@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign } from "lucide-react";
+import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign, Zap, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { motion } from "framer-motion";
@@ -72,20 +72,20 @@ function LazyImage({ src, alt, className, style }: { src: string; alt: string; c
   );
 }
 
-// --- Skeleton Components with Shimmer ---
+// --- Skeleton Components ---
 function SectionSkeleton() {
   return (
     <section className="max-w-lg mx-auto px-5">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="h-6 w-32 rounded-lg shimmer-skeleton" />
+      <div className="mb-3 flex justify-between items-center">
+        <div className="h-5 w-32 rounded-lg shimmer-skeleton" />
         <div className="h-4 w-20 rounded-lg shimmer-skeleton" />
       </div>
       <div className="flex gap-3 overflow-hidden">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="min-w-[200px] rounded-[18px] bg-white overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
-            <div className="h-28 w-full shimmer-skeleton" />
+          <div key={i} className="min-w-[140px] rounded-[16px] bg-white overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+            <div className="h-24 w-full shimmer-skeleton" />
             <div className="p-3 space-y-2">
-              <div className="h-4 w-3/4 rounded-lg shimmer-skeleton" />
+              <div className="h-3 w-3/4 rounded-lg shimmer-skeleton" />
               <div className="h-3 w-1/2 rounded-lg shimmer-skeleton" />
             </div>
           </div>
@@ -96,7 +96,7 @@ function SectionSkeleton() {
 }
 
 function BannerSkeleton() {
-  return <div className="rounded-[28px] h-44 w-full shimmer-skeleton" />;
+  return <div className="rounded-[20px] h-40 w-full shimmer-skeleton" />;
 }
 
 /** Renders all enabled brand sections in order */
@@ -123,7 +123,7 @@ export default function HomeSectionsRenderer() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <SectionSkeleton />
         <SectionSkeleton />
       </div>
@@ -139,7 +139,7 @@ export default function HomeSectionsRenderer() {
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {sections.map((section, idx) => (
         <motion.div
           key={section.id}
@@ -148,8 +148,8 @@ export default function HomeSectionsRenderer() {
           transition={{ duration: 0.35, delay: idx * 0.06, ease: "easeOut" }}
         >
           {idx > 0 && (
-            <div className="max-w-lg mx-auto px-5 py-3">
-              <div className="h-px" style={{ backgroundColor: `${fg}10` }} />
+            <div className="max-w-lg mx-auto px-5 py-2">
+              <div className="h-[0.5px]" style={{ backgroundColor: `${fg}0A` }} />
             </div>
           )}
           <SectionBlock
@@ -248,31 +248,27 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   };
 
   const bannerH =
-    section.banner_height === "small" ? 100 :
-    section.banner_height === "large" ? 200 : 140;
+    section.banner_height === "small" ? 80 :
+    section.banner_height === "large" ? 160 : 120;
 
   return (
     <section>
-      {/* Section Header */}
+      {/* Section Header - Méliuz style */}
       {(section.title || section.subtitle) && (
-        <div className="max-w-lg mx-auto px-5 mb-3 flex items-end justify-between">
-          <div>
-            {section.title && (
-              <h2 className="text-base font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-                {section.title}
-              </h2>
-            )}
-            {section.subtitle && (
-              <p className="text-xs mt-0.5" style={{ color: `${fg}50` }}>{section.subtitle}</p>
-            )}
+        <div className="max-w-lg mx-auto px-5 mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
+              {section.title}
+            </h2>
           </div>
           {section.cta_text && items.length > 0 && (
             <button
-              className="text-xs font-bold"
+              className="text-xs font-bold flex items-center gap-0.5"
               style={{ color: primary }}
               onClick={handleCtaClick}
             >
               {section.cta_text}
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -284,14 +280,14 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           <img
             src={section.banner_image_url}
             alt={section.title || "Banner"}
-            className="w-full object-cover rounded-[18px]"
+            className="w-full object-cover rounded-[16px]"
             style={{ height: bannerH }}
           />
         </div>
       )}
 
       {loading ? renderSkeleton() : items.length === 0 ? (
-        <div className="max-w-lg mx-auto px-5 text-center py-6 opacity-30 text-sm">Nenhum item disponível</div>
+        <div className="max-w-lg mx-auto px-5 text-center py-4 opacity-30 text-xs">Nenhum item disponível</div>
       ) : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
@@ -309,7 +305,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   );
 }
 
-// --- VOUCHERS_CARDS (ticket style) ---
+// --- VOUCHERS_CARDS (Méliuz coupon style - pink/magenta accent) ---
 function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -322,47 +318,43 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-[18px] overflow-hidden relative bg-white"
+            className="min-w-[220px] max-w-[240px] flex-shrink-0 rounded-[16px] overflow-hidden relative"
             style={{
-              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
               scrollSnapAlign: "start",
+              background: "linear-gradient(135deg, #E91E63 0%, #AD1457 100%)",
             }}
           >
             {/* Ticket notch */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
+            <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
+            <div className="absolute right-0 top-[55%] -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
 
-            <div className="px-5 pt-4 pb-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Percent className="h-3.5 w-3.5" style={{ color: primary }} />
-                <span className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                  {v.discount_percent}% OFF
-                </span>
+            <div className="px-4 pt-3 pb-2 text-white">
+              <div className="flex items-center gap-1 mb-1 opacity-80">
+                <Percent className="h-3 w-3" />
+                <span className="text-[10px] font-semibold uppercase tracking-wide">Cupom</span>
               </div>
-              <h3 className="font-semibold text-sm mb-1" style={{ fontFamily: fontHeading }}>{v.title}</h3>
-              {v.description && <p className="text-xs line-clamp-2" style={{ color: `${fg}50` }}>{v.description}</p>}
+              <span className="text-2xl font-black block leading-tight" style={{ fontFamily: fontHeading }}>
+                {v.discount_percent}% OFF
+              </span>
+              <h3 className="font-medium text-xs mt-1 line-clamp-1 opacity-90">{v.title}</h3>
             </div>
 
             {/* Dashed divider */}
-            <div className="mx-4 border-t border-dashed" style={{ borderColor: `${fg}15` }} />
+            <div className="mx-3 border-t border-dashed border-white/30" />
 
-            <div className="px-5 py-3 flex items-center justify-between">
+            <div className="px-4 py-2.5 flex items-center justify-between">
               {v.expires_at && (
-                <div className="flex items-center gap-1 text-[10px]" style={{ color: `${fg}40` }}>
-                  <Clock className="h-3 w-3" />
+                <div className="flex items-center gap-1 text-[9px] text-white/60">
+                  <Clock className="h-2.5 w-2.5" />
                   Até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
                 </div>
               )}
-              <button
-                className="text-xs font-bold px-3 py-1.5 rounded-full"
-                style={{ backgroundColor: `${primary}12`, color: primary }}
-              >
-                Resgatar
+              <button className="text-[11px] font-bold text-white bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                PEGAR CUPOM
               </button>
             </div>
           </motion.div>
         ))}
-        {/* Peek spacer */}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
@@ -382,7 +374,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="min-w-[180px] max-w-[200px] flex-shrink-0 rounded-[18px] overflow-hidden bg-white cursor-pointer active:scale-[0.97] transition-transform"
+            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[16px] overflow-hidden bg-white cursor-pointer active:scale-[0.97] transition-transform"
             style={{
               boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
               scrollSnapAlign: "start",
@@ -390,21 +382,35 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
             onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
-              <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+              <div className="relative">
+                <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+                {o.discount_percent > 0 && (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: "#E91E63" }}>
+                    {o.discount_percent}% OFF
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                <ShoppingBag className="h-8 w-8" style={{ color: `${primary}40` }} />
+              <div className="h-24 w-full flex items-center justify-center relative" style={{ backgroundColor: `${primary}06` }}>
+                <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
+                {o.discount_percent > 0 && (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: "#E91E63" }}>
+                    {o.discount_percent}% OFF
+                  </div>
+                )}
               </div>
             )}
             <div className="px-3 py-2.5">
               <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
               {o.stores?.name && (
-                <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}40` }}>{o.stores.name}</p>
+                <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}45` }}>{o.stores.name}</p>
               )}
               <div className="flex items-center justify-between mt-1.5">
-                <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
-                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
-                </span>
+                {o.value_rescue > 0 && (
+                  <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
+                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                  </span>
+                )}
                 {o.likes_count > 0 && (
                   <div className="flex items-center gap-0.5 text-[10px]" style={{ color: `${fg}35` }}>
                     <Heart className="h-2.5 w-2.5" />
@@ -421,44 +427,45 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
   );
 }
 
-// --- OFFERS_GRID (2-col) ---
+// --- OFFERS_GRID (2-col Méliuz style) ---
 function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick }: any) {
   return (
     <div className="max-w-lg mx-auto px-5">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="rounded-[18px] overflow-hidden bg-white cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
+            className="rounded-[16px] overflow-hidden bg-white cursor-pointer active:scale-[0.97] transition-transform"
+            style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
             onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
-              <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
-            ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}40` }} />
-              </div>
-            )}
-            <div className="px-3 py-2.5">
-              <h3 className="font-semibold text-xs truncate mb-0.5" style={{ fontFamily: fontHeading }}>{o.title}</h3>
-              {o.stores?.name && (
-                <p className="text-[10px] truncate" style={{ color: `${fg}40` }}>{o.stores.name}</p>
-              )}
-              <div className="flex items-center justify-between mt-1">
-                <span className="font-bold text-xs" style={{ color: primary }}>
-                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
-                </span>
-                {o.end_at && (
-                  <div className="flex items-center gap-0.5 text-[9px]" style={{ color: `${fg}35` }}>
-                    <Clock className="h-2.5 w-2.5" />
-                    {new Date(o.end_at).toLocaleDateString("pt-BR")}
+              <div className="relative">
+                <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+                {o.discount_percent > 0 && (
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-white text-[9px] font-bold" style={{ backgroundColor: "#E91E63" }}>
+                    {o.discount_percent}% OFF
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+              </div>
+            )}
+            <div className="px-2.5 py-2">
+              <h3 className="font-semibold text-[11px] truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+              {o.stores?.name && (
+                <p className="text-[9px] truncate" style={{ color: `${fg}40` }}>{o.stores.name}</p>
+              )}
+              {o.value_rescue > 0 && (
+                <span className="font-bold text-xs mt-1 block" style={{ color: primary }}>
+                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                </span>
+              )}
             </div>
           </motion.div>
         ))}
@@ -467,138 +474,127 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
   );
 }
 
-// --- Category Filter Chips ---
-function CategoryFilter({ items, selected, onSelect, primary, fg }: { items: any[]; selected: string | null; onSelect: (cat: string | null) => void; primary: string; fg: string }) {
-  const categories = useMemo(() => {
-    const cats = items.map((i: any) => i.category).filter(Boolean) as string[];
-    return [...new Set(cats)].sort();
-  }, [items]);
-
-  if (categories.length < 2) return null;
-
-  return (
-    <div className="max-w-lg mx-auto mb-3">
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5 pb-1">
-        <button
-          onClick={() => onSelect(null)}
-          className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
-          style={{
-            backgroundColor: !selected ? primary : `${fg}06`,
-            color: !selected ? "#fff" : `${fg}60`,
-          }}
-        >
-          Todos
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => onSelect(selected === cat ? null : cat)}
-            className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
-            style={{
-              backgroundColor: selected === cat ? primary : `${fg}06`,
-              color: selected === cat ? "#fff" : `${fg}60`,
-            }}
-          >
-            {cat}
-          </button>
-        ))}
-        <div className="min-w-[8px] shrink-0" />
-      </div>
-    </div>
-  );
-}
-
-// --- STORES_GRID (horizontal scroll with cashback badges) ---
+// --- STORES_GRID (Méliuz 4-col cashback grid) ---
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [selectedCat, setSelectedCat] = useState<string | null>(null);
-  const filtered = useMemo(() => selectedCat ? items.filter((i: any) => i.category === selectedCat) : items, [items, selectedCat]);
+
+  // Display as a 4-column grid like Méliuz
+  const rows = [];
+  for (let i = 0; i < items.length; i += 4) {
+    rows.push(items.slice(i, i + 4));
+  }
 
   return (
-    <div className="max-w-lg mx-auto">
-      <CategoryFilter items={items} selected={selectedCat} onSelect={setSelectedCat} primary={primary} fg={fg} />
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
-        {filtered.map((b: any, idx: number) => (
-          <motion.div
-            key={b.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="min-w-[100px] flex-shrink-0 rounded-[18px] p-4 text-center bg-white cursor-pointer active:scale-[0.95] transition-transform"
-            style={{
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              scrollSnapAlign: "start",
-            }}
-            onClick={() => onStoreClick?.(b)}
-          >
-            {b.logo_url ? (
-              <LazyImage src={b.logo_url} alt={b.name} className="h-12 w-12 mx-auto mb-2 rounded-xl" />
-            ) : (
-              <div className="h-12 w-12 mx-auto mb-2 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                <Store className="h-5 w-5" style={{ color: primary }} />
-              </div>
-            )}
-            <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-            {b.points_per_real && (
-              <span className="text-[10px] font-bold mt-1 inline-block" style={{ color: primary }}>
-                {b.points_per_real}x pts
-              </span>
-            )}
-            {b.category && !b.points_per_real && (
-              <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}40` }}>{b.category}</p>
-            )}
-          </motion.div>
+    <div className="max-w-lg mx-auto px-5">
+      <div className="space-y-3">
+        {rows.map((row: any[], rIdx: number) => (
+          <div key={rIdx} className="grid grid-cols-4 gap-2">
+            {row.map((b: any, idx: number) => (
+              <motion.div
+                key={b.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25, delay: (rIdx * 4 + idx) * 0.03 }}
+                className="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform"
+                onClick={() => onStoreClick?.(b)}
+              >
+                <div className="relative mb-1.5">
+                  {b.logo_url ? (
+                    <div className="h-14 w-14 rounded-2xl overflow-hidden bg-white" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                      <LazyImage src={b.logo_url} alt={b.name} className="h-14 w-14" />
+                    </div>
+                  ) : (
+                    <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-white" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                      <Store className="h-6 w-6" style={{ color: `${primary}60` }} />
+                    </div>
+                  )}
+                  {/* Cashback badge */}
+                  {b.points_per_real > 0 && (
+                    <div
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-white text-[8px] font-bold whitespace-nowrap"
+                      style={{ backgroundColor: "#059669", minWidth: 36, textAlign: "center" }}
+                    >
+                      {b.points_per_real}x pts
+                    </div>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium leading-tight truncate w-full mt-0.5" style={{ color: `${fg}80` }}>
+                  {b.name}
+                </span>
+                {b.category && (
+                  <span className="text-[8px] truncate w-full" style={{ color: `${fg}35` }}>{b.category}</span>
+                )}
+              </motion.div>
+            ))}
+            {/* Fill empty slots */}
+            {row.length < 4 && Array.from({ length: 4 - row.length }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+          </div>
         ))}
-        <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
   );
 }
 
-// --- STORES_LIST ---
+// --- STORES_LIST (Méliuz list with cashback + badges) ---
 function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
-  const [selectedCat, setSelectedCat] = useState<string | null>(null);
-  const filtered = useMemo(() => selectedCat ? items.filter((i: any) => i.category === selectedCat) : items, [items, selectedCat]);
+  const BADGES = ["IMPERDÍVEL", "EXCLUSIVO", "ÚLTIMAS HORAS", "NOVO"];
+  const badgeColors = ["#E91E63", "#7C3AED", "#FF6B35", "#059669"];
 
   return (
-    <div>
-      <CategoryFilter items={items} selected={selectedCat} onSelect={setSelectedCat} primary={primary} fg={fg} />
-      <div className="max-w-lg mx-auto px-5 space-y-2">
-        {filtered.map((b: any, idx: number) => (
+    <div className="max-w-lg mx-auto px-5 space-y-2">
+      {items.map((b: any, idx: number) => {
+        const badgeIdx = idx % BADGES.length;
+        const showBadge = b.points_per_real && b.points_per_real > 1;
+
+        return (
           <motion.div
             key={b.id}
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
             className="rounded-[14px] p-3 flex items-center gap-3 bg-white cursor-pointer active:scale-[0.98] transition-transform"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
             onClick={() => onStoreClick?.(b)}
           >
             {b.logo_url ? (
-              <LazyImage src={b.logo_url} alt={b.name} className="h-11 w-11 shrink-0 rounded-xl" />
+              <div className="h-12 w-12 shrink-0 rounded-xl overflow-hidden">
+                <LazyImage src={b.logo_url} alt={b.name} className="h-12 w-12" />
+              </div>
             ) : (
-              <div className="h-11 w-11 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                <Store className="h-5 w-5" style={{ color: primary }} />
+              <div className="h-12 w-12 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                <Store className="h-5 w-5" style={{ color: `${primary}60` }} />
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+                {showBadge && (
+                  <span
+                    className="text-[8px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
+                    style={{ backgroundColor: badgeColors[badgeIdx] }}
+                  >
+                    {BADGES[badgeIdx]}
+                  </span>
+                )}
+              </div>
               {b.category && (
-                <p className="text-xs" style={{ color: `${fg}40` }}>{b.category}</p>
+                <p className="text-[11px]" style={{ color: `${fg}45` }}>{b.category}</p>
+              )}
+              {b.points_per_real > 0 && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Zap className="h-3 w-3" style={{ color: "#059669" }} />
+                  <span className="text-[11px] font-bold" style={{ color: "#059669" }}>
+                    Até {b.points_per_real}x pontos/R$
+                  </span>
+                </div>
               )}
             </div>
-            {b.points_per_real && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: `${primary}12`, color: primary }}>
-                {b.points_per_real}x
-              </span>
-            )}
-            <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}25` }} />
+            <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}20` }} />
           </motion.div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-6 opacity-30 text-sm">Nenhuma loja nesta categoria</div>
-        )}
-      </div>
+        );
+      })}
     </div>
   );
 }
@@ -610,7 +606,7 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
 
   const h =
     bannerHeight === "small" ? "h-28" :
-    bannerHeight === "large" ? "h-56" : "h-44";
+    bannerHeight === "large" ? "h-52" : "h-40";
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -623,8 +619,8 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
   if (!banners.length) {
     return (
       <div className="max-w-lg mx-auto px-5">
-        <div className={`rounded-[28px] bg-gradient-to-br from-black/5 to-black/[0.02] ${h} flex items-center justify-center`}>
-          <p className="text-sm text-muted-foreground opacity-50">Configure banners no painel admin</p>
+        <div className={`rounded-[20px] bg-gradient-to-br from-black/5 to-black/[0.02] ${h} flex items-center justify-center`}>
+          <p className="text-xs text-muted-foreground opacity-50">Configure banners no painel admin</p>
         </div>
       </div>
     );
@@ -632,20 +628,19 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
 
   return (
     <div className="max-w-lg mx-auto px-5">
-      <div className={`relative rounded-[28px] overflow-hidden ${h}`} style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+      <div className={`relative rounded-[20px] overflow-hidden ${h}`} style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
         <LazyImage src={banners[current]?.image_url} alt="Banner" className={`${h} w-full`} />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
         {banners.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
             {banners.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
                 className="transition-all"
                 style={{
-                  height: 6,
-                  width: i === current ? 20 : 6,
+                  height: 5,
+                  width: i === current ? 16 : 5,
                   borderRadius: 3,
                   backgroundColor: i === current ? "#fff" : "rgba(255,255,255,0.4)",
                 }}
