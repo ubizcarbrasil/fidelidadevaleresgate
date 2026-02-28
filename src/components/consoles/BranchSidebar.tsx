@@ -1,4 +1,4 @@
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2 } from "lucide-react";
+import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, Store } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +20,8 @@ const items = [
   { title: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
   { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
   { title: "Vouchers", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
+  { title: "Minha Regra de Pontos", url: "/store-points-rule", icon: Store, moduleKey: "earn_points_store" },
+  { title: "Aprovar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
   { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
 ];
 

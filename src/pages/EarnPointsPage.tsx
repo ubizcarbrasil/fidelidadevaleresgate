@@ -60,7 +60,6 @@ export default function EarnPointsPage() {
     queryKey: ["points-rule-active", currentBrandId, selectedStore?.branch_id],
     queryFn: async () => {
       if (!currentBrandId) return null;
-      // Try branch-specific rule first, then brand-level
       let q = supabase.from("points_rules").select("*").eq("brand_id", currentBrandId).eq("is_active", true);
       if (selectedStore?.branch_id) {
         q = q.or(`branch_id.eq.${selectedStore.branch_id},branch_id.is.null`);
@@ -72,6 +71,43 @@ export default function EarnPointsPage() {
     enabled: !!currentBrandId && !!storeId,
   });
 
+  // Fetch store-specific custom rule if allowed
+  const { data: storeRule } = useQuery({
+    queryKey: ["store-rule-active", storeId, rule?.allow_store_custom_rule],
+    queryFn: async () => {
+      if (!storeId || !rule?.allow_store_custom_rule) return null;
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("store_points_rules")
+        .select("*")
+        .eq("store_id", storeId)
+        .eq("status", "ACTIVE")
+        .eq("is_active", true)
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gte.${now}`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data?.[0] || null;
+    },
+    enabled: !!storeId && !!rule?.allow_store_custom_rule,
+  });
+
+  // Calculate effective points_per_real
+  const effectivePointsPerReal = useMemo(() => {
+    if (!rule) return 0;
+    if (storeRule && rule.allow_store_custom_rule) {
+      const clamped = Math.min(
+        Math.max(Number(storeRule.points_per_real), Number(rule.store_points_per_real_min)),
+        Number(rule.store_points_per_real_max)
+      );
+      return clamped;
+    }
+    return Number(rule.points_per_real);
+  }, [rule, storeRule]);
+
+  const usingCustomRule = !!storeRule && !!rule?.allow_store_custom_rule;
+
   // Calculate preview
   const preview = useMemo(() => {
     if (!rule || !purchaseValue) return null;
@@ -81,14 +117,14 @@ export default function EarnPointsPage() {
 
     let points = 0;
     if (rule.rule_type === "PER_REAL") {
-      points = Math.floor(pv * Number(rule.points_per_real));
+      points = Math.floor(pv * effectivePointsPerReal);
     } else if (rule.rule_type === "FIXED") {
-      points = Number(rule.points_per_real); // reuse field
+      points = Number(rule.points_per_real);
     }
     points = Math.min(points, rule.max_points_per_purchase);
     const money = points * Number(rule.money_per_point);
     return { points, money, error: null };
-  }, [rule, purchaseValue]);
+  }, [rule, purchaseValue, effectivePointsPerReal]);
 
   const earn = useMutation({
     mutationFn: async () => {
@@ -286,6 +322,11 @@ export default function EarnPointsPage() {
                 <p className="text-sm font-medium text-primary">Preview do ganho:</p>
                 <p className="text-2xl font-bold">+{preview.points} pontos</p>
                 <p className="text-sm text-muted-foreground">Equivalente a R$ {preview.money.toFixed(2)}</p>
+                {usingCustomRule && (
+                  <Badge variant="outline" className="mt-1">
+                    Regra personalizada da loja ({effectivePointsPerReal} pts/R$)
+                  </Badge>
+                )}
               </div>
             )}
 
