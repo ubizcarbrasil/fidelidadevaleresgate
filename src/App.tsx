@@ -50,6 +50,8 @@ import CustomerPreviewPage from "@/pages/CustomerPreviewPage";
 import StoreRegistrationWizard from "@/pages/StoreRegistrationWizard";
 import StoreApprovalsPage from "@/pages/StoreApprovalsPage";
 import StoreOwnerPanel from "@/pages/StoreOwnerPanel";
+import AffiliateDealsPage from "@/pages/AffiliateDealsPage";
+import StoreCatalogPage from "@/pages/StoreCatalogPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -107,6 +109,8 @@ function AppRoutes() {
         <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
         <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
         <Route path="store-approvals" element={<StoreApprovalsPage />} />
+        <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
+        <Route path="store-catalog" element={<ModuleGuard moduleKey="stores"><StoreCatalogPage /></ModuleGuard>} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

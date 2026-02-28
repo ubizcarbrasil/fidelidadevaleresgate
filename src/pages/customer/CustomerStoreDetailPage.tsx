@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type StoreRow = Tables<"stores">;
 type Offer = Tables<"offers">;
+type CatalogItem = Tables<"store_catalog_items">;
 
 interface Props {
   store: StoreRow;
@@ -34,7 +35,9 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -54,7 +57,20 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
       setOffers(data || []);
       setLoadingOffers(false);
     };
+    const fetchCatalog = async () => {
+      setLoadingCatalog(true);
+      const { data } = await supabase
+        .from("store_catalog_items")
+        .select("*")
+        .eq("store_id", store.id)
+        .eq("is_active", true)
+        .order("order_index")
+        .limit(50);
+      setCatalogItems(data || []);
+      setLoadingCatalog(false);
+    };
     fetchOffers();
+    fetchCatalog();
   }, [store.id]);
 
   const whatsappUrl = store.whatsapp
@@ -290,6 +306,44 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             </div>
           )}
         </div>
+
+        {/* Catalog section */}
+        {!loadingCatalog && catalogItems.length > 0 && (
+          <div className="mx-4 mt-5 mb-6">
+            <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
+              Catálogo
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {catalogItems.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.04, duration: 0.3 }}
+                  className="rounded-[16px] overflow-hidden bg-white"
+                  style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
+                >
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className="w-full h-28 object-cover" />
+                  ) : (
+                    <div className="w-full h-28 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                      <ShoppingBag className="h-8 w-8" style={{ color: `${primary}25` }} />
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <p className="text-sm font-semibold line-clamp-1" style={{ fontFamily: fontHeading }}>{item.name}</p>
+                    {item.description && <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: `${fg}45` }}>{item.description}</p>}
+                    {Number(item.price) > 0 && (
+                      <p className="font-bold text-sm mt-1" style={{ color: primary }}>
+                        R$ {Number(item.price).toFixed(2).replace(".", ",")}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

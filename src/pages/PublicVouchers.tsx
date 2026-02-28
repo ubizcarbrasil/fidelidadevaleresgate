@@ -144,6 +144,7 @@ function FallbackVouchers({ selectedBranch, primary, fg, cardBg, accent, fontHea
         .select("*")
         .eq("branch_id", selectedBranch.id)
         .eq("status", "active")
+        .or("is_public.eq.true")
         .order("created_at", { ascending: false });
       setVouchers(data || []);
       setLoading(false);
@@ -166,10 +167,16 @@ function FallbackVouchers({ selectedBranch, primary, fg, cardBg, accent, fontHea
       <div className="grid gap-4 sm:grid-cols-2">
         {vouchers.map((v) => (
           <div key={v.id} className="rounded-xl border overflow-hidden transition-shadow hover:shadow-lg" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: accent }}>
+             <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: accent }}>
               <div className="flex items-center gap-2">
                 <Percent className="h-5 w-5" style={{ color: primary }} />
-                <span className="font-bold text-lg" style={{ color: primary, fontFamily: fontHeading }}>{v.discount_percent}% OFF</span>
+                <span className="font-bold text-lg" style={{ color: primary, fontFamily: fontHeading }}>
+                  {(v as any).discount_type === "FIXED"
+                    ? `R$ ${Number((v as any).discount_fixed_value).toFixed(2)}`
+                    : (v as any).discount_type === "FREE_SHIPPING"
+                    ? "Frete Grátis"
+                    : `${v.discount_percent}% OFF`}
+                </span>
               </div>
               {v.campaign && <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: primary, color: "#fff" }}>{v.campaign}</span>}
             </div>
