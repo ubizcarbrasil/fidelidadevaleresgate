@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import BrandThemeEditor from "@/components/BrandThemeEditor";
+import type { BrandTheme } from "@/hooks/useBrandTheme";
 
 export default function BrandForm() {
   const { id } = useParams();
@@ -20,6 +23,7 @@ export default function BrandForm() {
   const [slug, setSlug] = useState("");
   const [tenantId, setTenantId] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [theme, setTheme] = useState<BrandTheme>({});
   const [loading, setLoading] = useState(false);
 
   const { data: tenants } = useQuery({
@@ -38,6 +42,9 @@ export default function BrandForm() {
         setSlug(data.slug);
         setTenantId(data.tenant_id);
         setIsActive(data.is_active);
+        if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
+          setTheme(data.brand_settings_json as unknown as BrandTheme);
+        }
       });
     }
   }, [id, isEdit, navigate]);
@@ -49,7 +56,16 @@ export default function BrandForm() {
       return;
     }
     setLoading(true);
-    const payload = { name, slug, tenant_id: tenantId, is_active: isActive };
+
+    // Clean empty values from theme
+    const cleanTheme = JSON.parse(JSON.stringify(theme, (_, v) => (v === "" || v === undefined ? undefined : v)));
+    const payload = {
+      name,
+      slug,
+      tenant_id: tenantId,
+      is_active: isActive,
+      brand_settings_json: Object.keys(cleanTheme).length > 0 ? cleanTheme : null,
+    };
 
     const { error } = isEdit
       ? await supabase.from("brands").update(payload).eq("id", id!)
@@ -61,48 +77,63 @@ export default function BrandForm() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl">
       <Button variant="ghost" onClick={() => navigate("/brands")} className="gap-2">
         <ArrowLeft className="h-4 w-4" />Voltar
       </Button>
-      <Card>
-        <CardHeader>
-          <CardTitle>{isEdit ? "Editar Brand" : "Nova Brand"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Tenant</Label>
-              <Select value={tenantId} onValueChange={setTenantId}>
-                <SelectTrigger><SelectValue placeholder="Selecione um tenant" /></SelectTrigger>
-                <SelectContent>
-                  {tenants?.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Slug</Label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Ativo</Label>
-              <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
-              <Button type="button" variant="outline" onClick={() => navigate("/brands")}>Cancelar</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Tabs defaultValue="general">
+          <TabsList>
+            <TabsTrigger value="general">Geral</TabsTrigger>
+            <TabsTrigger value="theme">Tema Visual</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{isEdit ? "Editar Brand" : "Nova Brand"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Tenant</Label>
+                  <Select value={tenantId} onValueChange={setTenantId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione um tenant" /></SelectTrigger>
+                    <SelectContent>
+                      {tenants?.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Nome</Label>
+                    <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Slug</Label>
+                    <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Ativo</Label>
+                  <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="theme" className="mt-4">
+            <BrandThemeEditor value={theme} onChange={setTheme} />
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex gap-2">
+          <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
+          <Button type="button" variant="outline" onClick={() => navigate("/brands")}>Cancelar</Button>
+        </div>
+      </form>
     </div>
   );
 }
