@@ -192,6 +192,103 @@ function findNearestBranch(branches: Branch[], coords: Coords): Branch | null {
   return nearest;
 }
 
+/**
+ * Override provider that accepts brand/branches as props,
+ * skipping domain resolution and forcing isWhiteLabel = true.
+ */
+export function BrandProviderOverride({
+  brand,
+  branches: initialBranches,
+  children,
+}: {
+  brand: Brand;
+  branches: Branch[];
+  children: React.ReactNode;
+}) {
+  const { user } = useAuth();
+  const [selectedBranch, setSelectedBranchState] = useState<Branch | null>(null);
+  const branches = initialBranches;
+
+  const theme = useBrandTheme(brand.brand_settings_json);
+
+  // Auto-select if single branch
+  useEffect(() => {
+    if (branches.length === 1) {
+      setSelectedBranchState(branches[0]);
+    }
+  }, [branches]);
+
+  // Restore selected branch from profile
+  useEffect(() => {
+    if (!user || branches.length <= 1) return;
+    const restore = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("selected_branch_id")
+        .eq("id", user.id)
+        .single();
+      if (profile?.selected_branch_id) {
+        const saved = branches.find((b) => b.id === profile.selected_branch_id);
+        if (saved) setSelectedBranchState(saved);
+      }
+    };
+    restore();
+  }, [user, branches]);
+
+  // Auto-detect branch by geolocation
+  useEffect(() => {
+    if (branches.length <= 1 || selectedBranch) return;
+    const autoDetect = async () => {
+      const branchesWithCoords = branches.filter(
+        (b) => b.latitude != null && b.longitude != null
+      );
+      if (branchesWithCoords.length === 0) return;
+      const coords = await getCurrentPosition();
+      if (!coords) return;
+      const nearest = findNearestBranch(branchesWithCoords, coords);
+      if (nearest) {
+        setSelectedBranchState(nearest);
+        if (user) {
+          await supabase.from("profiles").update({ selected_branch_id: nearest.id }).eq("id", user.id);
+        }
+      }
+    };
+    autoDetect();
+  }, [branches, selectedBranch, user]);
+
+  const detectBranchByLocation = async (): Promise<Branch | null> => {
+    const branchesWithCoords = branches.filter(b => b.latitude != null && b.longitude != null);
+    if (branchesWithCoords.length === 0) return null;
+    const coords = await getCurrentPosition();
+    if (!coords) return null;
+    return findNearestBranch(branchesWithCoords, coords);
+  };
+
+  const setSelectedBranch = async (branch: Branch) => {
+    setSelectedBranchState(branch);
+    if (user) {
+      await supabase.from("profiles").update({ selected_branch_id: branch.id }).eq("id", user.id);
+    }
+  };
+
+  return (
+    <BrandContext.Provider
+      value={{
+        brand,
+        branches,
+        selectedBranch,
+        setSelectedBranch,
+        loading: false,
+        isWhiteLabel: true,
+        theme,
+        detectBranchByLocation,
+      }}
+    >
+      {children}
+    </BrandContext.Provider>
+  );
+}
+
 export function useBrand() {
   const context = useContext(BrandContext);
   if (!context) throw new Error("useBrand must be used within BrandProvider");
