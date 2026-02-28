@@ -3,12 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle } from "lucide-react";
+import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle, Heart, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -166,6 +168,9 @@ export default function CustomerProfilePage() {
         </motion.div>
       )}
 
+      {/* Favorites Section */}
+      <FavoritesSection customer={customer} primary={primary} fg={fg} fontHeading={fontHeading} />
+
       {/* Menu items */}
       <motion.div
         custom={3}
@@ -205,5 +210,109 @@ export default function CustomerProfilePage() {
         </Button>
       </motion.div>
     </div>
+  );
+}
+
+// --- Favorites Section ---
+function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: any; primary: string; fg: string; fontHeading: string }) {
+  const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!customer) { setLoading(false); return; }
+    const fetch = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("customer_favorites")
+        .select("offer_id, offers(id, title, image_url, value_rescue, description, stores(name, logo_url))")
+        .eq("customer_id", customer.id)
+        .order("created_at", { ascending: false });
+      setFavorites((data || []).map((d: any) => d.offers).filter(Boolean));
+      setLoading(false);
+    };
+    fetch();
+  }, [customer]);
+
+  if (loading) {
+    return (
+      <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-white" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <Heart className="h-4 w-4" style={{ color: primary }} />
+          <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
+        </div>
+        <div className="space-y-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-2 rounded-xl">
+              <Skeleton className="h-11 w-11 rounded-xl" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-3/4 rounded" />
+                <Skeleton className="h-3 w-1/3 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-white" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <Heart className="h-4 w-4" style={{ color: primary }} />
+        <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
+        {favorites.length > 0 && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
+            {favorites.length}
+          </span>
+        )}
+      </div>
+
+      {favorites.length === 0 ? (
+        <div className="text-center py-6 opacity-40">
+          <Heart className="h-8 w-8 mx-auto mb-2" style={{ color: `${fg}30` }} />
+          <p className="text-xs">Nenhuma oferta salva ainda</p>
+          <p className="text-[10px] mt-0.5">Toque no ♥ nas ofertas para salvar aqui</p>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {favorites.map((offer: any) => (
+            <motion.button
+              key={offer.id}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openOffer(offer)}
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-black/[0.02] transition-colors text-left"
+            >
+              <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: `${primary}08` }}>
+                {offer.image_url ? (
+                  <img src={offer.image_url} alt={offer.title} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <Tag className="h-5 w-5" style={{ color: `${primary}40` }} />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{offer.title}</p>
+                {offer.stores?.name && (
+                  <p className="text-[10px] truncate" style={{ color: `${fg}45` }}>{offer.stores.name}</p>
+                )}
+              </div>
+              {Number(offer.value_rescue) > 0 && (
+                <span className="text-xs font-bold shrink-0" style={{ color: primary }}>
+                  R$ {Number(offer.value_rescue).toFixed(2)}
+                </span>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleFavorite(offer.id); }}
+                className="shrink-0 p-1"
+              >
+                <Heart className="h-4 w-4" fill={primary} style={{ color: primary }} />
+              </button>
+            </motion.button>
+          ))}
+        </div>
+      )}
+    </motion.div>
   );
 }
