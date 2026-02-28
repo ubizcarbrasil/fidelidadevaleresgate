@@ -1610,6 +1610,59 @@ export type Database = {
           },
         ]
       }
+      store_employees: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string | null
+          id: string
+          invited_at: string | null
+          is_active: boolean
+          name: string
+          phone: string | null
+          role: string
+          store_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invited_at?: string | null
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          role?: string
+          store_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invited_at?: string | null
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          role?: string
+          store_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_employees_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_points_rules: {
         Row: {
           approved_at: string | null
