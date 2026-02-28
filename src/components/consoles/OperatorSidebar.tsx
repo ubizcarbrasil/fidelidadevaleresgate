@@ -1,4 +1,4 @@
-import { ScanLine, LogOut, Ticket } from "lucide-react";
+import { ScanLine, LogOut, Ticket, Coins } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 const items = [
   { title: "Validar Resgate", url: "/", icon: ScanLine },
+  { title: "Pontuar Cliente", url: "/earn-points", icon: Coins },
 ];
 
 export function OperatorSidebar() {
