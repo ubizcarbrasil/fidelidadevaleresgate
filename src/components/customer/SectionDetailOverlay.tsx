@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Store, ShoppingBag, Heart, MapPin } from "lucide-react";
+import { ArrowLeft, Search, Store, ShoppingBag, Heart, MapPin, Clock, Sparkles, Percent, ThumbsUp } from "lucide-react";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 
 interface SectionDetailOverlayProps {
@@ -27,7 +27,7 @@ export default function SectionDetailOverlay({
   fontHeading,
 }: SectionDetailOverlayProps) {
   const [query, setQuery] = useState("");
-  const { openOffer, openStore } = useCustomerNav();
+  const { openOffer, openStore, isFavorite, toggleFavorite } = useCustomerNav();
 
   const filtered = useMemo(() => {
     if (!query.trim()) return items;
@@ -66,9 +66,17 @@ export default function SectionDetailOverlay({
           >
             <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
           </button>
-          <h1 className="text-lg font-bold flex-1 truncate" style={{ fontFamily: fontHeading }}>
-            {section.title || "Todos"}
-          </h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold truncate" style={{ fontFamily: fontHeading }}>
+              {section.title || "Todos"}
+            </h1>
+            {section.subtitle && (
+              <p className="text-[11px] truncate" style={{ color: `${fg}50` }}>{section.subtitle}</p>
+            )}
+          </div>
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${primary}10`, color: primary }}>
+            {filtered.length}
+          </span>
         </div>
 
         {/* Search bar */}
@@ -108,71 +116,109 @@ export default function SectionDetailOverlay({
         <div className="max-w-lg mx-auto px-4 pt-3 space-y-2">
           {filtered.length === 0 ? (
             <div className="text-center py-12 opacity-40 text-sm">Nenhum resultado encontrado</div>
-          ) : filtered.map((item: any) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 rounded-[14px] p-3 bg-white cursor-pointer active:scale-[0.98] transition-transform"
-              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
-              onClick={() => isStore ? openStore(item) : openOffer(item)}
-            >
-              {/* Image/Logo */}
-              {(item.logo_url || item.image_url) ? (
-                <img
-                  src={item.logo_url || item.image_url}
-                  alt={item.name || item.title}
-                  className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
-                />
-              ) : (
-                <div
-                  className="h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${primary}10` }}
-                >
-                  {isStore ? (
-                    <Store className="h-5 w-5" style={{ color: primary }} />
+          ) : filtered.map((item: any, idx: number) => {
+            const isOffer = !isStore;
+            const daysLeft = item.end_at
+              ? Math.max(0, Math.ceil((new Date(item.end_at).getTime() - Date.now()) / 86400000))
+              : null;
+            const isUrgent = daysLeft !== null && daysLeft <= 3;
+            const isNew = idx < 3;
+            const hasDiscount = Number(item.discount_percent) > 0;
+
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.03, duration: 0.25 }}
+                className="flex items-center gap-3 rounded-[16px] p-3 bg-white cursor-pointer active:scale-[0.98] transition-transform relative"
+                style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
+                onClick={() => isStore ? openStore(item) : openOffer(item)}
+              >
+                {/* Image/Logo */}
+                <div className="relative flex-shrink-0">
+                  {(item.logo_url || item.image_url) ? (
+                    <img
+                      src={item.logo_url || item.image_url}
+                      alt={item.name || item.title}
+                      className="h-14 w-14 rounded-xl object-cover"
+                    />
                   ) : (
-                    <ShoppingBag className="h-5 w-5" style={{ color: primary }} />
+                    <div
+                      className="h-14 w-14 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${primary}10` }}
+                    >
+                      {isStore ? (
+                        <Store className="h-6 w-6" style={{ color: primary }} />
+                      ) : (
+                        <ShoppingBag className="h-6 w-6" style={{ color: primary }} />
+                      )}
+                    </div>
+                  )}
+                  {/* Badges */}
+                  {isUrgent && (
+                    <span className="absolute -top-1 -left-1 flex items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-md text-white" style={{ backgroundColor: "hsl(0 72% 51%)" }}>
+                      <Clock className="h-2 w-2" />
+                      {daysLeft === 0 ? "HOJE" : `${daysLeft}d`}
+                    </span>
+                  )}
+                  {!isUrgent && isNew && (
+                    <span className="absolute -top-1 -left-1 flex items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-md text-white" style={{ backgroundColor: primary }}>
+                      <Sparkles className="h-2 w-2" />
+                    </span>
                   )}
                 </div>
-              )}
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>
-                  {item.name || item.title}
-                </h3>
-                {(item.stores?.name || item.store_name || item.category) && (
-                  <p className="text-xs truncate mt-0.5" style={{ color: `${fg}50` }}>
-                    {item.stores?.name || item.store_name || item.category}
-                  </p>
-                )}
-                {item.address && (
-                  <div className="flex items-center gap-1 text-[10px] mt-0.5" style={{ color: `${fg}40` }}>
-                    <MapPin className="h-2.5 w-2.5" />
-                    <span className="truncate">{item.address}</span>
-                  </div>
-                )}
-              </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  {(item.stores?.name || item.store_name) && (
+                    <p className="text-[10px] font-medium truncate mb-0.5" style={{ color: `${fg}45` }}>
+                      {item.stores?.name || item.store_name}
+                    </p>
+                  )}
+                  <h3 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>
+                    {item.name || item.title}
+                  </h3>
+                  {item.category && (
+                    <p className="text-[10px] truncate" style={{ color: `${fg}40` }}>
+                      {item.category}
+                    </p>
+                  )}
+                  {item.address && (
+                    <div className="flex items-center gap-1 text-[10px] mt-0.5" style={{ color: `${fg}40` }}>
+                      <MapPin className="h-2.5 w-2.5" />
+                      <span className="truncate">{item.address}</span>
+                    </div>
+                  )}
+                </div>
 
-              {/* Price/Discount */}
-              <div className="flex-shrink-0 text-right">
-                {item.discount_percent > 0 && (
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
-                    {item.discount_percent}% OFF
-                  </span>
-                )}
-                {item.value_rescue > 0 && !item.discount_percent && (
-                  <span className="font-bold text-sm" style={{ color: primary }}>
-                    R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
-                  </span>
-                )}
-                {item.points_per_real > 0 && (
-                  <span className="text-[10px] block mt-0.5" style={{ color: `${fg}50` }}>
-                    {item.points_per_real}x pts/R$
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+                {/* Right side */}
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  {hasDiscount && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                      {item.discount_percent}% OFF
+                    </span>
+                  )}
+                  {item.value_rescue > 0 && (
+                    <span className="font-bold text-sm" style={{ color: primary }}>
+                      R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
+                    </span>
+                  )}
+                  {item.points_per_real > 0 && (
+                    <span className="text-[10px]" style={{ color: `${fg}50` }}>
+                      {item.points_per_real}x pts/R$
+                    </span>
+                  )}
+                  {isOffer && item.likes_count > 0 && (
+                    <div className="flex items-center gap-0.5 text-[10px]" style={{ color: `${fg}40` }}>
+                      <ThumbsUp className="h-2.5 w-2.5" />
+                      {item.likes_count}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </motion.div>
