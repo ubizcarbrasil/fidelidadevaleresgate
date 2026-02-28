@@ -1,53 +1,76 @@
 
 
-## Plan: Auto-redirect store owners to `/store-panel` after login
+## Plan: Redesign Completo da Home do Cliente (Inspirado no Meliuz)
 
-### Problem
-After login, all users land on `/` (admin Dashboard). Store owners without admin roles see an admin interface they can't use.
+### 1. Fix critico: erro de hooks no `/customer-preview`
 
-### Approach
-Create a `useStoreOwnerRedirect` hook that runs inside `ProtectedRoute` (or at the `AppLayout` level). After auth loads, it checks:
-1. User has NO administrative roles (`root_admin`, `tenant_admin`, `brand_admin`, `branch_admin`, `branch_operator`, `operator_pdv`)
-2. User owns an APPROVED store (`stores.owner_user_id = auth.uid()`)
+**Arquivo**: `src/App.tsx` (linha 145)
+- Substituir `if (loading) return null` por um spinner inline para manter hook count estavel
 
-If both conditions are true, redirect to `/store-panel`.
+### 2. DB Migration: adicionar colunas de personalização em `brand_sections`
 
-### Implementation Steps
+Adicionar a `brand_sections`:
+- `banner_image_url text` -- banner de identificação da seção
+- `banner_height text DEFAULT 'medium'` -- small/medium/large
+- `display_mode text DEFAULT 'carousel'` -- carousel/grid/list
 
-1. **Create hook `src/hooks/useStoreOwnerRedirect.ts`**
-   - Use `useAuth()` to get `roles` and `user`
-   - If roles array is empty (no admin roles) and user exists, query `stores` table for `owner_user_id = user.id` and `approval_status = 'APPROVED'`
-   - If found, call `navigate('/store-panel', { replace: true })`
-   - Return `{ isRedirecting: boolean }` so callers can show a spinner
+### 3. Novo template type: `STORES_HIGHLIGHT` (lista horizontal com cashback/badges)
 
-2. **Integrate in `src/pages/Dashboard.tsx`**
-   - Call `useStoreOwnerRedirect()` at the top of the Dashboard component
-   - While redirecting, show a loading spinner instead of the dashboard
+Inspirado nas screenshots (Lojas em destaque com logo, nome, "Até X% cashback", badges "ÚLTIMAS HORAS" / "IMPERDÍVEL"), esse layout aparece em varias seções do Meliuz. Usar o campo `visual_json` existente para configurar badges e textos de destaque por item.
 
-This keeps it simple: the redirect only triggers when the user lands on the Dashboard (the index route), not on every protected route. Store owners who navigate directly to `/store-panel` won't be affected.
+### 4. Redesign `HomeSectionsRenderer.tsx`
 
-### Technical Details
+Refatorar completamente os componentes de seção:
 
-```text
-Login → /auth success → navigate("/") → ProtectedRoute → AppLayout → Dashboard
-                                                                        ↓
-                                                              useStoreOwnerRedirect()
-                                                                        ↓
-                                                         roles.length === 0?
-                                                           YES → query stores
-                                                             → APPROVED owner? → /store-panel
-                                                           NO → show Dashboard
-```
+- **Separadores claros entre seções**: linha fina + padding generoso (já existe parcialmente, melhorar)
+- **Header de seção**: titulo bold à esquerda + "Abrir todas" em cor primary à direita (como Meliuz)
+- **Banner dentro da seção**: renderizar `banner_image_url` como banner arredondado (18-28px) acima dos items
+- **Carrossel de lojas estilo grid 4x2**: logo arredondado + nome truncado + "Até X%" bold + "Era X%" cinza (como nas screenshots)
+- **Lista horizontal de lojas com badges**: logo + nome + cashback + badges coloridos
+- **Cupons estilo ticket**: cards rosa com logo + "CUPOM X% OFF" + botão "PEGAR CUPOM" (como na screenshot IMG_3270)
+- **"Mostrar mais" / "Abrir todas"**: CTA que abre overlay fullscreen com lista + busca
 
-The hook query:
-```typescript
-supabase.from("stores")
-  .select("id")
-  .eq("owner_user_id", user.id)
-  .eq("approval_status", "APPROVED")
-  .limit(1)
-  .maybeSingle()
-```
+### 5. Nova página `SectionDetailOverlay.tsx`
 
-No database changes needed. RLS on `stores` already allows owners to read their own stores via the existing "Store owners manage own offers" pattern (needs verification — may need a SELECT policy for store owners on the `stores` table).
+Quando clicar "Abrir todas":
+- Header com titulo + voltar
+- Banner de identificação (se configurado)
+- Barra de busca
+- Lista vertical de items (logo + nome + cashback + badges) como na screenshot IMG_3264
+- Integrado ao `CustomerNavContext`
+
+### 6. Melhorar `BrandSectionsManager.tsx` (admin)
+
+Adicionar campos no dialog de criação/edição:
+- Upload de banner image da seção
+- Seletor de altura do banner (small/medium/large)
+- Seletor de modo de exibição
+
+### 7. Visual polish
+
+- Shimmer animation nos Skeletons (`src/index.css`)
+- Migrar fetching do `HomeSectionsRenderer` para `useQuery`
+- Framer Motion staggered entry nos cards
+
+### Arquivos a criar/editar
+
+| Arquivo | Ação |
+|---|---|
+| `src/App.tsx` | Fix hook (linha 145) |
+| DB migration | Colunas banner em brand_sections |
+| `src/components/HomeSectionsRenderer.tsx` | Redesign completo com novos layouts |
+| `src/components/customer/SectionDetailOverlay.tsx` | **Novo** |
+| `src/components/customer/CustomerLayout.tsx` | Registrar SectionDetailOverlay no nav |
+| `src/components/BrandSectionsManager.tsx` | Campos de banner/display mode |
+| `src/index.css` | Shimmer keyframes |
+
+### Ordem de implementação
+
+1. Fix hooks `App.tsx`
+2. DB migration
+3. Redesign HomeSectionsRenderer (novos layouts de seção)
+4. SectionDetailOverlay
+5. Integrar no CustomerLayout
+6. Admin: campos de banner no BrandSectionsManager
+7. Shimmer + polish
 
