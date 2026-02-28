@@ -267,6 +267,151 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          money_balance: number
+          name: string
+          phone: string | null
+          points_balance: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          money_balance?: number
+          name: string
+          phone?: string | null
+          points_balance?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          money_balance?: number
+          name?: string
+          phone?: string | null
+          points_balance?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          allowed_hours: string | null
+          allowed_weekdays: number[] | null
+          branch_id: string
+          brand_id: string
+          created_at: string
+          description: string | null
+          end_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          likes_count: number
+          max_daily_redemptions: number | null
+          min_purchase: number
+          start_at: string | null
+          status: Database["public"]["Enums"]["offer_status"]
+          store_id: string
+          title: string
+          updated_at: string
+          value_rescue: number
+        }
+        Insert: {
+          allowed_hours?: string | null
+          allowed_weekdays?: number[] | null
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          likes_count?: number
+          max_daily_redemptions?: number | null
+          min_purchase?: number
+          start_at?: string | null
+          status?: Database["public"]["Enums"]["offer_status"]
+          store_id: string
+          title: string
+          updated_at?: string
+          value_rescue?: number
+        }
+        Update: {
+          allowed_hours?: string | null
+          allowed_weekdays?: number[] | null
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          likes_count?: number
+          max_daily_redemptions?: number | null
+          min_purchase?: number
+          start_at?: string | null
+          status?: Database["public"]["Enums"]["offer_status"]
+          store_id?: string
+          title?: string
+          updated_at?: string
+          value_rescue?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           created_at: string
@@ -362,6 +507,80 @@ export type Database = {
           },
         ]
       }
+      redemptions: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          customer_id: string
+          expires_at: string | null
+          id: string
+          offer_id: string
+          purchase_value: number | null
+          qr_data: string | null
+          status: Database["public"]["Enums"]["redemption_status"]
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          customer_id: string
+          expires_at?: string | null
+          id?: string
+          offer_id: string
+          purchase_value?: number | null
+          qr_data?: string | null
+          status?: Database["public"]["Enums"]["redemption_status"]
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          customer_id?: string
+          expires_at?: string | null
+          id?: string
+          offer_id?: string
+          purchase_value?: number | null
+          qr_data?: string | null
+          status?: Database["public"]["Enums"]["redemption_status"]
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -451,6 +670,66 @@ export type Database = {
           type?: Database["public"]["Enums"]["section_type"]
         }
         Relationships: []
+      }
+      stores: {
+        Row: {
+          address: string | null
+          branch_id: string
+          brand_id: string
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          branch_id: string
+          brand_id: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          branch_id?: string
+          brand_id?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {
@@ -696,6 +975,8 @@ export type Database = {
         | "operator_pdv"
         | "store_admin"
         | "customer"
+      offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
+      redemption_status: "PENDING" | "USED" | "EXPIRED" | "CANCELED"
       section_source_type:
         | "OFFERS"
         | "STORES"
@@ -847,6 +1128,8 @@ export const Constants = {
         "store_admin",
         "customer",
       ],
+      offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
+      redemption_status: ["PENDING", "USED", "EXPIRED", "CANCELED"],
       section_source_type: [
         "OFFERS",
         "STORES",
