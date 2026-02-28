@@ -11,17 +11,19 @@ import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
 import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
 import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
+import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 
-// Context to allow child components to open offer/store detail and manage favorites
+// Context to allow child components to open offer/store/section detail and manage favorites
 interface CustomerNavContextType {
   openOffer: (offer: any) => void;
   openStore: (store: any) => void;
+  openSectionDetail: (section: any, items: any[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
 }
 const CustomerNavContext = createContext<CustomerNavContextType>({
-  openOffer: () => {}, openStore: () => {},
+  openOffer: () => {}, openStore: () => {}, openSectionDetail: () => {},
   isFavorite: () => false, toggleFavorite: () => {},
 });
 export const useOfferNav = () => useContext(CustomerNavContext);
@@ -59,6 +61,7 @@ export default function CustomerLayout() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [sectionDetail, setSectionDetail] = useState<{ section: any; items: any[] } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
@@ -75,7 +78,7 @@ export default function CustomerLayout() {
   const ActivePage = TAB_CONTENT[activeTab];
 
   return (
-    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, isFavorite, toggleFavorite }}>
+    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite }}>
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
         {/* Modern Header */}
         <header className="sticky top-0 z-50" style={{ backgroundColor: cardBg }}>
@@ -198,6 +201,20 @@ export default function CustomerLayout() {
                 setSelectedStore(null);
                 setTimeout(() => setSelectedOffer(offer), 100);
               }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Section Detail Overlay */}
+        <AnimatePresence>
+          {sectionDetail && (
+            <SectionDetailOverlay
+              section={sectionDetail.section}
+              items={sectionDetail.items}
+              onBack={() => setSectionDetail(null)}
+              primary={primary}
+              fg={fg}
+              fontHeading={fontHeading}
             />
           )}
         </AnimatePresence>

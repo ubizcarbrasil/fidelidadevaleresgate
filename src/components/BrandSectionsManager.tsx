@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GripVertical, Trash2, Settings, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, GripVertical, Trash2, Settings, ChevronUp, ChevronDown, Image } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 interface BrandSectionsManagerProps {
@@ -43,6 +44,9 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
   const [newTemplateId, setNewTemplateId] = useState("");
   const [newSourceType, setNewSourceType] = useState("OFFERS");
   const [newLimit, setNewLimit] = useState("10");
+  const [newBannerUrl, setNewBannerUrl] = useState("");
+  const [newBannerHeight, setNewBannerHeight] = useState("medium");
+  const [newDisplayMode, setNewDisplayMode] = useState("carousel");
 
   const { data: templates } = useQuery({
     queryKey: ["section-templates"],
@@ -82,6 +86,9 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
           subtitle: newSubtitle || null,
           cta_text: newCtaText || null,
           order_index: maxOrder,
+          banner_image_url: newBannerUrl || null,
+          banner_height: newBannerHeight,
+          display_mode: newDisplayMode,
         })
         .select()
         .single();
@@ -105,6 +112,9 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
       setNewSubtitle("");
       setNewCtaText("");
       setNewTemplateId("");
+      setNewBannerUrl("");
+      setNewBannerHeight("medium");
+      setNewDisplayMode("carousel");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -207,6 +217,34 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
                 <div className="space-y-2">
                   <Label>Limite</Label>
                   <Input type="number" value={newLimit} onChange={(e) => setNewLimit(e.target.value)} min="1" max="50" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Banner da Seção (URL)</Label>
+                <Input value={newBannerUrl} onChange={(e) => setNewBannerUrl(e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Altura do Banner</Label>
+                  <Select value={newBannerHeight} onValueChange={setNewBannerHeight}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Pequeno</SelectItem>
+                      <SelectItem value="medium">Médio</SelectItem>
+                      <SelectItem value="large">Grande</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Modo de Exibição</Label>
+                  <Select value={newDisplayMode} onValueChange={setNewDisplayMode}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="carousel">Carrossel</SelectItem>
+                      <SelectItem value="grid">Grade</SelectItem>
+                      <SelectItem value="list">Lista</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <Button onClick={() => addSection.mutate()} disabled={!newTemplateId} className="w-full">
