@@ -34,17 +34,7 @@ export default function WhiteLabelLayout() {
     return <BranchSelector />;
   }
 
-  // Guest mode: show public vouchers
-  if (guestMode && !user) {
-    return <PublicVouchers />;
-  }
-
-  // Not authenticated: show auth page
-  if (!user) {
-    return <CustomerAuthPage onSkip={() => setGuestMode(true)} />;
-  }
-
-  // Authenticated: show customer app
+  // Allow access without authentication for now
   return (
     <CustomerProvider>
       <CustomerLayout />
