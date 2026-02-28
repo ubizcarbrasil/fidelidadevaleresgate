@@ -1891,11 +1891,19 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           description: string | null
+          discount_fixed_value: number
           discount_percent: number
+          discount_type: string
           expires_at: string | null
           id: string
+          is_public: boolean
           max_uses: number
+          max_uses_per_customer: number
+          min_purchase: number
+          start_at: string | null
           status: Database["public"]["Enums"]["voucher_status"]
+          target_audience: string
+          terms: string | null
           title: string
           updated_at: string
         }
@@ -1910,11 +1918,19 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           description?: string | null
+          discount_fixed_value?: number
           discount_percent: number
+          discount_type?: string
           expires_at?: string | null
           id?: string
+          is_public?: boolean
           max_uses?: number
+          max_uses_per_customer?: number
+          min_purchase?: number
+          start_at?: string | null
           status?: Database["public"]["Enums"]["voucher_status"]
+          target_audience?: string
+          terms?: string | null
           title: string
           updated_at?: string
         }
@@ -1929,11 +1945,19 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           description?: string | null
+          discount_fixed_value?: number
           discount_percent?: number
+          discount_type?: string
           expires_at?: string | null
           id?: string
+          is_public?: boolean
           max_uses?: number
+          max_uses_per_customer?: number
+          min_purchase?: number
+          start_at?: string | null
           status?: Database["public"]["Enums"]["voucher_status"]
+          target_audience?: string
+          terms?: string | null
           title?: string
           updated_at?: string
         }
