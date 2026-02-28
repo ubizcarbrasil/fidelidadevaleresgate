@@ -167,6 +167,72 @@ export type Database = {
         }
         Relationships: []
       }
+      banner_schedules: {
+        Row: {
+          brand_id: string
+          brand_section_id: string | null
+          created_at: string
+          end_at: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          link_target_id: string | null
+          link_type: string
+          link_url: string | null
+          order_index: number
+          start_at: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          brand_section_id?: string | null
+          created_at?: string
+          end_at?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean
+          link_target_id?: string | null
+          link_type?: string
+          link_url?: string | null
+          order_index?: number
+          start_at?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          brand_section_id?: string | null
+          created_at?: string
+          end_at?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_target_id?: string | null
+          link_type?: string
+          link_url?: string | null
+          order_index?: number
+          start_at?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banner_schedules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banner_schedules_brand_section_id_fkey"
+            columns: ["brand_section_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           branch_settings_json: Json | null
@@ -822,6 +888,53 @@ export type Database = {
         }
         Relationships: []
       }
+      icon_library: {
+        Row: {
+          brand_id: string | null
+          category: string
+          color: string | null
+          created_at: string
+          icon_type: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          lucide_name: string | null
+          name: string
+        }
+        Insert: {
+          brand_id?: string | null
+          category?: string
+          color?: string | null
+          created_at?: string
+          icon_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          lucide_name?: string | null
+          name: string
+        }
+        Update: {
+          brand_id?: string | null
+          category?: string
+          color?: string | null
+          created_at?: string
+          icon_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          lucide_name?: string | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icon_library_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_jobs: {
         Row: {
           branch_id: string | null
@@ -872,6 +985,44 @@ export type Database = {
           },
           {
             foreignKeyName: "import_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_labels: {
+        Row: {
+          brand_id: string
+          context: string
+          created_at: string
+          custom_label: string
+          id: string
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          context?: string
+          created_at?: string
+          custom_label: string
+          id?: string
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          context?: string
+          created_at?: string
+          custom_label?: string
+          id?: string
+          key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_labels_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
