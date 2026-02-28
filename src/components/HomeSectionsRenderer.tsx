@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Ticket, MapPin, Clock, Percent, Loader2, Gift, ChevronLeft, ChevronRight, Store } from "lucide-react";
+import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Voucher = Tables<"vouchers">;
 
@@ -33,6 +34,98 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+// --- Lazy Image Component ---
+function LazyImage({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={imgRef} className={`relative overflow-hidden ${className || ""}`} style={style}>
+      {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
+      {inView && (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
+    </div>
+  );
+}
+
+// --- Skeleton Components ---
+function SectionSkeleton() {
+  return (
+    <section className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="mb-4">
+        <Skeleton className="h-6 w-40 mb-1" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <CardSkeleton key={i} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CardSkeleton() {
+  return (
+    <div className="rounded-xl border overflow-hidden bg-card">
+      <Skeleton className="h-10 w-full" />
+      <div className="px-4 py-3 space-y-2">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+    </div>
+  );
+}
+
+function StoreCardSkeleton() {
+  return (
+    <div className="rounded-xl border p-4 bg-card">
+      <Skeleton className="h-8 w-8 mx-auto mb-2 rounded-full" />
+      <Skeleton className="h-4 w-20 mx-auto mb-1" />
+      <Skeleton className="h-3 w-16 mx-auto" />
+    </div>
+  );
+}
+
+function CarouselSkeleton() {
+  return (
+    <div className="flex gap-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="flex-1 min-w-0 rounded-xl border overflow-hidden bg-card">
+          <Skeleton className="h-8 w-full" />
+          <div className="px-3 py-2">
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BannerSkeleton() {
+  return <Skeleton className="rounded-xl h-48 w-full" />;
+}
+
 /** Renders all enabled brand sections in order */
 export default function HomeSectionsRenderer() {
   const { brand, selectedBranch, theme } = useBrand();
@@ -57,8 +150,9 @@ export default function HomeSectionsRenderer() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="space-y-8">
+        <SectionSkeleton />
+        <SectionSkeleton />
       </div>
     );
   }
@@ -140,6 +234,21 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     fetchItems();
   }, [section, branchId, templateType]);
 
+  const renderSkeleton = () => {
+    if (templateType === "BANNER_CAROUSEL") return <BannerSkeleton />;
+    if (templateType === "OFFERS_CAROUSEL" || templateType === "VOUCHERS_CARDS") return <CarouselSkeleton />;
+    if (templateType === "STORES_GRID") return (
+      <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-${schema.columns || 4}`}>
+        {Array.from({ length: 4 }).map((_, i) => <StoreCardSkeleton key={i} />)}
+      </div>
+    );
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
+      </div>
+    );
+  };
+
   return (
     <section className="max-w-4xl mx-auto px-4 sm:px-6">
       {(section.title || section.subtitle) && (
@@ -165,11 +274,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         </div>
       )}
 
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      ) : items.length === 0 ? (
+      {loading ? renderSkeleton() : items.length === 0 ? (
         <div className="text-center py-6 opacity-40 text-sm">Nenhum item disponível</div>
       ) : templateType === "VOUCHERS_CARDS" || templateType === "OFFERS_GRID" ? (
         <VoucherGrid items={items as Voucher[]} columns={schema.columns || 3} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} showExpiry={schema.show_expiry} showDiscount={schema.show_discount} />
@@ -180,7 +285,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       ) : templateType === "STORES_LIST" ? (
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "BANNER_CAROUSEL" ? (
-        <BannerPlaceholder />
+        <BannerCarousel items={items} />
       ) : null}
     </section>
   );
@@ -258,7 +363,11 @@ function StoresGrid({ items, columns, primary, cardBg, fontHeading, fg }: any) {
     <div className={`grid gap-4 ${colClass}`}>
       {items.map((b: any) => (
         <div key={b.id} className="rounded-xl border p-4 text-center transition-shadow hover:shadow-md" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
-          <Store className="h-8 w-8 mx-auto mb-2 opacity-60" style={{ color: primary }} />
+          {b.logo_url ? (
+            <LazyImage src={b.logo_url} alt={b.name} className="h-8 w-8 mx-auto mb-2 rounded-full" />
+          ) : (
+            <Store className="h-8 w-8 mx-auto mb-2 opacity-60" style={{ color: primary }} />
+          )}
           <h3 className="font-medium text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
           {b.city && <p className="text-xs opacity-50 mt-1"><MapPin className="h-3 w-3 inline mr-1" />{b.city}{b.state ? `, ${b.state}` : ""}</p>}
         </div>
@@ -272,7 +381,11 @@ function StoresList({ items, primary, cardBg, fontHeading, fg }: any) {
     <div className="space-y-2">
       {items.map((b: any) => (
         <div key={b.id} className="rounded-lg border p-3 flex items-center gap-3" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
-          <Store className="h-6 w-6 shrink-0 opacity-60" style={{ color: primary }} />
+          {b.logo_url ? (
+            <LazyImage src={b.logo_url} alt={b.name} className="h-6 w-6 shrink-0 rounded-full" />
+          ) : (
+            <Store className="h-6 w-6 shrink-0 opacity-60" style={{ color: primary }} />
+          )}
           <div className="min-w-0">
             <h3 className="font-medium text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
             {b.city && <p className="text-xs opacity-50"><MapPin className="h-3 w-3 inline mr-1" />{b.city}{b.state ? `, ${b.state}` : ""}</p>}
@@ -283,10 +396,32 @@ function StoresList({ items, primary, cardBg, fontHeading, fg }: any) {
   );
 }
 
-function BannerPlaceholder() {
+function BannerCarousel({ items }: { items: any[] }) {
+  const [current, setCurrent] = useState(0);
+  const banners = items.filter((i) => i.image_url);
+
+  if (!banners.length) {
+    return (
+      <div className="rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20 h-48 flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Banner Carousel — configure banners no painel admin</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20 h-48 flex items-center justify-center">
-      <p className="text-sm text-muted-foreground">Banner Carousel — configure banners no painel admin</p>
+    <div className="relative rounded-xl overflow-hidden h-48">
+      <LazyImage src={banners[current]?.image_url} alt="Banner" className="h-48 w-full" />
+      {banners.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`h-2 w-2 rounded-full transition-colors ${i === current ? "bg-white" : "bg-white/40"}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
