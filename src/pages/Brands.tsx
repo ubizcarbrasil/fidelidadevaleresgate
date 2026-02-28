@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -7,19 +8,26 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Power } from "lucide-react";
 import { toast } from "sonner";
+import { DataTableControls } from "@/components/DataTableControls";
+import { useDebounce } from "@/hooks/useDebounce";
+
+const PAGE_SIZE = 20;
 
 export default function Brands() {
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
 
-  const { data: brands, isLoading } = useQuery({
-    queryKey: ["brands"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["brands", debouncedSearch, page],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("*, tenants(name)")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("brands").select("*, tenants(name)", { count: "exact" });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,slug.ilike.%${debouncedSearch}%`);
+      query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data;
+      return { rows: data, count: count ?? 0 };
     },
   });
 
@@ -28,14 +36,9 @@ export default function Brands() {
       const { error } = await supabase.from("brands").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["brands"] });
-      toast.success("Status atualizado!");
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["brands"] }); toast.success("Status atualizado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
-
-  if (isLoading) return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
   return (
     <div className="space-y-6">
@@ -44,52 +47,31 @@ export default function Brands() {
           <h2 className="text-2xl font-bold tracking-tight">Brands</h2>
           <p className="text-muted-foreground">Gerencie as marcas dos tenants</p>
         </div>
-        <Button asChild>
-          <Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Brand</Link>
-        </Button>
+        <Button asChild><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Brand</Link></Button>
       </div>
-
+      <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome ou slug..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Lista de Brands</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-base">Lista de Brands</CardTitle></CardHeader>
         <CardContent>
+          {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
+            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Tenant</TableHead><TableHead>Slug</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {brands?.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma brand cadastrada</TableCell></TableRow>
-              )}
-              {brands?.map((b) => (
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma brand cadastrada</TableCell></TableRow>}
+              {data?.rows?.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.name}</TableCell>
                   <TableCell className="text-muted-foreground">{(b.tenants as any)?.name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{b.slug}</TableCell>
-                  <TableCell>
-                    <Badge variant={b.is_active ? "default" : "destructive"}>
-                      {b.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
+                  <TableCell><Badge variant={b.is_active ? "default" : "destructive"}>{b.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to={`/brands/${b.id}`}><Pencil className="h-4 w-4" /></Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}>
-                      <Power className="h-4 w-4" />
-                    </Button>
+                    <Button variant="ghost" size="icon" asChild><Link to={`/brands/${b.id}`}><Pencil className="h-4 w-4" /></Link></Button>
+                    <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}><Power className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table>)}
         </CardContent>
       </Card>
     </div>
