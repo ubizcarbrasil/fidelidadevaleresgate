@@ -57,6 +57,8 @@ import SendNotificationPage from "@/pages/SendNotificationPage";
 import IconLibraryPage from "@/pages/IconLibraryPage";
 import BannerManagerPage from "@/pages/BannerManagerPage";
 import MenuLabelsPage from "@/pages/MenuLabelsPage";
+import PageBuilderPage from "@/pages/PageBuilderPage";
+import CustomPage from "@/pages/customer/CustomPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -68,6 +70,7 @@ function AppRoutes() {
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/customer-preview" element={<CustomerPreviewPage />} />
+      <Route path="/p/:slug" element={<CustomPage />} />
       <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
       <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
       <Route
@@ -122,6 +125,7 @@ function AppRoutes() {
         <Route path="icon-library" element={<IconLibraryPage />} />
         <Route path="banner-manager" element={<BannerManagerPage />} />
         <Route path="menu-labels" element={<MenuLabelsPage />} />
+        <Route path="page-builder" element={<PageBuilderPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
