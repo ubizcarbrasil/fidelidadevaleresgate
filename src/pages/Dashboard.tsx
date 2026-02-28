@@ -73,27 +73,33 @@ export default function Dashboard() {
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
 
   // Redemptions chart for selected period
+  async function fetchChartData(table: string) {
+    const days: { label: string; count: number }[] = [];
+    for (let i = periodDays - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const start = new Date(d); start.setHours(0, 0, 0, 0);
+      const end = new Date(d); end.setHours(23, 59, 59, 999);
+      const { count } = await (supabase.from as any)(table)
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", start.toISOString())
+        .lte("created_at", end.toISOString());
+      const fmt = periodDays <= 7
+        ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+        : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      days.push({ label: fmt, count: count || 0 });
+    }
+    return days;
+  }
+
   const { data: recentRedemptions } = useQuery({
     queryKey: ["redemptions-chart", period],
-    queryFn: async () => {
-      const days: { label: string; count: number }[] = [];
-      for (let i = periodDays - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const start = new Date(d); start.setHours(0, 0, 0, 0);
-        const end = new Date(d); end.setHours(23, 59, 59, 999);
-        const { count } = await supabase
-          .from("redemptions")
-          .select("*", { count: "exact", head: true })
-          .gte("created_at", start.toISOString())
-          .lte("created_at", end.toISOString());
-        const fmt = periodDays <= 7
-          ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
-          : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-        days.push({ label: fmt, count: count || 0 });
-      }
-      return days;
-    },
+    queryFn: () => fetchChartData("redemptions"),
+  });
+
+  const { data: recentEarnings } = useQuery({
+    queryKey: ["earnings-chart", period],
+    queryFn: () => fetchChartData("earning_events"),
   });
 
   const offersPie = [
@@ -175,7 +181,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Redemptions 7-day chart */}
+        {/* Redemptions chart */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Resgates — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
@@ -196,7 +202,30 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Offers distribution pie */}
+        {/* Earnings chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Acúmulos — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!recentEarnings ? (
+              <Skeleton className="h-[200px] w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={recentEarnings}>
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={30} />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                  <Bar dataKey="count" name="Acúmulos" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pies */}
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Distribuição de Ofertas</CardTitle>
