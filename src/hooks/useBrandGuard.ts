@@ -70,12 +70,13 @@ export function useBrandGuard() {
   }, [isRootAdmin, currentBranchId]);
 
   /** Determine user console scope */
-  const consoleScope = useMemo((): "ROOT" | "TENANT" | "BRAND" | "BRANCH" | "OPERATOR" => {
+  const consoleScope = useMemo((): "ROOT" | "TENANT" | "BRAND" | "BRANCH" | "OPERATOR" | "STORE_ADMIN" => {
     if (isRootAdmin) return "ROOT";
     if (roles.some(r => r.role === "tenant_admin")) return "TENANT";
     if (roles.some(r => r.role === "brand_admin")) return "BRAND";
     if (roles.some(r => r.role === "branch_admin")) return "BRANCH";
     if (roles.some(r => r.role === "branch_operator" || r.role === "operator_pdv")) return "OPERATOR";
+    if (roles.some(r => r.role === "store_admin")) return "STORE_ADMIN";
     return "BRANCH";
   }, [isRootAdmin, roles]);
 

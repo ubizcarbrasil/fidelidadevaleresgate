@@ -80,13 +80,7 @@ export default function StoreApprovalsPage() {
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
-      // Assign store_admin role to owner
-      if (selected.owner_user_id) {
-        await supabase.from("user_roles").insert({
-          user_id: selected.owner_user_id,
-          role: "store_admin" as any,
-        }).select();
-      }
+      // store_admin role is auto-assigned by DB trigger (trg_auto_assign_store_admin)
       toast({ title: "Loja aprovada!" });
       setSelected(null);
       fetchStores();

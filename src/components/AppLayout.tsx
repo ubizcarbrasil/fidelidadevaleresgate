@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { RootSidebar } from "@/components/consoles/RootSidebar";
@@ -13,10 +13,16 @@ const CONSOLE_TITLES: Record<string, string> = {
   BRAND: "Brand Console",
   BRANCH: "Branch Console",
   OPERATOR: "Operador PDV",
+  STORE_ADMIN: "Painel do Lojista",
 };
 
 export default function AppLayout() {
   const { consoleScope } = useBrandGuard();
+
+  // Store admins should use the dedicated store panel
+  if (consoleScope === "STORE_ADMIN") {
+    return <Navigate to="/store-panel" replace />;
+  }
 
   const SidebarComponent = {
     ROOT: RootSidebar,
