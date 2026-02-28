@@ -44,6 +44,10 @@ export default function BrandForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenantId) {
+      toast.error("Selecione um tenant");
+      return;
+    }
     setLoading(true);
     const payload = { name, slug, tenant_id: tenantId, is_active: isActive };
 
@@ -69,7 +73,7 @@ export default function BrandForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Tenant</Label>
-              <Select value={tenantId} onValueChange={setTenantId} required>
+              <Select value={tenantId} onValueChange={setTenantId}>
                 <SelectTrigger><SelectValue placeholder="Selecione um tenant" /></SelectTrigger>
                 <SelectContent>
                   {tenants?.map((t) => (
