@@ -1352,6 +1352,88 @@ export type Database = {
         }
         Relationships: []
       }
+      store_catalog_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          order_index: number
+          price: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          order_index?: number
+          price?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          price?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_catalog_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_documents: {
+        Row: {
+          document_type: string
+          file_name: string | null
+          file_url: string
+          id: string
+          store_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          document_type: string
+          file_name?: string | null
+          file_url: string
+          id?: string
+          store_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          document_type?: string
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          store_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_documents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_points_rules: {
         Row: {
           approved_at: string | null
@@ -1425,45 +1507,105 @@ export type Database = {
       stores: {
         Row: {
           address: string | null
+          approval_status: Database["public"]["Enums"]["store_approval_status"]
+          approved_at: string | null
+          banner_url: string | null
           branch_id: string
           brand_id: string
           category: string | null
+          cnpj: string | null
           created_at: string
+          description: string | null
+          email: string | null
+          gallery_urls: string[] | null
           id: string
+          instagram: string | null
           is_active: boolean
           logo_url: string | null
           name: string
+          owner_user_id: string | null
+          phone: string | null
+          points_per_real: number | null
+          rejection_reason: string | null
+          segment: string | null
+          site_url: string | null
           slug: string
+          store_type: Database["public"]["Enums"]["store_type"]
+          submitted_at: string | null
+          tags: string[] | null
           updated_at: string
+          video_url: string | null
           whatsapp: string | null
+          wizard_data_json: Json | null
+          wizard_step: number | null
         }
         Insert: {
           address?: string | null
+          approval_status?: Database["public"]["Enums"]["store_approval_status"]
+          approved_at?: string | null
+          banner_url?: string | null
           branch_id: string
           brand_id: string
           category?: string | null
+          cnpj?: string | null
           created_at?: string
+          description?: string | null
+          email?: string | null
+          gallery_urls?: string[] | null
           id?: string
+          instagram?: string | null
           is_active?: boolean
           logo_url?: string | null
           name: string
+          owner_user_id?: string | null
+          phone?: string | null
+          points_per_real?: number | null
+          rejection_reason?: string | null
+          segment?: string | null
+          site_url?: string | null
           slug: string
+          store_type?: Database["public"]["Enums"]["store_type"]
+          submitted_at?: string | null
+          tags?: string[] | null
           updated_at?: string
+          video_url?: string | null
           whatsapp?: string | null
+          wizard_data_json?: Json | null
+          wizard_step?: number | null
         }
         Update: {
           address?: string | null
+          approval_status?: Database["public"]["Enums"]["store_approval_status"]
+          approved_at?: string | null
+          banner_url?: string | null
           branch_id?: string
           brand_id?: string
           category?: string | null
+          cnpj?: string | null
           created_at?: string
+          description?: string | null
+          email?: string | null
+          gallery_urls?: string[] | null
           id?: string
+          instagram?: string | null
           is_active?: boolean
           logo_url?: string | null
           name?: string
+          owner_user_id?: string | null
+          phone?: string | null
+          points_per_real?: number | null
+          rejection_reason?: string | null
+          segment?: string | null
+          site_url?: string | null
           slug?: string
+          store_type?: Database["public"]["Enums"]["store_type"]
+          submitted_at?: string | null
+          tags?: string[] | null
           updated_at?: string
+          video_url?: string | null
           whatsapp?: string | null
+          wizard_data_json?: Json | null
+          wizard_step?: number | null
         }
         Relationships: [
           {
@@ -1749,7 +1891,13 @@ export type Database = {
         | "STORES_GRID"
         | "STORES_LIST"
         | "VOUCHERS_CARDS"
+      store_approval_status:
+        | "DRAFT"
+        | "PENDING_APPROVAL"
+        | "APPROVED"
+        | "REJECTED"
       store_rule_status: "ACTIVE" | "PENDING_APPROVAL" | "REJECTED"
+      store_type: "RECEPTORA" | "EMISSORA" | "MISTA"
       voucher_status: "active" | "expired" | "depleted" | "cancelled"
     }
     CompositeTypes: {
@@ -1914,7 +2062,14 @@ export const Constants = {
         "STORES_LIST",
         "VOUCHERS_CARDS",
       ],
+      store_approval_status: [
+        "DRAFT",
+        "PENDING_APPROVAL",
+        "APPROVED",
+        "REJECTED",
+      ],
       store_rule_status: ["ACTIVE", "PENDING_APPROVAL", "REJECTED"],
+      store_type: ["RECEPTORA", "EMISSORA", "MISTA"],
       voucher_status: ["active", "expired", "depleted", "cancelled"],
     },
   },

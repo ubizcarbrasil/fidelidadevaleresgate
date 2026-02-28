@@ -46,6 +46,9 @@ import PointsLedgerPage from "@/pages/PointsLedgerPage";
 import StorePointsRulePage from "@/pages/StorePointsRulePage";
 import ApproveStoreRulesPage from "@/pages/ApproveStoreRulesPage";
 import CustomerPreviewPage from "@/pages/CustomerPreviewPage";
+import StoreRegistrationWizard from "@/pages/StoreRegistrationWizard";
+import StoreApprovalsPage from "@/pages/StoreApprovalsPage";
+import StoreOwnerPanel from "@/pages/StoreOwnerPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +59,8 @@ function AppRoutes() {
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/customer-preview" element={<CustomerPreviewPage />} />
+      <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
+      <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
       <Route
         path="/"
         element={
@@ -100,6 +105,7 @@ function AppRoutes() {
         <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
         <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
         <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
+        <Route path="store-approvals" element={<StoreApprovalsPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
