@@ -32,7 +32,7 @@ const formatCpf = (value: string) => {
 
 const maskCpf = (cpf: string) => {
   if (!cpf || cpf.length < 11) return cpf || "—";
-  return `${cpf.slice(0, 3)}.***.*${cpf.slice(9, 11)}-${cpf.slice(9)}`;
+  return `${cpf.slice(0, 3)}.***.**${cpf.slice(9, 11)}-${cpf.slice(9)}`;
 };
 
 export default function OperatorRedeemPage() {
