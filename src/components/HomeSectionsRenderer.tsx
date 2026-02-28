@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag } from "lucide-react";
+import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Voucher = Tables<"vouchers">;
@@ -180,11 +180,22 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     const fetchItems = async () => {
       setLoading(true);
 
-      if (templateType === "VOUCHERS_CARDS" || source.source_type === "OFFERS") {
+      if (templateType === "VOUCHERS_CARDS") {
         let query = supabase
           .from("vouchers")
           .select("*")
           .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(source.limit || 10);
+        if (branchId) query = query.eq("branch_id", branchId);
+        const { data } = await query;
+        setItems(data || []);
+      } else if (source.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID") {
+        let query = supabase
+          .from("offers")
+          .select("*, stores(name, logo_url)")
+          .eq("is_active", true)
+          .eq("status", "ACTIVE")
           .order("created_at", { ascending: false })
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
@@ -320,32 +331,38 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg }: any
   return (
     <div className="max-w-lg mx-auto">
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((v: Voucher, idx: number) => (
+        {items.map((o: any, idx: number) => (
           <div
-            key={v.id}
+            key={o.id}
             className="min-w-[180px] max-w-[200px] flex-shrink-0 rounded-[18px] overflow-hidden bg-white"
             style={{
               boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
               scrollSnapAlign: "start",
             }}
           >
-            <div className="px-3 py-2.5" style={{ backgroundColor: `${primary}08` }}>
-              <div className="flex items-center justify-between">
+            {o.image_url ? (
+              <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+            ) : (
+              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                <ShoppingBag className="h-8 w-8" style={{ color: `${primary}40` }} />
+              </div>
+            )}
+            <div className="px-3 py-2.5">
+              <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+              {o.stores?.name && (
+                <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}40` }}>{o.stores.name}</p>
+              )}
+              <div className="flex items-center justify-between mt-1.5">
                 <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
-                  {v.discount_percent}% OFF
+                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                 </span>
-                {idx < 2 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: primary }}>
-                    Novo
-                  </span>
+                {o.likes_count > 0 && (
+                  <div className="flex items-center gap-0.5 text-[10px]" style={{ color: `${fg}35` }}>
+                    <Heart className="h-2.5 w-2.5" />
+                    {o.likes_count}
+                  </div>
                 )}
               </div>
-            </div>
-            <div className="px-3 py-2.5">
-              <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{v.title}</h3>
-              {v.campaign && (
-                <p className="text-[10px] mt-0.5" style={{ color: `${fg}40` }}>{v.campaign}</p>
-              )}
             </div>
           </div>
         ))}
@@ -360,28 +377,35 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg }
   return (
     <div className="max-w-lg mx-auto px-5">
       <div className="grid grid-cols-2 gap-3">
-        {items.map((v: Voucher) => (
+        {items.map((o: any) => (
           <div
-            key={v.id}
+            key={o.id}
             className="rounded-[18px] overflow-hidden bg-white"
             style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
           >
-            <div className="px-3 py-2.5" style={{ backgroundColor: `${primary}06` }}>
-              <div className="flex items-center gap-1">
-                <Percent className="h-3 w-3" style={{ color: primary }} />
-                <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
-                  {v.discount_percent}% OFF
-                </span>
+            {o.image_url ? (
+              <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+            ) : (
+              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}40` }} />
               </div>
-            </div>
+            )}
             <div className="px-3 py-2.5">
-              <h3 className="font-semibold text-xs truncate mb-0.5" style={{ fontFamily: fontHeading }}>{v.title}</h3>
-              {v.expires_at && (
-                <div className="flex items-center gap-1 text-[10px]" style={{ color: `${fg}35` }}>
-                  <Clock className="h-2.5 w-2.5" />
-                  {new Date(v.expires_at).toLocaleDateString("pt-BR")}
-                </div>
+              <h3 className="font-semibold text-xs truncate mb-0.5" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+              {o.stores?.name && (
+                <p className="text-[10px] truncate" style={{ color: `${fg}40` }}>{o.stores.name}</p>
               )}
+              <div className="flex items-center justify-between mt-1">
+                <span className="font-bold text-xs" style={{ color: primary }}>
+                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                </span>
+                {o.end_at && (
+                  <div className="flex items-center gap-0.5 text-[9px]" style={{ color: `${fg}35` }}>
+                    <Clock className="h-2.5 w-2.5" />
+                    {new Date(o.end_at).toLocaleDateString("pt-BR")}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
