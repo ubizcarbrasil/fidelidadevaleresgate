@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,21 @@ import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, R
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type PeriodKey = "today" | "7d" | "30d";
+
+function getPeriodStart(period: PeriodKey): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (period === "7d") d.setDate(d.getDate() - 6);
+  if (period === "30d") d.setDate(d.getDate() - 29);
+  return d;
+}
+
+function getPeriodDays(period: PeriodKey): number {
+  return period === "today" ? 1 : period === "7d" ? 7 : 30;
+}
 
 function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string) {
   return useQuery({
@@ -22,10 +38,13 @@ function useMetric(table: string, enabled = true, filter?: (q: any) => any, filt
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted-foreground))", "hsl(var(--destructive))"];
 
 export default function Dashboard() {
+  const [period, setPeriod] = useState<PeriodKey>("7d");
   const { consoleScope } = useBrandGuard();
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
   const showBrand = ["ROOT", "TENANT", "BRAND"].includes(consoleScope);
+  const periodStart = getPeriodStart(period);
+  const periodDays = getPeriodDays(period);
 
   const { data: tenants } = useMetric("tenants", isRoot);
   const { data: brands } = useMetric("brands", showTenant);
@@ -45,16 +64,14 @@ export default function Dashboard() {
   const { data: vouchersActive } = useMetric("vouchers", true, (q: any) => q.eq("status", "active"), "active");
   const { data: usersCount } = useMetric("profiles", showBrand);
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const { data: redemptionsToday } = useMetric("redemptions", true, (q: any) => q.gte("created_at", todayStart.toISOString()), "today");
+  const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
 
-  // Recent 7-day redemptions for chart
+  // Redemptions chart for selected period
   const { data: recentRedemptions } = useQuery({
-    queryKey: ["redemptions-7days"],
+    queryKey: ["redemptions-chart", period],
     queryFn: async () => {
       const days: { label: string; count: number }[] = [];
-      for (let i = 6; i >= 0; i--) {
+      for (let i = periodDays - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const start = new Date(d); start.setHours(0, 0, 0, 0);
@@ -64,7 +81,10 @@ export default function Dashboard() {
           .select("*", { count: "exact", head: true })
           .gte("created_at", start.toISOString())
           .lte("created_at", end.toISOString());
-        days.push({ label: d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""), count: count || 0 });
+        const fmt = periodDays <= 7
+          ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+          : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+        days.push({ label: fmt, count: count || 0 });
       }
       return days;
     },
@@ -84,7 +104,7 @@ export default function Dashboard() {
     { title: "Lojas", value: storesTotal, sub: `${storesActive ?? 0} ativas`, icon: ShoppingBag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Ofertas Ativas", value: offersActive, sub: `${offersTotal ?? 0} total`, icon: Tag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Clientes", value: customersTotal, sub: `${customersActive ?? 0} ativos`, icon: UserCheck, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Resgates Hoje", value: redemptionsToday, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Resgates no Período", value: redemptionsPeriod, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Vouchers Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Usuários", value: usersCount, icon: Users, scopes: ["ROOT", "TENANT", "BRAND"] },
   ];
@@ -101,9 +121,21 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
+        </div>
+        <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Hoje</SelectItem>
+            <SelectItem value="7d">7 dias</SelectItem>
+            <SelectItem value="30d">30 dias</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* KPI Cards */}
@@ -131,7 +163,7 @@ export default function Dashboard() {
         {/* Redemptions 7-day chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Resgates — Últimos 7 dias</CardTitle>
+            <CardTitle className="text-base">Resgates — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
           </CardHeader>
           <CardContent>
             {!recentRedemptions ? (
