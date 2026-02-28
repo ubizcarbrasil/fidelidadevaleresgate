@@ -1,12 +1,19 @@
+import { useState } from "react";
 import { useBrand } from "@/contexts/BrandContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { CustomerProvider } from "@/contexts/CustomerContext";
 import BranchSelector from "@/components/BranchSelector";
+import CustomerLayout from "@/components/customer/CustomerLayout";
+import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
 import PublicVouchers from "@/pages/PublicVouchers";
 import { Loader2 } from "lucide-react";
 
 export default function WhiteLabelLayout() {
   const { brand, loading, selectedBranch, branches } = useBrand();
+  const { user, loading: authLoading } = useAuth();
+  const [guestMode, setGuestMode] = useState(false);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -27,5 +34,20 @@ export default function WhiteLabelLayout() {
     return <BranchSelector />;
   }
 
-  return <PublicVouchers />;
+  // Guest mode: show public vouchers
+  if (guestMode && !user) {
+    return <PublicVouchers />;
+  }
+
+  // Not authenticated: show auth page
+  if (!user) {
+    return <CustomerAuthPage onSkip={() => setGuestMode(true)} />;
+  }
+
+  // Authenticated: show customer app
+  return (
+    <CustomerProvider>
+      <CustomerLayout />
+    </CustomerProvider>
+  );
 }
