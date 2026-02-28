@@ -52,6 +52,8 @@ import StoreApprovalsPage from "@/pages/StoreApprovalsPage";
 import StoreOwnerPanel from "@/pages/StoreOwnerPanel";
 import AffiliateDealsPage from "@/pages/AffiliateDealsPage";
 import StoreCatalogPage from "@/pages/StoreCatalogPage";
+import ReportsPage from "@/pages/ReportsPage";
+import SendNotificationPage from "@/pages/SendNotificationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -111,6 +113,8 @@ function AppRoutes() {
         <Route path="store-approvals" element={<StoreApprovalsPage />} />
         <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
         <Route path="store-catalog" element={<ModuleGuard moduleKey="stores"><StoreCatalogPage /></ModuleGuard>} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="send-notification" element={<SendNotificationPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
