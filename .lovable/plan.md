@@ -1,76 +1,176 @@
 
 
-## Plan: Redesign Completo da Home do Cliente (Inspirado no Meliuz)
+## Plan: Upload com Recorte, Galeria de Ícones, Central de Banners, Organização Admin e Nomes Configuráveis
 
-### 1. Fix critico: erro de hooks no `/customer-preview`
+Este plano cobre 5 frentes novas solicitadas.
 
-**Arquivo**: `src/App.tsx` (linha 145)
-- Substituir `if (loading) return null` por um spinner inline para manter hook count estavel
+---
 
-### 2. DB Migration: adicionar colunas de personalização em `brand_sections`
+### 1. Upload de Imagem com Recorte (Image Cropper)
 
-Adicionar a `brand_sections`:
-- `banner_image_url text` -- banner de identificação da seção
-- `banner_height text DEFAULT 'medium'` -- small/medium/large
-- `display_mode text DEFAULT 'carousel'` -- carousel/grid/list
+**Problema**: Hoje o `ImageUploadField` só faz upload direto, sem recorte.
 
-### 3. Novo template type: `STORES_HIGHLIGHT` (lista horizontal com cashback/badges)
+**Solução**:
+- Criar componente `ImageCropDialog.tsx` usando a lib `react-image-crop` (ou implementação nativa com canvas)
+- Ao selecionar arquivo, abrir modal com preview + crop area (aspect ratio configurável)
+- Botão "Recortar e Salvar" gera o blob recortado via Canvas API e faz upload ao Storage
+- Integrar no `ImageUploadField` existente -- após selecionar arquivo, abre o crop dialog antes de enviar
+- Aplicar em todos os lugares que usam imagem: BrandSectionsManager, BrandThemeEditor, StoreProfileTab, etc.
 
-Inspirado nas screenshots (Lojas em destaque com logo, nome, "Até X% cashback", badges "ÚLTIMAS HORAS" / "IMPERDÍVEL"), esse layout aparece em varias seções do Meliuz. Usar o campo `visual_json` existente para configurar badges e textos de destaque por item.
-
-### 4. Redesign `HomeSectionsRenderer.tsx`
-
-Refatorar completamente os componentes de seção:
-
-- **Separadores claros entre seções**: linha fina + padding generoso (já existe parcialmente, melhorar)
-- **Header de seção**: titulo bold à esquerda + "Abrir todas" em cor primary à direita (como Meliuz)
-- **Banner dentro da seção**: renderizar `banner_image_url` como banner arredondado (18-28px) acima dos items
-- **Carrossel de lojas estilo grid 4x2**: logo arredondado + nome truncado + "Até X%" bold + "Era X%" cinza (como nas screenshots)
-- **Lista horizontal de lojas com badges**: logo + nome + cashback + badges coloridos
-- **Cupons estilo ticket**: cards rosa com logo + "CUPOM X% OFF" + botão "PEGAR CUPOM" (como na screenshot IMG_3270)
-- **"Mostrar mais" / "Abrir todas"**: CTA que abre overlay fullscreen com lista + busca
-
-### 5. Nova página `SectionDetailOverlay.tsx`
-
-Quando clicar "Abrir todas":
-- Header com titulo + voltar
-- Banner de identificação (se configurado)
-- Barra de busca
-- Lista vertical de items (logo + nome + cashback + badges) como na screenshot IMG_3264
-- Integrado ao `CustomerNavContext`
-
-### 6. Melhorar `BrandSectionsManager.tsx` (admin)
-
-Adicionar campos no dialog de criação/edição:
-- Upload de banner image da seção
-- Seletor de altura do banner (small/medium/large)
-- Seletor de modo de exibição
-
-### 7. Visual polish
-
-- Shimmer animation nos Skeletons (`src/index.css`)
-- Migrar fetching do `HomeSectionsRenderer` para `useQuery`
-- Framer Motion staggered entry nos cards
-
-### Arquivos a criar/editar
-
+**Arquivos**:
 | Arquivo | Ação |
 |---|---|
-| `src/App.tsx` | Fix hook (linha 145) |
-| DB migration | Colunas banner em brand_sections |
-| `src/components/HomeSectionsRenderer.tsx` | Redesign completo com novos layouts |
-| `src/components/customer/SectionDetailOverlay.tsx` | **Novo** |
-| `src/components/customer/CustomerLayout.tsx` | Registrar SectionDetailOverlay no nav |
-| `src/components/BrandSectionsManager.tsx` | Campos de banner/display mode |
-| `src/index.css` | Shimmer keyframes |
+| `src/components/ImageCropDialog.tsx` | **Novo** - Modal de recorte com canvas |
+| `src/components/ImageUploadField.tsx` | Integrar crop dialog antes do upload |
 
-### Ordem de implementação
+---
 
-1. Fix hooks `App.tsx`
-2. DB migration
-3. Redesign HomeSectionsRenderer (novos layouts de seção)
-4. SectionDetailOverlay
-5. Integrar no CustomerLayout
-6. Admin: campos de banner no BrandSectionsManager
-7. Shimmer + polish
+### 2. Galeria de Ícones
+
+**DB Migration** - Nova tabela `icon_library`:
+- `id uuid PK`
+- `brand_id uuid` (nullable = ícones globais)
+- `name text`
+- `category text` (ex: "ações", "categorias", "social")
+- `icon_type text` -- "lucide" (nativo) ou "custom"
+- `lucide_name text` -- nome do ícone lucide (se nativo)
+- `image_url text` -- URL da imagem (se custom)
+- `color text`
+- `is_active boolean DEFAULT true`
+- `created_at timestamp`
+
+**Componentes**:
+| Arquivo | Ação |
+|---|---|
+| `src/pages/IconLibraryPage.tsx` | **Novo** - CRUD de ícones com preview, busca por nome, upload de ícones custom |
+| `src/components/IconPickerDialog.tsx` | **Novo** - Seletor de ícone reutilizável (busca lucide + custom) |
+
+---
+
+### 3. Central de Gestão de Banners com Agendamento
+
+**DB Migration** - Nova tabela `banner_schedules`:
+- `id uuid PK`
+- `brand_id uuid`
+- `brand_section_id uuid` (nullable -- pode ser banner global)
+- `image_url text`
+- `title text`
+- `link_url text`
+- `link_type text` -- "external", "internal", "offer", "store"
+- `link_target_id uuid` (nullable)
+- `start_at timestamptz`
+- `end_at timestamptz` (nullable)
+- `is_active boolean DEFAULT true`
+- `order_index integer DEFAULT 0`
+- `created_at, updated_at`
+
+**Componentes**:
+| Arquivo | Ação |
+|---|---|
+| `src/pages/BannerManagerPage.tsx` | **Novo** - Central de banners: lista, agendamento, preview, vinculação a seções |
+
+Funcionalidades:
+- Criar banner com data de início/fim
+- Vincular a uma seção específica ou como banner global
+- Vincular a oferta agendada (link_type = "offer")
+- Preview visual do banner
+- Status automático baseado em datas (AGENDADO / ATIVO / EXPIRADO)
+
+---
+
+### 4. Organização do Admin por Fluxos + Descrições de Instrução
+
+**Mudança nos Sidebars**: Reorganizar os menus laterais do admin em grupos semânticos com labels descritivos.
+
+Exemplo de reorganização do `BrandSidebar`:
+```
+📊 Visão Geral
+  - Dashboard
+  
+🎨 Identidade Visual
+  - Tema & Marca
+  - Domínios
+  - Galeria de Ícones
+  
+📱 Vitrine do App
+  - Seções da Home
+  - Central de Banners
+  - Nomes e Rótulos
+  
+🏪 Operações
+  - Lojas
+  - Branches
+  - Aprovação de Lojas
+  - Importar CSV
+  
+💰 Programa de Pontos
+  - Regras de Pontos
+  - Extrato de Pontos
+  
+👥 Usuários & Permissões
+  - Usuários
+  - Módulos
+```
+
+**Descrições de instrução**: Cada página admin terá um cabeçalho com título + descrição curta de como usar aquela funcionalidade. Criar componente `PageHeader.tsx` reutilizável com `title`, `description` e opcional `helpLink`.
+
+**Arquivos**:
+| Arquivo | Ação |
+|---|---|
+| `src/components/PageHeader.tsx` | **Novo** - Header com título + descrição instrucional |
+| `src/components/consoles/BrandSidebar.tsx` | Reorganizar em SidebarGroups por fluxo |
+| `src/components/consoles/RootSidebar.tsx` | Idem |
+| `src/components/consoles/TenantSidebar.tsx` | Idem |
+| Todas as páginas admin | Adicionar PageHeader com descrição |
+
+---
+
+### 5. Configuração de Nomes dos Menus (Admin + App)
+
+**DB Migration** - Nova tabela `menu_labels`:
+- `id uuid PK`
+- `brand_id uuid`
+- `context text` -- "admin" ou "customer_app"
+- `key text` -- identificador do menu (ex: "sidebar.dashboard", "app.ofertas")
+- `custom_label text`
+- `created_at, updated_at`
+- `UNIQUE(brand_id, context, key)`
+
+**Componentes**:
+| Arquivo | Ação |
+|---|---|
+| `src/pages/MenuLabelsPage.tsx` | **Novo** - Tabela editável com todos os rótulos de menu, separados por contexto (Admin / App) |
+| `src/hooks/useMenuLabels.ts` | **Novo** - Hook que carrega labels custom e faz fallback para o padrão |
+
+**Integração**:
+- Sidebars usam `useMenuLabels("admin")` para buscar nomes custom
+- `CustomerLayout` usa `useMenuLabels("customer_app")` para bottom nav e quick actions
+- Cada label tem um `key` fixo e um `custom_label` editável
+
+---
+
+### Ordem de Implementação
+
+1. **ImageCropDialog** + integrar no ImageUploadField
+2. **DB migrations** (icon_library, banner_schedules, menu_labels)
+3. **Galeria de Ícones** (IconLibraryPage + IconPickerDialog)
+4. **Central de Banners** (BannerManagerPage)
+5. **PageHeader** + reorganizar Sidebars por fluxo
+6. **MenuLabelsPage** + useMenuLabels hook
+7. Integrar labels nos sidebars e customer app
+
+### Resumo de Migrações DB
+
+```sql
+-- 1. icon_library
+CREATE TABLE public.icon_library (...)
+
+-- 2. banner_schedules  
+CREATE TABLE public.banner_schedules (...)
+
+-- 3. menu_labels
+CREATE TABLE public.menu_labels (...)
+```
+
+Todas com RLS: leitura pública para items ativos, gestão restrita a brand/tenant/root admins.
 
