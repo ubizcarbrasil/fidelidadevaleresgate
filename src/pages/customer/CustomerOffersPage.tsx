@@ -66,10 +66,8 @@ export default function CustomerOffersPage() {
 
   // Redemption now happens via the detail page with CPF input
   // This quick-redeem handler is kept for backwards compat but will be removed
-  const handleRedeem = async (offer: Offer) => {
-    if (!customer || !brand || !selectedBranch) return;
-    // Redirect to detail page for CPF-required flow
-    toast({ title: "Abra a oferta para resgatar", description: "Toque na oferta para informar seu CPF e gerar o PIN." });
+  const handleRedeem = (offer: Offer) => {
+    openOffer(offer);
   };
 
   if (loading) {
