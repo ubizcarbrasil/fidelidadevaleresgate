@@ -21,6 +21,7 @@ import BranchForm from "@/pages/BranchForm";
 import Vouchers from "@/pages/Vouchers";
 import VoucherForm from "@/pages/VoucherForm";
 import VoucherRedeem from "@/pages/VoucherRedeem";
+import BrandDomains from "@/pages/BrandDomains";
 import UsersPage from "@/pages/UsersPage";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => (
                   <Route path="vouchers/new" element={<VoucherForm />} />
                   <Route path="vouchers/redeem" element={<VoucherRedeem />} />
                   <Route path="vouchers/:id" element={<VoucherForm />} />
+                  <Route path="domains" element={<BrandDomains />} />
                   <Route path="users" element={<UsersPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
