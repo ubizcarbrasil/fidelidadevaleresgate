@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutTemplate,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutTemplate, FileSpreadsheet,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -26,6 +26,7 @@ const operationItems = [
   { title: "Clientes", url: "/customers", icon: UserCheck },
   { title: "Resgates", url: "/redemptions", icon: ReceiptText },
   { title: "Vouchers", url: "/vouchers", icon: Ticket },
+  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
 ];
 
 const platformItems = [
