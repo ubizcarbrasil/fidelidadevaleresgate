@@ -147,6 +147,54 @@ export type Database = {
           },
         ]
       }
+      brand_modules: {
+        Row: {
+          brand_id: string
+          config_json: Json
+          created_at: string
+          id: string
+          is_enabled: boolean
+          module_definition_id: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          config_json?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          config_json?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_modules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_modules_module_definition_id_fkey"
+            columns: ["module_definition_id"]
+            isOneToOne: false
+            referencedRelation: "module_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_section_manual_items: {
         Row: {
           brand_section_id: string
@@ -553,6 +601,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      module_definitions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_core: boolean
+          key: string
+          name: string
+          schema_json: Json
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_core?: boolean
+          key: string
+          name: string
+          schema_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_core?: boolean
+          key?: string
+          name?: string
+          schema_json?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       offers: {
         Row: {

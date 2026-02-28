@@ -1,4 +1,4 @@
-import { Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users, FileSpreadsheet } from "lucide-react";
+import { Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users, FileSpreadsheet, Blocks } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ const configItems = [
   { title: "Tema & Marca", url: "/brands", icon: Palette },
   { title: "Domínios", url: "/domains", icon: Globe },
   { title: "Home Sections", url: "/templates", icon: Layout },
+  { title: "Módulos", url: "/brand-modules", icon: Blocks },
   { title: "Branches", url: "/branches", icon: MapPin },
   { title: "Usuários", url: "/users", icon: Users },
   { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
