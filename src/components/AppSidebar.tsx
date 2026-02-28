@@ -1,5 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -11,13 +12,27 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
+const coreItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Tenants", url: "/tenants", icon: Building2 },
   { title: "Brands", url: "/brands", icon: Store },
   { title: "Branches", url: "/branches", icon: MapPin },
-  { title: "Vouchers", url: "/vouchers", icon: Ticket },
   { title: "Domínios", url: "/domains", icon: Globe },
+];
+
+const operationItems = [
+  { title: "Lojas", url: "/stores", icon: ShoppingBag },
+  { title: "Ofertas", url: "/offers", icon: Tag },
+  { title: "Clientes", url: "/customers", icon: UserCheck },
+  { title: "Resgates", url: "/redemptions", icon: ReceiptText },
+  { title: "Vouchers", url: "/vouchers", icon: Ticket },
+];
+
+const platformItems = [
+  { title: "Módulos", url: "/modules", icon: Blocks },
+  { title: "Templates", url: "/templates", icon: Layout },
+  { title: "Feature Flags", url: "/flags", icon: Flag },
+  { title: "Auditoria", url: "/audit", icon: ScrollText },
   { title: "Usuários", url: "/users", icon: Users },
 ];
 
@@ -26,6 +41,26 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
+
+  const renderGroup = (label: string, items: typeof coreItems) => (
+    <SidebarGroup key={label}>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
+                <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+                  <item.icon className="h-4 w-4" />
+                  {!collapsed && <span>{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -37,30 +72,16 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Platform</span>
+              <span className="text-xs text-sidebar-foreground/60">Root Console</span>
             </div>
           )}
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Gestão</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
-                    <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderGroup("Gestão", coreItems)}
+        {renderGroup("Operação", operationItems)}
+        {renderGroup("Plataforma", platformItems)}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
