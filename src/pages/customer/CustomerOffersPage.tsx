@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { useOfferNav } from "@/components/customer/CustomerLayout";
+import { useOfferNav, useCustomerNav } from "@/components/customer/CustomerLayout";
 import type { Tables } from "@/integrations/supabase/types";
 import { Loader2, Tag, Clock, ShoppingBag, Heart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ const cardVariants = {
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
-  const { openOffer } = useOfferNav();
+  const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState<string | null>(null);
@@ -180,8 +180,13 @@ export default function CustomerOffersPage() {
                       whileTap={{ scale: 1.3 }}
                       transition={{ type: "spring", stiffness: 400, damping: 12 }}
                       className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm"
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(offer.id); }}
                     >
-                      <Heart className="h-4 w-4" style={{ color: `${fg}50` }} />
+                      <Heart
+                        className="h-4 w-4 transition-colors"
+                        fill={isFavorite(offer.id) ? primary : "none"}
+                        style={{ color: isFavorite(offer.id) ? primary : `${fg}50` }}
+                      />
                     </motion.button>
                   </div>
                 )}
