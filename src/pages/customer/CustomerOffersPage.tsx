@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { useOfferNav } from "@/components/customer/CustomerLayout";
 import type { Tables } from "@/integrations/supabase/types";
 import { Loader2, Tag, Clock, ShoppingBag, Heart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,8 @@ const cardVariants = {
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const { openOffer } = useOfferNav();
+  const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState<string | null>(null);
 
@@ -43,7 +45,7 @@ export default function CustomerOffersPage() {
       setLoading(true);
       const { data } = await supabase
         .from("offers")
-        .select("*")
+        .select("*, stores(name, logo_url)")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("status", "ACTIVE")
@@ -125,8 +127,9 @@ export default function CustomerOffersPage() {
                 initial="hidden"
                 animate="visible"
                 whileTap={{ scale: 0.98 }}
-                className="rounded-[20px] overflow-hidden bg-white"
+                className="rounded-[20px] overflow-hidden bg-white cursor-pointer"
                 style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
+                onClick={() => openOffer(offer)}
               >
                 {offer.image_url && (
                   <div className="relative">
