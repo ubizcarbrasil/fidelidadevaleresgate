@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
+import { getCurrentPosition, distanceKm, type Coords } from "@/lib/geolocation";
+import { useBrandTheme, type BrandTheme } from "@/hooks/useBrandTheme";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -13,6 +15,8 @@ interface BrandContextType {
   setSelectedBranch: (branch: Branch) => void;
   loading: boolean;
   isWhiteLabel: boolean;
+  theme: BrandTheme | null;
+  detectBranchByLocation: () => Promise<Branch | null>;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -42,6 +46,9 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   const [selectedBranch, setSelectedBranchState] = useState<Branch | null>(null);
   const [loading, setLoading] = useState(true);
   const [isWhiteLabel, setIsWhiteLabel] = useState(false);
+
+  // Apply brand theme dynamically
+  const theme = useBrandTheme(brand?.brand_settings_json);
 
   // Resolve brand from domain
   useEffect(() => {
@@ -104,6 +111,45 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     restore();
   }, [user, brand, branches]);
 
+  // Auto-detect branch by geolocation when brand has multiple branches
+  useEffect(() => {
+    if (!brand || branches.length <= 1 || selectedBranch) return;
+
+    const autoDetect = async () => {
+      const branchesWithCoords = branches.filter(
+        (b) => (b as any).latitude != null && (b as any).longitude != null
+      );
+      if (branchesWithCoords.length === 0) return;
+
+      const coords = await getCurrentPosition();
+      if (!coords) return;
+
+      const nearest = findNearestBranch(branchesWithCoords, coords);
+      if (nearest) {
+        setSelectedBranchState(nearest);
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ selected_branch_id: nearest.id })
+            .eq("id", user.id);
+        }
+      }
+    };
+    autoDetect();
+  }, [brand, branches, selectedBranch, user]);
+
+  const detectBranchByLocation = async (): Promise<Branch | null> => {
+    const branchesWithCoords = branches.filter(
+      (b) => (b as any).latitude != null && (b as any).longitude != null
+    );
+    if (branchesWithCoords.length === 0) return null;
+
+    const coords = await getCurrentPosition();
+    if (!coords) return null;
+
+    return findNearestBranch(branchesWithCoords, coords);
+  };
+
   const setSelectedBranch = async (branch: Branch) => {
     setSelectedBranchState(branch);
     if (user) {
@@ -116,11 +162,37 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <BrandContext.Provider
-      value={{ brand, branches, selectedBranch, setSelectedBranch, loading, isWhiteLabel }}
+      value={{
+        brand,
+        branches,
+        selectedBranch,
+        setSelectedBranch,
+        loading,
+        isWhiteLabel,
+        theme,
+        detectBranchByLocation,
+      }}
     >
       {children}
     </BrandContext.Provider>
   );
+}
+
+function findNearestBranch(branches: Branch[], coords: Coords): Branch | null {
+  let nearest: Branch | null = null;
+  let minDist = Infinity;
+
+  for (const b of branches) {
+    const lat = (b as any).latitude as number;
+    const lng = (b as any).longitude as number;
+    const d = distanceKm(coords, { latitude: lat, longitude: lng });
+    if (d < minDist) {
+      minDist = d;
+      nearest = b;
+    }
+  }
+
+  return nearest;
 }
 
 export function useBrand() {
