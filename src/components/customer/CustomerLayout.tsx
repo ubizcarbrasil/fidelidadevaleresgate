@@ -9,13 +9,19 @@ import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
 import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
 import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
+import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 
-// Context to allow child components to open offer/store detail
+// Context to allow child components to open offer/store detail and manage favorites
 interface CustomerNavContextType {
   openOffer: (offer: any) => void;
   openStore: (store: any) => void;
+  isFavorite: (offerId: string) => boolean;
+  toggleFavorite: (offerId: string) => void;
 }
-const CustomerNavContext = createContext<CustomerNavContextType>({ openOffer: () => {}, openStore: () => {} });
+const CustomerNavContext = createContext<CustomerNavContextType>({
+  openOffer: () => {}, openStore: () => {},
+  isFavorite: () => false, toggleFavorite: () => {},
+});
 export const useOfferNav = () => useContext(CustomerNavContext);
 export const useCustomerNav = () => useContext(CustomerNavContext);
 
@@ -52,6 +58,7 @@ export default function CustomerLayout() {
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { isFavorite, toggleFavorite } = useCustomerFavorites();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const bg = "#FAFAFA";
@@ -64,7 +71,7 @@ export default function CustomerLayout() {
   const ActivePage = TAB_CONTENT[activeTab];
 
   return (
-    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore }}>
+    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, isFavorite, toggleFavorite }}>
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
         {/* Modern Header */}
         <header className="sticky top-0 z-50" style={{ backgroundColor: cardBg }}>

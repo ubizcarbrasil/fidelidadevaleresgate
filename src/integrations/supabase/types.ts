@@ -363,6 +363,42 @@ export type Database = {
           },
         ]
       }
+      customer_favorites: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          offer_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          offer_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          offer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_favorites_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_favorites_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           branch_id: string
