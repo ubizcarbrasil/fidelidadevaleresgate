@@ -1,5 +1,6 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { CreditCard, ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, QrCode } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
@@ -13,13 +14,13 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 }
 
 const QUICK_ACTIONS = [
-  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35" },
-  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63" },
-  { key: "lojas", label: "Lojas", icon: Store, color: "#7C3AED" },
-  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669" },
-  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706" },
-  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9" },
-  { key: "qrcode", label: "QR Code", icon: QrCode, color: "#6366F1" },
+  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", tab: "offers" as const },
+  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", tab: "offers" as const },
+  { key: "lojas", label: "Lojas", icon: Store, color: "#7C3AED", tab: null },
+  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", tab: "wallet" as const },
+  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", tab: "offers" as const },
+  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", tab: null },
+  { key: "qrcode", label: "QR Code", icon: QrCode, color: "#6366F1", tab: "wallet" as const },
 ];
 
 interface CustomerHomePageProps {
@@ -29,6 +30,7 @@ interface CustomerHomePageProps {
 export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { theme } = useBrand();
+  const { navigateToTab } = useCustomerNav();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -131,6 +133,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.05 * idx, duration: 0.25 }}
                 className="flex flex-col items-center gap-1.5 min-w-[64px] py-2 active:scale-95 transition-transform"
+                onClick={() => action.tab && navigateToTab(action.tab)}
               >
                 <div
                   className="h-12 w-12 rounded-2xl flex items-center justify-center"
