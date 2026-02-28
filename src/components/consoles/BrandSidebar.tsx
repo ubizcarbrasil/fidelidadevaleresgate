@@ -2,6 +2,7 @@ import { Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users, 
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandModules } from "@/hooks/useBrandModules";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -13,11 +14,11 @@ const configItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Tema & Marca", url: "/brands", icon: Palette },
   { title: "Domínios", url: "/domains", icon: Globe },
-  { title: "Home Sections", url: "/templates", icon: Layout },
+  { title: "Home Sections", url: "/templates", icon: Layout, moduleKey: "home_sections" },
   { title: "Módulos", url: "/brand-modules", icon: Blocks },
   { title: "Branches", url: "/branches", icon: MapPin },
   { title: "Usuários", url: "/users", icon: Users },
-  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
+  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
 ];
 
 export function BrandSidebar() {
@@ -25,6 +26,9 @@ export function BrandSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isModuleEnabled } = useBrandModules();
+
+  const visibleItems = configItems.filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey));
 
   return (
     <Sidebar collapsible="icon">
@@ -46,7 +50,7 @@ export function BrandSidebar() {
           <SidebarGroupLabel>Configuração da Marca</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {configItems.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
                     <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
