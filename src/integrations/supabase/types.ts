@@ -446,13 +446,22 @@ export type Database = {
         Row: {
           banner_height: string
           banner_image_url: string | null
+          banners_json: Json
           brand_id: string
+          city_filter_json: Json
+          columns_count: number
+          coupon_type_filter: string | null
           created_at: string
           cta_text: string | null
           display_mode: string
+          filter_mode: string
+          icon_size: string
           id: string
           is_enabled: boolean
+          max_stores_visible: number | null
+          min_stores_visible: number
           order_index: number
+          rows_count: number
           subtitle: string | null
           template_id: string
           title: string | null
@@ -462,13 +471,22 @@ export type Database = {
         Insert: {
           banner_height?: string
           banner_image_url?: string | null
+          banners_json?: Json
           brand_id: string
+          city_filter_json?: Json
+          columns_count?: number
+          coupon_type_filter?: string | null
           created_at?: string
           cta_text?: string | null
           display_mode?: string
+          filter_mode?: string
+          icon_size?: string
           id?: string
           is_enabled?: boolean
+          max_stores_visible?: number | null
+          min_stores_visible?: number
           order_index?: number
+          rows_count?: number
           subtitle?: string | null
           template_id: string
           title?: string | null
@@ -478,13 +496,22 @@ export type Database = {
         Update: {
           banner_height?: string
           banner_image_url?: string | null
+          banners_json?: Json
           brand_id?: string
+          city_filter_json?: Json
+          columns_count?: number
+          coupon_type_filter?: string | null
           created_at?: string
           cta_text?: string | null
           display_mode?: string
+          filter_mode?: string
+          icon_size?: string
           id?: string
           is_enabled?: boolean
+          max_stores_visible?: number | null
+          min_stores_visible?: number
           order_index?: number
+          rows_count?: number
           subtitle?: string | null
           template_id?: string
           title?: string | null
@@ -545,6 +572,53 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_pages: {
+        Row: {
+          brand_id: string
+          created_at: string
+          elements_json: Json
+          id: string
+          is_published: boolean
+          permissions_json: Json
+          slug: string
+          tags_json: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          elements_json?: Json
+          id?: string
+          is_published?: boolean
+          permissions_json?: Json
+          slug: string
+          tags_json?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          elements_json?: Json
+          id?: string
+          is_published?: boolean
+          permissions_json?: Json
+          slug?: string
+          tags_json?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_pages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]

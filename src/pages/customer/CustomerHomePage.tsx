@@ -1,6 +1,6 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
-import { Star, ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, QrCode } from "lucide-react";
+import { CreditCard, ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, QrCode } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
@@ -22,7 +22,11 @@ const QUICK_ACTIONS = [
   { key: "qrcode", label: "QR Code", icon: QrCode, color: "#6366F1" },
 ];
 
-export default function CustomerHomePage() {
+interface CustomerHomePageProps {
+  onOpenLedger?: () => void;
+}
+
+export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { theme } = useBrand();
 
@@ -30,12 +34,15 @@ export default function CustomerHomePage() {
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  // Truncated account number from customer ID
+  const accountNumber = customer?.id ? customer.id.slice(-8).toUpperCase() : "--------";
+
   return (
     <div className="space-y-5">
-      {/* Points Balance Card */}
+      {/* Bank-style Balance Card */}
       {loading ? (
         <div className="max-w-lg mx-auto px-5 pt-4">
-          <Skeleton className="h-[110px] w-full rounded-[20px]" />
+          <Skeleton className="h-[140px] w-full rounded-[20px]" />
         </div>
       ) : customer ? (
         <motion.div
@@ -44,46 +51,70 @@ export default function CustomerHomePage() {
           transition={{ duration: 0.4, ease: "easeOut" as const }}
           className="max-w-lg mx-auto px-5 pt-4"
         >
-          <div
-            className="rounded-[20px] p-4 text-white relative overflow-hidden"
+          <button
+            onClick={onOpenLedger}
+            className="w-full text-left rounded-[20px] p-5 text-white relative overflow-hidden active:scale-[0.98] transition-transform"
             style={{
-              background: `linear-gradient(135deg, ${primary} 0%, ${primary}cc 50%, ${primary}99 100%)`,
-              boxShadow: `0 8px 32px -8px ${primary}60`,
+              background: `linear-gradient(145deg, ${primary} 0%, ${primary}dd 40%, ${primary}aa 100%)`,
+              boxShadow: `0 12px 40px -12px ${primary}50`,
             }}
           >
-            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-10" style={{ backgroundColor: "#fff" }} />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full opacity-10" style={{ backgroundColor: "#fff" }} />
+            {/* Decorative elements */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-[0.07]" style={{ backgroundColor: "#fff" }} />
+            <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full opacity-[0.07]" style={{ backgroundColor: "#fff" }} />
+            <div className="absolute top-4 right-4 w-20 h-14 rounded-lg border border-white/10 opacity-20" />
 
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 opacity-90">
-                  <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
-                    <Star className="h-3 w-3" />
+              {/* Header row: chip + account */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  {/* Chip icon */}
+                  <div className="h-8 w-10 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)" }}>
+                    <div className="grid grid-cols-2 gap-px">
+                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
+                    </div>
                   </div>
-                  <span className="text-xs font-medium">Seu saldo</span>
+                  <span className="text-[10px] font-medium tracking-[0.15em] opacity-60 uppercase">Conta Digital</span>
                 </div>
-                <ChevronRight className="h-4 w-4 opacity-60" />
+                <div className="flex items-center gap-1 opacity-60">
+                  <span className="text-[10px] font-mono tracking-wider">•••• {accountNumber.slice(-4)}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </div>
               </div>
 
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight" style={{ fontFamily: fontHeading }}>
-                  {Number(customer.points_balance).toLocaleString("pt-BR")}
-                </span>
-                <span className="text-xs opacity-70 font-medium">pontos</span>
+              {/* Balance */}
+              <div className="mb-1">
+                <span className="text-[11px] font-medium opacity-60 block mb-0.5">Seu saldo</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black tracking-tight" style={{ fontFamily: fontHeading }}>
+                    {Number(customer.points_balance).toLocaleString("pt-BR")}
+                  </span>
+                  <span className="text-xs opacity-50 font-medium">pontos</span>
+                </div>
               </div>
 
+              {/* Money balance row */}
               {Number(customer.money_balance) > 0 && (
-                <div className="flex items-center gap-1.5 mt-1.5 opacity-80">
+                <div className="flex items-center gap-1.5 mt-1 opacity-70">
                   <Coins className="h-3 w-3" />
-                  <span className="text-xs">R$ {Number(customer.money_balance).toFixed(2)} disponível</span>
+                  <span className="text-xs font-medium">R$ {Number(customer.money_balance).toFixed(2)} disponível</span>
                 </div>
               )}
+
+              {/* CTA hint */}
+              <div className="mt-3 flex items-center gap-1 text-[10px] opacity-40 font-medium">
+                <CreditCard className="h-3 w-3" />
+                <span>Toque para ver extrato</span>
+              </div>
             </div>
-          </div>
+          </button>
         </motion.div>
       ) : null}
 
-      {/* Quick Actions Bar (Méliuz-style) */}
+      {/* Quick Actions Bar */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
