@@ -24,6 +24,14 @@ import VoucherForm from "@/pages/VoucherForm";
 import VoucherRedeem from "@/pages/VoucherRedeem";
 import BrandDomains from "@/pages/BrandDomains";
 import UsersPage from "@/pages/UsersPage";
+import StoresPage from "@/pages/StoresPage";
+import OffersPage from "@/pages/OffersPage";
+import CustomersPage from "@/pages/CustomersPage";
+import RedemptionsPage from "@/pages/RedemptionsPage";
+import SectionTemplatesPage from "@/pages/SectionTemplatesPage";
+import ModuleDefinitionsPage from "@/pages/ModuleDefinitionsPage";
+import FeatureFlagsPage from "@/pages/FeatureFlagsPage";
+import AuditLogsPage from "@/pages/AuditLogsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +65,14 @@ function AppRoutes() {
         <Route path="vouchers/:id" element={<VoucherForm />} />
         <Route path="domains" element={<BrandDomains />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="stores" element={<StoresPage />} />
+        <Route path="offers" element={<OffersPage />} />
+        <Route path="customers" element={<CustomersPage />} />
+        <Route path="redemptions" element={<RedemptionsPage />} />
+        <Route path="templates" element={<SectionTemplatesPage />} />
+        <Route path="modules" element={<ModuleDefinitionsPage />} />
+        <Route path="flags" element={<FeatureFlagsPage />} />
+        <Route path="audit" element={<AuditLogsPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
