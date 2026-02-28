@@ -48,8 +48,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     const resolve = async () => {
       const hostname = window.location.hostname;
 
-      // Skip resolution for localhost and preview domains
-      const isLocal = hostname === "localhost" || hostname.includes("lovable.app");
+      // Skip resolution only for localhost
+      const isLocal = hostname === "localhost";
       if (isLocal) {
         setLoading(false);
         return;
