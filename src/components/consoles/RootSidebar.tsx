@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutTemplate, FileSpreadsheet,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutTemplate, FileSpreadsheet, Copy,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -17,6 +17,7 @@ const coreItems = [
   { title: "Tenants", url: "/tenants", icon: Building2 },
   { title: "Brands", url: "/brands", icon: Store },
   { title: "Branches", url: "/branches", icon: MapPin },
+  { title: "Clonar Branch", url: "/clone-branch", icon: Copy },
   { title: "Domínios", url: "/domains", icon: Globe },
 ];
 
