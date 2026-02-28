@@ -54,6 +54,9 @@ import AffiliateDealsPage from "@/pages/AffiliateDealsPage";
 import StoreCatalogPage from "@/pages/StoreCatalogPage";
 import ReportsPage from "@/pages/ReportsPage";
 import SendNotificationPage from "@/pages/SendNotificationPage";
+import IconLibraryPage from "@/pages/IconLibraryPage";
+import BannerManagerPage from "@/pages/BannerManagerPage";
+import MenuLabelsPage from "@/pages/MenuLabelsPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -116,6 +119,9 @@ function AppRoutes() {
         <Route path="store-catalog" element={<ModuleGuard moduleKey="stores"><StoreCatalogPage /></ModuleGuard>} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="send-notification" element={<SendNotificationPage />} />
+        <Route path="icon-library" element={<IconLibraryPage />} />
+        <Route path="banner-manager" element={<BannerManagerPage />} />
+        <Route path="menu-labels" element={<MenuLabelsPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

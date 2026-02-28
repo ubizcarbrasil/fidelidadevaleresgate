@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -12,43 +12,75 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const coreItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Tenants", url: "/tenants", icon: Building2 },
-  { title: "Brands", url: "/brands", icon: Store },
-  { title: "Branches", url: "/branches", icon: MapPin },
-  { title: "Clonar Branch", url: "/clone-branch", icon: Copy },
-  { title: "Domínios", url: "/domains", icon: Globe },
-];
-
-const operationItems = [
-  { title: "Lojas", url: "/stores", icon: ShoppingBag },
-  { title: "Ofertas", url: "/offers", icon: Tag },
-  { title: "Clientes", url: "/customers", icon: UserCheck },
-  { title: "Resgates", url: "/redemptions", icon: ReceiptText },
-  { title: "Pontuar", url: "/earn-points", icon: Coins },
-  { title: "Regras de Pontos", url: "/points-rules", icon: Settings2 },
-  { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText },
-  { title: "Vouchers", url: "/vouchers", icon: Ticket },
-  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
-  { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck },
-  { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
-  { title: "Módulos da Marca", url: "/brand-modules", icon: Blocks },
-  { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
-  { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
-  { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
-  { title: "Relatórios", url: "/reports", icon: BarChart3 },
-];
-
-const platformItems = [
-  { title: "Módulos", url: "/modules", icon: Blocks },
-  { title: "Permissões", url: "/permissions", icon: Shield },
-  { title: "Templates", url: "/templates", icon: Layout },
-  { title: "Templates Home", url: "/home-templates", icon: LayoutList },
-  { title: "Feature Flags", url: "/flags", icon: Flag },
-  { title: "Releases", url: "/releases", icon: Rocket },
-  { title: "Auditoria", url: "/audit", icon: ScrollText },
-  { title: "Usuários", url: "/users", icon: Users },
+const groups = [
+  {
+    label: "📊 Visão Geral",
+    items: [
+      { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "🏢 Estrutura",
+    items: [
+      { title: "Tenants", url: "/tenants", icon: Building2 },
+      { title: "Brands", url: "/brands", icon: Store },
+      { title: "Branches", url: "/branches", icon: MapPin },
+      { title: "Clonar Branch", url: "/clone-branch", icon: Copy },
+      { title: "Domínios", url: "/domains", icon: Globe },
+    ],
+  },
+  {
+    label: "🎨 Identidade & Vitrine",
+    items: [
+      { title: "Galeria de Ícones", url: "/icon-library", icon: Image },
+      { title: "Central de Banners", url: "/banner-manager", icon: Image },
+      { title: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
+    ],
+  },
+  {
+    label: "🏪 Operações",
+    items: [
+      { title: "Lojas", url: "/stores", icon: ShoppingBag },
+      { title: "Ofertas", url: "/offers", icon: Tag },
+      { title: "Clientes", url: "/customers", icon: UserCheck },
+      { title: "Resgates", url: "/redemptions", icon: ReceiptText },
+      { title: "Vouchers", url: "/vouchers", icon: Ticket },
+      { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
+      { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck },
+      { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
+      { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
+      { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
+      { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
+    ],
+  },
+  {
+    label: "💰 Programa de Pontos",
+    items: [
+      { title: "Pontuar", url: "/earn-points", icon: Coins },
+      { title: "Regras de Pontos", url: "/points-rules", icon: Settings2 },
+      { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText },
+    ],
+  },
+  {
+    label: "👥 Usuários & Permissões",
+    items: [
+      { title: "Usuários", url: "/users", icon: Users },
+      { title: "Módulos da Marca", url: "/brand-modules", icon: Blocks },
+    ],
+  },
+  {
+    label: "⚙️ Plataforma",
+    items: [
+      { title: "Módulos", url: "/modules", icon: Blocks },
+      { title: "Permissões", url: "/permissions", icon: Shield },
+      { title: "Templates", url: "/templates", icon: Layout },
+      { title: "Templates Home", url: "/home-templates", icon: LayoutList },
+      { title: "Feature Flags", url: "/flags", icon: Flag },
+      { title: "Releases", url: "/releases", icon: Rocket },
+      { title: "Auditoria", url: "/audit", icon: ScrollText },
+      { title: "Relatórios", url: "/reports", icon: BarChart3 },
+    ],
+  },
 ];
 
 export function RootSidebar() {
@@ -56,26 +88,6 @@ export function RootSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
-
-  const renderGroup = (label: string, items: typeof coreItems) => (
-    <SidebarGroup key={label}>
-      <SidebarGroupLabel>{label}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
-                <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                  <item.icon className="h-4 w-4" />
-                  {!collapsed && <span>{item.title}</span>}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
 
   return (
     <Sidebar collapsible="icon">
@@ -93,9 +105,25 @@ export function RootSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {renderGroup("Gestão", coreItems)}
-        {renderGroup("Operação", operationItems)}
-        {renderGroup("Plataforma", platformItems)}
+        {groups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
+                      <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && <div className="mb-2 truncate text-xs text-sidebar-foreground/60">{user?.email}</div>}
