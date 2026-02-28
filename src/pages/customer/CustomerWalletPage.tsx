@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Loader2, TrendingUp, TrendingDown, Star, Wallet } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, Star, Wallet, Coins, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type LedgerEntry = Tables<"points_ledger">;
@@ -20,7 +20,6 @@ export default function CustomerWalletPage() {
   const [loading, setLoading] = useState(true);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const cardBg = hslToCss(theme?.colors?.card, "hsl(var(--card))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
@@ -42,91 +41,111 @@ export default function CustomerWalletPage() {
 
   if (customerLoading) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-6 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-6 w-6 animate-spin opacity-50" />
+      <div className="max-w-lg mx-auto px-5 py-6 flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-6 w-6 animate-spin opacity-40" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fontHeading }}>Carteira</h2>
+    <div className="max-w-lg mx-auto px-5 py-6">
+      <h2 className="text-xl font-bold mb-5" style={{ fontFamily: fontHeading }}>Carteira</h2>
 
       {/* Balance Cards */}
       {customer && (
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-7">
+          {/* Points card */}
           <div
-            className="rounded-xl p-4 text-white"
-            style={{ background: `linear-gradient(135deg, ${primary}, ${primary}cc)` }}
+            className="rounded-[20px] p-4 text-white relative overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
+              boxShadow: `0 6px 24px -6px ${primary}50`,
+            }}
           >
-            <div className="flex items-center gap-1.5 mb-1 opacity-80">
-              <Star className="h-3.5 w-3.5" />
-              <span className="text-xs">Pontos</span>
+            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-10 bg-white" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-1.5 mb-2 opacity-80">
+                <Star className="h-3.5 w-3.5" />
+                <span className="text-xs font-medium">Pontos</span>
+              </div>
+              <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
+                {Number(customer.points_balance).toLocaleString("pt-BR")}
+              </span>
             </div>
-            <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-              {Number(customer.points_balance).toLocaleString("pt-BR")}
-            </span>
           </div>
+
+          {/* Money card */}
           <div
-            className="rounded-xl p-4 border"
-            style={{ backgroundColor: cardBg, borderColor: `${fg}12` }}
+            className="rounded-[20px] p-4 bg-white relative overflow-hidden"
+            style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
           >
-            <div className="flex items-center gap-1.5 mb-1 opacity-60">
-              <Wallet className="h-3.5 w-3.5" />
-              <span className="text-xs">Valor (R$)</span>
+            <div className="relative z-10">
+              <div className="flex items-center gap-1.5 mb-2" style={{ color: `${fg}50` }}>
+                <Coins className="h-3.5 w-3.5" />
+                <span className="text-xs font-medium">Valor (R$)</span>
+              </div>
+              <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
+                {Number(customer.money_balance).toFixed(2)}
+              </span>
             </div>
-            <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-              {Number(customer.money_balance).toFixed(2)}
-            </span>
           </div>
         </div>
       )}
 
       {/* Transaction History */}
-      <h3 className="text-sm font-semibold mb-3 opacity-70">Histórico</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-bold" style={{ color: `${fg}70` }}>Histórico</h3>
+        <span className="text-xs font-medium" style={{ color: primary }}>Ver todos</span>
+      </div>
 
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-9 w-9 rounded-full" />
-              <div className="flex-1 space-y-1">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+            <div key={i} className="flex items-center gap-3 rounded-[16px] bg-white p-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-3/4 rounded-lg" />
+                <Skeleton className="h-3 w-1/2 rounded-lg" />
               </div>
-              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-16 rounded-lg" />
             </div>
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-12 opacity-40">
-          <Wallet className="h-10 w-10 mx-auto mb-2 opacity-40" />
-          <p className="text-sm">Nenhuma transação ainda</p>
+        <div className="text-center py-16 opacity-30">
+          <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+            <Wallet className="h-7 w-7" style={{ color: primary }} />
+          </div>
+          <p className="text-sm font-medium">Nenhuma transação ainda</p>
         </div>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-2">
           {entries.map((entry) => {
             const isCredit = entry.entry_type === "CREDIT";
+            const iconBg = isCredit ? "hsl(152 60% 54% / 0.12)" : "hsl(0 72% 56% / 0.10)";
+            const iconColor = isCredit ? "hsl(152 60% 40%)" : "hsl(0 72% 51%)";
+
             return (
               <div
                 key={entry.id}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-                style={{ backgroundColor: `${fg}04` }}
+                className="flex items-center gap-3 rounded-[16px] bg-white p-3 transition-shadow hover:shadow-md"
+                style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.03)" }}
               >
                 <div
-                  className="h-8 w-8 rounded-full flex items-center justify-center"
-                  style={{
-                    backgroundColor: isCredit ? "hsl(142 72% 40% / 0.12)" : "hsl(0 72% 51% / 0.12)",
-                    color: isCredit ? "hsl(142 72% 40%)" : "hsl(0 72% 51%)",
-                  }}
+                  className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: iconBg }}
                 >
-                  {isCredit ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                  {isCredit ? (
+                    <ArrowUpRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                  ) : (
+                    <ArrowDownRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {entry.reason || (isCredit ? "Crédito" : "Débito")}
+                  <p className="text-sm font-semibold truncate">
+                    {entry.reason || (isCredit ? "Crédito de pontos" : "Débito de pontos")}
                   </p>
-                  <p className="text-xs opacity-40">
+                  <p className="text-xs mt-0.5" style={{ color: `${fg}40` }}>
                     {new Date(entry.created_at).toLocaleDateString("pt-BR", {
                       day: "2-digit",
                       month: "short",
@@ -136,8 +155,8 @@ export default function CustomerWalletPage() {
                   </p>
                 </div>
                 <span
-                  className="text-sm font-semibold whitespace-nowrap"
-                  style={{ color: isCredit ? "hsl(142 72% 40%)" : "hsl(0 72% 51%)" }}
+                  className="text-sm font-bold whitespace-nowrap"
+                  style={{ color: iconColor }}
                 >
                   {isCredit ? "+" : "-"}{entry.points_amount} pts
                 </span>

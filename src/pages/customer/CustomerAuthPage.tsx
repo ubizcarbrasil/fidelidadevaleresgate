@@ -28,9 +28,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
   const [loading, setLoading] = useState(false);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const bg = hslToCss(theme?.colors?.background, "hsl(var(--background))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
-  const cardBg = hslToCss(theme?.colors?.card, "hsl(var(--card))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const fontBody = theme?.font_body ? `"${theme.font_body}", sans-serif` : "inherit";
   const displayName = theme?.display_name || brand?.name || "";
@@ -71,56 +69,62 @@ export default function CustomerAuthPage({ onSkip }: Props) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}
+      className="min-h-screen flex flex-col items-center justify-center px-5"
+      style={{ backgroundColor: "#FAFAFA", color: fg, fontFamily: fontBody }}
     >
       <div
-        className="w-full max-w-sm rounded-2xl border p-6 shadow-lg"
-        style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}
+        className="w-full max-w-sm rounded-[24px] p-7 bg-white"
+        style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
       >
         {/* Brand header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-7">
           {theme?.logo_url ? (
-            <img src={theme.logo_url} alt={displayName} className="h-12 mx-auto mb-3 object-contain" />
+            <img src={theme.logo_url} alt={displayName} className="h-14 mx-auto mb-4 object-contain" />
           ) : (
             <div
-              className="h-12 w-12 rounded-full mx-auto mb-3 flex items-center justify-center text-xl font-bold"
-              style={{ backgroundColor: primary, color: "#fff" }}
+              className="h-14 w-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl font-bold"
+              style={{
+                background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
+                color: "#fff",
+                boxShadow: `0 4px 16px -4px ${primary}50`,
+              }}
             >
               {displayName.charAt(0)}
             </div>
           )}
-          <h1 className="text-xl font-bold" style={{ fontFamily: fontHeading }}>
-            {mode === "login" ? "Entrar" : "Criar conta"}
+          <h1 className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
+            {mode === "login" ? "Bem-vindo!" : "Criar conta"}
           </h1>
-          <p className="text-sm opacity-60 mt-1">{displayName}</p>
+          <p className="text-sm mt-1.5" style={{ color: `${fg}50` }}>{displayName}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "register" && (
             <>
               <div>
-                <Label className="text-sm mb-1 block opacity-70">Nome</Label>
+                <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Nome</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-40" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: `${fg}35` }} />
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome"
                     required
-                    className="pl-10"
+                    className="pl-10 h-12 rounded-xl border-0"
+                    style={{ backgroundColor: "#F2F2F7" }}
                   />
                 </div>
               </div>
               <div>
-                <Label className="text-sm mb-1 block opacity-70">Telefone</Label>
+                <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Telefone</Label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-40" />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: `${fg}35` }} />
                   <Input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="(11) 99999-0000"
-                    className="pl-10"
+                    className="pl-10 h-12 rounded-xl border-0"
+                    style={{ backgroundColor: "#F2F2F7" }}
                   />
                 </div>
               </div>
@@ -128,24 +132,25 @@ export default function CustomerAuthPage({ onSkip }: Props) {
           )}
 
           <div>
-            <Label className="text-sm mb-1 block opacity-70">Email</Label>
+            <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-40" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: `${fg}35` }} />
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 required
-                className="pl-10"
+                className="pl-10 h-12 rounded-xl border-0"
+                style={{ backgroundColor: "#F2F2F7" }}
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm mb-1 block opacity-70">Senha</Label>
+            <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Senha</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-40" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: `${fg}35` }} />
               <Input
                 type="password"
                 value={password}
@@ -153,7 +158,8 @@ export default function CustomerAuthPage({ onSkip }: Props) {
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="pl-10"
+                className="pl-10 h-12 rounded-xl border-0"
+                style={{ backgroundColor: "#F2F2F7" }}
               />
             </div>
           </div>
@@ -161,26 +167,30 @@ export default function CustomerAuthPage({ onSkip }: Props) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl font-semibold text-base"
-            style={{ backgroundColor: primary, color: "#fff" }}
+            className="w-full h-12 rounded-2xl font-bold text-base"
+            style={{
+              backgroundColor: primary,
+              color: "#fff",
+              boxShadow: `0 4px 16px -4px ${primary}50`,
+            }}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {mode === "login" ? "Entrar" : "Criar conta"}
           </Button>
         </form>
 
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-5 text-center text-sm">
           {mode === "login" ? (
-            <p>
+            <p style={{ color: `${fg}60` }}>
               Não tem conta?{" "}
-              <button onClick={() => setMode("register")} className="font-semibold hover:underline" style={{ color: primary }}>
+              <button onClick={() => setMode("register")} className="font-bold hover:underline" style={{ color: primary }}>
                 Cadastre-se
               </button>
             </p>
           ) : (
-            <p>
+            <p style={{ color: `${fg}60` }}>
               Já tem conta?{" "}
-              <button onClick={() => setMode("login")} className="font-semibold hover:underline" style={{ color: primary }}>
+              <button onClick={() => setMode("login")} className="font-bold hover:underline" style={{ color: primary }}>
                 Entrar
               </button>
             </p>
@@ -190,9 +200,10 @@ export default function CustomerAuthPage({ onSkip }: Props) {
         {onSkip && (
           <button
             onClick={onSkip}
-            className="mt-4 w-full text-center text-sm opacity-50 hover:opacity-80 flex items-center justify-center gap-1"
+            className="mt-5 w-full text-center text-sm flex items-center justify-center gap-1.5 py-2"
+            style={{ color: `${fg}40` }}
           >
-            <ArrowLeft className="h-3 w-3" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             Continuar sem login
           </button>
         )}
