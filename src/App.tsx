@@ -22,6 +22,7 @@ import Branches from "@/pages/Branches";
 import BranchForm from "@/pages/BranchForm";
 import Vouchers from "@/pages/Vouchers";
 import VoucherForm from "@/pages/VoucherForm";
+import VoucherWizardPage from "@/pages/VoucherWizardPage";
 import VoucherRedeem from "@/pages/VoucherRedeem";
 import BrandDomains from "@/pages/BrandDomains";
 import UsersPage from "@/pages/UsersPage";
@@ -80,7 +81,7 @@ function AppRoutes() {
         <Route path="branches/new" element={<BranchForm />} />
         <Route path="branches/:id" element={<BranchForm />} />
         <Route path="vouchers" element={<ModuleGuard moduleKey="vouchers"><Vouchers /></ModuleGuard>} />
-        <Route path="vouchers/new" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
+        <Route path="vouchers/new" element={<ModuleGuard moduleKey="vouchers"><VoucherWizardPage /></ModuleGuard>} />
         <Route path="vouchers/redeem" element={<ModuleGuard moduleKey="vouchers"><VoucherRedeem /></ModuleGuard>} />
         <Route path="vouchers/:id" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
         <Route path="domains" element={<BrandDomains />} />
