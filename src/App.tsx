@@ -8,6 +8,7 @@ import { BrandProvider } from "@/contexts/BrandContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBrand } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ModuleGuard from "@/components/ModuleGuard";
 import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import Auth from "@/pages/Auth";
@@ -69,30 +70,30 @@ function AppRoutes() {
         <Route path="branches" element={<Branches />} />
         <Route path="branches/new" element={<BranchForm />} />
         <Route path="branches/:id" element={<BranchForm />} />
-        <Route path="vouchers" element={<Vouchers />} />
-        <Route path="vouchers/new" element={<VoucherForm />} />
-        <Route path="vouchers/redeem" element={<VoucherRedeem />} />
-        <Route path="vouchers/:id" element={<VoucherForm />} />
+        <Route path="vouchers" element={<ModuleGuard moduleKey="vouchers"><Vouchers /></ModuleGuard>} />
+        <Route path="vouchers/new" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
+        <Route path="vouchers/redeem" element={<ModuleGuard moduleKey="vouchers"><VoucherRedeem /></ModuleGuard>} />
+        <Route path="vouchers/:id" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
         <Route path="domains" element={<BrandDomains />} />
         <Route path="users" element={<UsersPage />} />
-        <Route path="stores" element={<StoresPage />} />
-        <Route path="offers" element={<OffersPage />} />
-        <Route path="customers" element={<CustomersPage />} />
-        <Route path="redemptions" element={<RedemptionsPage />} />
-        <Route path="templates" element={<SectionTemplatesPage />} />
+        <Route path="stores" element={<ModuleGuard moduleKey="stores"><StoresPage /></ModuleGuard>} />
+        <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />
+        <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
+        <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
+        <Route path="templates" element={<ModuleGuard moduleKey="home_sections"><SectionTemplatesPage /></ModuleGuard>} />
         <Route path="modules" element={<ModuleDefinitionsPage />} />
         <Route path="permissions" element={<PermissionsPage />} />
         <Route path="flags" element={<FeatureFlagsPage />} />
         <Route path="audit" element={<AuditLogsPage />} />
         <Route path="releases" element={<ReleasesPage />} />
         <Route path="home-templates" element={<HomeTemplatesPage />} />
-        <Route path="csv-import" element={<CsvImportPage />} />
+        <Route path="csv-import" element={<ModuleGuard moduleKey="stores"><CsvImportPage /></ModuleGuard>} />
         <Route path="clone-branch" element={<CloneBranchPage />} />
         <Route path="brand-modules" element={<BrandModulesPage />} />
         <Route path="pdv" element={<OperatorRedeemPage />} />
-        <Route path="points-rules" element={<PointsRulesPage />} />
-        <Route path="earn-points" element={<EarnPointsPage />} />
-        <Route path="points-ledger" element={<PointsLedgerPage />} />
+        <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />
+        <Route path="earn-points" element={<ModuleGuard moduleKey="earn_points_store"><EarnPointsPage /></ModuleGuard>} />
+        <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
