@@ -69,7 +69,13 @@ export default function Vouchers() {
                 <TableRow key={v.id}>
                   <TableCell className="font-mono font-medium">{v.code}</TableCell>
                   <TableCell>{v.title}</TableCell>
-                  <TableCell>{v.discount_percent}%</TableCell>
+                  <TableCell>
+                    {(v as any).discount_type === "FIXED"
+                      ? `R$ ${Number((v as any).discount_fixed_value).toFixed(2)}`
+                      : (v as any).discount_type === "FREE_SHIPPING"
+                      ? "Frete Grátis"
+                      : `${v.discount_percent}%`}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{(v.branches as any)?.name || "—"}</TableCell>
                   <TableCell>{v.current_uses}/{v.max_uses}</TableCell>
                   <TableCell className="text-muted-foreground">{v.expires_at ? new Date(v.expires_at).toLocaleDateString("pt-BR") : "Sem validade"}</TableCell>

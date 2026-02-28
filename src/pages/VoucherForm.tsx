@@ -62,6 +62,8 @@ export default function VoucherForm() {
         setMaxUses(String(data.max_uses));
         setExpiresAt(data.expires_at ? data.expires_at.slice(0, 16) : "");
         setCampaign(data.campaign || "");
+        // Handle new fields gracefully for edit
+
         setCustomerName(data.customer_name || "");
         setCustomerPhone(data.customer_phone || "");
         setCustomerEmail(data.customer_email || "");
