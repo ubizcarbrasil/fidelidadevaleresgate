@@ -12,6 +12,7 @@ import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
 import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
+import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 
 // Context to allow child components to open offer/store/section detail and manage favorites
@@ -64,6 +65,7 @@ export default function CustomerLayout() {
   const [sectionDetail, setSectionDetail] = useState<{ section: any; items: any[] } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [ledgerOpen, setLedgerOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
 
@@ -140,7 +142,11 @@ export default function CustomerLayout() {
               animate="animate"
               exit="exit"
             >
-              <ActivePage />
+              {activeTab === "home" ? (
+                <CustomerHomePage onOpenLedger={() => setLedgerOpen(true)} />
+              ) : (
+                <ActivePage />
+              )}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -221,6 +227,9 @@ export default function CustomerLayout() {
 
         {/* Search Overlay */}
         <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+        {/* Ledger Overlay */}
+        <CustomerLedgerOverlay open={ledgerOpen} onBack={() => setLedgerOpen(false)} />
 
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
