@@ -411,6 +411,92 @@ export type Database = {
         }
         Relationships: []
       }
+      home_template_apply_jobs: {
+        Row: {
+          created_at: string
+          created_by: string
+          finished_at: string | null
+          id: string
+          logs_json: Json
+          overwrite: boolean
+          scope_id: string | null
+          scope_type: string
+          status: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          finished_at?: string | null
+          id?: string
+          logs_json?: Json
+          overwrite?: boolean
+          scope_id?: string | null
+          scope_type?: string
+          status?: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          finished_at?: string | null
+          id?: string
+          logs_json?: Json
+          overwrite?: boolean
+          scope_id?: string | null
+          scope_type?: string
+          status?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_template_apply_jobs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "home_template_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      home_template_library: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          key: string
+          name: string
+          preview_image_url: string | null
+          template_payload_json: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          key: string
+          name: string
+          preview_image_url?: string | null
+          template_payload_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          key?: string
+          name?: string
+          preview_image_url?: string | null
+          template_payload_json?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           allowed_hours: string | null
