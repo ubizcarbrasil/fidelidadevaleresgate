@@ -1,6 +1,8 @@
 import { createContext, useContext, useState } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { Home, Tag, Wallet, UserCircle, MapPin, Bell, Search } from "lucide-react";
+import NotificationDrawer from "@/components/customer/NotificationDrawer";
+import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
 import CustomerOffersPage from "@/pages/customer/CustomerOffersPage";
@@ -58,7 +60,9 @@ export default function CustomerLayout() {
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
+  const { unreadCount } = useCustomerNotifications();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const bg = "#FAFAFA";
@@ -92,9 +96,16 @@ export default function CustomerLayout() {
                   <span className="font-medium">{selectedBranch.name}</span>
                 </div>
               )}
-              <button className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
+              <button
+                onClick={() => setNotifOpen(true)}
+                className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors"
+              >
                 <Bell className="h-5 w-5" style={{ color: `${fg}90` }} />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full" style={{ backgroundColor: primary }} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white" style={{ backgroundColor: "hsl(0 72% 51%)" }}>
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </button>
               <button className="h-9 w-9 flex items-center justify-center rounded-full" onClick={() => setActiveTab("wallet")} style={{ color: `${fg}90` }}>
                 <Wallet className="h-5 w-5" />
@@ -193,6 +204,9 @@ export default function CustomerLayout() {
 
         {/* Search Overlay */}
         <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+        {/* Notification Drawer */}
+        <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
       </div>
     </CustomerNavContext.Provider>
   );
