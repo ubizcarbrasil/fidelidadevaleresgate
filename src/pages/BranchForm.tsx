@@ -52,6 +52,10 @@ export default function BranchForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!brandId) {
+      toast.error("Selecione uma brand");
+      return;
+    }
     setLoading(true);
     const payload = { name, slug, brand_id: brandId, city: city || null, state: state || null, timezone, is_active: isActive };
 
@@ -77,7 +81,7 @@ export default function BranchForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Brand</Label>
-              <Select value={brandId} onValueChange={setBrandId} required>
+              <Select value={brandId} onValueChange={setBrandId}>
                 <SelectTrigger><SelectValue placeholder="Selecione uma brand" /></SelectTrigger>
                 <SelectContent>
                   {brands?.map((b) => (
