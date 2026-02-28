@@ -1,6 +1,7 @@
 import {
   Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users,
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
+  FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -43,6 +44,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.secoes_home", defaultTitle: "Seções da Home", url: "/templates", icon: Layout, moduleKey: "home_sections" },
       { key: "sidebar.central_banners", defaultTitle: "Central de Banners", url: "/banner-manager", icon: Image },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
+      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder", icon: FileText },
     ],
   },
   {
