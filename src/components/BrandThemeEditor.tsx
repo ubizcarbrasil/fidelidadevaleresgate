@@ -1,14 +1,14 @@
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Palette, Type, Image, FileText } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
+import ImageUploadField from "@/components/ImageUploadField";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
   onChange: (theme: BrandTheme) => void;
+  brandId?: string;
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
@@ -57,8 +57,9 @@ function hexToHsl(hex: string): string {
   return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-export default function BrandThemeEditor({ value, onChange }: BrandThemeEditorProps) {
+export default function BrandThemeEditor({ value, onChange, brandId }: BrandThemeEditorProps) {
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
+  const folder = brandId ? `brands/${brandId}` : `brands/new-${Date.now()}`;
   const updateColor = (key: string, hex: string) => {
     update({ colors: { ...value.colors, [key]: hexToHsl(hex) } });
   };
@@ -157,35 +158,33 @@ export default function BrandThemeEditor({ value, onChange }: BrandThemeEditorPr
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="text-xs">URL do Logo</Label>
-              <Input
+            <div className="space-y-1.5">
+              <Label className="text-xs">Logo</Label>
+              <ImageUploadField
                 value={value.logo_url || ""}
-                onChange={(e) => update({ logo_url: e.target.value || undefined })}
-                placeholder="https://..."
+                onChange={(url) => update({ logo_url: url || undefined })}
+                folder={`${folder}/logo`}
+                previewClassName="h-10 object-contain"
               />
-              {value.logo_url && (
-                <img src={value.logo_url} alt="Logo preview" className="h-10 object-contain mt-1 rounded border border-input p-1" />
-              )}
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs">URL do Favicon</Label>
-              <Input
+            <div className="space-y-1.5">
+              <Label className="text-xs">Favicon</Label>
+              <ImageUploadField
                 value={value.favicon_url || ""}
-                onChange={(e) => update({ favicon_url: e.target.value || undefined })}
-                placeholder="https://..."
+                onChange={(url) => update({ favicon_url: url || undefined })}
+                folder={`${folder}/favicon`}
+                accept="image/png,image/x-icon,image/svg+xml"
+                previewClassName="h-8 w-8 object-contain"
               />
-              {value.favicon_url && (
-                <img src={value.favicon_url} alt="Favicon preview" className="h-8 w-8 object-contain mt-1 rounded border border-input p-1" />
-              )}
             </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs">URL da imagem de fundo</Label>
-            <Input
+          <div className="space-y-1.5">
+            <Label className="text-xs">Imagem de fundo</Label>
+            <ImageUploadField
               value={value.background_image_url || ""}
-              onChange={(e) => update({ background_image_url: e.target.value || undefined })}
-              placeholder="https://..."
+              onChange={(url) => update({ background_image_url: url || undefined })}
+              folder={`${folder}/background`}
+              previewClassName="h-16 object-cover w-full"
             />
           </div>
         </CardContent>
