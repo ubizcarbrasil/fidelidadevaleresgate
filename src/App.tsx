@@ -36,6 +36,7 @@ import ReleasesPage from "@/pages/ReleasesPage";
 import OperatorRedeemPage from "@/pages/OperatorRedeemPage";
 import HomeTemplatesPage from "@/pages/HomeTemplatesPage";
 import CsvImportPage from "@/pages/CsvImportPage";
+import CloneBranchPage from "@/pages/CloneBranchPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ function AppRoutes() {
         <Route path="releases" element={<ReleasesPage />} />
         <Route path="home-templates" element={<HomeTemplatesPage />} />
         <Route path="csv-import" element={<CsvImportPage />} />
+        <Route path="clone-branch" element={<CloneBranchPage />} />
         <Route path="pdv" element={<OperatorRedeemPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
