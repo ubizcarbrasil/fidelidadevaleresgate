@@ -202,6 +202,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permission_overrides: {
+        Row: {
+          created_at: string
+          id: string
+          is_allowed: boolean
+          permission_key: string
+          scope_id: string | null
+          scope_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_allowed?: boolean
+          permission_key: string
+          scope_id?: string | null
+          scope_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_allowed?: boolean
+          permission_key?: string
+          scope_id?: string | null
+          scope_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           branch_id: string | null
@@ -365,6 +395,15 @@ export type Database = {
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      user_has_permission: {
+        Args: {
+          _permission_key: string
+          _scope_id?: string
+          _scope_type?: string
           _user_id: string
         }
         Returns: boolean
