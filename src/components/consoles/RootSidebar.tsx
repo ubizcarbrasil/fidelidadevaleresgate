@@ -32,6 +32,8 @@ const operationItems = [
   { title: "Vouchers", url: "/vouchers", icon: Ticket },
   { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
   { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck },
+  { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
+  { title: "Módulos da Marca", url: "/brand-modules", icon: Blocks },
   { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
   { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
   { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
