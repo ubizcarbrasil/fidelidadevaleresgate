@@ -1,4 +1,4 @@
-import { Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users, FileSpreadsheet, Blocks, Settings2, ScrollText } from "lucide-react";
+import { Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ const configItems = [
   { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
   { title: "Usuários", url: "/users", icon: Users },
   { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
+  { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck, moduleKey: "stores" },
 ];
 
 export function BrandSidebar() {
