@@ -19,6 +19,7 @@ interface RedemptionResult {
   branch_name: string;
   value_rescue: number;
   min_purchase: number;
+  expires_at: string | null;
 }
 
 const formatCpf = (value: string) => {
@@ -60,6 +61,13 @@ export default function StoreRedeemTab({ store }: { store: any }) {
       if (error) throw error;
       if (!data) throw new Error("PIN + CPF inválidos, resgate já utilizado ou não pertence a esta loja");
 
+      // Anti-fraud: check PIN expiration
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        // Auto-mark as expired
+        await supabase.from("redemptions").update({ status: "EXPIRED" as any }).eq("id", data.id);
+        throw new Error("PIN expirado. Este resgate não pode mais ser utilizado.");
+      }
+
       return {
         id: data.id,
         token: data.token,
@@ -70,6 +78,7 @@ export default function StoreRedeemTab({ store }: { store: any }) {
         branch_name: (data.branches as any)?.name || "",
         value_rescue: Number((data.offers as any)?.value_rescue || 0),
         min_purchase: Number((data.offers as any)?.min_purchase || 0),
+        expires_at: data.expires_at,
       } as RedemptionResult;
     },
     onSuccess: (data) => { setResult(data); setError(null); },
@@ -171,6 +180,9 @@ export default function StoreRedeemTab({ store }: { store: any }) {
               <div><span className="text-muted-foreground">Compra Mín.:</span> <strong>R$ {result.min_purchase.toFixed(2)}</strong></div>
               <div><span className="text-muted-foreground">PIN:</span> <strong className="font-mono tracking-wider">{result.token}</strong></div>
               <div><span className="text-muted-foreground">Status:</span> <Badge variant="outline">{result.status}</Badge></div>
+              {result.expires_at && (
+                <div className="col-span-2"><span className="text-muted-foreground">Expira em:</span> <strong>{new Date(result.expires_at).toLocaleString("pt-BR")}</strong></div>
+              )}
             </div>
 
             <div className="space-y-2 pt-2 border-t">

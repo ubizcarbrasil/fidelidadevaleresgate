@@ -15,17 +15,19 @@ import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
 import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 
-// Context to allow child components to open offer/store/section detail and manage favorites
+// Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
 interface CustomerNavContextType {
   openOffer: (offer: any) => void;
   openStore: (store: any) => void;
   openSectionDetail: (section: any, items: any[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
+  navigateToTab: (tab: Tab) => void;
 }
 const CustomerNavContext = createContext<CustomerNavContextType>({
   openOffer: () => {}, openStore: () => {}, openSectionDetail: () => {},
   isFavorite: () => false, toggleFavorite: () => {},
+  navigateToTab: () => {},
 });
 export const useOfferNav = () => useContext(CustomerNavContext);
 export const useCustomerNav = () => useContext(CustomerNavContext);
@@ -80,7 +82,7 @@ export default function CustomerLayout() {
   const ActivePage = TAB_CONTENT[activeTab];
 
   return (
-    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite }}>
+    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab }}>
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
         {/* Modern Header */}
         <header className="sticky top-0 z-50" style={{ backgroundColor: cardBg }}>
