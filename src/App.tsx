@@ -45,6 +45,7 @@ import EarnPointsPage from "@/pages/EarnPointsPage";
 import PointsLedgerPage from "@/pages/PointsLedgerPage";
 import StorePointsRulePage from "@/pages/StorePointsRulePage";
 import ApproveStoreRulesPage from "@/pages/ApproveStoreRulesPage";
+import CustomerPreviewPage from "@/pages/CustomerPreviewPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/customer-preview" element={<CustomerPreviewPage />} />
       <Route
         path="/"
         element={
