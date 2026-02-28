@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutTemplate,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -31,6 +31,7 @@ const operationItems = [
 const platformItems = [
   { title: "Módulos", url: "/modules", icon: Blocks },
   { title: "Templates", url: "/templates", icon: Layout },
+  { title: "Templates Home", url: "/home-templates", icon: LayoutTemplate },
   { title: "Feature Flags", url: "/flags", icon: Flag },
   { title: "Releases", url: "/releases", icon: Rocket },
   { title: "Auditoria", url: "/audit", icon: ScrollText },
