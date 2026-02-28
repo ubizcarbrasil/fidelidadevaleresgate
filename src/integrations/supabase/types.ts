@@ -61,6 +61,38 @@ export type Database = {
           },
         ]
       }
+      brand_domains: {
+        Row: {
+          brand_id: string
+          created_at: string
+          domain: string
+          id: string
+          is_primary: boolean
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          domain: string
+          id?: string
+          is_primary?: boolean
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          is_primary?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_domains_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           brand_settings_json: Json | null
@@ -109,6 +141,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          selected_branch_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -116,6 +149,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          selected_branch_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -123,8 +157,17 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          selected_branch_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_selected_branch_id_fkey"
+            columns: ["selected_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {

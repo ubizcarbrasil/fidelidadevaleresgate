@@ -4,9 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { BrandProvider } from "@/contexts/BrandContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
+import BranchSelector from "@/components/BranchSelector";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
@@ -28,41 +30,44 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Dashboard />} />
-                <Route path="tenants" element={<Tenants />} />
-                <Route path="tenants/new" element={<TenantForm />} />
-                <Route path="tenants/:id" element={<TenantForm />} />
-                <Route path="brands" element={<Brands />} />
-                <Route path="brands/new" element={<BrandForm />} />
-                <Route path="brands/:id" element={<BrandForm />} />
-                <Route path="branches" element={<Branches />} />
-                <Route path="branches/new" element={<BranchForm />} />
-                <Route path="branches/:id" element={<BranchForm />} />
-                <Route path="vouchers" element={<Vouchers />} />
-                <Route path="vouchers/new" element={<VoucherForm />} />
-                <Route path="vouchers/redeem" element={<VoucherRedeem />} />
-                <Route path="vouchers/:id" element={<VoucherForm />} />
-                <Route path="users" element={<UsersPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <BrandProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <BranchSelector />
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Dashboard />} />
+                  <Route path="tenants" element={<Tenants />} />
+                  <Route path="tenants/new" element={<TenantForm />} />
+                  <Route path="tenants/:id" element={<TenantForm />} />
+                  <Route path="brands" element={<Brands />} />
+                  <Route path="brands/new" element={<BrandForm />} />
+                  <Route path="brands/:id" element={<BrandForm />} />
+                  <Route path="branches" element={<Branches />} />
+                  <Route path="branches/new" element={<BranchForm />} />
+                  <Route path="branches/:id" element={<BranchForm />} />
+                  <Route path="vouchers" element={<Vouchers />} />
+                  <Route path="vouchers/new" element={<VoucherForm />} />
+                  <Route path="vouchers/redeem" element={<VoucherRedeem />} />
+                  <Route path="vouchers/:id" element={<VoucherForm />} />
+                  <Route path="users" element={<UsersPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </BrandProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
