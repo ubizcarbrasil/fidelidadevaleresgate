@@ -31,6 +31,7 @@ import RedemptionsPage from "@/pages/RedemptionsPage";
 import SectionTemplatesPage from "@/pages/SectionTemplatesPage";
 import ModuleDefinitionsPage from "@/pages/ModuleDefinitionsPage";
 import FeatureFlagsPage from "@/pages/FeatureFlagsPage";
+import PermissionsPage from "@/pages/PermissionsPage";
 import AuditLogsPage from "@/pages/AuditLogsPage";
 import ReleasesPage from "@/pages/ReleasesPage";
 import OperatorRedeemPage from "@/pages/OperatorRedeemPage";
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="redemptions" element={<RedemptionsPage />} />
         <Route path="templates" element={<SectionTemplatesPage />} />
         <Route path="modules" element={<ModuleDefinitionsPage />} />
+        <Route path="permissions" element={<PermissionsPage />} />
         <Route path="flags" element={<FeatureFlagsPage />} />
         <Route path="audit" element={<AuditLogsPage />} />
         <Route path="releases" element={<ReleasesPage />} />
