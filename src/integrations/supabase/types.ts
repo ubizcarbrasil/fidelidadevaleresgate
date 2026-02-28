@@ -1163,6 +1163,7 @@ export type Database = {
           branch_id: string
           brand_id: string
           created_at: string
+          customer_cpf: string | null
           customer_id: string
           expires_at: string | null
           id: string
@@ -1177,6 +1178,7 @@ export type Database = {
           branch_id: string
           brand_id: string
           created_at?: string
+          customer_cpf?: string | null
           customer_id: string
           expires_at?: string | null
           id?: string
@@ -1191,6 +1193,7 @@ export type Database = {
           branch_id?: string
           brand_id?: string
           created_at?: string
+          customer_cpf?: string | null
           customer_id?: string
           expires_at?: string | null
           id?: string

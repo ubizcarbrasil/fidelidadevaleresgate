@@ -64,24 +64,12 @@ export default function CustomerOffersPage() {
     fetchOffers();
   }, [selectedBranch, brand]);
 
+  // Redemption now happens via the detail page with CPF input
+  // This quick-redeem handler is kept for backwards compat but will be removed
   const handleRedeem = async (offer: Offer) => {
     if (!customer || !brand || !selectedBranch) return;
-    setRedeeming(offer.id);
-    try {
-      const { error } = await supabase.from("redemptions").insert({
-        offer_id: offer.id,
-        customer_id: customer.id,
-        brand_id: brand.id,
-        branch_id: selectedBranch.id,
-        status: "PENDING",
-      });
-      if (error) throw error;
-      toast({ title: "Resgate solicitado!", description: "Apresente o código ao estabelecimento." });
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setRedeeming(null);
-    }
+    // Redirect to detail page for CPF-required flow
+    toast({ title: "Abra a oferta para resgatar", description: "Toque na oferta para informar seu CPF e gerar o PIN." });
   };
 
   if (loading) {
