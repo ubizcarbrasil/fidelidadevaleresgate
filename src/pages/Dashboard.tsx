@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,7 +40,16 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted-fo
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
+  const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope } = useBrandGuard();
+
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
   const showBrand = ["ROOT", "TENANT", "BRAND"].includes(consoleScope);
