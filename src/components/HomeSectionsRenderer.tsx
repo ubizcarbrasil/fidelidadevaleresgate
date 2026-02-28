@@ -4,7 +4,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
 import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOfferNav } from "@/components/customer/CustomerLayout";
+import { useCustomerNav } from "@/components/customer/CustomerLayout";
 
 type Voucher = Tables<"vouchers">;
 
@@ -171,7 +171,7 @@ interface SectionBlockProps {
 function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHeading }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { openOffer } = useOfferNav();
+  const { openOffer, openStore } = useCustomerNav();
   const templateType = section.section_templates?.type;
   const schema = section.section_templates?.schema_json || {};
 
@@ -205,11 +205,12 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         setItems(data || []);
       } else if (source.source_type === "STORES") {
         let query = supabase
-          .from("branches")
+          .from("stores")
           .select("*")
           .eq("is_active", true)
           .order("name")
           .limit(source.limit || 10);
+        if (branchId) query = query.eq("branch_id", branchId);
         const { data } = await query;
         setItems(data || []);
       } else {
@@ -259,9 +260,9 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       ) : templateType === "OFFERS_CAROUSEL" ? (
         <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
       ) : templateType === "STORES_GRID" ? (
-        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} />
       ) : templateType === "STORES_LIST" ? (
-        <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
+        <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} />
       ) : templateType === "BANNER_CAROUSEL" ? (
         <BannerCarousel items={items} primary={primary} />
       ) : null}
@@ -419,7 +420,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 }
 
 // --- STORES_GRID (horizontal scroll) ---
-function StoresGrid({ items, primary, cardBg, fontHeading, fg }: any) {
+function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -428,11 +429,12 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg }: any) {
         {items.map((b: any) => (
           <div
             key={b.id}
-            className="min-w-[100px] flex-shrink-0 rounded-[18px] p-4 text-center bg-white"
+            className="min-w-[100px] flex-shrink-0 rounded-[18px] p-4 text-center bg-white cursor-pointer"
             style={{
               boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
               scrollSnapAlign: "start",
             }}
+            onClick={() => onStoreClick?.(b)}
           >
             {b.logo_url ? (
               <LazyImage src={b.logo_url} alt={b.name} className="h-10 w-10 mx-auto mb-2 rounded-xl" />
@@ -454,14 +456,15 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg }: any) {
 }
 
 // --- STORES_LIST ---
-function StoresList({ items, primary, cardBg, fontHeading, fg }: any) {
+function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   return (
     <div className="max-w-lg mx-auto px-5 space-y-2">
       {items.map((b: any, idx: number) => (
         <div
           key={b.id}
-          className="rounded-[14px] p-3 flex items-center gap-3 bg-white"
+          className="rounded-[14px] p-3 flex items-center gap-3 bg-white cursor-pointer"
           style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
+          onClick={() => onStoreClick?.(b)}
         >
           {b.logo_url ? (
             <LazyImage src={b.logo_url} alt={b.name} className="h-10 w-10 shrink-0 rounded-xl" />

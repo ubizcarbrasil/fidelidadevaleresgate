@@ -7,13 +7,16 @@ import CustomerOffersPage from "@/pages/customer/CustomerOffersPage";
 import CustomerWalletPage from "@/pages/customer/CustomerWalletPage";
 import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
 import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
+import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
 
-// Context to allow child components to open offer detail
-interface OfferNavContextType {
+// Context to allow child components to open offer/store detail
+interface CustomerNavContextType {
   openOffer: (offer: any) => void;
+  openStore: (store: any) => void;
 }
-const OfferNavContext = createContext<OfferNavContextType>({ openOffer: () => {} });
-export const useOfferNav = () => useContext(OfferNavContext);
+const CustomerNavContext = createContext<CustomerNavContextType>({ openOffer: () => {}, openStore: () => {} });
+export const useOfferNav = () => useContext(CustomerNavContext);
+export const useCustomerNav = () => useContext(CustomerNavContext);
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -46,6 +49,7 @@ export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [selectedStore, setSelectedStore] = useState<any>(null);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const bg = "#FAFAFA";
@@ -58,7 +62,7 @@ export default function CustomerLayout() {
   const ActivePage = TAB_CONTENT[activeTab];
 
   return (
-    <OfferNavContext.Provider value={{ openOffer: setSelectedOffer }}>
+    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore }}>
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
         {/* Modern Header */}
         <header className="sticky top-0 z-50" style={{ backgroundColor: cardBg }}>
@@ -159,7 +163,21 @@ export default function CustomerLayout() {
             />
           )}
         </AnimatePresence>
+
+        {/* Store Detail Overlay */}
+        <AnimatePresence>
+          {selectedStore && (
+            <CustomerStoreDetailPage
+              store={selectedStore}
+              onBack={() => setSelectedStore(null)}
+              onOfferClick={(offer) => {
+                setSelectedStore(null);
+                setTimeout(() => setSelectedOffer(offer), 100);
+              }}
+            />
+          )}
+        </AnimatePresence>
       </div>
-    </OfferNavContext.Provider>
+    </CustomerNavContext.Provider>
   );
 }
