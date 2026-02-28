@@ -1,176 +1,82 @@
 
 
-## Plan: Upload com Recorte, Galeria de Ícones, Central de Banners, Organização Admin e Nomes Configuráveis
+## Plano: 5 Ajustes — Carteira Bancária, Extrato, Seções Modulares, Page Builder, Página de Produtos
 
-Este plano cobre 5 frentes novas solicitadas.
-
----
-
-### 1. Upload de Imagem com Recorte (Image Cropper)
-
-**Problema**: Hoje o `ImageUploadField` só faz upload direto, sem recorte.
-
-**Solução**:
-- Criar componente `ImageCropDialog.tsx` usando a lib `react-image-crop` (ou implementação nativa com canvas)
-- Ao selecionar arquivo, abrir modal com preview + crop area (aspect ratio configurável)
-- Botão "Recortar e Salvar" gera o blob recortado via Canvas API e faz upload ao Storage
-- Integrar no `ImageUploadField` existente -- após selecionar arquivo, abre o crop dialog antes de enviar
-- Aplicar em todos os lugares que usam imagem: BrandSectionsManager, BrandThemeEditor, StoreProfileTab, etc.
-
-**Arquivos**:
-| Arquivo | Ação |
-|---|---|
-| `src/components/ImageCropDialog.tsx` | **Novo** - Modal de recorte com canvas |
-| `src/components/ImageUploadField.tsx` | Integrar crop dialog antes do upload |
+Este é um conjunto grande de mudanças. Dado a complexidade, proponho implementação em **5 fases sequenciais**.
 
 ---
 
-### 2. Galeria de Ícones
+### Fase 1: Carteira estilo banco na Home + Extrato ao clicar
 
-**DB Migration** - Nova tabela `icon_library`:
-- `id uuid PK`
-- `brand_id uuid` (nullable = ícones globais)
-- `name text`
-- `category text` (ex: "ações", "categorias", "social")
-- `icon_type text` -- "lucide" (nativo) ou "custom"
-- `lucide_name text` -- nome do ícone lucide (se nativo)
-- `image_url text` -- URL da imagem (se custom)
-- `color text`
-- `is_active boolean DEFAULT true`
-- `created_at timestamp`
-
-**Componentes**:
-| Arquivo | Ação |
-|---|---|
-| `src/pages/IconLibraryPage.tsx` | **Novo** - CRUD de ícones com preview, busca por nome, upload de ícones custom |
-| `src/components/IconPickerDialog.tsx` | **Novo** - Seletor de ícone reutilizável (busca lucide + custom) |
+**Arquivos a editar:**
+- `src/pages/customer/CustomerHomePage.tsx` — Redesenhar o card de saldo para parecer um cartão bancário digital (número de conta truncado do customer ID, chip visual, gradiente premium, ícone de banco, saldo em destaque com "Conta Digital")
+- `src/components/customer/CustomerLayout.tsx` — Adicionar state `ledgerOpen` e integrar um drawer de extrato mobile-friendly
+- Criar `src/components/customer/CustomerLedgerOverlay.tsx` — Overlay fullscreen estilo banco (slide-up) com:
+  - Saldo no topo
+  - Filtro por período (chips: Hoje, 7 dias, 30 dias, Tudo)
+  - Lista de transações com: ícone crédito/débito, motivo, **nome da loja** (join com `earning_events` → `stores`), data, valor
+  - Query: `points_ledger` JOIN `earning_events` (via `reference_id`) → `stores(name, logo_url)` para mostrar qual loja gerou cada transação
 
 ---
 
-### 3. Central de Gestão de Banners com Agendamento
+### Fase 2: Editor modular avançado de seções
 
-**DB Migration** - Nova tabela `banner_schedules`:
-- `id uuid PK`
-- `brand_id uuid`
-- `brand_section_id uuid` (nullable -- pode ser banner global)
-- `image_url text`
-- `title text`
-- `link_url text`
-- `link_type text` -- "external", "internal", "offer", "store"
-- `link_target_id uuid` (nullable)
-- `start_at timestamptz`
-- `end_at timestamptz` (nullable)
-- `is_active boolean DEFAULT true`
-- `order_index integer DEFAULT 0`
-- `created_at, updated_at`
+**DB Migration** — Adicionar colunas a `brand_sections`:
+- `rows_count integer DEFAULT 1`
+- `columns_count integer DEFAULT 4`
+- `icon_size text DEFAULT 'medium'` (small/medium/large)
+- `filter_mode text DEFAULT 'recent'` (most_redeemed/newest/random/by_category/by_tag/by_credit_range/by_coupon_type)
+- `coupon_type_filter text` (PRODUCT/STORE/MIXED)
+- `min_stores_visible integer DEFAULT 1`
+- `max_stores_visible integer`
+- `city_filter_json jsonb DEFAULT '[]'`
+- `banners_json jsonb DEFAULT '[]'` (array de URLs, max 10)
 
-**Componentes**:
-| Arquivo | Ação |
-|---|---|
-| `src/pages/BannerManagerPage.tsx` | **Novo** - Central de banners: lista, agendamento, preview, vinculação a seções |
-
-Funcionalidades:
-- Criar banner com data de início/fim
-- Vincular a uma seção específica ou como banner global
-- Vincular a oferta agendada (link_type = "offer")
-- Preview visual do banner
-- Status automático baseado em datas (AGENDADO / ATIVO / EXPIRADO)
+**Arquivos:**
+- `src/components/BrandSectionsManager.tsx` — Refatorar dialog para incluir: grid linhas/colunas, tamanho ícone, filtro, tipo cupom, min/max lojas, filtro cidade, upload multi-banners, drag-and-drop reorder
+- `src/components/HomeSectionsRenderer.tsx` — Aplicar `rows_count × columns_count` no grid, aplicar `filter_mode` na query, respeitar limites, renderizar multi-banners como carrossel
 
 ---
 
-### 4. Organização do Admin por Fluxos + Descrições de Instrução
+### Fase 3: Página de Produtos e Lojas estilo Méliuz
 
-**Mudança nos Sidebars**: Reorganizar os menus laterais do admin em grupos semânticos com labels descritivos.
-
-Exemplo de reorganização do `BrandSidebar`:
-```
-📊 Visão Geral
-  - Dashboard
-  
-🎨 Identidade Visual
-  - Tema & Marca
-  - Domínios
-  - Galeria de Ícones
-  
-📱 Vitrine do App
-  - Seções da Home
-  - Central de Banners
-  - Nomes e Rótulos
-  
-🏪 Operações
-  - Lojas
-  - Branches
-  - Aprovação de Lojas
-  - Importar CSV
-  
-💰 Programa de Pontos
-  - Regras de Pontos
-  - Extrato de Pontos
-  
-👥 Usuários & Permissões
-  - Usuários
-  - Módulos
-```
-
-**Descrições de instrução**: Cada página admin terá um cabeçalho com título + descrição curta de como usar aquela funcionalidade. Criar componente `PageHeader.tsx` reutilizável com `title`, `description` e opcional `helpLink`.
-
-**Arquivos**:
-| Arquivo | Ação |
-|---|---|
-| `src/components/PageHeader.tsx` | **Novo** - Header com título + descrição instrucional |
-| `src/components/consoles/BrandSidebar.tsx` | Reorganizar em SidebarGroups por fluxo |
-| `src/components/consoles/RootSidebar.tsx` | Idem |
-| `src/components/consoles/TenantSidebar.tsx` | Idem |
-| Todas as páginas admin | Adicionar PageHeader com descrição |
+**Arquivos:**
+- `src/pages/customer/CustomerOffersPage.tsx` — Redesenhar para layout de lista vertical (imagem esquerda 80×80 + info direita): nome da loja acima, título, preço atual + preço antigo riscado, badge cashback, likes, busca no topo
+- `src/pages/customer/CustomerOfferDetailPage.tsx` — Adicionar seção "Ofertas semelhantes", cupom em destaque com borda tracejada, botão compartilhar, tabela de cashback por categoria
+- `src/components/customer/SectionDetailOverlay.tsx` — Melhorar com badges (IMPERDÍVEL, ÚLTIMAS HORAS), cashback por loja, layout mais denso
 
 ---
 
-### 5. Configuração de Nomes dos Menus (Admin + App)
+### Fase 4: Construtor de páginas (Page Builder)
 
-**DB Migration** - Nova tabela `menu_labels`:
-- `id uuid PK`
-- `brand_id uuid`
-- `context text` -- "admin" ou "customer_app"
-- `key text` -- identificador do menu (ex: "sidebar.dashboard", "app.ofertas")
-- `custom_label text`
-- `created_at, updated_at`
-- `UNIQUE(brand_id, context, key)`
+**DB Migration** — Nova tabela `custom_pages`:
+- `id uuid PK`, `brand_id uuid`, `title text`, `slug text UNIQUE`
+- `is_published boolean DEFAULT false`
+- `elements_json jsonb` — array de elementos com: type (button/icon/banner/section/text/divider), content, style (font, size, color, shadow, effects, border_radius), action (link externo, webview, rota interna, categoria, produto, segmento, tag)
+- `permissions_json jsonb` — controle de acesso
+- `tags_json jsonb` — tags de comunicação visual
 
-**Componentes**:
-| Arquivo | Ação |
-|---|---|
-| `src/pages/MenuLabelsPage.tsx` | **Novo** - Tabela editável com todos os rótulos de menu, separados por contexto (Admin / App) |
-| `src/hooks/useMenuLabels.ts` | **Novo** - Hook que carrega labels custom e faz fallback para o padrão |
+**Novos arquivos:**
+- `src/pages/PageBuilderPage.tsx` — Editor visual com lista de elementos + preview lado a lado
+- `src/components/page-builder/ElementEditor.tsx` — Config de cada elemento (tipografia, cor, sombra, efeito, link/webview/rota)
+- `src/components/page-builder/PagePreview.tsx` — Preview em tempo real
+- `src/components/page-builder/ElementRenderer.tsx` — Renderizador de elementos
+- `src/pages/customer/CustomPage.tsx` — Renderizador público
 
-**Integração**:
-- Sidebars usam `useMenuLabels("admin")` para buscar nomes custom
-- `CustomerLayout` usa `useMenuLabels("customer_app")` para bottom nav e quick actions
-- Cada label tem um `key` fixo e um `custom_label` editável
+**Rotas:** `/page-builder` no admin, `/p/:slug` no customer
 
 ---
 
-### Ordem de Implementação
+### Fase 5: Integrar tudo + polimentos
 
-1. **ImageCropDialog** + integrar no ImageUploadField
-2. **DB migrations** (icon_library, banner_schedules, menu_labels)
-3. **Galeria de Ícones** (IconLibraryPage + IconPickerDialog)
-4. **Central de Banners** (BannerManagerPage)
-5. **PageHeader** + reorganizar Sidebars por fluxo
-6. **MenuLabelsPage** + useMenuLabels hook
-7. Integrar labels nos sidebars e customer app
+- Garantir que clique no card de saldo abre o extrato
+- Quick Actions navegam para as tabs corretas
+- Seções modulares renderizam corretamente com novos campos
+- Page Builder funcional end-to-end
 
-### Resumo de Migrações DB
+---
 
-```sql
--- 1. icon_library
-CREATE TABLE public.icon_library (...)
+### Ordem de implementação recomendada
 
--- 2. banner_schedules  
-CREATE TABLE public.banner_schedules (...)
-
--- 3. menu_labels
-CREATE TABLE public.menu_labels (...)
-```
-
-Todas com RLS: leitura pública para items ativos, gestão restrita a brand/tenant/root admins.
+Sugiro começar pela **Fase 1** (carteira bancária + extrato), pois é a mais impactante visualmente e a mais independente das demais.
 
