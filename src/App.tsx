@@ -39,6 +39,9 @@ import HomeTemplatesPage from "@/pages/HomeTemplatesPage";
 import CsvImportPage from "@/pages/CsvImportPage";
 import CloneBranchPage from "@/pages/CloneBranchPage";
 import BrandModulesPage from "@/pages/BrandModulesPage";
+import PointsRulesPage from "@/pages/PointsRulesPage";
+import EarnPointsPage from "@/pages/EarnPointsPage";
+import PointsLedgerPage from "@/pages/PointsLedgerPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -87,6 +90,9 @@ function AppRoutes() {
         <Route path="clone-branch" element={<CloneBranchPage />} />
         <Route path="brand-modules" element={<BrandModulesPage />} />
         <Route path="pdv" element={<OperatorRedeemPage />} />
+        <Route path="points-rules" element={<PointsRulesPage />} />
+        <Route path="earn-points" element={<EarnPointsPage />} />
+        <Route path="points-ledger" element={<PointsLedgerPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

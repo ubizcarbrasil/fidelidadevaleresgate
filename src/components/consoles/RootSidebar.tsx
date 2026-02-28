@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -26,6 +26,9 @@ const operationItems = [
   { title: "Ofertas", url: "/offers", icon: Tag },
   { title: "Clientes", url: "/customers", icon: UserCheck },
   { title: "Resgates", url: "/redemptions", icon: ReceiptText },
+  { title: "Pontuar", url: "/earn-points", icon: Coins },
+  { title: "Regras de Pontos", url: "/points-rules", icon: Settings2 },
+  { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText },
   { title: "Vouchers", url: "/vouchers", icon: Ticket },
   { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
 ];

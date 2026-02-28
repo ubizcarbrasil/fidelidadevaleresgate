@@ -420,6 +420,83 @@ export type Database = {
           },
         ]
       }
+      earning_events: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          created_by_user_id: string
+          customer_id: string
+          id: string
+          money_earned: number
+          points_earned: number
+          purchase_value: number
+          receipt_code: string | null
+          source: Database["public"]["Enums"]["earning_source"]
+          status: Database["public"]["Enums"]["earning_status"]
+          store_id: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          created_by_user_id: string
+          customer_id: string
+          id?: string
+          money_earned?: number
+          points_earned?: number
+          purchase_value?: number
+          receipt_code?: string | null
+          source?: Database["public"]["Enums"]["earning_source"]
+          status?: Database["public"]["Enums"]["earning_status"]
+          store_id: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          created_by_user_id?: string
+          customer_id?: string
+          id?: string
+          money_earned?: number
+          points_earned?: number
+          purchase_value?: number
+          receipt_code?: string | null
+          source?: Database["public"]["Enums"]["earning_source"]
+          status?: Database["public"]["Enums"]["earning_status"]
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "earning_events_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earning_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earning_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earning_events_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -752,6 +829,139 @@ export type Database = {
           module?: string
         }
         Relationships: []
+      }
+      points_ledger: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          created_by_user_id: string
+          customer_id: string
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id: string
+          money_amount: number
+          points_amount: number
+          reason: string | null
+          reference_id: string | null
+          reference_type: Database["public"]["Enums"]["ledger_reference_type"]
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          created_by_user_id: string
+          customer_id: string
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id?: string
+          money_amount?: number
+          points_amount?: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type: Database["public"]["Enums"]["ledger_reference_type"]
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          created_by_user_id?: string
+          customer_id?: string
+          entry_type?: Database["public"]["Enums"]["ledger_entry_type"]
+          id?: string
+          money_amount?: number
+          points_amount?: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: Database["public"]["Enums"]["ledger_reference_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "points_ledger_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_ledger_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      points_rules: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          max_points_per_customer_per_day: number
+          max_points_per_purchase: number
+          max_points_per_store_per_day: number
+          min_purchase_to_earn: number
+          money_per_point: number
+          points_per_real: number
+          require_receipt_code: boolean
+          rule_type: Database["public"]["Enums"]["points_rule_type"]
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_points_per_customer_per_day?: number
+          max_points_per_purchase?: number
+          max_points_per_store_per_day?: number
+          min_purchase_to_earn?: number
+          money_per_point?: number
+          points_per_real?: number
+          require_receipt_code?: boolean
+          rule_type?: Database["public"]["Enums"]["points_rule_type"]
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_points_per_customer_per_day?: number
+          max_points_per_purchase?: number
+          max_points_per_store_per_day?: number
+          min_purchase_to_earn?: number
+          money_per_point?: number
+          points_per_real?: number
+          require_receipt_code?: boolean
+          rule_type?: Database["public"]["Enums"]["points_rule_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "points_rules_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1322,7 +1532,15 @@ export type Database = {
         | "operator_pdv"
         | "store_admin"
         | "customer"
+      earning_source: "STORE" | "PDV" | "ADMIN" | "IMPORT" | "API"
+      earning_status: "APPROVED" | "REJECTED"
+      ledger_entry_type: "CREDIT" | "DEBIT"
+      ledger_reference_type:
+        | "EARNING_EVENT"
+        | "REDEMPTION"
+        | "MANUAL_ADJUSTMENT"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
+      points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
       redemption_status: "PENDING" | "USED" | "EXPIRED" | "CANCELED"
       section_source_type:
         | "OFFERS"
@@ -1475,7 +1693,16 @@ export const Constants = {
         "store_admin",
         "customer",
       ],
+      earning_source: ["STORE", "PDV", "ADMIN", "IMPORT", "API"],
+      earning_status: ["APPROVED", "REJECTED"],
+      ledger_entry_type: ["CREDIT", "DEBIT"],
+      ledger_reference_type: [
+        "EARNING_EVENT",
+        "REDEMPTION",
+        "MANUAL_ADJUSTMENT",
+      ],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
+      points_rule_type: ["PER_REAL", "FIXED", "TIERED"],
       redemption_status: ["PENDING", "USED", "EXPIRED", "CANCELED"],
       section_source_type: [
         "OFFERS",
