@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { DataTableControls } from "@/components/DataTableControls";
+
+const PAGE_SIZE = 20;
 
 interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; }
 const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "" };
@@ -20,13 +23,24 @@ export default function CustomersPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerForm>(emptyForm);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: customers, isLoading } = useQuery({
-    queryKey: ["customers"],
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["customers", debouncedSearch, page],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("*, brands(name), branches(name)").order("created_at", { ascending: false });
+      let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      const from = (page - 1) * PAGE_SIZE;
+      const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { items: data, total: count || 0 };
     },
   });
 
@@ -37,13 +51,8 @@ export default function CustomersPage() {
   const save = useMutation({
     mutationFn: async () => {
       const payload = { name: form.name, phone: form.phone || null, brand_id: form.brand_id, branch_id: form.branch_id };
-      if (editId) {
-        const { error } = await supabase.from("customers").update(payload).eq("id", editId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("customers").insert(payload);
-        if (error) throw error;
-      }
+      if (editId) { const { error } = await supabase.from("customers").update(payload).eq("id", editId); if (error) throw error; }
+      else { const { error } = await supabase.from("customers").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
@@ -87,6 +96,9 @@ export default function CustomersPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome ou telefone..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -104,8 +116,8 @@ export default function CustomersPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {customers?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente</TableCell></TableRow>}
-              {customers?.map(c => (
+              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
+              {data?.items?.map(c => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>{c.phone || "—"}</TableCell>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { DataTableControls } from "@/components/DataTableControls";
 import type { Database } from "@/integrations/supabase/types";
 
 type OfferStatus = Database["public"]["Enums"]["offer_status"];
 const STATUS_OPTIONS: OfferStatus[] = ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"];
 const STATUS_COLORS: Record<OfferStatus, string> = { DRAFT: "secondary", PENDING: "outline", APPROVED: "default", ACTIVE: "default", EXPIRED: "destructive" } as any;
+
+const PAGE_SIZE = 20;
 
 interface OfferForm {
   title: string; description: string; brand_id: string; branch_id: string; store_id: string;
@@ -29,13 +32,24 @@ export default function OffersPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: offers, isLoading } = useQuery({
-    queryKey: ["offers"],
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["offers", debouncedSearch, page],
     queryFn: async () => {
-      const { data, error } = await supabase.from("offers").select("*, brands(name), branches(name), stores(name)").order("created_at", { ascending: false });
+      let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
+      if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
+      const from = (page - 1) * PAGE_SIZE;
+      const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { items: data, total: count || 0 };
     },
   });
 
@@ -53,13 +67,8 @@ export default function OffersPage() {
         value_rescue: Number(form.value_rescue), min_purchase: Number(form.min_purchase), status: form.status,
         max_daily_redemptions: form.max_daily_redemptions ? Number(form.max_daily_redemptions) : null,
       };
-      if (editId) {
-        const { error } = await supabase.from("offers").update(payload).eq("id", editId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("offers").insert(payload);
-        if (error) throw error;
-      }
+      if (editId) { const { error } = await supabase.from("offers").update(payload).eq("id", editId); if (error) throw error; }
+      else { const { error } = await supabase.from("offers").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["offers"] }); toast.success(editId ? "Oferta atualizada!" : "Oferta criada!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
@@ -132,6 +141,9 @@ export default function OffersPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -147,8 +159,8 @@ export default function OffersPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {offers?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma oferta</TableCell></TableRow>}
-              {offers?.map(o => (
+              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma oferta encontrada</TableCell></TableRow>}
+              {data?.items?.map(o => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.title}</TableCell>
                   <TableCell>{(o.stores as any)?.name}</TableCell>

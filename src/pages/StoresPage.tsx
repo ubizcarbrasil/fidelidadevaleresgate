@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -12,18 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { DataTableControls } from "@/components/DataTableControls";
+
+const PAGE_SIZE = 20;
 
 interface StoreForm {
-  name: string;
-  slug: string;
-  category: string;
-  address: string;
-  whatsapp: string;
-  brand_id: string;
-  branch_id: string;
-  is_active: boolean;
+  name: string; slug: string; category: string; address: string; whatsapp: string;
+  brand_id: string; branch_id: string; is_active: boolean;
 }
-
 const emptyForm: StoreForm = { name: "", slug: "", category: "", address: "", whatsapp: "", brand_id: "", branch_id: "", is_active: true };
 
 export default function StoresPage() {
@@ -31,38 +27,36 @@ export default function StoresPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<StoreForm>(emptyForm);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: stores, isLoading } = useQuery({
-    queryKey: ["stores"],
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["stores", debouncedSearch, page],
     queryFn: async () => {
-      const { data, error } = await supabase.from("stores").select("*, brands(name), branches(name)").order("created_at", { ascending: false });
+      let query = supabase.from("stores").select("*, brands(name), branches(name)", { count: "exact" });
+      if (debouncedSearch) query = query.ilike("name", `%${debouncedSearch}%`);
+      const from = (page - 1) * PAGE_SIZE;
+      const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { items: data, total: count || 0 };
     },
   });
 
-  const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
-    queryFn: async () => { const { data } = await supabase.from("brands").select("id, name").order("name"); return data || []; },
-  });
-
-  const { data: branches } = useQuery({
-    queryKey: ["branches-select"],
-    queryFn: async () => { const { data } = await supabase.from("branches").select("id, name, brand_id").order("name"); return data || []; },
-  });
-
+  const { data: brands } = useQuery({ queryKey: ["brands-select"], queryFn: async () => { const { data } = await supabase.from("brands").select("id, name").order("name"); return data || []; } });
+  const { data: branches } = useQuery({ queryKey: ["branches-select"], queryFn: async () => { const { data } = await supabase.from("branches").select("id, name, brand_id").order("name"); return data || []; } });
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
 
   const save = useMutation({
     mutationFn: async () => {
       const payload = { name: form.name, slug: form.slug, category: form.category || null, address: form.address || null, whatsapp: form.whatsapp || null, brand_id: form.brand_id, branch_id: form.branch_id, is_active: form.is_active };
-      if (editId) {
-        const { error } = await supabase.from("stores").update(payload).eq("id", editId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("stores").insert(payload);
-        if (error) throw error;
-      }
+      if (editId) { const { error } = await supabase.from("stores").update(payload).eq("id", editId); if (error) throw error; }
+      else { const { error } = await supabase.from("stores").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["stores"] }); toast.success(editId ? "Loja atualizada!" : "Loja criada!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
@@ -120,6 +114,9 @@ export default function StoresPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar loja por nome..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -135,8 +132,8 @@ export default function StoresPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {stores?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma loja</TableCell></TableRow>}
-              {stores?.map(s => (
+              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma loja encontrada</TableCell></TableRow>}
+              {data?.items?.map(s => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell>{(s.brands as any)?.name}</TableCell>
