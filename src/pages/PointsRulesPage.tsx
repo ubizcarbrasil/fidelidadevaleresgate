@@ -26,6 +26,10 @@ interface RuleForm {
   max_points_per_store_per_day: number;
   require_receipt_code: boolean;
   is_active: boolean;
+  allow_store_custom_rule: boolean;
+  store_points_per_real_min: number;
+  store_points_per_real_max: number;
+  store_rule_requires_approval: boolean;
 }
 
 const emptyForm: RuleForm = {
@@ -40,6 +44,10 @@ const emptyForm: RuleForm = {
   max_points_per_store_per_day: 10000,
   require_receipt_code: false,
   is_active: true,
+  allow_store_custom_rule: false,
+  store_points_per_real_min: 1,
+  store_points_per_real_max: 3,
+  store_rule_requires_approval: true,
 };
 
 export default function PointsRulesPage() {
@@ -94,6 +102,10 @@ export default function PointsRulesPage() {
         max_points_per_store_per_day: form.max_points_per_store_per_day,
         require_receipt_code: form.require_receipt_code,
         is_active: form.is_active,
+        allow_store_custom_rule: form.allow_store_custom_rule,
+        store_points_per_real_min: form.store_points_per_real_min,
+        store_points_per_real_max: form.store_points_per_real_max,
+        store_rule_requires_approval: form.store_rule_requires_approval,
       };
       if (!editId) {
         payload.brand_id = isRootAdmin ? form.brand_id : currentBrandId;
@@ -128,6 +140,10 @@ export default function PointsRulesPage() {
       max_points_per_customer_per_day: r.max_points_per_customer_per_day,
       max_points_per_store_per_day: r.max_points_per_store_per_day,
       require_receipt_code: r.require_receipt_code, is_active: r.is_active,
+      allow_store_custom_rule: r.allow_store_custom_rule ?? false,
+      store_points_per_real_min: r.store_points_per_real_min ?? 1,
+      store_points_per_real_max: r.store_points_per_real_max ?? 3,
+      store_rule_requires_approval: r.store_rule_requires_approval ?? true,
     });
     setOpen(true);
   };
@@ -213,6 +229,33 @@ export default function PointsRulesPage() {
               <div className="flex items-center justify-between">
                 <Label>Ativa</Label>
                 <Switch checked={form.is_active} onCheckedChange={v => updateField("is_active", v)} />
+              </div>
+
+              {/* Store custom rule settings */}
+              <div className="border-t pt-4 space-y-4">
+                <p className="text-sm font-semibold text-muted-foreground">Regra customizada por loja</p>
+                <div className="flex items-center justify-between">
+                  <Label>Permitir regra customizada por loja</Label>
+                  <Switch checked={form.allow_store_custom_rule} onCheckedChange={v => updateField("allow_store_custom_rule", v)} />
+                </div>
+                {form.allow_store_custom_rule && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Pts/R$ mínimo (loja)</Label>
+                        <Input type="number" step="0.1" value={form.store_points_per_real_min} onChange={e => updateField("store_points_per_real_min", +e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Pts/R$ máximo (loja)</Label>
+                        <Input type="number" step="0.1" value={form.store_points_per_real_max} onChange={e => updateField("store_points_per_real_max", +e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Requer aprovação do admin</Label>
+                      <Switch checked={form.store_rule_requires_approval} onCheckedChange={v => updateField("store_rule_requires_approval", v)} />
+                    </div>
+                  </>
+                )}
               </div>
               <Button onClick={() => save.mutate()} disabled={!form.rule_type || (!editId && !form.brand_id && !currentBrandId)} className="w-full">Salvar</Button>
             </div>

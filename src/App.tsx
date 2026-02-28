@@ -43,6 +43,8 @@ import BrandModulesPage from "@/pages/BrandModulesPage";
 import PointsRulesPage from "@/pages/PointsRulesPage";
 import EarnPointsPage from "@/pages/EarnPointsPage";
 import PointsLedgerPage from "@/pages/PointsLedgerPage";
+import StorePointsRulePage from "@/pages/StorePointsRulePage";
+import ApproveStoreRulesPage from "@/pages/ApproveStoreRulesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +96,8 @@ function AppRoutes() {
         <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />
         <Route path="earn-points" element={<ModuleGuard moduleKey="earn_points_store"><EarnPointsPage /></ModuleGuard>} />
         <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
+        <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
+        <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

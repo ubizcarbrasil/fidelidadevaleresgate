@@ -899,6 +899,7 @@ export type Database = {
       }
       points_rules: {
         Row: {
+          allow_store_custom_rule: boolean
           branch_id: string | null
           brand_id: string
           created_at: string
@@ -912,9 +913,13 @@ export type Database = {
           points_per_real: number
           require_receipt_code: boolean
           rule_type: Database["public"]["Enums"]["points_rule_type"]
+          store_points_per_real_max: number
+          store_points_per_real_min: number
+          store_rule_requires_approval: boolean
           updated_at: string
         }
         Insert: {
+          allow_store_custom_rule?: boolean
           branch_id?: string | null
           brand_id: string
           created_at?: string
@@ -928,9 +933,13 @@ export type Database = {
           points_per_real?: number
           require_receipt_code?: boolean
           rule_type?: Database["public"]["Enums"]["points_rule_type"]
+          store_points_per_real_max?: number
+          store_points_per_real_min?: number
+          store_rule_requires_approval?: boolean
           updated_at?: string
         }
         Update: {
+          allow_store_custom_rule?: boolean
           branch_id?: string | null
           brand_id?: string
           created_at?: string
@@ -944,6 +953,9 @@ export type Database = {
           points_per_real?: number
           require_receipt_code?: boolean
           rule_type?: Database["public"]["Enums"]["points_rule_type"]
+          store_points_per_real_max?: number
+          store_points_per_real_min?: number
+          store_rule_requires_approval?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -1227,6 +1239,76 @@ export type Database = {
           type?: Database["public"]["Enums"]["section_type"]
         }
         Relationships: []
+      }
+      store_points_rules: {
+        Row: {
+          approved_at: string | null
+          approved_by_user_id: string | null
+          branch_id: string
+          brand_id: string
+          created_at: string
+          created_by_user_id: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          points_per_real: number
+          starts_at: string | null
+          status: Database["public"]["Enums"]["store_rule_status"]
+          store_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_user_id?: string | null
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          created_by_user_id: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          points_per_real?: number
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["store_rule_status"]
+          store_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_user_id?: string | null
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          created_by_user_id?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          points_per_real?: number
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["store_rule_status"]
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_points_rules_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_points_rules_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stores: {
         Row: {
@@ -1555,6 +1637,7 @@ export type Database = {
         | "STORES_GRID"
         | "STORES_LIST"
         | "VOUCHERS_CARDS"
+      store_rule_status: "ACTIVE" | "PENDING_APPROVAL" | "REJECTED"
       voucher_status: "active" | "expired" | "depleted" | "cancelled"
     }
     CompositeTypes: {
@@ -1719,6 +1802,7 @@ export const Constants = {
         "STORES_LIST",
         "VOUCHERS_CARDS",
       ],
+      store_rule_status: ["ACTIVE", "PENDING_APPROVAL", "REJECTED"],
       voucher_status: ["active", "expired", "depleted", "cancelled"],
     },
   },
