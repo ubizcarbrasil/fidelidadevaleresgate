@@ -11,6 +11,9 @@ import {
   HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus
 } from "lucide-react";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
+import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
+import StoreProfileTab from "@/components/store-owner/StoreProfileTab";
+import StoreExtratoTab from "@/components/store-owner/StoreExtratoTab";
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
 
@@ -123,7 +126,10 @@ export default function StoreOwnerPanel() {
             <StoreCouponsTab store={store} onCreateNew={() => setShowWizard(true)} />
           )
         )}
-        {activeTab !== "dashboard" && activeTab !== "cupons" && (
+        {activeTab === "resgate" && <StoreRedeemTab store={store} />}
+        {activeTab === "perfil" && <StoreProfileTab store={store} />}
+        {activeTab === "extrato" && <StoreExtratoTab store={store} />}
+        {!["dashboard", "cupons", "resgate", "perfil", "extrato"].includes(activeTab) && (
           <div className="text-center py-20 text-muted-foreground">
             <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="font-semibold">Módulo "{MENU_ITEMS.find(m => m.key === activeTab)?.label}"</p>
