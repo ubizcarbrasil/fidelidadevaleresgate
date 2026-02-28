@@ -16,6 +16,9 @@ import Brands from "@/pages/Brands";
 import BrandForm from "@/pages/BrandForm";
 import Branches from "@/pages/Branches";
 import BranchForm from "@/pages/BranchForm";
+import Vouchers from "@/pages/Vouchers";
+import VoucherForm from "@/pages/VoucherForm";
+import VoucherRedeem from "@/pages/VoucherRedeem";
 import UsersPage from "@/pages/UsersPage";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +53,10 @@ const App = () => (
                 <Route path="branches" element={<Branches />} />
                 <Route path="branches/new" element={<BranchForm />} />
                 <Route path="branches/:id" element={<BranchForm />} />
+                <Route path="vouchers" element={<Vouchers />} />
+                <Route path="vouchers/new" element={<VoucherForm />} />
+                <Route path="vouchers/redeem" element={<VoucherRedeem />} />
+                <Route path="vouchers/:id" element={<VoucherForm />} />
                 <Route path="users" element={<UsersPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />

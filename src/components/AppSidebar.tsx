@@ -16,6 +16,7 @@ const navItems = [
   { title: "Tenants", url: "/tenants", icon: Building2 },
   { title: "Brands", url: "/brands", icon: Store },
   { title: "Branches", url: "/branches", icon: MapPin },
+  { title: "Vouchers", url: "/vouchers", icon: Ticket },
   { title: "Usuários", url: "/users", icon: Users },
 ];
 
