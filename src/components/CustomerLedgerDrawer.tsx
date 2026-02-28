@@ -1,11 +1,20 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Coins, TrendingUp, TrendingDown } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Coins, TrendingUp, TrendingDown, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
+
+const PAGE_SIZE = 20;
 
 interface CustomerLedgerDrawerProps {
   customer: { id: string; name: string; points_balance: number; money_balance: number } | null;
@@ -14,20 +23,42 @@ interface CustomerLedgerDrawerProps {
 }
 
 export default function CustomerLedgerDrawer({ customer, open, onOpenChange }: CustomerLedgerDrawerProps) {
-  const { data: entries, isLoading } = useQuery({
-    queryKey: ["customer-ledger", customer?.id],
+  const [page, setPage] = useState(1);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["customer-ledger", customer?.id, page, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("points_ledger")
-        .select("*, branches(name)")
+        .select("*, branches(name)", { count: "exact" })
         .eq("customer_id", customer!.id)
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .order("created_at", { ascending: false });
+
+      if (dateRange?.from) query = query.gte("created_at", dateRange.from.toISOString());
+      if (dateRange?.to) {
+        const end = new Date(dateRange.to);
+        end.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", end.toISOString());
+      }
+
+      const from = (page - 1) * PAGE_SIZE;
+      const { data, error, count } = await query.range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { items: data, total: count || 0 };
     },
     enabled: !!customer?.id && open,
   });
+
+  const totalPages = Math.ceil((data?.total || 0) / PAGE_SIZE);
+
+  const handleDateChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setPage(1);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -53,16 +84,51 @@ export default function CustomerLedgerDrawer({ customer, open, onOpenChange }: C
               </div>
             </div>
 
+            {/* Date range filter */}
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal flex-1", !dateRange && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <span>{format(dateRange.from, "dd/MM/yy")} — {format(dateRange.to, "dd/MM/yy")}</span>
+                      ) : (
+                        format(dateRange.from, "dd/MM/yy")
+                      )
+                    ) : (
+                      <span>Filtrar por período</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={handleDateChange}
+                    numberOfMonths={1}
+                    locale={ptBR}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              {dateRange && (
+                <Button variant="ghost" size="sm" onClick={() => handleDateChange(undefined)} className="text-xs text-muted-foreground">
+                  Limpar
+                </Button>
+              )}
+            </div>
+
             <Separator />
 
             {/* Ledger list */}
-            <ScrollArea className="h-[calc(100vh-260px)]">
+            <ScrollArea className="h-[calc(100vh-340px)]">
               {isLoading && <p className="text-center text-muted-foreground py-8">Carregando...</p>}
-              {!isLoading && (!entries || entries.length === 0) && (
+              {!isLoading && (!data?.items || data.items.length === 0) && (
                 <p className="text-center text-muted-foreground py-8">Nenhuma movimentação encontrada</p>
               )}
               <div className="space-y-2 pr-3">
-                {entries?.map((e: any) => {
+                {data?.items?.map((e: any) => {
                   const isCredit = e.entry_type === "CREDIT";
                   return (
                     <div key={e.id} className="flex items-start gap-3 rounded-lg border p-3">
@@ -90,6 +156,22 @@ export default function CustomerLedgerDrawer({ customer, open, onOpenChange }: C
                 })}
               </div>
             </ScrollArea>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-muted-foreground">{data?.total} registros</span>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs px-2">{page}/{totalPages}</span>
+                  <Button variant="outline" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </SheetContent>
