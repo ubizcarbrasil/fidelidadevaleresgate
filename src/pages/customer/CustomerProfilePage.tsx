@@ -6,7 +6,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Save, Loader2, User } from "lucide-react";
+import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
@@ -24,7 +24,6 @@ export default function CustomerProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const cardBg = hslToCss(theme?.colors?.card, "hsl(var(--card))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
@@ -53,92 +52,150 @@ export default function CustomerProfilePage() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut();
-  };
-
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <h2 className="text-lg font-bold mb-6" style={{ fontFamily: fontHeading }}>Perfil</h2>
+    <div className="max-w-lg mx-auto px-5 py-6">
+      <h2 className="text-xl font-bold mb-6" style={{ fontFamily: fontHeading }}>Perfil</h2>
 
-      {/* Avatar */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Avatar + Info */}
+      <div className="flex items-center gap-4 mb-7">
         <div
-          className="h-14 w-14 rounded-full flex items-center justify-center text-xl font-bold"
-          style={{ backgroundColor: primary, color: "#fff" }}
+          className="h-16 w-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0"
+          style={{
+            background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
+            color: "#fff",
+            boxShadow: `0 4px 16px -4px ${primary}50`,
+          }}
         >
-          {name ? name.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
+          {name ? name.charAt(0).toUpperCase() : <User className="h-7 w-7" />}
         </div>
         <div>
-          <p className="font-semibold">{name || "Cliente"}</p>
-          <p className="text-sm opacity-50">{user?.email}</p>
+          <p className="font-bold text-lg" style={{ fontFamily: fontHeading }}>{name || "Cliente"}</p>
+          <p className="text-sm" style={{ color: `${fg}50` }}>{user?.email}</p>
         </div>
       </div>
 
-      {/* Edit Form */}
+      {/* Edit Form Card */}
       <div
-        className="rounded-xl border p-4 space-y-4 mb-6"
-        style={{ backgroundColor: cardBg, borderColor: `${fg}12` }}
+        className="rounded-[20px] p-5 space-y-4 mb-5 bg-white"
+        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
       >
         <div>
-          <Label className="text-sm mb-1 block opacity-70">Nome</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Nome</Label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="rounded-xl h-11 border-0"
+            style={{ backgroundColor: "#F2F2F7" }}
+          />
         </div>
         <div>
-          <Label className="text-sm mb-1 block opacity-70">Telefone</Label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" />
+          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Telefone</Label>
+          <Input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="(11) 99999-0000"
+            className="rounded-xl h-11 border-0"
+            style={{ backgroundColor: "#F2F2F7" }}
+          />
         </div>
         <div>
-          <Label className="text-sm mb-1 block opacity-70">Email</Label>
-          <Input value={user?.email || ""} disabled className="opacity-60" />
+          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Email</Label>
+          <Input
+            value={user?.email || ""}
+            disabled
+            className="rounded-xl h-11 border-0 opacity-60"
+            style={{ backgroundColor: "#F2F2F7" }}
+          />
         </div>
 
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="w-full rounded-lg font-semibold"
+          className="w-full h-11 rounded-2xl font-bold text-sm"
           style={{ backgroundColor: primary, color: "#fff" }}
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          Salvar
+          Salvar alterações
         </Button>
       </div>
 
       {/* Branch Selector */}
       {branches.length > 1 && (
         <div
-          className="rounded-xl border p-4 mb-6"
-          style={{ backgroundColor: cardBg, borderColor: `${fg}12` }}
+          className="rounded-[20px] p-5 mb-5 bg-white"
+          style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
         >
-          <Label className="text-sm mb-2 block opacity-70">Filial</Label>
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin className="h-4 w-4" style={{ color: primary }} />
+            <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Filial</span>
+          </div>
           <div className="space-y-2">
-            {branches.map((branch) => (
-              <button
-                key={branch.id}
-                onClick={() => setSelectedBranch(branch)}
-                className="w-full text-left rounded-lg px-3 py-2 text-sm transition-colors border"
-                style={{
-                  backgroundColor: selectedBranch?.id === branch.id ? `${primary}15` : "transparent",
-                  borderColor: selectedBranch?.id === branch.id ? primary : `${fg}10`,
-                  color: selectedBranch?.id === branch.id ? primary : fg,
-                }}
-              >
-                {branch.name}
-                {branch.city && <span className="opacity-50 ml-1">· {branch.city}</span>}
-              </button>
-            ))}
+            {branches.map((branch) => {
+              const isSelected = selectedBranch?.id === branch.id;
+              return (
+                <button
+                  key={branch.id}
+                  onClick={() => setSelectedBranch(branch)}
+                  className="w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between"
+                  style={{
+                    backgroundColor: isSelected ? `${primary}10` : "#F2F2F7",
+                    border: isSelected ? `1.5px solid ${primary}40` : "1.5px solid transparent",
+                  }}
+                >
+                  <div>
+                    <span className="font-semibold" style={{ color: isSelected ? primary : fg }}>
+                      {branch.name}
+                    </span>
+                    {branch.city && (
+                      <span className="ml-1.5 text-xs" style={{ color: `${fg}40` }}>· {branch.city}</span>
+                    )}
+                  </div>
+                  {isSelected && (
+                    <div className="h-5 w-5 rounded-full flex items-center justify-center" style={{ backgroundColor: primary }}>
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
+      {/* Menu items */}
+      <div
+        className="rounded-[20px] overflow-hidden bg-white mb-5"
+        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+      >
+        {[
+          { icon: Shield, label: "Privacidade e Segurança" },
+          { icon: HelpCircle, label: "Ajuda e Suporte" },
+        ].map(({ icon: Icon, label }, idx) => (
+          <button
+            key={label}
+            className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-black/[0.02] transition-colors"
+            style={{
+              borderBottom: idx === 0 ? `1px solid ${fg}08` : "none",
+            }}
+          >
+            <Icon className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+            <span className="flex-1">{label}</span>
+            <ChevronRight className="h-4 w-4" style={{ color: `${fg}25` }} />
+          </button>
+        ))}
+      </div>
+
       {/* Logout */}
       <Button
         variant="outline"
-        onClick={handleLogout}
-        className="w-full rounded-lg"
+        onClick={() => signOut()}
+        className="w-full h-11 rounded-2xl font-semibold text-sm border-0"
+        style={{ backgroundColor: "hsl(0 72% 56% / 0.08)", color: "hsl(0 72% 51%)" }}
       >
         <LogOut className="h-4 w-4 mr-2" />
-        Sair
+        Sair da conta
       </Button>
     </div>
   );

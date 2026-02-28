@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef, useCallback, memo } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store } from "lucide-react";
+import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Voucher = Tables<"vouchers">;
@@ -70,60 +70,28 @@ function LazyImage({ src, alt, className, style }: { src: string; alt: string; c
 // --- Skeleton Components ---
 function SectionSkeleton() {
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6">
-      <div className="mb-4">
-        <Skeleton className="h-6 w-40 mb-1" />
-        <Skeleton className="h-4 w-64" />
+    <section className="max-w-lg mx-auto px-5">
+      <div className="mb-4 flex justify-between items-center">
+        <Skeleton className="h-6 w-32 rounded-lg" />
+        <Skeleton className="h-4 w-20 rounded-lg" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex gap-3 overflow-hidden">
         {[1, 2, 3].map((i) => (
-          <CardSkeleton key={i} />
+          <div key={i} className="min-w-[200px] rounded-[18px] bg-white overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+            <Skeleton className="h-28 w-full" />
+            <div className="p-3 space-y-2">
+              <Skeleton className="h-4 w-3/4 rounded-lg" />
+              <Skeleton className="h-3 w-1/2 rounded-lg" />
+            </div>
+          </div>
         ))}
       </div>
     </section>
   );
 }
 
-function CardSkeleton() {
-  return (
-    <div className="rounded-xl border overflow-hidden bg-card">
-      <Skeleton className="h-10 w-full" />
-      <div className="px-4 py-3 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
-    </div>
-  );
-}
-
-function StoreCardSkeleton() {
-  return (
-    <div className="rounded-xl border p-4 bg-card">
-      <Skeleton className="h-8 w-8 mx-auto mb-2 rounded-full" />
-      <Skeleton className="h-4 w-20 mx-auto mb-1" />
-      <Skeleton className="h-3 w-16 mx-auto" />
-    </div>
-  );
-}
-
-function CarouselSkeleton() {
-  return (
-    <div className="flex gap-4">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex-1 min-w-0 rounded-xl border overflow-hidden bg-card">
-          <Skeleton className="h-8 w-full" />
-          <div className="px-3 py-2">
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function BannerSkeleton() {
-  return <Skeleton className="rounded-xl h-48 w-full" />;
+  return <Skeleton className="rounded-[28px] h-44 w-full" />;
 }
 
 /** Renders all enabled brand sections in order */
@@ -161,23 +129,29 @@ export default function HomeSectionsRenderer() {
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
-  const cardBg = hslToCss(theme?.colors?.card, "hsl(var(--card))");
+  const cardBg = "#FFFFFF";
   const accent = hslToCss(theme?.colors?.accent, "hsl(var(--accent))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   return (
-    <div className="space-y-8">
-      {sections.map((section) => (
-        <SectionBlock
-          key={section.id}
-          section={section}
-          branchId={selectedBranch?.id}
-          primary={primary}
-          fg={fg}
-          cardBg={cardBg}
-          accent={accent}
-          fontHeading={fontHeading}
-        />
+    <div className="space-y-7">
+      {sections.map((section, idx) => (
+        <div key={section.id}>
+          {idx > 0 && (
+            <div className="max-w-lg mx-auto px-5 mb-7">
+              <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
+            </div>
+          )}
+          <SectionBlock
+            section={section}
+            branchId={selectedBranch?.id}
+            primary={primary}
+            fg={fg}
+            cardBg={cardBg}
+            accent={accent}
+            fontHeading={fontHeading}
+          />
+        </div>
       ))}
     </div>
   );
@@ -213,7 +187,6 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .eq("status", "active")
           .order("created_at", { ascending: false })
           .limit(source.limit || 10);
-
         if (branchId) query = query.eq("branch_id", branchId);
         const { data } = await query;
         setItems(data || []);
@@ -235,193 +208,294 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   }, [section, branchId, templateType]);
 
   const renderSkeleton = () => {
-    if (templateType === "BANNER_CAROUSEL") return <BannerSkeleton />;
-    if (templateType === "OFFERS_CAROUSEL" || templateType === "VOUCHERS_CARDS") return <CarouselSkeleton />;
-    if (templateType === "STORES_GRID") return (
-      <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-${schema.columns || 4}`}>
-        {Array.from({ length: 4 }).map((_, i) => <StoreCardSkeleton key={i} />)}
-      </div>
-    );
-    return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
-      </div>
-    );
+    if (templateType === "BANNER_CAROUSEL") return <div className="max-w-lg mx-auto px-5"><BannerSkeleton /></div>;
+    return <SectionSkeleton />;
   };
 
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6">
+    <section>
       {(section.title || section.subtitle) && (
-        <div className="mb-4 flex items-end justify-between">
+        <div className="max-w-lg mx-auto px-5 mb-4 flex items-end justify-between">
           <div>
             {section.title && (
-              <h2 className="text-xl font-bold" style={{ fontFamily: fontHeading }}>
+              <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
                 {section.title}
               </h2>
             )}
             {section.subtitle && (
-              <p className="text-sm opacity-60 mt-0.5">{section.subtitle}</p>
+              <p className="text-xs mt-0.5" style={{ color: `${fg}50` }}>{section.subtitle}</p>
             )}
           </div>
           {section.cta_text && (
             <button
-              className="text-sm font-medium hover:underline"
+              className="text-xs font-bold"
               style={{ color: primary }}
             >
-              {section.cta_text} →
+              {section.cta_text}
             </button>
           )}
         </div>
       )}
 
       {loading ? renderSkeleton() : items.length === 0 ? (
-        <div className="text-center py-6 opacity-40 text-sm">Nenhum item disponível</div>
-      ) : templateType === "VOUCHERS_CARDS" || templateType === "OFFERS_GRID" ? (
-        <VoucherGrid items={items as Voucher[]} columns={schema.columns || 3} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} showExpiry={schema.show_expiry} showDiscount={schema.show_discount} />
+        <div className="max-w-lg mx-auto px-5 text-center py-6 opacity-30 text-sm">Nenhum item disponível</div>
+      ) : templateType === "VOUCHERS_CARDS" ? (
+        <VoucherTickets items={items as Voucher[]} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
+      ) : templateType === "OFFERS_GRID" ? (
+        <OffersGrid items={items as Voucher[]} columns={schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
-        <VoucherCarousel items={items as Voucher[]} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
+        <OffersCarousel items={items as Voucher[]} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "STORES_GRID" ? (
-        <StoresGrid items={items} columns={schema.columns || 4} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "STORES_LIST" ? (
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "BANNER_CAROUSEL" ? (
-        <BannerCarousel items={items} />
+        <BannerCarousel items={items} primary={primary} />
       ) : null}
     </section>
   );
 }
 
-// --- Sub-renderers ---
+// --- VOUCHERS_CARDS (ticket style) ---
+function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-function VoucherGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, showExpiry = true, showDiscount = true }: any) {
-  const colClass = columns === 2 ? "sm:grid-cols-2" : columns === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-2 lg:grid-cols-3";
   return (
-    <div className={`grid gap-4 ${colClass}`}>
-      {items.map((v: Voucher) => (
-        <div key={v.id} className="rounded-xl border overflow-hidden transition-shadow hover:shadow-lg" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
-          {showDiscount && (
-            <div className="px-4 py-2 flex items-center justify-between" style={{ backgroundColor: accent }}>
-              <div className="flex items-center gap-1.5">
-                <Percent className="h-4 w-4" style={{ color: primary }} />
-                <span className="font-bold" style={{ color: primary, fontFamily: fontHeading }}>{v.discount_percent}% OFF</span>
+    <div className="max-w-lg mx-auto">
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((v: Voucher) => (
+          <div
+            key={v.id}
+            className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-[18px] overflow-hidden relative bg-white"
+            style={{
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+              scrollSnapAlign: "start",
+            }}
+          >
+            {/* Ticket notch */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
+
+            <div className="px-5 pt-4 pb-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Percent className="h-3.5 w-3.5" style={{ color: primary }} />
+                <span className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                  {v.discount_percent}% OFF
+                </span>
               </div>
-              {v.campaign && <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: primary, color: "#fff" }}>{v.campaign}</span>}
+              <h3 className="font-semibold text-sm mb-1" style={{ fontFamily: fontHeading }}>{v.title}</h3>
+              {v.description && <p className="text-xs line-clamp-2" style={{ color: `${fg}50` }}>{v.description}</p>}
             </div>
-          )}
-          <div className="px-4 py-3">
-            <h3 className="font-semibold text-sm mb-1" style={{ fontFamily: fontHeading }}>{v.title}</h3>
-            {v.description && <p className="text-xs opacity-60 line-clamp-2">{v.description}</p>}
-            {showExpiry && v.expires_at && (
-              <div className="flex items-center gap-1 text-xs opacity-40 mt-2">
-                <Clock className="h-3 w-3" />
-                Até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
-              </div>
-            )}
+
+            {/* Dashed divider */}
+            <div className="mx-4 border-t border-dashed" style={{ borderColor: `${fg}15` }} />
+
+            <div className="px-5 py-3 flex items-center justify-between">
+              {v.expires_at && (
+                <div className="flex items-center gap-1 text-[10px]" style={{ color: `${fg}40` }}>
+                  <Clock className="h-3 w-3" />
+                  Até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
+                </div>
+              )}
+              <button
+                className="text-xs font-bold px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: `${primary}12`, color: primary }}
+              >
+                Resgatar
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+        {/* Peek spacer */}
+        <div className="min-w-[16px] flex-shrink-0" />
+      </div>
     </div>
   );
 }
 
-function VoucherCarousel({ items, primary, cardBg, accent, fontHeading, fg }: any) {
-  const [offset, setOffset] = useState(0);
-  const visible = Math.min(4, items.length);
-  const maxOffset = Math.max(0, items.length - visible);
+// --- OFFERS_CAROUSEL ---
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg }: any) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative">
-      {offset > 0 && (
-        <button onClick={() => setOffset(Math.max(0, offset - 1))} className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full shadow flex items-center justify-center" style={{ backgroundColor: cardBg }}>
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-      )}
-      <div className="flex gap-4 overflow-hidden">
-        {items.slice(offset, offset + visible).map((v: Voucher) => (
-          <div key={v.id} className="flex-1 min-w-0 rounded-xl border overflow-hidden" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
-            <div className="px-3 py-2" style={{ backgroundColor: accent }}>
-              <span className="font-bold text-sm" style={{ color: primary }}>{v.discount_percent}% OFF</span>
+    <div className="max-w-lg mx-auto">
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((v: Voucher, idx: number) => (
+          <div
+            key={v.id}
+            className="min-w-[180px] max-w-[200px] flex-shrink-0 rounded-[18px] overflow-hidden bg-white"
+            style={{
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+              scrollSnapAlign: "start",
+            }}
+          >
+            <div className="px-3 py-2.5" style={{ backgroundColor: `${primary}08` }}>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
+                  {v.discount_percent}% OFF
+                </span>
+                {idx < 2 && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: primary }}>
+                    Novo
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="px-3 py-2">
-              <h3 className="font-medium text-sm truncate" style={{ fontFamily: fontHeading }}>{v.title}</h3>
+            <div className="px-3 py-2.5">
+              <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{v.title}</h3>
+              {v.campaign && (
+                <p className="text-[10px] mt-0.5" style={{ color: `${fg}40` }}>{v.campaign}</p>
+              )}
+            </div>
+          </div>
+        ))}
+        <div className="min-w-[16px] flex-shrink-0" />
+      </div>
+    </div>
+  );
+}
+
+// --- OFFERS_GRID (2-col) ---
+function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg }: any) {
+  return (
+    <div className="max-w-lg mx-auto px-5">
+      <div className="grid grid-cols-2 gap-3">
+        {items.map((v: Voucher) => (
+          <div
+            key={v.id}
+            className="rounded-[18px] overflow-hidden bg-white"
+            style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
+          >
+            <div className="px-3 py-2.5" style={{ backgroundColor: `${primary}06` }}>
+              <div className="flex items-center gap-1">
+                <Percent className="h-3 w-3" style={{ color: primary }} />
+                <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
+                  {v.discount_percent}% OFF
+                </span>
+              </div>
+            </div>
+            <div className="px-3 py-2.5">
+              <h3 className="font-semibold text-xs truncate mb-0.5" style={{ fontFamily: fontHeading }}>{v.title}</h3>
+              {v.expires_at && (
+                <div className="flex items-center gap-1 text-[10px]" style={{ color: `${fg}35` }}>
+                  <Clock className="h-2.5 w-2.5" />
+                  {new Date(v.expires_at).toLocaleDateString("pt-BR")}
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
-      {offset < maxOffset && (
-        <button onClick={() => setOffset(Math.min(maxOffset, offset + 1))} className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full shadow flex items-center justify-center" style={{ backgroundColor: cardBg }}>
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      )}
     </div>
   );
 }
 
-function StoresGrid({ items, columns, primary, cardBg, fontHeading, fg }: any) {
-  const colClass = columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-4";
+// --- STORES_GRID (horizontal scroll) ---
+function StoresGrid({ items, primary, cardBg, fontHeading, fg }: any) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className={`grid gap-4 ${colClass}`}>
-      {items.map((b: any) => (
-        <div key={b.id} className="rounded-xl border p-4 text-center transition-shadow hover:shadow-md" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
-          {b.logo_url ? (
-            <LazyImage src={b.logo_url} alt={b.name} className="h-8 w-8 mx-auto mb-2 rounded-full" />
-          ) : (
-            <Store className="h-8 w-8 mx-auto mb-2 opacity-60" style={{ color: primary }} />
-          )}
-          <h3 className="font-medium text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-          {b.city && <p className="text-xs opacity-50 mt-1"><MapPin className="h-3 w-3 inline mr-1" />{b.city}{b.state ? `, ${b.state}` : ""}</p>}
-        </div>
-      ))}
+    <div className="max-w-lg mx-auto">
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((b: any) => (
+          <div
+            key={b.id}
+            className="min-w-[100px] flex-shrink-0 rounded-[18px] p-4 text-center bg-white"
+            style={{
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              scrollSnapAlign: "start",
+            }}
+          >
+            {b.logo_url ? (
+              <LazyImage src={b.logo_url} alt={b.name} className="h-10 w-10 mx-auto mb-2 rounded-xl" />
+            ) : (
+              <div className="h-10 w-10 mx-auto mb-2 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                <Store className="h-5 w-5" style={{ color: primary }} />
+              </div>
+            )}
+            <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+            {b.city && (
+              <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}40` }}>{b.city}</p>
+            )}
+          </div>
+        ))}
+        <div className="min-w-[16px] flex-shrink-0" />
+      </div>
     </div>
   );
 }
 
+// --- STORES_LIST ---
 function StoresList({ items, primary, cardBg, fontHeading, fg }: any) {
   return (
-    <div className="space-y-2">
-      {items.map((b: any) => (
-        <div key={b.id} className="rounded-lg border p-3 flex items-center gap-3" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
+    <div className="max-w-lg mx-auto px-5 space-y-2">
+      {items.map((b: any, idx: number) => (
+        <div
+          key={b.id}
+          className="rounded-[14px] p-3 flex items-center gap-3 bg-white"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
+        >
           {b.logo_url ? (
-            <LazyImage src={b.logo_url} alt={b.name} className="h-6 w-6 shrink-0 rounded-full" />
+            <LazyImage src={b.logo_url} alt={b.name} className="h-10 w-10 shrink-0 rounded-xl" />
           ) : (
-            <Store className="h-6 w-6 shrink-0 opacity-60" style={{ color: primary }} />
+            <div className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+              <Store className="h-5 w-5" style={{ color: primary }} />
+            </div>
           )}
-          <div className="min-w-0">
-            <h3 className="font-medium text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-            {b.city && <p className="text-xs opacity-50"><MapPin className="h-3 w-3 inline mr-1" />{b.city}{b.state ? `, ${b.state}` : ""}</p>}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+            {b.city && (
+              <p className="text-xs" style={{ color: `${fg}40` }}>
+                {b.city}{b.state ? `, ${b.state}` : ""}
+              </p>
+            )}
           </div>
+          <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}25` }} />
         </div>
       ))}
     </div>
   );
 }
 
-function BannerCarousel({ items }: { items: any[] }) {
+// --- BANNER_CAROUSEL ---
+function BannerCarousel({ items, primary }: { items: any[]; primary: string }) {
   const [current, setCurrent] = useState(0);
   const banners = items.filter((i) => i.image_url);
 
   if (!banners.length) {
     return (
-      <div className="rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20 h-48 flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Banner Carousel — configure banners no painel admin</p>
+      <div className="max-w-lg mx-auto px-5">
+        <div className="rounded-[28px] bg-gradient-to-br from-black/5 to-black/[0.02] h-44 flex items-center justify-center">
+          <p className="text-sm text-muted-foreground opacity-50">Configure banners no painel admin</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative rounded-xl overflow-hidden h-48">
-      <LazyImage src={banners[current]?.image_url} alt="Banner" className="h-48 w-full" />
-      {banners.length > 1 && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {banners.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`h-2 w-2 rounded-full transition-colors ${i === current ? "bg-white" : "bg-white/40"}`}
-            />
-          ))}
-        </div>
-      )}
+    <div className="max-w-lg mx-auto px-5">
+      <div className="relative rounded-[28px] overflow-hidden h-44" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+        <LazyImage src={banners[current]?.image_url} alt="Banner" className="h-44 w-full" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        {banners.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className="transition-all"
+                style={{
+                  height: 6,
+                  width: i === current ? 20 : 6,
+                  borderRadius: 3,
+                  backgroundColor: i === current ? "#fff" : "rgba(255,255,255,0.4)",
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
