@@ -16,6 +16,7 @@ import StoreProfileTab from "@/components/store-owner/StoreProfileTab";
 import StoreExtratoTab from "@/components/store-owner/StoreExtratoTab";
 import StoreEmployeesTab from "@/components/store-owner/StoreEmployeesTab";
 import { StoreTermosTab, StoreTutorialTab, StoreSuporteTab } from "@/components/store-owner/StoreInfoTabs";
+import StoreBranchesTab from "@/components/store-owner/StoreBranchesTab";
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
 
@@ -133,9 +134,10 @@ export default function StoreOwnerPanel() {
         {activeTab === "extrato" && <StoreExtratoTab store={store} />}
         {activeTab === "funcionarios" && <StoreEmployeesTab store={store} />}
         {activeTab === "termos" && <StoreTermosTab />}
+        {activeTab === "filiais" && <StoreBranchesTab store={store} />}
         {activeTab === "tutorial" && <StoreTutorialTab />}
         {activeTab === "suporte" && <StoreSuporteTab />}
-        {!["dashboard", "cupons", "resgate", "perfil", "extrato", "funcionarios", "termos", "tutorial", "suporte"].includes(activeTab) && (
+        {!["dashboard", "cupons", "resgate", "perfil", "extrato", "funcionarios", "termos", "filiais", "tutorial", "suporte"].includes(activeTab) && (
           <div className="text-center py-20 text-muted-foreground">
             <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="font-semibold">Módulo "{MENU_ITEMS.find(m => m.key === activeTab)?.label}"</p>
