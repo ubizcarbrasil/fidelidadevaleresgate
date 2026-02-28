@@ -8,8 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
-  HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store
+  HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus
 } from "lucide-react";
+import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
 
@@ -31,6 +32,7 @@ export default function StoreOwnerPanel() {
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
+  const [showWizard, setShowWizard] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -109,7 +111,19 @@ export default function StoreOwnerPanel() {
       {/* Content */}
       <main className="flex-1 p-8">
         {activeTab === "dashboard" && <StoreOwnerDashboard store={store} />}
-        {activeTab !== "dashboard" && (
+        {activeTab === "cupons" && (
+          showWizard ? (
+            <StoreVoucherWizard
+              storeId={store.id}
+              branchId={store.branch_id}
+              brandId={store.brand_id}
+              onClose={() => setShowWizard(false)}
+            />
+          ) : (
+            <StoreCouponsTab store={store} onCreateNew={() => setShowWizard(true)} />
+          )
+        )}
+        {activeTab !== "dashboard" && activeTab !== "cupons" && (
           <div className="text-center py-20 text-muted-foreground">
             <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="font-semibold">Módulo "{MENU_ITEMS.find(m => m.key === activeTab)?.label}"</p>
@@ -296,6 +310,86 @@ function StoreOwnerDashboard({ store }: { store: any }) {
             </Card>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+function StoreCouponsTab({ store, onCreateNew }: { store: any; onCreateNew: () => void }) {
+  const [offers, setOffers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("offers")
+        .select("id, title, status, is_active, coupon_type, coupon_category, discount_percent, value_rescue, min_purchase, end_at, created_at")
+        .eq("store_id", store.id)
+        .order("created_at", { ascending: false });
+      setOffers(data || []);
+      setLoading(false);
+    };
+    fetch();
+  }, [store.id]);
+
+  const statusLabel = (s: string) => {
+    const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+      DRAFT: { label: "Rascunho", variant: "secondary" },
+      PENDING: { label: "Pendente", variant: "outline" },
+      APPROVED: { label: "Aprovado", variant: "default" },
+      ACTIVE: { label: "Ativo", variant: "default" },
+      EXPIRED: { label: "Expirado", variant: "destructive" },
+    };
+    return map[s] || { label: s, variant: "secondary" as const };
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Cupons</h1>
+          <p className="text-sm text-muted-foreground">Gerencie seus cupons e ofertas</p>
+        </div>
+        <Button onClick={onCreateNew} className="gap-2">
+          <Plus className="h-4 w-4" /> Criar Cupom
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        </div>
+      ) : offers.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <Tag className="h-12 w-12 mx-auto mb-3 opacity-30" />
+          <p className="font-semibold">Nenhum cupom criado</p>
+          <p className="text-sm mt-1">Clique em "Criar Cupom" para começar</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {offers.map((offer) => {
+            const st = statusLabel(offer.status);
+            return (
+              <Card key={offer.id} className="rounded-xl">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-sm">{offer.title}</p>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant={st.variant} className="text-[10px]">{st.label}</Badge>
+                      {offer.coupon_category && <Badge variant="outline" className="text-[10px]">{offer.coupon_category}</Badge>}
+                      <span className="text-xs text-muted-foreground">
+                        R$ {offer.value_rescue?.toFixed(2)} | mín. R$ {offer.min_purchase?.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(offer.created_at).toLocaleDateString("pt-BR")}
+                  </span>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
     </div>
   );
