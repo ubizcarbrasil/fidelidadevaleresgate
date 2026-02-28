@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,14 +6,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DataTableControls } from "@/components/DataTableControls";
+import { useDebounce } from "@/hooks/useDebounce";
+
+const PAGE_SIZE = 30;
 
 export default function AuditLogsPage() {
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ["audit-logs"],
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["audit-logs", debouncedSearch, page],
     queryFn: async () => {
-      const { data, error } = await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200);
+      let query = supabase.from("audit_logs").select("*", { count: "exact" });
+      if (debouncedSearch) query = query.or(`action.ilike.%${debouncedSearch}%,entity_type.ilike.%${debouncedSearch}%`);
+      query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data;
+      return { rows: data, count: count ?? 0 };
     },
   });
 
@@ -22,32 +34,24 @@ export default function AuditLogsPage() {
         <h2 className="text-2xl font-bold tracking-tight">Auditoria Global</h2>
         <p className="text-muted-foreground">Registro de ações na plataforma</p>
       </div>
+      <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por ação ou entidade..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
         <CardContent className="p-0">
+          {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Ação</TableHead>
-                <TableHead>Entidade</TableHead>
-                <TableHead>Detalhes</TableHead>
-              </TableRow>
-            </TableHeader>
+            <TableHeader><TableRow><TableHead>Data/Hora</TableHead><TableHead>Ação</TableHead><TableHead>Entidade</TableHead><TableHead>Detalhes</TableHead></TableRow></TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {logs?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum registro de auditoria</TableCell></TableRow>}
-              {logs?.map(l => (
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum registro de auditoria</TableCell></TableRow>}
+              {data?.rows?.map(l => (
                 <TableRow key={l.id}>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
-                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
                   <TableCell><Badge variant="outline">{l.action}</Badge></TableCell>
                   <TableCell className="font-mono text-xs">{l.entity_type}{l.entity_id ? ` #${String(l.entity_id).slice(0, 8)}` : ""}</TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-xs truncate">{JSON.stringify(l.details_json)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table>)}
         </CardContent>
       </Card>
     </div>
