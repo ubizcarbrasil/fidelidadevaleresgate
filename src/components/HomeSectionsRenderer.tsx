@@ -4,6 +4,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
 import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOfferNav } from "@/components/customer/CustomerLayout";
 
 type Voucher = Tables<"vouchers">;
 
@@ -170,6 +171,7 @@ interface SectionBlockProps {
 function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHeading }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { openOffer } = useOfferNav();
   const templateType = section.section_templates?.type;
   const schema = section.section_templates?.schema_json || {};
 
@@ -253,9 +255,9 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       ) : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items as Voucher[]} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
-        <OffersGrid items={items as Voucher[]} columns={schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
+        <OffersGrid items={items} columns={schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
-        <OffersCarousel items={items as Voucher[]} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
+        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
       ) : templateType === "STORES_GRID" ? (
         <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "STORES_LIST" ? (
@@ -325,7 +327,7 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_CAROUSEL ---
-function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg }: any) {
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -334,11 +336,12 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg }: any
         {items.map((o: any, idx: number) => (
           <div
             key={o.id}
-            className="min-w-[180px] max-w-[200px] flex-shrink-0 rounded-[18px] overflow-hidden bg-white"
+            className="min-w-[180px] max-w-[200px] flex-shrink-0 rounded-[18px] overflow-hidden bg-white cursor-pointer"
             style={{
               boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
               scrollSnapAlign: "start",
             }}
+            onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
               <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
@@ -373,15 +376,16 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_GRID (2-col) ---
-function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg }: any) {
+function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick }: any) {
   return (
     <div className="max-w-lg mx-auto px-5">
       <div className="grid grid-cols-2 gap-3">
         {items.map((o: any) => (
           <div
             key={o.id}
-            className="rounded-[18px] overflow-hidden bg-white"
+            className="rounded-[18px] overflow-hidden bg-white cursor-pointer"
             style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
+            onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
               <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
