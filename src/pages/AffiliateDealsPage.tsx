@@ -15,6 +15,7 @@ import { Plus, Pencil, Trash2, ExternalLink, MousePointerClick } from "lucide-re
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import ImageUploadField from "@/components/ImageUploadField";
 
 const PAGE_SIZE = 20;
 
@@ -202,8 +203,13 @@ export default function AffiliateDealsPage() {
                 <Input value={form.affiliate_url} onChange={(e) => setForm((f) => ({ ...f, affiliate_url: e.target.value }))} placeholder="https://..." />
               </div>
               <div className="space-y-2">
-                <Label>URL da Imagem</Label>
-                <Input value={form.image_url} onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))} placeholder="https://..." />
+                <Label>Imagem</Label>
+                <ImageUploadField
+                  value={form.image_url}
+                  onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                  folder="affiliate-deals"
+                  label="Imagem do Achadinho"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">

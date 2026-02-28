@@ -15,6 +15,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import ImageUploadField from "@/components/ImageUploadField";
 
 const PAGE_SIZE = 20;
 
@@ -160,8 +161,13 @@ export default function StoreCatalogPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>URL da Imagem</Label>
-                <Input value={form.image_url} onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))} placeholder="https://..." />
+                <Label>Imagem</Label>
+                <ImageUploadField
+                  value={form.image_url}
+                  onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                  folder="catalog-items"
+                  label="Imagem do Produto"
+                />
               </div>
               <div className="flex items-center gap-3">
                 <Switch checked={form.is_active} onCheckedChange={(v) => setForm((f) => ({ ...f, is_active: v }))} />
