@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -34,6 +34,8 @@ const operationItems = [
   { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck },
   { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
   { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
+  { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
+  { title: "Relatórios", url: "/reports", icon: BarChart3 },
 ];
 
 const platformItems = [

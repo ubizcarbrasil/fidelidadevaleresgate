@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText } from "lucide-react";
+import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,6 +67,8 @@ export default function Dashboard() {
   const { data: storeRulesActive } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "ACTIVE"), "active");
   const { data: storeRulesPending } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "PENDING_APPROVAL"), "pending");
   const { data: storeRulesRejected } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "REJECTED"), "rejected");
+  const { data: earningEventsTotal } = useMetric("earning_events");
+  const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
 
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
 
@@ -117,6 +119,7 @@ export default function Dashboard() {
     { title: "Clientes", value: customersTotal, sub: `${customersActive ?? 0} ativos`, icon: UserCheck, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Resgates no Período", value: redemptionsPeriod, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Vouchers Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Acúmulos no Período", value: earningEventsPeriod, sub: `${earningEventsTotal ?? 0} total`, icon: Coins, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Regras de Loja", value: storeRulesActive, sub: `${storeRulesTotal ?? 0} total · ${storeRulesPending ?? 0} pendentes`, icon: Store, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Usuários", value: usersCount, icon: Users, scopes: ["ROOT", "TENANT", "BRAND"] },
   ];
