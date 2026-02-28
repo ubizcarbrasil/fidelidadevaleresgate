@@ -7,6 +7,7 @@ import { Loader2, Tag, Clock, ShoppingBag, Heart, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 type Offer = Tables<"offers">;
 
@@ -14,6 +15,16 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
 }
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { delay: i * 0.07, duration: 0.35, ease: "easeOut" as const },
+  }),
+};
 
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
@@ -90,27 +101,36 @@ export default function CustomerOffersPage() {
       <h2 className="text-xl font-bold mb-5" style={{ fontFamily: fontHeading }}>Ofertas</h2>
 
       {offers.length === 0 ? (
-        <div className="text-center py-20 opacity-40">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-center py-20 opacity-40"
+        >
           <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
             <Tag className="h-7 w-7" style={{ color: primary }} />
           </div>
           <p className="font-semibold text-base mb-1">Nenhuma oferta disponível</p>
           <p className="text-sm">Volte em breve para novas ofertas!</p>
-        </div>
+        </motion.div>
       ) : (
         <div className="space-y-4">
           {offers.map((offer, idx) => {
             const isNew = idx < 2;
             return (
-              <div
+              <motion.div
                 key={offer.id}
-                className="rounded-[20px] overflow-hidden bg-white transition-all"
+                custom={idx}
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                whileTap={{ scale: 0.98 }}
+                className="rounded-[20px] overflow-hidden bg-white"
                 style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
               >
                 {offer.image_url && (
                   <div className="relative">
                     <img src={offer.image_url} alt={offer.title} className="w-full h-44 object-cover" />
-                    {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-1.5">
                       {isNew && (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: primary }}>
@@ -118,21 +138,20 @@ export default function CustomerOffersPage() {
                         </span>
                       )}
                     </div>
-                    {/* Like */}
-                    <button className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm">
+                    <motion.button
+                      whileTap={{ scale: 1.3 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 12 }}
+                      className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm"
+                    >
                       <Heart className="h-4 w-4" style={{ color: `${fg}50` }} />
-                    </button>
+                    </motion.button>
                   </div>
                 )}
 
                 <div className="p-4">
-                  <h3 className="font-bold text-base mb-1" style={{ fontFamily: fontHeading }}>
-                    {offer.title}
-                  </h3>
+                  <h3 className="font-bold text-base mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h3>
                   {offer.description && (
-                    <p className="text-sm line-clamp-2 mb-3" style={{ color: `${fg}60` }}>
-                      {offer.description}
-                    </p>
+                    <p className="text-sm line-clamp-2 mb-3" style={{ color: `${fg}60` }}>{offer.description}</p>
                   )}
 
                   <div className="flex items-end justify-between">
@@ -148,17 +167,13 @@ export default function CustomerOffersPage() {
                       {Number(offer.min_purchase) > 0 && (
                         <div className="flex items-center gap-1.5">
                           <ShoppingBag className="h-3 w-3" style={{ color: `${fg}40` }} />
-                          <span className="text-xs" style={{ color: `${fg}40` }}>
-                            Mínimo: R$ {Number(offer.min_purchase).toFixed(2)}
-                          </span>
+                          <span className="text-xs" style={{ color: `${fg}40` }}>Mínimo: R$ {Number(offer.min_purchase).toFixed(2)}</span>
                         </div>
                       )}
                       {offer.end_at && (
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3 w-3" style={{ color: `${fg}35` }} />
-                          <span className="text-xs" style={{ color: `${fg}35` }}>
-                            Até {new Date(offer.end_at).toLocaleDateString("pt-BR")}
-                          </span>
+                          <span className="text-xs" style={{ color: `${fg}35` }}>Até {new Date(offer.end_at).toLocaleDateString("pt-BR")}</span>
                         </div>
                       )}
                     </div>
@@ -177,7 +192,7 @@ export default function CustomerOffersPage() {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
