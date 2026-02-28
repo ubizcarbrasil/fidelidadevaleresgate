@@ -42,25 +42,44 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [pin, setPin] = useState<string | null>(null);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    return digits
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  };
+
+  const isValidCpf = (v: string) => v.replace(/\D/g, "").length === 11;
+
   const handleRedeem = async () => {
     if (!customer || !brand || !selectedBranch) return;
+    if (!isValidCpf(cpf)) {
+      toast({ title: "CPF inválido", description: "Informe os 11 dígitos do CPF.", variant: "destructive" });
+      return;
+    }
     setRedeeming(true);
     try {
-      const { error } = await supabase.from("redemptions").insert({
+      const { data: created, error } = await supabase.from("redemptions").insert({
         offer_id: offer.id,
         customer_id: customer.id,
         brand_id: brand.id,
         branch_id: selectedBranch.id,
         status: "PENDING",
-      });
+        customer_cpf: cpf.replace(/\D/g, ""),
+      }).select("token").single();
       if (error) throw error;
+      setPin(created.token);
       setRedeemed(true);
-      toast({ title: "Resgate solicitado!", description: "Apresente o código ao estabelecimento." });
+      setShowConfirm(false);
+      toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
     } catch (err: any) {
       toast({ title: "Erro ao resgatar", description: err.message, variant: "destructive" });
     } finally {
@@ -353,16 +372,22 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
         </div>
       )}
 
-      {/* Redeemed state */}
-      {redeemed && (
+      {/* Redeemed state with PIN */}
+      {redeemed && pin && (
         <div
           className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3"
           style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}
         >
-          <div className="max-w-lg mx-auto">
-            <div className="w-full py-4 rounded-2xl font-bold text-base text-center flex items-center justify-center gap-2" style={{ backgroundColor: "#E8F5E9", color: "#2E7D32" }}>
-              <CheckCircle2 className="h-5 w-5" />
-              Resgate confirmado!
+          <div className="max-w-lg mx-auto space-y-3">
+            <div className="w-full py-4 rounded-2xl text-center" style={{ backgroundColor: "#E8F5E9" }}>
+              <div className="flex items-center justify-center gap-2 mb-2" style={{ color: "#2E7D32" }}>
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="font-bold text-base">Resgate confirmado!</span>
+              </div>
+              <p className="text-xs mb-2" style={{ color: "#2E7D32" }}>Apresente este PIN ao estabelecimento:</p>
+              <p className="text-4xl font-mono font-black tracking-[0.3em]" style={{ color: "#1B5E20" }}>
+                {pin}
+              </p>
             </div>
           </div>
         </div>
@@ -412,6 +437,23 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
                 )}
               </div>
 
+              {/* CPF Input */}
+              <div className="mb-4">
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>
+                  CPF (obrigatório)
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={cpf}
+                  onChange={e => setCpf(formatCpf(e.target.value))}
+                  placeholder="000.000.000-00"
+                  className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
+                  style={{ borderColor: `${fg}15`, focusRingColor: primary } as any}
+                  maxLength={14}
+                />
+              </div>
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirm(false)}
@@ -424,8 +466,8 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleRedeem}
-                  disabled={redeeming}
-                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2"
+                  disabled={redeeming || !isValidCpf(cpf)}
+                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50"
                   style={{ backgroundColor: primary }}
                 >
                   {redeeming ? (
