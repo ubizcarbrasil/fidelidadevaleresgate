@@ -35,6 +35,7 @@ import AuditLogsPage from "@/pages/AuditLogsPage";
 import ReleasesPage from "@/pages/ReleasesPage";
 import OperatorRedeemPage from "@/pages/OperatorRedeemPage";
 import HomeTemplatesPage from "@/pages/HomeTemplatesPage";
+import CsvImportPage from "@/pages/CsvImportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ function AppRoutes() {
         <Route path="audit" element={<AuditLogsPage />} />
         <Route path="releases" element={<ReleasesPage />} />
         <Route path="home-templates" element={<HomeTemplatesPage />} />
+        <Route path="csv-import" element={<CsvImportPage />} />
         <Route path="pdv" element={<OperatorRedeemPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />

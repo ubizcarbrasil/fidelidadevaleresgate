@@ -1,4 +1,4 @@
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket } from "lucide-react";
+import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,7 @@ const items = [
   { title: "Clientes", url: "/customers", icon: UserCheck },
   { title: "Resgates", url: "/redemptions", icon: ReceiptText },
   { title: "Vouchers", url: "/vouchers", icon: Ticket },
+  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
 ];
 
 export function BranchSidebar() {

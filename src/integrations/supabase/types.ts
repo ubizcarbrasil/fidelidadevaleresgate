@@ -497,6 +497,63 @@ export type Database = {
         }
         Relationships: []
       }
+      import_jobs: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string
+          created_by: string
+          error_rows_json: Json
+          file_url: string | null
+          finished_at: string | null
+          id: string
+          status: string
+          summary_json: Json
+          type: string
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string
+          created_by: string
+          error_rows_json?: Json
+          file_url?: string | null
+          finished_at?: string | null
+          id?: string
+          status?: string
+          summary_json?: Json
+          type?: string
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string
+          error_rows_json?: Json
+          file_url?: string | null
+          finished_at?: string | null
+          id?: string
+          status?: string
+          summary_json?: Json
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_jobs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offers: {
         Row: {
           allowed_hours: string | null
