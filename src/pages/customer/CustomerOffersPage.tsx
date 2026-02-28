@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -34,11 +34,18 @@ export default function CustomerOffersPage() {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState<string | null>(null);
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  const categories = useMemo(() => {
+    const cats = offers.map((o: any) => o.stores?.name).filter(Boolean) as string[];
+    return [...new Set(cats)].sort();
+  }, [offers]);
+
+  const filtered = useMemo(() => selectedCat ? offers.filter((o: any) => o.stores?.name === selectedCat) : offers, [offers, selectedCat]);
   useEffect(() => {
     if (!selectedBranch || !brand) return;
     const fetchOffers = async () => {
@@ -100,9 +107,37 @@ export default function CustomerOffersPage() {
 
   return (
     <div className="max-w-lg mx-auto px-5 py-6">
-      <h2 className="text-xl font-bold mb-5" style={{ fontFamily: fontHeading }}>Ofertas</h2>
+      <h2 className="text-xl font-bold mb-4" style={{ fontFamily: fontHeading }}>Ofertas</h2>
 
-      {offers.length === 0 ? (
+      {categories.length >= 2 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-4 -mx-5 px-5">
+          <button
+            onClick={() => setSelectedCat(null)}
+            className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
+            style={{
+              backgroundColor: !selectedCat ? primary : `${fg}06`,
+              color: !selectedCat ? "#fff" : `${fg}60`,
+            }}
+          >
+            Todas
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
+              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+              style={{
+                backgroundColor: selectedCat === cat ? primary : `${fg}06`,
+                color: selectedCat === cat ? "#fff" : `${fg}60`,
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -117,7 +152,7 @@ export default function CustomerOffersPage() {
         </motion.div>
       ) : (
         <div className="space-y-4">
-          {offers.map((offer, idx) => {
+          {filtered.map((offer, idx) => {
             const isNew = idx < 2;
             return (
               <motion.div
