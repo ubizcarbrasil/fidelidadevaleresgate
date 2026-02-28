@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Loader2, TrendingUp, TrendingDown, Star, Wallet, Coins, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Loader2, Star, Wallet, Coins, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 type LedgerEntry = Tables<"points_ledger">;
 
@@ -12,6 +13,15 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
 }
+
+const cardStagger = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.06, duration: 0.3, ease: "easeOut" as const },
+  }),
+};
 
 export default function CustomerWalletPage() {
   const { customer, loading: customerLoading } = useCustomer();
@@ -54,8 +64,10 @@ export default function CustomerWalletPage() {
       {/* Balance Cards */}
       {customer && (
         <div className="grid grid-cols-2 gap-3 mb-7">
-          {/* Points card */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" as const }}
             className="rounded-[20px] p-4 text-white relative overflow-hidden"
             style={{
               background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
@@ -72,10 +84,12 @@ export default function CustomerWalletPage() {
                 {Number(customer.points_balance).toLocaleString("pt-BR")}
               </span>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Money card */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" as const }}
             className="rounded-[20px] p-4 bg-white relative overflow-hidden"
             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
           >
@@ -88,7 +102,7 @@ export default function CustomerWalletPage() {
                 {Number(customer.money_balance).toFixed(2)}
               </span>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -112,29 +126,36 @@ export default function CustomerWalletPage() {
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-16 opacity-30">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-center py-16 opacity-30"
+        >
           <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
             <Wallet className="h-7 w-7" style={{ color: primary }} />
           </div>
           <p className="text-sm font-medium">Nenhuma transação ainda</p>
-        </div>
+        </motion.div>
       ) : (
         <div className="space-y-2">
-          {entries.map((entry) => {
+          {entries.map((entry, idx) => {
             const isCredit = entry.entry_type === "CREDIT";
             const iconBg = isCredit ? "hsl(152 60% 54% / 0.12)" : "hsl(0 72% 56% / 0.10)";
             const iconColor = isCredit ? "hsl(152 60% 40%)" : "hsl(0 72% 51%)";
 
             return (
-              <div
+              <motion.div
                 key={entry.id}
+                custom={idx}
+                variants={cardStagger}
+                initial="hidden"
+                animate="visible"
+                whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-3 rounded-[16px] bg-white p-3 transition-shadow hover:shadow-md"
                 style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.03)" }}
               >
-                <div
-                  className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: iconBg }}
-                >
+                <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: iconBg }}>
                   {isCredit ? (
                     <ArrowUpRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
                   ) : (
@@ -146,21 +167,13 @@ export default function CustomerWalletPage() {
                     {entry.reason || (isCredit ? "Crédito de pontos" : "Débito de pontos")}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: `${fg}40` }}>
-                    {new Date(entry.created_at).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(entry.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
-                <span
-                  className="text-sm font-bold whitespace-nowrap"
-                  style={{ color: iconColor }}
-                >
+                <span className="text-sm font-bold whitespace-nowrap" style={{ color: iconColor }}>
                   {isCredit ? "+" : "-"}{entry.points_amount} pts
                 </span>
-              </div>
+              </motion.div>
             );
           })}
         </div>

@@ -1,8 +1,9 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
-import { Loader2, Star, ChevronRight, Coins } from "lucide-react";
+import { Star, ChevronRight, Coins } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -18,13 +19,18 @@ export default function CustomerHomePage() {
 
   return (
     <div className="space-y-6">
-      {/* Points Balance Card - Premium Gradient */}
+      {/* Points Balance Card */}
       {loading ? (
         <div className="max-w-lg mx-auto px-5 pt-5">
           <Skeleton className="h-[120px] w-full rounded-[24px]" />
         </div>
       ) : customer ? (
-        <div className="max-w-lg mx-auto px-5 pt-5">
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" as const }}
+          className="max-w-lg mx-auto px-5 pt-5"
+        >
           <div
             className="rounded-[24px] p-5 text-white relative overflow-hidden"
             style={{
@@ -32,15 +38,8 @@ export default function CustomerHomePage() {
               boxShadow: `0 8px 32px -8px ${primary}60`,
             }}
           >
-            {/* Decorative circles */}
-            <div
-              className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-10"
-              style={{ backgroundColor: "#fff" }}
-            />
-            <div
-              className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full opacity-10"
-              style={{ backgroundColor: "#fff" }}
-            />
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-10" style={{ backgroundColor: "#fff" }} />
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full opacity-10" style={{ backgroundColor: "#fff" }} />
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3">
@@ -63,24 +62,26 @@ export default function CustomerHomePage() {
               {Number(customer.money_balance) > 0 && (
                 <div className="flex items-center gap-1.5 mt-2 opacity-80">
                   <Coins className="h-3.5 w-3.5" />
-                  <span className="text-sm">
-                    R$ {Number(customer.money_balance).toFixed(2)} disponível
-                  </span>
+                  <span className="text-sm">R$ {Number(customer.money_balance).toFixed(2)} disponível</span>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       ) : null}
 
       {/* Dynamic Sections */}
-      <HomeSectionsRenderer />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
+      >
+        <HomeSectionsRenderer />
+      </motion.div>
 
       {/* Footer text */}
       {theme?.footer_text && (
-        <div className="text-center py-6 text-xs opacity-30 px-4">
-          {theme.footer_text}
-        </div>
+        <div className="text-center py-6 text-xs opacity-30 px-4">{theme.footer_text}</div>
       )}
     </div>
   );
