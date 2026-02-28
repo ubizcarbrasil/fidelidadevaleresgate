@@ -28,6 +28,7 @@ export default function BrandDomains() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingDomain, setEditingDomain] = useState<DomainRow | null>(null);
+  const [filterBrandId, setFilterBrandId] = useState<string>("all");
 
   // Form state
   const [domain, setDomain] = useState("");
@@ -137,8 +138,19 @@ export default function BrandDomains() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Lista de Domínios</CardTitle>
+          <Select value={filterBrandId} onValueChange={setFilterBrandId}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filtrar por brand" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as brands</SelectItem>
+              {brands?.map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent>
           <Table>
@@ -151,14 +163,20 @@ export default function BrandDomains() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {domains?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    Nenhum domínio cadastrado
-                  </TableCell>
-                </TableRow>
-              )}
-              {domains?.map((d) => (
+              {(() => {
+                const filtered = filterBrandId === "all"
+                  ? domains
+                  : domains?.filter((d) => d.brand_id === filterBrandId);
+                if (!filtered?.length) {
+                  return (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        Nenhum domínio encontrado
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+                return filtered.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
@@ -183,7 +201,8 @@ export default function BrandDomains() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                ));
+              })()}
             </TableBody>
           </Table>
         </CardContent>
