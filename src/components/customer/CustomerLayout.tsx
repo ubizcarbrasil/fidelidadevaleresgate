@@ -8,6 +8,7 @@ import CustomerWalletPage from "@/pages/customer/CustomerWalletPage";
 import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
 import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
 import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
+import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 
 // Context to allow child components to open offer/store detail
 interface CustomerNavContextType {
@@ -50,6 +51,7 @@ export default function CustomerLayout() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const bg = "#FAFAFA";
@@ -94,10 +96,14 @@ export default function CustomerLayout() {
           </div>
 
           <div className="max-w-lg mx-auto px-5 pb-3">
-            <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5" style={{ backgroundColor: "#F2F2F7" }}>
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="w-full flex items-center gap-2.5 rounded-full px-4 py-2.5 text-left"
+              style={{ backgroundColor: "#F2F2F7" }}
+            >
               <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
               <span className="text-sm" style={{ color: `${fg}40` }}>Busque por lojas e ofertas</span>
-            </div>
+            </button>
           </div>
 
           <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
@@ -177,6 +183,9 @@ export default function CustomerLayout() {
             />
           )}
         </AnimatePresence>
+
+        {/* Search Overlay */}
+        <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       </div>
     </CustomerNavContext.Provider>
   );
