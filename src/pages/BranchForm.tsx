@@ -25,6 +25,8 @@ export default function BranchForm() {
   const [state, setState] = useState("");
   const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [isActive, setIsActive] = useState(true);
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { data: brands } = useQuery({
@@ -46,6 +48,8 @@ export default function BranchForm() {
         setState(data.state || "");
         setTimezone(data.timezone);
         setIsActive(data.is_active);
+        setLatitude((data as any).latitude?.toString() || "");
+        setLongitude((data as any).longitude?.toString() || "");
       });
     }
   }, [id, isEdit, navigate]);
@@ -57,7 +61,11 @@ export default function BranchForm() {
       return;
     }
     setLoading(true);
-    const payload = { name, slug, brand_id: brandId, city: city || null, state: state || null, timezone, is_active: isActive };
+    const payload: any = {
+      name, slug, brand_id: brandId, city: city || null, state: state || null, timezone, is_active: isActive,
+      latitude: latitude ? parseFloat(latitude) : null,
+      longitude: longitude ? parseFloat(longitude) : null,
+    };
 
     const { error } = isEdit
       ? await supabase.from("branches").update(payload).eq("id", id!)
@@ -117,6 +125,16 @@ export default function BranchForm() {
               <div className="space-y-2">
                 <Label>Timezone</Label>
                 <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Latitude</Label>
+                <Input type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="-23.5505" />
+              </div>
+              <div className="space-y-2">
+                <Label>Longitude</Label>
+                <Input type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="-46.6333" />
               </div>
             </div>
             <div className="space-y-2">
