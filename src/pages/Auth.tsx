@@ -32,9 +32,30 @@ export default function Auth() {
     }
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) toast.error(error.message);
-      else navigate("/");
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        // Check if user is a store owner (store_admin role) to redirect accordingly
+        const userId = data.user?.id;
+        if (userId) {
+          const { data: roles } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId);
+          const isStoreAdmin = roles?.some(r => r.role === "store_admin");
+          const hasAdminRole = roles?.some(r =>
+            ["root_admin", "tenant_admin", "brand_admin", "branch_admin", "branch_operator", "operator_pdv"].includes(r.role)
+          );
+          if (isStoreAdmin && !hasAdminRole) {
+            navigate("/store-panel");
+          } else {
+            navigate("/");
+          }
+        } else {
+          navigate("/");
+        }
+      }
     } else {
       const { error } = await supabase.auth.signUp({
         email,
