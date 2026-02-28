@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
@@ -419,14 +419,58 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
   );
 }
 
+// --- Category Filter Chips ---
+function CategoryFilter({ items, selected, onSelect, primary, fg }: { items: any[]; selected: string | null; onSelect: (cat: string | null) => void; primary: string; fg: string }) {
+  const categories = useMemo(() => {
+    const cats = items.map((i: any) => i.category).filter(Boolean) as string[];
+    return [...new Set(cats)].sort();
+  }, [items]);
+
+  if (categories.length < 2) return null;
+
+  return (
+    <div className="max-w-lg mx-auto mb-3">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5 pb-1">
+        <button
+          onClick={() => onSelect(null)}
+          className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
+          style={{
+            backgroundColor: !selected ? primary : `${fg}06`,
+            color: !selected ? "#fff" : `${fg}60`,
+          }}
+        >
+          Todos
+        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => onSelect(selected === cat ? null : cat)}
+            className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+            style={{
+              backgroundColor: selected === cat ? primary : `${fg}06`,
+              color: selected === cat ? "#fff" : `${fg}60`,
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+        <div className="min-w-[8px] shrink-0" />
+      </div>
+    </div>
+  );
+}
+
 // --- STORES_GRID (horizontal scroll) ---
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const filtered = useMemo(() => selectedCat ? items.filter((i: any) => i.category === selectedCat) : items, [items, selectedCat]);
 
   return (
     <div className="max-w-lg mx-auto">
+      <CategoryFilter items={items} selected={selectedCat} onSelect={setSelectedCat} primary={primary} fg={fg} />
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((b: any) => (
+        {filtered.map((b: any) => (
           <div
             key={b.id}
             className="min-w-[100px] flex-shrink-0 rounded-[18px] p-4 text-center bg-white cursor-pointer"
@@ -444,8 +488,8 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
               </div>
             )}
             <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-            {b.city && (
-              <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}40` }}>{b.city}</p>
+            {b.category && (
+              <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}40` }}>{b.category}</p>
             )}
           </div>
         ))}
@@ -457,33 +501,40 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
 
 // --- STORES_LIST ---
 function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const filtered = useMemo(() => selectedCat ? items.filter((i: any) => i.category === selectedCat) : items, [items, selectedCat]);
+
   return (
-    <div className="max-w-lg mx-auto px-5 space-y-2">
-      {items.map((b: any, idx: number) => (
-        <div
-          key={b.id}
-          className="rounded-[14px] p-3 flex items-center gap-3 bg-white cursor-pointer"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
-          onClick={() => onStoreClick?.(b)}
-        >
-          {b.logo_url ? (
-            <LazyImage src={b.logo_url} alt={b.name} className="h-10 w-10 shrink-0 rounded-xl" />
-          ) : (
-            <div className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-              <Store className="h-5 w-5" style={{ color: primary }} />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-            {b.city && (
-              <p className="text-xs" style={{ color: `${fg}40` }}>
-                {b.city}{b.state ? `, ${b.state}` : ""}
-              </p>
+    <div>
+      <CategoryFilter items={items} selected={selectedCat} onSelect={setSelectedCat} primary={primary} fg={fg} />
+      <div className="max-w-lg mx-auto px-5 space-y-2">
+        {filtered.map((b: any) => (
+          <div
+            key={b.id}
+            className="rounded-[14px] p-3 flex items-center gap-3 bg-white cursor-pointer"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
+            onClick={() => onStoreClick?.(b)}
+          >
+            {b.logo_url ? (
+              <LazyImage src={b.logo_url} alt={b.name} className="h-10 w-10 shrink-0 rounded-xl" />
+            ) : (
+              <div className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                <Store className="h-5 w-5" style={{ color: primary }} />
+              </div>
             )}
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+              {b.category && (
+                <p className="text-xs" style={{ color: `${fg}40` }}>{b.category}</p>
+              )}
+            </div>
+            <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}25` }} />
           </div>
-          <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}25` }} />
-        </div>
-      ))}
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-6 opacity-30 text-sm">Nenhuma loja nesta categoria</div>
+        )}
+      </div>
     </div>
   );
 }
