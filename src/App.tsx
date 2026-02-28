@@ -55,6 +55,7 @@ import StoreCatalogPage from "@/pages/StoreCatalogPage";
 import ReportsPage from "@/pages/ReportsPage";
 import SendNotificationPage from "@/pages/SendNotificationPage";
 import NotFound from "./pages/NotFound";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -142,7 +143,13 @@ const App = () => (
 function AppContent() {
   const { isWhiteLabel, loading } = useBrand();
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (isWhiteLabel) {
     return <WhiteLabelLayout />;

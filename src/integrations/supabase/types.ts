@@ -378,9 +378,12 @@ export type Database = {
       }
       brand_sections: {
         Row: {
+          banner_height: string
+          banner_image_url: string | null
           brand_id: string
           created_at: string
           cta_text: string | null
+          display_mode: string
           id: string
           is_enabled: boolean
           order_index: number
@@ -391,9 +394,12 @@ export type Database = {
           visual_json: Json
         }
         Insert: {
+          banner_height?: string
+          banner_image_url?: string | null
           brand_id: string
           created_at?: string
           cta_text?: string | null
+          display_mode?: string
           id?: string
           is_enabled?: boolean
           order_index?: number
@@ -404,9 +410,12 @@ export type Database = {
           visual_json?: Json
         }
         Update: {
+          banner_height?: string
+          banner_image_url?: string | null
           brand_id?: string
           created_at?: string
           cta_text?: string | null
+          display_mode?: string
           id?: string
           is_enabled?: boolean
           order_index?: number
