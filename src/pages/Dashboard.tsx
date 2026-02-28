@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users } from "lucide-react";
+import { Building2, Store, MapPin, Users, Ticket } from "lucide-react";
 
 export default function Dashboard() {
   const { data: tenants } = useQuery({
@@ -36,10 +36,19 @@ export default function Dashboard() {
     },
   });
 
+  const { data: vouchersCount } = useQuery({
+    queryKey: ["vouchers-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("vouchers").select("*", { count: "exact", head: true });
+      return count || 0;
+    },
+  });
+
   const stats = [
     { title: "Tenants", value: tenants ?? 0, icon: Building2, color: "text-primary" },
     { title: "Brands", value: brands ?? 0, icon: Store, color: "text-accent-foreground" },
     { title: "Branches", value: branches ?? 0, icon: MapPin, color: "text-success" },
+    { title: "Vouchers", value: vouchersCount ?? 0, icon: Ticket, color: "text-primary" },
     { title: "Usuários", value: usersCount ?? 0, icon: Users, color: "text-warning" },
   ];
 

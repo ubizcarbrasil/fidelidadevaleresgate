@@ -205,6 +205,106 @@ export type Database = {
           },
         ]
       }
+      voucher_redemptions: {
+        Row: {
+          id: string
+          notes: string | null
+          redeemed_at: string
+          redeemed_by: string
+          voucher_id: string
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          redeemed_at?: string
+          redeemed_by: string
+          voucher_id: string
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          redeemed_at?: string
+          redeemed_by?: string
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_redemptions_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          branch_id: string
+          campaign: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          description: string | null
+          discount_percent: number
+          expires_at: string | null
+          id: string
+          max_uses: number
+          status: Database["public"]["Enums"]["voucher_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          campaign?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          discount_percent: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          status?: Database["public"]["Enums"]["voucher_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          campaign?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          discount_percent?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          status?: Database["public"]["Enums"]["voucher_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -228,6 +328,7 @@ export type Database = {
         | "brand_admin"
         | "branch_admin"
         | "branch_operator"
+      voucher_status: "active" | "expired" | "depleted" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -362,6 +463,7 @@ export const Constants = {
         "branch_admin",
         "branch_operator",
       ],
+      voucher_status: ["active", "expired", "depleted", "cancelled"],
     },
   },
 } as const
