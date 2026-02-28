@@ -915,18 +915,34 @@ export type Database = {
           allowed_weekdays: number[] | null
           branch_id: string
           brand_id: string
+          coupon_category: string | null
+          coupon_type: string | null
           created_at: string
           description: string | null
+          discount_percent: number | null
           end_at: string | null
           id: string
           image_url: string | null
+          interval_between_uses_days: number | null
           is_active: boolean
+          is_cumulative: boolean | null
           likes_count: number
           max_daily_redemptions: number | null
+          max_total_uses: number | null
+          max_uses_per_customer: number | null
           min_purchase: number
+          product_id: string | null
+          redemption_branch_id: string | null
+          redemption_type: string | null
+          requires_scheduling: boolean | null
+          scaled_values_json: Json | null
+          scheduling_advance_hours: number | null
+          specific_days_json: Json | null
           start_at: string | null
           status: Database["public"]["Enums"]["offer_status"]
           store_id: string
+          terms_accepted_at: string | null
+          terms_text: string | null
           title: string
           updated_at: string
           value_rescue: number
@@ -936,18 +952,34 @@ export type Database = {
           allowed_weekdays?: number[] | null
           branch_id: string
           brand_id: string
+          coupon_category?: string | null
+          coupon_type?: string | null
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           end_at?: string | null
           id?: string
           image_url?: string | null
+          interval_between_uses_days?: number | null
           is_active?: boolean
+          is_cumulative?: boolean | null
           likes_count?: number
           max_daily_redemptions?: number | null
+          max_total_uses?: number | null
+          max_uses_per_customer?: number | null
           min_purchase?: number
+          product_id?: string | null
+          redemption_branch_id?: string | null
+          redemption_type?: string | null
+          requires_scheduling?: boolean | null
+          scaled_values_json?: Json | null
+          scheduling_advance_hours?: number | null
+          specific_days_json?: Json | null
           start_at?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
           store_id: string
+          terms_accepted_at?: string | null
+          terms_text?: string | null
           title: string
           updated_at?: string
           value_rescue?: number
@@ -957,18 +989,34 @@ export type Database = {
           allowed_weekdays?: number[] | null
           branch_id?: string
           brand_id?: string
+          coupon_category?: string | null
+          coupon_type?: string | null
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           end_at?: string | null
           id?: string
           image_url?: string | null
+          interval_between_uses_days?: number | null
           is_active?: boolean
+          is_cumulative?: boolean | null
           likes_count?: number
           max_daily_redemptions?: number | null
+          max_total_uses?: number | null
+          max_uses_per_customer?: number | null
           min_purchase?: number
+          product_id?: string | null
+          redemption_branch_id?: string | null
+          redemption_type?: string | null
+          requires_scheduling?: boolean | null
+          scaled_values_json?: Json | null
+          scheduling_advance_hours?: number | null
+          specific_days_json?: Json | null
           start_at?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
           store_id?: string
+          terms_accepted_at?: string | null
+          terms_text?: string | null
           title?: string
           updated_at?: string
           value_rescue?: number
@@ -986,6 +1034,20 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "store_catalog_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_redemption_branch_id_fkey"
+            columns: ["redemption_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
