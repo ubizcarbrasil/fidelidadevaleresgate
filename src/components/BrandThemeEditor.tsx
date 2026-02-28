@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Palette, Type, Image, FileText } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
+import BrandThemePreview from "@/components/BrandThemePreview";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
   onChange: (theme: BrandTheme) => void;
   brandId?: string;
+  brandName?: string;
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
@@ -57,7 +59,7 @@ function hexToHsl(hex: string): string {
   return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-export default function BrandThemeEditor({ value, onChange, brandId }: BrandThemeEditorProps) {
+export default function BrandThemeEditor({ value, onChange, brandId, brandName }: BrandThemeEditorProps) {
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
   const folder = brandId ? `brands/${brandId}` : `brands/new-${Date.now()}`;
   const updateColor = (key: string, hex: string) => {
@@ -65,7 +67,8 @@ export default function BrandThemeEditor({ value, onChange, brandId }: BrandThem
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="space-y-6">
       {/* Colors */}
       <Card>
         <CardHeader className="pb-3">
@@ -226,6 +229,12 @@ export default function BrandThemeEditor({ value, onChange, brandId }: BrandThem
           </div>
         </CardContent>
       </Card>
+      </div>
+
+      {/* Live Preview - sticky sidebar */}
+      <div className="lg:sticky lg:top-4 lg:self-start">
+        <BrandThemePreview theme={value} brandName={brandName || ""} />
+      </div>
     </div>
   );
 }
