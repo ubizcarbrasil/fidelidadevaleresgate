@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -32,11 +32,12 @@ const platformItems = [
   { title: "Módulos", url: "/modules", icon: Blocks },
   { title: "Templates", url: "/templates", icon: Layout },
   { title: "Feature Flags", url: "/flags", icon: Flag },
+  { title: "Releases", url: "/releases", icon: Rocket },
   { title: "Auditoria", url: "/audit", icon: ScrollText },
   { title: "Usuários", url: "/users", icon: Users },
 ];
 
-export function AppSidebar() {
+export function RootSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -77,22 +78,15 @@ export function AppSidebar() {
           )}
         </div>
       </SidebarHeader>
-
       <SidebarContent>
         {renderGroup("Gestão", coreItems)}
         {renderGroup("Operação", operationItems)}
         {renderGroup("Plataforma", platformItems)}
       </SidebarContent>
-
       <SidebarFooter className="border-t border-sidebar-border p-3">
-        {!collapsed && (
-          <div className="mb-2 truncate text-xs text-sidebar-foreground/60">
-            {user?.email}
-          </div>
-        )}
+        {!collapsed && <div className="mb-2 truncate text-xs text-sidebar-foreground/60">{user?.email}</div>}
         <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
-          <LogOut className="h-4 w-4 mr-2" />
-          {!collapsed && "Sair"}
+          <LogOut className="h-4 w-4 mr-2" />{!collapsed && "Sair"}
         </Button>
       </SidebarFooter>
     </Sidebar>

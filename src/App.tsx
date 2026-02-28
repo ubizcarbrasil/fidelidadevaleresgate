@@ -32,6 +32,8 @@ import SectionTemplatesPage from "@/pages/SectionTemplatesPage";
 import ModuleDefinitionsPage from "@/pages/ModuleDefinitionsPage";
 import FeatureFlagsPage from "@/pages/FeatureFlagsPage";
 import AuditLogsPage from "@/pages/AuditLogsPage";
+import ReleasesPage from "@/pages/ReleasesPage";
+import OperatorRedeemPage from "@/pages/OperatorRedeemPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +75,8 @@ function AppRoutes() {
         <Route path="modules" element={<ModuleDefinitionsPage />} />
         <Route path="flags" element={<FeatureFlagsPage />} />
         <Route path="audit" element={<AuditLogsPage />} />
+        <Route path="releases" element={<ReleasesPage />} />
+        <Route path="pdv" element={<OperatorRedeemPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -17,33 +17,42 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
+          actor_user_id: string | null
+          changes_json: Json
           created_at: string
           details_json: Json
           entity_id: string | null
           entity_type: string
           id: string
           ip_address: string | null
-          user_id: string | null
+          scope_id: string | null
+          scope_type: string | null
         }
         Insert: {
           action: string
+          actor_user_id?: string | null
+          changes_json?: Json
           created_at?: string
           details_json?: Json
           entity_id?: string | null
           entity_type: string
           id?: string
           ip_address?: string | null
-          user_id?: string | null
+          scope_id?: string | null
+          scope_type?: string | null
         }
         Update: {
           action?: string
+          actor_user_id?: string | null
+          changes_json?: Json
           created_at?: string
           details_json?: Json
           entity_id?: string | null
           entity_type?: string
           id?: string
           ip_address?: string | null
-          user_id?: string | null
+          scope_id?: string | null
+          scope_type?: string | null
         }
         Relationships: []
       }
@@ -106,21 +115,27 @@ export type Database = {
           created_at: string
           domain: string
           id: string
+          is_active: boolean
           is_primary: boolean
+          subdomain: string | null
         }
         Insert: {
           brand_id: string
           created_at?: string
           domain: string
           id?: string
+          is_active?: boolean
           is_primary?: boolean
+          subdomain?: string | null
         }
         Update: {
           brand_id?: string
           created_at?: string
           domain?: string
           id?: string
+          is_active?: boolean
           is_primary?: boolean
+          subdomain?: string | null
         }
         Relationships: [
           {
@@ -652,6 +667,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      releases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          payload_json: Json
+          title: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          payload_json?: Json
+          title: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          payload_json?: Json
+          title?: string
+          version?: string
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
