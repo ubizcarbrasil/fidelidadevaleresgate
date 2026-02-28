@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_clicks: {
+        Row: {
+          clicked_at: string
+          customer_id: string | null
+          deal_id: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          customer_id?: string | null
+          deal_id: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          customer_id?: string | null
+          deal_id?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_clicks_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_deals: {
+        Row: {
+          affiliate_url: string
+          branch_id: string | null
+          brand_id: string
+          category: string | null
+          click_count: number
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          order_index: number
+          original_price: number | null
+          price: number
+          store_name: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_url: string
+          branch_id?: string | null
+          brand_id: string
+          category?: string | null
+          click_count?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          order_index?: number
+          original_price?: number | null
+          price?: number
+          store_name?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_url?: string
+          branch_id?: string | null
+          brand_id?: string
+          category?: string | null
+          click_count?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          order_index?: number
+          original_price?: number | null
+          price?: number
+          store_name?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_deals_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_deals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
