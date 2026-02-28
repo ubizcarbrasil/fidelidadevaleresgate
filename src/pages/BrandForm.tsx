@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
+import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 
 export default function BrandForm() {
@@ -87,6 +88,7 @@ export default function BrandForm() {
           <TabsList>
             <TabsTrigger value="general">Geral</TabsTrigger>
             <TabsTrigger value="theme">Tema Visual</TabsTrigger>
+            {isEdit && <TabsTrigger value="sections">Seções da Home</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="general" className="mt-4">
@@ -127,6 +129,12 @@ export default function BrandForm() {
           <TabsContent value="theme" className="mt-4">
             <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} />
           </TabsContent>
+
+          {isEdit && id && (
+            <TabsContent value="sections" className="mt-4">
+              <BrandSectionsManager brandId={id} />
+            </TabsContent>
+          )}
         </Tabs>
 
         <div className="flex gap-2">

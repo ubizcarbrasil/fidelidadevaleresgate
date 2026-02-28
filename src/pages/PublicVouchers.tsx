@@ -3,6 +3,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { Ticket, MapPin, Clock, Percent, Loader2, Gift } from "lucide-react";
+import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 
 type Voucher = Tables<"vouchers">;
 
@@ -13,29 +14,6 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 
 export default function PublicVouchers() {
   const { brand, branches, selectedBranch, theme, loading: brandLoading } = useBrand();
-  const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!selectedBranch) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchVouchers = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("vouchers")
-        .select("*")
-        .eq("branch_id", selectedBranch.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
-
-      setVouchers(data || []);
-      setLoading(false);
-    };
-    fetchVouchers();
-  }, [selectedBranch]);
 
   if (brandLoading) {
     return (
@@ -113,74 +91,18 @@ export default function PublicVouchers() {
         </div>
       </section>
 
-      {/* Vouchers list */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : vouchers.length === 0 ? (
-          <div className="text-center py-16 opacity-60">
-            <Ticket className="h-12 w-12 mx-auto mb-3 opacity-40" />
-            <p className="text-lg font-medium" style={{ fontFamily: fontHeading }}>
-              Nenhum voucher disponível no momento
-            </p>
-            <p className="text-sm mt-1 opacity-70">Volte em breve para novas ofertas!</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {vouchers.map((v) => (
-              <div
-                key={v.id}
-                className="rounded-xl border overflow-hidden transition-shadow hover:shadow-lg"
-                style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}
-              >
-                <div
-                  className="px-5 py-3 flex items-center justify-between"
-                  style={{ backgroundColor: accent }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Percent className="h-5 w-5" style={{ color: primary }} />
-                    <span
-                      className="font-bold text-lg"
-                      style={{ color: primary, fontFamily: fontHeading }}
-                    >
-                      {v.discount_percent}% OFF
-                    </span>
-                  </div>
-                  {v.campaign && (
-                    <span
-                      className="text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: primary, color: "#fff" }}
-                    >
-                      {v.campaign}
-                    </span>
-                  )}
-                </div>
-                <div className="px-5 py-4">
-                  <h3 className="font-semibold text-base mb-1" style={{ fontFamily: fontHeading }}>
-                    {v.title}
-                  </h3>
-                  {v.description && (
-                    <p className="text-sm opacity-60 mb-3">{v.description}</p>
-                  )}
-                  <div className="flex items-center justify-between text-xs opacity-50">
-                    {v.expires_at && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Válido até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
-                      </div>
-                    )}
-                    <div className="font-mono tracking-wider opacity-70" style={{ color: primary }}>
-                      {v.code}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
+      {/* Dynamic Sections */}
+      <HomeSectionsRenderer />
+
+      {/* Fallback: Vouchers list (when no sections configured) */}
+      <FallbackVouchers
+        selectedBranch={selectedBranch}
+        primary={primary}
+        fg={fg}
+        cardBg={cardBg}
+        accent={accent}
+        fontHeading={fontHeading}
+      />
 
       {/* Footer */}
       {theme?.footer_text && (
@@ -192,5 +114,81 @@ export default function PublicVouchers() {
         </footer>
       )}
     </div>
+  );
+}
+
+function FallbackVouchers({ selectedBranch, primary, fg, cardBg, accent, fontHeading }: {
+  selectedBranch: any; primary: string; fg: string; cardBg: string; accent: string; fontHeading: string;
+}) {
+  const [vouchers, setVouchers] = useState<Tables<"vouchers">[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasSections, setHasSections] = useState(true);
+
+  useEffect(() => {
+    if (!selectedBranch) { setLoading(false); return; }
+    const fetch = async () => {
+      // Check if brand has sections configured
+      const { data: sections } = await supabase
+        .from("brand_sections")
+        .select("id")
+        .eq("is_enabled", true)
+        .limit(1);
+      if (sections && sections.length > 0) {
+        setHasSections(true);
+        setLoading(false);
+        return;
+      }
+      setHasSections(false);
+      const { data } = await supabase
+        .from("vouchers")
+        .select("*")
+        .eq("branch_id", selectedBranch.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+      setVouchers(data || []);
+      setLoading(false);
+    };
+    fetch();
+  }, [selectedBranch]);
+
+  if (hasSections || loading) return null;
+  if (vouchers.length === 0) {
+    return (
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 text-center py-16 opacity-60">
+        <Ticket className="h-12 w-12 mx-auto mb-3 opacity-40" />
+        <p className="text-lg font-medium" style={{ fontFamily: fontHeading }}>Nenhum voucher disponível</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {vouchers.map((v) => (
+          <div key={v.id} className="rounded-xl border overflow-hidden transition-shadow hover:shadow-lg" style={{ backgroundColor: cardBg, borderColor: `${fg}15` }}>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: accent }}>
+              <div className="flex items-center gap-2">
+                <Percent className="h-5 w-5" style={{ color: primary }} />
+                <span className="font-bold text-lg" style={{ color: primary, fontFamily: fontHeading }}>{v.discount_percent}% OFF</span>
+              </div>
+              {v.campaign && <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: primary, color: "#fff" }}>{v.campaign}</span>}
+            </div>
+            <div className="px-5 py-4">
+              <h3 className="font-semibold text-base mb-1" style={{ fontFamily: fontHeading }}>{v.title}</h3>
+              {v.description && <p className="text-sm opacity-60 mb-3">{v.description}</p>}
+              <div className="flex items-center justify-between text-xs opacity-50">
+                {v.expires_at && (
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Válido até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
+                  </div>
+                )}
+                <div className="font-mono tracking-wider opacity-70" style={{ color: primary }}>{v.code}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
   );
 }

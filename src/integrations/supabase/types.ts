@@ -99,6 +99,133 @@ export type Database = {
           },
         ]
       }
+      brand_section_manual_items: {
+        Row: {
+          brand_section_id: string
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          order_index: number
+        }
+        Insert: {
+          brand_section_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          order_index?: number
+        }
+        Update: {
+          brand_section_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_section_manual_items_brand_section_id_fkey"
+            columns: ["brand_section_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_section_sources: {
+        Row: {
+          brand_section_id: string
+          created_at: string
+          filters_json: Json
+          id: string
+          limit: number
+          source_type: Database["public"]["Enums"]["section_source_type"]
+        }
+        Insert: {
+          brand_section_id: string
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          limit?: number
+          source_type: Database["public"]["Enums"]["section_source_type"]
+        }
+        Update: {
+          brand_section_id?: string
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          limit?: number
+          source_type?: Database["public"]["Enums"]["section_source_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_section_sources_brand_section_id_fkey"
+            columns: ["brand_section_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_sections: {
+        Row: {
+          brand_id: string
+          created_at: string
+          cta_text: string | null
+          id: string
+          is_enabled: boolean
+          order_index: number
+          subtitle: string | null
+          template_id: string
+          title: string | null
+          updated_at: string
+          visual_json: Json
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          cta_text?: string | null
+          id?: string
+          is_enabled?: boolean
+          order_index?: number
+          subtitle?: string | null
+          template_id: string
+          title?: string | null
+          updated_at?: string
+          visual_json?: Json
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          cta_text?: string | null
+          id?: string
+          is_enabled?: boolean
+          order_index?: number
+          subtitle?: string | null
+          template_id?: string
+          title?: string | null
+          updated_at?: string
+          visual_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sections_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sections_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "section_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           brand_settings_json: Json | null
@@ -174,6 +301,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      section_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          schema_json: Json
+          type: Database["public"]["Enums"]["section_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          schema_json?: Json
+          type: Database["public"]["Enums"]["section_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          schema_json?: Json
+          type?: Database["public"]["Enums"]["section_type"]
+        }
+        Relationships: []
       }
       tenants: {
         Row: {
@@ -416,6 +573,19 @@ export type Database = {
         | "brand_admin"
         | "branch_admin"
         | "branch_operator"
+      section_source_type:
+        | "OFFERS"
+        | "STORES"
+        | "CATEGORIES"
+        | "CUSTOM_QUERY"
+        | "MANUAL"
+      section_type:
+        | "BANNER_CAROUSEL"
+        | "OFFERS_CAROUSEL"
+        | "OFFERS_GRID"
+        | "STORES_GRID"
+        | "STORES_LIST"
+        | "VOUCHERS_CARDS"
       voucher_status: "active" | "expired" | "depleted" | "cancelled"
     }
     CompositeTypes: {
@@ -550,6 +720,21 @@ export const Constants = {
         "brand_admin",
         "branch_admin",
         "branch_operator",
+      ],
+      section_source_type: [
+        "OFFERS",
+        "STORES",
+        "CATEGORIES",
+        "CUSTOM_QUERY",
+        "MANUAL",
+      ],
+      section_type: [
+        "BANNER_CAROUSEL",
+        "OFFERS_CAROUSEL",
+        "OFFERS_GRID",
+        "STORES_GRID",
+        "STORES_LIST",
+        "VOUCHERS_CARDS",
       ],
       voucher_status: ["active", "expired", "depleted", "cancelled"],
     },
