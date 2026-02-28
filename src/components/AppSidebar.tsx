@@ -1,5 +1,5 @@
 import {
-  Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket,
+  Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -17,6 +17,7 @@ const navItems = [
   { title: "Brands", url: "/brands", icon: Store },
   { title: "Branches", url: "/branches", icon: MapPin },
   { title: "Vouchers", url: "/vouchers", icon: Ticket },
+  { title: "Domínios", url: "/domains", icon: Globe },
   { title: "Usuários", url: "/users", icon: Users },
 ];
 
