@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
+import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +27,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [ledgerCustomer, setLedgerCustomer] = useState<any>(null);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -127,6 +129,7 @@ export default function CustomersPage() {
                   <TableCell>R$ {Number(c.money_balance).toFixed(2)}</TableCell>
                   <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
@@ -135,6 +138,12 @@ export default function CustomersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <CustomerLedgerDrawer
+        customer={ledgerCustomer}
+        open={!!ledgerCustomer}
+        onOpenChange={open => { if (!open) setLedgerCustomer(null); }}
+      />
     </div>
   );
 }
