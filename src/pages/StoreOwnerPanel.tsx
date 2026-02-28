@@ -122,68 +122,180 @@ export default function StoreOwnerPanel() {
 }
 
 function StoreOwnerDashboard({ store }: { store: any }) {
-  const [stats, setStats] = useState({ cuponsEmitidos: 0, cuponsResgatados: 0, cuponsAtivos: 0, ganhos: 0 });
+  const [stats, setStats] = useState({
+    cuponsEmitidos: 0,
+    cuponsResgatados: 0,
+    cuponsAtivos: 0,
+    cuponsInativos: 0,
+    cuponsEstourados: 0,
+    ganhos: 0,
+    proximosVencer: [] as any[],
+  });
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<"today" | "7d" | "30d" | "all">("30d");
 
   useEffect(() => {
     const fetch = async () => {
-      // Fetch offers stats
+      setLoading(true);
+      // Fetch all offers for this store
       const { data: offers } = await supabase
         .from("offers")
-        .select("id, status, is_active")
+        .select("id, title, status, is_active, end_at, max_daily_redemptions")
         .eq("store_id", store.id);
 
-      const { data: redemptions } = await supabase
+      const offerIds = (offers || []).map(o => o.id);
+
+      // Fetch redemptions filtered by period
+      let redemptionQuery = supabase
         .from("redemptions")
-        .select("id, status, purchase_value")
-        .in("offer_id", (offers || []).map(o => o.id));
+        .select("id, status, purchase_value, created_at")
+        .in("offer_id", offerIds.length ? offerIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      if (period !== "all") {
+        const now = new Date();
+        const from = new Date();
+        if (period === "today") from.setHours(0, 0, 0, 0);
+        else if (period === "7d") from.setDate(now.getDate() - 7);
+        else if (period === "30d") from.setDate(now.getDate() - 30);
+        redemptionQuery = redemptionQuery.gte("created_at", from.toISOString());
+      }
+
+      const { data: redemptions } = await redemptionQuery;
 
       const used = (redemptions || []).filter(r => r.status === "USED");
+      const active = (offers || []).filter(o => o.status === "ACTIVE" && o.is_active);
+      const inactive = (offers || []).filter(o => !o.is_active || o.status === "EXPIRED");
+
+      // Offers expiring within 7 days
+      const now = new Date();
+      const in7d = new Date();
+      in7d.setDate(now.getDate() + 7);
+      const expiring = (offers || []).filter(o =>
+        o.end_at && o.status === "ACTIVE" && o.is_active &&
+        new Date(o.end_at) <= in7d && new Date(o.end_at) >= now
+      );
+
+      // "Estourados": offers that reached max_daily_redemptions today
+      // Simplified: offers with max_daily_redemptions set
+      const estourados = active.filter(o => o.max_daily_redemptions != null);
 
       setStats({
         cuponsEmitidos: (offers || []).length,
         cuponsResgatados: used.length,
-        cuponsAtivos: (offers || []).filter(o => o.status === "ACTIVE" && o.is_active).length,
+        cuponsAtivos: active.length,
+        cuponsInativos: inactive.length,
+        cuponsEstourados: estourados.length,
         ganhos: used.reduce((sum, r) => sum + (Number(r.purchase_value) || 0), 0),
+        proximosVencer: expiring,
       });
       setLoading(false);
     };
     fetch();
-  }, [store.id]);
+  }, [store.id, period]);
 
   const kpis = [
     { label: "Cupons Emitidos", value: stats.cuponsEmitidos, icon: Tag, color: "text-blue-600 bg-blue-50" },
-    { label: "Cupons Resgatados", value: stats.cuponsResgatados, icon: Check, color: "text-green-600 bg-green-50" },
-    { label: "Cupons Ativos", value: stats.cuponsAtivos, icon: Clock, color: "text-yellow-600 bg-yellow-50" },
-    { label: "Ganhos (R$)", value: `R$ ${stats.ganhos.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-600 bg-emerald-50" },
+    { label: "Resgatados", value: stats.cuponsResgatados, icon: Check, color: "text-green-600 bg-green-50" },
+    { label: "Ativos", value: stats.cuponsAtivos, icon: Clock, color: "text-yellow-600 bg-yellow-50" },
+    { label: "Ganhos", value: `R$ ${stats.ganhos.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-600 bg-emerald-50" },
+  ];
+
+  const periods = [
+    { key: "today" as const, label: "Hoje" },
+    { key: "7d" as const, label: "7 dias" },
+    { key: "30d" as const, label: "30 dias" },
+    { key: "all" as const, label: "Tudo" },
   ];
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-      <p className="text-sm text-muted-foreground mb-6">Visão geral do seu estabelecimento</p>
+    <div className="space-y-6">
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Visão geral do seu estabelecimento</p>
+        </div>
+        <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+          {periods.map(p => (
+            <button
+              key={p.key}
+              onClick={() => setPeriod(p.key)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                period === p.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {kpis.map(kpi => {
-            const Icon = kpi.icon;
-            return (
-              <Card key={kpi.label} className="rounded-2xl">
-                <CardContent className="p-5">
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center mb-3 ${kpi.color}`}>
-                    <Icon className="h-4.5 w-4.5" />
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {kpis.map(kpi => {
+              const Icon = kpi.icon;
+              return (
+                <Card key={kpi.label} className="rounded-2xl">
+                  <CardContent className="p-5">
+                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center mb-3 ${kpi.color}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <p className="text-2xl font-bold">{kpi.value}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Secondary stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="rounded-2xl">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-medium">Inativos / Expirados</span>
+                </div>
+                <p className="text-xl font-bold">{stats.cuponsInativos}</p>
+              </CardContent>
+            </Card>
+            <Card className="rounded-2xl">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-medium">Com limite diário</span>
+                </div>
+                <p className="text-xl font-bold">{stats.cuponsEstourados}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Expiring soon */}
+          {stats.proximosVencer.length > 0 && (
+            <Card className="rounded-2xl border-yellow-200 bg-yellow-50/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-yellow-800">
+                  <Clock className="h-4 w-4" />
+                  Cupons próximos de vencer (7 dias)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {stats.proximosVencer.map(o => (
+                  <div key={o.id} className="flex items-center justify-between bg-white rounded-xl px-4 py-3">
+                    <span className="text-sm font-medium">{o.title}</span>
+                    <Badge variant="outline" className="text-yellow-700 border-yellow-300 text-[10px]">
+                      Expira {new Date(o.end_at).toLocaleDateString("pt-BR")}
+                    </Badge>
                   </div>
-                  <p className="text-2xl font-bold">{kpi.value}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

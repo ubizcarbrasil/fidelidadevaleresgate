@@ -2,6 +2,8 @@ import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Star, ChevronRight, Coins } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
+import EmissorasSection from "@/components/customer/EmissorasSection";
+import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
@@ -77,6 +79,24 @@ export default function CustomerHomePage() {
         transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
       >
         <HomeSectionsRenderer />
+      </motion.div>
+
+      {/* Lojas Emissoras Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25, ease: "easeOut" as const }}
+      >
+        <EmissorasSection />
+      </motion.div>
+
+      {/* Achadinhos Marketplace Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" as const }}
+      >
+        <AchadinhoSection />
       </motion.div>
 
       {/* Footer text */}
