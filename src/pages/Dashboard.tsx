@@ -63,6 +63,10 @@ export default function Dashboard() {
   const { data: vouchersTotal } = useMetric("vouchers");
   const { data: vouchersActive } = useMetric("vouchers", true, (q: any) => q.eq("status", "active"), "active");
   const { data: usersCount } = useMetric("profiles", showBrand);
+  const { data: storeRulesTotal } = useMetric("store_points_rules");
+  const { data: storeRulesActive } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "ACTIVE"), "active");
+  const { data: storeRulesPending } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "PENDING_APPROVAL"), "pending");
+  const { data: storeRulesRejected } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "REJECTED"), "rejected");
 
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
 
@@ -97,6 +101,13 @@ export default function Dashboard() {
     { name: "Outras", value: Math.max(0, (offersTotal ?? 0) - (offersActive ?? 0) - (offersDraft ?? 0) - (offersExpired ?? 0)) },
   ].filter(s => s.value > 0);
 
+  const storeRulesPie = [
+    { name: "Ativas", value: storeRulesActive ?? 0 },
+    { name: "Pendentes", value: storeRulesPending ?? 0 },
+    { name: "Rejeitadas", value: storeRulesRejected ?? 0 },
+  ].filter(s => s.value > 0);
+
+  const STORE_RULE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--destructive))"];
   const allStats = [
     { title: "Tenants", value: tenants, icon: Building2, scopes: ["ROOT"] },
     { title: "Brands", value: brands, icon: Store, scopes: ["ROOT", "TENANT"] },
@@ -106,6 +117,7 @@ export default function Dashboard() {
     { title: "Clientes", value: customersTotal, sub: `${customersActive ?? 0} ativos`, icon: UserCheck, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Resgates no Período", value: redemptionsPeriod, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Vouchers Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Regras de Loja", value: storeRulesActive, sub: `${storeRulesTotal ?? 0} total · ${storeRulesPending ?? 0} pendentes`, icon: Store, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Usuários", value: usersCount, icon: Users, scopes: ["ROOT", "TENANT", "BRAND"] },
   ];
 
@@ -223,6 +235,54 @@ export default function Dashboard() {
             <ReceiptText className="h-5 w-5 text-destructive" />
             <p className="text-sm font-medium">
               {redemptionsPending} resgate{(redemptionsPending ?? 0) > 1 ? "s" : ""} pendente{(redemptionsPending ?? 0) > 1 ? "s" : ""} aguardando confirmação
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Store rules pie chart */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Regras Customizadas de Loja</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {storeRulesTotal === undefined ? (
+              <Skeleton className="h-[200px] w-full" />
+            ) : storeRulesPie.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-16">Nenhuma regra customizada cadastrada</p>
+            ) : (
+              <div className="flex items-center justify-center gap-6">
+                <ResponsiveContainer width={160} height={160}>
+                  <PieChart>
+                    <Pie data={storeRulesPie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                      {storeRulesPie.map((_, i) => <Cell key={i} fill={STORE_RULE_COLORS[i % STORE_RULE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-col gap-2 text-sm">
+                  {storeRulesPie.map((s, i) => (
+                    <div key={s.name} className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full" style={{ background: STORE_RULE_COLORS[i % STORE_RULE_COLORS.length] }} />
+                      <span className="text-muted-foreground">{s.name}:</span>
+                      <span className="font-medium">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pending store rules alert */}
+      {(storeRulesPending ?? 0) > 0 && (
+        <Card className="border-accent/30 bg-accent/5">
+          <CardContent className="flex items-center gap-3 py-4">
+            <Store className="h-5 w-5 text-accent-foreground" />
+            <p className="text-sm font-medium">
+              {storeRulesPending} regra{(storeRulesPending ?? 0) > 1 ? "s" : ""} de loja pendente{(storeRulesPending ?? 0) > 1 ? "s" : ""} de aprovação
             </p>
           </CardContent>
         </Card>
