@@ -2,6 +2,7 @@ import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Tick
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandModules } from "@/hooks/useBrandModules";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -11,12 +12,12 @@ import { Button } from "@/components/ui/button";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Lojas", url: "/stores", icon: ShoppingBag },
-  { title: "Ofertas", url: "/offers", icon: Tag },
-  { title: "Clientes", url: "/customers", icon: UserCheck },
-  { title: "Resgates", url: "/redemptions", icon: ReceiptText },
-  { title: "Vouchers", url: "/vouchers", icon: Ticket },
-  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
+  { title: "Lojas", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
+  { title: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
+  { title: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
+  { title: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
+  { title: "Vouchers", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
+  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
 ];
 
 export function BranchSidebar() {
@@ -24,6 +25,9 @@ export function BranchSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isModuleEnabled } = useBrandModules();
+
+  const visibleItems = items.filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey));
 
   return (
     <Sidebar collapsible="icon">
@@ -45,7 +49,7 @@ export function BranchSidebar() {
           <SidebarGroupLabel>Gestão da Filial</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
                     <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
