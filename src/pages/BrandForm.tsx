@@ -125,7 +125,7 @@ export default function BrandForm() {
           </TabsContent>
 
           <TabsContent value="theme" className="mt-4">
-            <BrandThemeEditor value={theme} onChange={setTheme} />
+            <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} />
           </TabsContent>
         </Tabs>
 
