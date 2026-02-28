@@ -267,32 +267,85 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          module: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          module: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          module?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          branch_id: string | null
+          brand_id: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          is_active: boolean
+          phone: string | null
           selected_branch_id: string | null
+          tenant_id: string | null
         }
         Insert: {
           avatar_url?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          is_active?: boolean
+          phone?: string | null
           selected_branch_id?: string | null
+          tenant_id?: string | null
         }
         Update: {
           avatar_url?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
+          phone?: string | null
           selected_branch_id?: string | null
+          tenant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_selected_branch_id_fkey"
             columns: ["selected_branch_id"]
@@ -300,7 +353,74 @@ export type Database = {
             referencedRelation: "branches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_system: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+        }
+        Relationships: []
       }
       section_templates: {
         Row: {
@@ -573,6 +693,9 @@ export type Database = {
         | "brand_admin"
         | "branch_admin"
         | "branch_operator"
+        | "operator_pdv"
+        | "store_admin"
+        | "customer"
       section_source_type:
         | "OFFERS"
         | "STORES"
@@ -720,6 +843,9 @@ export const Constants = {
         "brand_admin",
         "branch_admin",
         "branch_operator",
+        "operator_pdv",
+        "store_admin",
+        "customer",
       ],
       section_source_type: [
         "OFFERS",
