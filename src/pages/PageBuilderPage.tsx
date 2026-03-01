@@ -35,7 +35,10 @@ export default function PageBuilderPage() {
   const [saving, setSaving] = useState(false);
 
   const fetchPages = useCallback(async () => {
-    if (!brand) return;
+    if (!brand) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const { data } = await supabase
       .from("custom_pages")
