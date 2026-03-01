@@ -1,18 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, GripVertical, FileText, Loader2, ExternalLink } from "lucide-react";
-import ElementEditor from "@/components/page-builder/ElementEditor";
-import PagePreview from "@/components/page-builder/PagePreview";
-import type { PageElement } from "@/components/page-builder/types";
+import { Plus, Trash2, Eye, EyeOff, Loader2, FileText, Layers } from "lucide-react";
+import UnifiedEditor from "@/components/page-builder/UnifiedEditor";
 
 interface CustomPage {
   id: string;
@@ -20,9 +16,10 @@ interface CustomPage {
   title: string;
   slug: string;
   is_published: boolean;
-  elements_json: PageElement[];
-  permissions_json: any;
-  tags_json: any[];
+  elements_json: any;
+  subtitle?: string | null;
+  search_enabled?: boolean;
+  visibility_type?: string;
   created_at: string;
 }
 
@@ -34,15 +31,10 @@ export default function PageBuilderPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSlug, setNewSlug] = useState("");
+  const [newSubtitle, setNewSubtitle] = useState("");
   const [saving, setSaving] = useState(false);
-  const [previewPage, setPreviewPage] = useState<CustomPage | null>(null);
 
-  useEffect(() => {
-    if (!brand) return;
-    fetchPages();
-  }, [brand]);
-
-  const fetchPages = async () => {
+  const fetchPages = useCallback(async () => {
     if (!brand) return;
     setLoading(true);
     const { data } = await supabase
@@ -52,7 +44,9 @@ export default function PageBuilderPage() {
       .order("created_at", { ascending: false });
     setPages((data as any[]) || []);
     setLoading(false);
-  };
+  }, [brand]);
+
+  useEffect(() => { fetchPages(); }, [fetchPages]);
 
   const handleCreate = async () => {
     if (!brand || !newTitle.trim() || !newSlug.trim()) return;
@@ -61,62 +55,54 @@ export default function PageBuilderPage() {
     const { error } = await supabase.from("custom_pages").insert({
       brand_id: brand.id,
       title: newTitle.trim(),
+      subtitle: newSubtitle.trim() || null,
       slug,
       elements_json: [],
       permissions_json: {},
       tags_json: [],
-    });
+    } as any);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Página criada!" });
       setShowCreate(false);
-      setNewTitle("");
-      setNewSlug("");
+      setNewTitle(""); setNewSlug(""); setNewSubtitle("");
       fetchPages();
     }
     setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir esta página?")) return;
+    if (!confirm("Excluir esta página e todas as sessões vinculadas?")) return;
     await supabase.from("custom_pages").delete().eq("id", id);
     toast({ title: "Página excluída" });
     fetchPages();
   };
 
   const handleTogglePublish = async (page: CustomPage) => {
-    await supabase.from("custom_pages").update({ is_published: !page.is_published }).eq("id", page.id);
+    const newPublished = !page.is_published;
+    await supabase.from("custom_pages").update({
+      is_published: newPublished,
+    }).eq("id", page.id);
+    toast({ title: newPublished ? "Página publicada!" : "Página despublicada" });
     fetchPages();
-  };
-
-  const handleSaveElements = async (pageId: string, elements: PageElement[]) => {
-    const { error } = await supabase.from("custom_pages").update({ elements_json: elements as any }).eq("id", pageId);
-    if (error) {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Página salva!" });
-      fetchPages();
-    }
   };
 
   if (editing) {
     return (
-      <ElementEditor
+      <UnifiedEditor
         page={editing}
-        onSave={(elements) => {
-          handleSaveElements(editing.id, elements);
-          setEditing({ ...editing, elements_json: elements });
-        }}
-        onBack={() => setEditing(null)}
-        onPreview={() => setPreviewPage(editing)}
+        onBack={() => { setEditing(null); fetchPages(); }}
       />
     );
   }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <PageHeader title="Construtor de Páginas" description="Crie páginas customizadas com elementos visuais configuráveis." />
+      <PageHeader
+        title="Construtor de Páginas"
+        description="Crie páginas customizadas com elementos visuais e sessões dinâmicas de conteúdo."
+      />
 
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowCreate(true)}>
@@ -137,24 +123,25 @@ export default function PageBuilderPage() {
       ) : (
         <div className="space-y-3">
           {pages.map((page) => (
-            <div key={page.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card">
+            <div key={page.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:shadow-sm transition-shadow">
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">{page.title}</h3>
-                <p className="text-xs text-muted-foreground">/p/{page.slug}</p>
+                {(page as any).subtitle && <p className="text-xs text-muted-foreground truncate">{(page as any).subtitle}</p>}
+                <p className="text-xs text-muted-foreground mt-0.5 font-mono">/p/{page.slug}</p>
               </div>
-              <div className="flex items-center gap-1 text-xs">
+              <div className="flex items-center gap-2 text-xs shrink-0">
                 <span className={`px-2 py-0.5 rounded-full font-medium ${page.is_published ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
                   {page.is_published ? "Publicada" : "Rascunho"}
                 </span>
               </div>
-              <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" onClick={() => handleTogglePublish(page)}>
-                  <Eye className="h-4 w-4" />
+              <div className="flex items-center gap-1 shrink-0">
+                <Button size="icon" variant="ghost" onClick={() => handleTogglePublish(page)} title={page.is_published ? "Despublicar" : "Publicar"}>
+                  {page.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => setEditing(page)}>
-                  <Pencil className="h-4 w-4" />
+                <Button size="icon" variant="ghost" onClick={() => setEditing(page)} title="Editar">
+                  <Layers className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => handleDelete(page.id)}>
+                <Button size="icon" variant="ghost" onClick={() => handleDelete(page.id)} title="Excluir">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -163,16 +150,26 @@ export default function PageBuilderPage() {
         </div>
       )}
 
-      {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Nova Página</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Título</Label>
-              <Input value={newTitle} onChange={(e) => { setNewTitle(e.target.value); setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")); }} placeholder="Ex: Promoções de Verão" />
+              <Input
+                value={newTitle}
+                onChange={(e) => {
+                  setNewTitle(e.target.value);
+                  setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, ""));
+                }}
+                placeholder="Ex: Promoções de Verão"
+              />
+            </div>
+            <div>
+              <Label>Subtítulo (opcional)</Label>
+              <Input value={newSubtitle} onChange={(e) => setNewSubtitle(e.target.value)} placeholder="Descrição curta da página" />
             </div>
             <div>
               <Label>Slug (URL)</Label>
@@ -184,26 +181,11 @@ export default function PageBuilderPage() {
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancelar</Button>
             <Button onClick={handleCreate} disabled={saving || !newTitle.trim() || !newSlug.trim()}>
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Criar
+              Criar Página
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Preview overlay */}
-      {previewPage && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <span className="font-bold text-sm">Preview: {previewPage.title}</span>
-              <Button size="sm" variant="outline" onClick={() => setPreviewPage(null)}>Fechar</Button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <PagePreview elements={previewPage.elements_json} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
