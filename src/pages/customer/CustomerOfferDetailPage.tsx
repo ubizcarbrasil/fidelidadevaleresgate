@@ -151,7 +151,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       className="fixed inset-0 z-[60] flex flex-col"
       style={{ backgroundColor: "#FAFAFA" }}
     >
-      <div className="flex-1 overflow-y-auto pb-28">
+      <div className="flex-1 overflow-y-auto pb-40">
         {/* Hero image */}
         <div className="relative">
           {offer.image_url ? (
