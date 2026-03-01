@@ -41,6 +41,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
   const [cpf, setCpf] = useState("");
+  const [productValue, setProductValue] = useState("");
   const [pin, setPin] = useState<string | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [similarOffers, setSimilarOffers] = useState<any[]>([]);
@@ -127,6 +128,13 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         terms_text: offer.terms_text,
       };
 
+      const parsedProductValue = offer.coupon_type === "PRODUCT" && productValue
+        ? Number(productValue.replace(",", "."))
+        : undefined;
+      const creditApplied = parsedProductValue && Number(offer.discount_percent) > 0
+        ? parsedProductValue * (Number(offer.discount_percent) / 100)
+        : undefined;
+
       const { data: created, error } = await supabase.from("redemptions").insert({
         offer_id: offer.id,
         customer_id: customer.id,
@@ -135,6 +143,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         status: "PENDING",
         customer_cpf: cpf.replace(/\D/g, ""),
         offer_snapshot_json: offerSnapshot as any,
+        purchase_value: parsedProductValue || null,
+        credit_value_applied: creditApplied || null,
       }).select("token").single();
       if (error) throw error;
       setPin(created.token);
@@ -454,11 +464,11 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
                       <div>
-                        <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate</p>
+                        <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate em Crédito</p>
                         <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </p>
-                        <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>em crédito</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>crédito condicionado à compra mínima</p>
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
@@ -593,7 +603,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             }}
               className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
               style={{ backgroundColor: "#FFD54F", color: "#1F2937", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
-              RESGATAR {Math.round((Number(offer.discount_percent) / 100) * ((offer.terms_params_json as any)?.product_price || 0))} PONTOS
+              PAGUE {offer.discount_percent}% COM PONTOS
             </motion.button>
           </div>
         </div>
@@ -611,7 +621,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             }}
               className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
               style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
-              Resgatar agora
+              {Number(offer.value_rescue) > 0
+                ? `Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
+                : "Resgatar agora"}
             </motion.button>
           </div>
         </div>
@@ -684,7 +696,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           {offer.coupon_type === "PRODUCT"
                             ? `Pague ${offer.discount_percent}% com Pontos`
                             : Number(offer.value_rescue) > 0
-                              ? `Vale Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")}`
+                              ? `Vale Resgate de R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
                               : offer.title}
                         </p>
                       </div>
@@ -842,19 +854,58 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
                       <ShoppingBag className="h-7 w-7" style={{ color: primary }} />
                     </div>
-                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>Confirmar resgate?</h3>
+                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>
+                      {offer.coupon_type === "PRODUCT" ? `Pague ${offer.discount_percent}% com Pontos` : "Confirmar resgate"}
+                    </h3>
                     <p className="text-sm" style={{ color: `${fg}50` }}>
-                      Você está resgatando a oferta <strong>{offer.title}</strong>
-                      {Number(offer.value_rescue) > 0 && (
-                        <> no valor de <strong style={{ color: primary }}>R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}</strong></>
+                      {offer.coupon_type === "PRODUCT" ? (
+                        <>Informe o valor do produto e seu CPF para gerar o cupom de desconto</>
+                      ) : (
+                        <>
+                          Você está resgatando{" "}
+                          {Number(offer.value_rescue) > 0 ? (
+                            <><strong style={{ color: primary }}>R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}</strong> em crédito</>
+                          ) : (
+                            <>a oferta <strong>{offer.title}</strong></>
+                          )}
+                        </>
                       )}
                     </p>
-                    {Number(offer.min_purchase) > 0 && (
+                    {offer.coupon_type !== "PRODUCT" && Number(offer.min_purchase) > 0 && (
                       <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block" style={{ backgroundColor: `${fg}06`, color: `${fg}50` }}>
                         Compra mínima: R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
                       </p>
                     )}
                   </div>
+
+                  {/* Product value input - only for PRODUCT offers */}
+                  {offer.coupon_type === "PRODUCT" && (
+                    <div className="mb-4">
+                      <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>Valor do produto (R$)</label>
+                      <input
+                        type="text" inputMode="decimal" value={productValue}
+                        onChange={e => {
+                          const v = e.target.value.replace(/[^\d,\.]/g, "");
+                          setProductValue(v);
+                        }}
+                        placeholder="0,00"
+                        className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
+                        style={{ borderColor: `${fg}15` }}
+                      />
+                      {productValue && Number(productValue.replace(",", ".")) > 0 && (
+                        <div className="mt-2 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFF8E1", border: "1px solid #FFD54F" }}>
+                          <p className="text-xs" style={{ color: `${fg}60` }}>
+                            Desconto de <strong style={{ color: "#E65100" }}>{offer.discount_percent}%</strong> ={" "}
+                            <strong style={{ color: "#E65100" }}>
+                              R$ {(Number(productValue.replace(",", ".")) * (Number(offer.discount_percent) / 100)).toFixed(2).replace(".", ",")}
+                            </strong>{" "}
+                            pagos com pontos
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="mb-4">
                     <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>CPF (obrigatório)</label>
                     <input
@@ -873,7 +924,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       Voltar
                     </button>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
-                      disabled={redeeming || !isValidCpf(cpf)}
+                      disabled={redeeming || !isValidCpf(cpf) || (offer.coupon_type === "PRODUCT" && (!productValue || Number(productValue.replace(",", ".")) <= 0))}
                       className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50"
                       style={{ backgroundColor: primary }}>
                       {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
