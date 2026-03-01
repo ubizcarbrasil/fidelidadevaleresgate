@@ -58,6 +58,7 @@ import IconLibraryPage from "@/pages/IconLibraryPage";
 import BannerManagerPage from "@/pages/BannerManagerPage";
 import MenuLabelsPage from "@/pages/MenuLabelsPage";
 import PageBuilderPage from "@/pages/PageBuilderPage";
+import TaxonomyPage from "@/pages/TaxonomyPage";
 import CustomPage from "@/pages/customer/CustomPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -126,6 +127,7 @@ function AppRoutes() {
         <Route path="banner-manager" element={<BannerManagerPage />} />
         <Route path="menu-labels" element={<MenuLabelsPage />} />
         <Route path="page-builder" element={<PageBuilderPage />} />
+        <Route path="taxonomy" element={<TaxonomyPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
