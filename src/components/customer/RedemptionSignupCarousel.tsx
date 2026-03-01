@@ -77,11 +77,12 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
     goNext();
   };
 
-  // Step 6: create account with signUp and complete
+  // Step 6: create account or sign in and complete
   const handleSetPassword = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // Try signup first
+      const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -92,7 +93,18 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
           },
         },
       });
-      if (error) throw error;
+
+      // If user already exists, sign in instead
+      if (signUpError?.message?.includes("already registered") || signUpError?.message?.includes("already exists")) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (signInError) throw signInError;
+      } else if (signUpError) {
+        throw signUpError;
+      }
+
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
       setTimeout(() => onComplete(data.cpf), 1500);
     } catch (err: any) {
