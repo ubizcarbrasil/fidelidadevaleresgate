@@ -185,6 +185,13 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   const templateType = section.section_templates?.type;
   const schema = section.section_templates?.schema_json || {};
 
+  const filterMode = (section as any).filter_mode || "recent";
+  const columnsCount = (section as any).columns_count || 4;
+  const rowsCount = (section as any).rows_count || 1;
+  const minStoresVisible = (section as any).min_stores_visible || 0;
+  const couponTypeFilter = (section as any).coupon_type_filter || null;
+  const cityFilterJson: string[] = (section as any).city_filter_json || [];
+
   useEffect(() => {
     const source = section.brand_section_sources?.[0];
 
@@ -200,18 +207,9 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .eq("is_active", true)
           .lte("start_at", now)
           .order("order_index");
-        
-        // Filter by brand
-        if (section.brand_id) {
-          query = query.eq("brand_id", section.brand_id);
-        }
-        // If section has brand_section_id link, use it
-        if (section.id) {
-          query = query.or(`brand_section_id.eq.${section.id},brand_section_id.is.null`);
-        }
-
+        if (section.brand_id) query = query.eq("brand_id", section.brand_id);
+        if (section.id) query = query.or(`brand_section_id.eq.${section.id},brand_section_id.is.null`);
         const { data } = await query;
-        // Filter out expired banners (end_at passed)
         const filtered = (data || []).filter(b => !b.end_at || new Date(b.end_at) > new Date());
         setItems(filtered);
         setLoading(false);
@@ -231,16 +229,46 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         const { data } = await query;
         setItems(data || []);
       } else if (source.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID") {
+        // Build ordering based on filter_mode
+        const orderCol = filterMode === "most_redeemed" ? "likes_count" : "created_at";
+        const orderAsc = false;
+
         let query = supabase
           .from("offers")
           .select("*, stores(name, logo_url)")
           .eq("is_active", true)
           .eq("status", "ACTIVE")
-          .order("created_at", { ascending: false })
+          .order(orderCol, { ascending: orderAsc })
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
+
+        // Apply coupon_type_filter
+        if (couponTypeFilter && couponTypeFilter !== "all") {
+          query = query.eq("coupon_type", couponTypeFilter);
+        }
+
+        // Apply "newest" filter — only offers from last 14 days
+        if (filterMode === "newest") {
+          const since = new Date();
+          since.setDate(since.getDate() - 14);
+          query = query.gte("created_at", since.toISOString());
+        }
+
         const { data } = await query;
-        setItems(data || []);
+        let results = data || [];
+
+        // Apply random shuffle if filter_mode is "random" (daily seed)
+        if (filterMode === "random" && results.length > 1) {
+          const daySeed = new Date().toISOString().slice(0, 10);
+          const hash = daySeed.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+          results = [...results].sort((a, b) => {
+            const ha = (a.id.charCodeAt(0) + hash) % 1000;
+            const hb = (b.id.charCodeAt(0) + hash) % 1000;
+            return ha - hb;
+          });
+        }
+
+        setItems(results);
       } else if (source.source_type === "STORES") {
         let query = supabase
           .from("stores")
@@ -249,15 +277,28 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .order("name")
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
+
+        // Apply city filter
+        if (cityFilterJson.length > 0) {
+          query = (query as any).in("city", cityFilterJson);
+        }
+
         const { data } = await query;
-        setItems(data || []);
+        let results = data || [];
+
+        // Hide section if below min_stores_visible
+        if (results.length < minStoresVisible) {
+          results = [];
+        }
+
+        setItems(results);
       } else {
         setItems([]);
       }
       setLoading(false);
     };
     fetchItems();
-  }, [section, branchId, templateType]);
+  }, [section, branchId, templateType, filterMode, couponTypeFilter, cityFilterJson.length, minStoresVisible]);
 
   const handleCtaClick = useCallback(() => {
     if (items.length > 0) {
@@ -320,7 +361,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       ) : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
-        <OffersGrid items={items} columns={schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
+        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
         <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
       ) : templateType === "STORES_GRID" ? (
@@ -460,7 +501,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
 function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick }: any) {
   return (
     <div className="max-w-lg mx-auto px-5">
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className={`grid gap-2.5`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
@@ -507,10 +548,11 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Display as a 4-column grid like Méliuz
+  // Use dynamic columns from section config
+  const gridCols = items[0]?._gridCols || 4;
   const rows = [];
-  for (let i = 0; i < items.length; i += 4) {
-    rows.push(items.slice(i, i + 4));
+  for (let i = 0; i < items.length; i += gridCols) {
+    rows.push(items.slice(i, i + gridCols));
   }
 
   return (
