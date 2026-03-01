@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Ticket } from "lucide-react";
+import { Ticket, Store } from "lucide-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -126,6 +126,20 @@ export default function Auth() {
                 Voltar ao login
               </button>
             )}
+          </div>
+
+          {/* Store owner CTA */}
+          <div className="mt-6 pt-5 border-t">
+            <p className="text-xs text-muted-foreground text-center mb-3">É lojista ou quer cadastrar sua empresa?</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => navigate("/register-store")}
+            >
+              <Store className="h-4 w-4" />
+              Cadastrar minha loja
+            </Button>
           </div>
         </CardContent>
       </Card>
