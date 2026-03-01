@@ -44,7 +44,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
       {/* Bank-style Balance Card */}
       {loading ? (
         <div className="max-w-lg mx-auto px-5 pt-4">
-          <Skeleton className="h-[140px] w-full rounded-[20px]" />
+          <Skeleton className="h-[160px] w-full rounded-[20px]" />
         </div>
       ) : customer ? (
         <motion.div
@@ -55,22 +55,21 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         >
           <button
             onClick={onOpenLedger}
-            className="w-full text-left rounded-[20px] p-5 text-white relative overflow-hidden active:scale-[0.98] transition-transform"
+            className="w-full text-left rounded-[20px] p-5 relative overflow-hidden active:scale-[0.98] transition-transform"
             style={{
-              background: `linear-gradient(145deg, ${primary} 0%, ${primary}dd 40%, ${primary}aa 100%)`,
-              boxShadow: `0 12px 40px -12px ${primary}50`,
+              background: "linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+              boxShadow: "0 12px 40px -12px rgba(15, 52, 96, 0.5)",
             }}
           >
             {/* Decorative elements */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-[0.07]" style={{ backgroundColor: "#fff" }} />
-            <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full opacity-[0.07]" style={{ backgroundColor: "#fff" }} />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/[0.04]" />
+            <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full bg-white/[0.04]" />
             <div className="absolute top-4 right-4 w-20 h-14 rounded-lg border border-white/10 opacity-20" />
 
             <div className="relative z-10">
               {/* Header row: chip + account */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2.5">
-                  {/* Chip icon */}
                   <div className="h-8 w-10 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)" }}>
                     <div className="grid grid-cols-2 gap-px">
                       <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
@@ -79,37 +78,37 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                       <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium tracking-[0.15em] opacity-60 uppercase">Conta Digital</span>
+                  <span className="text-[10px] font-medium tracking-[0.15em] text-white/60 uppercase">Conta Digital</span>
                 </div>
-                <div className="flex items-center gap-1 opacity-60">
+                <div className="flex items-center gap-1 text-white/60">
                   <span className="text-[10px] font-mono tracking-wider">•••• {accountNumber.slice(-4)}</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </div>
               </div>
 
-              {/* Balance */}
-              <div className="mb-1">
-                <span className="text-[11px] font-medium opacity-60 block mb-0.5">Seu saldo</span>
+              {/* Balance - prominent */}
+              <div className="mb-3">
+                <span className="text-[11px] font-medium text-white/50 block mb-1">Seu saldo</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black tracking-tight" style={{ fontFamily: fontHeading }}>
+                  <Coins className="h-5 w-5 text-amber-400" />
+                  <span className="text-4xl font-black tracking-tight text-white" style={{ fontFamily: fontHeading }}>
                     {Number(customer.points_balance).toLocaleString("pt-BR")}
                   </span>
-                  <span className="text-xs opacity-50 font-medium">pontos</span>
+                  <span className="text-sm text-white/50 font-medium">pontos</span>
                 </div>
               </div>
 
               {/* Money balance row */}
               {Number(customer.money_balance) > 0 && (
-                <div className="flex items-center gap-1.5 mt-1 opacity-70">
-                  <Coins className="h-3 w-3" />
-                  <span className="text-xs font-medium">R$ {Number(customer.money_balance).toFixed(2)} disponível</span>
+                <div className="flex items-center gap-1.5 mt-1 text-emerald-300/80">
+                  <span className="text-xs font-semibold">R$ {Number(customer.money_balance).toFixed(2)} disponível</span>
                 </div>
               )}
 
               {/* CTA hint */}
-              <div className="mt-3 flex items-center gap-1 text-[10px] opacity-40 font-medium">
-                <CreditCard className="h-3 w-3" />
-                <span>Toque para ver extrato</span>
+              <div className="mt-4 flex items-center gap-1.5 text-[11px] text-white/30 font-medium">
+                <CreditCard className="h-3.5 w-3.5" />
+                <span>Toque para ver extrato completo</span>
               </div>
             </div>
           </button>
