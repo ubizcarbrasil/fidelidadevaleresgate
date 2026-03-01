@@ -260,19 +260,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     fetchSections();
   };
 
-  const handleMoveSection = async (sectionId: string, direction: -1 | 1) => {
-    const idx = sections.findIndex(s => s.id === sectionId);
-    if (idx === -1) return;
-    const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= sections.length) return;
-    const a = sections[idx];
-    const b = sections[newIdx];
-    await Promise.all([
-      supabase.from("brand_sections").update({ order_index: b.order_index }).eq("id", a.id),
-      supabase.from("brand_sections").update({ order_index: a.order_index }).eq("id", b.id),
-    ]);
-    fetchSections();
-  };
+  // handleMoveSection is now handled by handleTouchMoveBlock
 
   const handleSaveInline = async (sectionId: string) => {
     setSavingInline(true);
@@ -294,18 +282,63 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     setSavingInline(false);
   };
 
-  // Drag-and-drop for static elements
-  const handleDragStart = (idx: number) => setDragIdx(idx);
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
+  // Unified drag-and-drop for all blocks
+  const handleBlockDragStart = (blockIdx: number) => setDragIdx(blockIdx);
+  const handleBlockDragOver = (e: React.DragEvent, blockIdx: number) => {
     e.preventDefault();
-    if (dragIdx === null || dragIdx === idx) return;
-    const copy = [...elements];
-    const [moved] = copy.splice(dragIdx, 1);
-    copy.splice(idx, 0, moved);
-    setElements(copy);
-    setDragIdx(idx);
+    if (dragIdx === null || dragIdx === blockIdx) return;
+    // Reorder in the unified block list
+    const orderedBlocks = [...blocks];
+    const [moved] = orderedBlocks.splice(dragIdx, 1);
+    orderedBlocks.splice(blockIdx, 0, moved);
+    // Apply new order: update static elements array and section order_index
+    const newElements: PageElement[] = [];
+    const sectionUpdates: { id: string; order_index: number }[] = [];
+    orderedBlocks.forEach((b, i) => {
+      if (b.blockType === "static") newElements.push(b.element);
+      else sectionUpdates.push({ id: b.id, order_index: i });
+    });
+    if (!isHomePage) setElements(newElements);
+    // Update sections order locally
+    setSections(prev => prev.map(s => {
+      const upd = sectionUpdates.find(u => u.id === s.id);
+      return upd ? { ...s, order_index: upd.order_index } : s;
+    }));
+    setDragIdx(blockIdx);
   };
-  const handleDragEnd = () => setDragIdx(null);
+  const handleBlockDragEnd = async () => {
+    setDragIdx(null);
+    // Persist section order to DB
+    const updates = sections.map((s, i) => ({ id: s.id, order_index: s.order_index }));
+    await Promise.all(
+      updates.map(u => supabase.from("brand_sections").update({ order_index: u.order_index }).eq("id", u.id))
+    );
+  };
+
+  // Mobile block reordering
+
+  const handleTouchMoveBlock = async (fromIdx: number, direction: -1 | 1) => {
+    const toIdx = fromIdx + direction;
+    if (toIdx < 0 || toIdx >= blocks.length) return;
+    const orderedBlocks = [...blocks];
+    const [moved] = orderedBlocks.splice(fromIdx, 1);
+    orderedBlocks.splice(toIdx, 0, moved);
+    const newElements: PageElement[] = [];
+    const sectionUpdates: { id: string; order_index: number }[] = [];
+    orderedBlocks.forEach((b, i) => {
+      if (b.blockType === "static") newElements.push(b.element);
+      else sectionUpdates.push({ id: b.id, order_index: i });
+    });
+    if (!isHomePage) setElements(newElements);
+    setSections(prev => prev.map(s => {
+      const upd = sectionUpdates.find(u => u.id === s.id);
+      return upd ? { ...s, order_index: upd.order_index } : s;
+    }));
+    // Persist
+    await Promise.all(
+      sectionUpdates.map(u => supabase.from("brand_sections").update({ order_index: u.order_index }).eq("id", u.id))
+    );
+  };
 
   // Save all
   const handleSave = async () => {
@@ -401,21 +434,32 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
           </p>
         )}
         {!loading && blocks.map((block, blockIdx) => {
+          const isSelected = selectedBlockId === block.id;
           if (block.blockType === "static") {
-            const elIdx = elements.findIndex(el => el.id === block.id);
             return (
               <div
                 key={block.id}
                 draggable={!isMobile}
-                onDragStart={() => handleDragStart(elIdx)}
-                onDragOver={(e) => handleDragOver(e, elIdx)}
-                onDragEnd={handleDragEnd}
+                onDragStart={() => handleBlockDragStart(blockIdx)}
+                onDragOver={(e) => handleBlockDragOver(e, blockIdx)}
+                onDragEnd={handleBlockDragEnd}
                 onClick={() => setSelectedBlockId(block.id)}
                 className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${
-                  selectedBlockId === block.id ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"
+                  isSelected ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"
                 }`}
               >
-                {!isMobile && <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />}
+                {isMobile ? (
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); handleTouchMoveBlock(blockIdx, -1); }} disabled={blockIdx === 0} className="text-muted-foreground hover:text-foreground p-0.5 disabled:opacity-30">
+                      <ChevronUp className="h-3 w-3" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleTouchMoveBlock(blockIdx, 1); }} disabled={blockIdx === blocks.length - 1} className="text-muted-foreground hover:text-foreground p-0.5 disabled:opacity-30">
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
+                )}
                 <div className="flex-1 min-w-0">
                   <span className="text-[10px] px-1 py-0.5 rounded bg-blue-50 text-blue-600 font-mono mr-1">
                     {ELEMENT_TYPE_LABELS[block.element.type]}
@@ -434,15 +478,30 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
             );
           }
           // Dynamic block
-          const secIdx = sections.findIndex(s => s.id === block.id);
           return (
             <div
               key={block.id}
+              draggable={!isMobile}
+              onDragStart={() => handleBlockDragStart(blockIdx)}
+              onDragOver={(e) => handleBlockDragOver(e, blockIdx)}
+              onDragEnd={handleBlockDragEnd}
               onClick={() => setSelectedBlockId(block.id)}
               className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${
                 !block.section.is_enabled ? "opacity-50" : ""
-              } ${selectedBlockId === block.id ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"}`}
+              } ${isSelected ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"}`}
             >
+              {isMobile ? (
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <button onClick={(e) => { e.stopPropagation(); handleTouchMoveBlock(blockIdx, -1); }} disabled={blockIdx === 0} className="text-muted-foreground hover:text-foreground p-0.5 disabled:opacity-30">
+                    <ChevronUp className="h-3 w-3" />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); handleTouchMoveBlock(blockIdx, 1); }} disabled={blockIdx === blocks.length - 1} className="text-muted-foreground hover:text-foreground p-0.5 disabled:opacity-30">
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
+              )}
               <Layers className="h-3 w-3 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary font-mono mr-1">
@@ -451,16 +510,6 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
                 <span className="text-xs truncate block mt-0.5">{block.section.title || "Sem título"}</span>
               </div>
               <div className="flex gap-0.5 shrink-0">
-                {secIdx > 0 && (
-                  <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, -1); }} className="text-muted-foreground hover:text-foreground p-1" title="Mover acima">
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </button>
-                )}
-                {secIdx < sections.length - 1 && (
-                  <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, 1); }} className="text-muted-foreground hover:text-foreground p-1" title="Mover abaixo">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                )}
                 <button onClick={(e) => { e.stopPropagation(); handleToggleSection(block.section); }} className="text-muted-foreground hover:text-foreground p-1">
                   {block.section.is_enabled ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                 </button>
