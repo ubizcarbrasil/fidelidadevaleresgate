@@ -1,10 +1,12 @@
 import { useBrand } from "@/contexts/BrandContext";
-import { MapPin, MessageCircle, Globe, Instagram, Clock, AlertTriangle, Store, Copy, Check, ArrowLeft, Home } from "lucide-react";
+import { MapPin, MessageCircle, Globe, Instagram, Clock, AlertTriangle, Store, Copy, Check, ArrowLeft, Home, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -14,12 +16,16 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 interface Props {
   redemption: any;
   onBack: () => void;
+  onCanceled?: () => void;
 }
 
-export default function CustomerRedemptionDetailPage({ redemption, onBack }: Props) {
+export default function CustomerRedemptionDetailPage({ redemption, onBack, onCanceled }: Props) {
   const { theme } = useBrand();
   const { navigateToTab } = useCustomerNav();
   const [copied, setCopied] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelPin, setCancelPin] = useState("");
+  const [canceling, setCanceling] = useState(false);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -43,9 +49,33 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack }: Pro
       setTimeout(() => setCopied(false), 2000);
     } catch {}
   };
+  const hoursSinceCreation = (Date.now() - new Date(redemption.created_at).getTime()) / (1000 * 60 * 60);
+  const canCancel = redemption.status === "PENDING" && hoursSinceCreation <= 24;
 
-  const statusLabel = redemption.status === "PENDING" ? "ATIVO" : redemption.status === "USED" ? "USADO" : "EXPIRADO";
-  const statusColor = redemption.status === "PENDING" ? "#059669" : redemption.status === "USED" ? "#6B7280" : "#DC2626";
+  const handleCancelRedemption = async () => {
+    if (cancelPin !== redemption.token) {
+      toast.error("PIN incorreto. Verifique e tente novamente.");
+      return;
+    }
+    setCanceling(true);
+    try {
+      const { error } = await supabase
+        .from("redemptions")
+        .update({ status: "CANCELED" as any })
+        .eq("id", redemption.id)
+        .eq("status", "PENDING");
+      if (error) throw error;
+      toast.success("Resgate estornado com sucesso!");
+      onCanceled?.();
+    } catch (err: any) {
+      toast.error("Erro ao estornar: " + (err.message || "Tente novamente"));
+    } finally {
+      setCanceling(false);
+    }
+  };
+
+  const statusLabel = redemption.status === "PENDING" ? "ATIVO" : redemption.status === "USED" ? "USADO" : redemption.status === "CANCELED" ? "ESTORNADO" : "EXPIRADO";
+  const statusColor = redemption.status === "PENDING" ? "#059669" : redemption.status === "USED" ? "#6B7280" : redemption.status === "CANCELED" ? "#D97706" : "#DC2626";
 
   const hasActions = store?.address || store?.whatsapp || store?.site_url || store?.instagram;
 
@@ -130,7 +160,54 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack }: Pro
           </p>
         </div>
 
-        {/* How to redeem - action buttons */}
+        {/* Estorno button */}
+        {canCancel && (
+          <div className="mx-5 mb-4">
+            {!showCancelConfirm ? (
+              <button
+                onClick={() => setShowCancelConfirm(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold border transition-transform active:scale-[0.98]"
+                style={{ borderColor: "#DC2626", color: "#DC2626", backgroundColor: "#FEF2F2" }}
+              >
+                <RotateCcw className="h-4 w-4" />
+                ESTORNAR RESGATE
+              </button>
+            ) : (
+              <div className="rounded-2xl p-4 space-y-3" style={{ border: "1.5px solid #DC2626", backgroundColor: "#FEF2F2" }}>
+                <p className="text-xs font-semibold text-center" style={{ color: "#991B1B" }}>
+                  Digite o PIN para confirmar o estorno
+                </p>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={cancelPin}
+                  onChange={(e) => setCancelPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  className="w-full text-center text-2xl font-mono font-bold tracking-[0.3em] py-3 rounded-xl border outline-none"
+                  style={{ borderColor: "#DC262640", color: "#991B1B" }}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setShowCancelConfirm(false); setCancelPin(""); }}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ backgroundColor: `${fg}10`, color: `${fg}70` }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCancelRedemption}
+                    disabled={cancelPin.length < 6 || canceling}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                    style={{ backgroundColor: "#DC2626" }}
+                  >
+                    {canceling ? "Estornando..." : "Confirmar Estorno"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {hasActions && (
           <div className="mx-5 rounded-2xl p-5 mb-4" style={{ border: "2px solid #FBBF24", backgroundColor: "#FFFBEB" }}>
             <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: `${fg}60` }}>COMO RESGATAR</p>
