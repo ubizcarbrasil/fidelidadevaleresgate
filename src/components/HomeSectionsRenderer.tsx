@@ -321,6 +321,9 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     section.banner_height === "small" ? 80 :
     section.banner_height === "large" ? 160 : 120;
 
+  // Hide entire section when no items and not loading
+  if (!loading && items.length === 0) return null;
+
   return (
     <section>
       {/* Section Header - Méliuz style */}
@@ -356,9 +359,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         </div>
       )}
 
-      {loading ? renderSkeleton() : items.length === 0 ? (
-        <div className="max-w-lg mx-auto px-5 text-center py-4 opacity-30 text-xs">Nenhum item disponível</div>
-      ) : templateType === "VOUCHERS_CARDS" ? (
+      {loading ? renderSkeleton() : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
         <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
