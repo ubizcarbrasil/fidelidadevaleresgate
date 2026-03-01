@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp } from "lucide-react";
+import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -38,10 +39,42 @@ function useMetric(table: string, enabled = true, filter?: (q: any) => any, filt
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted-foreground))", "hsl(var(--destructive))"];
 
+/** Hook to subscribe to realtime changes and auto-invalidate queries */
+function useRealtimeRefresh() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("dashboard-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["redemptions-count"] });
+        queryClient.invalidateQueries({ queryKey: ["redemptions-chart"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "earning_events" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["earning_events-count"] });
+        queryClient.invalidateQueries({ queryKey: ["earnings-chart"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["customers-count"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["offers-count"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+}
+
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope } = useBrandGuard();
+
+  // Enable realtime refresh
+  useRealtimeRefresh();
 
   if (isRedirecting) {
     return (
@@ -153,9 +186,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
+          </div>
+          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600">
+            <Radio className="h-3 w-3 animate-pulse" />
+            Tempo real
+          </Badge>
         </div>
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
           <SelectTrigger className="w-[140px]">
@@ -181,7 +220,7 @@ export default function Dashboard() {
               {stat.value === undefined ? (
                 <Skeleton className="h-9 w-20" />
               ) : (
-                <div className="text-3xl font-bold">{stat.value}</div>
+                <div className="text-3xl font-bold transition-all duration-300">{stat.value}</div>
               )}
               {stat.sub && <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>}
             </CardContent>
@@ -268,22 +307,8 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Pending redemptions alert */}
-      {(redemptionsPending ?? 0) > 0 && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="flex items-center gap-3 py-4">
-            <ReceiptText className="h-5 w-5 text-destructive" />
-            <p className="text-sm font-medium">
-              {redemptionsPending} resgate{(redemptionsPending ?? 0) > 1 ? "s" : ""} pendente{(redemptionsPending ?? 0) > 1 ? "s" : ""} aguardando confirmação
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Store rules pie chart */}
-      <div className="grid gap-4 md:grid-cols-2">
+        {/* Store rules pie chart */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Regras Customizadas de Loja</CardTitle>
@@ -317,6 +342,18 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Pending redemptions alert */}
+      {(redemptionsPending ?? 0) > 0 && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="flex items-center gap-3 py-4">
+            <ReceiptText className="h-5 w-5 text-destructive" />
+            <p className="text-sm font-medium">
+              {redemptionsPending} resgate{(redemptionsPending ?? 0) > 1 ? "s" : ""} pendente{(redemptionsPending ?? 0) > 1 ? "s" : ""} aguardando confirmação
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pending store rules alert */}
       {(storeRulesPending ?? 0) > 0 && (
