@@ -6,7 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
-  MapPin, Ban, Globe, MessageCircle,
+  MapPin, Ban, Globe, MessageCircle, DollarSign, Tag,
 } from "lucide-react";
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -165,214 +165,423 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         className="flex-1 overflow-y-auto pb-40 transition-opacity duration-300"
         style={{ opacity: isFading ? 0 : 1 }}
       >
-        {/* Hero image */}
-        <div className="relative">
-          {offer.image_url ? (
-            <img src={offer.image_url} alt={offer.title} className="w-full h-64 object-cover" />
-          ) : (
-            <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-              <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
-          <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
-            <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
-          </button>
-          <div className="absolute top-4 right-4 flex gap-2">
-            <button onClick={handleShare} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
-              <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
-            </button>
-            <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
-              <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
-            </motion.button>
-          </div>
-          {/* Badges */}
-          <div className="absolute bottom-4 left-4 flex gap-1.5">
-            {daysLeft !== null && daysLeft <= 3 && (
-              <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: "hsl(0 72% 51%)" }}>
-                <Clock className="h-3 w-3" />
-                {daysLeft === 0 ? "Último dia!" : `${daysLeft} dias restantes`}
-              </span>
-            )}
-          </div>
-          {offer.likes_count > 0 && (
-            <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 backdrop-blur text-xs font-semibold shadow-sm">
-              <ThumbsUp className="h-3 w-3" style={{ color: primary }} />
-              {offer.likes_count}
-            </div>
-          )}
-        </div>
+        {(() => {
+          const isProduct = offer.coupon_type === "PRODUCT";
+          const termsParams = offer.terms_params_json as any;
+          const productPrice = termsParams?.product_price || 0;
+          const discountPct = Number(offer.discount_percent) || 0;
+          const pointsValue = Math.round((discountPct / 100) * productPrice);
+          const creditAmount = (discountPct / 100) * productPrice;
 
-        {/* Content card */}
-        <div className="relative -mt-6 mx-4 rounded-[24px] bg-white p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
-          {offer.stores?.name && (
-            <div className="flex items-center gap-2 mb-3">
-              {offer.stores.logo_url ? (
-                <img src={offer.stores.logo_url} alt={offer.stores.name} className="h-8 w-8 rounded-lg object-cover" />
-              ) : (
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                  <Store className="h-4 w-4" style={{ color: primary }} />
+          if (isProduct) {
+            return (
+              <>
+                {/* Store banner */}
+                <div className="relative">
+                  {offer.stores?.logo_url ? (
+                    <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                      <img src={offer.stores.logo_url} alt={offer.stores?.name} className="max-h-32 max-w-[80%] object-contain" />
+                    </div>
+                  ) : (
+                    <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                      <Store className="h-16 w-16" style={{ color: `${primary}30` }} />
+                    </div>
+                  )}
+                  <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                    <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
+                  </button>
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button onClick={handleShare} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                      <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
+                    </button>
+                    <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                      <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
+                    </motion.button>
+                  </div>
+                  {/* Store logo circle overlay */}
+                  {offer.stores?.logo_url && (
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
+                      <div className="h-16 w-16 rounded-2xl bg-white shadow-lg border-2 border-white overflow-hidden">
+                        <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              <span className="text-sm font-medium" style={{ color: `${fg}70` }}>{offer.stores.name}</span>
-            </div>
-          )}
-          <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
-          {offer.description && (
-            <p className="text-sm leading-relaxed mb-4" style={{ color: `${fg}60` }}>{offer.description}</p>
-          )}
 
-          {/* Coupon-style value highlight */}
-          {(() => {
-            const isProduct = offer.coupon_type === "PRODUCT";
-            const termsParams = offer.terms_params_json as any;
-            const productPrice = termsParams?.product_price || 0;
+                {/* Store name */}
+                <div className="text-center pt-10 pb-2">
+                  <p className="text-base font-bold" style={{ color: fg, fontFamily: fontHeading }}>
+                    {offer.stores?.name || "Loja"}
+                  </p>
+                </div>
 
-            if (isProduct && Number(offer.discount_percent) > 0) {
-              return (
-                <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
-                  <div className="p-4 text-center" style={{ backgroundColor: `${primary}06` }}>
-                    <p className="text-xs font-medium mb-1" style={{ color: `${fg}50` }}>Oferta de Produto</p>
-                    <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                      PAGUE {offer.discount_percent}% COM PONTOS
-                    </p>
-                    {productPrice > 0 && (
-                      <p className="text-sm mt-1" style={{ color: `${fg}60` }}>
-                        Produto: R$ {Number(productPrice).toFixed(2).replace(".", ",")}
+                {/* Product image with badge */}
+                <div className="mx-4 mt-2 relative rounded-2xl overflow-hidden" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.08)" }}>
+                  {discountPct > 0 && (
+                    <span className="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white"
+                      style={{ backgroundColor: primary }}>
+                      {discountPct}% COM PONTOS
+                    </span>
+                  )}
+                  {offer.image_url ? (
+                    <img src={offer.image_url} alt={offer.title} className="w-full h-72 object-cover" />
+                  ) : (
+                    <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                      <ShoppingBag className="h-20 w-20" style={{ color: `${primary}20` }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Product info */}
+                <div className="mx-4 mt-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Tag className="h-3.5 w-3.5" style={{ color: `${fg}40` }} />
+                    <span className="text-xs" style={{ color: `${fg}50` }}>{offer.stores?.name}</span>
+                  </div>
+                  <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
+                  {offer.description && (
+                    <p className="text-sm leading-relaxed mb-2" style={{ color: `${fg}60` }}>{offer.description}</p>
+                  )}
+                  {productPrice > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs" style={{ color: `${fg}50` }}>Preço</p>
+                      <p className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
+                        R$ {Number(productPrice).toFixed(2).replace(".", ",")}
                       </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pague com Pontos card */}
+                {discountPct > 0 && (
+                  <div className="mx-4 mt-2 rounded-2xl p-4" style={{
+                    backgroundColor: "#FFF8E1",
+                    border: "2px solid #FFD54F",
+                  }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <DollarSign className="h-5 w-5" style={{ color: "#E65100" }} />
+                      <span className="text-base font-bold" style={{ color: "#E65100" }}>Pague com Pontos</span>
+                    </div>
+                    <div className="flex gap-3 mb-3">
+                      <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.7)" }}>
+                        <p className="text-[11px] font-medium" style={{ color: `${fg}50` }}>Você pode usar</p>
+                        <p className="text-3xl font-bold" style={{ color: "#E65100" }}>{discountPct}%</p>
+                        <p className="text-[11px]" style={{ color: `${fg}50` }}>do valor em pontos</p>
+                      </div>
+                      <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
+                        <p className="text-[11px] font-medium" style={{ color: `${fg}70` }}>Equivale a</p>
+                        <p className="text-3xl font-bold" style={{ color: fg }}>{pointsValue}</p>
+                        <p className="text-[11px]" style={{ color: `${fg}70` }}>pontos</p>
+                      </div>
+                    </div>
+                    <p className="text-xs" style={{ color: `${fg}60` }}>
+                      Ao resgatar, você receberá um cupom de desconto de{" "}
+                      <strong style={{ color: "#E65100" }}>R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
+                      para usar na compra deste produto.
+                    </p>
+                  </div>
+                )}
+
+                {/* Informações */}
+                <div className="mx-4 mt-4 mb-4">
+                  <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>Informações</h3>
+                  <div className="space-y-3">
+                    {offer.end_at && (
+                      <RuleRow icon={Clock} primary={primary} fg={fg} label="Validade"
+                        value={`até ${new Date(offer.end_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}`} />
+                    )}
+                    {offer.is_cumulative === false && (
+                      <RuleRow icon={AlertTriangle} primary={primary} fg={fg} label="Atenção"
+                        value="Oferta não cumulativa com outras promoções" />
+                    )}
+                    {offer.redemption_type && (
+                      <RuleRow icon={MapPin} primary={primary} fg={fg} label="Resgate"
+                        value={offer.redemption_type === "SITE" ? "Válido para compras online" :
+                          offer.redemption_type === "WHATSAPP" ? "Resgate via WhatsApp" :
+                            "Válido somente na loja física"} />
+                    )}
+                    {hasWeekdayRestriction && (
+                      <div className="flex items-start gap-3">
+                        <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+                          <CalendarDays className="h-4 w-4" style={{ color: primary }} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold">Dias válidos</p>
+                          <div className="flex gap-1 mt-1">
+                            {WEEKDAY_LABELS.map((label, i) => {
+                              const isAllowed = (offer.allowed_weekdays as number[]).includes(i);
+                              return (
+                                <span key={i} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                                  style={{ backgroundColor: isAllowed ? `${primary}15` : `${fg}06`, color: isAllowed ? primary : `${fg}30` }}>
+                                  {label}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {offer.max_daily_redemptions && (
+                      <RuleRow icon={AlertTriangle} primary={primary} fg={fg} label="Limite diário"
+                        value={`${offer.max_daily_redemptions} resgates por dia`} />
                     )}
                   </div>
                 </div>
-              );
-            }
 
-            if (Number(offer.value_rescue) > 0) {
-              return (
-                <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
-                  <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
-                    <div>
-                      <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate</p>
-                      <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                        R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
-                      </p>
-                      <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>em crédito</p>
+                {/* Similar offers */}
+                {similarOffers.length > 0 && (
+                  <div className="mx-4 mt-2 mb-4">
+                    <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Ofertas semelhantes</h3>
+                    <div className="space-y-2">
+                      {similarOffers.map((sim) => (
+                        <motion.div
+                          key={sim.id}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
+                          style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
+                          onClick={() => {
+                            setIsFading(true);
+                            setTimeout(() => {
+                              scrollRef.current?.scrollTo({ top: 0 });
+                              onOfferClick?.(sim);
+                              setIsFading(false);
+                            }, 250);
+                          }}
+                        >
+                          {sim.image_url ? (
+                            <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
+                              <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            {sim.stores?.name && (
+                              <p className="text-[10px] font-medium truncate" style={{ color: `${fg}45` }}>{sim.stores.name}</p>
+                            )}
+                            <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
-                    {Number(offer.min_purchase) > 0 && (
-                      <div className="text-right">
-                        <p className="text-[10px] font-medium" style={{ color: `${fg}40` }}>Compra mínima</p>
-                        <p className="text-sm font-bold" style={{ color: `${fg}70` }}>
-                          R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                  </div>
+                )}
+              </>
+            );
+          }
+
+          // ── STORE type (original layout) ──
+          return (
+            <>
+              {/* Hero image */}
+              <div className="relative">
+                {offer.image_url ? (
+                  <img src={offer.image_url} alt={offer.title} className="w-full h-64 object-cover" />
+                ) : offer.stores?.logo_url ? (
+                  <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-64 object-cover" />
+                ) : (
+                  <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                    <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+                <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                  <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
+                </button>
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button onClick={handleShare} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                    <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
+                  </button>
+                  <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                    <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
+                  </motion.button>
+                </div>
+                {daysLeft !== null && daysLeft <= 3 && (
+                  <div className="absolute bottom-4 left-4">
+                    <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: "hsl(0 72% 51%)" }}>
+                      <Clock className="h-3 w-3" />
+                      {daysLeft === 0 ? "Último dia!" : `${daysLeft} dias restantes`}
+                    </span>
+                  </div>
+                )}
+                {offer.likes_count > 0 && (
+                  <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 backdrop-blur text-xs font-semibold shadow-sm">
+                    <ThumbsUp className="h-3 w-3" style={{ color: primary }} />
+                    {offer.likes_count}
+                  </div>
+                )}
+              </div>
+
+              {/* Content card */}
+              <div className="relative -mt-6 mx-4 rounded-[24px] bg-white p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+                {offer.stores?.name && (
+                  <div className="flex items-center gap-2 mb-3">
+                    {offer.stores.logo_url ? (
+                      <img src={offer.stores.logo_url} alt={offer.stores.name} className="h-8 w-8 rounded-lg object-cover" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                        <Store className="h-4 w-4" style={{ color: primary }} />
+                      </div>
+                    )}
+                    <span className="text-sm font-medium" style={{ color: `${fg}70` }}>{offer.stores.name}</span>
+                  </div>
+                )}
+                <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
+                {offer.description && (
+                  <p className="text-sm leading-relaxed mb-4" style={{ color: `${fg}60` }}>{offer.description}</p>
+                )}
+
+                {/* Vale Resgate value highlight */}
+                {Number(offer.value_rescue) > 0 && (
+                  <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
+                    <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
+                      <div>
+                        <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate</p>
+                        <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                          R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </p>
+                        <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>em crédito</p>
+                      </div>
+                      {Number(offer.min_purchase) > 0 && (
+                        <div className="text-right">
+                          <p className="text-[10px] font-medium" style={{ color: `${fg}40` }}>Compra mínima</p>
+                          <p className="text-sm font-bold" style={{ color: `${fg}70` }}>
+                            R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {Number(offer.discount_percent) > 0 && (
+                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                        {offer.discount_percent}% de desconto aplicado
                       </div>
                     )}
                   </div>
-                  {Number(offer.discount_percent) > 0 && (
-                    <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: `${primary}12`, color: primary }}>
-                      {offer.discount_percent}% de desconto aplicado
+                )}
+              </div>
+
+              {/* Rules section */}
+              <div className="mx-4 mt-4 rounded-[20px] bg-white p-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
+                <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Regras da oferta</h3>
+                <div className="space-y-3">
+                  {offer.end_at && (
+                    <RuleRow icon={CalendarDays} primary={primary} fg={fg} label="Válida até"
+                      value={new Date(offer.end_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })} />
+                  )}
+                  {offer.start_at && (
+                    <RuleRow icon={Clock} primary={primary} fg={fg} label="Início"
+                      value={new Date(offer.start_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })} />
+                  )}
+                  {hasWeekdayRestriction && (
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+                        <CalendarDays className="h-4 w-4" style={{ color: primary }} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold">Dias válidos</p>
+                        <div className="flex gap-1 mt-1">
+                          {WEEKDAY_LABELS.map((label, i) => {
+                            const isAllowed = (offer.allowed_weekdays as number[]).includes(i);
+                            return (
+                              <span key={i} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                                style={{ backgroundColor: isAllowed ? `${primary}15` : `${fg}06`, color: isAllowed ? primary : `${fg}30` }}>
+                                {label}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
-              );
-            }
-
-            return null;
-          })()}
-        </div>
-
-        {/* Rules section */}
-        <div className="mx-4 mt-4 rounded-[20px] bg-white p-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
-          <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Regras da oferta</h3>
-          <div className="space-y-3">
-            {offer.end_at && (
-              <RuleRow icon={CalendarDays} primary={primary} fg={fg} label="Válida até"
-                value={new Date(offer.end_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })} />
-            )}
-            {offer.start_at && (
-              <RuleRow icon={Clock} primary={primary} fg={fg} label="Início"
-                value={new Date(offer.start_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })} />
-            )}
-            {hasWeekdayRestriction && (
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
-                  <CalendarDays className="h-4 w-4" style={{ color: primary }} />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold">Dias válidos</p>
-                  <div className="flex gap-1 mt-1">
-                    {WEEKDAY_LABELS.map((label, i) => {
-                      const isAllowed = (offer.allowed_weekdays as number[]).includes(i);
-                      return (
-                        <span key={i} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                          style={{ backgroundColor: isAllowed ? `${primary}15` : `${fg}06`, color: isAllowed ? primary : `${fg}30` }}>
-                          {label}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  {offer.allowed_hours && (
+                    <RuleRow icon={Clock} primary={primary} fg={fg} label="Horários" value={offer.allowed_hours} />
+                  )}
+                  {Number(offer.min_purchase) > 0 && (
+                    <RuleRow icon={ShoppingBag} primary={primary} fg={fg} label="Compra mínima"
+                      value={`R$ ${Number(offer.min_purchase).toFixed(2).replace(".", ",")}`} />
+                  )}
+                  {offer.max_daily_redemptions && (
+                    <RuleRow icon={AlertTriangle} primary={primary} fg={fg} label="Limite diário"
+                      value={`${offer.max_daily_redemptions} resgates por dia`} />
+                  )}
                 </div>
               </div>
-            )}
-            {offer.allowed_hours && (
-              <RuleRow icon={Clock} primary={primary} fg={fg} label="Horários" value={offer.allowed_hours} />
-            )}
-            {Number(offer.min_purchase) > 0 && (
-              <RuleRow icon={ShoppingBag} primary={primary} fg={fg} label="Compra mínima"
-                value={`R$ ${Number(offer.min_purchase).toFixed(2).replace(".", ",")}`} />
-            )}
-            {offer.max_daily_redemptions && (
-              <RuleRow icon={AlertTriangle} primary={primary} fg={fg} label="Limite diário"
-                value={`${offer.max_daily_redemptions} resgates por dia`} />
-            )}
-          </div>
-        </div>
 
-        {/* Similar offers */}
-        {similarOffers.length > 0 && (
-          <div className="mx-4 mt-4 mb-4">
-            <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Ofertas semelhantes</h3>
-            <div className="space-y-2">
-              {similarOffers.map((sim) => (
-                <motion.div
-                  key={sim.id}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
-                  style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
-                  onClick={() => {
-                    setIsFading(true);
-                    setTimeout(() => {
-                      scrollRef.current?.scrollTo({ top: 0 });
-                      onOfferClick?.(sim);
-                      setIsFading(false);
-                    }, 250);
-                  }}
-                >
-                  {sim.image_url ? (
-                    <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                      <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    {sim.stores?.name && (
-                      <p className="text-[10px] font-medium truncate" style={{ color: `${fg}45` }}>{sim.stores.name}</p>
-                    )}
-                    <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
-                    {Number(sim.value_rescue) > 0 && (
-                      <span className="text-xs font-bold" style={{ color: primary }}>
-                        R$ {Number(sim.value_rescue).toFixed(2).replace(".", ",")}
-                      </span>
-                    )}
+              {/* Similar offers */}
+              {similarOffers.length > 0 && (
+                <div className="mx-4 mt-4 mb-4">
+                  <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Ofertas semelhantes</h3>
+                  <div className="space-y-2">
+                    {similarOffers.map((sim) => (
+                      <motion.div
+                        key={sim.id}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
+                        style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
+                        onClick={() => {
+                          setIsFading(true);
+                          setTimeout(() => {
+                            scrollRef.current?.scrollTo({ top: 0 });
+                            onOfferClick?.(sim);
+                            setIsFading(false);
+                          }, 250);
+                        }}
+                      >
+                        {sim.image_url ? (
+                          <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
+                            <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          {sim.stores?.name && (
+                            <p className="text-[10px] font-medium truncate" style={{ color: `${fg}45` }}>{sim.stores.name}</p>
+                          )}
+                          <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
+                          {Number(sim.value_rescue) > 0 && (
+                            <span className="text-xs font-bold" style={{ color: primary }}>
+                              R$ {Number(sim.value_rescue).toFixed(2).replace(".", ",")}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
 
-      {/* Sticky CTA */}
-      {!redeemed && (
+      {/* Sticky CTA - Product type */}
+      {!redeemed && offer.coupon_type === "PRODUCT" && (
+        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
+          <div className="max-w-lg mx-auto">
+            {customer && (
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className="text-sm" style={{ color: `${fg}50` }}>Seu saldo:</span>
+                <span className="text-sm font-bold" style={{ color: primary }}>
+                  {Math.round(customer.points_balance || 0).toLocaleString("pt-BR")} pontos
+                </span>
+              </div>
+            )}
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
+              setRedemptionStep("terms");
+              setTermsAccepted(false);
+              setShowConfirm(true);
+            }}
+              className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
+              style={{ backgroundColor: "#FFD54F", color: "#1F2937", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
+              RESGATAR {Math.round((Number(offer.discount_percent) / 100) * ((offer.terms_params_json as any)?.product_price || 0))} PONTOS
+            </motion.button>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky CTA - Store type */}
+      {!redeemed && offer.coupon_type !== "PRODUCT" && (
         <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
@@ -449,9 +658,11 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       <div>
                         <p className="text-sm font-medium" style={{ color: `${fg}60` }}>{offer.stores?.name || "Loja"}</p>
                         <p className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
-                          {Number(offer.value_rescue) > 0
-                            ? `Crédito de R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")}`
-                            : offer.title}
+                          {offer.coupon_type === "PRODUCT"
+                            ? `Pague ${offer.discount_percent}% com Pontos`
+                            : Number(offer.value_rescue) > 0
+                              ? `Vale Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")}`
+                              : offer.title}
                         </p>
                       </div>
                     </div>
