@@ -220,6 +220,7 @@ function RedemptionCard({
   const creditValue = r.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0;
   const purchaseValue = r.purchase_value || 0;
   const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
+  const minPurchase = Number(offer?.min_purchase || snapshot?.min_purchase) || 0;
 
   const typeBadge = isProduct
     ? { label: "PRODUTO", bg: "#DBEAFE", color: "#1E40AF" }
@@ -274,6 +275,7 @@ function RedemptionCard({
           ) : !isProduct && creditValue > 0 ? (
             <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
               Vale Resgate {formatCurrency(creditValue)}
+              {minPurchase > 0 && <span> · Compra mín. {formatCurrency(minPurchase)}</span>}
             </p>
           ) : null}
         </div>
@@ -308,8 +310,16 @@ function RedemptionCard({
           ) : !isProduct && creditValue > 0 ? (
             <DetailInfoRow icon={<CreditCard className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
               Vale Resgate: <strong>{formatCurrency(creditValue)}</strong>
+              {minPurchase > 0 && <> · Compra mínima de <strong>{formatCurrency(minPurchase)}</strong></>}
             </DetailInfoRow>
           ) : null}
+
+          {/* Min purchase - for product type */}
+          {isProduct && minPurchase > 0 && (
+            <DetailInfoRow icon={<DollarSign className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Compra mínima: <strong>{formatCurrency(minPurchase)}</strong>
+            </DetailInfoRow>
+          )}
 
           {/* Validity */}
           <DetailInfoRow icon={<Clock className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
@@ -349,9 +359,16 @@ function RedemptionCard({
       {/* Credit + dates */}
       <div className="px-4 py-3 space-y-1" style={{ borderTop: `1px solid ${fg}06` }}>
         <div className="flex justify-between items-center">
-          <span className="text-[11px] font-semibold" style={{ color: `${fg}50` }}>
-            CRÉDITO DO {isProduct ? "PRODUTO" : "CUPOM"}
-          </span>
+          <div>
+            <span className="text-[11px] font-semibold block" style={{ color: `${fg}50` }}>
+              CRÉDITO DO {isProduct ? "PRODUTO" : "CUPOM"}
+            </span>
+            {!isProduct && minPurchase > 0 && (
+              <span className="text-[10px]" style={{ color: `${fg}40` }}>
+                Crédito condicionado à compra mínima de {formatCurrency(minPurchase)}
+              </span>
+            )}
+          </div>
           <span className="text-lg font-bold" style={{ color: primary, fontFamily: fontHeading }}>
             {formatCurrency(creditValue)}
           </span>
