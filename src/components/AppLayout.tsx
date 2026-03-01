@@ -37,12 +37,12 @@ export default function AppLayout() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <SidebarComponent />
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center border-b px-4 bg-card">
-            <SidebarTrigger className="mr-4" />
-            <h1 className="text-lg font-semibold text-foreground">Vale Resgate — {CONSOLE_TITLES[consoleScope]}</h1>
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 flex items-center border-b px-3 sm:px-4 bg-card shrink-0">
+            <SidebarTrigger className="mr-2 sm:mr-4" />
+            <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Vale Resgate — {CONSOLE_TITLES[consoleScope]}</h1>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-3 sm:p-6 overflow-auto">
             <Outlet />
           </main>
           <ContextualHelpDrawer />

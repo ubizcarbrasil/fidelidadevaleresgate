@@ -133,3 +133,24 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* PWA safe areas */
+@supports (padding: env(safe-area-inset-top)) {
+  .pwa-safe-top { padding-top: env(safe-area-inset-top); }
+  .pwa-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Mobile-friendly touch targets */
+@media (max-width: 640px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+  
+  table {
+    font-size: 0.8rem;
+  }
+  
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
