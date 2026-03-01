@@ -39,6 +39,7 @@ export default function StoreOwnerPanel() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
   const [showWizard, setShowWizard] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -123,10 +124,15 @@ export default function StoreOwnerPanel() {
               storeId={store.id}
               branchId={store.branch_id}
               brandId={store.brand_id}
-              onClose={() => setShowWizard(false)}
+              editOffer={editingOffer}
+              onClose={() => { setShowWizard(false); setEditingOffer(null); }}
             />
           ) : (
-            <StoreCouponsTab store={store} onCreateNew={() => setShowWizard(true)} />
+            <StoreCouponsTab
+              store={store}
+              onCreateNew={() => { setEditingOffer(null); setShowWizard(true); }}
+              onEdit={(offer: any) => { setEditingOffer(offer); setShowWizard(true); }}
+            />
           )
         )}
         {activeTab === "resgate" && <StoreRedeemTab store={store} />}
@@ -329,7 +335,7 @@ function StoreOwnerDashboard({ store }: { store: any }) {
   );
 }
 
-function StoreCouponsTab({ store, onCreateNew }: { store: any; onCreateNew: () => void }) {
+function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateNew: () => void; onEdit: (offer: any) => void }) {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -337,7 +343,7 @@ function StoreCouponsTab({ store, onCreateNew }: { store: any; onCreateNew: () =
     const fetch = async () => {
       const { data } = await supabase
         .from("offers")
-        .select("id, title, status, is_active, coupon_type, coupon_category, discount_percent, value_rescue, min_purchase, end_at, created_at")
+        .select("id, title, status, is_active, coupon_type, coupon_category, discount_percent, value_rescue, min_purchase, end_at, created_at, start_at, max_total_uses, max_uses_per_customer, interval_between_uses_days, redemption_branch_id, product_id, description, terms_version, terms_params_json, specific_days_json, scaled_values_json, requires_scheduling, scheduling_advance_hours, is_cumulative, redemption_type, allowed_weekdays")
         .eq("store_id", store.id)
         .order("created_at", { ascending: false });
       setOffers(data || []);
@@ -383,6 +389,7 @@ function StoreCouponsTab({ store, onCreateNew }: { store: any; onCreateNew: () =
         <div className="space-y-3">
           {offers.map((offer) => {
             const st = statusLabel(offer.status);
+            const canEdit = ["DRAFT", "ACTIVE"].includes(offer.status) && (!offer.end_at || new Date(offer.end_at) > new Date());
             return (
               <Card key={offer.id} className="rounded-xl">
                 <CardContent className="p-4 flex items-center justify-between">
@@ -396,9 +403,16 @@ function StoreCouponsTab({ store, onCreateNew }: { store: any; onCreateNew: () =
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(offer.created_at).toLocaleDateString("pt-BR")}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {canEdit && (
+                      <Button size="sm" variant="outline" onClick={() => onEdit(offer)}>
+                        Editar
+                      </Button>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(offer.created_at).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             );

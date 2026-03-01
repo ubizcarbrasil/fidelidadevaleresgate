@@ -31,14 +31,50 @@ interface Props {
   storeId: string;
   branchId: string;
   brandId: string;
+  editOffer?: any;
   onClose: () => void;
 }
 
-export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose }: Props) {
+export default function StoreVoucherWizard({ storeId, branchId, brandId, editOffer, onClose }: Props) {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [data, setData] = useState<StoreVoucherData>(initialStoreVoucherData);
+
+  const buildInitialData = (): StoreVoucherData => {
+    if (!editOffer) return initialStoreVoucherData;
+    const p = editOffer.terms_params_json || {};
+    return {
+      ...initialStoreVoucherData,
+      coupon_category: editOffer.coupon_category || "",
+      coupon_type: editOffer.coupon_type || "STORE",
+      product_id: editOffer.product_id || "",
+      discount_percent: p.discount_percent ?? editOffer.discount_percent ?? 20,
+      discount_fixed: p.discount_fixed ?? 0,
+      discount_mode: p.discount_mode || "PERCENT",
+      min_purchase: p.min_purchase ?? editOffer.min_purchase ?? 100,
+      scaled_values: p.scaled_values || [],
+      requires_scheduling: p.requires_scheduling ?? false,
+      scheduling_advance_hours: p.scheduling_advance_hours ?? 24,
+      is_cumulative: p.is_cumulative ?? true,
+      specific_days: p.specific_days || [],
+      has_specific_days: p.has_specific_days ?? false,
+      validity_start: editOffer.start_at ? editOffer.start_at.slice(0, 16) : "",
+      validity_end: editOffer.end_at ? editOffer.end_at.slice(0, 16) : "",
+      max_total_uses: editOffer.max_total_uses,
+      unlimited_total: editOffer.max_total_uses == null,
+      max_uses_per_customer: editOffer.max_uses_per_customer,
+      unlimited_per_customer: editOffer.max_uses_per_customer == null,
+      interval_between_uses_days: editOffer.interval_between_uses_days,
+      no_interval: (editOffer.interval_between_uses_days ?? 0) === 0,
+      terms_accepted: true,
+      redemption_type: p.redemption_type || "PRESENCIAL",
+      redemption_branch_id: editOffer.redemption_branch_id || "",
+      title: editOffer.title || "",
+      description: editOffer.description || "",
+    };
+  };
+
+  const [data, setData] = useState<StoreVoucherData>(buildInitialData);
 
   const { data: catalogItems } = useQuery({
     queryKey: ["catalog-items-wizard", storeId],
@@ -98,10 +134,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose
       coupon_category: data.coupon_category,
     };
 
-    const { error } = await supabase.from("offers").insert([{
-      store_id: storeId,
-      branch_id: branchId,
-      brand_id: brandId,
+    const payload: any = {
       title: data.coupon_category + " - " + (data.coupon_type === "STORE" ? "Loja Toda" : "Produto"),
       description: data.description || null,
       coupon_type: data.coupon_type,
@@ -121,21 +154,36 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose
       interval_between_uses_days: data.no_interval ? 0 : (data.interval_between_uses_days ?? 0),
       redemption_type: data.redemption_type,
       terms_text: terms,
-      terms_version: "1",
+      terms_version: editOffer ? String(Number(editOffer.terms_version || "0") + 1) : "1",
       terms_params_json: termsParams as any,
       terms_accepted_at: new Date().toISOString(),
       terms_accepted_by_user_id: user?.id || null,
       product_id: data.coupon_type === "PRODUCT" ? data.product_id || null : null,
-      status: "DRAFT" as const,
-      is_active: true,
       allowed_weekdays: data.has_specific_days
         ? data.specific_days.map(d => d.weekday)
         : [0, 1, 2, 3, 4, 5, 6],
-    }]);
+    };
+
+    let error: any;
+    if (editOffer) {
+      const res = await supabase.from("offers").update(payload).eq("id", editOffer.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("offers").insert([{
+        ...payload,
+        store_id: storeId,
+        branch_id: branchId,
+        brand_id: brandId,
+        status: "DRAFT" as const,
+        is_active: true,
+      }]);
+      error = res.error;
+    }
+
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Cupom criado com sucesso!");
+      toast.success(editOffer ? "Cupom atualizado com sucesso!" : "Cupom criado com sucesso!");
       onClose();
     }
     setSaving(false);
@@ -169,7 +217,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose
 
       <Card>
         <CardHeader className="space-y-4">
-          <CardTitle>Novo Cupom — Passo {step + 1} de {TOTAL}</CardTitle>
+          <CardTitle>{editOffer ? "Editar" : "Novo"} Cupom — Passo {step + 1} de {TOTAL}</CardTitle>
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{STEP_LABELS[step]}</span>
@@ -208,7 +256,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={saving || !data.terms_accepted}>
-              {saving ? "Salvando..." : <><Check className="h-4 w-4 mr-1" /> Criar Cupom</>}
+              {saving ? "Salvando..." : <><Check className="h-4 w-4 mr-1" /> {editOffer ? "Salvar Alterações" : "Criar Cupom"}</>}
             </Button>
           )}
         </div>
