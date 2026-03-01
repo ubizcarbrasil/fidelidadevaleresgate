@@ -1780,6 +1780,50 @@ export type Database = {
         }
         Relationships: []
       }
+      segment_synonym_logs: {
+        Row: {
+          created_at: string
+          free_text: string
+          id: string
+          match_method: string | null
+          match_score: number
+          matched_segment_id: string | null
+          normalized_text: string
+          store_id: string | null
+          was_accepted: boolean
+        }
+        Insert: {
+          created_at?: string
+          free_text: string
+          id?: string
+          match_method?: string | null
+          match_score?: number
+          matched_segment_id?: string | null
+          normalized_text: string
+          store_id?: string | null
+          was_accepted?: boolean
+        }
+        Update: {
+          created_at?: string
+          free_text?: string
+          id?: string
+          match_method?: string | null
+          match_score?: number
+          matched_segment_id?: string | null
+          normalized_text?: string
+          store_id?: string | null
+          was_accepted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "segment_synonym_logs_matched_segment_id_fkey"
+            columns: ["matched_segment_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_catalog_items: {
         Row: {
           created_at: string
@@ -2105,6 +2149,92 @@ export type Database = {
           },
         ]
       }
+      taxonomy_categories: {
+        Row: {
+          created_at: string
+          icon_name: string | null
+          id: string
+          is_active: boolean
+          name: string
+          order_index: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          order_index?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      taxonomy_segments: {
+        Row: {
+          aliases: string[]
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          keywords: string[]
+          name: string
+          order_index: number
+          related_segment_ids: string[]
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          name: string
+          order_index?: number
+          related_segment_ids?: string[]
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          name?: string
+          order_index?: number
+          related_segment_ids?: string[]
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_segments_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           created_at: string
@@ -2353,6 +2483,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       user_has_permission: {
         Args: {
           _permission_key: string
