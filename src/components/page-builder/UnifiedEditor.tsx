@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Save, Copy,
   Settings2, Loader2, Layers, Link2, Type, MousePointer, Image as ImageIcon,
-  Minus, Square, Smartphone, RefreshCw,
+  Minus, Square, Smartphone, RefreshCw, ChevronUp, ChevronDown,
 } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { PageElement, PageElementStyle, SectionRow, UnifiedBlock } from "./types";
@@ -19,6 +19,8 @@ import { DEFAULT_ELEMENT, ELEMENT_TYPE_LABELS, SECTION_TYPES } from "./types";
 import LivePreview from "./LivePreview";
 import SectionEditor from "@/components/page-builder-v2/SectionEditor";
 import ManualLinksEditor from "@/components/page-builder-v2/ManualLinksEditor";
+import StorageImageUpload from "./StorageImageUpload";
+import InlineBannerManager from "./InlineBannerManager";
 
 interface PageRow {
   id: string;
@@ -85,7 +87,6 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
       .select("*, section_templates(key, name, type), brand_section_sources(*)") as any;
 
     if (isHomePage) {
-      // Home page: sections with page_id IS NULL for this brand
       query = query.eq("brand_id", brand?.id || page.brand_id).is("page_id", null);
     } else {
       query = query.eq("page_id", page.id);
@@ -239,6 +240,23 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     fetchSections();
   };
 
+  // Reorder section (move up/down)
+  const handleMoveSection = async (sectionId: string, direction: -1 | 1) => {
+    const idx = sections.findIndex(s => s.id === sectionId);
+    if (idx === -1) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= sections.length) return;
+
+    const a = sections[idx];
+    const b = sections[newIdx];
+    // Swap order_index values
+    await Promise.all([
+      supabase.from("brand_sections").update({ order_index: b.order_index }).eq("id", a.id),
+      supabase.from("brand_sections").update({ order_index: a.order_index }).eq("id", b.id),
+    ]);
+    fetchSections();
+  };
+
   // Save inline section edits
   const handleSaveInline = async (sectionId: string) => {
     setSavingInline(true);
@@ -307,6 +325,11 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   const isManualLinksType = (section: SectionRow) => {
     const key = section.section_templates?.key || "";
     return key.includes("MANUAL_LINKS");
+  };
+
+  const isBannerCarouselType = (section: SectionRow) => {
+    const key = section.section_templates?.key || "";
+    return key === "BANNER_CAROUSEL";
   };
 
   // Sub-editor views
@@ -394,7 +417,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
                   {isHomePage ? "Adicione sessões acima" : "Adicione elementos ou sessões acima"}
                 </p>
               )}
-              {!loading && blocks.map((block) => {
+              {!loading && blocks.map((block, blockIdx) => {
                 if (block.blockType === "static") {
                   const elIdx = elements.findIndex(el => el.id === block.id);
                   return (
@@ -428,6 +451,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
                   );
                 }
                 // Dynamic block
+                const secIdx = sections.findIndex(s => s.id === block.id);
                 return (
                   <div
                     key={block.id}
@@ -444,6 +468,20 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
                       <span className="text-xs truncate block mt-0.5">{block.section.title || "Sem título"}</span>
                     </div>
                     <div className="flex gap-0.5 shrink-0">
+                      {/* Move up/down */}
+                      {secIdx > 0 && (
+                        <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, -1); }} className="text-muted-foreground hover:text-foreground" title="Mover acima">
+                          <ChevronUp className="h-3 w-3" />
+                        </button>
+                      )}
+                      {secIdx < sections.length - 1 && (
+                        <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, 1); }} className="text-muted-foreground hover:text-foreground" title="Mover abaixo">
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      )}
+                      <button onClick={(e) => { e.stopPropagation(); handleDuplicateSection(block.section); }} className="text-muted-foreground hover:text-foreground" title="Duplicar">
+                        <Copy className="h-3 w-3" />
+                      </button>
                       <button onClick={(e) => { e.stopPropagation(); handleToggleSection(block.section); }} className="text-muted-foreground hover:text-foreground">
                         {block.section.is_enabled ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                       </button>
@@ -479,6 +517,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
             ) : selectedSection ? (
               <InlineSectionEditor
                 section={selectedSection}
+                brandId={brand?.id || page.brand_id}
                 title={inlineTitle}
                 subtitle={inlineSubtitle}
                 ctaText={inlineCtaText}
@@ -497,9 +536,11 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
                 saving={savingInline}
                 onToggle={() => handleToggleSection(selectedSection)}
                 onDelete={() => handleDeleteSection(selectedSection.id)}
+                onDuplicate={() => handleDuplicateSection(selectedSection)}
                 onEditConfig={() => setEditingSection(selectedSection)}
                 onEditLinks={() => setEditingManualLinks(selectedSection)}
                 isManualLinks={isManualLinksType(selectedSection)}
+                isBannerCarousel={isBannerCarouselType(selectedSection)}
               />
             ) : null}
           </div>
@@ -625,15 +666,18 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   );
 }
 
-// --- Inline Section Editor (edit properties directly in the panel) ---
+// --- Inline Section Editor ---
 function InlineSectionEditor({
   section,
+  brandId,
   title, subtitle, ctaText, displayMode, filterMode, couponTypeFilter, columnsCount,
   onTitleChange, onSubtitleChange, onCtaTextChange, onDisplayModeChange, onFilterModeChange,
   onCouponTypeFilterChange, onColumnsCountChange,
-  onSave, saving, onToggle, onDelete, onEditConfig, onEditLinks, isManualLinks,
+  onSave, saving, onToggle, onDelete, onDuplicate, onEditConfig, onEditLinks,
+  isManualLinks, isBannerCarousel,
 }: {
   section: SectionRow;
+  brandId: string;
   title: string; subtitle: string; ctaText: string; displayMode: string;
   filterMode: string; couponTypeFilter: string; columnsCount: number;
   onTitleChange: (v: string) => void; onSubtitleChange: (v: string) => void;
@@ -641,8 +685,9 @@ function InlineSectionEditor({
   onFilterModeChange: (v: string) => void; onCouponTypeFilterChange: (v: string) => void;
   onColumnsCountChange: (v: number) => void;
   onSave: () => void; saving: boolean;
-  onToggle: () => void; onDelete: () => void;
-  onEditConfig: () => void; onEditLinks: () => void; isManualLinks: boolean;
+  onToggle: () => void; onDelete: () => void; onDuplicate: () => void;
+  onEditConfig: () => void; onEditLinks: () => void;
+  isManualLinks: boolean; isBannerCarousel: boolean;
 }) {
   const templateKey = section.section_templates?.key || "";
 
@@ -656,6 +701,9 @@ function InlineSectionEditor({
           </span>
         </div>
         <div className="flex gap-1">
+          <Button size="sm" variant="outline" onClick={onDuplicate} title="Duplicar">
+            <Copy className="h-3 w-3" />
+          </Button>
           <Button size="sm" variant="outline" onClick={onToggle}>
             {section.is_enabled ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
           </Button>
@@ -664,6 +712,12 @@ function InlineSectionEditor({
           </Button>
         </div>
       </div>
+
+      {!section.is_enabled && (
+        <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-2 text-xs text-yellow-700 text-center">
+          Sessão desativada — não aparece no app
+        </div>
+      )}
 
       <div className="space-y-3">
         <div>
@@ -742,6 +796,13 @@ function InlineSectionEditor({
         Salvar Alterações
       </Button>
 
+      {/* Inline Banner Manager for BANNER_CAROUSEL */}
+      {isBannerCarousel && (
+        <div className="border-t pt-3">
+          <InlineBannerManager sectionId={section.id} brandId={brandId} />
+        </div>
+      )}
+
       <div className="border-t pt-3 flex gap-2">
         <Button variant="outline" className="flex-1 text-xs" onClick={onEditConfig}>
           <Settings2 className="h-3.5 w-3.5 mr-1" /> Config Avançada
@@ -793,11 +854,27 @@ function StaticPropertiesPanel({
         </div>
       )}
 
+      {/* Image upload for banner */}
       {element.type === "banner" && (
-        <div>
-          <Label className="text-xs">URL da Imagem</Label>
-          <Input value={element.imageUrl || ""} onChange={(e) => onUpdate({ imageUrl: e.target.value })} placeholder="https://..." />
-        </div>
+        <StorageImageUpload
+          value={element.imageUrl || ""}
+          onChange={(url) => onUpdate({ imageUrl: url })}
+          label="Imagem do Banner"
+          folder="page-builder/banners"
+          aspectHint="Recomendado: 1080×400px"
+        />
+      )}
+
+      {/* Image upload for icon */}
+      {element.type === "icon" && (
+        <StorageImageUpload
+          value={element.imageUrl || ""}
+          onChange={(url) => onUpdate({ imageUrl: url })}
+          label="Imagem do Ícone"
+          folder="page-builder/icons"
+          aspectHint="Recomendado: 200×200px (quadrado)"
+          compact
+        />
       )}
 
       {["banner", "button"].includes(element.type) && (
