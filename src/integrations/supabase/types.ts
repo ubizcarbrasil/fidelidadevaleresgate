@@ -2058,6 +2058,7 @@ export type Database = {
           store_type: Database["public"]["Enums"]["store_type"]
           submitted_at: string | null
           tags: string[] | null
+          taxonomy_segment_id: string | null
           updated_at: string
           video_url: string | null
           whatsapp: string | null
@@ -2092,6 +2093,7 @@ export type Database = {
           store_type?: Database["public"]["Enums"]["store_type"]
           submitted_at?: string | null
           tags?: string[] | null
+          taxonomy_segment_id?: string | null
           updated_at?: string
           video_url?: string | null
           whatsapp?: string | null
@@ -2126,6 +2128,7 @@ export type Database = {
           store_type?: Database["public"]["Enums"]["store_type"]
           submitted_at?: string | null
           tags?: string[] | null
+          taxonomy_segment_id?: string | null
           updated_at?: string
           video_url?: string | null
           whatsapp?: string | null
@@ -2145,6 +2148,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_taxonomy_segment_id_fkey"
+            columns: ["taxonomy_segment_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_segments"
             referencedColumns: ["id"]
           },
         ]

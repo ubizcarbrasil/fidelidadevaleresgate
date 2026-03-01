@@ -5,12 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Save, Image as ImageIcon, Video, Globe, Instagram, MapPin, MessageCircle } from "lucide-react";
+import { Loader2, Save, Image as ImageIcon, Video, Globe, Instagram, MapPin, MessageCircle, Tag } from "lucide-react";
 import { toast } from "sonner";
+import SegmentAutocomplete from "@/components/SegmentAutocomplete";
 
 export default function StoreProfileTab({ store }: { store: any }) {
   const [form, setForm] = useState({
     description: store.description || "",
+    segment: store.segment || "",
+    taxonomy_segment_id: store.taxonomy_segment_id || "",
     banner_url: store.banner_url || "",
     video_url: store.video_url || "",
     gallery_urls: (store.gallery_urls || []) as string[],
@@ -28,6 +31,8 @@ export default function StoreProfileTab({ store }: { store: any }) {
       .from("stores")
       .update({
         description: form.description,
+        segment: form.segment || null,
+        taxonomy_segment_id: form.taxonomy_segment_id || null,
         banner_url: form.banner_url || null,
         video_url: form.video_url || null,
         gallery_urls: form.gallery_urls.length ? form.gallery_urls : null,
@@ -76,6 +81,29 @@ export default function StoreProfileTab({ store }: { store: any }) {
             onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
             rows={4}
           />
+        </CardContent>
+      </Card>
+
+      {/* Segmento */}
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Tag className="h-4 w-4" /> Segmento
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SegmentAutocomplete
+            value={form.taxonomy_segment_id || null}
+            segmentName={form.segment}
+            onSelect={(segId, segName) => {
+              setForm(prev => ({ ...prev, taxonomy_segment_id: segId || "", segment: segName }));
+            }}
+            storeId={store.id}
+            placeholder="Digite para buscar... Ex: Hamburgueria"
+          />
+          <p className="text-[11px] text-muted-foreground mt-2">
+            O segmento ajuda seus clientes a encontrar seu estabelecimento mais facilmente
+          </p>
         </CardContent>
       </Card>
 
