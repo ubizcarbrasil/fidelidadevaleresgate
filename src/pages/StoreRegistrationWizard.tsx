@@ -7,15 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ChevronRight, ChevronLeft, Check, Store, MapPin, FileText, Lock, Upload } from "lucide-react";
+import {
+  Loader2, ChevronRight, ChevronLeft, Check, Store, MapPin,
+  FileText, Lock, Upload, Phone, Mail, Building2, Tag,
+  Globe, Instagram, MessageCircle, ShieldCheck, Eye, EyeOff,
+  Sparkles, CheckCircle2, AlertCircle, ImageIcon
+} from "lucide-react";
 
 const STEPS = [
-  { label: "Dados básicos", icon: Store },
-  { label: "Endereço e canais", icon: MapPin },
-  { label: "Documentos e mídia", icon: FileText },
-  { label: "Acesso", icon: Lock },
+  { label: "Dados básicos", desc: "Informações do negócio", icon: Store },
+  { label: "Endereço e canais", desc: "Localização e contato", icon: MapPin },
+  { label: "Documentos e mídia", desc: "Comprovantes e imagens", icon: FileText },
+  { label: "Criar acesso", desc: "Senha do painel", icon: Lock },
 ];
 
 const CATEGORIES = [
@@ -24,7 +32,6 @@ const CATEGORIES = [
 ];
 
 interface WizardData {
-  // Step 1
   name: string;
   phone: string;
   email: string;
@@ -33,17 +40,14 @@ interface WizardData {
   segment: string;
   tags: string;
   store_type: string;
-  // Step 2
   address: string;
   site_url: string;
   instagram: string;
   whatsapp: string;
-  // Step 3 (file URLs after upload)
   cnpj_doc_url: string;
   contrato_url: string;
   logo_url: string;
   banner_url: string;
-  // Step 4
   password: string;
   confirm_password: string;
 }
@@ -55,6 +59,142 @@ const defaultData: WizardData = {
   password: "", confirm_password: "",
 };
 
+function StepIndicator({ currentStep }: { currentStep: number }) {
+  const progress = ((currentStep + 1) / STEPS.length) * 100;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">
+            Etapa {currentStep + 1} de {STEPS.length}
+          </h3>
+          <p className="text-xs text-muted-foreground">{STEPS[currentStep].desc}</p>
+        </div>
+        <Badge variant="secondary" className="text-xs">
+          {Math.round(progress)}%
+        </Badge>
+      </div>
+      <Progress value={progress} className="h-1.5" />
+      <div className="flex gap-1">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const isActive = i === currentStep;
+          const isDone = i < currentStep;
+          return (
+            <button
+              key={i}
+              onClick={() => { if (isDone) {} }}
+              className={`flex-1 flex flex-col items-center gap-1.5 py-2 px-1 rounded-xl transition-all duration-200 ${
+                isActive
+                  ? "bg-primary/10"
+                  : isDone
+                  ? "opacity-80"
+                  : "opacity-40"
+              }`}
+            >
+              <div
+                className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : isDone
+                    ? "bg-primary/20 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {isDone ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+              </div>
+              <span className={`text-[10px] font-medium leading-tight text-center ${
+                isActive ? "text-primary" : "text-muted-foreground"
+              }`}>
+                {s.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FieldGroup({ icon: Icon, label, required, children, hint }: {
+  icon: React.ElementType;
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        {label}
+        {required && <span className="text-destructive">*</span>}
+      </Label>
+      {children}
+      {hint && <p className="text-[11px] text-muted-foreground pl-5">{hint}</p>}
+    </div>
+  );
+}
+
+function FileUploadCard({ label, field, accept, value, uploading, onUpload, onClear }: {
+  label: string;
+  field: string;
+  accept: string;
+  value: string;
+  uploading: boolean;
+  onUpload: (file: File) => void;
+  onClear: () => void;
+}) {
+  const isImage = accept.includes("jpg") || accept.includes("png") || accept.includes("webp") || accept.includes("svg");
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <CheckCircle2 className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          <p className="text-xs text-primary">Arquivo enviado com sucesso</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onClear} className="text-xs text-muted-foreground shrink-0">
+          Trocar
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <label className="group flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-muted-foreground/15 hover:border-primary/30 hover:bg-primary/[0.02] cursor-pointer transition-all duration-200">
+      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+        {uploading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        ) : isImage ? (
+          <ImageIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        ) : (
+          <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">
+          {uploading ? "Enviando arquivo..." : `Formatos: ${accept.replace(/\./g, "").toUpperCase()}`}
+        </p>
+      </div>
+      <input
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={e => {
+          const file = e.target.files?.[0];
+          if (file) onUpload(file);
+        }}
+      />
+    </label>
+  );
+}
+
 export default function StoreRegistrationWizard() {
   const { user } = useAuth();
   const { brand, selectedBranch } = useBrand();
@@ -64,6 +204,8 @@ export default function StoreRegistrationWizard() {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Load draft if exists
   useEffect(() => {
@@ -162,7 +304,7 @@ export default function StoreRegistrationWizard() {
         setStoreId(created.id);
       }
       setStep(nextStep);
-      toast({ title: "Rascunho salvo!" });
+      toast({ title: "Progresso salvo!" });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
@@ -172,8 +314,6 @@ export default function StoreRegistrationWizard() {
 
   const handleSubmit = async () => {
     if (!storeId) return;
-
-    // Validate step 4
     if (data.password.length < 6) {
       toast({ title: "Senha deve ter pelo menos 6 caracteres", variant: "destructive" });
       return;
@@ -185,8 +325,6 @@ export default function StoreRegistrationWizard() {
 
     setSaving(true);
     try {
-      // If user isn't signed up yet with email/pass, sign them up
-      // Otherwise just update the store status
       const { error } = await supabase
         .from("stores")
         .update({
@@ -195,10 +333,8 @@ export default function StoreRegistrationWizard() {
           wizard_step: 4,
         })
         .eq("id", storeId);
-
       if (error) throw error;
 
-      // Upload documents as store_documents records
       const docs = [
         { type: "cnpj", url: data.cnpj_doc_url },
         { type: "contrato_social", url: data.contrato_url },
@@ -236,233 +372,388 @@ export default function StoreRegistrationWizard() {
     }
   };
 
+  const passwordStrength = () => {
+    const p = data.password;
+    if (!p) return { label: "", color: "", value: 0 };
+    let score = 0;
+    if (p.length >= 6) score++;
+    if (p.length >= 8) score++;
+    if (/[A-Z]/.test(p)) score++;
+    if (/[0-9]/.test(p)) score++;
+    if (/[^A-Za-z0-9]/.test(p)) score++;
+    if (score <= 2) return { label: "Fraca", color: "text-destructive", value: 33 };
+    if (score <= 3) return { label: "Média", color: "text-accent-foreground", value: 66 };
+    return { label: "Forte", color: "text-primary", value: 100 };
+  };
+
   if (submitted) {
     return (
-      <div className="max-w-lg mx-auto px-5 py-16 text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-          <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <Check className="h-10 w-10 text-green-600" />
+      <div className="min-h-screen flex items-center justify-center px-5 bg-background">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-md w-full text-center space-y-6"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+          >
+            <div className="h-24 w-24 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto">
+              <Sparkles className="h-12 w-12 text-primary" />
+            </div>
+          </motion.div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">Cadastro Enviado!</h2>
+            <p className="text-muted-foreground">
+              Seu estabelecimento foi enviado para análise da equipe.
+            </p>
           </div>
+          <Card className="rounded-2xl text-left">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Análise em andamento</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nossa equipe verificará os documentos e dados enviados. Esse processo pode levar até 48h úteis.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Você será notificado</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enviaremos um e-mail para <strong>{data.email}</strong> assim que a análise for concluída.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
-        <h2 className="text-2xl font-bold mb-2">Cadastro Enviado!</h2>
-        <p className="text-muted-foreground mb-1">Seu estabelecimento foi enviado para análise.</p>
-        <p className="text-sm text-muted-foreground">Você será notificado quando for aprovado.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto px-5 py-8">
-      <h2 className="text-2xl font-bold mb-2">Cadastrar minha loja</h2>
-      <p className="text-sm text-muted-foreground mb-8">Preencha as informações para registrar seu estabelecimento</p>
-
-      {/* Step indicator */}
-      <div className="flex items-center gap-2 mb-8">
-        {STEPS.map((s, i) => {
-          const Icon = s.icon;
-          const isActive = i === step;
-          const isDone = i < step;
-          return (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-              <div
-                className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                  isActive ? "bg-primary text-primary-foreground shadow-lg" :
-                  isDone ? "bg-primary/20 text-primary" :
-                  "bg-muted text-muted-foreground"
-                }`}
-              >
-                {isDone ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-              </div>
-              <span className={`text-[10px] font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                {s.label}
-              </span>
-            </div>
-          );
-        })}
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+        <div className="max-w-lg mx-auto px-5 py-4">
+          <StepIndicator currentStep={step} />
+        </div>
       </div>
 
-      {/* Step content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-          className="space-y-4"
-        >
-          {step === 0 && (
-            <>
-              <div>
-                <Label>Nome do estabelecimento *</Label>
-                <Input value={data.name} onChange={e => update("name", e.target.value)} placeholder="Ex: Pizzaria do Zé" />
-              </div>
-              <div>
-                <Label>Tipo de loja *</Label>
-                <Select value={data.store_type} onValueChange={v => update("store_type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RECEPTORA">Receptora (recebe resgates)</SelectItem>
-                    <SelectItem value="EMISSORA">Emissora (distribui pontos)</SelectItem>
-                    <SelectItem value="MISTA">Mista (emite e recebe)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Telefone *</Label>
-                  <Input value={data.phone} onChange={e => update("phone", e.target.value)} placeholder="(11) 99999-0000" />
-                </div>
-                <div>
-                  <Label>Email *</Label>
-                  <Input value={data.email} onChange={e => update("email", e.target.value)} type="email" placeholder="loja@email.com" />
-                </div>
-              </div>
-              <div>
-                <Label>CNPJ *</Label>
-                <Input value={data.cnpj} onChange={e => update("cnpj", e.target.value)} placeholder="00.000.000/0000-00" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Categoria *</Label>
-                  <Select value={data.category} onValueChange={v => update("category", v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+      {/* Content */}
+      <div className="max-w-lg mx-auto px-5 py-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* Step Title */}
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-foreground">{STEPS[step].label}</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">{STEPS[step].desc}</p>
+            </div>
+
+            {/* Step 0: Dados básicos */}
+            {step === 0 && (
+              <div className="space-y-5">
+                <FieldGroup icon={Store} label="Nome do estabelecimento" required>
+                  <Input
+                    value={data.name}
+                    onChange={e => update("name", e.target.value)}
+                    placeholder="Ex: Pizzaria do Zé"
+                    className="h-11"
+                  />
+                </FieldGroup>
+
+                <FieldGroup icon={Building2} label="Tipo de loja" required hint="Define como sua loja interage com a plataforma">
+                  <Select value={data.store_type} onValueChange={v => update("store_type", v)}>
+                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      <SelectItem value="RECEPTORA">
+                        <span className="flex items-center gap-2">Receptora <span className="text-muted-foreground text-xs">— recebe resgates</span></span>
+                      </SelectItem>
+                      <SelectItem value="EMISSORA">
+                        <span className="flex items-center gap-2">Emissora <span className="text-muted-foreground text-xs">— distribui pontos</span></span>
+                      </SelectItem>
+                      <SelectItem value="MISTA">
+                        <span className="flex items-center gap-2">Mista <span className="text-muted-foreground text-xs">— emite e recebe</span></span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label>Segmento</Label>
-                  <Input value={data.segment} onChange={e => update("segment", e.target.value)} placeholder="Ex: Pizzaria" />
-                </div>
-              </div>
-              <div>
-                <Label>Tags (separadas por vírgula)</Label>
-                <Input value={data.tags} onChange={e => update("tags", e.target.value)} placeholder="pizza, delivery, italiana" />
-              </div>
-            </>
-          )}
+                </FieldGroup>
 
-          {step === 1 && (
-            <>
-              <div>
-                <Label>Endereço completo *</Label>
-                <Textarea value={data.address} onChange={e => update("address", e.target.value)} placeholder="Rua, número, bairro, cidade, estado, CEP" rows={3} />
-              </div>
-              <div>
-                <Label>Site (opcional)</Label>
-                <Input value={data.site_url} onChange={e => update("site_url", e.target.value)} placeholder="https://meusite.com" />
-              </div>
-              <div>
-                <Label>Instagram (opcional)</Label>
-                <Input value={data.instagram} onChange={e => update("instagram", e.target.value)} placeholder="@minhalojaoficial" />
-              </div>
-              <div>
-                <Label>WhatsApp de vendas (opcional)</Label>
-                <Input value={data.whatsapp} onChange={e => update("whatsapp", e.target.value)} placeholder="(11) 99999-0000" />
-              </div>
-            </>
-          )}
+                <div className="grid grid-cols-2 gap-3">
+                  <FieldGroup icon={Phone} label="Telefone" required>
+                    <Input
+                      value={data.phone}
+                      onChange={e => update("phone", e.target.value)}
+                      placeholder="(11) 99999-0000"
+                      className="h-11"
+                    />
+                  </FieldGroup>
+                  <FieldGroup icon={Mail} label="Email" required>
+                    <Input
+                      value={data.email}
+                      onChange={e => update("email", e.target.value)}
+                      type="email"
+                      placeholder="loja@email.com"
+                      className="h-11"
+                    />
+                  </FieldGroup>
+                </div>
 
-          {step === 2 && (
-            <>
-              {[
-                { field: "cnpj_doc_url", label: "Documento CNPJ *", accept: ".pdf,.jpg,.png" },
-                { field: "contrato_url", label: "Contrato Social *", accept: ".pdf,.jpg,.png" },
-                { field: "logo_url", label: "Logomarca *", accept: ".jpg,.png,.webp,.svg" },
-                { field: "banner_url", label: "Banner de perfil *", accept: ".jpg,.png,.webp" },
-              ].map(({ field, label, accept }) => (
-                <div key={field}>
-                  <Label>{label}</Label>
-                  <div className="mt-1.5">
-                    {data[field as keyof WizardData] ? (
-                      <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-200">
-                        <Check className="h-4 w-4 text-green-600" />
-                        <span className="text-sm text-green-700 flex-1 truncate">Arquivo enviado</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => update(field as keyof WizardData, "")}
-                          className="text-xs"
-                        >
-                          Trocar
-                        </Button>
-                      </div>
-                    ) : (
-                      <label className="flex items-center gap-2 p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 cursor-pointer transition-colors">
-                        {uploading[field] ? (
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        ) : (
-                          <Upload className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {uploading[field] ? "Enviando..." : "Clique para enviar"}
-                        </span>
-                        <input
-                          type="file"
-                          accept={accept}
-                          className="hidden"
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload(field, file);
-                          }}
-                        />
-                      </label>
-                    )}
+                <FieldGroup icon={FileText} label="CNPJ" required hint="Apenas números ou no formato 00.000.000/0000-00">
+                  <Input
+                    value={data.cnpj}
+                    onChange={e => update("cnpj", e.target.value)}
+                    placeholder="00.000.000/0000-00"
+                    className="h-11"
+                  />
+                </FieldGroup>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FieldGroup icon={Tag} label="Categoria" required>
+                    <Select value={data.category} onValueChange={v => update("category", v)}>
+                      <SelectTrigger className="h-11"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FieldGroup>
+                  <FieldGroup icon={Tag} label="Segmento">
+                    <Input
+                      value={data.segment}
+                      onChange={e => update("segment", e.target.value)}
+                      placeholder="Ex: Pizzaria"
+                      className="h-11"
+                    />
+                  </FieldGroup>
+                </div>
+
+                <FieldGroup icon={Tag} label="Tags" hint="Separe por vírgula para facilitar a busca">
+                  <Input
+                    value={data.tags}
+                    onChange={e => update("tags", e.target.value)}
+                    placeholder="pizza, delivery, italiana"
+                    className="h-11"
+                  />
+                </FieldGroup>
+              </div>
+            )}
+
+            {/* Step 1: Endereço e canais */}
+            {step === 1 && (
+              <div className="space-y-5">
+                <FieldGroup icon={MapPin} label="Endereço completo" required hint="Rua, número, bairro, cidade, estado e CEP">
+                  <Textarea
+                    value={data.address}
+                    onChange={e => update("address", e.target.value)}
+                    placeholder="Rua das Flores, 123 - Centro, São Paulo - SP, 01001-000"
+                    rows={3}
+                    className="resize-none"
+                  />
+                </FieldGroup>
+
+                <div className="pt-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Canais de contato (opcionais)</p>
+                  <div className="space-y-4">
+                    <FieldGroup icon={Globe} label="Site">
+                      <Input
+                        value={data.site_url}
+                        onChange={e => update("site_url", e.target.value)}
+                        placeholder="https://meusite.com.br"
+                        className="h-11"
+                      />
+                    </FieldGroup>
+                    <FieldGroup icon={Instagram} label="Instagram">
+                      <Input
+                        value={data.instagram}
+                        onChange={e => update("instagram", e.target.value)}
+                        placeholder="@minhalojaoficial"
+                        className="h-11"
+                      />
+                    </FieldGroup>
+                    <FieldGroup icon={MessageCircle} label="WhatsApp de vendas">
+                      <Input
+                        value={data.whatsapp}
+                        onChange={e => update("whatsapp", e.target.value)}
+                        placeholder="(11) 99999-0000"
+                        className="h-11"
+                      />
+                    </FieldGroup>
                   </div>
                 </div>
-              ))}
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <p className="text-sm text-muted-foreground">
-                Crie uma senha para acessar o painel da sua loja após aprovação.
-              </p>
-              <div>
-                <Label>Senha *</Label>
-                <Input type="password" value={data.password} onChange={e => update("password", e.target.value)} placeholder="Mínimo 6 caracteres" />
               </div>
-              <div>
-                <Label>Confirmar senha *</Label>
-                <Input type="password" value={data.confirm_password} onChange={e => update("confirm_password", e.target.value)} placeholder="Repita a senha" />
-              </div>
-              {data.password && data.confirm_password && data.password !== data.confirm_password && (
-                <p className="text-xs text-destructive">As senhas não conferem</p>
-              )}
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+            )}
 
-      {/* Navigation buttons */}
-      <div className="flex gap-3 mt-8">
-        {step > 0 && (
-          <Button variant="outline" onClick={() => setStep(step - 1)} className="flex-1 h-12 rounded-2xl">
-            <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
-          </Button>
-        )}
-        {step < 3 ? (
-          <Button
-            onClick={() => saveDraft(step + 1)}
-            disabled={!canAdvance() || saving}
-            className="flex-1 h-12 rounded-2xl"
-          >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Salvar e Avançar <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSubmit}
-            disabled={!canAdvance() || saving}
-            className="flex-1 h-12 rounded-2xl"
-          >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-            Enviar para Análise
-          </Button>
-        )}
+            {/* Step 2: Documentos e mídia */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <Card className="rounded-xl border-dashed border-primary/10 bg-primary/[0.02]">
+                  <CardContent className="p-3 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Envie documentos legíveis e em boa qualidade. Aceitamos PDF, JPG e PNG (máx. 5MB cada).
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-3">
+                  <FileUploadCard
+                    label="Documento CNPJ"
+                    field="cnpj_doc_url"
+                    accept=".pdf,.jpg,.png"
+                    value={data.cnpj_doc_url}
+                    uploading={uploading.cnpj_doc_url || false}
+                    onUpload={f => handleFileUpload("cnpj_doc_url", f)}
+                    onClear={() => update("cnpj_doc_url", "")}
+                  />
+                  <FileUploadCard
+                    label="Contrato Social"
+                    field="contrato_url"
+                    accept=".pdf,.jpg,.png"
+                    value={data.contrato_url}
+                    uploading={uploading.contrato_url || false}
+                    onUpload={f => handleFileUpload("contrato_url", f)}
+                    onClear={() => update("contrato_url", "")}
+                  />
+                  <FileUploadCard
+                    label="Logomarca"
+                    field="logo_url"
+                    accept=".jpg,.png,.webp,.svg"
+                    value={data.logo_url}
+                    uploading={uploading.logo_url || false}
+                    onUpload={f => handleFileUpload("logo_url", f)}
+                    onClear={() => update("logo_url", "")}
+                  />
+                  <FileUploadCard
+                    label="Banner do perfil"
+                    field="banner_url"
+                    accept=".jpg,.png,.webp"
+                    value={data.banner_url}
+                    uploading={uploading.banner_url || false}
+                    onUpload={f => handleFileUpload("banner_url", f)}
+                    onClear={() => update("banner_url", "")}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Acesso */}
+            {step === 3 && (
+              <div className="space-y-5">
+                <Card className="rounded-xl bg-muted/30">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <Lock className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Crie sua senha de acesso</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Essa senha será utilizada para acessar o painel da sua loja após a aprovação do cadastro.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <FieldGroup icon={Lock} label="Senha" required hint="Mínimo de 6 caracteres">
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={data.password}
+                      onChange={e => update("password", e.target.value)}
+                      placeholder="••••••••"
+                      className="h-11 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {data.password && (
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <Progress value={passwordStrength().value} className="h-1 flex-1" />
+                      <span className={`text-[11px] font-medium ${passwordStrength().color}`}>
+                        {passwordStrength().label}
+                      </span>
+                    </div>
+                  )}
+                </FieldGroup>
+
+                <FieldGroup icon={ShieldCheck} label="Confirmar senha" required>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={data.confirm_password}
+                      onChange={e => update("confirm_password", e.target.value)}
+                      placeholder="••••••••"
+                      className="h-11 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {data.password && data.confirm_password && data.password !== data.confirm_password && (
+                    <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                      <AlertCircle className="h-3 w-3" /> As senhas não conferem
+                    </p>
+                  )}
+                  {data.password && data.confirm_password && data.password === data.confirm_password && (
+                    <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                      <CheckCircle2 className="h-3 w-3" /> Senhas conferem
+                    </p>
+                  )}
+                </FieldGroup>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <div className="flex gap-3 mt-8 pb-8">
+          {step > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setStep(step - 1)}
+              className="flex-1 h-12 rounded-2xl font-medium"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
+            </Button>
+          )}
+          {step < 3 ? (
+            <Button
+              onClick={() => saveDraft(step + 1)}
+              disabled={!canAdvance() || saving}
+              className="flex-1 h-12 rounded-2xl font-medium"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Continuar <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={!canAdvance() || saving}
+              className="flex-1 h-12 rounded-2xl font-medium"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+              Enviar para Análise
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
