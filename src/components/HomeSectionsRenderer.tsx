@@ -11,6 +11,7 @@ type Voucher = Tables<"vouchers">;
 
 interface BrandSection {
   id: string;
+  brand_id: string;
   title: string | null;
   subtitle: string | null;
   cta_text: string | null;
@@ -186,10 +187,38 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
 
   useEffect(() => {
     const source = section.brand_section_sources?.[0];
-    if (!source) { setLoading(false); return; }
 
     const fetchItems = async () => {
       setLoading(true);
+
+      // Banner carousel: fetch from banner_schedules with date filtering
+      if (templateType === "BANNER_CAROUSEL") {
+        const now = new Date().toISOString();
+        let query = supabase
+          .from("banner_schedules")
+          .select("*")
+          .eq("is_active", true)
+          .lte("start_at", now)
+          .order("order_index");
+        
+        // Filter by brand
+        if (section.brand_id) {
+          query = query.eq("brand_id", section.brand_id);
+        }
+        // If section has brand_section_id link, use it
+        if (section.id) {
+          query = query.or(`brand_section_id.eq.${section.id},brand_section_id.is.null`);
+        }
+
+        const { data } = await query;
+        // Filter out expired banners (end_at passed)
+        const filtered = (data || []).filter(b => !b.end_at || new Date(b.end_at) > new Date());
+        setItems(filtered);
+        setLoading(false);
+        return;
+      }
+
+      if (!source) { setLoading(false); return; }
 
       if (templateType === "VOUCHERS_CARDS") {
         let query = supabase
