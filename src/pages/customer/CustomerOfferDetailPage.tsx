@@ -82,10 +82,6 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const isValidCpf = (v: string) => v.replace(/\D/g, "").length === 11;
 
   const handleRedeem = async () => {
-    if (!customer) {
-      toast({ title: "Faça login para resgatar", description: "Você precisa estar logado para resgatar ofertas.", variant: "destructive" });
-      return;
-    }
     if (!brand || !selectedBranch) return;
     if (!isValidCpf(cpf)) {
       toast({ title: "CPF inválido", description: "Informe os 11 dígitos do CPF.", variant: "destructive" });
@@ -93,16 +89,26 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
     }
     setRedeeming(true);
     try {
-      // Ensure we have an active session before attempting insert
+      // Ensure we have a valid authenticated session
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        // Try to refresh the session
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
+      let activeSession = sessionData.session;
+
+      if (!activeSession) {
+        // Try refreshing
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError || !refreshData.session) {
           toast({ title: "Sessão expirada", description: "Faça login novamente para resgatar.", variant: "destructive" });
           setRedeeming(false);
           return;
         }
+        activeSession = refreshData.session;
+      }
+
+      // Verify customer belongs to current user
+      if (!customer || customer.user_id !== activeSession.user.id) {
+        toast({ title: "Erro de autenticação", description: "Faça login novamente para resgatar.", variant: "destructive" });
+        setRedeeming(false);
+        return;
       }
 
       // Build offer snapshot for historical integrity
