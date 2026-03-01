@@ -685,6 +685,179 @@ const helpContent: Record<string, HelpEntry> = {
       },
     ],
   },
+
+  /* ═══════════════════════════════════════════════
+     TENANTS (ROOT)
+     ═══════════════════════════════════════════════ */
+  "/tenants": {
+    pageTitle: "Tenants (Clientes)",
+    sections: [
+      {
+        title: "Gerenciar tenants",
+        summary: "Tenants são os clientes (empresas) que utilizam a plataforma.",
+        steps: [
+          "Clique em 'Novo tenant' para criar um novo cliente da plataforma.",
+          "Preencha nome, slug e dados do responsável.",
+          "Cada tenant pode ter múltiplas marcas e filiais.",
+          "Ative ou desative tenants conforme a necessidade.",
+        ],
+        tips: [
+          "O slug é usado na URL e não pode ser alterado depois de criado.",
+          "Desativar um tenant desativa todas as marcas e filiais vinculadas.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     PERMISSÕES
+     ═══════════════════════════════════════════════ */
+  "/permissions": {
+    pageTitle: "Permissões",
+    sections: [
+      {
+        title: "Gerenciar permissões por role",
+        summary: "Configure quais ações cada papel (role) pode executar no sistema.",
+        steps: [
+          "Selecione uma role na lista à esquerda.",
+          "Marque ou desmarque as permissões desejadas.",
+          "As permissões são agrupadas por módulo para facilitar a configuração.",
+          "Clique em 'Salvar' para aplicar.",
+        ],
+        tips: [
+          "Roles de sistema não podem ser excluídas, mas suas permissões podem ser ajustadas.",
+          "Alterações se aplicam imediatamente a todos os usuários com aquela role.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     MÓDULOS (ROOT)
+     ═══════════════════════════════════════════════ */
+  "/modules": {
+    pageTitle: "Definições de Módulos",
+    sections: [
+      {
+        title: "Gerenciar módulos da plataforma",
+        summary: "Crie e configure os módulos disponíveis para as marcas.",
+        steps: [
+          "Cada módulo representa uma funcionalidade (ex: vouchers, pontos, lojas).",
+          "Defina chave (key), nome, categoria e descrição.",
+          "Módulos 'core' são obrigatórios e não podem ser desativados pelas marcas.",
+          "Use o schema JSON para configurar campos customizáveis do módulo.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     FEATURE FLAGS
+     ═══════════════════════════════════════════════ */
+  "/flags": {
+    pageTitle: "Feature Flags",
+    sections: [
+      {
+        title: "Controlar features por flag",
+        summary: "Ative ou desative funcionalidades específicas sem deploy.",
+        steps: [
+          "Crie uma nova flag com chave (key) e label descritiva.",
+          "Defina o escopo: global, por marca ou por filial.",
+          "Use o toggle para ativar/desativar a flag.",
+          "O sistema checará automaticamente a flag antes de exibir a funcionalidade.",
+        ],
+        tips: [
+          "Flags globais afetam toda a plataforma.",
+          "Flags com escopo de marca/filial permitem ativar progressivamente.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     RELEASES
+     ═══════════════════════════════════════════════ */
+  "/releases": {
+    pageTitle: "Releases",
+    sections: [
+      {
+        title: "Registrar versões do sistema",
+        summary: "Documente novas versões e mudanças na plataforma.",
+        steps: [
+          "Clique em 'Nova release'.",
+          "Informe a versão (ex: 1.2.0), título e descrição das mudanças.",
+          "As releases ficam visíveis no changelog para referência.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     HOME TEMPLATES
+     ═══════════════════════════════════════════════ */
+  "/home-templates": {
+    pageTitle: "Templates de Home",
+    sections: [
+      {
+        title: "Gerenciar templates de Home",
+        summary: "Crie e aplique templates predefinidos para a Home do app do cliente.",
+        steps: [
+          "Visualize os templates disponíveis na lista.",
+          "Clique em um template para ver o preview.",
+          "Use 'Aplicar template' para copiar seções para uma marca ou filial.",
+          "O campo 'Sobrescrever' define se seções existentes serão substituídas.",
+        ],
+        tips: [
+          "Templates marcados como 'padrão' são aplicados automaticamente em novas marcas.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     CLONE BRANCH
+     ═══════════════════════════════════════════════ */
+  "/clone-branch": {
+    pageTitle: "Clonar Filial",
+    sections: [
+      {
+        title: "Duplicar configurações de uma filial",
+        summary: "Copie seções, regras e configurações de uma filial para outra.",
+        steps: [
+          "Selecione a filial de origem (que será copiada).",
+          "Selecione a filial de destino (que receberá a cópia).",
+          "Escolha quais elementos copiar: seções, regras de pontos, etc.",
+          "Confirme a operação.",
+        ],
+        tips: [
+          "Dados existentes na filial de destino podem ser sobrescritos — cuidado!",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     OPERADOR PDV
+     ═══════════════════════════════════════════════ */
+  "/pdv": {
+    pageTitle: "PDV — Validar Resgate",
+    sections: [
+      {
+        title: "Validar resgate no ponto de venda",
+        summary: "Use esta tela para dar baixa em resgates de clientes.",
+        steps: [
+          "Peça o PIN de 6 dígitos ao cliente.",
+          "Digite o PIN no campo indicado.",
+          "O sistema exibirá os detalhes do resgate: oferta, valor, validade.",
+          "Confirme o resgate para dar baixa.",
+        ],
+        tips: [
+          "PINs expirados ou já utilizados são recusados automaticamente.",
+          "Em caso de dúvida, consulte o extrato de resgates.",
+        ],
+      },
+    ],
+  },
 };
 
 export function getHelpForRoute(pathname: string): HelpEntry | null {
