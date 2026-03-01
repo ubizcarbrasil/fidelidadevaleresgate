@@ -104,6 +104,7 @@ export function BranchSidebar() {
                           location.pathname === item.url ||
                           (item.url !== "/" && location.pathname.startsWith(item.url))
                         }
+                        tooltip={item.title}
                       >
                         <NavLink
                           to={item.url}

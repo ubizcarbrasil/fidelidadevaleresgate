@@ -135,6 +135,7 @@ export function BrandSidebar() {
                           location.pathname === item.url ||
                           (item.url !== "/" && location.pathname.startsWith(item.url))
                         }
+                        tooltip={getLabel(item.key)}
                       >
                         <NavLink
                           to={item.url}
