@@ -177,7 +177,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
         store_id: storeId,
         branch_id: branchId,
         brand_id: brandId,
-        status: "DRAFT" as const,
+        status: "ACTIVE" as const,
         is_active: true,
       }]);
       error = res.error;
