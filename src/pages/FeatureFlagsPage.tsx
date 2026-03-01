@@ -42,7 +42,7 @@ export default function FeatureFlagsPage() {
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["feature-flags"] }); toast.success("Flag salva!"); closeDialog(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["feature-flags"] }); toast.success("Recurso salvo!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -57,7 +57,7 @@ export default function FeatureFlagsPage() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("feature_flags").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["feature-flags"] }); toast.success("Flag removida!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["feature-flags"] }); toast.success("Recurso removido!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -68,17 +68,17 @@ export default function FeatureFlagsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Feature Flags</h2>
-          <p className="text-muted-foreground">Controle funcionalidades globais da plataforma</p>
+         <h2 className="text-2xl font-bold tracking-tight">Controle de Recursos</h2>
+          <p className="text-muted-foreground">Ative ou desative funcionalidades globais da plataforma</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nova Flag</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Recurso</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>{editId ? "Editar Flag" : "Nova Flag"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editId ? "Editar Recurso" : "Novo Recurso"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Key</Label><Input value={form.key} onChange={e => setForm(f => ({ ...f, key: e.target.value }))} placeholder="enable_feature_x" /></div>
-                <div className="space-y-2"><Label>Label</Label><Input value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>Chave</Label><Input value={form.key} onChange={e => setForm(f => ({ ...f, key: e.target.value }))} placeholder="habilitar_recurso_x" /></div>
+                <div className="space-y-2"><Label>Nome</Label><Input value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} /></div>
               </div>
               <div className="space-y-2"><Label>Descrição</Label><Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="space-y-2">
@@ -86,14 +86,14 @@ export default function FeatureFlagsPage() {
                 <Select value={form.scope_type} onValueChange={v => setForm(f => ({ ...f, scope_type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PLATFORM">Platform</SelectItem>
-                    <SelectItem value="TENANT">Tenant</SelectItem>
-                    <SelectItem value="BRAND">Brand</SelectItem>
-                    <SelectItem value="BRANCH">Branch</SelectItem>
+                    <SelectItem value="PLATFORM">Plataforma</SelectItem>
+                    <SelectItem value="TENANT">Franqueado</SelectItem>
+                    <SelectItem value="BRAND">Marca</SelectItem>
+                    <SelectItem value="BRANCH">Cidade</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2"><Switch checked={form.is_enabled} onCheckedChange={v => setForm(f => ({ ...f, is_enabled: v }))} /><Label>Habilitada</Label></div>
+              <div className="flex items-center gap-2"><Switch checked={form.is_enabled} onCheckedChange={v => setForm(f => ({ ...f, is_enabled: v }))} /><Label>Ativo</Label></div>
               <Button onClick={() => save.mutate()} disabled={!form.key || !form.label} className="w-full">Salvar</Button>
             </div>
           </DialogContent>
@@ -104,8 +104,8 @@ export default function FeatureFlagsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Key</TableHead>
-                <TableHead>Label</TableHead>
+                <TableHead>Chave</TableHead>
+                <TableHead>Nome</TableHead>
                 <TableHead>Escopo</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -113,7 +113,7 @@ export default function FeatureFlagsPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {flags?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma flag</TableCell></TableRow>}
+              {flags?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recurso cadastrado</TableCell></TableRow>}
               {flags?.map(f => (
                 <TableRow key={f.id}>
                   <TableCell className="font-mono text-xs">{f.key}</TableCell>
