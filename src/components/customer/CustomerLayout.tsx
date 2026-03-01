@@ -1,12 +1,13 @@
 import { createContext, useContext, useState } from "react";
 import { useBrand } from "@/contexts/BrandContext";
-import { Home, Tag, Wallet, UserCircle, Bell, Search } from "lucide-react";
+import { Home, Tag, Wallet, UserCircle, Bell, Search, Ticket } from "lucide-react";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
 import CustomerOffersPage from "@/pages/customer/CustomerOffersPage";
+import CustomerRedemptionsPage from "@/pages/customer/CustomerRedemptionsPage";
 import CustomerWalletPage from "@/pages/customer/CustomerWalletPage";
 import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
 import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
@@ -44,18 +45,20 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
-type Tab = "home" | "offers" | "wallet" | "profile";
+type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
 const TABS: { key: Tab; label: string; icon: typeof Home }[] = [
   { key: "home", label: "Início", icon: Home },
   { key: "offers", label: "Ofertas", icon: Tag },
+  { key: "redemptions", label: "Resgates", icon: Ticket },
   { key: "wallet", label: "Carteira", icon: Wallet },
   { key: "profile", label: "Perfil", icon: UserCircle },
 ];
 
-const TAB_CONTENT: Record<Tab, React.FC> = {
+const TAB_CONTENT: Record<Tab, React.FC<any>> = {
   home: CustomerHomePage,
   offers: CustomerOffersPage,
+  redemptions: CustomerRedemptionsPage,
   wallet: CustomerWalletPage,
   profile: CustomerProfilePage,
 };
