@@ -191,6 +191,10 @@ export default function CustomerLayout() {
             <CustomerOfferDetailPage
               offer={selectedOffer}
               onBack={() => setSelectedOffer(null)}
+              onOfferClick={(offer) => {
+                setSelectedOffer(null);
+                setTimeout(() => setSelectedOffer(offer), 150);
+              }}
             />
           )}
         </AnimatePresence>

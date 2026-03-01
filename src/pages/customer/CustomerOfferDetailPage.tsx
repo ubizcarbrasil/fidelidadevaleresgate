@@ -26,9 +26,10 @@ const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 interface Props {
   offer: OfferWithStore;
   onBack: () => void;
+  onOfferClick?: (offer: OfferWithStore) => void;
 }
 
-export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
+export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -72,7 +73,11 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
   const isValidCpf = (v: string) => v.replace(/\D/g, "").length === 11;
 
   const handleRedeem = async () => {
-    if (!customer || !brand || !selectedBranch) return;
+    if (!customer) {
+      toast({ title: "Faça login para resgatar", description: "Você precisa estar logado para resgatar ofertas.", variant: "destructive" });
+      return;
+    }
+    if (!brand || !selectedBranch) return;
     if (!isValidCpf(cpf)) {
       toast({ title: "CPF inválido", description: "Informe os 11 dígitos do CPF.", variant: "destructive" });
       return;
@@ -290,7 +295,7 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
                   whileTap={{ scale: 0.98 }}
                   className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
                   style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
-                  onClick={() => { /* would need parent nav - just showing UI */ }}
+                  onClick={() => onOfferClick?.(sim)}
                 >
                   {sim.image_url ? (
                     <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
@@ -318,10 +323,16 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
       </div>
 
       {/* Sticky CTA */}
-      {customer && !redeemed && (
+      {!redeemed && (
         <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowConfirm(true)}
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
+              if (!customer) {
+                toast({ title: "Faça login para resgatar", description: "Você precisa estar logado para resgatar ofertas.", variant: "destructive" });
+                return;
+              }
+              setShowConfirm(true);
+            }}
               className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
               style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
               Resgatar agora
