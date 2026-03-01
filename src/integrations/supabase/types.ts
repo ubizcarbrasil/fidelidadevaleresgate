@@ -2584,6 +2584,11 @@ export type Database = {
         | "STORES_GRID"
         | "STORES_LIST"
         | "VOUCHERS_CARDS"
+        | "MANUAL_LINKS_CAROUSEL"
+        | "MANUAL_LINKS_GRID"
+        | "LIST_INFO"
+        | "GRID_INFO"
+        | "GRID_LOGOS"
       store_approval_status:
         | "DRAFT"
         | "PENDING_APPROVAL"
@@ -2754,6 +2759,11 @@ export const Constants = {
         "STORES_GRID",
         "STORES_LIST",
         "VOUCHERS_CARDS",
+        "MANUAL_LINKS_CAROUSEL",
+        "MANUAL_LINKS_GRID",
+        "LIST_INFO",
+        "GRID_INFO",
+        "GRID_LOGOS",
       ],
       store_approval_status: [
         "DRAFT",
