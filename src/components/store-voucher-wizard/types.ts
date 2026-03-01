@@ -37,6 +37,7 @@ export interface StoreVoucherData {
   redemption_branch_id: string;
   title: string;
   description: string;
+  image_url: string;
 }
 
 export const WEEKDAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -74,4 +75,5 @@ export const initialStoreVoucherData: StoreVoucherData = {
   redemption_branch_id: "",
   title: "",
   description: "",
+  image_url: "",
 };
