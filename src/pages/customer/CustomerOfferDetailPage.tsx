@@ -326,13 +326,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       {!redeemed && (
         <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
-              if (!customer) {
-                toast({ title: "Faça login para resgatar", description: "Você precisa estar logado para resgatar ofertas.", variant: "destructive" });
-                return;
-              }
-              setShowConfirm(true);
-            }}
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowConfirm(true)}
               className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
               style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
               Resgatar agora
