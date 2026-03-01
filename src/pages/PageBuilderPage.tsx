@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Eye, EyeOff, Loader2, FileText, Layers, Home, Smartphone } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Loader2, FileText, Layers, Smartphone } from "lucide-react";
 import UnifiedEditor from "@/components/page-builder/UnifiedEditor";
 
 interface CustomPage {
@@ -39,6 +41,16 @@ const HOME_PAGE_SENTINEL: CustomPage = {
 
 export default function PageBuilderPage() {
   const { brand } = useBrand();
+  const { isRootAdmin, currentBrandId } = useBrandGuard();
+
+  // For root admins without a brand context, allow selecting a brand
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState<string>(currentBrandId || "");
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
+  // Effective brand id: context brand > role brand > manually selected
+  const effectiveBrandId = brand?.id || currentBrandId || selectedBrandId;
+
   const [pages, setPages] = useState<CustomPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<CustomPage | null>(null);
@@ -48,8 +60,31 @@ export default function PageBuilderPage() {
   const [newSubtitle, setNewSubtitle] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Fetch brands for root admin selector
+  useEffect(() => {
+    if (!isRootAdmin || brand || currentBrandId) return;
+    setLoadingBrands(true);
+    supabase
+      .from("brands")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("name")
+      .then(({ data }) => {
+        setBrands(data || []);
+        if (data?.length === 1) setSelectedBrandId(data[0].id);
+        setLoadingBrands(false);
+      });
+  }, [isRootAdmin, brand, currentBrandId]);
+
+  // Update selectedBrandId when currentBrandId changes
+  useEffect(() => {
+    if (currentBrandId && !selectedBrandId) {
+      setSelectedBrandId(currentBrandId);
+    }
+  }, [currentBrandId]);
+
   const fetchPages = useCallback(async () => {
-    if (!brand) {
+    if (!effectiveBrandId) {
       setLoading(false);
       return;
     }
@@ -57,20 +92,20 @@ export default function PageBuilderPage() {
     const { data } = await supabase
       .from("custom_pages")
       .select("*")
-      .eq("brand_id", brand.id)
+      .eq("brand_id", effectiveBrandId)
       .order("created_at", { ascending: false });
     setPages((data as any[]) || []);
     setLoading(false);
-  }, [brand]);
+  }, [effectiveBrandId]);
 
   useEffect(() => { fetchPages(); }, [fetchPages]);
 
   const handleCreate = async () => {
-    if (!brand || !newTitle.trim() || !newSlug.trim()) return;
+    if (!effectiveBrandId || !newTitle.trim() || !newSlug.trim()) return;
     setSaving(true);
     const slug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
     const { error } = await supabase.from("custom_pages").insert({
-      brand_id: brand.id,
+      brand_id: effectiveBrandId,
       title: newTitle.trim(),
       subtitle: newSubtitle.trim() || null,
       slug,
@@ -109,12 +144,15 @@ export default function PageBuilderPage() {
     const isHome = editing.id === "__HOME__";
     return (
       <UnifiedEditor
-        page={isHome ? { ...editing, brand_id: brand?.id || "", id: "__HOME__" } : editing}
+        page={isHome ? { ...editing, brand_id: effectiveBrandId || "", id: "__HOME__" } : editing}
         onBack={() => { setEditing(null); fetchPages(); }}
         isHomePage={isHome}
       />
     );
   }
+
+  // Show brand selector for root admins without brand context
+  const needsBrandSelector = isRootAdmin && !brand && !currentBrandId;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -123,8 +161,29 @@ export default function PageBuilderPage() {
         description="Visualize e edite o app inteiro — home, páginas e sessões — em um só lugar."
       />
 
+      {/* Brand selector for root admins */}
+      {needsBrandSelector && (
+        <div className="mb-6 p-4 rounded-xl border-2 border-dashed border-primary/20 bg-primary/5">
+          <Label className="text-sm font-semibold mb-2 block">Selecione a Brand para editar</Label>
+          {loadingBrands ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : (
+            <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
+              <SelectTrigger className="max-w-xs">
+                <SelectValue placeholder="Escolha uma brand..." />
+              </SelectTrigger>
+              <SelectContent>
+                {brands.map(b => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
+
       <div className="flex justify-end mb-6">
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={() => setShowCreate(true)} disabled={!effectiveBrandId}>
           <Plus className="h-4 w-4 mr-2" /> Nova Página
         </Button>
       </div>
@@ -133,28 +192,31 @@ export default function PageBuilderPage() {
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
+      ) : !effectiveBrandId ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">Selecione uma brand acima para começar.</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {/* Home page entry - always on top */}
-          {brand && (
-            <div
-              onClick={() => setEditing(HOME_PAGE_SENTINEL)}
-              className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors"
-            >
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Smartphone className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold truncate">Tela Inicial (Home)</h3>
-                <p className="text-xs text-muted-foreground truncate">Edite todas as sessões da home do app com preview ao vivo</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  App Principal
-                </span>
-              </div>
+          <div
+            onClick={() => setEditing(HOME_PAGE_SENTINEL)}
+            className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors"
+          >
+            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Smartphone className="h-6 w-6 text-primary" />
             </div>
-          )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold truncate">Tela Inicial (Home)</h3>
+              <p className="text-xs text-muted-foreground truncate">Edite todas as sessões da home do app com preview ao vivo</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                App Principal
+              </span>
+            </div>
+          </div>
 
           {pages.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
