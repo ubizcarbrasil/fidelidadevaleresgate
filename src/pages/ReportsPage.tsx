@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp } from "lucide-react";
+import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend, PieChart, Pie, Cell,
+} from "recharts";
 
 type ReportType = "redemptions" | "earning_events" | "customers" | "vouchers" | "affiliate_clicks" | "coupon_performance";
 
@@ -78,6 +82,7 @@ export default function ReportsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="data">Dados & CSV</TabsTrigger>
+          <TabsTrigger value="charts">Gráficos</TabsTrigger>
           <TabsTrigger value="antifraud">Anti-fraude</TabsTrigger>
         </TabsList>
 
@@ -104,6 +109,10 @@ export default function ReportsPage() {
             previewRows={previewRows}
             totalRows={data?.length || 0}
           />
+        </TabsContent>
+
+        <TabsContent value="charts" className="space-y-6 mt-4">
+          <ChartsTab brandId={currentBrandId} dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
         <TabsContent value="antifraud" className="space-y-6 mt-4">
@@ -367,6 +376,191 @@ function AntiFraudReport({ brandId, dateFrom, dateTo }: { brandId: string | null
             )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+const CHART_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--destructive))",
+  "hsl(var(--accent-foreground))",
+  "hsl(142 76% 36%)",
+  "hsl(38 92% 50%)",
+  "hsl(262 83% 58%)",
+];
+
+function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
+  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
+  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+
+  // Redemptions over time (daily)
+  const { data: redemptionsByDay, isLoading: loadingR } = useQuery({
+    queryKey: ["chart-redemptions", dateFrom, dateTo, brandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("redemptions")
+        .select("created_at, status")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(1000);
+      if (brandId) q = q.eq("brand_id", brandId);
+      const { data } = await q;
+      if (!data) return [];
+      const byDay: Record<string, { date: string; total: number; used: number; pending: number }> = {};
+      for (const r of data) {
+        const day = r.created_at.slice(0, 10);
+        if (!byDay[day]) byDay[day] = { date: day, total: 0, used: 0, pending: 0 };
+        byDay[day].total++;
+        if (r.status === "USED") byDay[day].used++;
+        if (r.status === "PENDING") byDay[day].pending++;
+      }
+      return Object.values(byDay);
+    },
+  });
+
+  // Points earned over time (daily)
+  const { data: pointsByDay, isLoading: loadingP } = useQuery({
+    queryKey: ["chart-points", dateFrom, dateTo, brandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("earning_events")
+        .select("created_at, points_earned, purchase_value")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(1000);
+      if (brandId) q = q.eq("brand_id", brandId);
+      const { data } = await q;
+      if (!data) return [];
+      const byDay: Record<string, { date: string; pontos: number; compras: number }> = {};
+      for (const r of data) {
+        const day = r.created_at.slice(0, 10);
+        if (!byDay[day]) byDay[day] = { date: day, pontos: 0, compras: 0 };
+        byDay[day].pontos += r.points_earned;
+        byDay[day].compras += Number(r.purchase_value);
+      }
+      return Object.values(byDay);
+    },
+  });
+
+  // Coupon status distribution (pie)
+  const statusDistribution = useMemo(() => {
+    if (!redemptionsByDay?.length) return [];
+    const totals = redemptionsByDay.reduce(
+      (acc, d) => ({ used: acc.used + d.used, pending: acc.pending + d.pending, other: acc.other + (d.total - d.used - d.pending) }),
+      { used: 0, pending: 0, other: 0 }
+    );
+    return [
+      { name: "Usados", value: totals.used },
+      { name: "Pendentes", value: totals.pending },
+      { name: "Outros", value: totals.other },
+    ].filter(d => d.value > 0);
+  }, [redemptionsByDay]);
+
+  const formatTick = (d: string) => {
+    const parts = d.split("-");
+    return `${parts[2]}/${parts[1]}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Redemptions line chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <LineChartIcon className="h-4 w-4" /> Resgates por Dia
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingR ? <Skeleton className="h-64 w-full" /> :
+            !redemptionsByDay?.length ? (
+              <p className="text-muted-foreground text-sm text-center py-12">Sem dados no período</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={redemptionsByDay}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" tickFormatter={formatTick} className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                    labelFormatter={(v) => `Data: ${formatTick(v as string)}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="used" name="Usados" fill={CHART_COLORS[3]} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pending" name="Pendentes" fill={CHART_COLORS[4]} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+        </CardContent>
+      </Card>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Points line chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" /> Pontos Emitidos por Dia
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingP ? <Skeleton className="h-64 w-full" /> :
+              !pointsByDay?.length ? (
+                <p className="text-muted-foreground text-sm text-center py-12">Sem dados</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={pointsByDay}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tickFormatter={formatTick} className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                      labelFormatter={(v) => `Data: ${formatTick(v as string)}`}
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="pontos" name="Pontos" stroke={CHART_COLORS[0]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="compras" name="Compras R$" stroke={CHART_COLORS[3]} strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+          </CardContent>
+        </Card>
+
+        {/* Pie chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" /> Distribuição de Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingR ? <Skeleton className="h-64 w-full" /> :
+              !statusDistribution.length ? (
+                <p className="text-muted-foreground text-sm text-center py-12">Sem dados</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={statusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={4}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {statusDistribution.map((_, i) => (
+                        <Cell key={i} fill={[CHART_COLORS[3], CHART_COLORS[4], CHART_COLORS[2]][i]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
