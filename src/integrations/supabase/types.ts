@@ -2483,8 +2483,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       user_has_permission: {
         Args: {
           _permission_key: string
