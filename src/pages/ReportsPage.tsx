@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon } from "lucide-react";
+import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon, Tag, icons, Store } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, PieChart, Pie, Cell,
@@ -83,6 +84,7 @@ export default function ReportsPage() {
         <TabsList>
           <TabsTrigger value="data">Dados & CSV</TabsTrigger>
           <TabsTrigger value="charts">Gráficos</TabsTrigger>
+          <TabsTrigger value="segments">Segmentos</TabsTrigger>
           <TabsTrigger value="antifraud">Anti-fraude</TabsTrigger>
         </TabsList>
 
@@ -113,6 +115,10 @@ export default function ReportsPage() {
 
         <TabsContent value="charts" className="space-y-6 mt-4">
           <ChartsTab brandId={currentBrandId} dateFrom={dateFrom} dateTo={dateTo} />
+        </TabsContent>
+
+        <TabsContent value="segments" className="space-y-6 mt-4">
+          <SegmentReportsTab brandId={currentBrandId} dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
         <TabsContent value="antifraud" className="space-y-6 mt-4">
@@ -374,6 +380,265 @@ function AntiFraudReport({ brandId, dateFrom, dateTo }: { brandId: string | null
                 </Table>
               </div>
             )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// --- Segment Icon Helper ---
+function kebabToPascal(name: string): string {
+  return name.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+}
+
+function SegmentIconPreview({ name, className = "h-4 w-4" }: { name: string | null; className?: string }) {
+  if (!name) return <Store className={className + " text-muted-foreground"} />;
+  const Icon = (icons as Record<string, any>)[kebabToPascal(name)];
+  if (!Icon) return <Store className={className + " text-muted-foreground"} />;
+  return <Icon className={className} />;
+}
+
+// --- Segment Reports Tab ---
+function SegmentReportsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
+  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
+  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+
+  const { data: segmentData, isLoading } = useQuery({
+    queryKey: ["segment-reports", dateFrom, dateTo, brandId],
+    queryFn: async () => {
+      // 1. Fetch stores with segments
+      let storesQ = supabase
+        .from("stores")
+        .select("id, taxonomy_segment_id, taxonomy_segments(id, name, icon_name, taxonomy_categories(name))")
+        .eq("is_active", true)
+        .not("taxonomy_segment_id", "is", null);
+      if (brandId) storesQ = storesQ.eq("brand_id", brandId);
+      const { data: storesData } = await storesQ.limit(1000);
+      if (!storesData?.length) return [];
+
+      // Build segment map
+      const segMap = new Map<string, {
+        id: string; name: string; icon_name: string | null; category: string;
+        stores: number; storeIds: string[];
+        offers: number; redemptions: number; revenue: number; points: number;
+      }>();
+
+      for (const s of storesData) {
+        const seg = s.taxonomy_segments as any;
+        if (!seg) continue;
+        const existing = segMap.get(seg.id);
+        if (existing) {
+          existing.stores++;
+          existing.storeIds.push(s.id);
+        } else {
+          segMap.set(seg.id, {
+            id: seg.id,
+            name: seg.name,
+            icon_name: seg.icon_name || null,
+            category: seg.taxonomy_categories?.name || "",
+            stores: 1,
+            storeIds: [s.id],
+            offers: 0, redemptions: 0, revenue: 0, points: 0,
+          });
+        }
+      }
+
+      // 2. Fetch offers count per store
+      const allStoreIds = storesData.map((s) => s.id);
+      let offersQ = supabase
+        .from("offers")
+        .select("id, store_id")
+        .in("store_id", allStoreIds.slice(0, 200))
+        .eq("is_active", true);
+      if (brandId) offersQ = offersQ.eq("brand_id", brandId);
+      const { data: offersData } = await offersQ.limit(1000);
+
+      if (offersData) {
+        for (const o of offersData) {
+          for (const seg of segMap.values()) {
+            if (seg.storeIds.includes(o.store_id)) {
+              seg.offers++;
+              break;
+            }
+          }
+        }
+      }
+
+      // 3. Fetch redemptions in period
+      let redQ = supabase
+        .from("redemptions")
+        .select("id, offer_id, purchase_value, credit_value_applied, status, offers(store_id)")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .eq("status", "USED");
+      if (brandId) redQ = redQ.eq("brand_id", brandId);
+      const { data: redData } = await redQ.limit(1000);
+
+      if (redData) {
+        for (const r of redData) {
+          const storeId = (r.offers as any)?.store_id;
+          if (!storeId) continue;
+          for (const seg of segMap.values()) {
+            if (seg.storeIds.includes(storeId)) {
+              seg.redemptions++;
+              seg.revenue += Number(r.purchase_value || 0);
+              break;
+            }
+          }
+        }
+      }
+
+      // 4. Fetch earning events in period
+      let earnQ = supabase
+        .from("earning_events")
+        .select("store_id, points_earned")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .in("store_id", allStoreIds.slice(0, 200));
+      if (brandId) earnQ = earnQ.eq("brand_id", brandId);
+      const { data: earnData } = await earnQ.limit(1000);
+
+      if (earnData) {
+        for (const e of earnData) {
+          for (const seg of segMap.values()) {
+            if (seg.storeIds.includes(e.store_id)) {
+              seg.points += e.points_earned;
+              break;
+            }
+          }
+        }
+      }
+
+      return Array.from(segMap.values())
+        .sort((a, b) => b.redemptions - a.redemptions);
+    },
+  });
+
+  const chartData = useMemo(() => {
+    if (!segmentData?.length) return [];
+    return segmentData.slice(0, 10).map((s) => ({
+      name: s.name.length > 14 ? s.name.slice(0, 12) + "…" : s.name,
+      Resgates: s.redemptions,
+      "Vendas R$": Math.round(s.revenue),
+    }));
+  }, [segmentData]);
+
+  if (isLoading) return (
+    <div className="space-y-4">
+      <Skeleton className="h-72 w-full" />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  );
+
+  if (!segmentData?.length) return (
+    <Card>
+      <CardContent className="py-12 text-center text-muted-foreground">
+        <Tag className="h-8 w-8 mx-auto mb-2 opacity-30" />
+        <p className="font-medium">Nenhum segmento com dados no período</p>
+        <p className="text-sm mt-1">Certifique-se de que lojas estão classificadas por segmento</p>
+      </CardContent>
+    </Card>
+  );
+
+  const totalStores = segmentData.reduce((s, v) => s + v.stores, 0);
+  const totalOffers = segmentData.reduce((s, v) => s + v.offers, 0);
+  const totalRedemptions = segmentData.reduce((s, v) => s + v.redemptions, 0);
+  const totalRevenue = segmentData.reduce((s, v) => s + v.revenue, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* KPI cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Segmentos Ativos</p>
+          <p className="text-2xl font-bold">{segmentData.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">{totalStores} lojas classificadas</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Ofertas Ativas</p>
+          <p className="text-2xl font-bold">{totalOffers}</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Resgates no Período</p>
+          <p className="text-2xl font-bold">{totalRedemptions}</p>
+        </CardContent></Card>
+        <Card className="border-primary/30 bg-primary/5"><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Vendas Geradas</p>
+          <p className="text-2xl font-bold">R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+        </CardContent></Card>
+      </div>
+
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" /> Resgates e Vendas por Segmento (Top 10)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} layout="vertical" margin={{ left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis type="number" className="text-xs" />
+                <YAxis type="category" dataKey="name" width={120} className="text-xs" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                />
+                <Legend />
+                <Bar dataKey="Resgates" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="Vendas R$" fill={CHART_COLORS[3]} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Tag className="h-4 w-4" /> Detalhamento por Segmento
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Segmento</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead className="text-right">Lojas</TableHead>
+                  <TableHead className="text-right">Ofertas</TableHead>
+                  <TableHead className="text-right">Resgates</TableHead>
+                  <TableHead className="text-right">Pontos</TableHead>
+                  <TableHead className="text-right">Vendas (R$)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {segmentData.map((seg) => (
+                  <TableRow key={seg.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <SegmentIconPreview name={seg.icon_name} className="h-4 w-4" />
+                        {seg.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">{seg.category}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{seg.stores}</TableCell>
+                    <TableCell className="text-right">{seg.offers}</TableCell>
+                    <TableCell className="text-right font-medium">{seg.redemptions}</TableCell>
+                    <TableCell className="text-right">{seg.points.toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      R$ {seg.revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
