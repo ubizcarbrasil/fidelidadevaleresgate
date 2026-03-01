@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Search, X, Tag, Store, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Search, X, Tag, Store, ArrowRight, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -25,11 +25,41 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
   const [stores, setStores] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [segments, setSegments] = useState<{ id: string; name: string; category_name: string }[]>([]);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+
+  // Load segments that have at least one active store in the current branch
+  useEffect(() => {
+    if (!open || !brand || !selectedBranch) return;
+    const fetchSegments = async () => {
+      const { data } = await supabase
+        .from("stores")
+        .select("taxonomy_segment_id, taxonomy_segments(id, name, taxonomy_categories(name))")
+        .eq("branch_id", selectedBranch.id)
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .not("taxonomy_segment_id", "is", null);
+      if (!data) return;
+      const segMap = new Map<string, { id: string; name: string; category_name: string }>();
+      for (const s of data) {
+        const seg = s.taxonomy_segments as any;
+        if (seg && !segMap.has(seg.id)) {
+          segMap.set(seg.id, {
+            id: seg.id,
+            name: seg.name,
+            category_name: seg.taxonomy_categories?.name || "",
+          });
+        }
+      }
+      setSegments(Array.from(segMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
+    };
+    fetchSegments();
+  }, [open, brand, selectedBranch]);
 
   useEffect(() => {
     if (open) {
@@ -38,11 +68,16 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
       setQuery("");
       setStores([]);
       setOffers([]);
+      setSelectedSegmentId(null);
     }
   }, [open]);
 
   useEffect(() => {
-    if (!debouncedQuery.trim() || !brand || !selectedBranch) {
+    if (!brand || !selectedBranch) return;
+    const hasQuery = debouncedQuery.trim().length > 0;
+    const hasSegment = !!selectedSegmentId;
+
+    if (!hasQuery && !hasSegment) {
       setStores([]);
       setOffers([]);
       return;
@@ -50,27 +85,49 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
     const search = async () => {
       setLoading(true);
-      const term = `%${debouncedQuery.trim()}%`;
+      const term = hasQuery ? `%${debouncedQuery.trim()}%` : null;
 
-      const [storesRes, offersRes] = await Promise.all([
-        supabase
+      // Build stores query
+      let storesQ = supabase
+        .from("stores")
+        .select("id, name, logo_url, category, address, taxonomy_segment_id, taxonomy_segments(name)")
+        .eq("branch_id", selectedBranch.id)
+        .eq("brand_id", brand.id)
+        .eq("is_active", true);
+      if (term) storesQ = storesQ.ilike("name", term);
+      if (selectedSegmentId) storesQ = storesQ.eq("taxonomy_segment_id", selectedSegmentId);
+      storesQ = storesQ.limit(10);
+
+      // Build offers query
+      let offersQ = supabase
+        .from("offers")
+        .select("*, stores(name, logo_url, taxonomy_segment_id)")
+        .eq("branch_id", selectedBranch.id)
+        .eq("brand_id", brand.id)
+        .eq("status", "ACTIVE")
+        .eq("is_active", true);
+      if (term) offersQ = offersQ.ilike("title", term);
+      if (selectedSegmentId) {
+        // Filter offers by stores that belong to the segment
+        const { data: segStores } = await supabase
           .from("stores")
-          .select("id, name, logo_url, category, address")
+          .select("id")
           .eq("branch_id", selectedBranch.id)
           .eq("brand_id", brand.id)
           .eq("is_active", true)
-          .ilike("name", term)
-          .limit(5),
-        supabase
-          .from("offers")
-          .select("*, stores(name, logo_url)")
-          .eq("branch_id", selectedBranch.id)
-          .eq("brand_id", brand.id)
-          .eq("status", "ACTIVE")
-          .eq("is_active", true)
-          .ilike("title", term)
-          .limit(5),
-      ]);
+          .eq("taxonomy_segment_id", selectedSegmentId);
+        const storeIds = (segStores || []).map((s: any) => s.id);
+        if (storeIds.length === 0) {
+          setStores([]);
+          setOffers([]);
+          setLoading(false);
+          return;
+        }
+        offersQ = offersQ.in("store_id", storeIds);
+      }
+      offersQ = offersQ.limit(5);
+
+      const [storesRes, offersRes] = await Promise.all([storesQ, offersQ]);
 
       setStores(storesRes.data || []);
       setOffers(offersRes.data || []);
@@ -78,10 +135,10 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
     };
 
     search();
-  }, [debouncedQuery, brand, selectedBranch]);
+  }, [debouncedQuery, brand, selectedBranch, selectedSegmentId]);
 
   const hasResults = stores.length > 0 || offers.length > 0;
-  const hasQuery = debouncedQuery.trim().length > 0;
+  const hasQuery = debouncedQuery.trim().length > 0 || !!selectedSegmentId;
 
   return (
     <AnimatePresence>
@@ -126,6 +183,25 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
               </button>
             </div>
             <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
+
+            {/* Segment chips */}
+            {segments.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-2.5">
+                {segments.map((seg) => (
+                  <button
+                    key={seg.id}
+                    onClick={() => setSelectedSegmentId(selectedSegmentId === seg.id ? null : seg.id)}
+                    className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+                    style={{
+                      backgroundColor: selectedSegmentId === seg.id ? primary : `${fg}06`,
+                      color: selectedSegmentId === seg.id ? "#fff" : `${fg}60`,
+                    }}
+                  >
+                    {seg.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Results */}
@@ -184,9 +260,9 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{store.name}</p>
-                        {store.category && (
-                          <p className="text-xs truncate" style={{ color: `${fg}50` }}>{store.category}</p>
-                        )}
+                        <p className="text-xs truncate" style={{ color: `${fg}50` }}>
+                          {(store.taxonomy_segments as any)?.name || store.category || ""}
+                        </p>
                       </div>
                       <ArrowRight className="h-4 w-4 shrink-0" style={{ color: `${fg}25` }} />
                     </button>

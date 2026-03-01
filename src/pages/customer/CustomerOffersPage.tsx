@@ -18,21 +18,43 @@ export default function CustomerOffersPage() {
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [segments, setSegments] = useState<{ id: string; name: string }[]>([]);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const categories = useMemo(() => {
-    const cats = offers.map((o: any) => o.stores?.name).filter(Boolean) as string[];
-    return [...new Set(cats)].sort();
-  }, [offers]);
+  // Load segments for stores with active offers in the branch
+  useEffect(() => {
+    if (!selectedBranch || !brand) return;
+    const fetchSegments = async () => {
+      const { data } = await supabase
+        .from("stores")
+        .select("taxonomy_segment_id, taxonomy_segments(id, name)")
+        .eq("branch_id", selectedBranch.id)
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .not("taxonomy_segment_id", "is", null);
+      if (!data) return;
+      const segMap = new Map<string, { id: string; name: string }>();
+      for (const s of data) {
+        const seg = s.taxonomy_segments as any;
+        if (seg && !segMap.has(seg.id)) {
+          segMap.set(seg.id, { id: seg.id, name: seg.name });
+        }
+      }
+      setSegments(Array.from(segMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
+    };
+    fetchSegments();
+  }, [selectedBranch, brand]);
 
   const filtered = useMemo(() => {
     let result = offers;
-    if (selectedCat) result = result.filter((o: any) => o.stores?.name === selectedCat);
+    if (selectedSegmentId) {
+      result = result.filter((o: any) => o.stores?.taxonomy_segment_id === selectedSegmentId);
+    }
     if (query.trim()) {
       const q = query.toLowerCase();
       result = result.filter((o: any) =>
@@ -42,7 +64,7 @@ export default function CustomerOffersPage() {
       );
     }
     return result;
-  }, [offers, selectedCat, query]);
+  }, [offers, selectedSegmentId, query]);
 
   useEffect(() => {
     if (!selectedBranch || !brand) return;
@@ -50,7 +72,7 @@ export default function CustomerOffersPage() {
       setLoading(true);
       const { data } = await supabase
         .from("offers")
-        .select("*, stores(name, logo_url)")
+        .select("*, stores(name, logo_url, taxonomy_segment_id)")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("status", "ACTIVE")
@@ -102,30 +124,30 @@ export default function CustomerOffersPage() {
         />
       </div>
 
-      {/* Category chips */}
-      {categories.length >= 2 && (
+      {/* Segment chips */}
+      {segments.length >= 2 && (
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 -mx-5 px-5">
           <button
-            onClick={() => setSelectedCat(null)}
+            onClick={() => setSelectedSegmentId(null)}
             className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={{
-              backgroundColor: !selectedCat ? primary : `${fg}06`,
-              color: !selectedCat ? "#fff" : `${fg}60`,
+              backgroundColor: !selectedSegmentId ? primary : `${fg}06`,
+              color: !selectedSegmentId ? "#fff" : `${fg}60`,
             }}
           >
             Todas
           </button>
-          {categories.map((cat) => (
+          {segments.map((seg) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
+              key={seg.id}
+              onClick={() => setSelectedSegmentId(selectedSegmentId === seg.id ? null : seg.id)}
               className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
               style={{
-                backgroundColor: selectedCat === cat ? primary : `${fg}06`,
-                color: selectedCat === cat ? "#fff" : `${fg}60`,
+                backgroundColor: selectedSegmentId === seg.id ? primary : `${fg}06`,
+                color: selectedSegmentId === seg.id ? "#fff" : `${fg}60`,
               }}
             >
-              {cat}
+              {seg.name}
             </button>
           ))}
         </div>
