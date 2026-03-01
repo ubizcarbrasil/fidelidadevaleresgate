@@ -60,14 +60,31 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
 
   const canAdvance = [isValidCpf, isValidName, isValidEmail, isValidPhone, isValidOtp, isValidPassword][step];
 
-  // Step 4: send OTP via signInWithOtp (does NOT auto-login)
+  // Step 4: skip real OTP — hardcoded 123456
   const handleSendOtp = async () => {
+    toast({ title: "Código enviado!", description: "Use o código 123456" });
+    goNext();
+  };
+
+  // Step 5: verify OTP (hardcoded 123456 for now)
+  const handleVerifyOtp = async () => {
+    const code = data.otp.replace(/\D/g, "");
+    if (code !== "123456") {
+      toast({ title: "Código inválido", description: "Use 123456", variant: "destructive" });
+      return;
+    }
+    onSigningUp?.();
+    goNext();
+  };
+
+  // Step 6: create account with signUp and complete
+  const handleSetPassword = async () => {
     setLoading(true);
     try {
-      const { error: otpError } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signUp({
         email: data.email,
+        password: data.password,
         options: {
-          shouldCreateUser: true,
           data: {
             full_name: data.name,
             phone: data.phone.replace(/\D/g, ""),
@@ -75,51 +92,8 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
           },
         },
       });
-      if (otpError) throw otpError;
-
-      toast({ title: "Código enviado!", description: `Verifique seu e-mail ${data.email}` });
-      goNext();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 5: verify OTP
-  const handleVerifyOtp = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: data.email,
-        token: data.otp.replace(/\D/g, ""),
-        type: "email",
-      });
-      if (error) throw error;
-      // User is now authenticated — notify parent to keep carousel visible
-      onSigningUp?.();
-      goNext();
-    } catch (err: any) {
-      toast({ title: "Código inválido", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 6: set final password and complete
-  const handleSetPassword = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: data.password,
-        data: {
-          full_name: data.name,
-          phone: data.phone.replace(/\D/g, ""),
-        },
-      });
       if (error) throw error;
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
-      // Give CustomerContext time to detect the user and create the customer record
       setTimeout(() => onComplete(data.cpf), 1500);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
