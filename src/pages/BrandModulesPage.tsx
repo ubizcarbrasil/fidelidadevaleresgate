@@ -1,16 +1,32 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { toast } from "sonner";
 import { Blocks } from "lucide-react";
 
 export default function BrandModulesPage() {
   const qc = useQueryClient();
-  const { currentBrandId: brandId } = useBrandGuard();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+
+  const brandId = isRootAdmin ? selectedBrandId : currentBrandId;
+
+  // ROOT needs a brand picker
+  const { data: allBrands } = useQuery({
+    queryKey: ["brands-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("brands").select("id, name").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isRootAdmin,
+  });
 
   const { data: definitions, isLoading: loadingDefs } = useQuery({
     queryKey: ["module-definitions"],
@@ -84,7 +100,26 @@ export default function BrandModulesPage() {
         <p className="text-muted-foreground">Ative ou desative funcionalidades para esta marca</p>
       </div>
 
-      {Object.entries(grouped).map(([category, mods]) => (
+      {isRootAdmin && (
+        <div className="max-w-xs">
+          <Select value={selectedBrandId || ""} onValueChange={setSelectedBrandId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma marca" />
+            </SelectTrigger>
+            <SelectContent>
+              {allBrands?.map(b => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {!brandId && (
+        <p className="text-muted-foreground text-sm">Selecione uma marca para gerenciar seus módulos.</p>
+      )}
+
+      {brandId && Object.entries(grouped).map(([category, mods]) => (
         <div key={category} className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{category}</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
