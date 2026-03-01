@@ -129,7 +129,7 @@ export default function StoreApprovalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Aprovação de Lojas</h1>
+        <h1 className="text-2xl font-bold">Aprovação de Parceiros</h1>
         <p className="text-sm text-muted-foreground">Revise e aprove cadastros de estabelecimentos</p>
       </div>
 
@@ -162,7 +162,7 @@ export default function StoreApprovalsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <Store className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma loja encontrada</p>
+          <p>Nenhum parceiro encontrado</p>
         </div>
       ) : (
         <div className="space-y-2">

@@ -14,13 +14,13 @@ const CONSOLE_TITLES: Record<string, string> = {
   BRAND: "Painel da Marca",
   BRANCH: "Painel da Filial",
   OPERATOR: "Operador do Ponto de Venda",
-  STORE_ADMIN: "Painel do Lojista",
+  STORE_ADMIN: "Portal do Parceiro",
 };
 
 export default function AppLayout() {
   const { consoleScope } = useBrandGuard();
 
-  // Store admins should use the dedicated store panel
+  // Parceiros usam o portal dedicado
   if (consoleScope === "STORE_ADMIN") {
     return <Navigate to="/store-panel" replace />;
   }

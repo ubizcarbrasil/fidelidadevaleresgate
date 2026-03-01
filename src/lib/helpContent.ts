@@ -184,34 +184,34 @@ const helpContent: Record<string, HelpEntry> = {
      OPERAÇÕES
      ═══════════════════════════════════════════════ */
    "/branches": {
-    pageTitle: "Filiais",
+    pageTitle: "Cidades",
     sections: [
       {
-        title: "Gerenciar filiais",
-        summary: "Filiais representam as unidades regionais da sua marca.",
+        title: "Gerenciar cidades",
+        summary: "Cidades representam as regiões onde a sua marca opera.",
         steps: [
-          "Clique em 'Nova filial' para criar.",
+          "Clique em 'Nova cidade' para criar.",
           "Preencha: nome, apelido (usado no endereço web), cidade, estado e localização geográfica.",
           "Selecione o fuso horário correto.",
           "Ative ou desative filiais conforme necessário.",
         ],
         tips: [
-          "A localização é usada para mostrar lojas e ofertas mais próximas do cliente no aplicativo.",
-          "Cada filial pode ter suas próprias regras de pontos e configurações.",
+          "A localização é usada para mostrar parceiros e ofertas mais próximas do cliente no aplicativo.",
+          "Cada cidade pode ter suas próprias regras de pontos e configurações.",
         ],
       },
     ],
   },
 
   "/stores": {
-    pageTitle: "Lojas",
+    pageTitle: "Parceiros",
     sections: [
       {
-        title: "Gerenciar lojas parceiras",
-        summary: "Visualize e gerencie as lojas cadastradas na sua filial.",
+        title: "Gerenciar parceiros",
+        summary: "Visualize e gerencie os estabelecimentos parceiros cadastrados na sua cidade.",
         steps: [
-          "Use a barra de busca para encontrar lojas por nome.",
-          "Clique em uma loja para ver detalhes: perfil, funcionários, extrato e cupons.",
+          "Use a barra de busca para encontrar parceiros por nome.",
+          "Clique em um parceiro para ver detalhes: perfil, funcionários, extrato e cupons.",
           "Altere a situação (ativa/inativa) para controlar a visibilidade no aplicativo.",
         ],
       },
@@ -219,15 +219,15 @@ const helpContent: Record<string, HelpEntry> = {
   },
 
   "/store-approvals": {
-    pageTitle: "Aprovação de Lojas",
+    pageTitle: "Aprovação de Parceiros",
     sections: [
       {
-        title: "Aprovar cadastros de lojas",
-        summary: "Revise e aprove novas lojas que se registraram na plataforma.",
+        title: "Aprovar cadastros de parceiros",
+        summary: "Revise e aprove novos estabelecimentos que se registraram na plataforma.",
         steps: [
-          "Lojas pendentes aparecem automaticamente nesta lista.",
-          "Clique em 'Aprovar' para ativar a loja ou 'Rejeitar' para recusar.",
-          "Após aprovação, a loja poderá criar cupons e receber clientes.",
+          "Parceiros pendentes aparecem automaticamente nesta lista.",
+          "Clique em 'Aprovar' para ativar o parceiro ou 'Rejeitar' para recusar.",
+          "Após aprovação, o parceiro poderá criar cupons e receber clientes.",
         ],
       },
     ],
@@ -471,14 +471,14 @@ const helpContent: Record<string, HelpEntry> = {
   },
 
   /* ═══════════════════════════════════════════════
-     PAINEL DO LOJISTA (STORE_ADMIN)
+     PORTAL DO PARCEIRO (STORE_ADMIN)
      ═══════════════════════════════════════════════ */
   "/store-panel": {
-    pageTitle: "Painel do Lojista",
+    pageTitle: "Portal do Parceiro",
     sections: [
       {
-        title: "Visão geral do painel",
-        summary: "O painel do lojista é o centro de controle da sua loja na plataforma.",
+        title: "Visão geral do portal",
+        summary: "O portal do parceiro é o centro de controle do seu estabelecimento dentro da marca.",
         steps: [
           "No topo, veja os indicadores: resgates pendentes, cupons ativos e clientes atendidos.",
           "Use as abas inferiores para navegar entre as funcionalidades.",
@@ -606,14 +606,14 @@ const helpContent: Record<string, HelpEntry> = {
   },
 
   /* ═══════════════════════════════════════════════
-     REGISTRO DE LOJA
+     REGISTRO DE PARCEIRO
      ═══════════════════════════════════════════════ */
    "/register-store": {
-    pageTitle: "Cadastro de Loja",
+    pageTitle: "Cadastro de Parceiro",
     sections: [
       {
-        title: "Registrar sua loja na plataforma",
-        summary: "Siga o passo a passo para cadastrar seu estabelecimento.",
+        title: "Registrar seu estabelecimento como parceiro",
+        summary: "Siga o passo a passo para cadastrar seu estabelecimento na marca.",
         steps: [
           "Preencha os dados do responsável: nome completo, CPF, telefone.",
           "Informe os dados da empresa: CNPJ, razão social, nome fantasia.",
@@ -818,19 +818,19 @@ const helpContent: Record<string, HelpEntry> = {
      CLONE BRANCH
      ═══════════════════════════════════════════════ */
   "/clone-branch": {
-    pageTitle: "Clonar Filial",
+    pageTitle: "Clonar Cidade",
     sections: [
       {
-        title: "Duplicar configurações de uma filial",
-        summary: "Copie seções, regras e configurações de uma filial para outra.",
+        title: "Duplicar configurações de uma cidade",
+        summary: "Copie seções, regras e configurações de uma cidade para outra.",
         steps: [
-          "Selecione a filial de origem (que será copiada).",
-          "Selecione a filial de destino (que receberá a cópia).",
+          "Selecione a cidade de origem (que será copiada).",
+          "Selecione a cidade de destino (que receberá a cópia).",
           "Escolha quais elementos copiar: seções, regras de pontos, etc.",
           "Confirme a operação.",
         ],
         tips: [
-          "Dados existentes na filial de destino podem ser sobrescritos — cuidado!",
+          "Dados existentes na cidade de destino podem ser sobrescritos — cuidado!",
         ],
       },
     ],

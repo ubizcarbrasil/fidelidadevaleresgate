@@ -78,12 +78,12 @@ export function usePermissions() {
 
 /** All role labels for UI display */
 export const ROLE_LABELS: Record<string, string> = {
-  root_admin: "Root Admin",
-  tenant_admin: "Tenant Admin",
-  brand_admin: "Brand Admin",
-  branch_admin: "Branch Admin",
-  branch_operator: "Branch Operator",
+  root_admin: "Administrador Raiz",
+  tenant_admin: "Administrador da Empresa",
+  brand_admin: "Empreendedor",
+  branch_admin: "Administrador da Cidade",
+  branch_operator: "Operador da Cidade",
   operator_pdv: "Operador PDV",
-  store_admin: "Store Admin",
+  store_admin: "Parceiro",
   customer: "Cliente",
 };
