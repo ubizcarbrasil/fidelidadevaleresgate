@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, Tag, FolderTree, ChevronRight, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Tag, FolderTree, ChevronRight, icons, Store } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 
 interface Category {
@@ -27,6 +27,7 @@ interface Segment {
   name: string;
   slug: string;
   description: string | null;
+  icon_name: string | null;
   aliases: string[];
   keywords: string[];
   related_segment_ids: string[];
@@ -41,6 +42,47 @@ function slugify(text: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function kebabToPascal(name: string): string {
+  return name
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+}
+
+function LucideIconPreview({ name, className = "h-4 w-4" }: { name: string | null; className?: string }) {
+  if (!name) return <Store className={className + " text-muted-foreground"} />;
+  const pascalName = kebabToPascal(name);
+  const Icon = (icons as Record<string, any>)[pascalName];
+  if (!Icon) return <Store className={className + " text-muted-foreground"} />;
+  return <Icon className={className} />;
+}
+
+function IconInput({ value, onChange, label = "Ícone (nome Lucide)" }: { value: string; onChange: (v: string) => void; label?: string }) {
+  const isValid = value ? !!(icons as Record<string, any>)[kebabToPascal(value)] : true;
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex items-center gap-2">
+        <div className="h-9 w-9 rounded-lg border flex items-center justify-center shrink-0 bg-muted/30">
+          <LucideIconPreview name={value || null} className="h-5 w-5" />
+        </div>
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Ex: coffee, pizza, scissors"
+          className={!isValid && value ? "border-destructive" : ""}
+        />
+      </div>
+      {value && !isValid && (
+        <p className="text-xs text-destructive mt-1">Ícone "{value}" não encontrado no Lucide</p>
+      )}
+      <p className="text-xs text-muted-foreground mt-1">
+        Use nomes do <a href="https://lucide.dev/icons" target="_blank" rel="noopener" className="underline">lucide.dev</a> em kebab-case
+      </p>
+    </div>
+  );
 }
 
 export default function TaxonomyPage() {
@@ -63,6 +105,7 @@ export default function TaxonomyPage() {
     description: "",
     aliases: "",
     keywords: "",
+    icon_name: "",
   });
 
   const fetchData = async () => {
@@ -138,7 +181,7 @@ export default function TaxonomyPage() {
   const openNewSeg = () => {
     if (!selectedCategory) { toast.error("Selecione uma categoria primeiro"); return; }
     setEditingSeg(null);
-    setSegForm({ name: "", description: "", aliases: "", keywords: "" });
+    setSegForm({ name: "", description: "", aliases: "", keywords: "", icon_name: "" });
     setSegDialog(true);
   };
 
@@ -149,6 +192,7 @@ export default function TaxonomyPage() {
       description: seg.description || "",
       aliases: seg.aliases.join(", "),
       keywords: seg.keywords.join(", "),
+      icon_name: seg.icon_name || "",
     });
     setSegDialog(true);
   };
@@ -162,7 +206,14 @@ export default function TaxonomyPage() {
     if (editingSeg) {
       const { error } = await supabase
         .from("taxonomy_segments")
-        .update({ name: segForm.name, slug, description: segForm.description || null, aliases, keywords })
+        .update({
+          name: segForm.name,
+          slug,
+          description: segForm.description || null,
+          aliases,
+          keywords,
+          icon_name: segForm.icon_name || null,
+        })
         .eq("id", editingSeg.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Segmento atualizado!");
@@ -176,6 +227,7 @@ export default function TaxonomyPage() {
           description: segForm.description || null,
           aliases,
           keywords,
+          icon_name: segForm.icon_name || null,
           order_index: filteredSegments.length,
         });
       if (error) { toast.error(error.message); return; }
@@ -235,10 +287,11 @@ export default function TaxonomyPage() {
                   <div key={cat.id} className="group flex items-center">
                     <button
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`flex-1 text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 flex items-center justify-between ${selectedCategory === cat.id ? "bg-primary/10 text-primary font-medium" : ""}`}
+                      className={`flex-1 text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 flex items-center gap-2 ${selectedCategory === cat.id ? "bg-primary/10 text-primary font-medium" : ""}`}
                     >
-                      <span className="truncate">{cat.name}</span>
-                      <Badge variant="secondary" className="text-xs ml-2 shrink-0">{segCountByCat(cat.id)}</Badge>
+                      <LucideIconPreview name={cat.icon_name} className="h-4 w-4 shrink-0" />
+                      <span className="truncate flex-1">{cat.name}</span>
+                      <Badge variant="secondary" className="text-xs ml-auto shrink-0">{segCountByCat(cat.id)}</Badge>
                     </button>
                     <div className="flex opacity-0 group-hover:opacity-100 transition-opacity pr-2">
                       <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditCat(cat)}>
@@ -288,12 +341,20 @@ export default function TaxonomyPage() {
                         key={seg.id}
                         className="group flex items-start gap-3 p-3 rounded-xl border hover:border-primary/30 transition-colors"
                       >
+                        <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
+                          <LucideIconPreview name={seg.icon_name} className="h-5 w-5" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{seg.name}</span>
                             {!selectedCategory && (
                               <Badge variant="outline" className="text-xs">
                                 {getCategoryName(seg.category_id)}
+                              </Badge>
+                            )}
+                            {seg.icon_name && (
+                              <Badge variant="secondary" className="text-[10px] font-mono">
+                                {seg.icon_name}
                               </Badge>
                             )}
                           </div>
@@ -348,10 +409,11 @@ export default function TaxonomyPage() {
               <Label>Nome</Label>
               <Input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} placeholder="Ex: Alimentação" />
             </div>
-            <div>
-              <Label>Ícone (Lucide name)</Label>
-              <Input value={catForm.icon_name} onChange={(e) => setCatForm({ ...catForm, icon_name: e.target.value })} placeholder="Ex: Utensils" />
-            </div>
+            <IconInput
+              value={catForm.icon_name}
+              onChange={(v) => setCatForm({ ...catForm, icon_name: v })}
+              label="Ícone da Categoria"
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCatDialog(false)}>Cancelar</Button>
@@ -371,6 +433,11 @@ export default function TaxonomyPage() {
               <Label>Nome</Label>
               <Input value={segForm.name} onChange={(e) => setSegForm({ ...segForm, name: e.target.value })} placeholder="Ex: Hamburgueria" />
             </div>
+            <IconInput
+              value={segForm.icon_name}
+              onChange={(v) => setSegForm({ ...segForm, icon_name: v })}
+              label="Ícone do Segmento"
+            />
             <div>
               <Label>Descrição (opcional)</Label>
               <Textarea value={segForm.description} onChange={(e) => setSegForm({ ...segForm, description: e.target.value })} placeholder="Descreva este segmento..." rows={2} />
