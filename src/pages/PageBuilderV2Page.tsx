@@ -168,7 +168,7 @@ export default function PageBuilderV2Page() {
 
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
+      <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Nova Página</DialogTitle>
           </DialogHeader>
