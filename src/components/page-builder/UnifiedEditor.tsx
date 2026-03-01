@@ -948,12 +948,10 @@ function InlineSectionEditor({
         Salvar Alterações
       </Button>
 
-      {/* Inline Banner Manager for BANNER_CAROUSEL */}
-      {isBannerCarousel && (
-        <div className="border-t pt-3">
-          <InlineBannerManager sectionId={section.id} brandId={brandId} />
-        </div>
-      )}
+      {/* Gerenciador de Banners — disponível para todas as sessões */}
+      <div className="border-t pt-3">
+        <InlineBannerManager sectionId={section.id} brandId={brandId} />
+      </div>
 
       <div className="border-t pt-3 flex gap-2">
         <Button variant="outline" className="flex-1 text-xs" onClick={onEditConfig}>
