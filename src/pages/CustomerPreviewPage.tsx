@@ -16,10 +16,21 @@ export default function CustomerPreviewPage() {
 
   useEffect(() => {
     const fetch = async () => {
+      // Find a brand that has at least one active branch
+      const { data: branchWithBrand } = await supabase
+        .from("branches")
+        .select("brand_id")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+
+      const targetBrandId = branchWithBrand?.brand_id;
+
       const { data: brandData, error: brandErr } = await supabase
         .from("brands")
         .select("*")
         .eq("is_active", true)
+        .eq("id", targetBrandId || "00000000-0000-0000-0000-000000000000")
         .limit(1)
         .single();
 
