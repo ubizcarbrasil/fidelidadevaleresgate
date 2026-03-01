@@ -116,6 +116,41 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         </motion.div>
       ) : null}
 
+      {/* Meus Resgates Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.05 }}
+        className="max-w-lg mx-auto px-5"
+      >
+        <button
+          onClick={() => navigateToTab("redemptions")}
+          className="w-full text-left rounded-[20px] p-5 relative overflow-hidden active:scale-[0.98] transition-transform"
+          style={{
+            background: `linear-gradient(135deg, ${primary} 0%, ${primary}CC 100%)`,
+            boxShadow: `0 8px 32px -8px ${primary}60`,
+          }}
+        >
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/[0.08]" />
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/[0.06]" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-extrabold text-white" style={{ fontFamily: fontHeading }}>
+                Meus Resgates
+              </h3>
+              <p className="text-xs text-white/70 mt-0.5">Saldo disponível</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-black text-white" style={{ fontFamily: fontHeading }}>
+                R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
+              </span>
+              <ChevronRight className="h-5 w-5 text-white/60" />
+            </div>
+          </div>
+        </button>
+      </motion.div>
+
       {/* Quick Actions Bar */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
