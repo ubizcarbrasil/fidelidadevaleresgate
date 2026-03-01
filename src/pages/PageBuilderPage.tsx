@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Eye, EyeOff, Loader2, FileText, Layers } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Loader2, FileText, Layers, Home, Smartphone } from "lucide-react";
 import UnifiedEditor from "@/components/page-builder/UnifiedEditor";
 
 interface CustomPage {
@@ -22,6 +22,20 @@ interface CustomPage {
   visibility_type?: string;
   created_at: string;
 }
+
+// Virtual page representing the home screen
+const HOME_PAGE_SENTINEL: CustomPage = {
+  id: "__HOME__",
+  brand_id: "",
+  title: "Tela Inicial (Home)",
+  slug: "home",
+  is_published: true,
+  elements_json: [],
+  subtitle: "Sessões dinâmicas da home do app",
+  search_enabled: false,
+  visibility_type: "public",
+  created_at: "",
+};
 
 export default function PageBuilderPage() {
   const { brand } = useBrand();
@@ -92,10 +106,12 @@ export default function PageBuilderPage() {
   };
 
   if (editing) {
+    const isHome = editing.id === "__HOME__";
     return (
       <UnifiedEditor
-        page={editing}
+        page={isHome ? { ...editing, brand_id: brand?.id || "", id: "__HOME__" } : editing}
         onBack={() => { setEditing(null); fetchPages(); }}
+        isHomePage={isHome}
       />
     );
   }
@@ -104,7 +120,7 @@ export default function PageBuilderPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <PageHeader
         title="Construtor de Páginas"
-        description="Crie páginas customizadas com elementos visuais e sessões dinâmicas de conteúdo."
+        description="Visualize e edite o app inteiro — home, páginas e sessões — em um só lugar."
       />
 
       <div className="flex justify-end mb-6">
@@ -117,14 +133,36 @@ export default function PageBuilderPage() {
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : pages.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Nenhuma página criada</p>
-          <p className="text-sm">Clique em "Nova Página" para começar.</p>
-        </div>
       ) : (
         <div className="space-y-3">
+          {/* Home page entry - always on top */}
+          {brand && (
+            <div
+              onClick={() => setEditing(HOME_PAGE_SENTINEL)}
+              className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors"
+            >
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Smartphone className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold truncate">Tela Inicial (Home)</h3>
+                <p className="text-xs text-muted-foreground truncate">Edite todas as sessões da home do app com preview ao vivo</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  App Principal
+                </span>
+              </div>
+            </div>
+          )}
+
+          {pages.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Nenhuma página customizada criada ainda.</p>
+            </div>
+          )}
+
           {pages.map((page) => (
             <div key={page.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:shadow-sm transition-shadow">
               <div className="flex-1 min-w-0">

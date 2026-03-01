@@ -4,8 +4,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import type { UnifiedBlock, PageElement } from "./types";
 import ElementRenderer from "./ElementRenderer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight, Globe, ExternalLink, ShoppingBag, Clock, Percent } from "lucide-react";
-import { motion } from "framer-motion";
+import { ChevronRight, Globe, ExternalLink, ShoppingBag, Clock, Percent, Home, Tag, Ticket, Wallet, UserCircle, Bell, Search } from "lucide-react";
 import { openLink } from "@/lib/openLink";
 
 interface LivePreviewProps {
@@ -15,12 +14,21 @@ interface LivePreviewProps {
   searchEnabled?: boolean;
   selectedBlockId: string | null;
   onSelectBlock: (id: string) => void;
+  isHomePage?: boolean;
 }
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
 }
+
+const BOTTOM_TABS = [
+  { key: "home", label: "Início", icon: Home },
+  { key: "offers", label: "Ofertas", icon: Tag },
+  { key: "redemptions", label: "Resgates", icon: Ticket },
+  { key: "wallet", label: "Carteira", icon: Wallet },
+  { key: "profile", label: "Perfil", icon: UserCircle },
+];
 
 export default function LivePreview({
   blocks,
@@ -29,83 +37,177 @@ export default function LivePreview({
   searchEnabled,
   selectedBlockId,
   onSelectBlock,
+  isHomePage,
 }: LivePreviewProps) {
   const { brand, selectedBranch, theme } = useBrand();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const displayName = theme?.display_name || brand?.name || "App";
 
   return (
-    <div className="max-w-md mx-auto pb-8 min-h-full" style={{ backgroundColor: "#FAFAFA" }}>
-      {/* Page Header */}
-      <div className="px-5 pt-4 pb-3">
-        <h1 className="text-xl font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-          {pageTitle}
-        </h1>
-        {pageSubtitle && (
-          <p className="text-sm mt-0.5" style={{ color: `${fg}60` }}>
-            {pageSubtitle}
-          </p>
-        )}
-      </div>
-
-      {/* Search placeholder */}
-      {searchEnabled && (
-        <div className="px-5 pb-3">
-          <div
-            className="flex items-center gap-3 rounded-2xl px-4 py-3"
-            style={{ backgroundColor: "#F2F2F7" }}
-          >
-            <span className="text-sm" style={{ color: `${fg}35` }}>
-              Buscar nesta página...
-            </span>
+    <div className="flex justify-center py-4 px-2">
+      {/* Phone frame */}
+      <div
+        className="relative w-[375px] rounded-[40px] overflow-hidden"
+        style={{
+          boxShadow: "0 25px 60px rgba(0,0,0,0.15), 0 0 0 2px rgba(0,0,0,0.08)",
+          backgroundColor: "#FAFAFA",
+          minHeight: 700,
+        }}
+      >
+        {/* Status bar */}
+        <div className="flex items-center justify-between px-6 pt-3 pb-1" style={{ backgroundColor: "#FFFFFF" }}>
+          <span className="text-[11px] font-semibold" style={{ color: fg }}>9:41</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-2 rounded-sm border" style={{ borderColor: `${fg}40` }}>
+              <div className="w-3 h-1.5 rounded-sm m-[0.5px]" style={{ backgroundColor: `${fg}60` }} />
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Blocks */}
-      <div className="space-y-3">
-        {blocks.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground text-sm">
-            Página vazia — adicione blocos no editor
+        {/* App Header */}
+        {isHomePage && (
+          <div style={{ backgroundColor: "#FFFFFF" }}>
+            <div className="flex items-center justify-between px-5 py-2.5">
+              <div className="flex items-center gap-2">
+                {theme?.logo_url ? (
+                  <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} />
+                ) : (
+                  <span className="font-extrabold text-lg tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
+                    {displayName}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-9 w-9 flex items-center justify-center rounded-xl">
+                  <Bell className="h-5 w-5" strokeWidth={1.6} style={{ color: `${fg}60` }} />
+                </div>
+                <div className="h-9 w-9 flex items-center justify-center rounded-xl">
+                  <Wallet className="h-5 w-5" strokeWidth={1.6} style={{ color: `${fg}60` }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Search bar */}
+            <div className="px-5 pb-3">
+              <div
+                className="flex items-center gap-3 rounded-2xl px-4 py-2.5"
+                style={{ backgroundColor: "#F2F2F7" }}
+              >
+                <Search className="h-4 w-4" style={{ color: `${fg}35` }} />
+                <span className="text-[13px]" style={{ color: `${fg}30` }}>
+                  Busque por parceiros e ofertas
+                </span>
+              </div>
+            </div>
           </div>
         )}
-        {blocks.map((block) => (
-          <div
-            key={block.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectBlock(block.id);
-            }}
-            className={`relative cursor-pointer transition-all ${
-              selectedBlockId === block.id
-                ? "ring-2 ring-primary ring-offset-1 rounded-lg"
-                : "hover:ring-1 hover:ring-primary/30 rounded-lg"
-            }`}
-          >
-            {block.blockType === "static" ? (
-              <div className="px-5">
-                <ElementRenderer element={block.element} />
-              </div>
-            ) : (
-              <LiveSectionBlock
-                section={block.section}
-                branchId={selectedBranch?.id}
-                brandId={brand?.id || ""}
-                primary={primary}
-                fg={fg}
-                fontHeading={fontHeading}
-              />
-            )}
-            {/* Selection label overlay */}
-            {selectedBlockId === block.id && (
-              <div className="absolute -top-2 left-3 px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full z-20">
-                {block.blockType === "static" ? "ELEMENTO" : "SESSÃO"}
-              </div>
+
+        {/* Page header for custom pages */}
+        {!isHomePage && (
+          <div className="px-5 pt-4 pb-3" style={{ backgroundColor: "#FFFFFF" }}>
+            <h1 className="text-xl font-bold" style={{ fontFamily: fontHeading, color: fg }}>
+              {pageTitle}
+            </h1>
+            {pageSubtitle && (
+              <p className="text-sm mt-0.5" style={{ color: `${fg}60` }}>
+                {pageSubtitle}
+              </p>
             )}
           </div>
-        ))}
+        )}
+
+        {/* Search for custom pages */}
+        {!isHomePage && searchEnabled && (
+          <div className="px-5 pb-3" style={{ backgroundColor: "#FFFFFF" }}>
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={{ backgroundColor: "#F2F2F7" }}
+            >
+              <span className="text-sm" style={{ color: `${fg}35` }}>
+                Buscar nesta página...
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Content area */}
+        <div className="pb-20 space-y-3" style={{ minHeight: 400 }}>
+          {blocks.length === 0 && (
+            <div className="text-center py-16 text-sm" style={{ color: `${fg}40` }}>
+              {isHomePage ? "Nenhuma sessão configurada — adicione sessões no painel" : "Página vazia — adicione blocos no editor"}
+            </div>
+          )}
+          {blocks.map((block) => (
+            <div
+              key={block.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectBlock(block.id);
+              }}
+              className={`relative cursor-pointer transition-all ${
+                selectedBlockId === block.id
+                  ? "ring-2 ring-blue-500 ring-offset-1 rounded-lg"
+                  : "hover:ring-1 hover:ring-blue-400/30 rounded-lg"
+              }`}
+            >
+              {block.blockType === "static" ? (
+                <div className="px-5">
+                  <ElementRenderer element={block.element} />
+                </div>
+              ) : (
+                <LiveSectionBlock
+                  section={block.section}
+                  branchId={selectedBranch?.id}
+                  brandId={brand?.id || ""}
+                  primary={primary}
+                  fg={fg}
+                  fontHeading={fontHeading}
+                />
+              )}
+              {/* Selection overlay */}
+              {selectedBlockId === block.id && (
+                <div className="absolute -top-2 left-3 px-2 py-0.5 text-[9px] font-bold rounded-full z-20 text-white" style={{ backgroundColor: "#3B82F6" }}>
+                  {block.blockType === "static" ? "ELEMENTO" : (block.section.section_templates?.key || "SESSÃO")}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Tab Bar */}
+        {isHomePage && (
+          <div className="absolute bottom-0 inset-x-0 z-10" style={{ backgroundColor: "#FFFFFF", boxShadow: "0 -2px 12px rgba(0,0,0,0.06)" }}>
+            <div className="flex">
+              {BOTTOM_TABS.map((tab, idx) => {
+                const isActive = tab.key === "home";
+                const Icon = tab.icon;
+                return (
+                  <div key={tab.key} className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 relative">
+                    {isActive && (
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: primary }} />
+                    )}
+                    <div
+                      className="h-7 w-7 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: isActive ? `${primary}12` : "transparent" }}
+                    >
+                      <Icon className="h-4 w-4" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : `${fg}40` }} />
+                    </div>
+                    <span className="text-[9px] font-semibold" style={{ color: isActive ? primary : `${fg}40` }}>
+                      {tab.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Home indicator */}
+            <div className="flex justify-center pb-1">
+              <div className="w-32 h-1 rounded-full" style={{ backgroundColor: `${fg}15` }} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -219,7 +321,7 @@ function LiveSectionBlock({
   if (loading) {
     return (
       <div className="px-5 py-3">
-        <Skeleton className="h-5 w-32 mb-3" />
+        <Skeleton className="h-4 w-28 mb-3" />
         <div className="flex gap-3">
           <Skeleton className="h-24 w-40 rounded-xl" />
           <Skeleton className="h-24 w-40 rounded-xl" />
@@ -230,8 +332,8 @@ function LiveSectionBlock({
 
   if (!section.is_enabled) {
     return (
-      <div className="px-5 py-4 opacity-40">
-        <div className="rounded-xl border-2 border-dashed p-3 text-center text-xs text-muted-foreground">
+      <div className="px-5 py-3 opacity-40">
+        <div className="rounded-xl border-2 border-dashed p-3 text-center text-xs" style={{ color: `${fg}50` }}>
           Sessão desativada: {section.title || section.section_templates?.key}
         </div>
       </div>
@@ -240,13 +342,13 @@ function LiveSectionBlock({
 
   if (!items.length) {
     return (
-      <div className="px-5 py-4">
-        <div className="rounded-xl border-2 border-dashed border-muted p-4 text-center">
+      <div className="px-5 py-3">
+        <div className="rounded-xl border-2 border-dashed p-4 text-center" style={{ borderColor: `${fg}15` }}>
           {section.title && (
             <p className="text-xs font-semibold mb-1" style={{ color: fg }}>{section.title}</p>
           )}
-          <p className="text-[10px] text-muted-foreground">
-            Nenhum conteúdo disponível para "{section.section_templates?.key || "sessão"}"
+          <p className="text-[10px]" style={{ color: `${fg}40` }}>
+            Nenhum conteúdo para "{section.section_templates?.key || "sessão"}"
           </p>
         </div>
       </div>
@@ -412,7 +514,7 @@ function LiveSectionBlock({
               className="flex items-center gap-3 p-3 rounded-xl bg-white"
               style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
             >
-              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
                 {s.logo_url ? <img src={s.logo_url} alt={s.name} className="h-full w-full object-cover" /> : <span>🏪</span>}
               </div>
               <div className="flex-1 min-w-0">

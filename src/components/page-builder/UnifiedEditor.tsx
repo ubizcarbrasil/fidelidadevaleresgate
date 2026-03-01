@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Save, Copy,
   Settings2, Loader2, Layers, Link2, Type, MousePointer, Image as ImageIcon,
-  Minus, Square,
+  Minus, Square, Smartphone, RefreshCw,
 } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { PageElement, PageElementStyle, SectionRow, UnifiedBlock } from "./types";
@@ -35,11 +35,12 @@ interface PageRow {
 interface Props {
   page: PageRow;
   onBack: () => void;
+  isHomePage?: boolean;
 }
 
-export default function UnifiedEditor({ page, onBack }: Props) {
+export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   const { brand } = useBrand();
-  const [elements, setElements] = useState<PageElement[]>((page.elements_json as PageElement[]) || []);
+  const [elements, setElements] = useState<PageElement[]>(isHomePage ? [] : ((page.elements_json as PageElement[]) || []));
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -67,28 +68,62 @@ export default function UnifiedEditor({ page, onBack }: Props) {
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
+  // Inline editing state for section properties
+  const [inlineTitle, setInlineTitle] = useState("");
+  const [inlineSubtitle, setInlineSubtitle] = useState("");
+  const [inlineCtaText, setInlineCtaText] = useState("");
+  const [inlineDisplayMode, setInlineDisplayMode] = useState("");
+  const [inlineFilterMode, setInlineFilterMode] = useState("");
+  const [inlineCouponTypeFilter, setInlineCouponTypeFilter] = useState("");
+  const [inlineColumnsCount, setInlineColumnsCount] = useState(2);
+  const [savingInline, setSavingInline] = useState(false);
+
   const fetchSections = useCallback(async () => {
     setLoading(true);
-    const { data } = await (supabase
+    let query = supabase
       .from("brand_sections")
-      .select("*, section_templates(key, name, type), brand_section_sources(*)") as any)
-      .eq("page_id", page.id)
-      .order("order_index");
+      .select("*, section_templates(key, name, type), brand_section_sources(*)") as any;
+
+    if (isHomePage) {
+      // Home page: sections with page_id IS NULL for this brand
+      query = query.eq("brand_id", brand?.id || page.brand_id).is("page_id", null);
+    } else {
+      query = query.eq("page_id", page.id);
+    }
+
+    const { data } = await query.order("order_index");
     setSections((data as SectionRow[]) || []);
     setLoading(false);
-  }, [page.id]);
+  }, [page.id, page.brand_id, brand?.id, isHomePage]);
 
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
   // Build unified block list
   const blocks: UnifiedBlock[] = [];
-  elements.forEach((el, idx) => {
-    blocks.push({ blockType: "static", id: el.id, orderIndex: idx, element: el });
-  });
+  if (!isHomePage) {
+    elements.forEach((el, idx) => {
+      blocks.push({ blockType: "static", id: el.id, orderIndex: idx, element: el });
+    });
+  }
   sections.forEach((sec) => {
-    blocks.push({ blockType: "dynamic", id: sec.id, orderIndex: elements.length + sec.order_index, section: sec });
+    blocks.push({ blockType: "dynamic", id: sec.id, orderIndex: (isHomePage ? 0 : elements.length) + sec.order_index, section: sec });
   });
   blocks.sort((a, b) => a.orderIndex - b.orderIndex);
+
+  // When selecting a section, populate inline editing fields
+  useEffect(() => {
+    const selectedBlock = blocks.find(b => b.id === selectedBlockId);
+    if (selectedBlock?.blockType === "dynamic") {
+      const sec = selectedBlock.section;
+      setInlineTitle(sec.title || "");
+      setInlineSubtitle(sec.subtitle || "");
+      setInlineCtaText(sec.cta_text || "");
+      setInlineDisplayMode(sec.display_mode || "carousel");
+      setInlineFilterMode(sec.filter_mode || "recent");
+      setInlineCouponTypeFilter(sec.coupon_type_filter || "all");
+      setInlineColumnsCount(sec.columns_count || 2);
+    }
+  }, [selectedBlockId]);
 
   // Static element operations
   const addElement = (type: PageElement["type"]) => {
@@ -148,9 +183,8 @@ export default function UnifiedEditor({ page, onBack }: Props) {
       return;
     }
     const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
-    const { error } = await supabase.from("brand_sections").insert({
+    const insertData: any = {
       brand_id: brand.id,
-      page_id: page.id,
       template_id: templates[0].id,
       title: newSectionTitle.trim() || null,
       order_index: maxOrder,
@@ -162,7 +196,11 @@ export default function UnifiedEditor({ page, onBack }: Props) {
       min_stores_visible: 1,
       icon_size: "medium",
       banner_height: "medium",
-    } as any);
+    };
+    if (!isHomePage) {
+      insertData.page_id = page.id;
+    }
+    const { error } = await supabase.from("brand_sections").insert(insertData);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
@@ -201,6 +239,27 @@ export default function UnifiedEditor({ page, onBack }: Props) {
     fetchSections();
   };
 
+  // Save inline section edits
+  const handleSaveInline = async (sectionId: string) => {
+    setSavingInline(true);
+    const { error } = await supabase.from("brand_sections").update({
+      title: inlineTitle.trim() || null,
+      subtitle: inlineSubtitle.trim() || null,
+      cta_text: inlineCtaText.trim() || null,
+      display_mode: inlineDisplayMode,
+      filter_mode: inlineFilterMode,
+      coupon_type_filter: inlineCouponTypeFilter === "all" ? null : inlineCouponTypeFilter,
+      columns_count: inlineColumnsCount,
+    }).eq("id", sectionId);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sessão atualizada!" });
+      fetchSections();
+    }
+    setSavingInline(false);
+  };
+
   // Drag-and-drop for static elements
   const handleDragStart = (idx: number) => setDragIdx(idx);
   const handleDragOver = (e: React.DragEvent, idx: number) => {
@@ -216,6 +275,10 @@ export default function UnifiedEditor({ page, onBack }: Props) {
 
   // Save all
   const handleSave = async () => {
+    if (isHomePage) {
+      toast({ title: "Home salva automaticamente ao editar sessões" });
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("custom_pages").update({
       elements_json: elements as any,
@@ -268,9 +331,6 @@ export default function UnifiedEditor({ page, onBack }: Props) {
   const selectedElement = selectedBlock?.blockType === "static" ? selectedBlock.element : null;
   const selectedSection = selectedBlock?.blockType === "dynamic" ? selectedBlock.section : null;
 
-  // Separate static element indices for drag
-  const staticBlocks = blocks.filter(b => b.blockType === "static");
-
   return (
     <div className="flex flex-col h-[calc(100vh-64px)]">
       {/* Header */}
@@ -278,30 +338,44 @@ export default function UnifiedEditor({ page, onBack }: Props) {
         <Button size="icon" variant="ghost" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-sm truncate">{page.title}</h2>
-          <p className="text-[10px] text-muted-foreground font-mono">/p/{page.slug}</p>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          {isHomePage && <Smartphone className="h-4 w-4 text-primary shrink-0" />}
+          <div>
+            <h2 className="font-bold text-sm truncate">{isHomePage ? "Tela Inicial (Home)" : page.title}</h2>
+            <p className="text-[10px] text-muted-foreground font-mono">
+              {isHomePage ? "Sessões dinâmicas da home" : `/p/${page.slug}`}
+            </p>
+          </div>
         </div>
-        <Button size="sm" variant="outline" onClick={() => setShowSettings(true)}>
-          <Settings2 className="h-3.5 w-3.5 mr-1" /> Config
+        {!isHomePage && (
+          <Button size="sm" variant="outline" onClick={() => setShowSettings(true)}>
+            <Settings2 className="h-3.5 w-3.5 mr-1" /> Config
+          </Button>
+        )}
+        <Button size="sm" variant="outline" onClick={fetchSections}>
+          <RefreshCw className="h-3.5 w-3.5 mr-1" /> Atualizar
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
-          Salvar
-        </Button>
+        {!isHomePage && (
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+            Salvar
+          </Button>
+        )}
       </div>
 
       <ResizablePanelGroup direction="horizontal" className="flex-1">
         {/* Left panel: Block list */}
-        <ResizablePanel defaultSize={30} minSize={22} maxSize={45}>
+        <ResizablePanel defaultSize={25} minSize={18} maxSize={40}>
           <div className="flex flex-col h-full bg-muted/30">
             {/* Add buttons */}
             <div className="p-3 border-b space-y-2">
               <p className="text-xs font-semibold text-muted-foreground">Adicionar bloco</p>
               <div className="flex gap-1.5">
-                <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddStatic(true)}>
-                  <Type className="h-3 w-3 mr-1" /> Elemento
-                </Button>
+                {!isHomePage && (
+                  <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddStatic(true)}>
+                    <Type className="h-3 w-3 mr-1" /> Elemento
+                  </Button>
+                )}
                 <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddDynamic(true)}>
                   <Layers className="h-3 w-3 mr-1" /> Sessão
                 </Button>
@@ -317,10 +391,10 @@ export default function UnifiedEditor({ page, onBack }: Props) {
               )}
               {!loading && blocks.length === 0 && (
                 <p className="text-xs text-center text-muted-foreground py-8">
-                  Adicione elementos ou sessões acima
+                  {isHomePage ? "Adicione sessões acima" : "Adicione elementos ou sessões acima"}
                 </p>
               )}
-              {!loading && blocks.map((block, blockIdx) => {
+              {!loading && blocks.map((block) => {
                 if (block.blockType === "static") {
                   const elIdx = elements.findIndex(el => el.id === block.id);
                   return (
@@ -367,22 +441,11 @@ export default function UnifiedEditor({ page, onBack }: Props) {
                       <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary font-mono mr-1">
                         {block.section.section_templates?.key || "SESSÃO"}
                       </span>
-                      <span className="text-xs truncate">{block.section.title || "Sem título"}</span>
+                      <span className="text-xs truncate block mt-0.5">{block.section.title || "Sem título"}</span>
                     </div>
                     <div className="flex gap-0.5 shrink-0">
                       <button onClick={(e) => { e.stopPropagation(); handleToggleSection(block.section); }} className="text-muted-foreground hover:text-foreground">
                         {block.section.is_enabled ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                      </button>
-                      {isManualLinksType(block.section) && (
-                        <button onClick={(e) => { e.stopPropagation(); setEditingManualLinks(block.section); }} className="text-muted-foreground hover:text-foreground">
-                          <Link2 className="h-3 w-3" />
-                        </button>
-                      )}
-                      <button onClick={(e) => { e.stopPropagation(); setEditingSection(block.section); }} className="text-muted-foreground hover:text-foreground">
-                        <Settings2 className="h-3 w-3" />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDuplicateSection(block.section); }} className="text-muted-foreground hover:text-foreground">
-                        <Copy className="h-3 w-3" />
                       </button>
                       <button onClick={(e) => { e.stopPropagation(); handleDeleteSection(block.id); }} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-3 w-3" />
@@ -398,11 +461,13 @@ export default function UnifiedEditor({ page, onBack }: Props) {
         <ResizableHandle withHandle />
 
         {/* Middle panel: Properties */}
-        <ResizablePanel defaultSize={35} minSize={25}>
+        <ResizablePanel defaultSize={30} minSize={22}>
           <div className="h-full overflow-y-auto p-4">
             {!selectedBlock ? (
               <div className="text-center py-16 text-muted-foreground text-sm">
-                Selecione um bloco para editar
+                <Layers className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Selecione um bloco</p>
+                <p className="text-xs mt-1">Clique em um bloco na lista ou no preview para editar</p>
               </div>
             ) : selectedElement ? (
               <StaticPropertiesPanel
@@ -412,12 +477,28 @@ export default function UnifiedEditor({ page, onBack }: Props) {
                 onRemove={() => removeElement(selectedElement.id)}
               />
             ) : selectedSection ? (
-              <DynamicPropertiesPanel
+              <InlineSectionEditor
                 section={selectedSection}
-                onEditConfig={() => setEditingSection(selectedSection)}
-                onEditLinks={() => setEditingManualLinks(selectedSection)}
+                title={inlineTitle}
+                subtitle={inlineSubtitle}
+                ctaText={inlineCtaText}
+                displayMode={inlineDisplayMode}
+                filterMode={inlineFilterMode}
+                couponTypeFilter={inlineCouponTypeFilter}
+                columnsCount={inlineColumnsCount}
+                onTitleChange={setInlineTitle}
+                onSubtitleChange={setInlineSubtitle}
+                onCtaTextChange={setInlineCtaText}
+                onDisplayModeChange={setInlineDisplayMode}
+                onFilterModeChange={setInlineFilterMode}
+                onCouponTypeFilterChange={setInlineCouponTypeFilter}
+                onColumnsCountChange={setInlineColumnsCount}
+                onSave={() => handleSaveInline(selectedSection.id)}
+                saving={savingInline}
                 onToggle={() => handleToggleSection(selectedSection)}
                 onDelete={() => handleDeleteSection(selectedSection.id)}
+                onEditConfig={() => setEditingSection(selectedSection)}
+                onEditLinks={() => setEditingManualLinks(selectedSection)}
                 isManualLinks={isManualLinksType(selectedSection)}
               />
             ) : null}
@@ -427,11 +508,8 @@ export default function UnifiedEditor({ page, onBack }: Props) {
         <ResizableHandle withHandle />
 
         {/* Right panel: Live Preview */}
-        <ResizablePanel defaultSize={35} minSize={20}>
-          <div className="h-full overflow-y-auto bg-white border-l">
-            <div className="text-center text-[10px] font-semibold text-muted-foreground py-2 border-b bg-muted/30">
-              📱 PREVIEW AO VIVO
-            </div>
+        <ResizablePanel defaultSize={45} minSize={30}>
+          <div className="h-full overflow-y-auto bg-gradient-to-b from-muted/50 to-muted/20">
             <LivePreview
               blocks={blocks}
               pageTitle={pageSettings.title}
@@ -439,34 +517,37 @@ export default function UnifiedEditor({ page, onBack }: Props) {
               searchEnabled={pageSettings.search_enabled}
               selectedBlockId={selectedBlockId}
               onSelectBlock={setSelectedBlockId}
+              isHomePage={isHomePage}
             />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
 
       {/* Add Static Element Dialog */}
-      <Dialog open={showAddStatic} onOpenChange={setShowAddStatic}>
-        <DialogContent aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Adicionar Elemento Visual</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-3 gap-3 py-4">
-            {(["text", "button", "banner", "icon", "divider", "spacer"] as PageElement["type"][]).map((t) => (
-              <button
-                key={t}
-                onClick={() => addElement(t)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl border hover:bg-accent transition-colors"
-              >
-                {t === "text" && <Type className="h-6 w-6" />}
-                {t === "button" && <MousePointer className="h-6 w-6" />}
-                {t === "banner" && <ImageIcon className="h-6 w-6" />}
-                {t === "icon" && <Square className="h-6 w-6" />}
-                {t === "divider" && <Minus className="h-6 w-6" />}
-                {t === "spacer" && <GripVertical className="h-6 w-6" />}
-                <span className="text-xs font-medium">{ELEMENT_TYPE_LABELS[t]}</span>
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {!isHomePage && (
+        <Dialog open={showAddStatic} onOpenChange={setShowAddStatic}>
+          <DialogContent aria-describedby={undefined}>
+            <DialogHeader><DialogTitle>Adicionar Elemento Visual</DialogTitle></DialogHeader>
+            <div className="grid grid-cols-3 gap-3 py-4">
+              {(["text", "button", "banner", "icon", "divider", "spacer"] as PageElement["type"][]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => addElement(t)}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl border hover:bg-accent transition-colors"
+                >
+                  {t === "text" && <Type className="h-6 w-6" />}
+                  {t === "button" && <MousePointer className="h-6 w-6" />}
+                  {t === "banner" && <ImageIcon className="h-6 w-6" />}
+                  {t === "icon" && <Square className="h-6 w-6" />}
+                  {t === "divider" && <Minus className="h-6 w-6" />}
+                  {t === "spacer" && <GripVertical className="h-6 w-6" />}
+                  <span className="text-xs font-medium">{ELEMENT_TYPE_LABELS[t]}</span>
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Add Dynamic Section Dialog */}
       <Dialog open={showAddDynamic} onOpenChange={setShowAddDynamic}>
@@ -500,44 +581,177 @@ export default function UnifiedEditor({ page, onBack }: Props) {
       </Dialog>
 
       {/* Page Settings Dialog */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Configurações da Página</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Título</Label>
-              <Input value={pageSettings.title} onChange={e => setPageSettings(p => ({ ...p, title: e.target.value }))} />
+      {!isHomePage && (
+        <Dialog open={showSettings} onOpenChange={setShowSettings}>
+          <DialogContent aria-describedby={undefined}>
+            <DialogHeader><DialogTitle>Configurações da Página</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Título</Label>
+                <Input value={pageSettings.title} onChange={e => setPageSettings(p => ({ ...p, title: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Subtítulo</Label>
+                <Input value={pageSettings.subtitle} onChange={e => setPageSettings(p => ({ ...p, subtitle: e.target.value }))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Busca habilitada</Label>
+                <Switch checked={pageSettings.search_enabled} onCheckedChange={v => setPageSettings(p => ({ ...p, search_enabled: v }))} />
+              </div>
+              <div>
+                <Label>Visibilidade</Label>
+                <Select value={pageSettings.visibility_type} onValueChange={v => setPageSettings(p => ({ ...p, visibility_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Pública</SelectItem>
+                    <SelectItem value="authenticated">Apenas logado</SelectItem>
+                    <SelectItem value="role_based">Por papel</SelectItem>
+                    <SelectItem value="branch_based">Por cidade</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSettings(false)}>Cancelar</Button>
+              <Button onClick={handleSavePageSettings} disabled={savingSettings}>
+                {savingSettings && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
+// --- Inline Section Editor (edit properties directly in the panel) ---
+function InlineSectionEditor({
+  section,
+  title, subtitle, ctaText, displayMode, filterMode, couponTypeFilter, columnsCount,
+  onTitleChange, onSubtitleChange, onCtaTextChange, onDisplayModeChange, onFilterModeChange,
+  onCouponTypeFilterChange, onColumnsCountChange,
+  onSave, saving, onToggle, onDelete, onEditConfig, onEditLinks, isManualLinks,
+}: {
+  section: SectionRow;
+  title: string; subtitle: string; ctaText: string; displayMode: string;
+  filterMode: string; couponTypeFilter: string; columnsCount: number;
+  onTitleChange: (v: string) => void; onSubtitleChange: (v: string) => void;
+  onCtaTextChange: (v: string) => void; onDisplayModeChange: (v: string) => void;
+  onFilterModeChange: (v: string) => void; onCouponTypeFilterChange: (v: string) => void;
+  onColumnsCountChange: (v: number) => void;
+  onSave: () => void; saving: boolean;
+  onToggle: () => void; onDelete: () => void;
+  onEditConfig: () => void; onEditLinks: () => void; isManualLinks: boolean;
+}) {
+  const templateKey = section.section_templates?.key || "";
+
+  return (
+    <div className="max-w-md space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-sm">Editar Sessão</h3>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono">
+            {templateKey}
+          </span>
+        </div>
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" onClick={onToggle}>
+            {section.is_enabled ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+          </Button>
+          <Button size="sm" variant="destructive" onClick={onDelete}>
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <Label className="text-xs">Título</Label>
+          <Input value={title} onChange={e => onTitleChange(e.target.value)} placeholder="Ex: Ofertas Imperdíveis" />
+        </div>
+        <div>
+          <Label className="text-xs">Subtítulo</Label>
+          <Input value={subtitle} onChange={e => onSubtitleChange(e.target.value)} placeholder="Texto descritivo" />
+        </div>
+        <div>
+          <Label className="text-xs">Texto CTA</Label>
+          <Input value={ctaText} onChange={e => onCtaTextChange(e.target.value)} placeholder="Ver tudo" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Exibição</Label>
+            <Select value={displayMode} onValueChange={onDisplayModeChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="carousel">Carrossel</SelectItem>
+                <SelectItem value="grid">Grade</SelectItem>
+                <SelectItem value="list">Lista</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Colunas</Label>
+            <Select value={String(columnsCount)} onValueChange={v => onColumnsCountChange(Number(v))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1</SelectItem>
+                <SelectItem value="2">2</SelectItem>
+                <SelectItem value="3">3</SelectItem>
+                <SelectItem value="4">4</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {(templateKey.includes("OFFERS") || templateKey.includes("STORES")) && (
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Subtítulo</Label>
-              <Input value={pageSettings.subtitle} onChange={e => setPageSettings(p => ({ ...p, subtitle: e.target.value }))} />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label>Busca habilitada</Label>
-              <Switch checked={pageSettings.search_enabled} onCheckedChange={v => setPageSettings(p => ({ ...p, search_enabled: v }))} />
-            </div>
-            <div>
-              <Label>Visibilidade</Label>
-              <Select value={pageSettings.visibility_type} onValueChange={v => setPageSettings(p => ({ ...p, visibility_type: v }))}>
+              <Label className="text-xs">Ordenação</Label>
+              <Select value={filterMode} onValueChange={onFilterModeChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="public">Pública</SelectItem>
-                  <SelectItem value="authenticated">Apenas logado</SelectItem>
-                  <SelectItem value="role_based">Por papel</SelectItem>
-                  <SelectItem value="branch_based">Por cidade</SelectItem>
+                  <SelectItem value="recent">Recentes</SelectItem>
+                  <SelectItem value="most_redeemed">Mais resgatados</SelectItem>
+                  <SelectItem value="newest">Novos (14 dias)</SelectItem>
+                  <SelectItem value="random">Aleatório</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {templateKey.includes("OFFERS") && (
+              <div>
+                <Label className="text-xs">Tipo de cupom</Label>
+                <Select value={couponTypeFilter} onValueChange={onCouponTypeFilterChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="STORE">Loja</SelectItem>
+                    <SelectItem value="BRAND">Marca</SelectItem>
+                    <SelectItem value="PLATFORM">Plataforma</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSettings(false)}>Cancelar</Button>
-            <Button onClick={handleSavePageSettings} disabled={savingSettings}>
-              {savingSettings && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        )}
+      </div>
+
+      <Button className="w-full" onClick={onSave} disabled={saving}>
+        {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        Salvar Alterações
+      </Button>
+
+      <div className="border-t pt-3 flex gap-2">
+        <Button variant="outline" className="flex-1 text-xs" onClick={onEditConfig}>
+          <Settings2 className="h-3.5 w-3.5 mr-1" /> Config Avançada
+        </Button>
+        {isManualLinks && (
+          <Button variant="outline" className="flex-1 text-xs" onClick={onEditLinks}>
+            <Link2 className="h-3.5 w-3.5 mr-1" /> Gerenciar Links
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -688,71 +902,6 @@ function StaticPropertiesPanel({
         )}
         {element.action.type === "webview" && (
           <Input value={element.action.url || ""} onChange={(e) => onUpdate({ action: { ...element.action, url: e.target.value } })} placeholder="https://..." />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// --- Dynamic Properties Panel ---
-function DynamicPropertiesPanel({
-  section,
-  onEditConfig,
-  onEditLinks,
-  onToggle,
-  onDelete,
-  isManualLinks,
-}: {
-  section: SectionRow;
-  onEditConfig: () => void;
-  onEditLinks: () => void;
-  onToggle: () => void;
-  onDelete: () => void;
-  isManualLinks: boolean;
-}) {
-  return (
-    <div className="max-w-md space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-sm">Sessão Dinâmica</h3>
-        <Button size="sm" variant="destructive" onClick={onDelete}>
-          <Trash2 className="h-3 w-3 mr-1" /> Remover
-        </Button>
-      </div>
-
-      <div className="rounded-xl border p-4 space-y-3">
-        <div>
-          <Label className="text-xs text-muted-foreground">Tipo</Label>
-          <p className="text-sm font-mono">{section.section_templates?.key || "—"}</p>
-        </div>
-        <div>
-          <Label className="text-xs text-muted-foreground">Título</Label>
-          <p className="text-sm">{section.title || "(sem título)"}</p>
-        </div>
-        {section.subtitle && (
-          <div>
-            <Label className="text-xs text-muted-foreground">Subtítulo</Label>
-            <p className="text-sm">{section.subtitle}</p>
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Ativa</Label>
-          <Switch checked={section.is_enabled} onCheckedChange={onToggle} />
-        </div>
-        <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-          <div><span className="font-medium">Display:</span> {section.display_mode}</div>
-          <div><span className="font-medium">Colunas:</span> {section.columns_count}</div>
-          <div><span className="font-medium">Linhas:</span> {section.rows_count}</div>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onEditConfig}>
-          <Settings2 className="h-4 w-4 mr-1" /> Configurar Sessão
-        </Button>
-        {isManualLinks && (
-          <Button variant="outline" className="flex-1" onClick={onEditLinks}>
-            <Link2 className="h-4 w-4 mr-1" /> Gerenciar Links
-          </Button>
         )}
       </div>
     </div>
