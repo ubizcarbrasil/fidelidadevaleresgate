@@ -10,7 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
   HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus,
-  ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2
+  ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2,
+  Menu, ChevronLeft, Settings
 } from "lucide-react";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
@@ -20,29 +21,36 @@ import StoreEmployeesTab from "@/components/store-owner/StoreEmployeesTab";
 import { StoreTermosTab, StoreTutorialTab, StoreSuporteTab } from "@/components/store-owner/StoreInfoTabs";
 import StoreBranchesTab from "@/components/store-owner/StoreBranchesTab";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
+} from "@/components/ui/sheet";
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
 
-const MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
-  { key: "dashboard", label: "Painel Principal", icon: LayoutDashboard },
-  { key: "cupons", label: "Cupom", icon: Tag },
-  { key: "resgate", label: "Resgate de PIN", icon: QrCode },
-  { key: "perfil", label: "Meu Perfil", icon: User },
+const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
+  { key: "dashboard", label: "Início", icon: LayoutDashboard },
+  { key: "cupons", label: "Cupons", icon: Tag },
+  { key: "resgate", label: "Resgate", icon: QrCode },
   { key: "extrato", label: "Extrato", icon: FileText },
+];
+
+const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
+  { key: "perfil", label: "Meu Perfil", icon: User },
   { key: "funcionarios", label: "Funcionários", icon: Users },
-  { key: "termos", label: "Termos e Uso", icon: BookOpen },
   { key: "filiais", label: "Cidades", icon: Building2 },
+  { key: "termos", label: "Termos e Uso", icon: BookOpen },
   { key: "tutorial", label: "Tutorial", icon: HelpCircle },
   { key: "suporte", label: "Suporte", icon: HelpCircle },
 ];
 
 export default function StoreOwnerPanel() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
   const [showWizard, setShowWizard] = useState(false);
   const [editingOffer, setEditingOffer] = useState<any>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -61,10 +69,10 @@ export default function StoreOwnerPanel() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-5 py-8 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+      <div className="min-h-screen bg-background px-4 pt-6 pwa-safe-top space-y-4">
+        <Skeleton className="h-14 w-full rounded-2xl" />
+        <div className="grid grid-cols-2 gap-3">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
         </div>
       </div>
     );
@@ -74,46 +82,74 @@ export default function StoreOwnerPanel() {
     return <StoreEmptyState userId={user?.id} />;
   }
 
+  const isInBottomTabs = BOTTOM_TABS.some(t => t.key === activeTab);
+  const activeLabel = [...BOTTOM_TABS, ...MORE_MENU_ITEMS].find(t => t.key === activeTab)?.label || "";
+
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      {/* Sidebar */}
-      <aside className="w-64 bg-background border-r shrink-0 p-4 space-y-1">
-        <div className="flex items-center gap-3 mb-6 px-2">
-          <div className="h-10 w-10 rounded-lg overflow-hidden bg-primary/10 flex items-center justify-center">
-            {store.logo_url ? (
-              <img src={store.logo_url} className="h-full w-full object-cover" />
-            ) : (
-              <Store className="h-5 w-5 text-primary" />
-            )}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top header */}
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b pwa-safe-top">
+        <div className="flex items-center justify-between px-4 h-14">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-9 w-9 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+              {store.logo_url ? (
+                <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />
+              ) : (
+                <Store className="h-4 w-4 text-primary" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-sm truncate">{store.name}</p>
+              <Badge variant="outline" className="text-[9px] h-4">
+                {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
+              </Badge>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="font-bold text-sm truncate">{store.name}</p>
-            <Badge variant="outline" className="text-[10px]">
-              {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
-            </Badge>
-          </div>
+
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
+                <Menu className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] p-0">
+              <SheetHeader className="p-5 border-b">
+                <SheetTitle className="text-left text-sm">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="p-3 space-y-1">
+                {MORE_MENU_ITEMS.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => { setActiveTab(item.key); setMenuOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors ${
+                        isActive ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="border-t p-3 mt-auto">
+                <button
+                  onClick={async () => { await signOut(); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sair da conta
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
+      </header>
 
-        {MENU_ITEMS.map(item => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.key;
-          return (
-            <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          );
-        })}
-      </aside>
-
-      {/* Content */}
-      <main className="flex-1 p-8">
+      {/* Main content area */}
+      <main className="flex-1 overflow-auto px-4 pt-4 pb-24">
         {activeTab === "dashboard" && <StoreOwnerDashboard store={store} />}
         {activeTab === "cupons" && (
           showWizard ? (
@@ -140,14 +176,46 @@ export default function StoreOwnerPanel() {
         {activeTab === "filiais" && <StoreBranchesTab store={store} />}
         {activeTab === "tutorial" && <StoreTutorialTab />}
         {activeTab === "suporte" && <StoreSuporteTab />}
-        {!["dashboard", "cupons", "resgate", "perfil", "extrato", "funcionarios", "termos", "filiais", "tutorial", "suporte"].includes(activeTab) && (
-          <div className="text-center py-20 text-muted-foreground">
-            <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="font-semibold">Módulo "{MENU_ITEMS.find(m => m.key === activeTab)?.label}"</p>
-            <p className="text-sm mt-1">Em breve disponível</p>
-          </div>
-        )}
       </main>
+
+      {/* Bottom tab bar - PWA style */}
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-md border-t pwa-safe-bottom">
+        <div className="flex items-stretch h-16 max-w-lg mx-auto">
+          {BOTTOM_TABS.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+                )}
+                <Icon className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`} />
+                <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>{tab.label}</span>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+              !isInBottomTabs ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            {!isInBottomTabs && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+            )}
+            <Menu className={`h-5 w-5 ${!isInBottomTabs ? "stroke-[2.5]" : ""}`} />
+            <span className={`text-[10px] ${!isInBottomTabs ? "font-bold" : "font-medium"}`}>Mais</span>
+          </button>
+        </div>
+      </nav>
+
+      <ContextualHelpDrawer />
     </div>
   );
 }
@@ -168,7 +236,6 @@ function StoreOwnerDashboard({ store }: { store: any }) {
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
-      // Fetch all offers for this store
       const { data: offers } = await supabase
         .from("offers")
         .select("id, title, status, is_active, end_at, max_daily_redemptions")
@@ -176,7 +243,6 @@ function StoreOwnerDashboard({ store }: { store: any }) {
 
       const offerIds = (offers || []).map(o => o.id);
 
-      // Fetch redemptions filtered by period
       let redemptionQuery = supabase
         .from("redemptions")
         .select("id, status, purchase_value, created_at")
@@ -197,7 +263,6 @@ function StoreOwnerDashboard({ store }: { store: any }) {
       const active = (offers || []).filter(o => o.status === "ACTIVE" && o.is_active);
       const inactive = (offers || []).filter(o => !o.is_active || o.status === "EXPIRED");
 
-      // Offers expiring within 7 days
       const now = new Date();
       const in7d = new Date();
       in7d.setDate(now.getDate() + 7);
@@ -206,8 +271,6 @@ function StoreOwnerDashboard({ store }: { store: any }) {
         new Date(o.end_at) <= in7d && new Date(o.end_at) >= now
       );
 
-      // "Estourados": offers that reached max_daily_redemptions today
-      // Simplified: offers with max_daily_redemptions set
       const estourados = active.filter(o => o.max_daily_redemptions != null);
 
       setStats({
@@ -225,101 +288,100 @@ function StoreOwnerDashboard({ store }: { store: any }) {
   }, [store.id, period]);
 
   const kpis = [
-    { label: "Cupons Emitidos", value: stats.cuponsEmitidos, icon: Tag, color: "text-blue-600 bg-blue-50" },
-    { label: "Resgatados", value: stats.cuponsResgatados, icon: Check, color: "text-green-600 bg-green-50" },
-    { label: "Ativos", value: stats.cuponsAtivos, icon: Clock, color: "text-yellow-600 bg-yellow-50" },
-    { label: "Ganhos", value: `R$ ${stats.ganhos.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-600 bg-emerald-50" },
+    { label: "Emitidos", value: stats.cuponsEmitidos, icon: Tag, color: "text-blue-600 bg-blue-100/80" },
+    { label: "Resgatados", value: stats.cuponsResgatados, icon: Check, color: "text-green-600 bg-green-100/80" },
+    { label: "Ativos", value: stats.cuponsAtivos, icon: Clock, color: "text-amber-600 bg-amber-100/80" },
+    { label: "Ganhos", value: `R$ ${stats.ganhos.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-600 bg-emerald-100/80" },
   ];
 
   const periods = [
     { key: "today" as const, label: "Hoje" },
-    { key: "7d" as const, label: "7 dias" },
-    { key: "30d" as const, label: "30 dias" },
+    { key: "7d" as const, label: "7d" },
+    { key: "30d" as const, label: "30d" },
     { key: "all" as const, label: "Tudo" },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Painel Principal</h1>
-          <p className="text-sm text-muted-foreground">Visão geral do seu estabelecimento</p>
-        </div>
-        <div className="flex gap-1 bg-muted rounded-lg p-0.5">
-          {periods.map(p => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                period === p.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-xl font-bold">Painel Principal</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">Visão geral do seu estabelecimento</p>
+      </div>
+
+      {/* Period selector - scrollable pills */}
+      <div className="flex gap-1.5 bg-muted/60 rounded-xl p-1">
+        {periods.map(p => (
+          <button
+            key={p.key}
+            onClick={() => setPeriod(p.key)}
+            className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+              period === p.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        <div className="grid grid-cols-2 gap-3">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {kpis.map(kpi => {
               const Icon = kpi.icon;
               return (
-                <Card key={kpi.label} className="rounded-2xl">
-                  <CardContent className="p-5">
-                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center mb-3 ${kpi.color}`}>
-                      <Icon className="h-4 w-4" />
+                <Card key={kpi.label} className="rounded-2xl border-0 shadow-sm">
+                  <CardContent className="p-4">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.color}`}>
+                      <Icon className="h-3.5 w-3.5" />
                     </div>
-                    <p className="text-2xl font-bold">{kpi.value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
+                    <p className="text-xl font-bold tracking-tight">{kpi.value}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{kpi.label}</p>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
 
-          {/* Secondary stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="rounded-2xl">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <X className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground font-medium">Inativos / Expirados</span>
+          {/* Secondary stats row */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="rounded-2xl border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground font-medium">Inativos</span>
                 </div>
-                <p className="text-xl font-bold">{stats.cuponsInativos}</p>
+                <p className="text-lg font-bold">{stats.cuponsInativos}</p>
               </CardContent>
             </Card>
-            <Card className="rounded-2xl">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground font-medium">Com limite diário</span>
+            <Card className="rounded-2xl border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground font-medium">Com limite</span>
                 </div>
-                <p className="text-xl font-bold">{stats.cuponsEstourados}</p>
+                <p className="text-lg font-bold">{stats.cuponsEstourados}</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Expiring soon */}
           {stats.proximosVencer.length > 0 && (
-            <Card className="rounded-2xl border-yellow-200 bg-yellow-50/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 text-yellow-800">
-                  <Clock className="h-4 w-4" />
-                  Cupons próximos de vencer (7 dias)
+            <Card className="rounded-2xl border-amber-200 bg-amber-50/50 shadow-sm">
+              <CardHeader className="pb-2 px-4 pt-4">
+                <CardTitle className="text-xs flex items-center gap-2 text-amber-800">
+                  <Clock className="h-3.5 w-3.5" />
+                  Vencendo em 7 dias
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="px-4 pb-4 space-y-2">
                 {stats.proximosVencer.map(o => (
-                  <div key={o.id} className="flex items-center justify-between bg-white rounded-xl px-4 py-3">
-                    <span className="text-sm font-medium">{o.title}</span>
-                    <Badge variant="outline" className="text-yellow-700 border-yellow-300 text-[10px]">
-                      Expira {new Date(o.end_at).toLocaleDateString("pt-BR")}
+                  <div key={o.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2.5">
+                    <span className="text-xs font-medium truncate mr-2">{o.title}</span>
+                    <Badge variant="outline" className="text-amber-700 border-amber-300 text-[9px] shrink-0">
+                      {new Date(o.end_at).toLocaleDateString("pt-BR")}
                     </Badge>
                   </div>
                 ))}
@@ -361,54 +423,56 @@ function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateN
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Cupons</h1>
-          <p className="text-sm text-muted-foreground">Gerencie seus cupons e ofertas</p>
+          <h1 className="text-xl font-bold">Cupons</h1>
+          <p className="text-xs text-muted-foreground">Gerencie seus cupons</p>
         </div>
-        <Button onClick={onCreateNew} className="gap-2">
-          <Plus className="h-4 w-4" /> Criar Cupom
+        <Button onClick={onCreateNew} size="sm" className="gap-1.5 rounded-xl h-9">
+          <Plus className="h-3.5 w-3.5" /> Criar
         </Button>
       </div>
 
       {loading ? (
         <div className="space-y-3">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          {[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
         </div>
       ) : offers.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
+        <div className="text-center py-20 text-muted-foreground">
           <Tag className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="font-semibold">Nenhum cupom criado</p>
-          <p className="text-sm mt-1">Clique em "Criar Cupom" para começar</p>
+          <p className="font-semibold text-sm">Nenhum cupom criado</p>
+          <p className="text-xs mt-1">Toque em "Criar" para começar</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {offers.map((offer) => {
             const st = statusLabel(offer.status);
             const canEdit = ["DRAFT", "ACTIVE"].includes(offer.status) && (!offer.end_at || new Date(offer.end_at) > new Date());
             return (
-              <Card key={offer.id} className="rounded-xl">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-sm">{offer.title}</p>
-                    <div className="flex gap-2 mt-1">
-                      <Badge variant={st.variant} className="text-[10px]">{st.label}</Badge>
-                      {offer.coupon_category && <Badge variant="outline" className="text-[10px]">{offer.coupon_category}</Badge>}
-                      <span className="text-xs text-muted-foreground">
-                        R$ {offer.value_rescue?.toFixed(2)} | mín. R$ {offer.min_purchase?.toFixed(2)}
+              <Card key={offer.id} className="rounded-2xl border-0 shadow-sm active:scale-[0.98] transition-transform">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm truncate">{offer.title}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        <Badge variant={st.variant} className="text-[9px] h-5">{st.label}</Badge>
+                        {offer.coupon_category && <Badge variant="outline" className="text-[9px] h-5">{offer.coupon_category}</Badge>}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        R$ {offer.value_rescue?.toFixed(2)} · mín. R$ {offer.min_purchase?.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {canEdit && (
+                        <Button size="sm" variant="outline" onClick={() => onEdit(offer)} className="h-7 text-xs rounded-lg">
+                          Editar
+                        </Button>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(offer.created_at).toLocaleDateString("pt-BR")}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {canEdit && (
-                      <Button size="sm" variant="outline" onClick={() => onEdit(offer)}>
-                        Editar
-                      </Button>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(offer.created_at).toLocaleDateString("pt-BR")}
-                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -453,9 +517,8 @@ function StoreEmptyState({ userId }: { userId?: string }) {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-5 pwa-safe-top pwa-safe-bottom">
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
         <div className="text-center space-y-3">
           <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
             <Store className="h-10 w-10 text-primary" />
@@ -466,11 +529,10 @@ function StoreEmptyState({ userId }: { userId?: string }) {
           </p>
         </div>
 
-        {/* Pending stores list */}
         {loading ? (
           <div className="space-y-3">
-            <Skeleton className="h-20 rounded-xl" />
-            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-2xl" />
+            <Skeleton className="h-20 rounded-2xl" />
           </div>
         ) : pendingStores.length > 0 ? (
           <div className="space-y-3">
@@ -481,15 +543,15 @@ function StoreEmptyState({ userId }: { userId?: string }) {
               const cfg = statusConfig[store.approval_status] || statusConfig.DRAFT;
               const Icon = cfg.icon;
               return (
-                <Card key={store.id} className="rounded-xl border">
+                <Card key={store.id} className="rounded-2xl border shadow-sm">
                   <CardContent className="p-4 flex items-center gap-4">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center bg-muted ${cfg.color}`}>
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-muted ${cfg.color}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate">{store.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[9px] h-4">
                           {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
                         </Badge>
                         <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
@@ -504,7 +566,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
             })}
 
             {pendingStores.some(s => s.approval_status === "PENDING_APPROVAL") && (
-              <Card className="rounded-xl border-amber-200 bg-amber-50/50">
+              <Card className="rounded-2xl border-amber-200 bg-amber-50/50">
                 <CardContent className="p-4 flex gap-3">
                   <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <div>
@@ -518,7 +580,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
             )}
           </div>
         ) : (
-          <Card className="rounded-xl">
+          <Card className="rounded-2xl">
             <CardContent className="p-6 text-center space-y-3">
               <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40" />
               <div>
@@ -531,10 +593,9 @@ function StoreEmptyState({ userId }: { userId?: string }) {
           </Card>
         )}
 
-        {/* Actions */}
         <div className="space-y-3">
           <Button
-            className="w-full gap-2"
+            className="w-full gap-2 rounded-2xl h-12"
             size="lg"
             onClick={() => navigate("/register-store")}
           >
@@ -545,7 +606,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
           <div className="flex gap-3">
             <Button
               variant="outline"
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 rounded-xl"
               onClick={() => {
                 setLoading(true);
                 window.location.reload();
@@ -556,7 +617,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
             </Button>
             <Button
               variant="ghost"
-              className="flex-1 gap-2 text-muted-foreground"
+              className="flex-1 gap-2 text-muted-foreground rounded-xl"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
