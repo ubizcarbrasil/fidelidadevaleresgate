@@ -51,7 +51,7 @@ function generateTerms(data: StoreVoucherData): string {
   }
 
   text += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nℹ️  INFORMAÇÕES DO CUPOM\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  text += `• Aplicação: ${data.coupon_type === "STORE" ? "Toda Loja" : "Produto Específico"}\n`;
+  text += `• Aplicação: ${data.coupon_type === "STORE" ? "Todo Estabelecimento" : "Produto Específico"}\n`;
   text += `• Tipo de desconto: ${isPercent ? "Percentual (%)" : "Valor Fixo (R$)"}\n`;
   if (data.validity_start) text += `• Data de liberação: ${new Date(data.validity_start).toLocaleDateString("pt-BR")}\n`;
   if (data.validity_end) text += `• Data de expiração: ${new Date(data.validity_end).toLocaleDateString("pt-BR")}\n`;
@@ -66,7 +66,7 @@ export default function StepTermsAccept({ data, update }: Props) {
 
   return (
     <div className="space-y-4">
-      <Label className="text-base font-semibold">Termo de Aceite do Lojista</Label>
+      <Label className="text-base font-semibold">Termo de Aceite do Parceiro</Label>
       <p className="text-sm text-muted-foreground">Revise os termos gerados automaticamente com base nas configurações do cupom.</p>
 
       <div className="p-4 bg-muted/50 rounded-lg border max-h-[350px] overflow-y-auto">

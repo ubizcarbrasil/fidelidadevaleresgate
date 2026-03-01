@@ -158,7 +158,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         <HomeSectionsRenderer />
       </motion.div>
 
-      {/* Lojas Emissoras Section */}
+      {/* Parceiros Emissores Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

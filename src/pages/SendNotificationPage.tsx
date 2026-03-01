@@ -73,14 +73,14 @@ export default function SendNotificationPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os clientes</SelectItem>
-                <SelectItem value="branch">Por filial</SelectItem>
+                <SelectItem value="branch">Por cidade</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {scope === "branch" && (
             <div className="space-y-2">
-              <Label>Filial</Label>
+              <Label>Cidade</Label>
               <Select value={branchId} onValueChange={setBranchId}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 
 const items = [
   { title: "Painel Principal", url: "/", icon: LayoutDashboard },
-  { title: "Lojas", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
+  { title: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
   { title: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
   { title: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
   { title: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
@@ -45,14 +45,14 @@ export function BranchSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Administrador da Filial</span>
+              <span className="text-xs text-sidebar-foreground/60">Administrador da Cidade</span>
             </div>
           )}
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Gestão da Filial</SidebarGroupLabel>
+          <SidebarGroupLabel>Gestão da Cidade</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleItems.map((item) => (
