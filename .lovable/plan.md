@@ -1,48 +1,96 @@
 
 
-## Plano: Cadastro inline em carrossel no modal de resgate
+## Plano: Página "Meus Resgates" no App do Cliente
 
-### Contexto
-Quando o usuário **não autenticado** clica em "Resgatar agora", o modal atual mostra apenas CPF + Confirmar. O pedido é transformar esse modal em um fluxo de cadastro completo em formato carrossel (uma etapa por vez), mantendo o comportamento atual para usuários já logados.
+### O que será feito
 
-### Fluxo do carrossel (6 etapas)
+**1. Adicionar tab "Meus Resgates" no menu inferior**
+- Novo tab entre "Ofertas" e "Carteira" com ícone de ticket (`Ticket`)
+- Tab type expandido: `"home" | "offers" | "redemptions" | "wallet" | "profile"`
+
+**2. Criar página `CustomerRedemptionsPage`** (novo arquivo)
+
+Replica fielmente o layout das referências:
 
 ```text
-┌─────┐   ┌──────┐   ┌───────┐   ┌──────────┐   ┌─────┐   ┌───────┐
-│ CPF │ → │ Nome │ → │ Email │ → │ Telefone │ → │ OTP │ → │ Senha │
-└─────┘   └──────┘   └───────┘   └──────────┘   └─────┘   └───────┘
+┌──────────────────────────────────┐
+│  ← Meus Resgates                │
+│                                  │
+│  ┌ Saldo disponível   R$XXX,XX ┐│
+│  └─────────────────────────────┘│
+│                                  │
+│  🔍 Buscar por código ou loja... │
+│                                  │
+│  [Todos 12] [Pendentes 8] [Usados 3] [Expirados 1] │
+│                                  │
+│  ── RESGATE ──────── EMITIDO ── │
+│  #PED260301...                   │
+│  [logo] Nome da Loja   PRODUTO  │
+│        R$ 200,00                 │
+│  ┌ Detalhes do Produto ────────┐│
+│  │ Valor: R$ 200,00            ││
+│  │ Crédito: 20% = R$ 40,00    ││
+│  │ Validade: 30 dias           ││
+│  │ Não cumulativa              ││
+│  │ Resgate via: endereço...    ││
+│  │ WhatsApp: (22)...           ││
+│  │ Site: https://...           ││
+│  └─────────────────────────────┘│
+│                                  │
+│  CRÉDITO DO PRODUTO   R$40,00   │
+│  Resgate:    01/03/2026, 14:44  │
+│  Expira:     31/03/2026, 14:44  │
+│                                  │
+│  [ 🔲 VER QR CODE E PIN ]       │
+│                                  │
+│  ── próximo card... ──           │
+└──────────────────────────────────┘
 ```
 
-- Cada etapa ocupa a mesma área do modal, com animação slide horizontal (framer-motion)
-- Botão "Próximo" avança, indicador de progresso (dots) no topo
-- Botão voltar retorna à etapa anterior
+**3. Criar overlay de detalhes do resgate** (ao clicar "VER QR CODE E PIN")
 
-### Lógica por etapa
+Página full-screen com:
+- Imagem da oferta (ou logo da loja como fallback)
+- Título (ex: "15% OFF") + nome da loja
+- 3 colunas: Crédito | Validade | Status
+- Seção "COPIE SEU PIN" com caixa tracejada + botão Copiar
+- Seção "COMO RESGATAR" com botões dinâmicos:
+  - Ver Localização (Google Maps via `stores.address`)
+  - Resgatar no WhatsApp (`wa.me/{stores.whatsapp}`)
+  - Resgatar no Site (`stores.site_url`)
+  - Ver Instagram (`instagram.com/{stores.instagram}`)
+- Seção "REGRAS DE RESGATE" com ícones (Validade, Cumulativo, Local)
+- Seção "DETALHES DO PEDIDO" (código, valor, crédito, pontos, data)
+- Botão "VOLTAR PARA HOME"
 
-1. **CPF** — input formatado (já existe). Validação: 11 dígitos
-2. **Nome** — input text. Validação: não vazio
-3. **E-mail** — input email. Validação: formato válido
-4. **Telefone** — input tel com máscara (XX) XXXXX-XXXX. Validação: 10-11 dígitos
-5. **OTP** — ao avançar do telefone, chama `supabase.auth.signUp()` com os dados coletados (auto_confirm está ativo). Depois envia OTP via `supabase.auth.signInWithOtp()` pelo e-mail para verificação. O usuário digita o código de 6 dígitos
-6. **Criar Senha** — input password (min 6 chars). Ao confirmar, chama `supabase.auth.updateUser({ password })` e em seguida executa o resgate automaticamente
+### Detalhes técnicos
 
-### Comportamento para usuário já logado
-Nada muda — continua mostrando apenas CPF + Confirmar como hoje.
+**Arquivos modificados:**
+- `src/components/customer/CustomerLayout.tsx` — adicionar tab "Meus Resgates" com ícone `Ticket`, importar nova página, expandir tipo `Tab`
 
-### Alterações técnicas
+**Arquivos criados:**
+- `src/pages/customer/CustomerRedemptionsPage.tsx` — lista de resgates com filtros, busca, cards detalhados
+- `src/pages/customer/CustomerRedemptionDetailPage.tsx` — overlay com PIN, QR code, ações da loja, regras
 
-#### `CustomerOfferDetailPage.tsx`
-- Adicionar estados: `signupStep` (0-5), `signupData` (cpf, name, email, phone, otp, password)
-- No modal, se `!customer`: renderizar o carrossel de cadastro em vez do CPF simples
-- Se `customer`: manter o fluxo atual (CPF + Confirmar)
-- Cada step usa `AnimatePresence` + `motion.div` com `key={step}` para animação de slide
-- Após senha criada e login bem-sucedido, o `CustomerContext` auto-cria o registro do customer, e o resgate é executado automaticamente
-- Indicador de progresso: 6 dots no topo do modal
+**Query principal (lista):**
+```sql
+SELECT r.*, offers(title, image_url, value_rescue, discount_percent, 
+  coupon_type, redemption_type, terms_text, min_purchase, start_at, end_at,
+  stores(name, logo_url, address, whatsapp, site_url, instagram)),
+  branches(name)
+FROM redemptions r
+WHERE r.customer_id = {customer.id}
+ORDER BY r.created_at DESC
+```
 
-#### Fluxo de auth no step 5 (OTP) e 6 (Senha)
-- Step 4→5: `supabase.auth.signUp({ email, password: temporária })` + `supabase.auth.signInWithOtp({ email })` para enviar código
-- Step 5→6: `supabase.auth.verifyOtp({ email, token, type: 'email' })` para verificar
-- Step 6 final: `supabase.auth.updateUser({ password })` com a senha definitiva, salva metadata (name, phone), aguarda `customer` do contexto e executa `handleRedeem` automaticamente
+**Filtros por status:** Todos | Pendentes (PENDING) | Usados (USED) | Expirados (EXPIRED) com contadores
 
-**Simplificação**: como `auto_confirm_email` está ativo, podemos simplificar — fazer `signUp` com email+senha definitiva no passo 6, pular OTP real, e prosseguir direto ao resgate. Porém o usuário pediu OTP explicitamente, então manteremos o fluxo com verificação por e-mail.
+**Cores e estilo (fiel às referências):**
+- Header com gradiente verde (primary)
+- Card de saldo com fundo primary e texto branco/amarelo
+- Badges amarelas "EMITIDO" / "PRODUTO"
+- Card de detalhes com borda verde, ícones verdes em círculos
+- Botão "VER QR CODE E PIN" amarelo, arredondado, bold
+- Botões de ação: amarelo (Localização), verde (WhatsApp), preto (Site)
+- Textos de valor em verde/primary, datas de expiração em vermelho
 
