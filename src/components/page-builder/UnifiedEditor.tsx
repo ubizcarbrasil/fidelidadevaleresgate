@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import {
   ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Save, Copy,
   Settings2, Loader2, Layers, Link2, Type, MousePointer, Image as ImageIcon,
   Minus, Square, Smartphone, RefreshCw, ChevronUp, ChevronDown,
+  LayoutList, SlidersHorizontal, MonitorSmartphone,
 } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { PageElement, PageElementStyle, SectionRow, UnifiedBlock } from "./types";
@@ -42,12 +44,16 @@ interface Props {
 
 export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   const { brand } = useBrand();
+  const isMobile = useIsMobile();
   const [elements, setElements] = useState<PageElement[]>(isHomePage ? [] : ((page.elements_json as PageElement[]) || []));
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Mobile tab state
+  const [mobileTab, setMobileTab] = useState<"blocks" | "props" | "preview">("blocks");
 
   // Sub-editors
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
@@ -126,6 +132,13 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     }
   }, [selectedBlockId]);
 
+  // Auto-switch to props tab on mobile when selecting a block
+  useEffect(() => {
+    if (isMobile && selectedBlockId) {
+      setMobileTab("props");
+    }
+  }, [selectedBlockId, isMobile]);
+
   // Static element operations
   const addElement = (type: PageElement["type"]) => {
     const el: PageElement = {
@@ -157,6 +170,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   const removeElement = (id: string) => {
     setElements(prev => prev.filter(el => el.id !== id));
     setSelectedBlockId(null);
+    if (isMobile) setMobileTab("blocks");
   };
 
   const duplicateElement = (id: string) => {
@@ -171,8 +185,10 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
 
   // Dynamic section operations
   const handleAddSection = async () => {
-    if (!brand || !newSectionType) return;
+    if (!brand && !page.brand_id) return;
+    if (!newSectionType) return;
     setAddingSection(true);
+    const brandId = brand?.id || page.brand_id;
     const { data: templates } = await supabase
       .from("section_templates")
       .select("id, key")
@@ -185,7 +201,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     }
     const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
     const insertData: any = {
-      brand_id: brand.id,
+      brand_id: brandId,
       template_id: templates[0].id,
       title: newSectionTitle.trim() || null,
       order_index: maxOrder,
@@ -218,7 +234,10 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     if (!confirm("Excluir esta sessão?")) return;
     await supabase.from("brand_sections").delete().eq("id", id);
     toast({ title: "Sessão removida" });
-    if (selectedBlockId === id) setSelectedBlockId(null);
+    if (selectedBlockId === id) {
+      setSelectedBlockId(null);
+      if (isMobile) setMobileTab("blocks");
+    }
     fetchSections();
   };
 
@@ -228,7 +247,8 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   };
 
   const handleDuplicateSection = async (section: SectionRow) => {
-    if (!brand) return;
+    const brandId = brand?.id || page.brand_id;
+    if (!brandId) return;
     const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
     const { id, section_templates, ...rest } = section as any;
     await supabase.from("brand_sections").insert({
@@ -240,16 +260,13 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     fetchSections();
   };
 
-  // Reorder section (move up/down)
   const handleMoveSection = async (sectionId: string, direction: -1 | 1) => {
     const idx = sections.findIndex(s => s.id === sectionId);
     if (idx === -1) return;
     const newIdx = idx + direction;
     if (newIdx < 0 || newIdx >= sections.length) return;
-
     const a = sections[idx];
     const b = sections[newIdx];
-    // Swap order_index values
     await Promise.all([
       supabase.from("brand_sections").update({ order_index: b.order_index }).eq("id", a.id),
       supabase.from("brand_sections").update({ order_index: a.order_index }).eq("id", b.id),
@@ -257,7 +274,6 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     fetchSections();
   };
 
-  // Save inline section edits
   const handleSaveInline = async (sectionId: string) => {
     setSavingInline(true);
     const { error } = await supabase.from("brand_sections").update({
@@ -354,216 +370,178 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   const selectedElement = selectedBlock?.blockType === "static" ? selectedBlock.element : null;
   const selectedSection = selectedBlock?.blockType === "dynamic" ? selectedBlock.section : null;
 
-  return (
-    <div className="flex flex-col h-[calc(100vh-64px)]">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-3 border-b bg-card shrink-0">
-        <Button size="icon" variant="ghost" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          {isHomePage && <Smartphone className="h-4 w-4 text-primary shrink-0" />}
-          <div>
-            <h2 className="font-bold text-sm truncate">{isHomePage ? "Tela Inicial (Home)" : page.title}</h2>
-            <p className="text-[10px] text-muted-foreground font-mono">
-              {isHomePage ? "Sessões dinâmicas da home" : `/p/${page.slug}`}
-            </p>
-          </div>
+  // --- Shared panel content ---
+  const blockListContent = (
+    <div className="flex flex-col h-full bg-muted/30">
+      {/* Add buttons */}
+      <div className="p-3 border-b space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground">Adicionar bloco</p>
+        <div className="flex gap-1.5">
+          {!isHomePage && (
+            <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddStatic(true)}>
+              <Type className="h-3 w-3 mr-1" /> Elemento
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddDynamic(true)}>
+            <Layers className="h-3 w-3 mr-1" /> Sessão
+          </Button>
         </div>
-        {!isHomePage && (
-          <Button size="sm" variant="outline" onClick={() => setShowSettings(true)}>
-            <Settings2 className="h-3.5 w-3.5 mr-1" /> Config
-          </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={fetchSections}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1" /> Atualizar
-        </Button>
-        {!isHomePage && (
-          <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
-            Salvar
-          </Button>
-        )}
       </div>
 
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Left panel: Block list */}
-        <ResizablePanel defaultSize={25} minSize={18} maxSize={40}>
-          <div className="flex flex-col h-full bg-muted/30">
-            {/* Add buttons */}
-            <div className="p-3 border-b space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Adicionar bloco</p>
-              <div className="flex gap-1.5">
-                {!isHomePage && (
-                  <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddStatic(true)}>
-                    <Type className="h-3 w-3 mr-1" /> Elemento
-                  </Button>
-                )}
-                <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowAddDynamic(true)}>
-                  <Layers className="h-3 w-3 mr-1" /> Sessão
-                </Button>
-              </div>
-            </div>
-
-            {/* Block list */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {loading && (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      {/* Block list */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {loading && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {!loading && blocks.length === 0 && (
+          <p className="text-xs text-center text-muted-foreground py-8">
+            {isHomePage ? "Adicione sessões acima" : "Adicione elementos ou sessões acima"}
+          </p>
+        )}
+        {!loading && blocks.map((block, blockIdx) => {
+          if (block.blockType === "static") {
+            const elIdx = elements.findIndex(el => el.id === block.id);
+            return (
+              <div
+                key={block.id}
+                draggable={!isMobile}
+                onDragStart={() => handleDragStart(elIdx)}
+                onDragOver={(e) => handleDragOver(e, elIdx)}
+                onDragEnd={handleDragEnd}
+                onClick={() => setSelectedBlockId(block.id)}
+                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${
+                  selectedBlockId === block.id ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"
+                }`}
+              >
+                {!isMobile && <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />}
+                <div className="flex-1 min-w-0">
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-blue-50 text-blue-600 font-mono mr-1">
+                    {ELEMENT_TYPE_LABELS[block.element.type]}
+                  </span>
+                  <span className="text-xs truncate">{block.element.content || "(vazio)"}</span>
                 </div>
-              )}
-              {!loading && blocks.length === 0 && (
-                <p className="text-xs text-center text-muted-foreground py-8">
-                  {isHomePage ? "Adicione sessões acima" : "Adicione elementos ou sessões acima"}
-                </p>
-              )}
-              {!loading && blocks.map((block, blockIdx) => {
-                if (block.blockType === "static") {
-                  const elIdx = elements.findIndex(el => el.id === block.id);
-                  return (
-                    <div
-                      key={block.id}
-                      draggable
-                      onDragStart={() => handleDragStart(elIdx)}
-                      onDragOver={(e) => handleDragOver(e, elIdx)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => setSelectedBlockId(block.id)}
-                      className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${
-                        selectedBlockId === block.id ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"
-                      }`}
-                    >
-                      <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[10px] px-1 py-0.5 rounded bg-blue-50 text-blue-600 font-mono mr-1">
-                          {ELEMENT_TYPE_LABELS[block.element.type]}
-                        </span>
-                        <span className="text-xs truncate">{block.element.content || "(vazio)"}</span>
-                      </div>
-                      <div className="flex gap-0.5 shrink-0">
-                        <button onClick={(e) => { e.stopPropagation(); duplicateElement(block.id); }} className="text-muted-foreground hover:text-foreground">
-                          <Copy className="h-3 w-3" />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); removeElement(block.id); }} className="text-muted-foreground hover:text-destructive">
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-                // Dynamic block
-                const secIdx = sections.findIndex(s => s.id === block.id);
-                return (
-                  <div
-                    key={block.id}
-                    onClick={() => setSelectedBlockId(block.id)}
-                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${
-                      !block.section.is_enabled ? "opacity-50" : ""
-                    } ${selectedBlockId === block.id ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"}`}
-                  >
-                    <Layers className="h-3 w-3 text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary font-mono mr-1">
-                        {block.section.section_templates?.key || "SESSÃO"}
-                      </span>
-                      <span className="text-xs truncate block mt-0.5">{block.section.title || "Sem título"}</span>
-                    </div>
-                    <div className="flex gap-0.5 shrink-0">
-                      {/* Move up/down */}
-                      {secIdx > 0 && (
-                        <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, -1); }} className="text-muted-foreground hover:text-foreground" title="Mover acima">
-                          <ChevronUp className="h-3 w-3" />
-                        </button>
-                      )}
-                      {secIdx < sections.length - 1 && (
-                        <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, 1); }} className="text-muted-foreground hover:text-foreground" title="Mover abaixo">
-                          <ChevronDown className="h-3 w-3" />
-                        </button>
-                      )}
-                      <button onClick={(e) => { e.stopPropagation(); handleDuplicateSection(block.section); }} className="text-muted-foreground hover:text-foreground" title="Duplicar">
-                        <Copy className="h-3 w-3" />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleToggleSection(block.section); }} className="text-muted-foreground hover:text-foreground">
-                        {block.section.is_enabled ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteSection(block.id); }} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </ResizablePanel>
-
-        <ResizableHandle withHandle />
-
-        {/* Middle panel: Properties */}
-        <ResizablePanel defaultSize={30} minSize={22}>
-          <div className="h-full overflow-y-auto p-4">
-            {!selectedBlock ? (
-              <div className="text-center py-16 text-muted-foreground text-sm">
-                <Layers className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                <p className="font-medium">Selecione um bloco</p>
-                <p className="text-xs mt-1">Clique em um bloco na lista ou no preview para editar</p>
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={(e) => { e.stopPropagation(); duplicateElement(block.id); }} className="text-muted-foreground hover:text-foreground p-1">
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); removeElement(block.id); }} className="text-muted-foreground hover:text-destructive p-1">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-            ) : selectedElement ? (
-              <StaticPropertiesPanel
-                element={selectedElement}
-                onUpdate={(patch) => updateElement(selectedElement.id, patch)}
-                onUpdateStyle={(patch) => updateStyle(selectedElement.id, patch)}
-                onRemove={() => removeElement(selectedElement.id)}
-              />
-            ) : selectedSection ? (
-              <InlineSectionEditor
-                section={selectedSection}
-                brandId={brand?.id || page.brand_id}
-                title={inlineTitle}
-                subtitle={inlineSubtitle}
-                ctaText={inlineCtaText}
-                displayMode={inlineDisplayMode}
-                filterMode={inlineFilterMode}
-                couponTypeFilter={inlineCouponTypeFilter}
-                columnsCount={inlineColumnsCount}
-                onTitleChange={setInlineTitle}
-                onSubtitleChange={setInlineSubtitle}
-                onCtaTextChange={setInlineCtaText}
-                onDisplayModeChange={setInlineDisplayMode}
-                onFilterModeChange={setInlineFilterMode}
-                onCouponTypeFilterChange={setInlineCouponTypeFilter}
-                onColumnsCountChange={setInlineColumnsCount}
-                onSave={() => handleSaveInline(selectedSection.id)}
-                saving={savingInline}
-                onToggle={() => handleToggleSection(selectedSection)}
-                onDelete={() => handleDeleteSection(selectedSection.id)}
-                onDuplicate={() => handleDuplicateSection(selectedSection)}
-                onEditConfig={() => setEditingSection(selectedSection)}
-                onEditLinks={() => setEditingManualLinks(selectedSection)}
-                isManualLinks={isManualLinksType(selectedSection)}
-                isBannerCarousel={isBannerCarouselType(selectedSection)}
-              />
-            ) : null}
-          </div>
-        </ResizablePanel>
+            );
+          }
+          // Dynamic block
+          const secIdx = sections.findIndex(s => s.id === block.id);
+          return (
+            <div
+              key={block.id}
+              onClick={() => setSelectedBlockId(block.id)}
+              className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${
+                !block.section.is_enabled ? "opacity-50" : ""
+              } ${selectedBlockId === block.id ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"}`}
+            >
+              <Layers className="h-3 w-3 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary font-mono mr-1">
+                  {block.section.section_templates?.key || "SESSÃO"}
+                </span>
+                <span className="text-xs truncate block mt-0.5">{block.section.title || "Sem título"}</span>
+              </div>
+              <div className="flex gap-0.5 shrink-0">
+                {secIdx > 0 && (
+                  <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, -1); }} className="text-muted-foreground hover:text-foreground p-1" title="Mover acima">
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {secIdx < sections.length - 1 && (
+                  <button onClick={(e) => { e.stopPropagation(); handleMoveSection(block.id, 1); }} className="text-muted-foreground hover:text-foreground p-1" title="Mover abaixo">
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button onClick={(e) => { e.stopPropagation(); handleToggleSection(block.section); }} className="text-muted-foreground hover:text-foreground p-1">
+                  {block.section.is_enabled ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteSection(block.id); }} className="text-muted-foreground hover:text-destructive p-1">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-        <ResizableHandle withHandle />
+  const propertiesContent = (
+    <div className="h-full overflow-y-auto p-4">
+      {!selectedBlock ? (
+        <div className="text-center py-16 text-muted-foreground text-sm">
+          <Layers className="h-8 w-8 mx-auto mb-3 opacity-30" />
+          <p className="font-medium">Selecione um bloco</p>
+          <p className="text-xs mt-1">Clique em um bloco na lista{!isMobile ? " ou no preview" : ""} para editar</p>
+        </div>
+      ) : selectedElement ? (
+        <StaticPropertiesPanel
+          element={selectedElement}
+          onUpdate={(patch) => updateElement(selectedElement.id, patch)}
+          onUpdateStyle={(patch) => updateStyle(selectedElement.id, patch)}
+          onRemove={() => removeElement(selectedElement.id)}
+        />
+      ) : selectedSection ? (
+        <InlineSectionEditor
+          section={selectedSection}
+          brandId={brand?.id || page.brand_id}
+          title={inlineTitle}
+          subtitle={inlineSubtitle}
+          ctaText={inlineCtaText}
+          displayMode={inlineDisplayMode}
+          filterMode={inlineFilterMode}
+          couponTypeFilter={inlineCouponTypeFilter}
+          columnsCount={inlineColumnsCount}
+          onTitleChange={setInlineTitle}
+          onSubtitleChange={setInlineSubtitle}
+          onCtaTextChange={setInlineCtaText}
+          onDisplayModeChange={setInlineDisplayMode}
+          onFilterModeChange={setInlineFilterMode}
+          onCouponTypeFilterChange={setInlineCouponTypeFilter}
+          onColumnsCountChange={setInlineColumnsCount}
+          onSave={() => handleSaveInline(selectedSection.id)}
+          saving={savingInline}
+          onToggle={() => handleToggleSection(selectedSection)}
+          onDelete={() => handleDeleteSection(selectedSection.id)}
+          onDuplicate={() => handleDuplicateSection(selectedSection)}
+          onEditConfig={() => setEditingSection(selectedSection)}
+          onEditLinks={() => setEditingManualLinks(selectedSection)}
+          isManualLinks={isManualLinksType(selectedSection)}
+          isBannerCarousel={isBannerCarouselType(selectedSection)}
+        />
+      ) : null}
+    </div>
+  );
 
-        {/* Right panel: Live Preview */}
-        <ResizablePanel defaultSize={45} minSize={30}>
-          <div className="h-full overflow-y-auto bg-gradient-to-b from-muted/50 to-muted/20">
-            <LivePreview
-              blocks={blocks}
-              pageTitle={pageSettings.title}
-              pageSubtitle={pageSettings.subtitle}
-              searchEnabled={pageSettings.search_enabled}
-              selectedBlockId={selectedBlockId}
-              onSelectBlock={setSelectedBlockId}
-              isHomePage={isHomePage}
-            />
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+  const previewContent = (
+    <div className="h-full overflow-y-auto bg-gradient-to-b from-muted/50 to-muted/20">
+      <LivePreview
+        blocks={blocks}
+        pageTitle={pageSettings.title}
+        pageSubtitle={pageSettings.subtitle}
+        searchEnabled={pageSettings.search_enabled}
+        selectedBlockId={selectedBlockId}
+        onSelectBlock={(id) => {
+          setSelectedBlockId(id);
+          if (isMobile) setMobileTab("props");
+        }}
+        isHomePage={isHomePage}
+      />
+    </div>
+  );
 
+  // --- Shared dialogs ---
+  const dialogs = (
+    <>
       {/* Add Static Element Dialog */}
       {!isHomePage && (
         <Dialog open={showAddStatic} onOpenChange={setShowAddStatic}>
@@ -662,6 +640,131 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
           </DialogContent>
         </Dialog>
       )}
+    </>
+  );
+
+  // ========= MOBILE LAYOUT =========
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-[100dvh]">
+        {/* Compact header */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b bg-card shrink-0 pwa-safe-top">
+          <Button size="icon" variant="ghost" onClick={onBack} className="h-8 w-8">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-bold text-xs truncate">
+              {isHomePage ? "Home" : page.title}
+            </h2>
+          </div>
+          <div className="flex gap-1">
+            {!isHomePage && (
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setShowSettings(true)}>
+                <Settings2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={fetchSections}>
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+            {!isHomePage && (
+              <Button size="sm" className="h-8 text-xs px-2" onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-hidden">
+          {mobileTab === "blocks" && blockListContent}
+          {mobileTab === "props" && propertiesContent}
+          {mobileTab === "preview" && previewContent}
+        </div>
+
+        {/* Bottom tab bar */}
+        <div className="flex border-t bg-card shrink-0 pwa-safe-bottom">
+          {([
+            { key: "blocks" as const, label: "Blocos", icon: LayoutList },
+            { key: "props" as const, label: "Editar", icon: SlidersHorizontal },
+            { key: "preview" as const, label: "Preview", icon: MonitorSmartphone },
+          ]).map(tab => {
+            const Icon = tab.icon;
+            const isActive = mobileTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setMobileTab(tab.key)}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} />
+                <span className="text-[10px] font-semibold">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {dialogs}
+      </div>
+    );
+  }
+
+  // ========= DESKTOP LAYOUT =========
+  return (
+    <div className="flex flex-col h-[calc(100vh-64px)]">
+      {/* Header */}
+      <div className="flex items-center gap-3 p-3 border-b bg-card shrink-0">
+        <Button size="icon" variant="ghost" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          {isHomePage && <Smartphone className="h-4 w-4 text-primary shrink-0" />}
+          <div>
+            <h2 className="font-bold text-sm truncate">{isHomePage ? "Tela Inicial (Home)" : page.title}</h2>
+            <p className="text-[10px] text-muted-foreground font-mono">
+              {isHomePage ? "Sessões dinâmicas da home" : `/p/${page.slug}`}
+            </p>
+          </div>
+        </div>
+        {!isHomePage && (
+          <Button size="sm" variant="outline" onClick={() => setShowSettings(true)}>
+            <Settings2 className="h-3.5 w-3.5 mr-1" /> Config
+          </Button>
+        )}
+        <Button size="sm" variant="outline" onClick={fetchSections}>
+          <RefreshCw className="h-3.5 w-3.5 mr-1" /> Atualizar
+        </Button>
+        {!isHomePage && (
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+            Salvar
+          </Button>
+        )}
+      </div>
+
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
+        {/* Left panel: Block list */}
+        <ResizablePanel defaultSize={25} minSize={18} maxSize={40}>
+          {blockListContent}
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* Middle panel: Properties */}
+        <ResizablePanel defaultSize={30} minSize={22}>
+          {propertiesContent}
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* Right panel: Live Preview */}
+        <ResizablePanel defaultSize={45} minSize={30}>
+          {previewContent}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {dialogs}
     </div>
   );
 }
@@ -854,7 +957,6 @@ function StaticPropertiesPanel({
         </div>
       )}
 
-      {/* Image upload for banner */}
       {element.type === "banner" && (
         <StorageImageUpload
           value={element.imageUrl || ""}
@@ -865,7 +967,6 @@ function StaticPropertiesPanel({
         />
       )}
 
-      {/* Image upload for icon */}
       {element.type === "icon" && (
         <StorageImageUpload
           value={element.imageUrl || ""}
