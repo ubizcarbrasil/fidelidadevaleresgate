@@ -227,7 +227,7 @@ export default function ElementEditor({ page, onSave, onBack }: Props) {
                       <SelectContent>
                         <SelectItem value="normal">Normal</SelectItem>
                         <SelectItem value="bold">Negrito</SelectItem>
-                        <SelectItem value="800">Extra Bold</SelectItem>
+                        <SelectItem value="800">Extra Negrito</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -246,11 +246,11 @@ export default function ElementEditor({ page, onSave, onBack }: Props) {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs">Border Radius</Label>
+                    <Label className="text-xs">Arredondamento</Label>
                     <Input value={selected.style.borderRadius || ""} onChange={(e) => updateStyle(selectedIdx!, { borderRadius: e.target.value })} placeholder="8px" />
                   </div>
                   <div>
-                    <Label className="text-xs">Padding</Label>
+                    <Label className="text-xs">Espaçamento Interno</Label>
                     <Input value={selected.style.padding || ""} onChange={(e) => updateStyle(selectedIdx!, { padding: e.target.value })} placeholder="12px" />
                   </div>
                   <div>

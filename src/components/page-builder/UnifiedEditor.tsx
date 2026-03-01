@@ -999,7 +999,7 @@ function StaticPropertiesPanel({
               <SelectContent>
                 <SelectItem value="normal">Normal</SelectItem>
                 <SelectItem value="bold">Negrito</SelectItem>
-                <SelectItem value="800">Extra Bold</SelectItem>
+                <SelectItem value="800">Extra Negrito</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1018,11 +1018,11 @@ function StaticPropertiesPanel({
             </div>
           </div>
           <div>
-            <Label className="text-xs">Border Radius</Label>
+            <Label className="text-xs">Arredondamento</Label>
             <Input value={element.style.borderRadius || ""} onChange={(e) => onUpdateStyle({ borderRadius: e.target.value })} placeholder="8px" />
           </div>
           <div>
-            <Label className="text-xs">Padding</Label>
+            <Label className="text-xs">Espaçamento Interno</Label>
             <Input value={element.style.padding || ""} onChange={(e) => onUpdateStyle({ padding: e.target.value })} placeholder="12px" />
           </div>
           <div>

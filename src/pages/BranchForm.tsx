@@ -83,14 +83,14 @@ export default function BranchForm() {
       </Button>
       <Card>
         <CardHeader>
-          <CardTitle>{isEdit ? "Editar Branch" : "Nova Branch"}</CardTitle>
+          <CardTitle>{isEdit ? "Editar Cidade" : "Nova Cidade"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Brand</Label>
-              <Select value={brandId} onValueChange={setBrandId}>
-                <SelectTrigger><SelectValue placeholder="Selecione uma brand" /></SelectTrigger>
+               <Label>Marca</Label>
+               <Select value={brandId} onValueChange={setBrandId}>
+                 <SelectTrigger><SelectValue placeholder="Selecione uma marca" /></SelectTrigger>
                 <SelectContent>
                   {brands?.map((b) => (
                     <SelectItem key={b.id} value={b.id}>{b.name} ({(b.tenants as any)?.name})</SelectItem>
@@ -104,7 +104,7 @@ export default function BranchForm() {
                 <Input value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>Slug</Label>
+                <Label>Identificador</Label>
                 <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
               </div>
             </div>

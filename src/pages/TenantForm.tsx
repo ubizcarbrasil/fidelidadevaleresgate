@@ -64,7 +64,7 @@ export default function TenantForm() {
                 <Input value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>Slug</Label>
+                <Label>Identificador</Label>
                 <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
               </div>
             </div>
