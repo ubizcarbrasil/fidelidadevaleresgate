@@ -74,6 +74,30 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose
 
     const terms = generateTerms(data);
 
+    const termsParams = {
+      discount_mode: data.discount_mode,
+      discount_percent: data.discount_percent,
+      discount_fixed: data.discount_fixed,
+      min_purchase: data.min_purchase,
+      scaled_values: data.scaled_values,
+      requires_scheduling: data.requires_scheduling,
+      scheduling_advance_hours: data.scheduling_advance_hours,
+      is_cumulative: data.is_cumulative,
+      has_specific_days: data.has_specific_days,
+      specific_days: data.specific_days,
+      validity_start: data.validity_start,
+      validity_end: data.validity_end,
+      max_total_uses: data.max_total_uses,
+      unlimited_total: data.unlimited_total,
+      max_uses_per_customer: data.max_uses_per_customer,
+      unlimited_per_customer: data.unlimited_per_customer,
+      interval_between_uses_days: data.interval_between_uses_days,
+      no_interval: data.no_interval,
+      redemption_type: data.redemption_type,
+      coupon_type: data.coupon_type,
+      coupon_category: data.coupon_category,
+    };
+
     const { error } = await supabase.from("offers").insert([{
       store_id: storeId,
       branch_id: branchId,
@@ -97,7 +121,10 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, onClose
       interval_between_uses_days: data.no_interval ? 0 : (data.interval_between_uses_days ?? 0),
       redemption_type: data.redemption_type,
       terms_text: terms,
+      terms_version: "1",
+      terms_params_json: termsParams as any,
       terms_accepted_at: new Date().toISOString(),
+      terms_accepted_by_user_id: user?.id || null,
       product_id: data.coupon_type === "PRODUCT" ? data.product_id || null : null,
       status: "DRAFT" as const,
       is_active: true,
