@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.expire-pending-pins]
 verify_jwt = false
+
+[functions.match-taxonomy]
+verify_jwt = false
