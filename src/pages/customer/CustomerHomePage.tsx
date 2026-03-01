@@ -15,12 +15,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 }
 
 const QUICK_ACTIONS = [
-  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", bg: "#FFF0E8", tab: "offers" as const },
-  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", bg: "#FCE4EC", tab: "offers" as const },
-  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", bg: "#EDE9FE", tab: null },
-  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", bg: "#D1FAE5", tab: "wallet" as const },
-  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", bg: "#FEF3C7", tab: "offers" as const },
-  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#E0F2FE", tab: null },
+  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", bg: "#FFE0CC", tab: "offers" as const },
+  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", bg: "#F8C8D8", tab: "offers" as const },
+  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", bg: "#DDD6FE", tab: null },
+  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", bg: "#A7F3D0", tab: "wallet" as const },
+  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", bg: "#FDE68A", tab: "offers" as const },
+  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#BAE6FD", tab: null },
 ];
 
 interface CustomerHomePageProps {
@@ -49,7 +49,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           onClick={() => navigateToTab("redemptions")}
           className="w-full rounded-2xl p-4 relative overflow-hidden active:scale-[0.98] transition-transform"
           style={{
-            background: `linear-gradient(135deg, ${primary}18 0%, ${primary}0C 100%)`,
+            background: `linear-gradient(135deg, ${primary}30 0%, ${primary}18 100%)`,
+            border: `1px solid ${primary}20`,
           }}
         >
           <div className="flex items-center justify-between">

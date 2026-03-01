@@ -112,14 +112,14 @@ export default function CustomerLayout() {
           <div
             className="pt-2 pb-0"
             style={{
-              background: `linear-gradient(180deg, ${primary}08 0%, ${primary}04 60%, transparent 100%)`,
+              background: `linear-gradient(180deg, ${primary}22 0%, ${primary}10 60%, transparent 100%)`,
               backgroundColor: cardBg,
             }}
           >
             <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
               <div className="flex items-center gap-2.5">
                 {theme?.logo_url ? (
-                  <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }} />
+                  <img src={theme.logo_url} alt={displayName} className="h-10 w-10 object-contain rounded-xl" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} />
                 ) : (
                   <span className="font-extrabold text-xl tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
                     {displayName}
