@@ -1,43 +1,19 @@
 
 
-## Plano: Seção "Junte pontos com seus parceiros" (estilo Livelo)
+## Rotas faltantes no Painel Root
 
-### O que será feito
+Duas rotas administrativas registradas no `App.tsx` não possuem entrada no `RootSidebar`:
 
-Redesenhar a `EmissorasSection` na home do cliente para exibir parceiros emissores no formato de **lista vertical** (como no app Livelo nas imagens de referencia), com logo, nome, regra de pontuação ("X pontos por R$ 1"), botao de favorito (coracao), e um link "Todos os parceiros" que abre uma **pagina completa** com busca e listagem.
+### 1. `/pdv` — Operador PDV (OperatorRedeemPage)
+- Adicionar ao grupo **"🏪 Operações"** com o título "Operador PDV" e ícone apropriado (ex: `ScanLine` ou `Monitor`)
 
-### Mudancas
+### 2. `/store-points-rule` — Regra de Pontos da Loja (StorePointsRulePage)
+- Adicionar ao grupo **"💰 Programa de Pontos"** com o título "Regra de Pontos do Parceiro" e ícone `Settings2` ou `Coins`
 
-**1. Redesenhar `EmissorasSection` (lista vertical na home)**
-- Titulo: "Junte pontos com seus parceiros"
-- Exibir no maximo 5 parceiros emissores em formato de lista (logo quadrado arredondado + nome + "X pontos por R$ 1" + coracao de favorito)
-- Separador entre itens
-- Botao "Todos os parceiros >" ao final que navega para pagina completa
+### Alterações
+- **Arquivo**: `src/components/consoles/RootSidebar.tsx`
+  - Importar ícones adicionais (`ScanLine` ou equivalente)
+  - Inserir os dois novos itens nos respectivos grupos
 
-**2. Criar tabela `customer_favorite_stores`**
-- Migração para criar tabela com `customer_id`, `store_id`, `created_at`
-- RLS policies para que o cliente so gerencie seus proprios favoritos
-- A tabela `customer_favorites` existente so suporta `offer_id`, entao precisamos de uma nova para lojas
-
-**3. Criar hook `useCustomerFavoriteStores`**
-- Similar ao `useCustomerFavorites` existente, mas para lojas
-- Funcoes `isFavoriteStore`, `toggleFavoriteStore`
-
-**4. Criar pagina `CustomerEmissorasPage`**
-- Pagina completa acessivel ao clicar "Todos os parceiros"
-- Barra de busca por nome
-- Filtros: "Meus favoritos"
-- Lista completa de parceiros emissores com logo, nome, pontuacao, favorito
-- Botao voltar
-
-**5. Integrar navegacao no `CustomerLayout`**
-- Adicionar overlay/pagina para a lista completa de emissoras
-- Expor funcao `openEmissorasList` no contexto de navegacao
-
-### Detalhes tecnicos
-
-- Nova tabela `customer_favorite_stores(id uuid PK, customer_id uuid, store_id uuid, created_at timestamptz)` com unique constraint em `(customer_id, store_id)` e RLS
-- O hook fara fetch dos favoritos do cliente logado e toggle via insert/delete otimista
-- A `EmissorasSection` mostrara os primeiros 5 stores ordenados por nome, com layout identico ao screenshot (logo 70px arredondado, nome bold, "X pontos por R$ 1" em cinza, coracao a direita)
-- A pagina completa tera `Input` de busca com filtro local e contagem de resultados
+Nenhuma mudança de banco de dados ou lógica é necessária — apenas a adição dos links no menu lateral.
 
