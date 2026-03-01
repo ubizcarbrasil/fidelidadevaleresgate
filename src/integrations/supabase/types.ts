@@ -461,6 +461,7 @@ export type Database = {
           max_stores_visible: number | null
           min_stores_visible: number
           order_index: number
+          page_id: string | null
           rows_count: number
           subtitle: string | null
           template_id: string
@@ -486,6 +487,7 @@ export type Database = {
           max_stores_visible?: number | null
           min_stores_visible?: number
           order_index?: number
+          page_id?: string | null
           rows_count?: number
           subtitle?: string | null
           template_id: string
@@ -511,6 +513,7 @@ export type Database = {
           max_stores_visible?: number | null
           min_stores_visible?: number
           order_index?: number
+          page_id?: string | null
           rows_count?: number
           subtitle?: string | null
           template_id?: string
@@ -524,6 +527,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sections_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "custom_pages"
             referencedColumns: ["id"]
           },
           {

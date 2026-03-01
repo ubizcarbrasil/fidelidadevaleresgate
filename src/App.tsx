@@ -58,7 +58,7 @@ import IconLibraryPage from "@/pages/IconLibraryPage";
 import BannerManagerPage from "@/pages/BannerManagerPage";
 import MenuLabelsPage from "@/pages/MenuLabelsPage";
 import PageBuilderPage from "@/pages/PageBuilderPage";
-import PageBuilderV2Page from "@/pages/PageBuilderV2Page";
+
 import TaxonomyPage from "@/pages/TaxonomyPage";
 import CustomPage from "@/pages/customer/CustomPage";
 import WebviewPage from "@/pages/customer/WebviewPage";
@@ -130,7 +130,7 @@ function AppRoutes() {
         <Route path="banner-manager" element={<BannerManagerPage />} />
         <Route path="menu-labels" element={<MenuLabelsPage />} />
         <Route path="page-builder" element={<PageBuilderPage />} />
-        <Route path="page-builder-v2" element={<PageBuilderV2Page />} />
+        
         <Route path="taxonomy" element={<TaxonomyPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
