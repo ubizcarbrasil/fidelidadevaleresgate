@@ -6,6 +6,7 @@ import { TenantSidebar } from "@/components/consoles/TenantSidebar";
 import { BrandSidebar } from "@/components/consoles/BrandSidebar";
 import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
+import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Root Console",
@@ -44,6 +45,7 @@ export default function AppLayout() {
           <main className="flex-1 p-6 overflow-auto">
             <Outlet />
           </main>
+          <ContextualHelpDrawer />
         </div>
       </div>
     </SidebarProvider>
