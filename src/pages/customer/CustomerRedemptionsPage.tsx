@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
-import { Search, ChevronDown, ChevronUp, MapPin, Phone, Globe, Instagram, Clock, Ban, Store, QrCode } from "lucide-react";
+import { Search, MapPin, Phone, Globe, Clock, AlertTriangle, Store, QrCode, Info, DollarSign, CreditCard, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,7 +34,6 @@ export default function CustomerRedemptionsPage() {
   const { theme } = useBrand();
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [search, setSearch] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedRedemption, setSelectedRedemption] = useState<any>(null);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
@@ -95,21 +94,16 @@ export default function CustomerRedemptionsPage() {
   const formatDate = (d: string) =>
     format(new Date(d), "dd/MM/yyyy, HH:mm", { locale: ptBR });
 
-  const totalCredit = useMemo(() =>
-    redemptions
-      .filter((r: any) => r.status === "PENDING")
-      .reduce((sum: number, r: any) => sum + (r.credit_value_applied || r.offers?.value_rescue || 0), 0),
-    [redemptions]
-  );
-
   return (
     <>
       <div className="max-w-lg mx-auto pb-4">
         {/* Header with gradient */}
         <div className="rounded-b-3xl px-5 pt-5 pb-6 mb-4" style={{ background: `linear-gradient(135deg, ${primary}, ${primary}dd)` }}>
-          <h1 className="text-white text-xl font-bold mb-4" style={{ fontFamily: fontHeading }}>
-            Meus Resgates
-          </h1>
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-white text-xl font-bold" style={{ fontFamily: fontHeading }}>
+              Meus Resgates
+            </h1>
+          </div>
           {/* Balance card */}
           <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
             <span className="text-white/80 text-sm font-medium">Saldo disponível</span>
@@ -176,149 +170,18 @@ export default function CustomerRedemptionsPage() {
           </div>
         ) : (
           <div className="px-5 space-y-4">
-            {filtered.map((r: any) => {
-              const offer = r.offers;
-              const store = offer?.stores;
-              const badge = STATUS_BADGE[r.status] || STATUS_BADGE.PENDING;
-              const creditValue = r.credit_value_applied || offer?.value_rescue || 0;
-              const isExpanded = expandedId === r.id;
-
-              return (
-                <motion.div
-                  key={r.id}
-                  layout
-                  className="rounded-2xl overflow-hidden"
-                  style={{ backgroundColor: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-                >
-                  {/* Card header */}
-                  <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${fg}08` }}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold tracking-wider" style={{ color: `${fg}40` }}>RESGATE</span>
-                      <span className="text-[10px] font-mono" style={{ color: `${fg}30` }}>
-                        #PED{r.id.slice(0, 8).toUpperCase()}
-                      </span>
-                    </div>
-                    <span
-                      className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-                      style={{ backgroundColor: badge.bg, color: badge.color }}
-                    >
-                      {badge.label}
-                    </span>
-                  </div>
-
-                  {/* Store info + value */}
-                  <div className="px-4 py-3 flex items-center gap-3">
-                    {store?.logo_url ? (
-                      <img src={store.logo_url} alt={store.name} className="h-10 w-10 rounded-xl object-cover" />
-                    ) : (
-                      <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
-                        <Store className="h-5 w-5" style={{ color: primary }} />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: fg }}>{store?.name || "Loja"}</p>
-                      {offer?.coupon_type && (
-                        <span
-                          className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold"
-                          style={{ backgroundColor: offer.coupon_type === "PRODUCT" ? "#DBEAFE" : "#FEF3C7", color: offer.coupon_type === "PRODUCT" ? "#1E40AF" : "#92400E" }}
-                        >
-                          {offer.coupon_type === "PRODUCT"
-                            ? `PAGUE ${offer.discount_percent || 0}% COM PONTOS`
-                            : `VALE RESGATE ${formatCurrency(creditValue)}`}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-lg font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                      {formatCurrency(creditValue)}
-                    </p>
-                  </div>
-
-                  {/* Expandable details */}
-                  <button
-                    onClick={() => setExpandedId(isExpanded ? null : r.id)}
-                    className="w-full px-4 py-2 flex items-center justify-between text-xs font-semibold"
-                    style={{ backgroundColor: `${primary}06`, color: primary, borderTop: `1px solid ${fg}06` }}
-                  >
-                    <span>Detalhes do {offer?.coupon_type === "PRODUCT" ? "Produto" : "Cupom"}</span>
-                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </button>
-
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div
-                          className="px-4 py-3 mx-3 mb-3 rounded-xl space-y-2 text-xs"
-                          style={{ border: `1.5px solid ${primary}25`, backgroundColor: `${primary}04` }}
-                        >
-                          <DetailRow icon={<span style={{ color: primary }}>💲</span>} label="Valor" value={formatCurrency(r.purchase_value || offer?.value_rescue || 0)} />
-                          {offer?.discount_percent > 0 && (
-                            <DetailRow icon={<span style={{ color: primary }}>%</span>} label="Crédito" value={`${offer.discount_percent}% = ${formatCurrency(creditValue)}`} />
-                          )}
-                          {offer?.end_at && (
-                            <DetailRow icon={<Clock className="h-3.5 w-3.5" style={{ color: primary }} />} label="Validade" value={format(new Date(offer.end_at), "dd/MM/yyyy")} />
-                          )}
-                          {offer?.is_cumulative === false && (
-                            <DetailRow icon={<Ban className="h-3.5 w-3.5" style={{ color: primary }} />} label="" value="Não cumulativa" />
-                          )}
-                          {store?.address && (
-                            <DetailRow icon={<MapPin className="h-3.5 w-3.5" style={{ color: primary }} />} label="Resgate via" value={store.address} />
-                          )}
-                          {store?.whatsapp && (
-                            <DetailRow icon={<Phone className="h-3.5 w-3.5" style={{ color: primary }} />} label="WhatsApp" value={store.whatsapp} />
-                          )}
-                          {store?.site_url && (
-                            <DetailRow icon={<Globe className="h-3.5 w-3.5" style={{ color: primary }} />} label="Site" value={store.site_url} />
-                          )}
-                          {store?.instagram && (
-                            <DetailRow icon={<Instagram className="h-3.5 w-3.5" style={{ color: primary }} />} label="Instagram" value={`@${store.instagram}`} />
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Credit + dates */}
-                  <div className="px-4 py-3 space-y-1" style={{ borderTop: `1px solid ${fg}06` }}>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-semibold" style={{ color: `${fg}50` }}>CRÉDITO DO {offer?.coupon_type === "PRODUCT" ? "PRODUTO" : "CUPOM"}</span>
-                      <span className="text-sm font-bold" style={{ color: primary }}>{formatCurrency(creditValue)}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px]" style={{ color: `${fg}50` }}>
-                      <span>Resgate:</span>
-                      <span>{formatDate(r.created_at)}</span>
-                    </div>
-                    {r.expires_at && (
-                      <div className="flex justify-between text-[11px]">
-                        <span style={{ color: `${fg}50` }}>Expira:</span>
-                        <span style={{ color: r.status === "EXPIRED" ? "#DC2626" : `${fg}50` }}>
-                          {formatDate(r.expires_at)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* QR / PIN button */}
-                  {r.status === "PENDING" && (
-                    <div className="px-4 pb-4">
-                      <button
-                        onClick={() => setSelectedRedemption(r)}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-transform active:scale-[0.98]"
-                        style={{ backgroundColor: "#FBBF24", color: "#1F2937" }}
-                      >
-                        <QrCode className="h-5 w-5" />
-                        VER QR CODE E PIN
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+            {filtered.map((r: any) => (
+              <RedemptionCard
+                key={r.id}
+                r={r}
+                primary={primary}
+                fg={fg}
+                fontHeading={fontHeading}
+                formatCurrency={formatCurrency}
+                formatDate={formatDate}
+                onViewDetail={() => setSelectedRedemption(r)}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -336,15 +199,204 @@ export default function CustomerRedemptionsPage() {
   );
 }
 
-function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+/* ─── Card Component ─── */
+
+function RedemptionCard({
+  r, primary, fg, fontHeading, formatCurrency, formatDate, onViewDetail,
+}: {
+  r: any;
+  primary: string;
+  fg: string;
+  fontHeading: string;
+  formatCurrency: (v: number) => string;
+  formatDate: (d: string) => string;
+  onViewDetail: () => void;
+}) {
+  const offer = r.offers;
+  const store = offer?.stores;
+  const snapshot = r.offer_snapshot_json || {};
+  const badge = STATUS_BADGE[r.status] || STATUS_BADGE.PENDING;
+  const isProduct = offer?.coupon_type === "PRODUCT" || snapshot?.coupon_type === "PRODUCT";
+  const creditValue = r.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0;
+  const purchaseValue = r.purchase_value || 0;
+  const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
+
+  const typeBadge = isProduct
+    ? { label: "PRODUTO", bg: "#DBEAFE", color: "#1E40AF" }
+    : { label: "LOJA", bg: "#FEF3C7", color: "#92400E" };
+
+  // Calculate expiry days
+  const expiryDays = r.expires_at
+    ? Math.max(0, Math.ceil((new Date(r.expires_at).getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24)))
+    : 30;
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+      {/* Card header */}
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${fg}08` }}>
+        <div>
+          <span className="text-[10px] font-bold tracking-wider block" style={{ color: `${fg}40` }}>RESGATE</span>
+          <span className="text-xs font-mono font-semibold" style={{ color: fg }}>
+            #PED{r.id.replace(/-/g, "").slice(0, 14).toUpperCase()}
+          </span>
+        </div>
+        <span
+          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+          style={{ backgroundColor: badge.bg, color: badge.color }}
+        >
+          {badge.label}
+        </span>
+      </div>
+
+      {/* Store info + type badge */}
+      <div className="px-4 py-3 flex items-center gap-3">
+        {store?.logo_url ? (
+          <img src={store.logo_url} alt={store.name} className="h-11 w-11 rounded-xl object-cover" />
+        ) : (
+          <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
+            <Store className="h-5 w-5" style={{ color: primary }} />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold truncate" style={{ color: fg }}>{store?.name || "Loja"}</p>
+            <span
+              className="px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0"
+              style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}
+            >
+              {typeBadge.label}
+            </span>
+          </div>
+          {isProduct && purchaseValue > 0 ? (
+            <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
+              {formatCurrency(purchaseValue)}
+            </p>
+          ) : !isProduct && creditValue > 0 ? (
+            <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
+              Vale Resgate {formatCurrency(creditValue)}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Details section - always visible */}
+      <div className="px-4 pb-3">
+        <div
+          className="rounded-xl p-3 space-y-2 text-xs"
+          style={{ border: `1.5px solid ${primary}25`, backgroundColor: `${primary}04` }}
+        >
+          {/* Section title */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <Info className="h-3.5 w-3.5" style={{ color: primary }} />
+            <span className="text-xs font-bold" style={{ color: primary }}>
+              {isProduct ? "Detalhes do Produto" : "Detalhes do Cupom"}
+            </span>
+          </div>
+
+          {/* Product value */}
+          {isProduct && purchaseValue > 0 && (
+            <DetailInfoRow icon={<DollarSign className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Valor do produto: <strong>{formatCurrency(purchaseValue)}</strong>
+            </DetailInfoRow>
+          )}
+
+          {/* Credit */}
+          {isProduct && discountPct > 0 ? (
+            <DetailInfoRow icon={<CreditCard className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Crédito: <strong>{discountPct}%</strong> = {formatCurrency(creditValue)}
+            </DetailInfoRow>
+          ) : !isProduct && creditValue > 0 ? (
+            <DetailInfoRow icon={<CreditCard className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Vale Resgate: <strong>{formatCurrency(creditValue)}</strong>
+            </DetailInfoRow>
+          ) : null}
+
+          {/* Validity */}
+          <DetailInfoRow icon={<Clock className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+            Validade do crédito: <strong>{expiryDays} dias</strong> após o resgate
+          </DetailInfoRow>
+
+          {/* Cumulative */}
+          {(offer?.is_cumulative === false || snapshot?.is_cumulative === false) && (
+            <DetailInfoRow icon={<AlertTriangle className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Oferta <strong>não cumulativa</strong> com outras promoções
+            </DetailInfoRow>
+          )}
+
+          {/* Store address */}
+          {store?.address && (
+            <DetailInfoRow icon={<MapPin className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Resgate via: {store.address}
+            </DetailInfoRow>
+          )}
+
+          {/* WhatsApp */}
+          {store?.whatsapp && (
+            <DetailInfoRow icon={<Phone className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              WhatsApp: {store.whatsapp}
+            </DetailInfoRow>
+          )}
+
+          {/* Site */}
+          {store?.site_url && (
+            <DetailInfoRow icon={<Globe className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
+              Site: {store.site_url}
+            </DetailInfoRow>
+          )}
+        </div>
+      </div>
+
+      {/* Credit + dates */}
+      <div className="px-4 py-3 space-y-1" style={{ borderTop: `1px solid ${fg}06` }}>
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] font-semibold" style={{ color: `${fg}50` }}>
+            CRÉDITO DO {isProduct ? "PRODUTO" : "CUPOM"}
+          </span>
+          <span className="text-lg font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+            {formatCurrency(creditValue)}
+          </span>
+        </div>
+        <div className="flex justify-between text-[11px]" style={{ color: `${fg}50` }}>
+          <span>Resgate:</span>
+          <span>{formatDate(r.created_at)}</span>
+        </div>
+        {r.expires_at && (
+          <div className="flex justify-between text-[11px]">
+            <span style={{ color: `${fg}50` }}>Expira:</span>
+            <span style={{ color: r.status === "EXPIRED" ? "#DC2626" : primary }}>
+              {formatDate(r.expires_at)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* QR / PIN button */}
+      {r.status === "PENDING" && (
+        <div className="px-4 pb-4">
+          <button
+            onClick={onViewDetail}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-transform active:scale-[0.98]"
+            style={{ backgroundColor: "#FBBF24", color: "#1F2937" }}
+          >
+            <QrCode className="h-5 w-5" />
+            VER QR CODE E PIN
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Detail Info Row ─── */
+
+function DetailInfoRow({ icon, children, primary }: { icon: React.ReactNode; children: React.ReactNode; primary: string }) {
   return (
     <div className="flex items-start gap-2">
-      <div className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }}>
+      <div className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: `${primary}10` }}>
         {icon}
       </div>
-      <span className="flex-1" style={{ color: "hsl(var(--foreground) / 0.7)" }}>
-        {label && <span className="font-medium">{label}: </span>}
-        {value}
+      <span className="flex-1 text-xs leading-relaxed" style={{ color: "hsl(var(--foreground) / 0.7)" }}>
+        {children}
       </span>
     </div>
   );
