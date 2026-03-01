@@ -13,31 +13,32 @@ export default function WhiteLabelLayout() {
   const { user, loading: authLoading } = useAuth();
   const [guestMode, setGuestMode] = useState(false);
 
-  if (loading || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  // Determine what to render without early returns to keep hook tree stable
+  const isLoading = loading || authLoading;
+  const needsBranchSelection = !isLoading && brand && branches.length > 1 && !selectedBranch;
+  const showContent = !isLoading && brand && !needsBranchSelection;
 
-  if (!brand) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Marca não encontrada para este domínio.</p>
-      </div>
-    );
-  }
-
-  // Show branch selector if multiple branches and none selected
-  if (branches.length > 1 && !selectedBranch) {
-    return <BranchSelector />;
-  }
-
-  // Allow access without authentication for now
   return (
-    <CustomerProvider>
-      <CustomerLayout />
-    </CustomerProvider>
+    <>
+      {isLoading && (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {!isLoading && !brand && (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <p className="text-muted-foreground">Marca não encontrada para este domínio.</p>
+        </div>
+      )}
+
+      {needsBranchSelection && <BranchSelector />}
+
+      {showContent && (
+        <CustomerProvider>
+          <CustomerLayout />
+        </CustomerProvider>
+      )}
+    </>
   );
 }
