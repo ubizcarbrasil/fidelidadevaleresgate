@@ -1,4 +1,7 @@
-import { Building2, Store, MapPin, LayoutDashboard, LogOut, Ticket, Users } from "lucide-react";
+import {
+  Building2, Store, MapPin, LayoutDashboard, LogOut, Ticket, Users, Globe,
+  ShoppingBag, Tag, UserCheck, ReceiptText, BarChart3, ClipboardList,
+} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,12 +23,17 @@ const groups = [
     label: "🏢 Estrutura",
     items: [
       { title: "Marcas", url: "/brands", icon: Store },
-      { title: "Filiais", url: "/branches", icon: MapPin },
+      { title: "Cidades", url: "/branches", icon: MapPin },
+      { title: "Domínios", url: "/domains", icon: Globe },
     ],
   },
   {
     label: "🏪 Operações",
     items: [
+      { title: "Parceiros", url: "/stores", icon: ShoppingBag },
+      { title: "Ofertas", url: "/offers", icon: Tag },
+      { title: "Clientes", url: "/customers", icon: UserCheck },
+      { title: "Resgates", url: "/redemptions", icon: ReceiptText },
       { title: "Cupons", url: "/vouchers", icon: Ticket },
     ],
   },
@@ -33,6 +41,13 @@ const groups = [
     label: "👥 Usuários",
     items: [
       { title: "Usuários", url: "/users", icon: Users },
+    ],
+  },
+  {
+    label: "📈 Análises",
+    items: [
+      { title: "Relatórios", url: "/reports", icon: BarChart3 },
+      { title: "Auditoria", url: "/audit", icon: ClipboardList },
     ],
   },
 ];

@@ -1,4 +1,8 @@
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, Store, ClipboardList } from "lucide-react";
+import {
+  ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket,
+  FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, Store,
+  ClipboardList, ScanLine, Sparkles, PackageSearch, BarChart3, Bell,
+} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,20 +14,53 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const items = [
-  { title: "Painel Principal", url: "/", icon: LayoutDashboard },
-  { title: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
-  { title: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
-  { title: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
-  { title: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
-  { title: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
-  { title: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
-  { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
-  { title: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
-  { title: "Minha Regra de Pontos", url: "/store-points-rule", icon: Store, moduleKey: "earn_points_store" },
-  { title: "Aprovar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
-  { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
-  { title: "Auditoria", url: "/audit", icon: ClipboardList },
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: any;
+  moduleKey?: string;
+}
+
+const groups: { label: string; items: MenuItem[] }[] = [
+  {
+    label: "📊 Visão Geral",
+    items: [
+      { title: "Painel Principal", url: "/", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "🏪 Operações",
+    items: [
+      { title: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
+      { title: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
+      { title: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
+      { title: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
+      { title: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
+      { title: "Aprovação de Parceiros", url: "/store-approvals", icon: Store, moduleKey: "stores" },
+      { title: "Aprovar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
+      { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
+      { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
+      { title: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "stores" },
+      { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
+      { title: "Operador PDV", url: "/pdv", icon: ScanLine },
+    ],
+  },
+  {
+    label: "💰 Programa de Pontos",
+    items: [
+      { title: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
+      { title: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
+      { title: "Minha Regra de Pontos", url: "/store-points-rule", icon: Store, moduleKey: "earn_points_store" },
+      { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
+    ],
+  },
+  {
+    label: "📈 Análises",
+    items: [
+      { title: "Relatórios", url: "/reports", icon: BarChart3 },
+      { title: "Auditoria", url: "/audit", icon: ClipboardList },
+    ],
+  },
 ];
 
 export function BranchSidebar() {
@@ -32,8 +69,6 @@ export function BranchSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isModuleEnabled } = useBrandModules();
-
-  const visibleItems = items.filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey));
 
   return (
     <Sidebar collapsible="icon">
@@ -51,23 +86,42 @@ export function BranchSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Gestão da Cidade</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {visibleItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}>
-                    <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {groups.map((group) => {
+          const visibleItems = group.items.filter(
+            (item) => !item.moduleKey || isModuleEnabled(item.moduleKey)
+          );
+          if (visibleItems.length === 0) return null;
+          return (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {visibleItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={
+                          location.pathname === item.url ||
+                          (item.url !== "/" && location.pathname.startsWith(item.url))
+                        }
+                      >
+                        <NavLink
+                          to={item.url}
+                          end={item.url === "/"}
+                          className="hover:bg-sidebar-accent/50"
+                          activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && <div className="mb-2 truncate text-xs text-sidebar-foreground/60">{user?.email}</div>}
