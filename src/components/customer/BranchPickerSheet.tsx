@@ -21,6 +21,7 @@ export default function BranchPickerSheet() {
   const primaryColor = theme?.colors?.primary ? `hsl(${theme.colors.primary})` : "hsl(var(--primary))";
   const fg = theme?.colors?.foreground ? `hsl(${theme.colors.foreground})` : "hsl(var(--foreground))";
 
+
   // Group branches by state > city
   const grouped = useMemo<GroupedBranches>(() => {
     const map: GroupedBranches = {};
@@ -37,6 +38,8 @@ export default function BranchPickerSheet() {
   const sortedStates = useMemo(() => Object.keys(grouped).sort(), [grouped]);
 
   const displayLabel = selectedBranch?.city || "Selecionar cidade";
+
+  if (branches.length === 0) return null;
 
   const handleDetectLocation = async () => {
     setDetecting(true);
