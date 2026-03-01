@@ -123,7 +123,7 @@ export default function CustomerLayout() {
               style={{ backgroundColor: "#F2F2F7" }}
             >
               <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
-              <span className="text-sm" style={{ color: `${fg}40` }}>Busque por lojas e ofertas</span>
+              <span className="text-sm" style={{ color: `${fg}40` }}>Busque por parceiros e ofertas</span>
             </button>
           </div>
 
