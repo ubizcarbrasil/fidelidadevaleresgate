@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -40,6 +40,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [pin, setPin] = useState<string | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [similarOffers, setSimilarOffers] = useState<any[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -153,7 +154,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       className="fixed inset-0 z-[60] flex flex-col"
       style={{ backgroundColor: "#FAFAFA" }}
     >
-      <div className="flex-1 overflow-y-auto pb-40">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-40">
         {/* Hero image */}
         <div className="relative">
           {offer.image_url ? (
@@ -297,7 +298,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   whileTap={{ scale: 0.98 }}
                   className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
                   style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
-                  onClick={() => onOfferClick?.(sim)}
+                  onClick={() => {
+                    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                    onOfferClick?.(sim);
+                  }}
                 >
                   {sim.image_url ? (
                     <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
