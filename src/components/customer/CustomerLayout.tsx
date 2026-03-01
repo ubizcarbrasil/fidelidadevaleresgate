@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import { useBrand } from "@/contexts/BrandContext";
-import { Home, Tag, Wallet, UserCircle, MapPin, Bell, Search } from "lucide-react";
+import { Home, Tag, Wallet, UserCircle, Bell, Search } from "lucide-react";
+import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
@@ -97,12 +98,7 @@ export default function CustomerLayout() {
               )}
             </div>
             <div className="flex items-center gap-1">
-              {selectedBranch && (
-                <div className="flex items-center gap-1 text-xs mr-2 px-2.5 py-1 rounded-full" style={{ backgroundColor: `${primary}10`, color: primary }}>
-                  <MapPin className="h-3 w-3" />
-                  <span className="font-medium">{selectedBranch.name}</span>
-                </div>
-              )}
+              <BranchPickerSheet />
               <button
                 onClick={() => setNotifOpen(true)}
                 className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors"
