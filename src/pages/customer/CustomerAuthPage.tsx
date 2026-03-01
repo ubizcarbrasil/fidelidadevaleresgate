@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, Lock, User, Phone, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/translateError";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -59,7 +60,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
     } catch (err: any) {
       toast({
         title: "Erro",
-        description: err.message || "Erro ao autenticar",
+        description: translateError(err.message) || "Erro ao autenticar",
         variant: "destructive",
       });
     } finally {
