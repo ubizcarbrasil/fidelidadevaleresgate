@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SegmentAutocomplete from "@/components/SegmentAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -38,6 +39,7 @@ interface WizardData {
   cnpj: string;
   category: string;
   segment: string;
+  taxonomy_segment_id: string;
   tags: string;
   store_type: string;
   address: string;
@@ -53,7 +55,7 @@ interface WizardData {
 }
 
 const defaultData: WizardData = {
-  name: "", phone: "", email: "", cnpj: "", category: "", segment: "", tags: "", store_type: "RECEPTORA",
+  name: "", phone: "", email: "", cnpj: "", category: "", segment: "", taxonomy_segment_id: "", tags: "", store_type: "RECEPTORA",
   address: "", site_url: "", instagram: "", whatsapp: "",
   cnpj_doc_url: "", contrato_url: "", logo_url: "", banner_url: "",
   password: "", confirm_password: "",
@@ -282,6 +284,7 @@ export default function StoreRegistrationWizard() {
       cnpj: data.cnpj,
       category: data.category,
       segment: data.segment,
+      taxonomy_segment_id: data.taxonomy_segment_id || null,
       tags: data.tags ? data.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
       address: data.address,
       site_url: data.site_url,
@@ -530,11 +533,13 @@ export default function StoreRegistrationWizard() {
                     </Select>
                   </FieldGroup>
                   <FieldGroup icon={Tag} label="Segmento">
-                    <Input
-                      value={data.segment}
-                      onChange={e => update("segment", e.target.value)}
+                    <SegmentAutocomplete
+                      value={data.taxonomy_segment_id || null}
+                      segmentName={data.segment}
+                      onSelect={(segId, segName) => {
+                        setData(prev => ({ ...prev, taxonomy_segment_id: segId || "", segment: segName }));
+                      }}
                       placeholder="Ex: Pizzaria"
-                      className="h-11"
                     />
                   </FieldGroup>
                 </div>
