@@ -56,8 +56,9 @@ export default function BannerManagerPage() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      if (!currentBrandId) throw new Error("Selecione uma marca antes de criar um banner.");
       const { error } = await supabase.from("banner_schedules").insert({
-        brand_id: currentBrandId!,
+        brand_id: currentBrandId,
         image_url: form.image_url,
         title: form.title || null,
         link_url: form.link_url || null,
