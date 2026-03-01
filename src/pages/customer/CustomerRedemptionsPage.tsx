@@ -220,14 +220,16 @@ export default function CustomerRedemptionsPage() {
                       {offer?.coupon_type && (
                         <span
                           className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold"
-                          style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
+                          style={{ backgroundColor: offer.coupon_type === "PRODUCT" ? "#DBEAFE" : "#FEF3C7", color: offer.coupon_type === "PRODUCT" ? "#1E40AF" : "#92400E" }}
                         >
-                          {offer.coupon_type === "PRODUCT" ? "PRODUTO" : offer.coupon_type === "SERVICE" ? "SERVIÇO" : offer.coupon_type}
+                          {offer.coupon_type === "PRODUCT"
+                            ? `PAGUE ${offer.discount_percent || 0}% COM PONTOS`
+                            : `VALE RESGATE ${formatCurrency(creditValue)}`}
                         </span>
                       )}
                     </div>
                     <p className="text-lg font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                      {formatCurrency(r.purchase_value || offer?.value_rescue || 0)}
+                      {formatCurrency(creditValue)}
                     </p>
                   </div>
 

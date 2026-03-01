@@ -38,6 +38,7 @@ export interface StoreVoucherData {
   title: string;
   description: string;
   image_url: string;
+  product_price: number;
 }
 
 export const WEEKDAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -76,4 +77,5 @@ export const initialStoreVoucherData: StoreVoucherData = {
   title: "",
   description: "",
   image_url: "",
+  product_price: 0,
 };
