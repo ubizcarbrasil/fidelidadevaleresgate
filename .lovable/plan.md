@@ -35,7 +35,9 @@
 - **StoreVoucherWizard**: modo edição com `editOffer`, preenchimento automático dos campos, incremento de `terms_version`
 - **StoreCouponsTab**: botão "Editar" em cupons DRAFT/ACTIVE não expirados
 
+### Sprint D (P2) — Relatórios Gráficos ✅
+- **ReportsPage**: aba "Gráficos" com BarChart (resgates/dia), LineChart (pontos emitidos/dia), PieChart (distribuição de status)
+
 ## Pendente (próximas iterações)
 
-### Sprint D (P2) — Relatórios Gráficos
-1. **ReportsPage**: gráficos reais com Recharts (ledger + redemptions ao longo do tempo)
+_(Todos os sprints P0-P2 concluídos)_
