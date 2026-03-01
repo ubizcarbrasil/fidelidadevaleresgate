@@ -24,8 +24,8 @@ const groups = [
     items: [
       { title: "Empresas", url: "/tenants", icon: Building2 },
       { title: "Marcas", url: "/brands", icon: Store },
-      { title: "Filiais", url: "/branches", icon: MapPin },
-      { title: "Clonar Filial", url: "/clone-branch", icon: Copy },
+      { title: "Cidades", url: "/branches", icon: MapPin },
+      { title: "Clonar Cidade", url: "/clone-branch", icon: Copy },
       { title: "Domínios", url: "/domains", icon: Globe },
     ],
   },
@@ -40,13 +40,13 @@ const groups = [
   {
     label: "🏪 Operações",
     items: [
-      { title: "Lojas", url: "/stores", icon: ShoppingBag },
+      { title: "Parceiros", url: "/stores", icon: ShoppingBag },
       { title: "Ofertas", url: "/offers", icon: Tag },
       { title: "Clientes", url: "/customers", icon: UserCheck },
       { title: "Resgates", url: "/redemptions", icon: ReceiptText },
       { title: "Cupons", url: "/vouchers", icon: Ticket },
       { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet },
-      { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck },
+      { title: "Aprovação de Parceiros", url: "/store-approvals", icon: ShieldCheck },
       { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
       { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },

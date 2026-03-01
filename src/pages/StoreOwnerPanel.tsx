@@ -24,14 +24,14 @@ import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
 
 const MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "dashboard", label: "Painel Principal", icon: LayoutDashboard },
   { key: "cupons", label: "Cupom", icon: Tag },
   { key: "resgate", label: "Resgate de PIN", icon: QrCode },
   { key: "perfil", label: "Meu Perfil", icon: User },
   { key: "extrato", label: "Extrato", icon: FileText },
   { key: "funcionarios", label: "Funcionários", icon: Users },
   { key: "termos", label: "Termos e Uso", icon: BookOpen },
-  { key: "filiais", label: "Filiais", icon: Building2 },
+  { key: "filiais", label: "Cidades", icon: Building2 },
   { key: "tutorial", label: "Tutorial", icon: HelpCircle },
   { key: "suporte", label: "Suporte", icon: HelpCircle },
 ];
@@ -242,8 +242,8 @@ function StoreOwnerDashboard({ store }: { store: any }) {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Visão geral do seu estabelecimento</p>
+          <h1 className="text-2xl font-bold mb-1">Painel Principal</h1>
+          <p className="text-sm text-muted-foreground">Visão geral do seu estabelecimento parceiro</p>
         </div>
         <div className="flex gap-1 bg-muted rounded-lg p-0.5">
           {periods.map(p => (
@@ -460,9 +460,9 @@ function StoreEmptyState({ userId }: { userId?: string }) {
           <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
             <Store className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Painel do Lojista</h1>
+          <h1 className="text-2xl font-bold text-foreground">Portal do Parceiro</h1>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-            Gerencie sua loja, cupons e resgates em um só lugar.
+            Gerencie suas ofertas, cupons e resgates como parceiro da marca.
           </p>
         </div>
 
@@ -524,7 +524,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
               <div>
                 <p className="font-semibold text-sm">Nenhum cadastro encontrado</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Cadastre sua loja para começar a oferecer cupons aos clientes.
+                  Cadastre seu estabelecimento para se tornar um parceiro.
                 </p>
               </div>
             </CardContent>
@@ -539,7 +539,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
             onClick={() => navigate("/register-store")}
           >
             <Plus className="h-4 w-4" />
-            Cadastrar nova loja
+            Cadastrar novo estabelecimento
           </Button>
 
           <div className="flex gap-3">

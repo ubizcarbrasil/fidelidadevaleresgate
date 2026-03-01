@@ -130,7 +130,7 @@ export default function Auth() {
 
           {/* Store owner CTA */}
           <div className="mt-6 pt-5 border-t">
-            <p className="text-xs text-muted-foreground text-center mb-3">É lojista ou quer cadastrar sua empresa?</p>
+            <p className="text-xs text-muted-foreground text-center mb-3">Tem um estabelecimento? Seja um parceiro!</p>
             <Button
               type="button"
               variant="outline"
@@ -138,7 +138,7 @@ export default function Auth() {
               onClick={() => navigate("/register-store")}
             >
               <Store className="h-4 w-4" />
-              Cadastrar minha loja
+              Quero ser parceiro
             </Button>
           </div>
         </CardContent>

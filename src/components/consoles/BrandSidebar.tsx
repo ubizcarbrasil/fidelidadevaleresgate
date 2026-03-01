@@ -50,8 +50,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "🏪 Operações",
     items: [
-      { key: "sidebar.branches", defaultTitle: "Filiais", url: "/branches", icon: MapPin },
-      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck, moduleKey: "stores" },
+      { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin },
+      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovação de Parceiros", url: "/store-approvals", icon: ShieldCheck, moduleKey: "stores" },
       { key: "sidebar.importar_csv", defaultTitle: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
     ],
   },
@@ -90,7 +90,7 @@ export function BrandSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Administrador da Marca</span>
+              <span className="text-xs text-sidebar-foreground/60">Painel do Empreendedor</span>
             </div>
           )}
         </div>
