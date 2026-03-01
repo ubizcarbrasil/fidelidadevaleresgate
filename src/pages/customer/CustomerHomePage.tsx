@@ -1,7 +1,7 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { CreditCard, ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, QrCode } from "lucide-react";
+import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
@@ -15,13 +15,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 }
 
 const QUICK_ACTIONS = [
-  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", tab: "offers" as const },
-  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", tab: "offers" as const },
-  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", tab: null },
-  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", tab: "wallet" as const },
-  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", tab: "offers" as const },
-  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", tab: null },
-  { key: "qrcode", label: "QR Code", icon: QrCode, color: "#6366F1", tab: "wallet" as const },
+  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", bg: "#FFF0E8", tab: "offers" as const },
+  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", bg: "#FCE4EC", tab: "offers" as const },
+  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", bg: "#EDE9FE", tab: null },
+  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", bg: "#D1FAE5", tab: "wallet" as const },
+  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", bg: "#FEF3C7", tab: "offers" as const },
+  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#E0F2FE", tab: null },
 ];
 
 interface CustomerHomePageProps {
@@ -37,146 +36,65 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  // Truncated account number from customer ID
-  const accountNumber = customer?.id ? customer.id.slice(-8).toUpperCase() : "--------";
-
   return (
-    <div className="space-y-5">
-      {/* Bank-style Balance Card */}
-      {loading ? (
-        <div className="max-w-lg mx-auto px-5 pt-4">
-          <Skeleton className="h-[160px] w-full rounded-[20px]" />
-        </div>
-      ) : customer ? (
-        <motion.div
-          initial={{ opacity: 0, y: 16, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.4, ease: "easeOut" as const }}
-          className="max-w-lg mx-auto px-5 pt-4"
-        >
-          <button
-            onClick={onOpenLedger}
-            className="w-full text-left rounded-[20px] p-5 relative overflow-hidden active:scale-[0.98] transition-transform"
-            style={{
-              background: "linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-              boxShadow: "0 12px 40px -12px rgba(15, 52, 96, 0.5)",
-            }}
-          >
-            {/* Decorative elements */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/[0.04]" />
-            <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full bg-white/[0.04]" />
-            <div className="absolute top-4 right-4 w-20 h-14 rounded-lg border border-white/10 opacity-20" />
-
-            <div className="relative z-10">
-              {/* Header row: chip + account */}
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-10 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)" }}>
-                    <div className="grid grid-cols-2 gap-px">
-                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
-                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
-                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
-                      <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-medium tracking-[0.15em] text-white/60 uppercase">Meus Pontos</span>
-                </div>
-                <div className="flex items-center gap-1 text-white/60">
-                  <span className="text-[10px] font-mono tracking-wider">•••• {accountNumber.slice(-4)}</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </div>
-              </div>
-
-              {/* Balance - prominent */}
-              <div className="mb-3">
-                <span className="text-[11px] font-medium text-white/50 block mb-1">Seu saldo</span>
-                <div className="flex items-baseline gap-2">
-                  <Coins className="h-5 w-5 text-amber-400" />
-                  <span className="text-4xl font-black tracking-tight text-white" style={{ fontFamily: fontHeading }}>
-                    {Number(customer.points_balance).toLocaleString("pt-BR")}
-                  </span>
-                  <span className="text-sm text-white/50 font-medium">pontos</span>
-                </div>
-              </div>
-
-              {/* Money balance row */}
-              {Number(customer.money_balance) > 0 && (
-                <div className="flex items-center gap-1.5 mt-1 text-emerald-300/80">
-                  <span className="text-xs font-semibold">R$ {Number(customer.money_balance).toFixed(2)} disponível</span>
-                </div>
-              )}
-
-              {/* CTA hint */}
-              <div className="mt-4 flex items-center gap-1.5 text-[11px] text-white/30 font-medium">
-                <CreditCard className="h-3.5 w-3.5" />
-                <span>Toque para ver extrato completo</span>
-              </div>
-            </div>
-          </button>
-        </motion.div>
-      ) : null}
-
-      {/* Meus Resgates Banner */}
+    <div className="space-y-4">
+      {/* Meus Resgates - clean banner */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.05 }}
-        className="max-w-lg mx-auto px-5"
+        transition={{ duration: 0.35 }}
+        className="max-w-lg mx-auto px-5 pt-3"
       >
         <button
           onClick={() => navigateToTab("redemptions")}
-          className="w-full text-left rounded-[20px] p-5 relative overflow-hidden active:scale-[0.98] transition-transform"
+          className="w-full rounded-2xl p-4 relative overflow-hidden active:scale-[0.98] transition-transform"
           style={{
-            background: `linear-gradient(135deg, ${primary} 0%, ${primary}CC 100%)`,
-            boxShadow: `0 8px 32px -8px ${primary}60`,
+            background: `linear-gradient(135deg, ${primary}18 0%, ${primary}0C 100%)`,
           }}
         >
-          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/[0.08]" />
-          <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/[0.06]" />
-
-          <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-extrabold text-white" style={{ fontFamily: fontHeading }}>
+              <h3 className="text-base font-bold" style={{ fontFamily: fontHeading, color: fg }}>
                 Meus Resgates
               </h3>
-              <p className="text-xs text-white/70 mt-0.5">Saldo disponível</p>
+              <p className="text-[11px] mt-0.5" style={{ color: `${fg}60` }}>Saldo disponível</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black text-white" style={{ fontFamily: fontHeading }}>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl font-black" style={{ fontFamily: fontHeading, color: primary }}>
                 R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
               </span>
-              <ChevronRight className="h-5 w-5 text-white/60" />
+              <ChevronRight className="h-4 w-4" style={{ color: `${primary}80` }} />
             </div>
           </div>
         </button>
       </motion.div>
 
-      {/* Quick Actions Bar */}
+      {/* Quick Actions Grid */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-        className="max-w-lg mx-auto"
+        transition={{ duration: 0.35, delay: 0.08 }}
+        className="max-w-lg mx-auto px-5"
       >
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide px-5 pb-1">
+        <div className="grid grid-cols-6 gap-2">
           {QUICK_ACTIONS.map((action, idx) => {
             const Icon = action.icon;
             return (
               <motion.button
                 key={action.key}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.05 * idx, duration: 0.25 }}
-                className="flex flex-col items-center gap-1.5 min-w-[64px] py-2 active:scale-95 transition-transform"
+                transition={{ delay: 0.04 * idx, duration: 0.25 }}
+                className="flex flex-col items-center gap-1.5 py-1 active:scale-95 transition-transform"
                 onClick={() => action.tab && navigateToTab(action.tab)}
               >
                 <div
-                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
-                  style={{ backgroundColor: `${action.color}12` }}
+                  className="h-14 w-14 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: action.bg }}
                 >
-                  <Icon className="h-5 w-5" style={{ color: action.color }} />
+                  <Icon className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
                 </div>
-                <span className="text-[10px] font-semibold" style={{ color: `${fg}70` }}>
+                <span className="text-[10px] font-semibold leading-tight text-center" style={{ color: `${fg}80` }}>
                   {action.label}
                 </span>
               </motion.button>
@@ -185,11 +103,50 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         </div>
       </motion.div>
 
+      {/* Points Balance Card */}
+      {loading ? (
+        <div className="max-w-lg mx-auto px-5">
+          <Skeleton className="h-[72px] w-full rounded-2xl" />
+        </div>
+      ) : customer ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.12 }}
+          className="max-w-lg mx-auto px-5"
+        >
+          <button
+            onClick={onOpenLedger}
+            className="w-full text-left rounded-2xl px-4 py-3.5 flex items-center justify-between active:scale-[0.98] transition-transform"
+            style={{
+              backgroundColor: "#FFFFFF",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="h-10 w-10 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: "#FEF3C7" }}
+              >
+                <Coins className="h-5 w-5" style={{ color: "#D97706" }} />
+              </div>
+              <div>
+                <span className="text-[11px] font-medium block" style={{ color: `${fg}50` }}>Meus pontos</span>
+                <span className="text-lg font-black tracking-tight" style={{ fontFamily: fontHeading, color: fg }}>
+                  {Number(customer.points_balance).toLocaleString("pt-BR")}
+                </span>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4" style={{ color: `${fg}30` }} />
+          </button>
+        </motion.div>
+      ) : null}
+
       {/* Segment Categories */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.12 }}
+        transition={{ duration: 0.35, delay: 0.15 }}
       >
         <SegmentNavSection onSegmentClick={(segId) => navigateToOffersWithSegment(segId)} />
       </motion.div>
@@ -198,7 +155,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
+        transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
       >
         <HomeSectionsRenderer />
       </motion.div>
@@ -216,7 +173,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" as const }}
+        transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" as const }}
       >
         <AchadinhoSection />
       </motion.div>

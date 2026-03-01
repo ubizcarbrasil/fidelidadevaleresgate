@@ -107,48 +107,67 @@ export default function CustomerLayout() {
     <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
         {/* Modern Header */}
-        <header className="sticky top-0 z-50" style={{ backgroundColor: cardBg }}>
-          <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-4 pb-2">
-            <div className="flex items-center gap-2.5">
-              {theme?.logo_url ? (
-                <img src={theme.logo_url} alt={displayName} className="h-8 object-contain" />
-              ) : (
-                <span className="font-bold text-xl" style={{ fontFamily: fontHeading, color: fg }}>
-                  {displayName}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              <BranchPickerSheet />
-              <button
-                onClick={() => setNotifOpen(true)}
-                className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors"
-              >
-                <Bell className="h-5 w-5" style={{ color: `${fg}90` }} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white" style={{ backgroundColor: "hsl(0 72% 51%)" }}>
-                    {unreadCount > 9 ? "9+" : unreadCount}
+        <header className="sticky top-0 z-50">
+          {/* Top bar with brand tint */}
+          <div
+            className="pt-2 pb-0"
+            style={{
+              background: `linear-gradient(180deg, ${primary}08 0%, ${primary}04 60%, transparent 100%)`,
+              backgroundColor: cardBg,
+            }}
+          >
+            <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
+              <div className="flex items-center gap-2.5">
+                {theme?.logo_url ? (
+                  <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }} />
+                ) : (
+                  <span className="font-extrabold text-xl tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
+                    {displayName}
                   </span>
                 )}
-              </button>
-              <button className="h-9 w-9 flex items-center justify-center rounded-full" onClick={() => setActiveTab("wallet")} style={{ color: `${fg}90` }}>
-                <Wallet className="h-5 w-5" />
+              </div>
+              <div className="flex items-center gap-0.5">
+                <BranchPickerSheet />
+                <button
+                  onClick={() => setNotifOpen(true)}
+                  className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
+                >
+                  <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                      style={{ backgroundColor: "hsl(0 72% 51%)" }}
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
+                  onClick={() => setActiveTab("wallet")}
+                >
+                  <Wallet className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="max-w-lg mx-auto px-5 pb-3">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-shadow"
+                style={{
+                  backgroundColor: "#F2F2F7",
+                  boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
+                }}
+              >
+                <Search className="h-5 w-5 flex-shrink-0" style={{ color: `${fg}40` }} />
+                <span className="text-sm font-medium" style={{ color: `${fg}35` }}>
+                  Busque por parceiros e ofertas
+                </span>
               </button>
             </div>
           </div>
-
-          <div className="max-w-lg mx-auto px-5 pb-3">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="w-full flex items-center gap-2.5 rounded-full px-4 py-2.5 text-left"
-              style={{ backgroundColor: "#F2F2F7" }}
-            >
-              <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
-              <span className="text-sm" style={{ color: `${fg}40` }}>Busque por parceiros e ofertas</span>
-            </button>
-          </div>
-
-          <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
         </header>
 
         {/* Content with tab transition */}
