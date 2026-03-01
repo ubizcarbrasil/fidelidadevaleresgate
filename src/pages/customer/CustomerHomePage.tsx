@@ -78,7 +78,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                       <div className="w-1.5 h-1.5 rounded-sm bg-yellow-800/40" />
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium tracking-[0.15em] text-white/60 uppercase">Conta Digital</span>
+                  <span className="text-[10px] font-medium tracking-[0.15em] text-white/60 uppercase">Meus Pontos</span>
                 </div>
                 <div className="flex items-center gap-1 text-white/60">
                   <span className="text-[10px] font-mono tracking-wider">•••• {accountNumber.slice(-4)}</span>
