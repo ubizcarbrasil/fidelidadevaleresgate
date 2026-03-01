@@ -16,7 +16,7 @@ import {
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { PageElement, PageElementStyle, SectionRow, UnifiedBlock } from "./types";
 import { DEFAULT_ELEMENT, ELEMENT_TYPE_LABELS, SECTION_TYPES } from "./types";
-import UnifiedPreview from "./UnifiedPreview";
+import LivePreview from "./LivePreview";
 import SectionEditor from "@/components/page-builder-v2/SectionEditor";
 import ManualLinksEditor from "@/components/page-builder-v2/ManualLinksEditor";
 
@@ -71,7 +71,7 @@ export default function UnifiedEditor({ page, onBack }: Props) {
     setLoading(true);
     const { data } = await (supabase
       .from("brand_sections")
-      .select("*, section_templates(key, name, type)") as any)
+      .select("*, section_templates(key, name, type), brand_section_sources(*)") as any)
       .eq("page_id", page.id)
       .order("order_index");
     setSections((data as SectionRow[]) || []);
@@ -426,13 +426,20 @@ export default function UnifiedEditor({ page, onBack }: Props) {
 
         <ResizableHandle withHandle />
 
-        {/* Right panel: Preview */}
+        {/* Right panel: Live Preview */}
         <ResizablePanel defaultSize={35} minSize={20}>
           <div className="h-full overflow-y-auto bg-white border-l">
             <div className="text-center text-[10px] font-semibold text-muted-foreground py-2 border-b bg-muted/30">
-              📱 PREVIEW
+              📱 PREVIEW AO VIVO
             </div>
-            <UnifiedPreview blocks={blocks} />
+            <LivePreview
+              blocks={blocks}
+              pageTitle={pageSettings.title}
+              pageSubtitle={pageSettings.subtitle}
+              searchEnabled={pageSettings.search_enabled}
+              selectedBlockId={selectedBlockId}
+              onSelectBlock={setSelectedBlockId}
+            />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
