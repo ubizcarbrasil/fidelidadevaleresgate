@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
-  HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus
+  HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus,
+  ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2
 } from "lucide-react";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
@@ -69,13 +71,7 @@ export default function StoreOwnerPanel() {
   }
 
   if (!store) {
-    return (
-      <div className="max-w-lg mx-auto px-5 py-16 text-center">
-        <Store className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
-        <h2 className="text-xl font-bold mb-2">Nenhuma loja aprovada</h2>
-        <p className="text-sm text-muted-foreground">Seu cadastro pode estar em análise ou ainda não foi enviado.</p>
-      </div>
-    );
+    return <StoreEmptyState userId={user?.id} />;
   }
 
   return (
@@ -421,6 +417,154 @@ function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateN
         </div>
       )}
       <ContextualHelpDrawer />
+    </div>
+  );
+}
+
+function StoreEmptyState({ userId }: { userId?: string }) {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const [pendingStores, setPendingStores] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("stores")
+      .select("id, name, approval_status, created_at, store_type")
+      .eq("owner_user_id", userId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setPendingStores(data || []);
+        setLoading(false);
+      });
+  }, [userId]);
+
+  const statusConfig: Record<string, { label: string; icon: typeof Clock; color: string }> = {
+    PENDING_APPROVAL: { label: "Em análise", icon: Clock, color: "text-amber-600" },
+    APPROVED: { label: "Aprovada", icon: CheckCircle2, color: "text-green-600" },
+    REJECTED: { label: "Rejeitada", icon: AlertCircle, color: "text-destructive" },
+    DRAFT: { label: "Rascunho", icon: ClipboardList, color: "text-muted-foreground" },
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth", { replace: true });
+  };
+
+  return (
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Store className="h-10 w-10 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Painel do Lojista</h1>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Gerencie sua loja, cupons e resgates em um só lugar.
+          </p>
+        </div>
+
+        {/* Pending stores list */}
+        {loading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+          </div>
+        ) : pendingStores.length > 0 ? (
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
+              Seus cadastros
+            </p>
+            {pendingStores.map((store) => {
+              const cfg = statusConfig[store.approval_status] || statusConfig.DRAFT;
+              const Icon = cfg.icon;
+              return (
+                <Card key={store.id} className="rounded-xl border">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center bg-muted ${cfg.color}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{store.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[10px]">
+                          {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
+                        </Badge>
+                        <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
+                      </div>
+                    </div>
+                    {store.approval_status === "PENDING_APPROVAL" && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {pendingStores.some(s => s.approval_status === "PENDING_APPROVAL") && (
+              <Card className="rounded-xl border-amber-200 bg-amber-50/50">
+                <CardContent className="p-4 flex gap-3">
+                  <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-900">Aguardando aprovação</p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Seu cadastro está sendo analisado. Você receberá acesso ao painel assim que for aprovado.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        ) : (
+          <Card className="rounded-xl">
+            <CardContent className="p-6 text-center space-y-3">
+              <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40" />
+              <div>
+                <p className="font-semibold text-sm">Nenhum cadastro encontrado</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Cadastre sua loja para começar a oferecer cupons aos clientes.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <Button
+            className="w-full gap-2"
+            size="lg"
+            onClick={() => navigate("/register-store")}
+          >
+            <Plus className="h-4 w-4" />
+            Cadastrar nova loja
+          </Button>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={() => {
+                setLoading(true);
+                window.location.reload();
+              }}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
