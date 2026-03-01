@@ -27,13 +27,13 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "📊 Visão Geral",
     items: [
-      { key: "sidebar.dashboard", defaultTitle: "Dashboard", url: "/", icon: LayoutDashboard },
+      { key: "sidebar.dashboard", defaultTitle: "Painel Principal", url: "/", icon: LayoutDashboard },
     ],
   },
   {
     label: "🎨 Identidade Visual",
     items: [
-      { key: "sidebar.tema_marca", defaultTitle: "Tema & Marca", url: "/brands", icon: Palette },
+      { key: "sidebar.tema_marca", defaultTitle: "Aparência da Marca", url: "/brands", icon: Palette },
       { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe },
       { key: "sidebar.galeria_icones", defaultTitle: "Galeria de Ícones", url: "/icon-library", icon: Image },
     ],
@@ -41,18 +41,18 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "📱 Vitrine do App",
     items: [
-      { key: "sidebar.secoes_home", defaultTitle: "Seções da Home", url: "/templates", icon: Layout, moduleKey: "home_sections" },
-      { key: "sidebar.central_banners", defaultTitle: "Central de Banners", url: "/banner-manager", icon: Image },
+      { key: "sidebar.secoes_home", defaultTitle: "Seções da Tela Inicial", url: "/templates", icon: Layout, moduleKey: "home_sections" },
+      { key: "sidebar.central_banners", defaultTitle: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
-      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder", icon: FileText },
+      { key: "sidebar.page_builder", defaultTitle: "Montador de Páginas", url: "/page-builder", icon: FileText },
     ],
   },
   {
     label: "🏪 Operações",
     items: [
-      { key: "sidebar.branches", defaultTitle: "Branches", url: "/branches", icon: MapPin },
+      { key: "sidebar.branches", defaultTitle: "Filiais", url: "/branches", icon: MapPin },
       { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck, moduleKey: "stores" },
-      { key: "sidebar.importar_csv", defaultTitle: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
+      { key: "sidebar.importar_csv", defaultTitle: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
     ],
   },
   {
@@ -66,8 +66,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "👥 Usuários & Permissões",
     items: [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
-      { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
-      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ScrollText },
+      { key: "sidebar.modulos", defaultTitle: "Funcionalidades", url: "/brand-modules", icon: Blocks },
+      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList },
     ],
   },
 ];
@@ -90,7 +90,7 @@ export function BrandSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Brand Admin</span>
+              <span className="text-xs text-sidebar-foreground/60">Administrador da Marca</span>
             </div>
           )}
         </div>

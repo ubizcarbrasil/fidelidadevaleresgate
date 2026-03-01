@@ -76,13 +76,6 @@ export default function Dashboard() {
   // Enable realtime refresh
   useRealtimeRefresh();
 
-  if (isRedirecting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
   const showBrand = ["ROOT", "TENANT", "BRAND"].includes(consoleScope);
@@ -116,7 +109,7 @@ export default function Dashboard() {
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
 
   // Redemptions chart for selected period
-  async function fetchChartData(table: string) {
+  const fetchChartData = useCallback(async (table: string) => {
     const days: { label: string; count: number }[] = [];
     for (let i = periodDays - 1; i >= 0; i--) {
       const d = new Date();
@@ -133,7 +126,7 @@ export default function Dashboard() {
       days.push({ label: fmt, count: count || 0 });
     }
     return days;
-  }
+  }, [periodDays]);
 
   const { data: recentRedemptions } = useQuery({
     queryKey: ["redemptions-chart", period],
@@ -144,6 +137,15 @@ export default function Dashboard() {
     queryKey: ["earnings-chart", period],
     queryFn: () => fetchChartData("earning_events"),
   });
+
+  // Early return AFTER all hooks
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   const offersPie = [
     { name: "Ativas", value: offersActive ?? 0 },
@@ -160,15 +162,15 @@ export default function Dashboard() {
 
   const STORE_RULE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--destructive))"];
   const allStats = [
-    { title: "Tenants", value: tenants, icon: Building2, scopes: ["ROOT"] },
-    { title: "Brands", value: brands, icon: Store, scopes: ["ROOT", "TENANT"] },
-    { title: "Branches", value: branches, icon: MapPin, scopes: ["ROOT", "TENANT", "BRAND"] },
+    { title: "Empresas", value: tenants, icon: Building2, scopes: ["ROOT"] },
+    { title: "Marcas", value: brands, icon: Store, scopes: ["ROOT", "TENANT"] },
+    { title: "Filiais", value: branches, icon: MapPin, scopes: ["ROOT", "TENANT", "BRAND"] },
     { title: "Lojas", value: storesTotal, sub: `${storesActive ?? 0} ativas`, icon: ShoppingBag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Ofertas Ativas", value: offersActive, sub: `${offersTotal ?? 0} total`, icon: Tag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Clientes", value: customersTotal, sub: `${customersActive ?? 0} ativos`, icon: UserCheck, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Resgates no Período", value: redemptionsPeriod, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Vouchers Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Acúmulos no Período", value: earningEventsPeriod, sub: `${earningEventsTotal ?? 0} total`, icon: Coins, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Cupons Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Pontuações no Período", value: earningEventsPeriod, sub: `${earningEventsTotal ?? 0} total`, icon: Coins, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Regras de Loja", value: storeRulesActive, sub: `${storeRulesTotal ?? 0} total · ${storeRulesPending ?? 0} pendentes`, icon: Store, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Usuários", value: usersCount, icon: Users, scopes: ["ROOT", "TENANT", "BRAND"] },
   ];
@@ -177,10 +179,10 @@ export default function Dashboard() {
 
   const scopeLabels: Record<string, string> = {
     ROOT: "Visão geral da plataforma",
-    TENANT: "Visão geral do tenant",
+    TENANT: "Visão geral da empresa",
     BRAND: "Visão geral da marca",
     BRANCH: "Visão geral da filial",
-    OPERATOR: "Operador PDV",
+    OPERATOR: "Operador do Ponto de Venda",
   };
 
   return (
@@ -188,7 +190,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Painel Principal</h2>
             <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
           </div>
           <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600">
@@ -254,7 +256,7 @@ export default function Dashboard() {
         {/* Earnings chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Acúmulos — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
+            <CardTitle className="text-base">Pontuações — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
           </CardHeader>
           <CardContent>
             {!recentEarnings ? (
@@ -265,7 +267,7 @@ export default function Dashboard() {
                   <XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={30} />
                   <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                  <Bar dataKey="count" name="Acúmulos" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" name="Pontuações" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -311,7 +313,7 @@ export default function Dashboard() {
         {/* Store rules pie chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Regras Customizadas de Loja</CardTitle>
+            <CardTitle className="text-base">Regras Personalizadas de Loja</CardTitle>
           </CardHeader>
           <CardContent>
             {storeRulesTotal === undefined ? (

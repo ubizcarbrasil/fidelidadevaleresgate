@@ -13,20 +13,20 @@ const groups = [
   {
     label: "📊 Visão Geral",
     items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
+      { title: "Painel Principal", url: "/", icon: LayoutDashboard },
     ],
   },
   {
     label: "🏢 Estrutura",
     items: [
-      { title: "Brands", url: "/brands", icon: Store },
-      { title: "Branches", url: "/branches", icon: MapPin },
+      { title: "Marcas", url: "/brands", icon: Store },
+      { title: "Filiais", url: "/branches", icon: MapPin },
     ],
   },
   {
     label: "🏪 Operações",
     items: [
-      { title: "Vouchers", url: "/vouchers", icon: Ticket },
+      { title: "Cupons", url: "/vouchers", icon: Ticket },
     ],
   },
   {
@@ -53,7 +53,7 @@ export function TenantSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Tenant Admin</span>
+              <span className="text-xs text-sidebar-foreground/60">Administrador da Empresa</span>
             </div>
           )}
         </div>

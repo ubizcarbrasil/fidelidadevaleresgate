@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Painel Principal", url: "/", icon: LayoutDashboard },
   { title: "Lojas", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
   { title: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
   { title: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
@@ -19,10 +19,10 @@ const items = [
   { title: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
   { title: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
   { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
-  { title: "Vouchers", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
+  { title: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
   { title: "Minha Regra de Pontos", url: "/store-points-rule", icon: Store, moduleKey: "earn_points_store" },
   { title: "Aprovar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
-  { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
+  { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
   { title: "Auditoria", url: "/audit", icon: ClipboardList },
 ];
 
@@ -45,7 +45,7 @@ export function BranchSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Branch Admin</span>
+              <span className="text-xs text-sidebar-foreground/60">Administrador da Filial</span>
             </div>
           )}
         </div>
