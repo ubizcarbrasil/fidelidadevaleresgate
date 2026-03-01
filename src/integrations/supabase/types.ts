@@ -2198,6 +2198,7 @@ export type Database = {
           category_id: string
           created_at: string
           description: string | null
+          icon_name: string | null
           id: string
           is_active: boolean
           keywords: string[]
@@ -2212,6 +2213,7 @@ export type Database = {
           category_id: string
           created_at?: string
           description?: string | null
+          icon_name?: string | null
           id?: string
           is_active?: boolean
           keywords?: string[]
@@ -2226,6 +2228,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           description?: string | null
+          icon_name?: string | null
           id?: string
           is_active?: boolean
           keywords?: string[]
