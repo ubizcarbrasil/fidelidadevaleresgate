@@ -16,6 +16,7 @@ import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
 import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
+import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 
 // Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
 interface CustomerNavContextType {
@@ -28,6 +29,7 @@ interface CustomerNavContextType {
   navigateToOffersWithSegment: (segmentId: string) => void;
   activeSegmentFilter: string | null;
   clearSegmentFilter: () => void;
+  openEmissorasList?: () => void;
 }
 const CustomerNavContext = createContext<CustomerNavContextType>({
   openOffer: () => {}, openStore: () => {}, openSectionDetail: () => {},
@@ -36,6 +38,7 @@ const CustomerNavContext = createContext<CustomerNavContextType>({
   navigateToOffersWithSegment: () => {},
   activeSegmentFilter: null,
   clearSegmentFilter: () => {},
+  openEmissorasList: () => {},
 });
 export const useOfferNav = () => useContext(CustomerNavContext);
 export const useCustomerNav = () => useContext(CustomerNavContext);
@@ -78,6 +81,7 @@ export default function CustomerLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [ledgerOpen, setLedgerOpen] = useState(false);
+  const [emissorasOpen, setEmissorasOpen] = useState(false);
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
@@ -100,7 +104,7 @@ export default function CustomerLayout() {
   const ActivePage = TAB_CONTENT[activeTab];
 
   return (
-    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter }}>
+    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
         {/* Modern Header */}
         <header className="sticky top-0 z-50" style={{ backgroundColor: cardBg }}>
@@ -249,6 +253,13 @@ export default function CustomerLayout() {
 
         {/* Ledger Overlay */}
         <CustomerLedgerOverlay open={ledgerOpen} onBack={() => setLedgerOpen(false)} />
+
+        {/* Emissoras List Overlay */}
+        <AnimatePresence>
+          {emissorasOpen && (
+            <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+          )}
+        </AnimatePresence>
 
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />

@@ -623,6 +623,42 @@ export type Database = {
           },
         ]
       }
+      customer_favorite_stores: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_favorite_stores_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_favorite_stores_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_favorites: {
         Row: {
           created_at: string
