@@ -8,9 +8,15 @@ interface Props {
 
 export default function StepReview({ data }: Props) {
   const isPercent = data.discount_mode === "PERCENT";
-  const creditBase = isPercent
-    ? (data.discount_percent / 100) * data.min_purchase
-    : data.discount_fixed;
+  const isProduct = data.coupon_type === "PRODUCT";
+
+  const creditBase = isProduct
+    ? isPercent
+      ? (data.discount_percent / 100) * data.product_price
+      : data.discount_fixed
+    : isPercent
+      ? (data.discount_percent / 100) * data.min_purchase
+      : data.discount_fixed;
 
   return (
     <div className="space-y-4">
@@ -22,23 +28,60 @@ export default function StepReview({ data }: Props) {
             <img src={data.image_url} alt="Imagem do cupom" className="w-full h-32 object-cover" />
           </div>
         )}
+        {!data.image_url && data.coupon_type === "STORE" && (
+          <div className="p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground mb-3">
+            📷 A logo da loja será usada automaticamente como imagem do cupom.
+          </div>
+        )}
         <div className="flex justify-between border-b pb-2">
           <span className="text-muted-foreground">Categoria</span>
           <Badge variant="secondary">{data.coupon_category}</Badge>
         </div>
         <div className="flex justify-between border-b pb-2">
           <span className="text-muted-foreground">Tipo</span>
-          <span>{data.coupon_type === "STORE" ? "Loja Toda" : "Produto Específico"}</span>
+          <span>{isProduct ? "Produto Específico" : "Loja Toda"}</span>
         </div>
+
+        {/* Differentiated nomenclature */}
+        <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+          {isProduct ? (
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
+              <p className="text-lg font-bold text-primary">
+                PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Produto: R$ {data.product_price.toFixed(2)}
+              </p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
+              <p className="text-lg font-bold text-primary">
+                VALE RESGATE R$ {creditBase.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Condicionado à compra mínima de R$ {data.min_purchase.toFixed(2)}
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-between border-b pb-2">
           <span className="text-muted-foreground">Desconto</span>
           <span className="font-bold">
             {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`}
           </span>
         </div>
+        {isProduct && (
+          <div className="flex justify-between border-b pb-2">
+            <span className="text-muted-foreground">Valor do produto</span>
+            <span className="font-bold">R$ {data.product_price.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between border-b pb-2">
-          <span className="text-muted-foreground">Crédito base</span>
-          <span>R$ {creditBase.toFixed(2)} (mín. R$ {data.min_purchase.toFixed(2)})</span>
+          <span className="text-muted-foreground">{isProduct ? "Valor em pontos" : "Crédito base"}</span>
+          <span>R$ {creditBase.toFixed(2)}{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
         </div>
         {data.scaled_values.length > 0 && (
           <div className="border-b pb-2">

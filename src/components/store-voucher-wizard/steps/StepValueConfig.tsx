@@ -11,9 +11,15 @@ interface Props {
 
 export default function StepValueConfig({ data, update }: Props) {
   const isPercent = data.discount_mode === "PERCENT";
-  const creditValue = isPercent
-    ? (data.discount_percent / 100) * data.min_purchase
-    : data.discount_fixed;
+  const isProduct = data.coupon_type === "PRODUCT";
+
+  const creditValue = isProduct
+    ? isPercent
+      ? (data.discount_percent / 100) * data.product_price
+      : data.discount_fixed
+    : isPercent
+      ? (data.discount_percent / 100) * data.min_purchase
+      : data.discount_fixed;
 
   const addScale = () => {
     if (data.scaled_values.length >= 5) return;
@@ -46,6 +52,24 @@ export default function StepValueConfig({ data, update }: Props) {
   return (
     <div className="space-y-5">
       <Label className="text-base font-semibold">Configuração de Valor</Label>
+
+      {/* Product price field - only for PRODUCT type */}
+      {isProduct && (
+        <div className="space-y-1 p-3 border rounded-lg bg-accent/30">
+          <Label className="font-semibold">Valor do produto (R$)</Label>
+          <div className="flex items-center gap-1">
+            <span className="text-lg font-bold text-muted-foreground">R$</span>
+            <Input
+              type="number" min={0.01} step={0.01}
+              value={data.product_price}
+              onChange={(e) => update({ product_price: Number(e.target.value) })}
+              className="text-lg font-bold max-w-[140px]"
+              placeholder="0,00"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Informe o preço original do produto para calcular o desconto em pontos.</p>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <button
@@ -96,24 +120,43 @@ export default function StepValueConfig({ data, update }: Props) {
             </div>
           </div>
         )}
-        <div className="space-y-1">
-          <Label>Compra mínima</Label>
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-muted-foreground">R$</span>
-            <Input
-              type="number" min={0} step={0.01}
-              value={data.min_purchase}
-              onChange={(e) => update({ min_purchase: Number(e.target.value) })}
-            />
+        {!isProduct && (
+          <div className="space-y-1">
+            <Label>Compra mínima</Label>
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-muted-foreground">R$</span>
+              <Input
+                type="number" min={0} step={0.01}
+                value={data.min_purchase}
+                onChange={(e) => update({ min_purchase: Number(e.target.value) })}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
+      {/* Summary box with differentiated nomenclature */}
       <div className="p-3 bg-accent/50 rounded-lg text-sm">
-        <strong>Crédito base:</strong> R$ {creditValue.toFixed(2)} para compra mínima de R$ {data.min_purchase.toFixed(2)}
+        {isProduct ? (
+          <>
+            <strong>PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS</strong>
+            <br />
+            <span className="text-muted-foreground">
+              Produto: R$ {data.product_price.toFixed(2)} → Cliente paga R$ {creditValue.toFixed(2)} em pontos
+            </span>
+          </>
+        ) : (
+          <>
+            <strong>VALE RESGATE R$ {creditValue.toFixed(2)}</strong>
+            <br />
+            <span className="text-muted-foreground">
+              Crédito condicionado à compra mínima de R$ {data.min_purchase.toFixed(2)}
+            </span>
+          </>
+        )}
       </div>
 
-      {isPercent && (
+      {isPercent && !isProduct && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label>Faixas escalonadas (até 5)</Label>

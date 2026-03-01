@@ -54,6 +54,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       discount_percent: p.discount_percent ?? editOffer.discount_percent ?? 20,
       discount_fixed: p.discount_fixed ?? 0,
       discount_mode: p.discount_mode || "PERCENT",
+      product_price: p.product_price ?? 0,
       min_purchase: p.min_purchase ?? editOffer.min_purchase ?? 100,
       scaled_values: p.scaled_values || [],
       requires_scheduling: p.requires_scheduling ?? false,
@@ -108,9 +109,14 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
   const handleSubmit = async () => {
     setSaving(true);
     const isPercent = data.discount_mode === "PERCENT";
-    const creditBase = isPercent
-      ? (data.discount_percent / 100) * data.min_purchase
-      : data.discount_fixed;
+    const isProduct = data.coupon_type === "PRODUCT";
+    const creditBase = isProduct
+      ? isPercent
+        ? (data.discount_percent / 100) * data.product_price
+        : data.discount_fixed
+      : isPercent
+        ? (data.discount_percent / 100) * data.min_purchase
+        : data.discount_fixed;
 
     const terms = generateTerms(data);
 
@@ -137,10 +143,15 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       coupon_type: data.coupon_type,
       coupon_category: data.coupon_category,
       taxonomy_segment_id: data.taxonomy_segment_id,
+      product_price: data.product_price,
     };
 
+    const autoTitle = isProduct
+      ? `Pague ${data.discount_percent}% com Pontos — ${data.coupon_category}`
+      : `Vale Resgate R$ ${creditBase.toFixed(2)} — ${data.coupon_category}`;
+
     const payload: any = {
-      title: data.coupon_category + " - " + (data.coupon_type === "STORE" ? "Loja Toda" : "Produto"),
+      title: autoTitle,
       description: data.description || null,
       image_url: data.image_url || null,
       coupon_type: data.coupon_type,

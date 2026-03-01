@@ -223,31 +223,60 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
           )}
 
           {/* Coupon-style value highlight */}
-          {Number(offer.value_rescue) > 0 && (
-            <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
-              <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
-                <div>
-                  <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Valor do resgate</p>
-                  <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                    R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
-                  </p>
-                </div>
-                {Number(offer.min_purchase) > 0 && (
-                  <div className="text-right">
-                    <p className="text-[10px] font-medium" style={{ color: `${fg}40` }}>Compra mínima</p>
-                    <p className="text-sm font-bold" style={{ color: `${fg}70` }}>
-                      R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+          {(() => {
+            const isProduct = offer.coupon_type === "PRODUCT";
+            const termsParams = offer.terms_params_json as any;
+            const productPrice = termsParams?.product_price || 0;
+
+            if (isProduct && Number(offer.discount_percent) > 0) {
+              return (
+                <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
+                  <div className="p-4 text-center" style={{ backgroundColor: `${primary}06` }}>
+                    <p className="text-xs font-medium mb-1" style={{ color: `${fg}50` }}>Oferta de Produto</p>
+                    <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                      PAGUE {offer.discount_percent}% COM PONTOS
                     </p>
+                    {productPrice > 0 && (
+                      <p className="text-sm mt-1" style={{ color: `${fg}60` }}>
+                        Produto: R$ {Number(productPrice).toFixed(2).replace(".", ",")}
+                      </p>
+                    )}
                   </div>
-                )}
-              </div>
-              {Number(offer.discount_percent) > 0 && (
-                <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: `${primary}12`, color: primary }}>
-                  {offer.discount_percent}% de desconto aplicado
                 </div>
-              )}
-            </div>
-          )}
+              );
+            }
+
+            if (Number(offer.value_rescue) > 0) {
+              return (
+                <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
+                  <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
+                    <div>
+                      <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate</p>
+                      <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                        R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                      </p>
+                      <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>em crédito</p>
+                    </div>
+                    {Number(offer.min_purchase) > 0 && (
+                      <div className="text-right">
+                        <p className="text-[10px] font-medium" style={{ color: `${fg}40` }}>Compra mínima</p>
+                        <p className="text-sm font-bold" style={{ color: `${fg}70` }}>
+                          R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {Number(offer.discount_percent) > 0 && (
+                    <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                      {offer.discount_percent}% de desconto aplicado
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return null;
+          })()}
         </div>
 
         {/* Rules section */}
