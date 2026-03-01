@@ -13,6 +13,13 @@ import {
   Phone,
   Tag,
   Sparkles,
+  Instagram,
+  Globe,
+  Navigation,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -155,14 +162,20 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             </div>
           )}
 
+          {store.description && (
+            <p className="text-xs leading-relaxed mt-3" style={{ color: `${fg}65` }}>
+              {store.description}
+            </p>
+          )}
+
           {/* Action buttons */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
             {whatsappUrl && (
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white min-w-[120px]"
                 style={{ backgroundColor: "#25D366" }}
               >
                 <MessageCircle className="h-4 w-4" />
@@ -179,8 +192,56 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                 Ligar
               </a>
             )}
+            {store.instagram && (
+              <a
+                href={store.instagram.startsWith("http") ? store.instagram : `https://instagram.com/${store.instagram.replace("@", "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm text-white"
+                style={{ background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)" }}
+              >
+                <Instagram className="h-4 w-4" />
+                Instagram
+              </a>
+            )}
+            {store.site_url && (
+              <a
+                href={store.site_url.startsWith("http") ? store.site_url : `https://${store.site_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
+                style={{ backgroundColor: `${primary}12`, color: primary }}
+              >
+                <Globe className="h-4 w-4" />
+                Site
+              </a>
+            )}
+            {store.address && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
+                style={{ backgroundColor: "#4285F412", color: "#4285F4" }}
+              >
+                <Navigation className="h-4 w-4" />
+                Ir até lá
+              </a>
+            )}
           </div>
         </div>
+
+        {/* Video embed */}
+        {store.video_url && (
+          <div className="mx-4 mt-4">
+            <VideoEmbed url={store.video_url} primary={primary} fontHeading={fontHeading} />
+          </div>
+        )}
+
+        {/* Gallery */}
+        {store.gallery_urls && (store.gallery_urls as string[]).length > 0 && (
+          <StoreGallery urls={store.gallery_urls as string[]} fontHeading={fontHeading} />
+        )}
 
         {/* Offers section */}
         <div className="mx-4 mt-5">
@@ -346,5 +407,110 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
         )}
       </div>
     </motion.div>
+  );
+}
+
+// --- Video Embed ---
+function VideoEmbed({ url, primary, fontHeading }: { url: string; primary: string; fontHeading: string }) {
+  const getEmbedUrl = (rawUrl: string): string | null => {
+    // YouTube
+    const ytMatch = rawUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    // Vimeo
+    const vimeoMatch = rawUrl.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    return null;
+  };
+
+  const embedUrl = getEmbedUrl(url);
+  if (!embedUrl) return null;
+
+  return (
+    <div>
+      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
+        Vídeo
+      </h3>
+      <div className="rounded-[16px] overflow-hidden" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+          <iframe
+            src={embedUrl}
+            title="Video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Store Gallery ---
+function StoreGallery({ urls, fontHeading }: { urls: string[]; fontHeading: string }) {
+  const [selected, setSelected] = useState<number | null>(null);
+
+  return (
+    <div className="mx-4 mt-4">
+      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
+        Fotos
+      </h3>
+      <div className="grid grid-cols-3 gap-2">
+        {urls.map((url, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.05 }}
+            className="aspect-square rounded-[12px] overflow-hidden cursor-pointer active:scale-95 transition-transform"
+            style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
+            onClick={() => setSelected(i)}
+          >
+            <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {selected !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setSelected(null)}
+          >
+            <button
+              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/20 flex items-center justify-center"
+              onClick={() => setSelected(null)}
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+            {selected > 0 && (
+              <button
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 flex items-center justify-center"
+                onClick={(e) => { e.stopPropagation(); setSelected(selected - 1); }}
+              >
+                <ChevronLeft className="h-5 w-5 text-white" />
+              </button>
+            )}
+            {selected < urls.length - 1 && (
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 flex items-center justify-center"
+                onClick={(e) => { e.stopPropagation(); setSelected(selected + 1); }}
+              >
+                <ChevronRight className="h-5 w-5 text-white" />
+              </button>
+            )}
+            <img
+              src={urls[selected]}
+              alt=""
+              className="max-w-full max-h-[85vh] rounded-xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
