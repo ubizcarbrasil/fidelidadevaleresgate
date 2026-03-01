@@ -79,6 +79,22 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
     }
     setRedeeming(true);
     try {
+      // Build offer snapshot for historical integrity
+      const offerSnapshot = {
+        title: offer.title,
+        value_rescue: offer.value_rescue,
+        min_purchase: offer.min_purchase,
+        discount_percent: offer.discount_percent,
+        scaled_values_json: offer.scaled_values_json,
+        coupon_type: offer.coupon_type,
+        redemption_type: offer.redemption_type,
+        allowed_weekdays: offer.allowed_weekdays,
+        allowed_hours: offer.allowed_hours,
+        max_daily_redemptions: offer.max_daily_redemptions,
+        max_uses_per_customer: offer.max_uses_per_customer,
+        terms_text: offer.terms_text,
+      };
+
       const { data: created, error } = await supabase.from("redemptions").insert({
         offer_id: offer.id,
         customer_id: customer.id,
@@ -86,6 +102,7 @@ export default function CustomerOfferDetailPage({ offer, onBack }: Props) {
         branch_id: selectedBranch.id,
         status: "PENDING",
         customer_cpf: cpf.replace(/\D/g, ""),
+        offer_snapshot_json: offerSnapshot as any,
       }).select("token").single();
       if (error) throw error;
       setPin(created.token);

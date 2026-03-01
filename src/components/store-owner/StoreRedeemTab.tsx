@@ -94,7 +94,12 @@ export default function StoreRedeemTab({ store }: { store: any }) {
       }
       const { error } = await supabase
         .from("redemptions")
-        .update({ status: "USED" as any, used_at: new Date().toISOString(), purchase_value: pv || null })
+        .update({
+          status: "USED" as any,
+          used_at: new Date().toISOString(),
+          purchase_value: pv || null,
+          credit_value_applied: result.value_rescue,
+        } as any)
         .eq("id", result.id);
       if (error) throw error;
     },

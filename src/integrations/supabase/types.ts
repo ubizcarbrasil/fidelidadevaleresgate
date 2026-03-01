@@ -772,6 +772,7 @@ export type Database = {
           points_earned: number
           purchase_value: number
           receipt_code: string | null
+          rule_snapshot_json: Json | null
           source: Database["public"]["Enums"]["earning_source"]
           status: Database["public"]["Enums"]["earning_status"]
           store_id: string
@@ -787,6 +788,7 @@ export type Database = {
           points_earned?: number
           purchase_value?: number
           receipt_code?: string | null
+          rule_snapshot_json?: Json | null
           source?: Database["public"]["Enums"]["earning_source"]
           status?: Database["public"]["Enums"]["earning_status"]
           store_id: string
@@ -802,6 +804,7 @@ export type Database = {
           points_earned?: number
           purchase_value?: number
           receipt_code?: string | null
+          rule_snapshot_json?: Json | null
           source?: Database["public"]["Enums"]["earning_source"]
           status?: Database["public"]["Enums"]["earning_status"]
           store_id?: string
@@ -1177,6 +1180,7 @@ export type Database = {
           store_id: string
           terms_accepted_at: string | null
           terms_text: string | null
+          terms_version: string | null
           title: string
           updated_at: string
           value_rescue: number
@@ -1214,6 +1218,7 @@ export type Database = {
           store_id: string
           terms_accepted_at?: string | null
           terms_text?: string | null
+          terms_version?: string | null
           title: string
           updated_at?: string
           value_rescue?: number
@@ -1251,6 +1256,7 @@ export type Database = {
           store_id?: string
           terms_accepted_at?: string | null
           terms_text?: string | null
+          terms_version?: string | null
           title?: string
           updated_at?: string
           value_rescue?: number
@@ -1570,11 +1576,13 @@ export type Database = {
           branch_id: string
           brand_id: string
           created_at: string
+          credit_value_applied: number | null
           customer_cpf: string | null
           customer_id: string
           expires_at: string | null
           id: string
           offer_id: string
+          offer_snapshot_json: Json | null
           purchase_value: number | null
           qr_data: string | null
           status: Database["public"]["Enums"]["redemption_status"]
@@ -1585,11 +1593,13 @@ export type Database = {
           branch_id: string
           brand_id: string
           created_at?: string
+          credit_value_applied?: number | null
           customer_cpf?: string | null
           customer_id: string
           expires_at?: string | null
           id?: string
           offer_id: string
+          offer_snapshot_json?: Json | null
           purchase_value?: number | null
           qr_data?: string | null
           status?: Database["public"]["Enums"]["redemption_status"]
@@ -1600,11 +1610,13 @@ export type Database = {
           branch_id?: string
           brand_id?: string
           created_at?: string
+          credit_value_applied?: number | null
           customer_cpf?: string | null
           customer_id?: string
           expires_at?: string | null
           id?: string
           offer_id?: string
+          offer_snapshot_json?: Json | null
           purchase_value?: number | null
           qr_data?: string | null
           status?: Database["public"]["Enums"]["redemption_status"]
