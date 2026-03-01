@@ -173,9 +173,11 @@ export type Database = {
           brand_section_id: string | null
           created_at: string
           end_at: string | null
+          height: string
           id: string
           image_url: string
           is_active: boolean
+          link_label: string | null
           link_target_id: string | null
           link_type: string
           link_url: string | null
@@ -189,9 +191,11 @@ export type Database = {
           brand_section_id?: string | null
           created_at?: string
           end_at?: string | null
+          height?: string
           id?: string
           image_url: string
           is_active?: boolean
+          link_label?: string | null
           link_target_id?: string | null
           link_type?: string
           link_url?: string | null
@@ -205,9 +209,11 @@ export type Database = {
           brand_section_id?: string | null
           created_at?: string
           end_at?: string | null
+          height?: string
           id?: string
           image_url?: string
           is_active?: boolean
+          link_label?: string | null
           link_target_id?: string | null
           link_type?: string
           link_url?: string | null
