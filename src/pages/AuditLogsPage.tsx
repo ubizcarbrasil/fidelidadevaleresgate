@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 30;
 
@@ -15,12 +16,19 @@ export default function AuditLogsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
+  const { isRootAdmin, currentBrandId, currentBranchId } = useBrandGuard();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["audit-logs", debouncedSearch, page],
+    queryKey: ["audit-logs", debouncedSearch, page, currentBrandId, currentBranchId],
     queryFn: async () => {
       let query = supabase.from("audit_logs").select("*", { count: "exact" });
       if (debouncedSearch) query = query.or(`action.ilike.%${debouncedSearch}%,entity_type.ilike.%${debouncedSearch}%`);
+      // Non-root users: RLS already filters by scope, but we also apply explicit filter for UX
+      if (!isRootAdmin && currentBranchId) {
+        query = query.eq("scope_type", "BRANCH").eq("scope_id", currentBranchId);
+      } else if (!isRootAdmin && currentBrandId) {
+        query = query.eq("scope_type", "BRAND").eq("scope_id", currentBrandId);
+      }
       query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       const { data, error, count } = await query;
       if (error) throw error;

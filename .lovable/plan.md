@@ -19,8 +19,23 @@
 - **EmissorasSection**: já exibia `points_per_real` ✅
 - **StoreExtratoTab**: filtro por tipo (resgates/pontuações) + KPIs separados + ícones distintos
 
+### Onda 1 (P1) — Extratos Avançados + Termos Versionados
+- **CustomerLedgerOverlay**: filtros período/tipo/busca, infinite scroll, agrupamento por data, join com stores
+- **StoreExtratoTab**: KPIs financeiros, mascaramento CPF/PIN, filtros status/cupom/data
+- **StoreVoucherWizard**: `terms_params_json` snapshot completo, `terms_version`, `terms_accepted_by_user_id`
+- **Migração**: `terms_params_json`, `terms_accepted_by_user_id` em `offers`
+
+### Onda 2 (P1) — Filtros de Seção + Relatórios
+- **HomeSectionsRenderer**: filter_mode (recent/most_redeemed/newest/random), coupon_type_filter, city_filter_json, min_stores_visible, columns_count
+- **ReportsPage**: Performance por Cupom, Central Anti-fraude (receipt_code duplicados, top emissores)
+
+### Onda 3 (P1) — Audit Logs Escopo + Cupom Editável
+- **AuditLogsPage**: filtro automático por brand/branch para não-root, RLS policy para brand/branch admins
+- **BrandSidebar / BranchSidebar**: link "Auditoria" adicionado
+- **StoreVoucherWizard**: modo edição com `editOffer`, preenchimento automático dos campos, incremento de `terms_version`
+- **StoreCouponsTab**: botão "Editar" em cupons DRAFT/ACTIVE não expirados
+
 ## Pendente (próximas iterações)
 
-### Sprint D (P2) — Sidebar + Relatórios
-1. **BrandSidebar / BranchSidebar**: reorganizar menus por grupos
-2. **ReportsPage**: gráficos reais com Recharts (ledger + redemptions)
+### Sprint D (P2) — Relatórios Gráficos
+1. **ReportsPage**: gráficos reais com Recharts (ledger + redemptions ao longo do tempo)
