@@ -106,8 +106,19 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
         throw signUpError;
       }
 
+      // Wait for the session to be fully established in the supabase client
+      // by polling getSession until we get a valid JWT
+      let attempts = 0;
+      while (attempts < 10) {
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        if (sessionCheck.session?.access_token) break;
+        await new Promise((r) => setTimeout(r, 500));
+        attempts++;
+      }
+
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
-      setTimeout(() => onComplete(data.cpf), 1500);
+      // Give React context time to update with new auth state
+      setTimeout(() => onComplete(data.cpf), 2000);
     } catch (err: any) {
       toast({ title: "Erro", description: translateError(err.message), variant: "destructive" });
     } finally {
