@@ -173,6 +173,18 @@ export default function EarnPointsPage() {
         if (existing && existing.length > 0) throw new Error("Comprovante já utilizado nesta loja");
       }
 
+      // Build rule snapshot for historical integrity
+      const ruleSnapshot = {
+        points_per_real: effectivePointsPerReal,
+        rule_type: rule.rule_type,
+        money_per_point: rule.money_per_point,
+        min_purchase_to_earn: rule.min_purchase_to_earn,
+        max_points_per_purchase: rule.max_points_per_purchase,
+        max_points_per_customer_per_day: rule.max_points_per_customer_per_day,
+        max_points_per_store_per_day: rule.max_points_per_store_per_day,
+        using_custom_store_rule: usingCustomRule,
+      };
+
       // Insert earning_event
       const { data: event, error: eventErr } = await supabase.from("earning_events").insert({
         brand_id: currentBrandId,
@@ -186,6 +198,7 @@ export default function EarnPointsPage() {
         source: "PDV" as any,
         created_by_user_id: user.id,
         status: "APPROVED" as any,
+        rule_snapshot_json: ruleSnapshot as any,
       }).select("id").single();
       if (eventErr) throw eventErr;
 
