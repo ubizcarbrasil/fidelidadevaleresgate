@@ -81,7 +81,7 @@ export default function StoreApprovalsPage() {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
       // store_admin role is auto-assigned by DB trigger (trg_auto_assign_store_admin)
-      toast({ title: "Loja aprovada!" });
+      toast({ title: "Parceiro aprovado!" });
       setSelected(null);
       fetchStores();
     }
@@ -102,7 +102,7 @@ export default function StoreApprovalsPage() {
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Loja rejeitada" });
+      toast({ title: "Parceiro rejeitado" });
       setSelected(null);
       fetchStores();
     }

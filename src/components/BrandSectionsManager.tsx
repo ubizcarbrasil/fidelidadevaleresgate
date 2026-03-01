@@ -21,14 +21,14 @@ const TEMPLATE_TYPE_LABELS: Record<string, string> = {
   BANNER_CAROUSEL: "Banner Carousel",
   OFFERS_CAROUSEL: "Carrossel de Ofertas",
   OFFERS_GRID: "Grade de Ofertas",
-  STORES_GRID: "Grade de Lojas",
-  STORES_LIST: "Lista de Lojas",
+  STORES_GRID: "Grade de Parceiros",
+  STORES_LIST: "Lista de Parceiros",
   VOUCHERS_CARDS: "Cards de Vouchers",
 };
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
   OFFERS: "Ofertas",
-  STORES: "Lojas",
+  STORES: "Parceiros",
   CATEGORIES: "Categorias",
   CUSTOM_QUERY: "Query Customizada",
   MANUAL: "Manual",
@@ -284,7 +284,7 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="PRODUCT">Produto</SelectItem>
-                      <SelectItem value="STORE">Loja toda</SelectItem>
+                      <SelectItem value="STORE">Estabelecimento todo</SelectItem>
                       <SelectItem value="MIXED">Misturado</SelectItem>
                     </SelectContent>
                   </Select>
@@ -293,11 +293,11 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
                 {/* Min/Max stores */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Mín. lojas visíveis</Label>
+                    <Label>Mín. parceiros visíveis</Label>
                     <Input type="number" value={form.minStoresVisible} onChange={e => updateForm("minStoresVisible", e.target.value)} min="0" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Máx. lojas visíveis</Label>
+                    <Label>Máx. parceiros visíveis</Label>
                     <Input type="number" value={form.maxStoresVisible} onChange={e => updateForm("maxStoresVisible", e.target.value)} placeholder="Sem limite" />
                   </div>
                 </div>
