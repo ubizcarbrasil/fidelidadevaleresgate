@@ -20,10 +20,10 @@ import {
 } from "lucide-react";
 
 const STEPS = [
-  { label: "Dados básicos", desc: "Informações do negócio", icon: Store },
+  { label: "Dados básicos", desc: "Informações do estabelecimento", icon: Store },
   { label: "Endereço e canais", desc: "Localização e contato", icon: MapPin },
   { label: "Documentos e mídia", desc: "Comprovantes e imagens", icon: FileText },
-  { label: "Criar acesso", desc: "Senha do painel", icon: Lock },
+  { label: "Criar acesso", desc: "Senha do portal", icon: Lock },
 ];
 
 const CATEGORIES = [
@@ -474,7 +474,7 @@ export default function StoreRegistrationWizard() {
                   />
                 </FieldGroup>
 
-                <FieldGroup icon={Building2} label="Tipo de loja" required hint="Define como sua loja interage com a plataforma">
+                <FieldGroup icon={Building2} label="Tipo de parceria" required hint="Define como seu estabelecimento interage com a plataforma">
                   <Select value={data.store_type} onValueChange={v => update("store_type", v)}>
                     <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -505,7 +505,7 @@ export default function StoreRegistrationWizard() {
                       value={data.email}
                       onChange={e => update("email", e.target.value)}
                       type="email"
-                      placeholder="loja@email.com"
+                      placeholder="contato@email.com"
                       className="h-11"
                     />
                   </FieldGroup>
@@ -578,7 +578,7 @@ export default function StoreRegistrationWizard() {
                       <Input
                         value={data.instagram}
                         onChange={e => update("instagram", e.target.value)}
-                        placeholder="@minhalojaoficial"
+                        placeholder="@meuestabelecimento"
                         className="h-11"
                       />
                     </FieldGroup>
@@ -656,8 +656,8 @@ export default function StoreRegistrationWizard() {
                     <Lock className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-foreground">Crie sua senha de acesso</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Essa senha será utilizada para acessar o painel da sua loja após a aprovação do cadastro.
+                       <p className="text-xs text-muted-foreground mt-0.5">
+                         Essa senha será utilizada para acessar o portal do parceiro após a aprovação do cadastro.
                       </p>
                     </div>
                   </CardContent>
