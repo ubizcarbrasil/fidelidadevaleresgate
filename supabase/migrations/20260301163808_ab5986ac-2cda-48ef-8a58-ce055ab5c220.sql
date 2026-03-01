@@ -1,0 +1,42 @@
+-- Add icon_name column to taxonomy_segments
+ALTER TABLE public.taxonomy_segments ADD COLUMN icon_name text;
+
+-- Populate with sensible defaults based on common segment names
+UPDATE public.taxonomy_segments SET icon_name = CASE
+  WHEN name ILIKE '%pizza%' THEN 'pizza'
+  WHEN name ILIKE '%hambur%' THEN 'beef'
+  WHEN name ILIKE '%café%' OR name ILIKE '%cafeteria%' THEN 'coffee'
+  WHEN name ILIKE '%padaria%' THEN 'croissant'
+  WHEN name ILIKE '%bar%' THEN 'beer'
+  WHEN name ILIKE '%farmácia%' OR name ILIKE '%drogaria%' THEN 'pill'
+  WHEN name ILIKE '%pet%' OR name ILIKE '%veterinár%' THEN 'paw-print'
+  WHEN name ILIKE '%academia%' OR name ILIKE '%fitness%' THEN 'dumbbell'
+  WHEN name ILIKE '%salão%' OR name ILIKE '%barbearia%' OR name ILIKE '%cabeleir%' THEN 'scissors'
+  WHEN name ILIKE '%roupa%' OR name ILIKE '%moda%' OR name ILIKE '%vestuário%' THEN 'shirt'
+  WHEN name ILIKE '%supermercado%' OR name ILIKE '%mercado%' THEN 'shopping-cart'
+  WHEN name ILIKE '%floricultura%' OR name ILIKE '%flor%' THEN 'flower-2'
+  WHEN name ILIKE '%doceria%' OR name ILIKE '%confeitaria%' THEN 'cake-slice'
+  WHEN name ILIKE '%açaí%' THEN 'grape'
+  WHEN name ILIKE '%sorvete%' OR name ILIKE '%gelat%' THEN 'ice-cream-cone'
+  WHEN name ILIKE '%lanchonete%' THEN 'sandwich'
+  WHEN name ILIKE '%churras%' THEN 'flame'
+  WHEN name ILIKE '%auto%' OR name ILIKE '%mecânic%' THEN 'wrench'
+  WHEN name ILIKE '%eletrônic%' OR name ILIKE '%celular%' THEN 'smartphone'
+  WHEN name ILIKE '%livr%' OR name ILIKE '%papelaria%' THEN 'book-open'
+  WHEN name ILIKE '%joalh%' OR name ILIKE '%bijut%' THEN 'gem'
+  WHEN name ILIKE '%ótica%' OR name ILIKE '%óculos%' THEN 'glasses'
+  WHEN name ILIKE '%viagem%' OR name ILIKE '%turismo%' THEN 'plane'
+  WHEN name ILIKE '%hotel%' OR name ILIKE '%pousada%' THEN 'bed'
+  WHEN name ILIKE '%imobil%' THEN 'building-2'
+  WHEN name ILIKE '%contab%' OR name ILIKE '%financ%' THEN 'calculator'
+  WHEN name ILIKE '%advocacia%' OR name ILIKE '%juríd%' THEN 'scale'
+  WHEN name ILIKE '%saúde%' OR name ILIKE '%clínica%' OR name ILIKE '%médic%' THEN 'heart-pulse'
+  WHEN name ILIKE '%odont%' OR name ILIKE '%dentist%' THEN 'smile'
+  WHEN name ILIKE '%foto%' THEN 'camera'
+  WHEN name ILIKE '%educação%' OR name ILIKE '%escola%' OR name ILIKE '%curso%' THEN 'graduation-cap'
+  WHEN name ILIKE '%esporte%' THEN 'trophy'
+  WHEN name ILIKE '%constru%' OR name ILIKE '%material%' THEN 'hard-hat'
+  WHEN name ILIKE '%móve%' OR name ILIKE '%decoração%' THEN 'sofa'
+  WHEN name ILIKE '%lavanderia%' THEN 'washing-machine'
+  ELSE NULL
+END;

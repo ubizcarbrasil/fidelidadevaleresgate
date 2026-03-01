@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
-import { Store } from "lucide-react";
+import { icons, Store } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -9,6 +9,8 @@ interface SegmentItem {
   id: string;
   name: string;
   category_name: string;
+  icon_name: string | null;
+  category_icon_name: string | null;
   store_count: number;
 }
 
@@ -33,6 +35,29 @@ function segmentColor(name: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
+// Convert kebab-case icon name to PascalCase for lucide-react icons map
+function kebabToPascal(name: string): string {
+  return name
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+}
+
+function SegmentIcon({ iconName, color }: { iconName: string | null; color: string }) {
+  if (!iconName) {
+    return <Store className="h-6 w-6" style={{ color }} />;
+  }
+
+  const pascalName = kebabToPascal(iconName);
+  const LucideIcon = (icons as Record<string, any>)[pascalName];
+
+  if (!LucideIcon) {
+    return <Store className="h-6 w-6" style={{ color }} />;
+  }
+
+  return <LucideIcon className="h-6 w-6" style={{ color }} />;
+}
+
 export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
   const [segments, setSegments] = useState<SegmentItem[]>([]);
@@ -47,7 +72,7 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
       setLoading(true);
       const { data } = await supabase
         .from("stores")
-        .select("taxonomy_segment_id, taxonomy_segments(id, name, taxonomy_categories(name))")
+        .select("taxonomy_segment_id, taxonomy_segments(id, name, icon_name, taxonomy_categories(name, icon_name))")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
@@ -67,6 +92,8 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
             id: seg.id,
             name: seg.name,
             category_name: seg.taxonomy_categories?.name || "",
+            icon_name: seg.icon_name || null,
+            category_icon_name: seg.taxonomy_categories?.icon_name || null,
             store_count: 1,
           });
         }
@@ -108,6 +135,8 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
       <div className="grid grid-cols-4 gap-x-3 gap-y-4">
         {segments.map((seg, idx) => {
           const color = segmentColor(seg.name);
+          // Prefer segment icon, fallback to category icon
+          const iconName = seg.icon_name || seg.category_icon_name;
           return (
             <motion.button
               key={seg.id}
@@ -121,7 +150,7 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
                 className="h-14 w-14 rounded-2xl flex items-center justify-center"
                 style={{ backgroundColor: `${color}12` }}
               >
-                <Store className="h-6 w-6" style={{ color }} />
+                <SegmentIcon iconName={iconName} color={color} />
               </div>
               <span
                 className="text-[10px] font-semibold text-center leading-tight line-clamp-2"
