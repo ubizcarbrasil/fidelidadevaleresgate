@@ -5,6 +5,7 @@ import { CreditCard, ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, Q
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
+import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
@@ -30,7 +31,7 @@ interface CustomerHomePageProps {
 export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { theme } = useBrand();
-  const { navigateToTab } = useCustomerNav();
+  const { navigateToTab, navigateToOffersWithSegment } = useCustomerNav();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -147,6 +148,15 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
             );
           })}
         </div>
+      </motion.div>
+
+      {/* Segment Categories */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.12 }}
+      >
+        <SegmentNavSection onSegmentClick={(segId) => navigateToOffersWithSegment(segId)} />
       </motion.div>
 
       {/* Dynamic Sections */}
