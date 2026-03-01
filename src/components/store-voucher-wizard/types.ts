@@ -11,6 +11,7 @@ export interface SpecificDay {
 
 export interface StoreVoucherData {
   coupon_category: string;
+  taxonomy_segment_id: string;
   coupon_type: "STORE" | "PRODUCT";
   product_id: string;
   discount_percent: number;
@@ -47,6 +48,7 @@ export const CATEGORY_OPTIONS = [
 
 export const initialStoreVoucherData: StoreVoucherData = {
   coupon_category: "",
+  taxonomy_segment_id: "",
   coupon_type: "STORE",
   product_id: "",
   discount_percent: 20,

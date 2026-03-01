@@ -47,6 +47,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
     return {
       ...initialStoreVoucherData,
       coupon_category: editOffer.coupon_category || "",
+      taxonomy_segment_id: (editOffer.terms_params_json as any)?.taxonomy_segment_id || "",
       coupon_type: editOffer.coupon_type || "STORE",
       product_id: editOffer.product_id || "",
       discount_percent: p.discount_percent ?? editOffer.discount_percent ?? 20,
@@ -94,7 +95,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
 
   const canAdvance = (): boolean => {
     switch (step) {
-      case 0: return !!data.coupon_category;
+      case 0: return !!data.coupon_category && !!data.taxonomy_segment_id;
       case 1: return data.coupon_type === "STORE" || !!data.product_id;
       case 2: return data.discount_mode === "PERCENT" ? data.discount_percent > 0 : data.discount_fixed > 0;
       case 8: return data.terms_accepted;
@@ -133,6 +134,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       redemption_type: data.redemption_type,
       coupon_type: data.coupon_type,
       coupon_category: data.coupon_category,
+      taxonomy_segment_id: data.taxonomy_segment_id,
     };
 
     const payload: any = {
