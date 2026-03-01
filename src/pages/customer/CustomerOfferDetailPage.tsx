@@ -6,6 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
+  MapPin, Ban, Globe, MessageCircle,
 } from "lucide-react";
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,6 +36,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [redemptionStep, setRedemptionStep] = useState<"terms" | "cpf">("terms");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
   const [cpf, setCpf] = useState("");
@@ -343,7 +346,11 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       {!redeemed && (
         <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowConfirm(true)}
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
+              setRedemptionStep("terms");
+              setTermsAccepted(false);
+              setShowConfirm(true);
+            }}
               className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
               style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
               Resgatar agora
@@ -378,24 +385,168 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <motion.div
               initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white p-6"
-              style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)" }}>
+              className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white overflow-hidden"
+              style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)", maxHeight: "85vh" }}>
+
               {(!customer || isSigningUp) ? (
-                <RedemptionSignupCarousel
-                  primary={primary}
-                  fg={fg}
-                  fontHeading={fontHeading}
-                  onComplete={(cpfFromSignup) => {
-                    setCpf(formatCpf(cpfFromSignup));
-                    setIsSigningUp(false);
-                    setShowConfirm(false);
-                    toast({ title: "Conta criada!", description: "Agora finalize seu resgate." });
-                  }}
-                  onCancel={() => { setIsSigningUp(false); setShowConfirm(false); }}
-                  onSigningUp={() => setIsSigningUp(true)}
-                />
+                <div className="p-6">
+                  <RedemptionSignupCarousel
+                    primary={primary}
+                    fg={fg}
+                    fontHeading={fontHeading}
+                    onComplete={(cpfFromSignup) => {
+                      setCpf(formatCpf(cpfFromSignup));
+                      setIsSigningUp(false);
+                      setShowConfirm(false);
+                      toast({ title: "Conta criada!", description: "Agora finalize seu resgate." });
+                    }}
+                    onCancel={() => { setIsSigningUp(false); setShowConfirm(false); }}
+                    onSigningUp={() => setIsSigningUp(true)}
+                  />
+                </div>
+              ) : redemptionStep === "terms" ? (
+                /* ── TERMS STEP ── */
+                <div className="flex flex-col" style={{ maxHeight: "85vh" }}>
+                  <div className="overflow-y-auto flex-1 p-6 pb-0">
+                    {/* Store header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      {offer.stores?.logo_url ? (
+                        <img src={offer.stores.logo_url} alt={offer.stores?.name} className="h-12 w-12 rounded-2xl object-cover" />
+                      ) : (
+                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                          <Store className="h-6 w-6" style={{ color: primary }} />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: `${fg}60` }}>{offer.stores?.name || "Loja"}</p>
+                        <p className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
+                          {Number(offer.value_rescue) > 0
+                            ? `Crédito de R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")}`
+                            : offer.title}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Redemption type badge */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+                        {offer.redemption_type === "ONLINE" ? <Globe className="h-4 w-4" style={{ color: primary }} /> :
+                          offer.redemption_type === "WHATSAPP" ? <MessageCircle className="h-4 w-4" style={{ color: primary }} /> :
+                            <MapPin className="h-4 w-4" style={{ color: primary }} />}
+                      </div>
+                      <span className="text-sm font-semibold" style={{ color: fg }}>
+                        {offer.redemption_type === "ONLINE" ? "Resgate Online (Site)" :
+                          offer.redemption_type === "WHATSAPP" ? "Resgate via WhatsApp" :
+                            "Resgate em Loja Física"}
+                      </span>
+                    </div>
+
+                    {/* Value card */}
+                    {Number(offer.value_rescue) > 0 && (
+                      <div className="rounded-2xl p-4 mb-4 flex items-center gap-3" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
+                        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
+                          <span className="text-lg font-bold" style={{ color: primary }}>$</span>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold tracking-wider" style={{ color: `${fg}50` }}>VALOR A SER RESGATADO</p>
+                          <p className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                            R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rules card */}
+                    <div className="rounded-2xl p-4 mb-4 space-y-3" style={{ backgroundColor: "#F9FAFB", border: `1px solid ${fg}08` }}>
+                      <p className="text-[11px] font-bold tracking-wider" style={{ color: `${fg}50` }}>REGRAS DE USO</p>
+                      {Number(offer.min_purchase) > 0 && (
+                        <TermsRuleItem icon={<ShoppingBag className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Compra mínima de R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                        </TermsRuleItem>
+                      )}
+                      {offer.is_cumulative === false && (
+                        <TermsRuleItem icon={<Ban className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Não cumulativa com outras ofertas
+                        </TermsRuleItem>
+                      )}
+                      {offer.end_at && (
+                        <TermsRuleItem icon={<CalendarDays className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Válida até {new Date(offer.end_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                        </TermsRuleItem>
+                      )}
+                      {hasWeekdayRestriction && (
+                        <TermsRuleItem icon={<CalendarDays className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Dias: {(offer.allowed_weekdays as number[]).map(d => WEEKDAY_LABELS[d]).join(", ")}
+                        </TermsRuleItem>
+                      )}
+                      {offer.allowed_hours && (
+                        <TermsRuleItem icon={<Clock className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Horários: {offer.allowed_hours}
+                        </TermsRuleItem>
+                      )}
+                      {offer.max_uses_per_customer && (
+                        <TermsRuleItem icon={<AlertTriangle className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Máximo {offer.max_uses_per_customer} uso(s) por cliente
+                        </TermsRuleItem>
+                      )}
+                      {offer.max_daily_redemptions && (
+                        <TermsRuleItem icon={<AlertTriangle className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          Limite de {offer.max_daily_redemptions} resgate(s) por dia
+                        </TermsRuleItem>
+                      )}
+                      {offer.redemption_type && (
+                        <TermsRuleItem icon={<MapPin className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
+                          {offer.redemption_type === "ONLINE" ? "Válido para compras online" :
+                            offer.redemption_type === "WHATSAPP" ? "Resgate via WhatsApp" :
+                              "Válido em loja física"}
+                        </TermsRuleItem>
+                      )}
+                    </div>
+
+                    {/* Terms text */}
+                    {offer.terms_text && (
+                      <div className="rounded-2xl p-4 mb-4 text-xs leading-relaxed" style={{ backgroundColor: `${fg}04`, color: `${fg}60`, border: `1px solid ${fg}06` }}>
+                        {offer.terms_text}
+                      </div>
+                    )}
+
+                    {/* Checkbox accept */}
+                    <label className="flex items-start gap-3 mb-4 cursor-pointer select-none">
+                      <div
+                        onClick={() => setTermsAccepted(!termsAccepted)}
+                        className="h-6 w-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors"
+                        style={{
+                          borderColor: termsAccepted ? primary : `${fg}25`,
+                          backgroundColor: termsAccepted ? primary : "transparent",
+                        }}
+                      >
+                        {termsAccepted && <CheckCircle2 className="h-4 w-4 text-white" />}
+                      </div>
+                      <span className="text-sm" style={{ color: `${fg}70` }}>
+                        Li e aceito os <strong>termos e condições</strong> desta oferta
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="p-6 pt-3 flex gap-3">
+                    <button onClick={() => setShowConfirm(false)}
+                      className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
+                      style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
+                      Cancelar
+                    </button>
+                    <motion.button whileTap={{ scale: 0.97 }}
+                      onClick={() => setRedemptionStep("cpf")}
+                      disabled={!termsAccepted}
+                      className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-40"
+                      style={{ backgroundColor: primary }}>
+                      Confirmar Resgate
+                    </motion.button>
+                  </div>
+                </div>
               ) : (
-                <>
+                /* ── CPF STEP ── */
+                <div className="p-6">
                   <div className="text-center mb-5">
                     <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
                       <ShoppingBag className="h-7 w-7" style={{ color: primary }} />
@@ -425,10 +576,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     />
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => setShowConfirm(false)} disabled={redeeming}
+                    <button onClick={() => setRedemptionStep("terms")} disabled={redeeming}
                       className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
                       style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
-                      Cancelar
+                      Voltar
                     </button>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
                       disabled={redeeming || !isValidCpf(cpf)}
@@ -437,7 +588,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
                     </motion.button>
                   </div>
-                </>
+                </div>
               )}
             </motion.div>
           </>
@@ -457,6 +608,17 @@ function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: any; primary
         <p className="text-xs font-semibold">{label}</p>
         <p className="text-xs" style={{ color: `${fg}50` }}>{value}</p>
       </div>
+    </div>
+  );
+}
+
+function TermsRuleItem({ icon, children, primary }: { icon: React.ReactNode; children: React.ReactNode; primary: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+        {icon}
+      </div>
+      <span className="text-sm" style={{ color: "hsl(var(--foreground) / 0.7)" }}>{children}</span>
     </div>
   );
 }
