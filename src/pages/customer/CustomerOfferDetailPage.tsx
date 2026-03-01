@@ -7,6 +7,7 @@ import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
 } from "lucide-react";
+import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 
@@ -363,47 +364,64 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white p-6"
               style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)" }}>
-              <div className="text-center mb-5">
-                <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
-                  <ShoppingBag className="h-7 w-7" style={{ color: primary }} />
-                </div>
-                <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>Confirmar resgate?</h3>
-                <p className="text-sm" style={{ color: `${fg}50` }}>
-                  Você está resgatando a oferta <strong>{offer.title}</strong>
-                  {Number(offer.value_rescue) > 0 && (
-                    <> no valor de <strong style={{ color: primary }}>R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}</strong></>
-                  )}
-                </p>
-                {Number(offer.min_purchase) > 0 && (
-                  <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block" style={{ backgroundColor: `${fg}06`, color: `${fg}50` }}>
-                    Compra mínima: R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
-                  </p>
-                )}
-              </div>
-              <div className="mb-4">
-                <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>CPF (obrigatório)</label>
-                <input
-                  type="text" inputMode="numeric" value={cpf}
-                  onChange={e => setCpf(formatCpf(e.target.value))}
-                  placeholder="000.000.000-00"
-                  className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                  style={{ borderColor: `${fg}15` }}
-                  maxLength={14}
+              {!customer ? (
+                <RedemptionSignupCarousel
+                  primary={primary}
+                  fg={fg}
+                  fontHeading={fontHeading}
+                  onComplete={(cpfFromSignup) => {
+                    setCpf(formatCpf(cpfFromSignup));
+                    setShowConfirm(false);
+                    // Auto-redeem will happen after customer context updates
+                    toast({ title: "Conta criada!", description: "Agora finalize seu resgate." });
+                  }}
+                  onCancel={() => setShowConfirm(false)}
                 />
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowConfirm(false)} disabled={redeeming}
-                  className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
-                  style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
-                  Cancelar
-                </button>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
-                  disabled={redeeming || !isValidCpf(cpf)}
-                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50"
-                  style={{ backgroundColor: primary }}>
-                  {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
-                </motion.button>
-              </div>
+              ) : (
+                <>
+                  <div className="text-center mb-5">
+                    <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+                      <ShoppingBag className="h-7 w-7" style={{ color: primary }} />
+                    </div>
+                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>Confirmar resgate?</h3>
+                    <p className="text-sm" style={{ color: `${fg}50` }}>
+                      Você está resgatando a oferta <strong>{offer.title}</strong>
+                      {Number(offer.value_rescue) > 0 && (
+                        <> no valor de <strong style={{ color: primary }}>R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}</strong></>
+                      )}
+                    </p>
+                    {Number(offer.min_purchase) > 0 && (
+                      <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block" style={{ backgroundColor: `${fg}06`, color: `${fg}50` }}>
+                        Compra mínima: R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>CPF (obrigatório)</label>
+                    <input
+                      type="text" inputMode="numeric" value={cpf}
+                      onChange={e => setCpf(formatCpf(e.target.value))}
+                      placeholder="000.000.000-00"
+                      className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
+                      style={{ borderColor: `${fg}15` }}
+                      maxLength={14}
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setShowConfirm(false)} disabled={redeeming}
+                      className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
+                      style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
+                      Cancelar
+                    </button>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
+                      disabled={redeeming || !isValidCpf(cpf)}
+                      className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                      style={{ backgroundColor: primary }}>
+                      {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
+                    </motion.button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </>
         )}
