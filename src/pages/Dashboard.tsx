@@ -164,14 +164,14 @@ export default function Dashboard() {
   const allStats = [
     { title: "Empresas", value: tenants, icon: Building2, scopes: ["ROOT"] },
     { title: "Marcas", value: brands, icon: Store, scopes: ["ROOT", "TENANT"] },
-    { title: "Filiais", value: branches, icon: MapPin, scopes: ["ROOT", "TENANT", "BRAND"] },
-    { title: "Lojas", value: storesTotal, sub: `${storesActive ?? 0} ativas`, icon: ShoppingBag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Cidades", value: branches, icon: MapPin, scopes: ["ROOT", "TENANT", "BRAND"] },
+    { title: "Parceiros", value: storesTotal, sub: `${storesActive ?? 0} ativos`, icon: ShoppingBag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Ofertas Ativas", value: offersActive, sub: `${offersTotal ?? 0} total`, icon: Tag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Clientes", value: customersTotal, sub: `${customersActive ?? 0} ativos`, icon: UserCheck, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Resgates no Período", value: redemptionsPeriod, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Cupons Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Pontuações no Período", value: earningEventsPeriod, sub: `${earningEventsTotal ?? 0} total`, icon: Coins, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Regras de Loja", value: storeRulesActive, sub: `${storeRulesTotal ?? 0} total · ${storeRulesPending ?? 0} pendentes`, icon: Store, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
+    { title: "Regras de Parceiro", value: storeRulesActive, sub: `${storeRulesTotal ?? 0} total · ${storeRulesPending ?? 0} pendentes`, icon: Store, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
     { title: "Usuários", value: usersCount, icon: Users, scopes: ["ROOT", "TENANT", "BRAND"] },
   ];
 
@@ -181,7 +181,7 @@ export default function Dashboard() {
     ROOT: "Visão geral da plataforma",
     TENANT: "Visão geral da empresa",
     BRAND: "Visão geral da marca",
-    BRANCH: "Visão geral da filial",
+    BRANCH: "Visão geral da cidade",
     OPERATOR: "Operador do Ponto de Venda",
   };
 
@@ -313,7 +313,7 @@ export default function Dashboard() {
         {/* Store rules pie chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Regras Personalizadas de Loja</CardTitle>
+            <CardTitle className="text-base">Regras Personalizadas de Parceiro</CardTitle>
           </CardHeader>
           <CardContent>
             {storeRulesTotal === undefined ? (
@@ -363,7 +363,7 @@ export default function Dashboard() {
           <CardContent className="flex items-center gap-3 py-4">
             <Store className="h-5 w-5 text-accent-foreground" />
             <p className="text-sm font-medium">
-              {storeRulesPending} regra{(storeRulesPending ?? 0) > 1 ? "s" : ""} de loja pendente{(storeRulesPending ?? 0) > 1 ? "s" : ""} de aprovação
+              {storeRulesPending} regra{(storeRulesPending ?? 0) > 1 ? "s" : ""} de parceiro pendente{(storeRulesPending ?? 0) > 1 ? "s" : ""} de aprovação
             </p>
           </CardContent>
         </Card>

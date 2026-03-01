@@ -237,13 +237,7 @@ A resolução da marca ocorre automaticamente via `BrandContext`, que consulta `
 
 ---
 
-## Pontos Pendentes de Terminologia (residuais)
+## Status de Terminologia
 
-Ainda existem ocorrências de "loja" e "filial" em:
-- `Dashboard.tsx`: labels "Lojas", "Filiais", "Regras de Loja"
-- `EarnPointsPage.tsx`: "Selecione a Loja", "Limite diário da loja", "Compra na loja"
-- `CustomerOffersPage.tsx`: placeholder "Buscar ofertas e lojas..."
-- `OperatorRedeemPage.tsx`: "Filial" no resultado do resgate
-
-Estes são candidatos para um Sprint 4 de refinamento de terminologia.
+✅ Todas as ocorrências de "loja" e "filial" foram corrigidas para "parceiro" e "cidade" em todos os arquivos da aplicação.
 
