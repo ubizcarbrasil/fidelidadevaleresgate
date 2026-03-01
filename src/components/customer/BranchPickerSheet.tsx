@@ -42,6 +42,7 @@ export default function BranchPickerSheet() {
     setDetecting(true);
     const branch = await detectBranchByLocation();
     if (branch) {
+      await setSelectedBranch(branch);
       setOpen(false);
     }
     setDetecting(false);
