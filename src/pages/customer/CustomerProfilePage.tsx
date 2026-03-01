@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle, Heart, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/translateError";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -55,7 +56,7 @@ export default function CustomerProfilePage() {
       await refetch();
       toast({ title: "Perfil atualizado!" });
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: translateError(err.message), variant: "destructive" });
     } finally {
       setSaving(false);
     }

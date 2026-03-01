@@ -10,6 +10,7 @@ import {
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/translateError";
 
 type Offer = Tables<"offers">;
 
@@ -120,7 +121,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       setShowConfirm(false);
       toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
     } catch (err: any) {
-      toast({ title: "Erro ao resgatar", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao resgatar", description: translateError(err.message), variant: "destructive" });
     } finally {
       setRedeeming(false);
     }

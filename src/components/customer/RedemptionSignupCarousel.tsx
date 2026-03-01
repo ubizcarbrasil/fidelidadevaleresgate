@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2, User, Mail, Phone, KeyRound, Lock, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/translateError";
 
 interface SignupData {
   cpf: string;
@@ -108,7 +109,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
       setTimeout(() => onComplete(data.cpf), 1500);
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: translateError(err.message), variant: "destructive" });
     } finally {
       setLoading(false);
     }
