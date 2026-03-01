@@ -1,43 +1,27 @@
 
 
-# Plano de Execução — Auditoria Cometa
+## Diagnóstico
 
-## ✅ Concluído
+O problema é simples: a brand ativa no banco ("Brand Premium", id `55418252...`) **não tem nenhuma branch/filial cadastrada**. As branches existentes (São Paulo e Rio de Janeiro) pertencem a outra brand (`2750cec8...`).
 
-### Sprint A (P0) — Snapshots + Crédito Aplicado
-- **Migração**: `offer_snapshot_json jsonb`, `credit_value_applied numeric` em `redemptions`; `rule_snapshot_json jsonb` em `earning_events`; `terms_version text` em `offers`
-- **CustomerOfferDetailPage**: grava snapshot da offer ao criar redemption
-- **EarnPointsPage**: grava snapshot da regra de pontos ao criar earning_event
-- **StoreRedeemTab**: grava `credit_value_applied` ao dar baixa (USED)
+O preview carrega a brand corretamente, mas como `branches = []`, o `BranchPickerSheet` não tem nada para mostrar e o `selectedBranch` fica `null`. A página renderiza, mas sem dados de cidade/localização.
 
-### Sprint B (P1) — Anti-fraude de Pontuação + Limites
-- **EarnPointsPage**: validação real-time de `max_points_per_purchase`, limites diários por cliente e por loja, `receipt_code` único
-- **Migração**: índice UNIQUE condicional em `earning_events(store_id, receipt_code)` WHERE NOT NULL
+## Plano
 
-### Sprint C (P1) — Extrato Detalhado + Emissoras
-- **CustomerLedgerOverlay**: já exibia nome da loja (earning_events→stores, redemptions→offers→stores) ✅
-- **EmissorasSection**: já exibia `points_per_real` ✅
-- **StoreExtratoTab**: filtro por tipo (resgates/pontuações) + KPIs separados + ícones distintos
+1. **Verificar/corrigir os dados no banco**: As branches precisam estar associadas à brand ativa. Há duas opções:
+   - Criar branches para a brand "Brand Premium"
+   - Ou alterar o `CustomerPreviewPage` para buscar a brand que realmente tem branches (a `2750cec8...`)
 
-### Onda 1 (P1) — Extratos Avançados + Termos Versionados
-- **CustomerLedgerOverlay**: filtros período/tipo/busca, infinite scroll, agrupamento por data, join com stores
-- **StoreExtratoTab**: KPIs financeiros, mascaramento CPF/PIN, filtros status/cupom/data
-- **StoreVoucherWizard**: `terms_params_json` snapshot completo, `terms_version`, `terms_accepted_by_user_id`
-- **Migração**: `terms_params_json`, `terms_accepted_by_user_id` em `offers`
+2. **Tornar o layout resiliente a branches vazias**: Atualmente, se não há branches, o `BranchPickerSheet` renderiza mas sem opções. Devemos esconder o botão de localização quando `branches.length === 0`.
 
-### Onda 2 (P1) — Filtros de Seção + Relatórios
-- **HomeSectionsRenderer**: filter_mode (recent/most_redeemed/newest/random), coupon_type_filter, city_filter_json, min_stores_visible, columns_count
-- **ReportsPage**: Performance por Cupom, Central Anti-fraude (receipt_code duplicados, top emissores)
+### Mudanças no código
 
-### Onda 3 (P1) — Audit Logs Escopo + Cupom Editável
-- **AuditLogsPage**: filtro automático por brand/branch para não-root, RLS policy para brand/branch admins
-- **BrandSidebar / BranchSidebar**: link "Auditoria" adicionado
-- **StoreVoucherWizard**: modo edição com `editOffer`, preenchimento automático dos campos, incremento de `terms_version`
-- **StoreCouponsTab**: botão "Editar" em cupons DRAFT/ACTIVE não expirados
+**`BranchPickerSheet.tsx`**: Retornar `null` se `branches.length === 0` para não mostrar o seletor vazio.
 
-### Sprint D (P2) — Relatórios Gráficos ✅
-- **ReportsPage**: aba "Gráficos" com BarChart (resgates/dia), LineChart (pontos emitidos/dia), PieChart (distribuição de status)
+**`CustomerPreviewPage.tsx`**: Alterar a query para buscar uma brand que tenha pelo menos uma branch ativa, garantindo que o preview sempre funcione com dados reais.
 
-## Pendente (próximas iterações)
+### Detalhes técnicos
 
-_(Todos os sprints P0-P2 concluídos)_
+- No `CustomerPreviewPage`, a query atual busca qualquer brand ativa. Vamos ajustá-la para buscar uma brand que tenha branches, usando um join ou subquery.
+- No `BranchPickerSheet`, adicionar um early return `if (branches.length === 0) return null`.
+
