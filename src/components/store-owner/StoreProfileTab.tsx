@@ -61,17 +61,17 @@ export default function StoreProfileTab({ store }: { store: any }) {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Meu Perfil</h1>
-        <p className="text-sm text-muted-foreground">Configure o perfil público da sua loja</p>
+        <p className="text-sm text-muted-foreground">Configure o perfil público do seu estabelecimento</p>
       </div>
 
       {/* Descrição */}
       <Card className="rounded-2xl">
         <CardHeader>
-          <CardTitle className="text-base">Descrição da Loja</CardTitle>
+          <CardTitle className="text-base">Descrição do Estabelecimento</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
-            placeholder="Descreva sua loja, produtos e diferenciais..."
+            placeholder="Descreva seu estabelecimento, produtos e diferenciais..."
             value={form.description}
             onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
             rows={4}

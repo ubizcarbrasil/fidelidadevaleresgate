@@ -16,7 +16,7 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 const QUICK_ACTIONS = [
   { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", tab: "offers" as const },
   { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", tab: "offers" as const },
-  { key: "lojas", label: "Lojas", icon: Store, color: "#7C3AED", tab: null },
+  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", tab: null },
   { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", tab: "wallet" as const },
   { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", tab: "offers" as const },
   { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", tab: null },

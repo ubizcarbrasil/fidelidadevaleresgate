@@ -247,7 +247,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
         <div className="mx-4 mt-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-base font-bold" style={{ fontFamily: fontHeading }}>
-              Ofertas desta loja
+              Ofertas deste parceiro
             </h3>
             {!loadingOffers && (
               <span className="text-xs" style={{ color: `${fg}40` }}>

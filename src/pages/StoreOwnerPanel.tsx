@@ -243,7 +243,7 @@ function StoreOwnerDashboard({ store }: { store: any }) {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-1">Painel Principal</h1>
-          <p className="text-sm text-muted-foreground">Visão geral do seu estabelecimento parceiro</p>
+          <p className="text-sm text-muted-foreground">Visão geral do seu estabelecimento</p>
         </div>
         <div className="flex gap-1 bg-muted rounded-lg p-0.5">
           {periods.map(p => (
