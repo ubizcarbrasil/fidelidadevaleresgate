@@ -20,18 +20,18 @@ const helpContent: Record<string, HelpEntry> = {
      DASHBOARD (comum a todos os consoles)
      ═══════════════════════════════════════════════ */
   "/": {
-    pageTitle: "Dashboard",
+    pageTitle: "Painel Principal",
     sections: [
       {
         title: "Visão Geral",
-        summary: "O Dashboard exibe indicadores-chave em tempo real sobre a operação.",
+        summary: "O Painel Principal exibe os números mais importantes da sua operação em tempo real.",
         steps: [
-          "Os KPIs no topo mostram: resgates do dia, pontos emitidos, clientes ativos e ofertas ativas.",
-          "O badge 'Tempo real' indica que os números são atualizados automaticamente.",
+          "Os indicadores no topo mostram: resgates do dia, pontos emitidos, clientes ativos e ofertas ativas.",
+          "A etiqueta 'Tempo real' indica que os números são atualizados automaticamente.",
           "Use os gráficos para acompanhar tendências de resgates e pontuação ao longo do tempo.",
         ],
         tips: [
-          "Clique em qualquer KPI para ver detalhes na página correspondente.",
+          "Clique em qualquer indicador para ver detalhes na página correspondente.",
           "Os dados são filtrados automaticamente pelo seu nível de acesso (marca/filial).",
         ],
       },
@@ -41,38 +41,38 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      BRAND ADMIN — Identidade Visual
      ═══════════════════════════════════════════════ */
-  "/brands": {
-    pageTitle: "Tema & Marca",
+   "/brands": {
+    pageTitle: "Aparência e Identidade da Marca",
     sections: [
       {
         title: "Personalizar a identidade visual",
-        summary: "Configure cores, logo e estilo que serão aplicados no app do cliente.",
+        summary: "Configure cores, logotipo e estilo que serão aplicados no aplicativo do cliente.",
         steps: [
           "Selecione a marca que deseja editar na lista.",
-          "Faça upload do logotipo (recomendado: PNG transparente 512×512).",
+          "Envie o logotipo da marca (recomendado: imagem PNG transparente, 512×512 pixels).",
           "Defina as cores primária, secundária e de destaque.",
           "Clique em 'Salvar' para aplicar as alterações.",
         ],
         tips: [
-          "Use o preview ao lado para ver como ficará no app do cliente antes de salvar.",
-          "O tema é aplicado imediatamente em todas as telas do app do cliente.",
+          "Use a pré-visualização ao lado para ver como ficará no aplicativo do cliente antes de salvar.",
+          "As alterações de visual são aplicadas imediatamente em todas as telas do aplicativo.",
         ],
       },
     ],
   },
 
-  "/domains": {
-    pageTitle: "Domínios",
+   "/domains": {
+    pageTitle: "Endereços Personalizados (Domínios)",
     sections: [
       {
-        title: "Configurar domínio personalizado",
-        summary: "Associe um domínio próprio (ex: app.sualoja.com.br) à sua marca.",
+        title: "Configurar endereço personalizado",
+        summary: "Associe um endereço web próprio (ex: app.sualoja.com.br) à sua marca.",
         steps: [
           "Clique em 'Adicionar domínio'.",
-          "Digite o domínio desejado (ex: app.suamarca.com.br).",
-          "Configure o registro CNAME no seu provedor de DNS apontando para o endereço fornecido.",
-          "Aguarde a verificação (pode levar até 48h).",
-          "Marque como domínio primário quando estiver verificado.",
+          "Digite o endereço desejado (ex: app.suamarca.com.br).",
+          "Configure o apontamento no seu provedor de hospedagem (registro CNAME) para o endereço fornecido pelo sistema.",
+          "Aguarde a verificação automática (pode levar até 48 horas).",
+          "Marque como endereço principal quando estiver verificado.",
         ],
         tips: [
           "Você pode ter múltiplos domínios, mas apenas um pode ser o primário.",
@@ -81,14 +81,14 @@ const helpContent: Record<string, HelpEntry> = {
     ],
   },
 
-  "/icon-library": {
-    pageTitle: "Galeria de Ícones",
+   "/icon-library": {
+    pageTitle: "Galeria de Ícones e Imagens",
     sections: [
       {
         title: "Gerenciar ícones",
-        summary: "Adicione e organize os ícones usados nas seções e categorias do app.",
+        summary: "Adicione e organize os ícones usados nas seções e categorias do aplicativo.",
         steps: [
-          "Escolha entre ícones Lucide (vetoriais) ou faça upload de imagens personalizadas.",
+          "Escolha entre ícones prontos do sistema ou envie imagens personalizadas.",
           "Defina nome, categoria e cor para cada ícone.",
           "Ative ou desative ícones conforme necessário.",
         ],
@@ -99,16 +99,16 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      BRAND ADMIN — Vitrine do App
      ═══════════════════════════════════════════════ */
-  "/templates": {
-    pageTitle: "Seções da Home",
+   "/templates": {
+    pageTitle: "Seções da Tela Inicial",
     sections: [
       {
-        title: "Montar a Home do app do cliente",
-        summary: "Configure quais seções aparecem na tela inicial e em que ordem.",
+        title: "Montar a Tela Inicial do aplicativo",
+        summary: "Configure quais seções aparecem na tela inicial do cliente e em que ordem.",
         steps: [
           "Arraste as seções para reordená-las.",
-          "Clique no ícone de edição para configurar cada seção: título, subtítulo, modo de exibição (carrossel/grade), filtros e quantidade de itens.",
-          "Use o toggle para ativar/desativar seções sem excluí-las.",
+          "Clique no ícone de edição para configurar cada seção: título, subtítulo, modo de exibição (carrossel ou grade), filtros e quantidade de itens.",
+          "Use o botão de ligar/desligar para ativar ou desativar seções sem excluí-las.",
           "Configure filtros de cidade, tipo de cupom e modo de ordenação (recentes, mais resgatados, etc.).",
         ],
         tips: [
@@ -119,21 +119,21 @@ const helpContent: Record<string, HelpEntry> = {
     ],
   },
 
-  "/banner-manager": {
-    pageTitle: "Central de Banners",
+   "/banner-manager": {
+    pageTitle: "Central de Propagandas (Banners)",
     sections: [
       {
-        title: "Gerenciar banners promocionais",
-        summary: "Crie banners com agendamento que aparecem no carrossel da Home.",
+        title: "Gerenciar propagandas visuais",
+        summary: "Crie imagens promocionais com agendamento que aparecem no carrossel da tela inicial.",
         steps: [
-          "Clique em 'Novo banner'.",
-          "Faça upload da imagem (recomendado: 1080×540px).",
-          "Defina título, link de destino e tipo de link (externo, página interna ou oferta).",
+          "Clique em 'Nova propaganda'.",
+          "Envie a imagem (tamanho recomendado: 1080×540 pixels).",
+          "Defina título, destino ao clicar e tipo de destino (site externo, página interna ou oferta).",
           "Configure as datas de início e fim para agendamento.",
-          "Reordene os banners arrastando-os na lista.",
+          "Reordene as propagandas arrastando-as na lista.",
         ],
         tips: [
-          "Banners expirados são ocultados automaticamente do app.",
+          "Propagandas com data vencida são ocultadas automaticamente do aplicativo.",
           "Use imagens com boa legibilidade em telas pequenas.",
         ],
       },
@@ -144,11 +144,11 @@ const helpContent: Record<string, HelpEntry> = {
     pageTitle: "Nomes e Rótulos",
     sections: [
       {
-        title: "Personalizar textos do app",
-        summary: "Altere os nomes dos menus e rótulos que o cliente vê no app.",
+        title: "Personalizar textos do aplicativo",
+        summary: "Altere os nomes dos menus e botões que o cliente vê no aplicativo.",
         steps: [
-          "Selecione o contexto: 'Admin' (menu lateral) ou 'App do Cliente'.",
-          "Clique em qualquer rótulo para editá-lo.",
+          "Selecione o contexto: 'Painel Administrativo' (menu lateral) ou 'Aplicativo do Cliente'.",
+          "Clique em qualquer nome para editá-lo.",
           "Digite o novo nome e clique em 'Salvar'.",
         ],
         tips: [
@@ -159,21 +159,21 @@ const helpContent: Record<string, HelpEntry> = {
     ],
   },
 
-  "/page-builder": {
-    pageTitle: "Construtor de Páginas",
+   "/page-builder": {
+    pageTitle: "Montador de Páginas",
     sections: [
       {
         title: "Criar páginas personalizadas",
-        summary: "Monte páginas customizadas com texto, imagens, botões e dividers.",
+        summary: "Monte páginas sob medida com texto, imagens, botões e separadores.",
         steps: [
           "Clique em 'Nova página'.",
-          "Defina título e slug (URL: /p/seu-slug).",
-          "Adicione elementos arrastando da barra lateral: Texto, Botão, Banner, Ícone, Divider, Espaçador.",
-          "Configure cada elemento: cor, tamanho, link de ação, sombra e opacidade.",
+          "Defina o título e o endereço da página (ex: /p/sua-pagina).",
+          "Adicione elementos arrastando da barra lateral: Texto, Botão, Imagem, Ícone, Linha Divisória, Espaço.",
+          "Configure cada elemento: cor, tamanho, ação ao clicar, sombra e transparência.",
           "Ative 'Publicar' quando a página estiver pronta.",
         ],
         tips: [
-          "Use o preview ao vivo para ver exatamente como ficará no celular.",
+          "Use a pré-visualização ao vivo para ver exatamente como ficará no celular.",
           "Páginas não publicadas ficam acessíveis apenas para administradores.",
         ],
       },
@@ -183,20 +183,20 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      OPERAÇÕES
      ═══════════════════════════════════════════════ */
-  "/branches": {
-    pageTitle: "Filiais (Branches)",
+   "/branches": {
+    pageTitle: "Filiais",
     sections: [
       {
         title: "Gerenciar filiais",
-        summary: "Filiais representam unidades regionais da sua marca.",
+        summary: "Filiais representam as unidades regionais da sua marca.",
         steps: [
           "Clique em 'Nova filial' para criar.",
-          "Preencha: nome, slug, cidade, estado e coordenadas (latitude/longitude).",
+          "Preencha: nome, apelido (usado no endereço web), cidade, estado e localização geográfica.",
           "Selecione o fuso horário correto.",
           "Ative ou desative filiais conforme necessário.",
         ],
         tips: [
-          "As coordenadas são usadas para filtrar lojas e ofertas por proximidade no app do cliente.",
+          "A localização é usada para mostrar lojas e ofertas mais próximas do cliente no aplicativo.",
           "Cada filial pode ter suas próprias regras de pontos e configurações.",
         ],
       },
@@ -212,7 +212,7 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Use a barra de busca para encontrar lojas por nome.",
           "Clique em uma loja para ver detalhes: perfil, funcionários, extrato e cupons.",
-          "Altere o status (ativo/inativo) para controlar a visibilidade no app.",
+          "Altere a situação (ativa/inativa) para controlar a visibilidade no aplicativo.",
         ],
       },
     ],
@@ -238,16 +238,16 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Importação em lote",
-        summary: "Importe lojas e dados em massa usando arquivos CSV.",
+        summary: "Importe lojas e dados em grande quantidade usando planilhas (arquivo CSV).",
         steps: [
-          "Baixe o modelo CSV clicando em 'Download modelo'.",
+          "Baixe o modelo de planilha clicando em 'Baixar modelo'.",
           "Preencha os dados seguindo o formato do modelo.",
-          "Faça upload do arquivo preenchido.",
+          "Envie o arquivo preenchido.",
           "Revise os erros (se houver) na tela de resultado.",
           "Corrija e reimporte os registros com erro.",
         ],
         tips: [
-          "O arquivo deve estar codificado em UTF-8.",
+          "O arquivo deve estar no formato correto (codificação UTF-8).",
           "Campos obrigatórios estão destacados no modelo.",
         ],
       },
@@ -266,12 +266,12 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Configure a taxa base: quantos pontos por real gasto.",
           "Defina limites: máximo por compra, por dia (cliente) e por dia (loja).",
-          "Configure o valor em dinheiro de cada ponto (money_per_point).",
-          "Defina se lojas podem criar regras customizadas e os limites permitidos.",
+          "Configure quanto vale cada ponto em dinheiro.",
+          "Defina se as lojas podem criar regras próprias e quais os limites permitidos.",
           "Ative 'Exigir código de recibo' se desejar rastreabilidade extra.",
         ],
         tips: [
-          "Regras de loja customizadas precisam de aprovação se 'Requer aprovação' estiver ativo.",
+          "Regras personalizadas das lojas precisam de aprovação se a opção 'Requer aprovação' estiver ativada.",
           "O campo 'Compra mínima' define o valor mínimo para gerar pontos.",
         ],
       },
@@ -307,8 +307,8 @@ const helpContent: Record<string, HelpEntry> = {
           "Confira o cálculo dos pontos e clique em 'Confirmar'.",
         ],
         tips: [
-          "O sistema valida automaticamente limites diários e por compra.",
-          "Códigos de recibo duplicados são bloqueados para evitar fraudes.",
+          "O sistema verifica automaticamente os limites diários e por compra.",
+          "Códigos de recibo repetidos são bloqueados para evitar fraudes.",
         ],
       },
     ],
@@ -324,14 +324,14 @@ const helpContent: Record<string, HelpEntry> = {
         title: "Gerenciar ofertas e cupons",
         summary: "Crie e gerencie cupons de desconto para os clientes.",
         steps: [
-          "Clique em 'Nova oferta' para iniciar o wizard de criação.",
+          "Clique em 'Nova oferta' para iniciar o assistente de criação passo a passo.",
           "Preencha: título, descrição, valor de resgate, compra mínima.",
           "Configure dias da semana, horários e limites de uso.",
           "Defina o período de validade (início e fim).",
           "Revise os termos e publique a oferta.",
         ],
         tips: [
-          "Ofertas em 'Rascunho' não são visíveis para clientes.",
+          "Ofertas em 'Rascunho' ficam invisíveis para os clientes.",
           "Use 'Valores escalonados' para criar cupons progressivos.",
         ],
       },
@@ -362,7 +362,7 @@ const helpContent: Record<string, HelpEntry> = {
         summary: "Visualize todos os resgates realizados pelos clientes.",
         steps: [
           "A lista mostra resgates com status: Pendente, Usado, Expirado.",
-          "Clique em um resgate para ver: oferta, cliente, PIN, valor aplicado.",
+          "Clique em um resgate para ver: oferta, cliente, código de resgate, valor aplicado.",
           "Use filtros de data e status para encontrar resgates específicos.",
         ],
         tips: [
@@ -384,7 +384,7 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Use a busca para encontrar clientes por nome ou telefone.",
           "Clique em um cliente para ver: saldo de pontos, histórico de resgates e pontuações.",
-          "Altere o status do cliente (ativo/inativo) se necessário.",
+          "Altere a situação do cliente (ativo/inativo) se necessário.",
         ],
       },
     ],
@@ -401,13 +401,13 @@ const helpContent: Record<string, HelpEntry> = {
         summary: "Cadastre e gerencie os usuários que acessam o painel admin.",
         steps: [
           "Clique em 'Novo usuário'.",
-          "Preencha nome, e-mail e selecione a role (papel).",
+          "Preencha nome, e-mail e selecione o cargo/função do usuário.",
           "Atribua a marca e/ou filial de acesso.",
           "O usuário receberá um e-mail para definir sua senha.",
         ],
         tips: [
-          "Cada role define um conjunto de permissões padrão.",
-          "Use 'overrides' para conceder ou negar permissões específicas.",
+          "Cada cargo define um conjunto de permissões padrão.",
+          "Use exceções para conceder ou negar permissões específicas a um usuário.",
         ],
       },
     ],
@@ -417,16 +417,16 @@ const helpContent: Record<string, HelpEntry> = {
     pageTitle: "Módulos",
     sections: [
       {
-        title: "Ativar/desativar módulos",
+        title: "Ativar ou desativar funcionalidades",
         summary: "Controle quais funcionalidades estão disponíveis na sua marca.",
         steps: [
-          "A lista mostra todos os módulos disponíveis com toggle de ativação.",
-          "Ative um módulo para habilitar o menu e as funcionalidades correspondentes.",
-          "Desative módulos que não são usados para simplificar o menu.",
+          "A lista mostra todas as funcionalidades disponíveis com botão de ligar/desligar.",
+          "Ative uma funcionalidade para habilitar o menu e os recursos correspondentes.",
+          "Desative funcionalidades que não são usadas para simplificar o menu.",
         ],
         tips: [
-          "Módulos desativados ocultam o menu correspondente em todos os consoles da marca.",
-          "Módulos 'core' não podem ser desativados.",
+          "Funcionalidades desativadas escondem o menu correspondente em todos os painéis da marca.",
+          "Funcionalidades essenciais (obrigatórias) não podem ser desativadas.",
         ],
       },
     ],
@@ -437,14 +437,14 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Rastrear atividades",
-        summary: "Acompanhe todas as ações realizadas por usuários na plataforma.",
+        summary: "Acompanhe tudo o que foi feito por usuários na plataforma.",
         steps: [
           "Use filtros de data, tipo de entidade e ação para refinar a busca.",
           "Cada registro mostra: quem fez, o que fez, quando e quais dados mudaram.",
           "Clique em uma entrada para ver o 'antes e depois' das alterações.",
         ],
         tips: [
-          "Os logs são filtrados automaticamente pelo seu escopo de acesso.",
+          "Os registros são filtrados automaticamente pelo seu nível de acesso.",
           "Administradores de marca veem apenas ações da sua marca.",
         ],
       },
@@ -454,16 +454,16 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      RELATÓRIOS
      ═══════════════════════════════════════════════ */
-  "/reports": {
-    pageTitle: "Relatórios",
+   "/reports": {
+    pageTitle: "Relatórios e Análises",
     sections: [
       {
         title: "Visualizar relatórios",
         summary: "Acesse relatórios de performance, anti-fraude e gráficos.",
         steps: [
-          "Selecione a aba desejada: Performance, Anti-fraude ou Gráficos.",
-          "Em 'Performance por Cupom': veja resgates, taxa de conversão e valor total por oferta.",
-          "Em 'Anti-fraude': identifique recibos duplicados e emissores suspeitos.",
+          "Selecione a aba desejada: Desempenho, Prevenção de Fraude ou Gráficos.",
+          "Em 'Desempenho por Cupom': veja resgates, taxa de conversão e valor total por oferta.",
+          "Em 'Prevenção de Fraude': identifique recibos duplicados e movimentações suspeitas.",
           "Em 'Gráficos': analise tendências com gráficos de barras, linhas e pizza.",
         ],
       },
@@ -480,15 +480,15 @@ const helpContent: Record<string, HelpEntry> = {
         title: "Visão geral do painel",
         summary: "O painel do lojista é o centro de controle da sua loja na plataforma.",
         steps: [
-          "No topo, veja os KPIs: resgates pendentes, cupons ativos e clientes atendidos.",
+          "No topo, veja os indicadores: resgates pendentes, cupons ativos e clientes atendidos.",
           "Use as abas inferiores para navegar entre as funcionalidades.",
         ],
       },
       {
         title: "Criar um cupom",
-        summary: "O wizard guiará você passo a passo na criação do seu cupom.",
+        summary: "O assistente guiará você passo a passo na criação do seu cupom.",
         steps: [
-          "Clique em 'Novo Cupom' na aba 'Cupom'.",
+          "Clique em 'Novo Cupom' na aba de Cupons.",
           "Passo 1 — Categoria: escolha a categoria do cupom (alimentação, serviço, etc.).",
           "Passo 2 — Tipo: defina se é desconto fixo, percentual ou valor de resgate.",
           "Passo 3 — Valor: configure os valores e escalonamento.",
@@ -508,11 +508,11 @@ const helpContent: Record<string, HelpEntry> = {
       },
       {
         title: "Validar um resgate (dar baixa)",
-        summary: "Quando um cliente apresentar um cupom, valide com PIN + CPF.",
+        summary: "Quando um cliente apresentar um cupom, confirme usando o código de 6 dígitos e o CPF.",
         steps: [
           "Acesse a aba 'Resgate'.",
-          "Peça ao cliente o PIN de 6 dígitos.",
-          "Digite o PIN e o CPF do cliente.",
+          "Peça ao cliente o código de resgate de 6 dígitos.",
+          "Digite o código e o CPF do cliente.",
           "Informe o valor da compra.",
           "Confirme o resgate — o crédito será aplicado automaticamente.",
         ],
@@ -546,7 +546,7 @@ const helpContent: Record<string, HelpEntry> = {
         summary: "Acompanhe todas as transações da sua loja.",
         steps: [
           "Acesse a aba 'Extrato'.",
-          "Veja KPIs no topo: total de resgates, pontos emitidos, valor creditado.",
+          "Veja os indicadores no topo: total de resgates, pontos emitidos, valor creditado.",
           "Use filtros de período, tipo e status para refinar a lista.",
           "Clique em uma transação para ver detalhes completos.",
         ],
@@ -562,7 +562,7 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Configurar regra de pontos da loja",
-        summary: "Defina sua própria taxa de pontuação (se permitido pela marca).",
+        summary: "Defina a sua própria taxa de pontuação (quando permitido pela marca).",
         steps: [
           "Veja a regra da marca (base) e os limites permitidos.",
           "Ajuste o valor de 'Pontos por real' dentro da faixa permitida.",
@@ -576,8 +576,8 @@ const helpContent: Record<string, HelpEntry> = {
     pageTitle: "Aprovar Regras de Pontos",
     sections: [
       {
-        title: "Aprovar regras customizadas",
-        summary: "Revise e aprove regras de pontos criadas por lojas.",
+        title: "Aprovar regras personalizadas",
+        summary: "Revise e aprove regras de pontos criadas pelas lojas.",
         steps: [
           "Regras pendentes aparecem automaticamente nesta lista.",
           "Revise os valores propostos pela loja.",
@@ -590,12 +590,12 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      NOTIFICAÇÕES
      ═══════════════════════════════════════════════ */
-  "/send-notification": {
+   "/send-notification": {
     pageTitle: "Enviar Notificação",
     sections: [
       {
-        title: "Enviar notificação push",
-        summary: "Envie mensagens para clientes da plataforma.",
+        title: "Enviar aviso para clientes",
+        summary: "Envie mensagens diretamente para os celulares dos clientes.",
         steps: [
           "Defina o título e o corpo da mensagem.",
           "Selecione o público-alvo.",
@@ -608,17 +608,17 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      REGISTRO DE LOJA
      ═══════════════════════════════════════════════ */
-  "/register-store": {
+   "/register-store": {
     pageTitle: "Cadastro de Loja",
     sections: [
       {
         title: "Registrar sua loja na plataforma",
-        summary: "Siga o wizard para cadastrar seu estabelecimento.",
+        summary: "Siga o passo a passo para cadastrar seu estabelecimento.",
         steps: [
           "Preencha os dados do responsável: nome completo, CPF, telefone.",
           "Informe os dados da empresa: CNPJ, razão social, nome fantasia.",
           "Adicione endereço completo e categoria de atuação.",
-          "Faça upload do logo da loja.",
+          "Envie o logotipo da loja.",
           "Aceite os termos de uso e envie o cadastro para análise.",
         ],
         tips: [
@@ -636,12 +636,12 @@ const helpContent: Record<string, HelpEntry> = {
     pageTitle: "Ofertas de Afiliados",
     sections: [
       {
-        title: "Gerenciar ofertas de afiliados",
-        summary: "Crie links de afiliados para produtos e serviços parceiros.",
+        title: "Gerenciar ofertas de parceiros",
+        summary: "Crie ofertas com links de parceiros para produtos e serviços.",
         steps: [
           "Clique em 'Nova oferta'.",
-          "Preencha: título, descrição, preço, URL de afiliado.",
-          "Faça upload da imagem do produto.",
+          "Preencha: título, descrição, preço e endereço do parceiro.",
+          "Envie a imagem do produto.",
           "Defina categoria e ordem de exibição.",
           "Ative a oferta para torná-la visível.",
         ],
@@ -671,16 +671,16 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      PREVIEW DO CLIENTE
      ═══════════════════════════════════════════════ */
-  "/customer-preview": {
-    pageTitle: "Preview do App do Cliente",
+   "/customer-preview": {
+    pageTitle: "Pré-visualização do Aplicativo",
     sections: [
       {
-        title: "Visualizar o app como cliente",
-        summary: "Veja como o app aparece para os clientes finais.",
+        title: "Ver o aplicativo como o cliente vê",
+        summary: "Confira como o aplicativo aparece para os clientes finais.",
         steps: [
-          "Navegue pelas seções da Home para verificar a aparência.",
+          "Navegue pelas seções da Tela Inicial para verificar a aparência.",
           "Teste ofertas, perfil de loja e funcionalidades de resgate.",
-          "Use este preview para validar alterações de tema e seções antes de publicar.",
+          "Use esta pré-visualização para validar alterações de visual e seções antes de publicar.",
         ],
       },
     ],
@@ -689,21 +689,21 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      TENANTS (ROOT)
      ═══════════════════════════════════════════════ */
-  "/tenants": {
-    pageTitle: "Tenants (Clientes)",
+   "/tenants": {
+    pageTitle: "Empresas Parceiras (Tenants)",
     sections: [
       {
-        title: "Gerenciar tenants",
-        summary: "Tenants são os clientes (empresas) que utilizam a plataforma.",
+        title: "Gerenciar empresas parceiras",
+        summary: "Empresas parceiras são os clientes (organizações) que utilizam a plataforma.",
         steps: [
-          "Clique em 'Novo tenant' para criar um novo cliente da plataforma.",
-          "Preencha nome, slug e dados do responsável.",
-          "Cada tenant pode ter múltiplas marcas e filiais.",
-          "Ative ou desative tenants conforme a necessidade.",
+          "Clique em 'Nova empresa' para cadastrar um novo cliente da plataforma.",
+          "Preencha nome, apelido (usado no endereço web) e dados do responsável.",
+          "Cada empresa pode ter múltiplas marcas e filiais.",
+          "Ative ou desative empresas conforme a necessidade.",
         ],
         tips: [
-          "O slug é usado na URL e não pode ser alterado depois de criado.",
-          "Desativar um tenant desativa todas as marcas e filiais vinculadas.",
+          "O apelido é usado no endereço web e não pode ser alterado depois de criado.",
+          "Desativar uma empresa desativa todas as marcas e filiais vinculadas automaticamente.",
         ],
       },
     ],
@@ -716,17 +716,17 @@ const helpContent: Record<string, HelpEntry> = {
     pageTitle: "Permissões",
     sections: [
       {
-        title: "Gerenciar permissões por role",
-        summary: "Configure quais ações cada papel (role) pode executar no sistema.",
+        title: "Gerenciar permissões por cargo",
+        summary: "Configure quais ações cada cargo pode executar no sistema.",
         steps: [
-          "Selecione uma role na lista à esquerda.",
+          "Selecione um cargo na lista à esquerda.",
           "Marque ou desmarque as permissões desejadas.",
           "As permissões são agrupadas por módulo para facilitar a configuração.",
           "Clique em 'Salvar' para aplicar.",
         ],
         tips: [
-          "Roles de sistema não podem ser excluídas, mas suas permissões podem ser ajustadas.",
-          "Alterações se aplicam imediatamente a todos os usuários com aquela role.",
+          "Cargos do sistema não podem ser excluídos, mas suas permissões podem ser ajustadas.",
+          "Alterações se aplicam imediatamente a todos os usuários com aquele cargo.",
         ],
       },
     ],
@@ -735,17 +735,17 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      MÓDULOS (ROOT)
      ═══════════════════════════════════════════════ */
-  "/modules": {
-    pageTitle: "Definições de Módulos",
+   "/modules": {
+    pageTitle: "Catálogo de Funcionalidades",
     sections: [
       {
-        title: "Gerenciar módulos da plataforma",
-        summary: "Crie e configure os módulos disponíveis para as marcas.",
+        title: "Gerenciar funcionalidades da plataforma",
+        summary: "Crie e configure as funcionalidades disponíveis para as marcas.",
         steps: [
-          "Cada módulo representa uma funcionalidade (ex: vouchers, pontos, lojas).",
-          "Defina chave (key), nome, categoria e descrição.",
-          "Módulos 'core' são obrigatórios e não podem ser desativados pelas marcas.",
-          "Use o schema JSON para configurar campos customizáveis do módulo.",
+          "Cada funcionalidade representa um recurso do sistema (ex: cupons, pontos, lojas).",
+          "Defina identificador, nome, categoria e descrição.",
+          "Funcionalidades essenciais são obrigatórias e não podem ser desativadas pelas marcas.",
+          "Use a configuração avançada para definir campos personalizáveis.",
         ],
       },
     ],
@@ -754,21 +754,21 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      FEATURE FLAGS
      ═══════════════════════════════════════════════ */
-  "/flags": {
-    pageTitle: "Feature Flags",
+   "/flags": {
+    pageTitle: "Controle de Recursos",
     sections: [
       {
-        title: "Controlar features por flag",
-        summary: "Ative ou desative funcionalidades específicas sem deploy.",
+        title: "Ligar ou desligar recursos específicos",
+        summary: "Ative ou desative recursos específicos da plataforma sem precisar atualizar o sistema.",
         steps: [
-          "Crie uma nova flag com chave (key) e label descritiva.",
-          "Defina o escopo: global, por marca ou por filial.",
-          "Use o toggle para ativar/desativar a flag.",
-          "O sistema checará automaticamente a flag antes de exibir a funcionalidade.",
+          "Crie um novo controle com identificador e nome descritivo.",
+          "Defina o alcance: toda a plataforma, por marca ou por filial.",
+          "Use o botão para ligar/desligar o recurso.",
+          "O sistema verificará automaticamente o controle antes de exibir o recurso.",
         ],
         tips: [
-          "Flags globais afetam toda a plataforma.",
-          "Flags com escopo de marca/filial permitem ativar progressivamente.",
+          "Controles globais afetam toda a plataforma.",
+          "Controles por marca ou filial permitem ativar recursos de forma gradual.",
         ],
       },
     ],
@@ -777,16 +777,16 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      RELEASES
      ═══════════════════════════════════════════════ */
-  "/releases": {
-    pageTitle: "Releases",
+   "/releases": {
+    pageTitle: "Histórico de Atualizações",
     sections: [
       {
         title: "Registrar versões do sistema",
         summary: "Documente novas versões e mudanças na plataforma.",
         steps: [
-          "Clique em 'Nova release'.",
-          "Informe a versão (ex: 1.2.0), título e descrição das mudanças.",
-          "As releases ficam visíveis no changelog para referência.",
+          "Clique em 'Nova atualização'.",
+          "Informe o número da versão (ex: 1.2.0), título e descrição das mudanças.",
+          "As atualizações ficam visíveis no histórico para referência de todos.",
         ],
       },
     ],
@@ -795,20 +795,20 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      HOME TEMPLATES
      ═══════════════════════════════════════════════ */
-  "/home-templates": {
-    pageTitle: "Templates de Home",
+   "/home-templates": {
+    pageTitle: "Modelos de Tela Inicial",
     sections: [
       {
-        title: "Gerenciar templates de Home",
-        summary: "Crie e aplique templates predefinidos para a Home do app do cliente.",
+        title: "Gerenciar modelos de Tela Inicial",
+        summary: "Crie e aplique modelos prontos para a tela inicial do aplicativo do cliente.",
         steps: [
-          "Visualize os templates disponíveis na lista.",
-          "Clique em um template para ver o preview.",
-          "Use 'Aplicar template' para copiar seções para uma marca ou filial.",
+          "Visualize os modelos disponíveis na lista.",
+          "Clique em um modelo para ver a pré-visualização.",
+          "Use 'Aplicar modelo' para copiar seções para uma marca ou filial.",
           "O campo 'Sobrescrever' define se seções existentes serão substituídas.",
         ],
         tips: [
-          "Templates marcados como 'padrão' são aplicados automaticamente em novas marcas.",
+          "Modelos marcados como 'padrão' são aplicados automaticamente em novas marcas.",
         ],
       },
     ],
@@ -839,20 +839,20 @@ const helpContent: Record<string, HelpEntry> = {
   /* ═══════════════════════════════════════════════
      OPERADOR PDV
      ═══════════════════════════════════════════════ */
-  "/pdv": {
-    pageTitle: "PDV — Validar Resgate",
+   "/pdv": {
+    pageTitle: "Ponto de Venda — Validar Resgate",
     sections: [
       {
         title: "Validar resgate no ponto de venda",
-        summary: "Use esta tela para dar baixa em resgates de clientes.",
+        summary: "Use esta tela para confirmar e dar baixa nos resgates dos clientes.",
         steps: [
-          "Peça o PIN de 6 dígitos ao cliente.",
-          "Digite o PIN no campo indicado.",
+          "Peça o código de resgate de 6 dígitos ao cliente.",
+          "Digite o código no campo indicado.",
           "O sistema exibirá os detalhes do resgate: oferta, valor, validade.",
           "Confirme o resgate para dar baixa.",
         ],
         tips: [
-          "PINs expirados ou já utilizados são recusados automaticamente.",
+          "Códigos vencidos ou já utilizados são recusados automaticamente.",
           "Em caso de dúvida, consulte o extrato de resgates.",
         ],
       },
