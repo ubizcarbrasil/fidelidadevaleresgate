@@ -1,21 +1,48 @@
 
 
-## Problemas Identificados
+## Plano: Cadastro inline em carrossel no modal de resgate
 
-### 1. Botão "Resgatar agora" não aparece
-O botão está condicionado a `customer && !redeemed` (linha 321). No modo preview sem login, `customer` é `null`, então o CTA nunca renderiza. **Solução**: mostrar o botão sempre, mas ao clicar sem estar logado, exibir um toast pedindo login.
+### Contexto
+Quando o usuário **não autenticado** clica em "Resgatar agora", o modal atual mostra apenas CPF + Confirmar. O pedido é transformar esse modal em um fluxo de cadastro completo em formato carrossel (uma etapa por vez), mantendo o comportamento atual para usuários já logados.
 
-### 2. Ofertas semelhantes não são clicáveis
-O `onClick` das ofertas semelhantes está vazio (linha 293: `/* would need parent nav */`). **Solução**: adicionar uma prop `onOfferClick` ao componente e conectá-la ao `openOffer` do `CustomerNavContext` no `CustomerLayout`.
+### Fluxo do carrossel (6 etapas)
 
-## Alterações
+```text
+┌─────┐   ┌──────┐   ┌───────┐   ┌──────────┐   ┌─────┐   ┌───────┐
+│ CPF │ → │ Nome │ → │ Email │ → │ Telefone │ → │ OTP │ → │ Senha │
+└─────┘   └──────┘   └───────┘   └──────────┘   └─────┘   └───────┘
+```
 
-### `CustomerOfferDetailPage.tsx`
-- Adicionar prop `onOfferClick?: (offer: OfferWithStore) => void` à interface `Props`
-- No click das ofertas semelhantes, chamar `onOfferClick(sim)` em vez do handler vazio
-- Remover a condição `customer &&` do CTA — sempre exibir o botão
-- No `handleRedeem` e no `onClick` do CTA, se `customer` for null, exibir toast "Faça login para resgatar" e retornar
+- Cada etapa ocupa a mesma área do modal, com animação slide horizontal (framer-motion)
+- Botão "Próximo" avança, indicador de progresso (dots) no topo
+- Botão voltar retorna à etapa anterior
 
-### `CustomerLayout.tsx`
-- Passar `onOfferClick` ao `CustomerOfferDetailPage`, conectando ao `setSelectedOffer` (fechar oferta atual, abrir a nova com pequeno delay para animação)
+### Lógica por etapa
+
+1. **CPF** — input formatado (já existe). Validação: 11 dígitos
+2. **Nome** — input text. Validação: não vazio
+3. **E-mail** — input email. Validação: formato válido
+4. **Telefone** — input tel com máscara (XX) XXXXX-XXXX. Validação: 10-11 dígitos
+5. **OTP** — ao avançar do telefone, chama `supabase.auth.signUp()` com os dados coletados (auto_confirm está ativo). Depois envia OTP via `supabase.auth.signInWithOtp()` pelo e-mail para verificação. O usuário digita o código de 6 dígitos
+6. **Criar Senha** — input password (min 6 chars). Ao confirmar, chama `supabase.auth.updateUser({ password })` e em seguida executa o resgate automaticamente
+
+### Comportamento para usuário já logado
+Nada muda — continua mostrando apenas CPF + Confirmar como hoje.
+
+### Alterações técnicas
+
+#### `CustomerOfferDetailPage.tsx`
+- Adicionar estados: `signupStep` (0-5), `signupData` (cpf, name, email, phone, otp, password)
+- No modal, se `!customer`: renderizar o carrossel de cadastro em vez do CPF simples
+- Se `customer`: manter o fluxo atual (CPF + Confirmar)
+- Cada step usa `AnimatePresence` + `motion.div` com `key={step}` para animação de slide
+- Após senha criada e login bem-sucedido, o `CustomerContext` auto-cria o registro do customer, e o resgate é executado automaticamente
+- Indicador de progresso: 6 dots no topo do modal
+
+#### Fluxo de auth no step 5 (OTP) e 6 (Senha)
+- Step 4→5: `supabase.auth.signUp({ email, password: temporária })` + `supabase.auth.signInWithOtp({ email })` para enviar código
+- Step 5→6: `supabase.auth.verifyOtp({ email, token, type: 'email' })` para verificar
+- Step 6 final: `supabase.auth.updateUser({ password })` com a senha definitiva, salva metadata (name, phone), aguarda `customer` do contexto e executa `handleRedeem` automaticamente
+
+**Simplificação**: como `auto_confirm_email` está ativo, podemos simplificar — fazer `signUp` com email+senha definitiva no passo 6, pular OTP real, e prosseguir direto ao resgate. Porém o usuário pediu OTP explicitamente, então manteremos o fluxo com verificação por e-mail.
 
