@@ -20,11 +20,12 @@ import StepValidity from "./steps/StepValidity";
 import StepLimits from "./steps/StepLimits";
 import StepTermsAccept from "./steps/StepTermsAccept";
 import StepRedemptionType from "./steps/StepRedemptionType";
+import StepImage from "./steps/StepImage";
 import StepReview from "./steps/StepReview";
 
 const STEP_LABELS = [
   "Categoria", "Tipo", "Valor", "Agendamento", "Cumulativo",
-  "Dias/Horários", "Validade", "Limites", "Termos", "Resgate", "Revisão",
+  "Dias/Horários", "Validade", "Limites", "Termos", "Resgate", "Imagem", "Revisão",
 ];
 
 interface Props {
@@ -73,6 +74,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       redemption_branch_id: editOffer.redemption_branch_id || "",
       title: editOffer.title || "",
       description: editOffer.description || "",
+      image_url: editOffer.image_url || "",
     };
   };
 
@@ -140,6 +142,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
     const payload: any = {
       title: data.coupon_category + " - " + (data.coupon_type === "STORE" ? "Loja Toda" : "Produto"),
       description: data.description || null,
+      image_url: data.image_url || null,
       coupon_type: data.coupon_type,
       coupon_category: data.coupon_category,
       discount_percent: isPercent ? data.discount_percent : 0,
@@ -207,7 +210,8 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       case 7: return <StepLimits data={data} update={update} />;
       case 8: return <StepTermsAccept data={data} update={update} />;
       case 9: return <StepRedemptionType data={data} update={update} />;
-      case 10: return <StepReview data={data} />;
+      case 10: return <StepImage data={data} update={update} storeId={storeId} />;
+      case 11: return <StepReview data={data} />;
       default: return null;
     }
   };

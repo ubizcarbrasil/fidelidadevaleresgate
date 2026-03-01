@@ -17,6 +17,11 @@ export default function StepReview({ data }: Props) {
       <Label className="text-base font-semibold">Revisão Final</Label>
 
       <div className="space-y-3 text-sm">
+        {data.image_url && (
+          <div className="rounded-xl overflow-hidden border border-border mb-3">
+            <img src={data.image_url} alt="Imagem do cupom" className="w-full h-32 object-cover" />
+          </div>
+        )}
         <div className="flex justify-between border-b pb-2">
           <span className="text-muted-foreground">Categoria</span>
           <Badge variant="secondary">{data.coupon_category}</Badge>
