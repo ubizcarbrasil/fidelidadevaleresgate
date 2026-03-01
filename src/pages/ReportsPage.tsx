@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 type ReportType = "redemptions" | "earning_events" | "customers" | "vouchers" | "affiliate_clicks";
 
@@ -46,6 +47,7 @@ function downloadCSV(rows: Record<string, any>[], filename: string) {
 }
 
 export default function ReportsPage() {
+  const { currentBrandId, applyBrandFilter } = useBrandGuard();
   const [reportType, setReportType] = useState<ReportType>("redemptions");
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() - 30);
@@ -54,20 +56,22 @@ export default function ReportsPage() {
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["report", reportType, dateFrom, dateTo],
+    queryKey: ["report", reportType, dateFrom, dateTo, currentBrandId],
     queryFn: async () => {
       const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
       const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
 
       switch (reportType) {
         case "redemptions": {
-          const { data } = await supabase
+          let q = supabase
             .from("redemptions")
             .select("id, token, status, created_at, used_at, purchase_value, customer_cpf")
             .gte("created_at", from.toISOString())
             .lte("created_at", to.toISOString())
             .order("created_at", { ascending: false })
             .limit(500);
+          if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+          const { data } = await q;
           return (data || []).map(r => ({
             ID: r.id, Token: r.token, Status: r.status,
             "Criado em": formatDate(r.created_at),
@@ -77,13 +81,15 @@ export default function ReportsPage() {
           }));
         }
         case "earning_events": {
-          const { data } = await supabase
+          let q = supabase
             .from("earning_events")
             .select("id, points_earned, money_earned, purchase_value, source, status, created_at, receipt_code")
             .gte("created_at", from.toISOString())
             .lte("created_at", to.toISOString())
             .order("created_at", { ascending: false })
             .limit(500);
+          if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+          const { data } = await q;
           return (data || []).map(r => ({
             ID: r.id, Pontos: r.points_earned, "Valor R$": Number(r.money_earned).toFixed(2),
             "Valor compra": Number(r.purchase_value).toFixed(2), Fonte: r.source, Status: r.status,
@@ -91,13 +97,15 @@ export default function ReportsPage() {
           }));
         }
         case "customers": {
-          const { data } = await supabase
+          let q = supabase
             .from("customers")
             .select("id, name, phone, points_balance, money_balance, is_active, created_at")
             .gte("created_at", from.toISOString())
             .lte("created_at", to.toISOString())
             .order("created_at", { ascending: false })
             .limit(500);
+          if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+          const { data } = await q;
           return (data || []).map(r => ({
             ID: r.id, Nome: r.name, Telefone: r.phone || "—",
             Pontos: r.points_balance, "Saldo R$": Number(r.money_balance).toFixed(2),

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, GripVertical, Eye, Save, Image, Type, Minus, Square, MousePointer } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, GripVertical, Eye, Save, Image, Type, Minus, Square, MousePointer, Copy } from "lucide-react";
 import type { PageElement, PageElementStyle } from "./types";
 import { DEFAULT_ELEMENT, ELEMENT_TYPE_LABELS } from "./types";
 import PagePreview from "./PagePreview";
@@ -60,6 +60,30 @@ export default function ElementEditor({ page, onSave, onBack }: Props) {
     setElements(copy);
     setSelectedIdx(newIdx);
   };
+
+  const duplicateElement = (idx: number) => {
+    const copy = { ...elements[idx], id: crypto.randomUUID() };
+    const newElements = [...elements];
+    newElements.splice(idx + 1, 0, copy);
+    setElements(newElements);
+    setSelectedIdx(idx + 1);
+  };
+
+  // Drag-and-drop state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  const handleDragStart = (idx: number) => setDragIdx(idx);
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const copy = [...elements];
+    const [moved] = copy.splice(dragIdx, 1);
+    copy.splice(idx, 0, moved);
+    setElements(copy);
+    setSelectedIdx(idx);
+    setDragIdx(idx);
+  };
+  const handleDragEnd = () => setDragIdx(null);
 
   const selected = selectedIdx !== null ? elements[selectedIdx] : null;
 
@@ -124,12 +148,19 @@ export default function ElementEditor({ page, onSave, onBack }: Props) {
             {elements.map((el, idx) => (
               <div
                 key={el.id}
-                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${selectedIdx === idx ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"}`}
+                draggable
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${dragIdx === idx ? "opacity-50" : ""} ${selectedIdx === idx ? "bg-primary/10 border border-primary/30" : "hover:bg-accent"}`}
                 onClick={() => setSelectedIdx(idx)}
               >
-                <GripVertical className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <GripVertical className="h-3 w-3 text-muted-foreground flex-shrink-0 cursor-grab" />
                 <span className="flex-1 truncate text-xs">{ELEMENT_TYPE_LABELS[el.type]}: {el.content || "(vazio)"}</span>
                 <div className="flex gap-0.5">
+                  <button onClick={(e) => { e.stopPropagation(); duplicateElement(idx); }} className="text-muted-foreground hover:text-foreground" title="Duplicar">
+                    <Copy className="h-3 w-3" />
+                  </button>
                   {idx > 0 && <button onClick={(e) => { e.stopPropagation(); moveElement(idx, -1); }} className="text-muted-foreground hover:text-foreground text-[10px]">↑</button>}
                   {idx < elements.length - 1 && <button onClick={(e) => { e.stopPropagation(); moveElement(idx, 1); }} className="text-muted-foreground hover:text-foreground text-[10px]">↓</button>}
                 </div>
@@ -251,6 +282,10 @@ export default function ElementEditor({ page, onSave, onBack }: Props) {
                       <Input value={selected.style.height || ""} onChange={(e) => updateStyle(selectedIdx!, { height: e.target.value })} placeholder="160px" />
                     </div>
                   )}
+                  <div>
+                    <Label className="text-xs">Opacidade</Label>
+                    <Input type="range" min="0" max="1" step="0.05" value={selected.style.opacity || "1"} onChange={(e) => updateStyle(selectedIdx!, { opacity: e.target.value })} className="h-9" />
+                  </div>
                 </div>
               </div>
 
