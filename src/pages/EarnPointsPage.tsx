@@ -158,7 +158,7 @@ export default function EarnPointsPage() {
         .gte("created_at", todayISO);
       const storeDayTotal = (storeToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
       if (rule && storeDayTotal + preview.points > rule.max_points_per_store_per_day) {
-        throw new Error(`Limite diário da loja atingido (${rule.max_points_per_store_per_day} pontos)`);
+        throw new Error(`Limite diário do parceiro atingido (${rule.max_points_per_store_per_day} pontos)`);
       }
 
       // Receipt uniqueness check
@@ -170,7 +170,7 @@ export default function EarnPointsPage() {
           .eq("store_id", storeId)
           .eq("receipt_code", receiptCode.trim())
           .limit(1);
-        if (existing && existing.length > 0) throw new Error("Comprovante já utilizado nesta loja");
+        if (existing && existing.length > 0) throw new Error("Comprovante já utilizado neste parceiro");
       }
 
       // Build rule snapshot for historical integrity
@@ -210,7 +210,7 @@ export default function EarnPointsPage() {
         entry_type: "CREDIT" as any,
         points_amount: preview.points,
         money_amount: preview.money,
-        reason: `Compra na loja ${selectedStore?.name || ""}`,
+        reason: `Compra no parceiro ${selectedStore?.name || ""}`,
         reference_type: "EARNING_EVENT" as any,
         reference_id: event.id,
         created_by_user_id: user.id,
@@ -267,10 +267,10 @@ export default function EarnPointsPage() {
 
       {/* Step 1: Select store */}
       <Card>
-        <CardHeader><CardTitle className="text-lg">1. Selecione a Loja</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-lg">1. Selecione o Parceiro</CardTitle></CardHeader>
         <CardContent>
           <Select value={storeId} onValueChange={setStoreId}>
-            <SelectTrigger><SelectValue placeholder="Escolha a loja" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Escolha o parceiro" /></SelectTrigger>
             <SelectContent>{stores?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
           </Select>
         </CardContent>
@@ -337,7 +337,7 @@ export default function EarnPointsPage() {
                 <p className="text-sm text-muted-foreground">Equivalente a R$ {preview.money.toFixed(2)}</p>
                 {usingCustomRule && (
                   <Badge variant="outline" className="mt-1">
-                    Regra personalizada da loja ({effectivePointsPerReal} pts/R$)
+                    Regra personalizada do parceiro ({effectivePointsPerReal} pts/R$)
                   </Badge>
                 )}
               </div>
@@ -361,7 +361,7 @@ export default function EarnPointsPage() {
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-            <p>Nenhuma regra de pontuação ativa para esta loja/filial.</p>
+            <p>Nenhuma regra de pontuação ativa para este parceiro/cidade.</p>
             <p className="text-sm">Configure uma regra em "Regras de Pontuação".</p>
           </CardContent>
         </Card>

@@ -176,7 +176,7 @@ export default function OperatorRedeemPage() {
               <div><span className="text-muted-foreground">Oferta:</span> <strong>{result.offer_title}</strong></div>
               <div><span className="text-muted-foreground">Cliente:</span> <strong>{result.customer_name}</strong></div>
               <div><span className="text-muted-foreground">CPF:</span> <strong>{maskCpf(result.customer_cpf)}</strong></div>
-              <div><span className="text-muted-foreground">Filial:</span> <strong>{result.branch_name}</strong></div>
+              <div><span className="text-muted-foreground">Cidade:</span> <strong>{result.branch_name}</strong></div>
               <div><span className="text-muted-foreground">Valor Resgate:</span> <strong>R$ {result.value_rescue.toFixed(2)}</strong></div>
               <div><span className="text-muted-foreground">Compra Mín.:</span> <strong>R$ {result.min_purchase.toFixed(2)}</strong></div>
               <div><span className="text-muted-foreground">PIN:</span> <strong className="font-mono tracking-wider">{result.token}</strong></div>
