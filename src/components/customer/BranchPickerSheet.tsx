@@ -127,10 +127,10 @@ export default function BranchPickerSheet() {
                                 className="text-sm font-medium block"
                                 style={{ color: isSelected ? primaryColor : fg }}
                               >
-                                {branch.name}
+                                {city}
                               </span>
                               <span className="text-[11px] opacity-40">
-                                {city}{state !== "Outros" ? ` - ${state}` : ""}
+                                {state !== "Outros" ? state : ""}
                               </span>
                             </div>
                             {isSelected && (
