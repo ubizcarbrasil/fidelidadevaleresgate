@@ -588,6 +588,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
               setRedemptionStep("terms");
               setTermsAccepted(false);
+              setIsSigningUp(false);
               setShowConfirm(true);
             }}
               className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
@@ -605,6 +606,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
               setRedemptionStep("terms");
               setTermsAccepted(false);
+              setIsSigningUp(false);
               setShowConfirm(true);
             }}
               className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
@@ -644,7 +646,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white overflow-hidden"
               style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)", maxHeight: "85vh" }}>
 
-              {(!customer || isSigningUp) ? (
+              {isSigningUp ? (
                 <div className="p-6">
                   <RedemptionSignupCarousel
                     primary={primary}
@@ -653,10 +655,13 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     onComplete={(cpfFromSignup) => {
                       setCpf(formatCpf(cpfFromSignup));
                       setIsSigningUp(false);
-                      setShowConfirm(false);
-                      toast({ title: "Conta criada!", description: "Agora finalize seu resgate." });
+                      setRedemptionStep("cpf");
+                      toast({ title: "Conta criada!", description: "Agora confirme o resgate." });
                     }}
-                    onCancel={() => { setIsSigningUp(false); setShowConfirm(false); }}
+                    onCancel={() => {
+                      setIsSigningUp(false);
+                      setRedemptionStep("terms");
+                    }}
                     onSigningUp={() => setIsSigningUp(true)}
                   />
                 </div>
@@ -793,14 +798,42 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
                       Cancelar
                     </button>
-                    <motion.button whileTap={{ scale: 0.97 }}
-                      onClick={() => setRedemptionStep("cpf")}
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        if (!termsAccepted) return;
+                        if (customer) {
+                          setRedemptionStep("cpf");
+                        } else {
+                          setIsSigningUp(true);
+                        }
+                      }}
                       disabled={!termsAccepted}
                       className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white disabled:opacity-40"
-                      style={{ backgroundColor: primary }}>
+                      style={{ backgroundColor: primary }}
+                    >
                       Confirmar Resgate
                     </motion.button>
                   </div>
+                </div>
+              ) : !customer ? (
+                <div className="p-6">
+                  <RedemptionSignupCarousel
+                    primary={primary}
+                    fg={fg}
+                    fontHeading={fontHeading}
+                    onComplete={(cpfFromSignup) => {
+                      setCpf(formatCpf(cpfFromSignup));
+                      setIsSigningUp(false);
+                      setRedemptionStep("cpf");
+                      toast({ title: "Conta criada!", description: "Agora confirme o resgate." });
+                    }}
+                    onCancel={() => {
+                      setIsSigningUp(false);
+                      setRedemptionStep("terms");
+                    }}
+                    onSigningUp={() => setIsSigningUp(true)}
+                  />
                 </div>
               ) : (
                 /* ── CPF STEP ── */
