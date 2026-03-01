@@ -305,7 +305,7 @@ export default function CsvImportPage() {
 
               {isRootAdmin && (
                 <div className="space-y-2">
-                  <Label>Brand</Label>
+                  <Label>Marca</Label>
                   <Select value={brandId} onValueChange={v => { setBrandId(v); setBranchId(""); }}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>

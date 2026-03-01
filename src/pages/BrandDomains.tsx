@@ -225,10 +225,10 @@ export default function BrandDomains() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Brand</Label>
-              <Select value={brandId} onValueChange={setBrandId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a brand" />
+               <Label>Marca</Label>
+               <Select value={brandId} onValueChange={setBrandId}>
+                 <SelectTrigger>
+                   <SelectValue placeholder="Selecione a marca" />
                 </SelectTrigger>
                 <SelectContent>
                   {brands?.map((b) => (

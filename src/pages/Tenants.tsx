@@ -44,20 +44,20 @@ export default function Tenants() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Tenants</h2>
-          <p className="text-muted-foreground">Gerencie os clientes da plataforma</p>
-        </div>
-        <Button asChild><Link to="/tenants/new"><Plus className="h-4 w-4 mr-2" />Novo Tenant</Link></Button>
+           <h2 className="text-2xl font-bold tracking-tight">Organizações</h2>
+           <p className="text-muted-foreground">Gerencie os clientes da plataforma</p>
+         </div>
+         <Button asChild><Link to="/tenants/new"><Plus className="h-4 w-4 mr-2" />Nova Organização</Link></Button>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome ou slug..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
-        <CardHeader><CardTitle className="text-base">Lista de Tenants</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Lista de Organizações</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Slug</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Identificador</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum tenant cadastrado</TableCell></TableRow>}
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma organização cadastrada</TableCell></TableRow>}
               {data?.rows?.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.name}</TableCell>

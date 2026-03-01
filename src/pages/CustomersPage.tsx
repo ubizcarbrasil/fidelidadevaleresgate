@@ -79,7 +79,7 @@ export default function CustomersPage() {
               <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Brand</Label>
+                  <Label>Marca</Label>
                   <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "" }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
@@ -108,7 +108,7 @@ export default function CustomersPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
-                <TableHead>Brand</TableHead>
+                <TableHead>Marca</TableHead>
                 <TableHead>Filial</TableHead>
                 <TableHead>Pontos</TableHead>
                 <TableHead>Saldo (R$)</TableHead>

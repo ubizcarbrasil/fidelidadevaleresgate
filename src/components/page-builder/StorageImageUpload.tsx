@@ -65,7 +65,7 @@ export default function StorageImageUpload({
             onClick={() => setMode("upload")}
             className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${mode === "upload" ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <Upload className="h-3 w-3 inline mr-0.5" /> Upload
+            <Upload className="h-3 w-3 inline mr-0.5" /> Enviar
           </button>
           <button
             type="button"
@@ -82,7 +82,7 @@ export default function StorageImageUpload({
         <div className="relative group">
           <img
             src={value}
-            alt="Preview"
+            alt="Pré-visualização"
             className={`w-full object-cover rounded-lg border ${compact ? "h-20" : "h-32"}`}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />

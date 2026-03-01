@@ -180,7 +180,7 @@ export default function VoucherForm() {
                   <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>E-mail</Label>
                   <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
                 </div>
               </div>

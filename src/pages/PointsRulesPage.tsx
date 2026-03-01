@@ -164,7 +164,7 @@ export default function PointsRulesPage() {
             <div className="space-y-4 pt-2 max-h-[70vh] overflow-y-auto">
               {isRootAdmin && !editId && (
                 <div className="space-y-2">
-                  <Label>Brand</Label>
+                  <Label>Marca</Label>
                   <Select value={form.brand_id} onValueChange={v => updateField("brand_id", v)}>
                     <SelectTrigger><SelectValue placeholder="Selecione a marca" /></SelectTrigger>
                     <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>

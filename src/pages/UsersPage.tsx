@@ -128,7 +128,7 @@ export default function UsersPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label>Papel</Label>
                 <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as AppRole)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -140,7 +140,7 @@ export default function UsersPage() {
               </div>
               {needsScope(selectedRole) && selectedRole === "tenant_admin" && (
                 <div className="space-y-2">
-                  <Label>Tenant</Label>
+                  <Label>Organização</Label>
                   <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
@@ -151,7 +151,7 @@ export default function UsersPage() {
               )}
               {selectedRole === "brand_admin" && (
                 <div className="space-y-2">
-                  <Label>Brand</Label>
+                  <Label>Marca</Label>
                   <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
@@ -162,7 +162,7 @@ export default function UsersPage() {
               )}
               {(selectedRole === "branch_admin" || selectedRole === "branch_operator") && (
                 <div className="space-y-2">
-                  <Label>Branch</Label>
+                  <Label>Cidade</Label>
                   <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
@@ -188,7 +188,7 @@ export default function UsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
+                  <TableHead>E-mail</TableHead>
                   <TableHead>Nome</TableHead>
                 </TableRow>
               </TableHeader>
@@ -209,20 +209,20 @@ export default function UsersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Roles Atribuídas</CardTitle>
+            <CardTitle className="text-base">Papéis Atribuídos</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Papel</TableHead>
                   <TableHead>Escopo</TableHead>
                   <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {userRoles?.length === 0 && (
-                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">Nenhuma role atribuída</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">Nenhum papel atribuído</TableCell></TableRow>
                 )}
                 {userRoles?.map((r) => (
                   <TableRow key={r.id}>

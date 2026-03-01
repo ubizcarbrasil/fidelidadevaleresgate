@@ -376,9 +376,9 @@ export default function HomeTemplatesPage() {
 
             {scopeType === "BRAND" && (
               <div className="space-y-2">
-                <Label>Brand</Label>
-                <Select value={scopeId} onValueChange={setScopeId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione a Brand" /></SelectTrigger>
+                 <Label>Marca</Label>
+                 <Select value={scopeId} onValueChange={setScopeId}>
+                   <SelectTrigger><SelectValue placeholder="Selecione a Marca" /></SelectTrigger>
                   <SelectContent>
                     {brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
@@ -388,9 +388,9 @@ export default function HomeTemplatesPage() {
 
             {scopeType === "TENANT" && (
               <div className="space-y-2">
-                <Label>Tenant</Label>
-                <Select value={scopeId} onValueChange={setScopeId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o Tenant" /></SelectTrigger>
+                 <Label>Organização</Label>
+                 <Select value={scopeId} onValueChange={setScopeId}>
+                   <SelectTrigger><SelectValue placeholder="Selecione a Organização" /></SelectTrigger>
                   <SelectContent>
                     {tenants?.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                   </SelectContent>

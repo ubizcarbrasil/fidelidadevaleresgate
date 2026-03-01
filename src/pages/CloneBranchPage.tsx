@@ -251,7 +251,7 @@ export default function CloneBranchPage() {
         <CardContent className="space-y-4">
           {isRootAdmin && (
             <div className="space-y-2">
-              <Label>Brand</Label>
+              <Label>Marca</Label>
               <Select value={brandId} onValueChange={v => { setBrandId(v); setSourceBranchId(""); setTargetBranchId(""); }}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>

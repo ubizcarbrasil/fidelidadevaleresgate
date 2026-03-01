@@ -94,13 +94,13 @@ export default function BrandForm() {
           <TabsContent value="general" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>{isEdit ? "Editar Brand" : "Nova Brand"}</CardTitle>
+                <CardTitle>{isEdit ? "Editar Marca" : "Nova Marca"}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Tenant</Label>
-                  <Select value={tenantId} onValueChange={setTenantId}>
-                    <SelectTrigger><SelectValue placeholder="Selecione um tenant" /></SelectTrigger>
+                   <Label>Organização</Label>
+                   <Select value={tenantId} onValueChange={setTenantId}>
+                     <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
                     <SelectContent>
                       {tenants?.map((t) => (
                         <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -114,7 +114,7 @@ export default function BrandForm() {
                     <Input value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Slug</Label>
+                    <Label>Identificador</Label>
                     <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
                   </div>
                 </div>
