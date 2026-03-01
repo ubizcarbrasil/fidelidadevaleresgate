@@ -9,6 +9,7 @@ import {
   MapPin, Ban, Globe, MessageCircle, DollarSign, Tag,
 } from "lucide-react";
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
+import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDetailPage";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
@@ -43,6 +44,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [cpf, setCpf] = useState("");
   const [productValue, setProductValue] = useState("");
   const [pin, setPin] = useState<string | null>(null);
+  const [completedRedemption, setCompletedRedemption] = useState<any>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [similarOffers, setSimilarOffers] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -145,11 +147,22 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         offer_snapshot_json: offerSnapshot as any,
         purchase_value: parsedProductValue || null,
         credit_value_applied: creditApplied || null,
-      }).select("token").single();
+      }).select("id, token").single();
       if (error) throw error;
       setPin(created.token);
+
+      // Fetch the full redemption record to show the detail page
+      const { data: fullRedemption } = await supabase
+        .from("redemptions")
+        .select("*, offers(*, stores(name, logo_url, address, whatsapp, site_url, instagram))")
+        .eq("id", created.id)
+        .single();
+
       setRedeemed(true);
       setShowConfirm(false);
+      if (fullRedemption) {
+        setCompletedRedemption(fullRedemption);
+      }
       toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
     } catch (err: any) {
       toast({ title: "Erro ao resgatar", description: translateError(err.message), variant: "destructive" });
@@ -629,21 +642,18 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         </div>
       )}
 
-      {/* Redeemed PIN */}
-      {redeemed && pin && (
-        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
-          <div className="max-w-lg mx-auto space-y-3">
-            <div className="w-full py-4 rounded-2xl text-center" style={{ backgroundColor: "#E8F5E9" }}>
-              <div className="flex items-center justify-center gap-2 mb-2" style={{ color: "#2E7D32" }}>
-                <CheckCircle2 className="h-5 w-5" />
-                <span className="font-bold text-base">Resgate confirmado!</span>
-              </div>
-              <p className="text-xs mb-2" style={{ color: "#2E7D32" }}>Apresente este PIN ao estabelecimento:</p>
-              <p className="text-4xl font-mono font-black tracking-[0.3em]" style={{ color: "#1B5E20" }}>{pin}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Completed Redemption → Full Detail Page */}
+      <AnimatePresence>
+        {completedRedemption && (
+          <CustomerRedemptionDetailPage
+            redemption={completedRedemption}
+            onBack={() => {
+              setCompletedRedemption(null);
+              onBack();
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Confirmation Modal */}
       <AnimatePresence>
