@@ -16,16 +16,16 @@ const groups = [
   {
     label: "📊 Visão Geral",
     items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
+      { title: "Painel Principal", url: "/", icon: LayoutDashboard },
     ],
   },
   {
     label: "🏢 Estrutura",
     items: [
-      { title: "Tenants", url: "/tenants", icon: Building2 },
-      { title: "Brands", url: "/brands", icon: Store },
-      { title: "Branches", url: "/branches", icon: MapPin },
-      { title: "Clonar Branch", url: "/clone-branch", icon: Copy },
+      { title: "Empresas", url: "/tenants", icon: Building2 },
+      { title: "Marcas", url: "/brands", icon: Store },
+      { title: "Filiais", url: "/branches", icon: MapPin },
+      { title: "Clonar Filial", url: "/clone-branch", icon: Copy },
       { title: "Domínios", url: "/domains", icon: Globe },
     ],
   },
@@ -33,7 +33,7 @@ const groups = [
     label: "🎨 Identidade & Vitrine",
     items: [
       { title: "Galeria de Ícones", url: "/icon-library", icon: Image },
-      { title: "Central de Banners", url: "/banner-manager", icon: Image },
+      { title: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { title: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
     ],
   },
@@ -44,8 +44,8 @@ const groups = [
       { title: "Ofertas", url: "/offers", icon: Tag },
       { title: "Clientes", url: "/customers", icon: UserCheck },
       { title: "Resgates", url: "/redemptions", icon: ReceiptText },
-      { title: "Vouchers", url: "/vouchers", icon: Ticket },
-      { title: "Importar CSV", url: "/csv-import", icon: FileSpreadsheet },
+      { title: "Cupons", url: "/vouchers", icon: Ticket },
+      { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet },
       { title: "Aprovação de Lojas", url: "/store-approvals", icon: ShieldCheck },
       { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
       { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
@@ -71,12 +71,12 @@ const groups = [
   {
     label: "⚙️ Plataforma",
     items: [
-      { title: "Módulos", url: "/modules", icon: Blocks },
+      { title: "Funcionalidades", url: "/modules", icon: Blocks },
       { title: "Permissões", url: "/permissions", icon: Shield },
-      { title: "Templates", url: "/templates", icon: Layout },
-      { title: "Templates Home", url: "/home-templates", icon: LayoutList },
-      { title: "Feature Flags", url: "/flags", icon: Flag },
-      { title: "Releases", url: "/releases", icon: Rocket },
+      { title: "Seções da Home", url: "/templates", icon: Layout },
+      { title: "Modelos de Home", url: "/home-templates", icon: LayoutList },
+      { title: "Controle de Recursos", url: "/flags", icon: Flag },
+      { title: "Atualizações", url: "/releases", icon: Rocket },
       { title: "Auditoria", url: "/audit", icon: ScrollText },
       { title: "Relatórios", url: "/reports", icon: BarChart3 },
     ],
@@ -99,7 +99,7 @@ export function RootSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Root Console</span>
+              <span className="text-xs text-sidebar-foreground/60">Painel Raiz</span>
             </div>
           )}
         </div>

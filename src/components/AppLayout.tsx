@@ -9,11 +9,11 @@ import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 const CONSOLE_TITLES: Record<string, string> = {
-  ROOT: "Root Console",
-  TENANT: "Tenant Console",
-  BRAND: "Brand Console",
-  BRANCH: "Branch Console",
-  OPERATOR: "Operador PDV",
+  ROOT: "Painel Raiz",
+  TENANT: "Painel da Empresa",
+  BRAND: "Painel da Marca",
+  BRANCH: "Painel da Filial",
+  OPERATOR: "Operador do Ponto de Venda",
   STORE_ADMIN: "Painel do Lojista",
 };
 
