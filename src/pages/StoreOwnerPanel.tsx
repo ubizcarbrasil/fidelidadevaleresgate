@@ -17,6 +17,7 @@ import StoreExtratoTab from "@/components/store-owner/StoreExtratoTab";
 import StoreEmployeesTab from "@/components/store-owner/StoreEmployeesTab";
 import { StoreTermosTab, StoreTutorialTab, StoreSuporteTab } from "@/components/store-owner/StoreInfoTabs";
 import StoreBranchesTab from "@/components/store-owner/StoreBranchesTab";
+import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
 
@@ -419,6 +420,7 @@ function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateN
           })}
         </div>
       )}
+      <ContextualHelpDrawer />
     </div>
   );
 }
