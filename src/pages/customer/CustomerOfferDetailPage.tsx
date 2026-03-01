@@ -93,6 +93,18 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
     }
     setRedeeming(true);
     try {
+      // Ensure we have an active session before attempting insert
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        // Try to refresh the session
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          toast({ title: "Sessão expirada", description: "Faça login novamente para resgatar.", variant: "destructive" });
+          setRedeeming(false);
+          return;
+        }
+      }
+
       // Build offer snapshot for historical integrity
       const offerSnapshot = {
         title: offer.title,
