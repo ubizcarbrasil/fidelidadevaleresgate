@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, FileText, Layers,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -35,6 +35,8 @@ const groups = [
       { title: "Galeria de Ícones", url: "/icon-library", icon: Image },
       { title: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { title: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
+      { title: "Montador de Páginas", url: "/page-builder", icon: FileText },
+      { title: "Construtor de Páginas V2", url: "/page-builder-v2", icon: Layers },
     ],
   },
   {
