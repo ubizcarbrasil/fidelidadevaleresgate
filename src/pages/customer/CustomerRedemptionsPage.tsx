@@ -291,6 +291,26 @@ function RedemptionCard({
         </div>
       </div>
 
+      {/* Minimum purchase highlight banner */}
+      {minPurchase > 0 && (
+        <div className="mx-4 mb-2">
+          <div
+            className="flex items-center gap-2 rounded-xl px-3 py-2.5"
+            style={{ backgroundColor: `${primary}12`, border: `1.5px solid ${primary}30` }}
+          >
+            <DollarSign className="h-5 w-5 flex-shrink-0" style={{ color: primary }} />
+            <div className="flex-1">
+              <p className="text-xs font-bold" style={{ color: primary }}>
+                Compra mínima obrigatória
+              </p>
+              <p className="text-sm font-extrabold" style={{ color: fg }}>
+                {formatCurrency(minPurchase)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Details section - always visible */}
       <div className="px-4 pb-3">
         <div
