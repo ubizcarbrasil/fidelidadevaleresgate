@@ -20,9 +20,22 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Coins,
+  Calendar,
+  ChevronDown,
+  Info,
+  HelpCircle,
+  FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type StoreRow = Tables<"stores">;
 type Offer = Tables<"offers">;
@@ -129,6 +142,14 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
               {store.name}
             </h1>
 
+            {/* Points rule - prominent like Livelo */}
+            {store.points_per_real && (
+              <p className="text-2xl font-black mb-2" style={{ fontFamily: fontHeading }}>
+                {Number(store.points_per_real).toFixed(0)} {Number(store.points_per_real) === 1 ? "ponto" : "pontos"}{" "}
+                <span className="text-base font-medium" style={{ color: `${fg}60` }}>por R$ 1</span>
+              </p>
+            )}
+
             {store.category && (
               <span
                 className="text-xs font-medium px-3 py-1 rounded-full mb-2"
@@ -231,6 +252,71 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           </div>
         </div>
 
+        {/* Orientações importantes - Livelo style */}
+        {(store.points_rule_text || store.points_deadline_text) && (
+          <div className="mx-4 mt-5">
+            <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fontHeading }}>
+              Orientações importantes
+            </h2>
+
+            {store.points_rule_text && (
+              <div className="flex items-start gap-3 mb-4">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${primary}10` }}
+                >
+                  <Tag className="h-5 w-5" style={{ color: primary }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Regra</p>
+                  <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>
+                    {store.points_rule_text}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {store.points_deadline_text && (
+              <div className="flex items-start gap-3">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${primary}10` }}
+                >
+                  <Calendar className="h-5 w-5" style={{ color: primary }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Prazo</p>
+                  <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>
+                    {store.points_deadline_text}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* FAQ Accordion - Livelo style */}
+        {store.faq_json && Array.isArray(store.faq_json) && (store.faq_json as any[]).length > 0 && (
+          <div className="mx-4 mt-5">
+            <h2 className="text-lg font-bold mb-3" style={{ fontFamily: fontHeading }}>
+              Dúvidas frequentes
+            </h2>
+            <div className="rounded-2xl bg-white overflow-hidden" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+              <Accordion type="single" collapsible>
+                {(store.faq_json as any[]).map((faq: any, idx: number) => (
+                  <AccordionItem key={idx} value={`faq-${idx}`} className="border-b last:border-b-0">
+                    <AccordionTrigger className="px-4 py-3.5 text-sm font-semibold text-left hover:no-underline">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 text-sm" style={{ color: `${fg}65` }}>
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </div>
+        )}
         {/* Video embed */}
         {store.video_url && (
           <div className="mx-4 mt-4">

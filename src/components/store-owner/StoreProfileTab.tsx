@@ -1,13 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Save, Image as ImageIcon, Video, Globe, Instagram, MapPin, MessageCircle, Tag } from "lucide-react";
+import { Loader2, Save, Image as ImageIcon, Video, Globe, Instagram, MapPin, MessageCircle, Tag, HelpCircle, Coins, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import SegmentAutocomplete from "@/components/SegmentAutocomplete";
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
 
 export default function StoreProfileTab({ store }: { store: any }) {
   const [form, setForm] = useState({
@@ -21,6 +26,9 @@ export default function StoreProfileTab({ store }: { store: any }) {
     instagram: store.instagram || "",
     whatsapp: store.whatsapp || "",
     address: store.address || "",
+    points_rule_text: store.points_rule_text || "",
+    points_deadline_text: store.points_deadline_text || "",
+    faq_json: (store.faq_json || []) as FaqItem[],
   });
   const [saving, setSaving] = useState(false);
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
@@ -40,6 +48,9 @@ export default function StoreProfileTab({ store }: { store: any }) {
         instagram: form.instagram || null,
         whatsapp: form.whatsapp || null,
         address: form.address || null,
+        points_rule_text: form.points_rule_text || null,
+        points_deadline_text: form.points_deadline_text || null,
+        faq_json: form.faq_json as any,
       })
       .eq("id", store.id);
 
@@ -62,6 +73,21 @@ export default function StoreProfileTab({ store }: { store: any }) {
     setForm(prev => ({ ...prev, gallery_urls: prev.gallery_urls.filter((_, i) => i !== index) }));
   };
 
+  const addFaqItem = () => {
+    setForm(prev => ({ ...prev, faq_json: [...prev.faq_json, { question: "", answer: "" }] }));
+  };
+
+  const updateFaqItem = (index: number, field: "question" | "answer", value: string) => {
+    setForm(prev => ({
+      ...prev,
+      faq_json: prev.faq_json.map((item, i) => i === index ? { ...item, [field]: value } : item),
+    }));
+  };
+
+  const removeFaqItem = (index: number) => {
+    setForm(prev => ({ ...prev, faq_json: prev.faq_json.filter((_, i) => i !== index) }));
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -81,6 +107,71 @@ export default function StoreProfileTab({ store }: { store: any }) {
             onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
             rows={4}
           />
+        </CardContent>
+      </Card>
+
+      {/* Regras de Pontuação */}
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Coins className="h-4 w-4" /> Regras de Pontuação
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Regra (como o cliente acumula pontos)</Label>
+            <Input
+              placeholder="Ex: Faça suas compras no site e acumule pontos automaticamente"
+              value={form.points_rule_text}
+              onChange={e => setForm(prev => ({ ...prev, points_rule_text: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Prazo de creditação</Label>
+            <Input
+              placeholder="Ex: Pontos creditados em até 30 dias após a compra"
+              value={form.points_deadline_text}
+              onChange={e => setForm(prev => ({ ...prev, points_deadline_text: e.target.value }))}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* FAQ */}
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <HelpCircle className="h-4 w-4" /> Dúvidas Frequentes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {form.faq_json.map((faq, idx) => (
+            <div key={idx} className="rounded-xl border p-3 space-y-2 relative">
+              <button
+                onClick={() => removeFaqItem(idx)}
+                className="absolute top-2 right-2 h-6 w-6 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <Input
+                placeholder="Pergunta"
+                value={faq.question}
+                onChange={e => updateFaqItem(idx, "question", e.target.value)}
+              />
+              <Textarea
+                placeholder="Resposta"
+                value={faq.answer}
+                onChange={e => updateFaqItem(idx, "answer", e.target.value)}
+                rows={2}
+              />
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={addFaqItem} className="w-full">
+            <Plus className="h-4 w-4 mr-1" /> Adicionar pergunta
+          </Button>
+          <p className="text-[11px] text-muted-foreground">
+            Essas perguntas aparecerão no perfil público do seu estabelecimento para os clientes
+          </p>
         </CardContent>
       </Card>
 

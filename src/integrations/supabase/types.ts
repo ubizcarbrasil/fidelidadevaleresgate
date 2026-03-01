@@ -2078,6 +2078,7 @@ export type Database = {
           created_at: string
           description: string | null
           email: string | null
+          faq_json: Json
           gallery_urls: string[] | null
           id: string
           instagram: string | null
@@ -2086,7 +2087,9 @@ export type Database = {
           name: string
           owner_user_id: string | null
           phone: string | null
+          points_deadline_text: string | null
           points_per_real: number | null
+          points_rule_text: string | null
           rejection_reason: string | null
           segment: string | null
           site_url: string | null
@@ -2113,6 +2116,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          faq_json?: Json
           gallery_urls?: string[] | null
           id?: string
           instagram?: string | null
@@ -2121,7 +2125,9 @@ export type Database = {
           name: string
           owner_user_id?: string | null
           phone?: string | null
+          points_deadline_text?: string | null
           points_per_real?: number | null
+          points_rule_text?: string | null
           rejection_reason?: string | null
           segment?: string | null
           site_url?: string | null
@@ -2148,6 +2154,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           email?: string | null
+          faq_json?: Json
           gallery_urls?: string[] | null
           id?: string
           instagram?: string | null
@@ -2156,7 +2163,9 @@ export type Database = {
           name?: string
           owner_user_id?: string | null
           phone?: string | null
+          points_deadline_text?: string | null
           points_per_real?: number | null
+          points_rule_text?: string | null
           rejection_reason?: string | null
           segment?: string | null
           site_url?: string | null
