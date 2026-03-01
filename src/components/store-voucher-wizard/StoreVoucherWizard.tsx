@@ -38,6 +38,7 @@ interface Props {
 export default function StoreVoucherWizard({ storeId, branchId, brandId, editOffer, onClose }: Props) {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
+  const [maxVisited, setMaxVisited] = useState(0);
   const [saving, setSaving] = useState(false);
 
   const buildInitialData = (): StoreVoucherData => {
@@ -229,11 +230,13 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
             {STEP_LABELS.map((label, i) => (
               <button
                 key={i}
-                onClick={() => i < step && setStep(i)}
+                onClick={() => {
+                  if (i <= maxVisited) setStep(i);
+                }}
                 className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
                   i === step
                     ? "bg-primary text-primary-foreground"
-                    : i < step
+                    : i <= maxVisited
                     ? "bg-primary/20 text-primary cursor-pointer hover:bg-primary/30"
                     : "bg-muted text-muted-foreground"
                 }`}
@@ -251,7 +254,11 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
             <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
           {step < TOTAL - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} disabled={!canAdvance()}>
+            <Button onClick={() => {
+              const next = step + 1;
+              setStep(next);
+              setMaxVisited((m) => Math.max(m, next));
+            }} disabled={!canAdvance()}>
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
