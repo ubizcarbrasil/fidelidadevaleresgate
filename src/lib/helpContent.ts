@@ -32,7 +32,7 @@ const helpContent: Record<string, HelpEntry> = {
         ],
         tips: [
           "Clique em qualquer indicador para ver detalhes na página correspondente.",
-          "Os dados são filtrados automaticamente pelo seu nível de acesso (marca/filial).",
+          "Os dados são filtrados automaticamente pelo seu nível de acesso (marca/cidade).",
         ],
       },
     ],
@@ -66,7 +66,7 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Configurar endereço personalizado",
-        summary: "Associe um endereço web próprio (ex: app.sualoja.com.br) à sua marca.",
+        summary: "Associe um endereço web próprio (ex: app.suamarca.com.br) à sua marca.",
         steps: [
           "Clique em 'Adicionar domínio'.",
           "Digite o endereço desejado (ex: app.suamarca.com.br).",
@@ -193,7 +193,7 @@ const helpContent: Record<string, HelpEntry> = {
           "Clique em 'Nova cidade' para criar.",
           "Preencha: nome, apelido (usado no endereço web), cidade, estado e localização geográfica.",
           "Selecione o fuso horário correto.",
-          "Ative ou desative filiais conforme necessário.",
+          "Ative ou desative cidades conforme necessário.",
         ],
         tips: [
           "A localização é usada para mostrar parceiros e ofertas mais próximas do cliente no aplicativo.",
@@ -265,7 +265,7 @@ const helpContent: Record<string, HelpEntry> = {
         summary: "Defina como os clientes acumulam pontos ao comprar nos parceiros.",
         steps: [
           "Configure a taxa base: quantos pontos por real gasto.",
-          "Defina limites: máximo por compra, por dia (cliente) e por dia (loja).",
+          "Defina limites: máximo por compra, por dia (cliente) e por dia (parceiro).",
           "Configure quanto vale cada ponto em dinheiro.",
           "Defina se os parceiros podem criar regras próprias e quais os limites permitidos.",
           "Ative 'Exigir código de recibo' se desejar rastreabilidade extra.",
@@ -287,7 +287,7 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Use os filtros de data para definir o período.",
           "Filtre por tipo: pontuação (crédito) ou resgate (débito).",
-          "Clique em uma transação para ver detalhes como loja, valor da compra e regra aplicada.",
+          "Clique em uma transação para ver detalhes como parceiro, valor da compra e regra aplicada.",
         ],
       },
     ],
@@ -402,7 +402,7 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Clique em 'Novo usuário'.",
           "Preencha nome, e-mail e selecione o cargo/função do usuário.",
-          "Atribua a marca e/ou filial de acesso.",
+          "Atribua a marca e/ou cidade de acesso.",
           "O usuário receberá um e-mail para definir sua senha.",
         ],
         tips: [
@@ -561,7 +561,7 @@ const helpContent: Record<string, HelpEntry> = {
     pageTitle: "Minha Regra de Pontos",
     sections: [
       {
-        title: "Configurar regra de pontos da loja",
+        title: "Configurar regra de pontos do parceiro",
         summary: "Defina a sua própria taxa de pontuação (quando permitido pela marca).",
         steps: [
           "Veja a regra da marca (base) e os limites permitidos.",
@@ -650,7 +650,7 @@ const helpContent: Record<string, HelpEntry> = {
   },
 
   /* ═══════════════════════════════════════════════
-     CATÁLOGO DA LOJA
+     CATÁLOGO DO PARCEIRO
      ═══════════════════════════════════════════════ */
   "/store-catalog": {
     pageTitle: "Catálogo de Produtos",
@@ -698,12 +698,12 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Clique em 'Nova empresa' para cadastrar um novo cliente da plataforma.",
           "Preencha nome, apelido (usado no endereço web) e dados do responsável.",
-          "Cada empresa pode ter múltiplas marcas e filiais.",
+          "Cada empresa pode ter múltiplas marcas e cidades.",
           "Ative ou desative empresas conforme a necessidade.",
         ],
         tips: [
           "O apelido é usado no endereço web e não pode ser alterado depois de criado.",
-          "Desativar uma empresa desativa todas as marcas e filiais vinculadas automaticamente.",
+          "Desativar uma empresa desativa todas as marcas e cidades vinculadas automaticamente.",
         ],
       },
     ],
@@ -762,13 +762,13 @@ const helpContent: Record<string, HelpEntry> = {
         summary: "Ative ou desative recursos específicos da plataforma sem precisar atualizar o sistema.",
         steps: [
           "Crie um novo controle com identificador e nome descritivo.",
-          "Defina o alcance: toda a plataforma, por marca ou por filial.",
+          "Defina o alcance: toda a plataforma, por marca ou por cidade.",
           "Use o botão para ligar/desligar o recurso.",
           "O sistema verificará automaticamente o controle antes de exibir o recurso.",
         ],
         tips: [
           "Controles globais afetam toda a plataforma.",
-          "Controles por marca ou filial permitem ativar recursos de forma gradual.",
+          "Controles por marca ou cidade permitem ativar recursos de forma gradual.",
         ],
       },
     ],
@@ -804,7 +804,7 @@ const helpContent: Record<string, HelpEntry> = {
         steps: [
           "Visualize os modelos disponíveis na lista.",
           "Clique em um modelo para ver a pré-visualização.",
-          "Use 'Aplicar modelo' para copiar seções para uma marca ou filial.",
+          "Use 'Aplicar modelo' para copiar seções para uma marca ou cidade.",
           "O campo 'Sobrescrever' define se seções existentes serão substituídas.",
         ],
         tips: [

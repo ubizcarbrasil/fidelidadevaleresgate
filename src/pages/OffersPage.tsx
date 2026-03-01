@@ -92,7 +92,7 @@ export default function OffersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Ofertas</h2>
-          <p className="text-muted-foreground">Gerencie ofertas de resgate por filial</p>
+          <p className="text-muted-foreground">Gerencie ofertas de resgate por cidade</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nova Oferta</Button></DialogTrigger>
@@ -103,21 +103,21 @@ export default function OffersPage() {
               <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
-                  <Label>Brand</Label>
+                  <Label>Marca</Label>
                   <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "", store_id: "" }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Filial</Label>
+                  <Label>Cidade</Label>
                   <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v, store_id: "" }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>{filteredBranches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Loja</Label>
+                  <Label>Parceiro</Label>
                   <Select value={form.store_id} onValueChange={v => setForm(f => ({ ...f, store_id: v }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>{filteredStores.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
@@ -150,8 +150,8 @@ export default function OffersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
-                <TableHead>Loja</TableHead>
-                <TableHead>Filial</TableHead>
+                <TableHead>Parceiro</TableHead>
+                <TableHead>Cidade</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
