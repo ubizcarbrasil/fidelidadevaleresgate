@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Search, X, Tag, Store, ArrowRight, Filter } from "lucide-react";
+import { Search, X, Tag, Store, ArrowRight, Sparkles, icons } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -12,6 +12,25 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function kebabToPascal(name: string): string {
+  return name.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+}
+
+function SegmentIcon({ iconName, className, style }: { iconName: string | null; className?: string; style?: React.CSSProperties }) {
+  if (!iconName) return <Store className={className} style={style} />;
+  const Icon = (icons as Record<string, any>)[kebabToPascal(iconName)];
+  if (!Icon) return <Store className={className} style={style} />;
+  return <Icon className={className} style={style} />;
+}
+
+interface SegmentSuggestion {
+  id: string;
+  name: string;
+  icon_name: string | null;
+  category_name: string;
+  matchedTerm: string; // the alias/keyword that matched
+}
+
 interface CustomerSearchOverlayProps {
   open: boolean;
   onClose: () => void;
@@ -19,13 +38,17 @@ interface CustomerSearchOverlayProps {
 
 export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchOverlayProps) {
   const { brand, selectedBranch, theme } = useBrand();
-  const { openOffer, openStore } = useCustomerNav();
+  const { openOffer, openStore, navigateToOffersWithSegment } = useCustomerNav();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
   const [stores, setStores] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [segments, setSegments] = useState<{ id: string; name: string; category_name: string }[]>([]);
+  const [allSegments, setAllSegments] = useState<{
+    id: string; name: string; icon_name: string | null; category_name: string;
+    aliases: string[]; keywords: string[];
+  }[]>([]);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -33,30 +56,40 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  // Load segments that have at least one active store in the current branch
+  // Load segments with aliases/keywords for autocomplete
   useEffect(() => {
     if (!open || !brand || !selectedBranch) return;
     const fetchSegments = async () => {
       const { data } = await supabase
         .from("stores")
-        .select("taxonomy_segment_id, taxonomy_segments(id, name, taxonomy_categories(name))")
+        .select("taxonomy_segment_id, taxonomy_segments(id, name, icon_name, aliases, keywords, taxonomy_categories(name))")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .not("taxonomy_segment_id", "is", null);
       if (!data) return;
-      const segMap = new Map<string, { id: string; name: string; category_name: string }>();
+      const segMap = new Map<string, typeof allSegments[0]>();
+      const chipMap = new Map<string, { id: string; name: string; category_name: string }>();
       for (const s of data) {
         const seg = s.taxonomy_segments as any;
         if (seg && !segMap.has(seg.id)) {
           segMap.set(seg.id, {
             id: seg.id,
             name: seg.name,
+            icon_name: seg.icon_name || null,
+            category_name: seg.taxonomy_categories?.name || "",
+            aliases: seg.aliases || [],
+            keywords: seg.keywords || [],
+          });
+          chipMap.set(seg.id, {
+            id: seg.id,
+            name: seg.name,
             category_name: seg.taxonomy_categories?.name || "",
           });
         }
       }
-      setSegments(Array.from(segMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
+      setAllSegments(Array.from(segMap.values()));
+      setSegments(Array.from(chipMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
     };
     fetchSegments();
   }, [open, brand, selectedBranch]);
@@ -71,6 +104,38 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
       setSelectedSegmentId(null);
     }
   }, [open]);
+
+  // Compute autocomplete suggestions from segment names/aliases/keywords
+  const suggestions = useMemo<SegmentSuggestion[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2 || selectedSegmentId) return [];
+
+    const results: SegmentSuggestion[] = [];
+    for (const seg of allSegments) {
+      // Check name
+      if (seg.name.toLowerCase().includes(q)) {
+        results.push({ id: seg.id, name: seg.name, icon_name: seg.icon_name, category_name: seg.category_name, matchedTerm: seg.name });
+        continue;
+      }
+      // Check aliases
+      const matchedAlias = seg.aliases.find((a) => a.toLowerCase().includes(q));
+      if (matchedAlias) {
+        results.push({ id: seg.id, name: seg.name, icon_name: seg.icon_name, category_name: seg.category_name, matchedTerm: matchedAlias });
+        continue;
+      }
+      // Check keywords
+      const matchedKw = seg.keywords.find((k) => k.toLowerCase().includes(q));
+      if (matchedKw) {
+        results.push({ id: seg.id, name: seg.name, icon_name: seg.icon_name, category_name: seg.category_name, matchedTerm: matchedKw });
+      }
+    }
+    return results.slice(0, 5);
+  }, [query, allSegments, selectedSegmentId]);
+
+  const applySuggestion = (seg: SegmentSuggestion) => {
+    setSelectedSegmentId(seg.id);
+    setQuery("");
+  };
 
   useEffect(() => {
     if (!brand || !selectedBranch) return;
@@ -87,7 +152,6 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
       setLoading(true);
       const term = hasQuery ? `%${debouncedQuery.trim()}%` : null;
 
-      // Build stores query
       let storesQ = supabase
         .from("stores")
         .select("id, name, logo_url, category, address, taxonomy_segment_id, taxonomy_segments(name)")
@@ -98,7 +162,6 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
       if (selectedSegmentId) storesQ = storesQ.eq("taxonomy_segment_id", selectedSegmentId);
       storesQ = storesQ.limit(10);
 
-      // Build offers query
       let offersQ = supabase
         .from("offers")
         .select("*, stores(name, logo_url, taxonomy_segment_id)")
@@ -108,7 +171,6 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
         .eq("is_active", true);
       if (term) offersQ = offersQ.ilike("title", term);
       if (selectedSegmentId) {
-        // Filter offers by stores that belong to the segment
         const { data: segStores } = await supabase
           .from("stores")
           .select("id")
@@ -139,6 +201,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
   const hasResults = stores.length > 0 || offers.length > 0;
   const hasQuery = debouncedQuery.trim().length > 0 || !!selectedSegmentId;
+  const showSuggestions = suggestions.length > 0 && !loading && !hasResults;
 
   return (
     <AnimatePresence>
@@ -184,17 +247,27 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
             </div>
             <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
 
-            {/* Segment chips */}
-            {segments.length > 0 && (
+            {/* Segment chips + active filter */}
+            {(segments.length > 0 || selectedSegmentId) && (
               <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-2.5">
-                {segments.map((seg) => (
+                {selectedSegmentId && (
+                  <button
+                    onClick={() => setSelectedSegmentId(null)}
+                    className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
+                    style={{ backgroundColor: primary, color: "#fff" }}
+                  >
+                    {segments.find((s) => s.id === selectedSegmentId)?.name}
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+                {!selectedSegmentId && segments.map((seg) => (
                   <button
                     key={seg.id}
-                    onClick={() => setSelectedSegmentId(selectedSegmentId === seg.id ? null : seg.id)}
+                    onClick={() => setSelectedSegmentId(seg.id)}
                     className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
                     style={{
-                      backgroundColor: selectedSegmentId === seg.id ? primary : `${fg}06`,
-                      color: selectedSegmentId === seg.id ? "#fff" : `${fg}60`,
+                      backgroundColor: `${fg}06`,
+                      color: `${fg}60`,
                     }}
                   >
                     {seg.name}
@@ -220,7 +293,47 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
               </div>
             )}
 
-            {!loading && hasQuery && !hasResults && (
+            {/* Autocomplete suggestions */}
+            {showSuggestions && (
+              <div className="mb-4">
+                <div className="flex items-center gap-1.5 mb-2 px-1">
+                  <Sparkles className="h-3.5 w-3.5" style={{ color: `${fg}35` }} />
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: `${fg}35` }}>
+                    Sugestões
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {suggestions.map((seg) => (
+                    <button
+                      key={seg.id}
+                      onClick={() => applySuggestion(seg)}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-black/[0.02] transition-colors text-left"
+                      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                    >
+                      <div
+                        className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${primary}10` }}
+                      >
+                        <SegmentIcon iconName={seg.icon_name} className="h-5 w-5" style={{ color: primary }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{seg.name}</p>
+                        <p className="text-xs" style={{ color: `${fg}45` }}>
+                          {seg.matchedTerm !== seg.name ? (
+                            <>"{seg.matchedTerm}" · {seg.category_name}</>
+                          ) : (
+                            seg.category_name
+                          )}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: `${fg}20` }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!loading && hasQuery && !hasResults && suggestions.length === 0 && (
               <div className="text-center py-16 opacity-40">
                 <Search className="h-10 w-10 mx-auto mb-3" style={{ color: `${fg}30` }} />
                 <p className="font-medium text-sm">Nenhum resultado para "{debouncedQuery}"</p>
@@ -228,7 +341,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
               </div>
             )}
 
-            {!loading && !hasQuery && (
+            {!loading && !hasQuery && suggestions.length === 0 && (
               <div className="text-center py-16 opacity-30">
                 <Search className="h-10 w-10 mx-auto mb-3" />
                 <p className="text-sm">Digite para buscar lojas e ofertas</p>
