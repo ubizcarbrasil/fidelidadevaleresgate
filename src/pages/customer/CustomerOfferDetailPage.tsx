@@ -38,6 +38,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [redeemed, setRedeemed] = useState(false);
   const [cpf, setCpf] = useState("");
   const [pin, setPin] = useState<string | null>(null);
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const [similarOffers, setSimilarOffers] = useState<any[]>([]);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
@@ -364,18 +365,19 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white p-6"
               style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)" }}>
-              {!customer ? (
+              {(!customer || isSigningUp) ? (
                 <RedemptionSignupCarousel
                   primary={primary}
                   fg={fg}
                   fontHeading={fontHeading}
                   onComplete={(cpfFromSignup) => {
                     setCpf(formatCpf(cpfFromSignup));
+                    setIsSigningUp(false);
                     setShowConfirm(false);
-                    // Auto-redeem will happen after customer context updates
                     toast({ title: "Conta criada!", description: "Agora finalize seu resgate." });
                   }}
-                  onCancel={() => setShowConfirm(false)}
+                  onCancel={() => { setIsSigningUp(false); setShowConfirm(false); }}
+                  onSigningUp={() => setIsSigningUp(true)}
                 />
               ) : (
                 <>

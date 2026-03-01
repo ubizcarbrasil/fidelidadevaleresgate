@@ -19,6 +19,7 @@ interface Props {
   fontHeading: string;
   onComplete: (cpf: string) => void;
   onCancel: () => void;
+  onSigningUp?: () => void;
 }
 
 const STEPS = ["CPF", "Nome", "E-mail", "Telefone", "Código", "Senha"] as const;
@@ -38,7 +39,7 @@ const formatPhone = (value: string) => {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 };
 
-export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onComplete, onCancel }: Props) {
+export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onComplete, onCancel, onSigningUp }: Props) {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -59,16 +60,14 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
 
   const canAdvance = [isValidCpf, isValidName, isValidEmail, isValidPhone, isValidOtp, isValidPassword][step];
 
-  // Step 4: send OTP when entering OTP step
+  // Step 4: send OTP via signInWithOtp (does NOT auto-login)
   const handleSendOtp = async () => {
     setLoading(true);
     try {
-      // Sign up with a temporary password first
-      const tempPass = crypto.randomUUID();
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { error: otpError } = await supabase.auth.signInWithOtp({
         email: data.email,
-        password: tempPass,
         options: {
+          shouldCreateUser: true,
           data: {
             full_name: data.name,
             phone: data.phone.replace(/\D/g, ""),
@@ -76,10 +75,6 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
           },
         },
       });
-      if (signUpError) throw signUpError;
-
-      // Send OTP to email
-      const { error: otpError } = await supabase.auth.signInWithOtp({ email: data.email });
       if (otpError) throw otpError;
 
       toast({ title: "Código enviado!", description: `Verifique seu e-mail ${data.email}` });
@@ -101,6 +96,8 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
         type: "email",
       });
       if (error) throw error;
+      // User is now authenticated — notify parent to keep carousel visible
+      onSigningUp?.();
       goNext();
     } catch (err: any) {
       toast({ title: "Código inválido", description: err.message, variant: "destructive" });
