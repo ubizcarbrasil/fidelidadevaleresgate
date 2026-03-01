@@ -36,9 +36,7 @@ export default function BranchPickerSheet() {
 
   const sortedStates = useMemo(() => Object.keys(grouped).sort(), [grouped]);
 
-  const displayLabel = selectedBranch
-    ? selectedBranch.city || selectedBranch.name
-    : "Selecionar cidade";
+  const displayLabel = selectedBranch?.city || "Selecionar cidade";
 
   const handleDetectLocation = async () => {
     setDetecting(true);
