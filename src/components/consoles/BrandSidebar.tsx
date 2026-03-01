@@ -1,7 +1,7 @@
 import {
   Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users,
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
-  FileText, ClipboardList,
+  FileText, ClipboardList, Layers,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -45,6 +45,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.central_banners", defaultTitle: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
       { key: "sidebar.page_builder", defaultTitle: "Montador de Páginas", url: "/page-builder", icon: FileText },
+      { key: "sidebar.page_builder_v2", defaultTitle: "Construtor de Páginas V2", url: "/page-builder-v2", icon: Layers },
     ],
   },
   {
