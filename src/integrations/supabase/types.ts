@@ -1179,6 +1179,8 @@ export type Database = {
           status: Database["public"]["Enums"]["offer_status"]
           store_id: string
           terms_accepted_at: string | null
+          terms_accepted_by_user_id: string | null
+          terms_params_json: Json
           terms_text: string | null
           terms_version: string | null
           title: string
@@ -1217,6 +1219,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["offer_status"]
           store_id: string
           terms_accepted_at?: string | null
+          terms_accepted_by_user_id?: string | null
+          terms_params_json?: Json
           terms_text?: string | null
           terms_version?: string | null
           title: string
@@ -1255,6 +1259,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["offer_status"]
           store_id?: string
           terms_accepted_at?: string | null
+          terms_accepted_by_user_id?: string | null
+          terms_params_json?: Json
           terms_text?: string | null
           terms_version?: string | null
           title?: string
