@@ -238,7 +238,7 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Importação em lote",
-        summary: "Importe lojas e dados em grande quantidade usando planilhas (arquivo CSV).",
+        summary: "Importe parceiros e dados em grande quantidade usando planilhas (arquivo CSV).",
         steps: [
           "Baixe o modelo de planilha clicando em 'Baixar modelo'.",
           "Preencha os dados seguindo o formato do modelo.",
@@ -262,16 +262,16 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Configurar regras de pontuação",
-        summary: "Defina como os clientes acumulam pontos ao comprar nas lojas.",
+        summary: "Defina como os clientes acumulam pontos ao comprar nos parceiros.",
         steps: [
           "Configure a taxa base: quantos pontos por real gasto.",
           "Defina limites: máximo por compra, por dia (cliente) e por dia (loja).",
           "Configure quanto vale cada ponto em dinheiro.",
-          "Defina se as lojas podem criar regras próprias e quais os limites permitidos.",
+          "Defina se os parceiros podem criar regras próprias e quais os limites permitidos.",
           "Ative 'Exigir código de recibo' se desejar rastreabilidade extra.",
         ],
         tips: [
-          "Regras personalizadas das lojas precisam de aprovação se a opção 'Requer aprovação' estiver ativada.",
+          "Regras personalizadas dos parceiros precisam de aprovação se a opção 'Requer aprovação' estiver ativada.",
           "O campo 'Compra mínima' define o valor mínimo para gerar pontos.",
         ],
       },
@@ -298,9 +298,9 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Registrar pontuação para cliente",
-        summary: "Registre pontos para um cliente após uma compra na loja.",
+        summary: "Registre pontos para um cliente após uma compra no parceiro.",
         steps: [
-          "Selecione a loja que está pontuando.",
+          "Selecione o parceiro que está pontuando.",
           "Busque o cliente por nome ou telefone.",
           "Informe o valor da compra.",
           "Se exigido, informe o código do recibo.",
@@ -522,8 +522,8 @@ const helpContent: Record<string, HelpEntry> = {
         ],
       },
       {
-        title: "Gerenciar perfil da loja",
-        summary: "Mantenha as informações públicas da sua loja atualizadas.",
+        title: "Gerenciar perfil do estabelecimento",
+        summary: "Mantenha as informações públicas do seu estabelecimento atualizadas.",
         steps: [
           "Acesse a aba 'Perfil'.",
           "Edite: nome, descrição, fotos, vídeo de apresentação.",
@@ -533,7 +533,7 @@ const helpContent: Record<string, HelpEntry> = {
       },
       {
         title: "Gerenciar funcionários",
-        summary: "Cadastre operadores que poderão validar resgates na sua loja.",
+        summary: "Cadastre operadores que poderão validar resgates no seu estabelecimento.",
         steps: [
           "Acesse a aba 'Funcionários'.",
           "Clique em 'Adicionar funcionário'.",
@@ -543,7 +543,7 @@ const helpContent: Record<string, HelpEntry> = {
       },
       {
         title: "Extrato financeiro",
-        summary: "Acompanhe todas as transações da sua loja.",
+        summary: "Acompanhe todas as transações do seu estabelecimento.",
         steps: [
           "Acesse a aba 'Extrato'.",
           "Veja os indicadores no topo: total de resgates, pontos emitidos, valor creditado.",
@@ -577,10 +577,10 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Aprovar regras personalizadas",
-        summary: "Revise e aprove regras de pontos criadas pelas lojas.",
+        summary: "Revise e aprove regras de pontos criadas pelos parceiros.",
         steps: [
           "Regras pendentes aparecem automaticamente nesta lista.",
-          "Revise os valores propostos pela loja.",
+          "Revise os valores propostos pelo parceiro.",
           "Clique em 'Aprovar' ou 'Rejeitar'.",
         ],
       },
@@ -618,12 +618,12 @@ const helpContent: Record<string, HelpEntry> = {
           "Preencha os dados do responsável: nome completo, CPF, telefone.",
           "Informe os dados da empresa: CNPJ, razão social, nome fantasia.",
           "Adicione endereço completo e categoria de atuação.",
-          "Envie o logotipo da loja.",
+          "Envie o logotipo do estabelecimento.",
           "Aceite os termos de uso e envie o cadastro para análise.",
         ],
         tips: [
-          "Após o cadastro, sua loja passará por aprovação antes de ficar ativa.",
-          "Você receberá um e-mail quando a loja for aprovada.",
+          "Após o cadastro, seu estabelecimento passará por aprovação antes de ficar ativo.",
+          "Você receberá um e-mail quando o estabelecimento for aprovado.",
         ],
       },
     ],
@@ -657,7 +657,7 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar catálogo",
-        summary: "Adicione e organize os produtos/serviços da sua loja.",
+        summary: "Adicione e organize os produtos/serviços do seu estabelecimento.",
         steps: [
           "Clique em 'Adicionar item'.",
           "Preencha: nome, descrição, preço e imagem.",
@@ -679,7 +679,7 @@ const helpContent: Record<string, HelpEntry> = {
         summary: "Confira como o aplicativo aparece para os clientes finais.",
         steps: [
           "Navegue pelas seções da Tela Inicial para verificar a aparência.",
-          "Teste ofertas, perfil de loja e funcionalidades de resgate.",
+          "Teste ofertas, perfil de parceiro e funcionalidades de resgate.",
           "Use esta pré-visualização para validar alterações de visual e seções antes de publicar.",
         ],
       },
@@ -742,7 +742,7 @@ const helpContent: Record<string, HelpEntry> = {
         title: "Gerenciar funcionalidades da plataforma",
         summary: "Crie e configure as funcionalidades disponíveis para as marcas.",
         steps: [
-          "Cada funcionalidade representa um recurso do sistema (ex: cupons, pontos, lojas).",
+          "Cada funcionalidade representa um recurso do sistema (ex: cupons, pontos, parceiros).",
           "Defina identificador, nome, categoria e descrição.",
           "Funcionalidades essenciais são obrigatórias e não podem ser desativadas pelas marcas.",
           "Use a configuração avançada para definir campos personalizáveis.",

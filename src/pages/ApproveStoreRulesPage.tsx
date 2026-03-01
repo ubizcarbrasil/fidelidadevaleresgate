@@ -80,9 +80,9 @@ export default function ApproveStoreRulesPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <ClipboardCheck className="h-6 w-6" /> Aprovar Regras de Lojas
+          <ClipboardCheck className="h-6 w-6" /> Aprovar Regras de Parceiros
         </h2>
-        <p className="text-muted-foreground">Gerencie as solicitações de regras personalizadas das lojas</p>
+        <p className="text-muted-foreground">Gerencie as solicitações de regras personalizadas dos parceiros</p>
       </div>
 
       {/* Pending rules */}
@@ -93,8 +93,8 @@ export default function ApproveStoreRulesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loja</TableHead>
-                  <TableHead>Filial</TableHead>
+                  <TableHead>Parceiro</TableHead>
+                  <TableHead>Cidade</TableHead>
                   <TableHead>Pts/R$</TableHead>
                   <TableHead>Período</TableHead>
                   <TableHead>Solicitado em</TableHead>
@@ -156,7 +156,7 @@ export default function ApproveStoreRulesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loja</TableHead>
+                  <TableHead>Parceiro</TableHead>
                   <TableHead>Pts/R$</TableHead>
                   <TableHead>Período</TableHead>
                   <TableHead>Status</TableHead>
