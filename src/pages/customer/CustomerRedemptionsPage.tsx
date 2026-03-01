@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
-import { Search, MapPin, Phone, Globe, Clock, AlertTriangle, Store, QrCode, Info, DollarSign, CreditCard, ArrowLeft } from "lucide-react";
+import { Search, MapPin, Phone, Globe, Clock, AlertTriangle, Store, QrCode, Info, DollarSign, CreditCard, ArrowLeft, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
-
+import { toast } from "sonner";
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
@@ -27,6 +27,7 @@ const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }>
   PENDING: { label: "EMITIDO", bg: "#FEF3C7", color: "#92400E" },
   USED: { label: "USADO", bg: "#D1FAE5", color: "#065F46" },
   EXPIRED: { label: "EXPIRADO", bg: "#FEE2E2", color: "#991B1B" },
+  CANCELED: { label: "ESTORNADO", bg: "#FEF3C7", color: "#D97706" },
 };
 
 export default function CustomerRedemptionsPage() {
@@ -35,7 +36,7 @@ export default function CustomerRedemptionsPage() {
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [search, setSearch] = useState("");
   const [selectedRedemption, setSelectedRedemption] = useState<any>(null);
-
+  const queryClient = useQueryClient();
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
@@ -180,6 +181,7 @@ export default function CustomerRedemptionsPage() {
                 formatCurrency={formatCurrency}
                 formatDate={formatDate}
                 onViewDetail={() => setSelectedRedemption(r)}
+                onCanceled={() => queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] })}
               />
             ))}
           </div>
@@ -192,6 +194,10 @@ export default function CustomerRedemptionsPage() {
           <CustomerRedemptionDetailPage
             redemption={selectedRedemption}
             onBack={() => setSelectedRedemption(null)}
+            onCanceled={() => {
+              setSelectedRedemption(null);
+              queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] });
+            }}
           />
         )}
       </AnimatePresence>
@@ -202,7 +208,7 @@ export default function CustomerRedemptionsPage() {
 /* ─── Card Component ─── */
 
 function RedemptionCard({
-  r, primary, fg, fontHeading, formatCurrency, formatDate, onViewDetail,
+  r, primary, fg, fontHeading, formatCurrency, formatDate, onViewDetail, onCanceled,
 }: {
   r: any;
   primary: string;
@@ -211,6 +217,7 @@ function RedemptionCard({
   formatCurrency: (v: number) => string;
   formatDate: (d: string) => string;
   onViewDetail: () => void;
+  onCanceled: () => void;
 }) {
   const offer = r.offers;
   const store = offer?.stores;
@@ -226,7 +233,10 @@ function RedemptionCard({
     ? { label: "PRODUTO", bg: "#DBEAFE", color: "#1E40AF" }
     : { label: "LOJA", bg: "#FEF3C7", color: "#92400E" };
 
-  // Calculate expiry days
+  // Can cancel within 24h of creation
+  const hoursSinceCreation = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60);
+  const canCancel = r.status === "PENDING" && hoursSinceCreation <= 24;
+
   const expiryDays = r.expires_at
     ? Math.max(0, Math.ceil((new Date(r.expires_at).getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24)))
     : 30;
@@ -387,9 +397,9 @@ function RedemptionCard({
         )}
       </div>
 
-      {/* QR / PIN button */}
+      {/* QR / PIN button + Estorno */}
       {r.status === "PENDING" && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 space-y-2">
           <button
             onClick={onViewDetail}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-transform active:scale-[0.98]"
@@ -398,6 +408,9 @@ function RedemptionCard({
             <QrCode className="h-5 w-5" />
             VER QR CODE E PIN
           </button>
+          {canCancel && (
+            <CancelButton redemptionId={r.id} token={r.token} onCanceled={onCanceled} fg={fg} />
+          )}
         </div>
       )}
     </div>
@@ -415,6 +428,84 @@ function DetailInfoRow({ icon, children, primary }: { icon: React.ReactNode; chi
       <span className="flex-1 text-xs leading-relaxed" style={{ color: "hsl(var(--foreground) / 0.7)" }}>
         {children}
       </span>
+    </div>
+  );
+}
+
+/* ─── Cancel / Estorno Button ─── */
+
+function CancelButton({ redemptionId, token, onCanceled, fg }: { redemptionId: string; token: string; onCanceled: () => void; fg: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleCancel = async () => {
+    if (pinInput !== token) {
+      toast.error("PIN incorreto. Verifique e tente novamente.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("redemptions")
+        .update({ status: "CANCELED" as any })
+        .eq("id", redemptionId)
+        .eq("status", "PENDING");
+      if (error) throw error;
+      toast.success("Resgate estornado com sucesso!");
+      onCanceled();
+    } catch (err: any) {
+      toast.error("Erro ao estornar: " + (err.message || "Tente novamente"));
+    } finally {
+      setLoading(false);
+      setConfirming(false);
+    }
+  };
+
+  if (!confirming) {
+    return (
+      <button
+        onClick={() => setConfirming(true)}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold border transition-transform active:scale-[0.98]"
+        style={{ borderColor: "#DC2626", color: "#DC2626", backgroundColor: "#FEF2F2" }}
+      >
+        <RotateCcw className="h-4 w-4" />
+        ESTORNAR RESGATE
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl p-3 space-y-2" style={{ border: "1.5px solid #DC2626", backgroundColor: "#FEF2F2" }}>
+      <p className="text-xs font-semibold text-center" style={{ color: "#991B1B" }}>
+        Digite o PIN para confirmar o estorno
+      </p>
+      <input
+        type="text"
+        maxLength={6}
+        value={pinInput}
+        onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ""))}
+        placeholder="000000"
+        className="w-full text-center text-xl font-mono font-bold tracking-[0.3em] py-2 rounded-xl border outline-none"
+        style={{ borderColor: "#DC262640", color: "#991B1B" }}
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={() => { setConfirming(false); setPinInput(""); }}
+          className="flex-1 py-2 rounded-xl text-xs font-semibold"
+          style={{ backgroundColor: `${fg}10`, color: `${fg}70` }}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleCancel}
+          disabled={pinInput.length < 6 || loading}
+          className="flex-1 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50"
+          style={{ backgroundColor: "#DC2626" }}
+        >
+          {loading ? "Estornando..." : "Confirmar"}
+        </button>
+      </div>
     </div>
   );
 }
