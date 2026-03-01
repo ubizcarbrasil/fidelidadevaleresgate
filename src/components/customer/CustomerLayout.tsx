@@ -50,7 +50,7 @@ type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 const TABS: { key: Tab; label: string; icon: typeof Home }[] = [
   { key: "home", label: "Início", icon: Home },
   { key: "offers", label: "Ofertas", icon: Tag },
-  { key: "redemptions", label: "Resgates", icon: Ticket },
+  { key: "redemptions", label: "Meus resgates", icon: Ticket },
   { key: "wallet", label: "Carteira", icon: Wallet },
   { key: "profile", label: "Perfil", icon: UserCircle },
 ];
