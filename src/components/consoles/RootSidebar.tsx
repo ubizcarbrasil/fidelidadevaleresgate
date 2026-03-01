@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, FileText, Layers,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, FileText, Layers, ScanLine,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -53,6 +53,7 @@ const groups = [
       { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
       { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
+      { title: "Operador PDV", url: "/pdv", icon: ScanLine },
     ],
   },
   {
@@ -60,6 +61,7 @@ const groups = [
     items: [
       { title: "Pontuar", url: "/earn-points", icon: Coins },
       { title: "Regras de Pontos", url: "/points-rules", icon: Settings2 },
+      { title: "Regra de Pontos do Parceiro", url: "/store-points-rule", icon: Coins },
       { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText },
     ],
   },
