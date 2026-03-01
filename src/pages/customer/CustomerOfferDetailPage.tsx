@@ -41,6 +41,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [similarOffers, setSimilarOffers] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [contentKey, setContentKey] = useState(offer.id);
+  const [isFading, setIsFading] = useState(false);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -154,7 +156,11 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       className="fixed inset-0 z-[60] flex flex-col"
       style={{ backgroundColor: "#FAFAFA" }}
     >
-      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-40">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto pb-40 transition-opacity duration-300"
+        style={{ opacity: isFading ? 0 : 1 }}
+      >
         {/* Hero image */}
         <div className="relative">
           {offer.image_url ? (
@@ -299,8 +305,12 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
                   style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
                   onClick={() => {
-                    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-                    onOfferClick?.(sim);
+                    setIsFading(true);
+                    setTimeout(() => {
+                      scrollRef.current?.scrollTo({ top: 0 });
+                      onOfferClick?.(sim);
+                      setIsFading(false);
+                    }, 250);
                   }}
                 >
                   {sim.image_url ? (
