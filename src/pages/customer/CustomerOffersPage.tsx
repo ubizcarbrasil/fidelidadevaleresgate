@@ -15,12 +15,20 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
-  const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
+  const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [segments, setSegments] = useState<{ id: string; name: string }[]>([]);
+
+  // Sync external segment filter from context (e.g. from home category tap)
+  useEffect(() => {
+    if (activeSegmentFilter) {
+      setSelectedSegmentId(activeSegmentFilter);
+      clearSegmentFilter();
+    }
+  }, [activeSegmentFilter, clearSegmentFilter]);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
