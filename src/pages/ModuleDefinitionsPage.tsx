@@ -2,15 +2,14 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Blocks, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 interface ModForm {
@@ -61,6 +60,15 @@ export default function ModuleDefinitionsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const toggleActive = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from("module_definitions").update({ is_active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["module-definitions"] }); toast.success("Status atualizado!"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("module_definitions").delete().eq("id", id);
@@ -83,32 +91,47 @@ export default function ModuleDefinitionsPage() {
     return acc;
   }, {} as Record<string, typeof modules>) || {};
 
+  const categoryIcons: Record<string, string> = {
+    core: "🔧",
+    comercial: "🏪",
+    fidelidade: "⭐",
+    visual: "🎨",
+    engajamento: "📣",
+    general: "📦",
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Definições de Módulos</h2>
-          <p className="text-muted-foreground">Catálogo de módulos da plataforma</p>
+    <div className="space-y-5 pb-20">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold tracking-tight truncate">Definições de Módulos</h2>
+          <p className="text-xs text-muted-foreground">Catálogo de módulos da plataforma</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Módulo</Button></DialogTrigger>
-          <DialogContent>
+          <DialogTrigger asChild>
+            <Button size="sm" className="shrink-0">
+              <Plus className="h-4 w-4 mr-1" />
+              Novo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw] sm:max-w-md">
             <DialogHeader><DialogTitle>{editId ? "Editar Módulo" : "Novo Módulo"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Key</Label><Input value={form.key} onChange={e => setForm(f => ({ ...f, key: e.target.value }))} placeholder="stores" /></div>
-                <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Lojas" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">Key</Label><Input value={form.key} onChange={e => setForm(f => ({ ...f, key: e.target.value }))} placeholder="stores" className="h-9" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Lojas" className="h-9" /></div>
               </div>
-              <div className="space-y-2"><Label>Categoria</Label><Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="core" /></div>
-              <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+              <div className="space-y-1.5"><Label className="text-xs">Categoria</Label><Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="core" className="h-9" /></div>
+              <div className="space-y-1.5"><Label className="text-xs">Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} /></div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <Switch checked={form.is_core} onCheckedChange={v => setForm(f => ({ ...f, is_core: v }))} />
-                  <Label>Core</Label>
+                  <Label className="text-xs">Core</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
-                  <Label>Ativo</Label>
+                  <Label className="text-xs">Ativo</Label>
                 </div>
               </div>
               <Button onClick={() => save.mutate()} disabled={!form.key || !form.name} className="w-full">Salvar</Button>
@@ -117,42 +140,97 @@ export default function ModuleDefinitionsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Key</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="text-center">Core</TableHead>
-                <TableHead className="text-center">Ativo</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {Object.entries(grouped).map(([cat, mods]) =>
-                mods!.map((m, i) => (
-                  <TableRow key={m.id}>
-                    {i === 0 && <TableCell rowSpan={mods!.length} className="align-top font-medium"><Badge variant="outline">{cat}</Badge></TableCell>}
-                    <TableCell className="font-mono text-xs">{m.key}</TableCell>
-                    <TableCell className="font-medium">{m.name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{m.description || "—"}</TableCell>
-                    <TableCell className="text-center">{m.is_core ? <Badge>Core</Badge> : "—"}</TableCell>
-                    <TableCell className="text-center">{m.is_active ? <Badge variant="secondary">Sim</Badge> : <Badge variant="destructive">Não</Badge>}</TableCell>
-                    <TableCell className="text-right space-x-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(m)}><Pencil className="h-4 w-4" /></Button>
-                      {!m.is_core && <Button variant="ghost" size="icon" onClick={() => remove.mutate(m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Loading skeleton */}
+      {isLoading && (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-5 w-24" />
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, j) => <Skeleton key={j} className="h-16 rounded-xl" />)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Category groups */}
+      {Object.entries(grouped).map(([cat, mods]) => (
+        <div key={cat} className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-base">{categoryIcons[cat] || "📦"}</span>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{cat}</h3>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-auto">{mods!.length}</Badge>
+          </div>
+
+          <div className="space-y-2">
+            {mods!.map(m => (
+              <div
+                key={m.id}
+                className={`rounded-xl border bg-card p-3 transition-all ${
+                  m.is_active ? "border-border shadow-sm" : "border-border/50 opacity-50"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div className={`mt-0.5 rounded-lg p-2 ${m.is_core ? "bg-primary/10" : "bg-muted"}`}>
+                    {m.is_core ? <Shield className="h-4 w-4 text-primary" /> : <Blocks className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium text-sm truncate">{m.name}</span>
+                      {m.is_core && <Badge className="text-[10px] h-4 px-1.5">Core</Badge>}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{m.key}</p>
+                    {m.description && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.description}</p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {/* Eye toggle */}
+                    <button
+                      onClick={() => toggleActive.mutate({ id: m.id, is_active: !m.is_active })}
+                      className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted active:scale-95 transition-all touch-manipulation"
+                      title={m.is_active ? "Desativar" : "Ativar"}
+                    >
+                      {m.is_active
+                        ? <Eye className="h-4 w-4 text-primary" />
+                        : <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      }
+                    </button>
+
+                    <button
+                      onClick={() => openEdit(m)}
+                      className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted active:scale-95 transition-all touch-manipulation"
+                    >
+                      <Pencil className="h-4 w-4 text-muted-foreground" />
+                    </button>
+
+                    {!m.is_core && (
+                      <button
+                        onClick={() => remove.mutate(m.id)}
+                        className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-destructive/10 active:scale-95 transition-all touch-manipulation"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {!isLoading && modules?.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground text-sm">
+          Nenhum módulo cadastrado ainda.
+        </div>
+      )}
     </div>
   );
 }
