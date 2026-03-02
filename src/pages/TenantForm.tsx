@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Rocket } from "lucide-react";
 
 export default function TenantForm() {
   const { id } = useParams();
@@ -20,6 +20,7 @@ export default function TenantForm() {
   const [plan, setPlan] = useState("free");
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [created, setCreated] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -42,10 +43,51 @@ export default function TenantForm() {
       ? await supabase.from("tenants").update(payload).eq("id", id!)
       : await supabase.from("tenants").insert(payload);
 
-    if (error) toast.error(error.message);
-    else { toast.success(isEdit ? "Tenant atualizado!" : "Tenant criado!"); navigate("/tenants"); }
+    if (error) {
+      toast.error(error.message);
+    } else if (isEdit) {
+      toast.success("Tenant atualizado!");
+      navigate("/tenants");
+    } else {
+      toast.success("Organização criada!");
+      setCreated(true);
+    }
     setLoading(false);
   };
+
+  if (created) {
+    return (
+      <div className="space-y-6 max-w-2xl">
+        <Card className="border-green-500/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-5 w-5" />
+              Organização Criada!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              A organização <strong>{name}</strong> foi criada com sucesso. Deseja provisionar uma marca completa com cidade, domínio e contas de teste?
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => navigate("/tenants")}>
+                Voltar para Organizações
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={() =>
+                  navigate(`/provision-brand?tenant_name=${encodeURIComponent(name)}&tenant_slug=${encodeURIComponent(slug)}`)
+                }
+              >
+                <Rocket className="h-4 w-4" />
+                Provisionar Marca Completa
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
