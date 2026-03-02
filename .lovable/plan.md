@@ -1,39 +1,50 @@
 
 
-## Problems Identified
+## Dark Mode Test Results
 
-1. **Hero card is white/invisible**: The `primary` variable resolves to `hsl(var(--primary))`. When used in the gradient with opacity suffixes like `${primary}DD`, it produces invalid CSS (e.g., `hsl(var(--primary))DD`), making the gradient fail and showing a transparent/white card with invisible white text.
+### What's Working
+- Hero card (Saldo/Pontos) — purple gradient displays correctly
+- Bottom navigation — adapts to dark mode
+- Profile page — dark backgrounds, proper contrast
+- Carteira (Wallet) page — correct dark styling
+- Home sections (Ofertas do Dia, Lojas Parceiras, Vouchers) — mostly good with `bg-card` already applied
+- VoucherTickets notch circles — already using `bg-background` class
 
-2. **Hardcoded white backgrounds**: Multiple components use `bg-white`, `#FFFFFF`, `#FAFAFA` which break in dark mode and don't adapt to brand themes.
+### Issues Found
 
-3. **Images not loading**: Some offer images use icons8 URLs (e.g., `https://img.icons8.com/color/200/restaurant.png`) which may fail to load. The `LazyImage` component shows a shimmer skeleton forever if the image fails — there's no error/fallback handler.
+**1. CustomerOffersPage — offer list cards use `bg-white` (line 195)**
+- Cards have hardcoded `bg-white` instead of `bg-card`
+- Search bar uses hardcoded `backgroundColor: "#F2F2F7"` (line 123)
+- Skeleton loading cards also use `bg-white` (line 101)
 
-## Plan
+**2. EmissorasSection — "Compre e pontue" cards use `#FFFFFF` (line 101)**
+- Store cards have `backgroundColor: "#FFFFFF"` — white in dark mode
+- Placeholder store icon background `#F5F5F5` (line 132) — doesn't adapt
+- "Ver todos" trailing card uses `backgroundColor: "#F8F8FA"` and light border (lines 168-169)
+- Favorite heart button background `rgba(255,255,255,0.85)` (line 113) — acceptable but could improve
 
-### 1. Fix Hero Card gradient (CustomerHomePage.tsx)
+**3. AchadinhoSection — deal cards use `bg-white` (line 129)**
+- Skeleton loading also uses `bg-white` (line 75)
 
-The core issue: `hslToCss` returns `hsl(var(--primary))` when no theme color is set. Appending hex opacity like `DD` to this breaks CSS.
+**4. CustomerOffersPage — segment chips use `${fg}06` which may be invisible in dark**
 
-**Fix**: Create a helper that resolves the actual computed primary color. When `theme?.colors?.primary` is undefined, use a known default hex color instead of `hsl(var(--primary))` for gradient contexts. Also add a separate `primaryHex` variable for contexts needing opacity manipulation, converting from HSL string to a usable format.
+### Plan
 
-Approach:
-- When `primary` is a CSS variable reference, compute a safe gradient fallback using `hsl(250, 65%, 55%)` (the default from index.css)
-- Use proper CSS `hsl()` with alpha channel: `hsla(H, S%, L%, 0.87)` instead of hex suffix
+**Files to modify:**
 
-### 2. Fix image loading failures (HomeSectionsRenderer.tsx, ForYouSection.tsx)
+1. **`src/pages/customer/CustomerOffersPage.tsx`**
+   - Line 101: `bg-white` → `bg-card`
+   - Line 123: `backgroundColor: "#F2F2F7"` → `className="bg-muted"`
+   - Line 195: `bg-white` → `bg-card`
 
-- Add `onError` handler to `LazyImage` that shows a colored placeholder with an icon instead of infinite shimmer
-- Add fallback placeholder for offers without images or with broken image URLs
+2. **`src/components/customer/EmissorasSection.tsx`**
+   - Line 101: `backgroundColor: "#FFFFFF"` → remove, add `className` with `bg-card`
+   - Line 132: `backgroundColor: "#F5F5F5"` → `bg-muted`
+   - Lines 168-169: `backgroundColor: "#F8F8FA"` and border → `bg-muted` and `border-border`
 
-### 3. Fix hardcoded colors for dark mode compatibility
+3. **`src/components/customer/AchadinhoSection.tsx`**
+   - Line 75: `bg-white` → `bg-card`
+   - Line 129: `bg-white` → `bg-card`
 
-- `HomeSectionsRenderer.tsx` line 140: `cardBg = "#FFFFFF"` → use `bg-card` class or `hsl(var(--card))`
-- `VoucherTickets` notch circles (lines 404-405): `backgroundColor: "#FAFAFA"` → use `hsl(var(--background))`
-- `OffersCarousel` card (line 453): `bg-white` → `bg-card`
-- `ForYouSection.tsx` offer cards: `bg-white` → `bg-card`
-
-### Files to modify:
-- `src/pages/customer/CustomerHomePage.tsx` — Fix gradient generation with proper HSL alpha
-- `src/components/HomeSectionsRenderer.tsx` — Fix LazyImage fallback, hardcoded whites, card backgrounds
-- `src/components/customer/ForYouSection.tsx` — Fix card backgrounds and image fallbacks
+All changes replace hardcoded light colors with semantic Tailwind tokens (`bg-card`, `bg-muted`) that automatically adapt to dark mode.
 
