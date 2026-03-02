@@ -15,6 +15,7 @@ import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 import RootJourneyGuidePage from "@/pages/RootJourneyGuidePage";
+const BrandJourneyGuidePage = lazy(() => import("@/pages/BrandJourneyGuidePage"));
 
 // Lazy-loaded pages
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -158,6 +159,7 @@ function AppRoutes() {
           <Route path="starter-kit" element={<StarterKitConfigPage />} />
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
           <Route path="root-journey" element={<RootJourneyGuidePage />} />
+          <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
