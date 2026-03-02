@@ -1,52 +1,39 @@
 
 
-## Plano de Melhorias para o Aplicativo do Cliente
+## Problems Identified
 
-Analisei o app completo (Home, Header, Tabs, Seções) e identifiquei melhorias visuais e de usabilidade organizadas por prioridade.
+1. **Hero card is white/invisible**: The `primary` variable resolves to `hsl(var(--primary))`. When used in the gradient with opacity suffixes like `${primary}DD`, it produces invalid CSS (e.g., `hsl(var(--primary))DD`), making the gradient fail and showing a transparent/white card with invisible white text.
 
----
+2. **Hardcoded white backgrounds**: Multiple components use `bg-white`, `#FFFFFF`, `#FAFAFA` which break in dark mode and don't adapt to brand themes.
 
-### 1. Header com Saudacao Personalizada
-Hoje o header mostra apenas o logo e ícones. Adicionar uma saudacao contextual ("Bom dia, Maria!") com base no horario e nome do cliente, como fazem iFood e Nubank. Deixa o app mais humano e acolhedor.
+3. **Images not loading**: Some offer images use icons8 URLs (e.g., `https://img.icons8.com/color/200/restaurant.png`) which may fail to load. The `LazyImage` component shows a shimmer skeleton forever if the image fails — there's no error/fallback handler.
 
-### 2. Card de Saldo Unificado (Hero Card)
-Unificar o card de "Meus Resgates" (R$) e "Meus Pontos" em um unico card hero com gradiente vibrante da marca, mostrando ambos os saldos lado a lado. Hoje sao dois blocos separados que competem por atencao. Um card unico com duas colunas (Saldo em R$ | Pontos) com icones e animacao de contagem seria mais limpo e impactante.
+## Plan
 
-### 3. Acoes Rapidas com Labels Maiores e Animacao
-O grid de 6 icones esta funcional, mas os labels em 10px sao dificeis de ler. Aumentar para 11px, adicionar um leve efeito de "bounce" ao tocar, e incluir um badge de contagem em "Cupons" e "Ofertas" quando houver novidades.
+### 1. Fix Hero Card gradient (CustomerHomePage.tsx)
 
-### 4. Banner Promocional Rotativo no Topo
-Adicionar um carrossel de banners promocionais entre o Hero Card e as Acoes Rapidas. Muitos apps de fidelidade (Livelo, Dotz) usam banners no topo para destacar campanhas. Ja existe o componente `BANNER_CAROUSEL` -- basta posiciona-lo melhor na hierarquia da home.
+The core issue: `hslToCss` returns `hsl(var(--primary))` when no theme color is set. Appending hex opacity like `DD` to this breaks CSS.
 
-### 5. Secao "Para Voce" com Recomendacoes
-Criar uma secao personalizada baseada nas categorias que o cliente mais interage (historico de cliques/resgates). Titulo: "Selecionados para voce" com um carrossel de ofertas relevantes. Isso aumenta engajamento e conversao.
+**Fix**: Create a helper that resolves the actual computed primary color. When `theme?.colors?.primary` is undefined, use a known default hex color instead of `hsl(var(--primary))` for gradient contexts. Also add a separate `primaryHex` variable for contexts needing opacity manipulation, converting from HSL string to a usable format.
 
-### 6. Indicador de Progresso de Nivel/Tier
-Adicionar um mini progress bar no Hero Card mostrando progresso para o proximo nivel de fidelidade (se a marca usar tiers). Ex: "Faltam 230 pts para Gold". Gamificacao simples que incentiva o uso.
+Approach:
+- When `primary` is a CSS variable reference, compute a safe gradient fallback using `hsl(250, 65%, 55%)` (the default from index.css)
+- Use proper CSS `hsl()` with alpha channel: `hsla(H, S%, L%, 0.87)` instead of hex suffix
 
-### 7. Melhorar Secao de Categorias
-As categorias hoje usam icones com fundo quase transparente (`color12` = 7% opacidade). Aumentar a saturacao dos fundos para 15-20%, adicionar um efeito de scroll horizontal quando houver mais de 8 categorias, e incluir um contador de ofertas por categoria.
+### 2. Fix image loading failures (HomeSectionsRenderer.tsx, ForYouSection.tsx)
 
-### 8. Estados Vazios Didaticos
-Quando nao ha ofertas, pontos ou resgates, exibir ilustracoes SVG com textos explicativos e CTAs claros. Ex: "Voce ainda nao tem pontos. Compre em parceiros emissores para comecar a acumular!"
+- Add `onError` handler to `LazyImage` that shows a colored placeholder with an icon instead of infinite shimmer
+- Add fallback placeholder for offers without images or with broken image URLs
 
-### 9. Micro-interacoes e Feedback Tatil
-Adicionar haptic feedback (vibration API) ao favoritar, resgatar e navegar entre tabs. Incluir animacao de confetti ao completar um resgate.
+### 3. Fix hardcoded colors for dark mode compatibility
 
-### 10. Onboarding Tour para Novos Usuarios
-Detectar primeiro acesso e exibir um carrossel de boas-vindas (3-4 slides) explicando: como ganhar pontos, como resgatar, como usar cupons. Componente `RedemptionSignupCarousel` ja existe -- pode ser adaptado.
+- `HomeSectionsRenderer.tsx` line 140: `cardBg = "#FFFFFF"` → use `bg-card` class or `hsl(var(--card))`
+- `VoucherTickets` notch circles (lines 404-405): `backgroundColor: "#FAFAFA"` → use `hsl(var(--background))`
+- `OffersCarousel` card (line 453): `bg-white` → `bg-card`
+- `ForYouSection.tsx` offer cards: `bg-white` → `bg-card`
 
----
-
-### Detalhes Tecnicos
-
-**Arquivos principais afetados:**
-- `CustomerHomePage.tsx` -- Hero card unificado, saudacao, reordenacao de secoes
-- `CustomerLayout.tsx` -- Header com saudacao, badges nos tabs
-- `SegmentNavSection.tsx` -- Saturacao, scroll horizontal, contadores
-- `HomeSectionsRenderer.tsx` -- Posicionamento do banner carousel
-- Novo: `WelcomeTour.tsx` -- Onboarding carrossel
-- Novo: `EmptyState.tsx` -- Componente reutilizavel de estado vazio
-
-**Sem mudancas no banco de dados** -- todas as melhorias sao puramente frontend, usando dados ja disponiveis.
+### Files to modify:
+- `src/pages/customer/CustomerHomePage.tsx` — Fix gradient generation with proper HSL alpha
+- `src/components/HomeSectionsRenderer.tsx` — Fix LazyImage fallback, hardcoded whites, card backgrounds
+- `src/components/customer/ForYouSection.tsx` — Fix card backgrounds and image fallbacks
 
