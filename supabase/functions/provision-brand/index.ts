@@ -79,9 +79,10 @@ Deno.serve(async (req) => {
     const emailPrefix = brand_slug.replace(/[^a-z0-9]/g, "");
 
     // 1. Create tenant
+    const tenantSlug = brand_slug;
     const { data: tenant, error: tenantErr } = await supabaseAdmin
       .from("tenants")
-      .insert({ name: company_name })
+      .insert({ name: company_name, slug: tenantSlug })
       .select("id")
       .single();
     if (tenantErr) throw new Error(`Tenant: ${tenantErr.message}`);
