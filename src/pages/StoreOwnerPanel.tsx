@@ -22,11 +22,12 @@ import { StoreTermosTab, StoreTutorialTab, StoreSuporteTab } from "@/components/
 import StoreBranchesTab from "@/components/store-owner/StoreBranchesTab";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import EmitterUpgradeCard from "@/components/store-owner/EmitterUpgradeCard";
+import StoreCatalogTab from "@/components/store-owner/StoreCatalogTab";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
 } from "@/components/ui/sheet";
 
-type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte";
+type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo";
 
 const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
@@ -37,6 +38,7 @@ const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashb
 
 const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "perfil", label: "Meu Perfil", icon: User },
+  { key: "catalogo", label: "Catálogo", icon: ClipboardList },
   { key: "funcionarios", label: "Funcionários", icon: Users },
   { key: "filiais", label: "Cidades", icon: Building2 },
   { key: "termos", label: "Termos e Uso", icon: BookOpen },
@@ -83,6 +85,12 @@ export default function StoreOwnerPanel() {
     return <StoreEmptyState userId={user?.id} />;
   }
 
+  const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
+  const filteredMoreItems = MORE_MENU_ITEMS.filter(item => {
+    if (item.key === "catalogo" && !isEmitter) return false;
+    return true;
+  });
+
   const isInBottomTabs = BOTTOM_TABS.some(t => t.key === activeTab);
   const activeLabel = [...BOTTOM_TABS, ...MORE_MENU_ITEMS].find(t => t.key === activeTab)?.label || "";
 
@@ -118,7 +126,7 @@ export default function StoreOwnerPanel() {
                 <SheetTitle className="text-left text-sm">Menu</SheetTitle>
               </SheetHeader>
               <div className="p-3 space-y-1">
-                {MORE_MENU_ITEMS.map(item => {
+                {filteredMoreItems.map(item => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.key;
                   return (
@@ -173,6 +181,7 @@ export default function StoreOwnerPanel() {
         {activeTab === "perfil" && <StoreProfileTab store={store} />}
         {activeTab === "extrato" && <StoreExtratoTab store={store} />}
         {activeTab === "funcionarios" && <StoreEmployeesTab store={store} />}
+        {activeTab === "catalogo" && isEmitter && <StoreCatalogTab store={store} />}
         {activeTab === "termos" && <StoreTermosTab />}
         {activeTab === "filiais" && <StoreBranchesTab store={store} />}
         {activeTab === "tutorial" && <StoreTutorialTab />}

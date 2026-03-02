@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
+import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
+import StoreCatalogView from "@/components/customer/StoreCatalogView";
 import {
   ArrowLeft,
   Store as StoreIcon,
@@ -54,10 +56,15 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
+  const { customer } = useCustomer();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [activeTab, setActiveTab] = useState<"ofertas" | "catalogo">("ofertas");
+
+  const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
+  const hasCatalog = isEmitter;
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -329,167 +336,171 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           <StoreGallery urls={store.gallery_urls as string[]} fontHeading={fontHeading} />
         )}
 
-        {/* Offers section */}
-        <div className="mx-4 mt-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-bold" style={{ fontFamily: fontHeading }}>
-              Ofertas deste parceiro
-            </h3>
-            {!loadingOffers && (
-              <span className="text-xs" style={{ color: `${fg}40` }}>
-                {offers.length} {offers.length === 1 ? "oferta" : "ofertas"}
-              </span>
-            )}
+        {/* Tab switcher for Ofertas / Catálogo */}
+        {hasCatalog && (
+          <div className="flex gap-1.5 mx-4 mt-5 bg-white/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+            <button
+              onClick={() => setActiveTab("ofertas")}
+              className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "ofertas" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              <Tag className="h-3.5 w-3.5 inline mr-1.5" />
+              Ofertas
+            </button>
+            <button
+              onClick={() => setActiveTab("catalogo")}
+              className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "catalogo" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              <ShoppingBag className="h-3.5 w-3.5 inline mr-1.5" />
+              Catálogo
+            </button>
           </div>
+        )}
 
-          {loadingOffers ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="rounded-[18px] overflow-hidden bg-white"
-                  style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}
-                >
-                  <Skeleton className="h-32 w-full" />
-                  <div className="p-3 space-y-2">
-                    <Skeleton className="h-4 w-3/4 rounded-lg" />
-                    <Skeleton className="h-3 w-1/2 rounded-lg" />
+        {/* Offers section */}
+        {(activeTab === "ofertas" || !hasCatalog) && (
+          <div className="mx-4 mt-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold" style={{ fontFamily: fontHeading }}>
+                Ofertas deste parceiro
+              </h3>
+              {!loadingOffers && (
+                <span className="text-xs" style={{ color: `${fg}40` }}>
+                  {offers.length} {offers.length === 1 ? "oferta" : "ofertas"}
+                </span>
+              )}
+            </div>
+
+            {loadingOffers ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-[18px] overflow-hidden bg-white"
+                    style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}
+                  >
+                    <Skeleton className="h-32 w-full" />
+                    <div className="p-3 space-y-2">
+                      <Skeleton className="h-4 w-3/4 rounded-lg" />
+                      <Skeleton className="h-3 w-1/2 rounded-lg" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : offers.length === 0 ? (
-            <div className="text-center py-12 opacity-40">
-              <div
-                className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: `${primary}10` }}
-              >
-                <Tag className="h-6 w-6" style={{ color: primary }} />
+                ))}
               </div>
-              <p className="text-sm font-medium">Nenhuma oferta disponível</p>
-              <p className="text-xs mt-1" style={{ color: `${fg}40` }}>
-                Fique de olho, novas ofertas podem surgir!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {offers.map((offer, idx) => (
-                <motion.div
-                  key={offer.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05, duration: 0.3 }}
-                  className="rounded-[18px] overflow-hidden bg-white cursor-pointer"
-                  style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
-                  onClick={() => onOfferClick?.({ ...offer, stores: { name: store.name, logo_url: store.logo_url } })}
+            ) : offers.length === 0 ? (
+              <div className="text-center py-12 opacity-40">
+                <div
+                  className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: `${primary}10` }}
                 >
-                  <div className="flex">
-                    {offer.image_url ? (
-                      <img
-                        src={offer.image_url}
-                        alt={offer.title}
-                        className="w-28 h-28 object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div
-                        className="w-28 h-28 flex-shrink-0 flex items-center justify-center"
-                        style={{ backgroundColor: `${primary}06` }}
-                      >
-                        <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                      </div>
-                    )}
+                  <Tag className="h-6 w-6" style={{ color: primary }} />
+                </div>
+                <p className="text-sm font-medium">Nenhuma oferta disponível</p>
+                <p className="text-xs mt-1" style={{ color: `${fg}40` }}>
+                  Fique de olho, novas ofertas podem surgir!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {offers.map((offer, idx) => (
+                  <motion.div
+                    key={offer.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05, duration: 0.3 }}
+                    className="rounded-[18px] overflow-hidden bg-white cursor-pointer"
+                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+                    onClick={() => onOfferClick?.({ ...offer, stores: { name: store.name, logo_url: store.logo_url } })}
+                  >
+                    <div className="flex">
+                      {offer.image_url ? (
+                        <img
+                          src={offer.image_url}
+                          alt={offer.title}
+                          className="w-28 h-28 object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className="w-28 h-28 flex-shrink-0 flex items-center justify-center"
+                          style={{ backgroundColor: `${primary}06` }}
+                        >
+                          <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
+                        </div>
+                      )}
 
-                    <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-                      <div>
-                        <div className="flex items-start justify-between gap-2">
-                          <h4
-                            className="font-semibold text-sm line-clamp-2"
-                            style={{ fontFamily: fontHeading }}
-                          >
-                            {offer.title}
-                          </h4>
-                          {idx < 2 && (
-                            <span
-                              className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
-                              style={{ backgroundColor: primary }}
+                      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <h4
+                              className="font-semibold text-sm line-clamp-2"
+                              style={{ fontFamily: fontHeading }}
                             >
-                              Novo
-                            </span>
+                              {offer.title}
+                            </h4>
+                            {idx < 2 && (
+                              <span
+                                className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
+                                style={{ backgroundColor: primary }}
+                              >
+                                Novo
+                              </span>
+                            )}
+                          </div>
+                          {offer.description && (
+                            <p
+                              className="text-[11px] line-clamp-1 mt-0.5"
+                              style={{ color: `${fg}45` }}
+                            >
+                              {offer.description}
+                            </p>
                           )}
                         </div>
-                        {offer.description && (
-                          <p
-                            className="text-[11px] line-clamp-1 mt-0.5"
-                            style={{ color: `${fg}45` }}
-                          >
-                            {offer.description}
-                          </p>
-                        )}
-                      </div>
 
-                      <div className="flex items-center justify-between mt-2">
-                        {Number(offer.value_rescue) > 0 && (
-                          <span
-                            className="font-bold text-sm"
-                            style={{ color: primary, fontFamily: fontHeading }}
-                          >
-                            R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
-                          </span>
-                        )}
-                        {offer.end_at && (
-                          <div
-                            className="flex items-center gap-0.5 text-[10px]"
-                            style={{ color: `${fg}35` }}
-                          >
-                            <Clock className="h-2.5 w-2.5" />
-                            {new Date(offer.end_at).toLocaleDateString("pt-BR")}
-                          </div>
-                        )}
+                        <div className="flex items-center justify-between mt-2">
+                          {Number(offer.value_rescue) > 0 && (
+                            <span
+                              className="font-bold text-sm"
+                              style={{ color: primary, fontFamily: fontHeading }}
+                            >
+                              R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                            </span>
+                          )}
+                          {offer.end_at && (
+                            <div
+                              className="flex items-center gap-0.5 text-[10px]"
+                              style={{ color: `${fg}35` }}
+                            >
+                              <Clock className="h-2.5 w-2.5" />
+                              {new Date(offer.end_at).toLocaleDateString("pt-BR")}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Catalog section */}
-        {!loadingCatalog && catalogItems.length > 0 && (
-          <div className="mx-4 mt-5 mb-6">
-            <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
-              Catálogo
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {catalogItems.map((item, idx) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04, duration: 0.3 }}
-                  className="rounded-[16px] overflow-hidden bg-white"
-                  style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}
-                >
-                  {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="w-full h-28 object-cover" />
-                  ) : (
-                    <div className="w-full h-28 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                      <ShoppingBag className="h-8 w-8" style={{ color: `${primary}25` }} />
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <p className="text-sm font-semibold line-clamp-1" style={{ fontFamily: fontHeading }}>{item.name}</p>
-                    {item.description && <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: `${fg}45` }}>{item.description}</p>}
-                    {Number(item.price) > 0 && (
-                      <p className="font-bold text-sm mt-1" style={{ color: primary }}>
-                        R$ {Number(item.price).toFixed(2).replace(".", ",")}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Catalog tab content */}
+        {activeTab === "catalogo" && hasCatalog && (
+          <StoreCatalogView
+            storeId={store.id}
+            storeName={store.name}
+            brandId={store.brand_id}
+            branchId={store.branch_id}
+            pointsPerReal={Number(store.points_per_real) || 1}
+            whatsapp={store.whatsapp}
+            customerName={customer?.name}
+            customerId={customer?.id}
+            primary={primary}
+            fontHeading={fontHeading}
+          />
         )}
       </div>
     </motion.div>

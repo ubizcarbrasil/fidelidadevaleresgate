@@ -630,6 +630,74 @@ export type Database = {
           },
         ]
       }
+      catalog_cart_orders: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          items_json: Json
+          points_earned_estimate: number
+          store_id: string
+          total_amount: number
+          whatsapp_url_sent: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          items_json?: Json
+          points_earned_estimate?: number
+          store_id: string
+          total_amount?: number
+          whatsapp_url_sent?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          items_json?: Json
+          points_earned_estimate?: number
+          store_id?: string
+          total_amount?: number
+          whatsapp_url_sent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_cart_orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_cart_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_cart_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_cart_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_pages: {
         Row: {
           brand_id: string
@@ -1938,8 +2006,69 @@ export type Database = {
           },
         ]
       }
+      store_catalog_categories: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          order_index: number
+          store_id: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          order_index?: number
+          store_id: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          order_index?: number
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_catalog_categories_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_catalog_categories_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_catalog_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_catalog_items: {
         Row: {
+          branch_id: string
+          brand_id: string
+          category: string | null
           created_at: string
           description: string | null
           id: string
@@ -1952,6 +2081,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch_id: string
+          brand_id: string
+          category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1964,6 +2096,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch_id?: string
+          brand_id?: string
+          category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1976,6 +2111,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "store_catalog_items_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_catalog_items_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "store_catalog_items_store_id_fkey"
             columns: ["store_id"]
@@ -2293,6 +2442,7 @@ export type Database = {
           segment: string | null
           site_url: string | null
           slug: string
+          store_catalog_config_json: Json | null
           store_type: Database["public"]["Enums"]["store_type"]
           submitted_at: string | null
           tags: string[] | null
@@ -2331,6 +2481,7 @@ export type Database = {
           segment?: string | null
           site_url?: string | null
           slug: string
+          store_catalog_config_json?: Json | null
           store_type?: Database["public"]["Enums"]["store_type"]
           submitted_at?: string | null
           tags?: string[] | null
@@ -2369,6 +2520,7 @@ export type Database = {
           segment?: string | null
           site_url?: string | null
           slug?: string
+          store_catalog_config_json?: Json | null
           store_type?: Database["public"]["Enums"]["store_type"]
           submitted_at?: string | null
           tags?: string[] | null
