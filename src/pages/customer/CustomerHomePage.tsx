@@ -68,7 +68,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
       {/* Unified Hero Card — R$ + Pontos */}
       {loading ? (
         <div className="max-w-lg mx-auto px-5">
-          <Skeleton className="h-[110px] w-full rounded-2xl" />
+          <Skeleton className="h-[140px] w-full rounded-3xl" />
         </div>
       ) : (
         <motion.div
@@ -78,61 +78,75 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           className="max-w-lg mx-auto px-5"
         >
           <div
-            className="w-full rounded-2xl p-5 relative overflow-hidden"
+            className="w-full rounded-3xl p-0 relative overflow-hidden"
             style={{
-              background: `linear-gradient(135deg, ${primary} 0%, ${primary}CC 50%, ${primary}99 100%)`,
+              background: `linear-gradient(145deg, ${primary} 0%, ${primary}DD 40%, ${primary}AA 100%)`,
+              boxShadow: `0 8px 32px -8px ${primary}60`,
             }}
           >
-            {/* Decorative circle */}
+            {/* Decorative shapes */}
             <div
-              className="absolute -top-8 -right-8 h-32 w-32 rounded-full"
-              style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+              className="absolute -top-10 -right-10 h-40 w-40 rounded-full"
+              style={{ background: "rgba(255,255,255,0.07)" }}
             />
             <div
-              className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full"
-              style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+              className="absolute top-4 right-12 h-20 w-20 rounded-[20px] rotate-12"
+              style={{ background: "rgba(255,255,255,0.05)" }}
+            />
+            <div
+              className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full"
+              style={{ background: "rgba(255,255,255,0.04)" }}
             />
 
-            <div className="relative z-10 flex items-stretch gap-4">
-              {/* Saldo em R$ */}
-              <button
-                onClick={() => { haptic("light"); navigateToTab("redemptions"); }}
-                className="flex-1 text-left active:scale-[0.97] transition-transform"
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-                    <Wallet className="h-3.5 w-3.5 text-white" strokeWidth={2} />
+            {/* Content */}
+            <div className="relative z-10 p-5 pb-4">
+              <div className="flex items-stretch gap-0">
+                {/* Saldo em R$ */}
+                <button
+                  onClick={() => { haptic("light"); navigateToTab("redemptions"); }}
+                  className="flex-1 text-left active:scale-[0.97] transition-transform pr-5"
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}>
+                      <Wallet className="h-4 w-4 text-white" strokeWidth={2.2} />
+                    </div>
+                    <span className="text-xs font-semibold text-white/65 tracking-wide uppercase">Saldo</span>
                   </div>
-                  <span className="text-[11px] font-medium text-white/70">Saldo</span>
-                </div>
-                <span className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: fontHeading }}>
-                  R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
-                </span>
-              </button>
+                  <span className="text-[28px] font-black text-white tracking-tight leading-none" style={{ fontFamily: fontHeading }}>
+                    R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
+                  </span>
+                </button>
 
-              {/* Divider */}
-              <div className="w-px self-stretch" style={{ backgroundColor: "rgba(255,255,255,0.2)" }} />
+                {/* Divider */}
+                <div className="w-px self-stretch my-1" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.25) 70%, transparent 100%)" }} />
 
-              {/* Pontos */}
-              <button
-                onClick={() => { haptic("light"); onOpenLedger?.(); }}
-                className="flex-1 text-left active:scale-[0.97] transition-transform"
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-                    <Coins className="h-3.5 w-3.5 text-white" strokeWidth={2} />
+                {/* Pontos */}
+                <button
+                  onClick={() => { haptic("light"); onOpenLedger?.(); }}
+                  className="flex-1 text-left active:scale-[0.97] transition-transform pl-5"
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}>
+                      <Coins className="h-4 w-4 text-white" strokeWidth={2.2} />
+                    </div>
+                    <span className="text-xs font-semibold text-white/65 tracking-wide uppercase">Pontos</span>
                   </div>
-                  <span className="text-[11px] font-medium text-white/70">Pontos</span>
-                </div>
-                <span className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: fontHeading }}>
-                  {customer ? Number(customer.points_balance).toLocaleString("pt-BR") : "0"}
-                </span>
-              </button>
-            </div>
+                  <span className="text-[28px] font-black text-white tracking-tight leading-none" style={{ fontFamily: fontHeading }}>
+                    {customer ? Number(customer.points_balance).toLocaleString("pt-BR") : "0"}
+                  </span>
+                </button>
+              </div>
 
-            {/* CTA arrow */}
-            <div className="absolute right-3 bottom-3">
-              <ChevronRight className="h-4 w-4 text-white/40" />
+              {/* Bottom action hint */}
+              <div className="flex items-center justify-center mt-4 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+                <button
+                  onClick={() => { haptic("light"); onOpenLedger?.(); }}
+                  className="flex items-center gap-1.5 text-white/60 hover:text-white/80 transition-colors active:scale-95"
+                >
+                  <span className="text-[11px] font-semibold tracking-wide">Ver extrato completo</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
