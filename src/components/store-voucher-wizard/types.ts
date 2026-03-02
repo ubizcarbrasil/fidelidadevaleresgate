@@ -1,3 +1,5 @@
+import type { BadgeConfig } from "@/hooks/useBrandTheme";
+
 export interface ScaledValue {
   min_purchase: number;
   credit_value: number;
@@ -39,6 +41,7 @@ export interface StoreVoucherData {
   description: string;
   image_url: string;
   product_price: number;
+  badge_config: BadgeConfig | null;
 }
 
 export const WEEKDAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -78,4 +81,5 @@ export const initialStoreVoucherData: StoreVoucherData = {
   description: "",
   image_url: "",
   product_price: 0,
+  badge_config: null,
 };

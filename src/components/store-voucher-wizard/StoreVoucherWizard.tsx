@@ -21,11 +21,12 @@ import StepLimits from "./steps/StepLimits";
 import StepTermsAccept from "./steps/StepTermsAccept";
 import StepRedemptionType from "./steps/StepRedemptionType";
 import StepImage from "./steps/StepImage";
+import StepBadge from "./steps/StepBadge";
 import StepReview from "./steps/StepReview";
 
 const STEP_LABELS = [
   "Categoria", "Tipo", "Valor", "Agendamento", "Cumulativo",
-  "Dias/Horários", "Validade", "Limites", "Termos", "Resgate", "Imagem", "Revisão",
+  "Dias/Horários", "Validade", "Limites", "Termos", "Resgate", "Imagem", "Etiqueta", "Revisão",
 ];
 
 interface Props {
@@ -76,6 +77,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       title: editOffer.title || "",
       description: editOffer.description || "",
       image_url: editOffer.image_url || "",
+      badge_config: editOffer.badge_config_json || null,
     };
   };
 
@@ -176,6 +178,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       terms_accepted_at: new Date().toISOString(),
       terms_accepted_by_user_id: user?.id || null,
       product_id: data.coupon_type === "PRODUCT" ? data.product_id || null : null,
+      badge_config_json: data.badge_config as any,
       allowed_weekdays: data.has_specific_days
         ? data.specific_days.map(d => d.weekday)
         : [0, 1, 2, 3, 4, 5, 6],
@@ -222,7 +225,8 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       case 8: return <StepTermsAccept data={data} update={update} />;
       case 9: return <StepRedemptionType data={data} update={update} />;
       case 10: return <StepImage data={data} update={update} storeId={storeId} />;
-      case 11: return <StepReview data={data} />;
+      case 11: return <StepBadge data={data} update={update} />;
+      case 12: return <StepReview data={data} />;
       default: return null;
     }
   };
