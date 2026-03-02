@@ -1,37 +1,52 @@
 
 
-## Plano: Melhorar Clonagem de Branch — Adicionar Regras de Pontos e Produtos
+## Plano de Melhorias para o Aplicativo do Cliente
 
-### Situação Atual
+Analisei o app completo (Home, Header, Tabs, Seções) e identifiquei melhorias visuais e de usabilidade organizadas por prioridade.
 
-- A página `CloneBranchPage.tsx` clona **Lojas** e **Ofertas** entre branches.
-- A tabela `points_rules` existe e tem colunas `brand_id` e `branch_id` (nullable).
-- **Não existe** tabela `store_products` no banco de dados. Portanto, a clonagem de produtos não é possível no momento.
+---
 
-### O que será feito
+### 1. Header com Saudacao Personalizada
+Hoje o header mostra apenas o logo e ícones. Adicionar uma saudacao contextual ("Bom dia, Maria!") com base no horario e nome do cliente, como fazem iFood e Nubank. Deixa o app mais humano e acolhedor.
 
-**1. Adicionar opção "Clonar Regras de Pontos"** no `CloneBranchPage.tsx`:
-- Novo checkbox na seção "O que clonar?" com label "Clonar Regras de Pontos" e descrição explicativa.
-- Lógica de clonagem: ler `points_rules` do `branch_id` de origem, inserir no destino com o novo `branch_id`, pulando regras com `rule_type` já existente no destino.
-- Campos copiados: `rule_type`, `points_per_real`, `money_per_point`, `min_purchase_to_earn`, `max_points_per_purchase`, `max_points_per_customer_per_day`, `max_points_per_store_per_day`, `require_receipt_code`, `is_active`, `allow_store_custom_rule`, limites de store custom rule.
+### 2. Card de Saldo Unificado (Hero Card)
+Unificar o card de "Meus Resgates" (R$) e "Meus Pontos" em um unico card hero com gradiente vibrante da marca, mostrando ambos os saldos lado a lado. Hoje sao dois blocos separados que competem por atencao. Um card unico com duas colunas (Saldo em R$ | Pontos) com icones e animacao de contagem seria mais limpo e impactante.
 
-**2. Atualizar interface e tipos**:
-- Adicionar `pointsRules: boolean` ao `CloneOptions`.
-- Atualizar `canClone` para incluir `pointsRules` como opção válida.
-- Registrar no `audit_log` o campo `clone_points_rules`.
+### 3. Acoes Rapidas com Labels Maiores e Animacao
+O grid de 6 icones esta funcional, mas os labels em 10px sao dificeis de ler. Aumentar para 11px, adicionar um leve efeito de "bounce" ao tocar, e incluir um badge de contagem em "Cupons" e "Ofertas" quando houver novidades.
 
-**3. Sobre Produtos (`store_products`)**:
-- A tabela não existe. Informarei ao usuário que esta funcionalidade requer primeiro a criação da tabela de produtos. A clonagem poderá ser adicionada depois.
+### 4. Banner Promocional Rotativo no Topo
+Adicionar um carrossel de banners promocionais entre o Hero Card e as Acoes Rapidas. Muitos apps de fidelidade (Livelo, Dotz) usam banners no topo para destacar campanhas. Ja existe o componente `BANNER_CAROUSEL` -- basta posiciona-lo melhor na hierarquia da home.
 
-### Detalhes Técnicos
+### 5. Secao "Para Voce" com Recomendacoes
+Criar uma secao personalizada baseada nas categorias que o cliente mais interage (historico de cliques/resgates). Titulo: "Selecionados para voce" com um carrossel de ofertas relevantes. Isso aumenta engajamento e conversao.
 
-Arquivo modificado: `src/pages/CloneBranchPage.tsx`
+### 6. Indicador de Progresso de Nivel/Tier
+Adicionar um mini progress bar no Hero Card mostrando progresso para o proximo nivel de fidelidade (se a marca usar tiers). Ex: "Faltam 230 pts para Gold". Gamificacao simples que incentiva o uso.
 
-A lógica de clonagem de `points_rules` seguirá o mesmo padrão das lojas:
-1. Buscar regras da origem filtrando por `branch_id` e `brand_id`
-2. Verificar duplicatas no destino por `rule_type`
-3. Inserir as novas regras com o `branch_id` do destino
-4. Logar resultado (criadas / ignoradas)
+### 7. Melhorar Secao de Categorias
+As categorias hoje usam icones com fundo quase transparente (`color12` = 7% opacidade). Aumentar a saturacao dos fundos para 15-20%, adicionar um efeito de scroll horizontal quando houver mais de 8 categorias, e incluir um contador de ofertas por categoria.
 
-Nenhuma migração de banco é necessária.
+### 8. Estados Vazios Didaticos
+Quando nao ha ofertas, pontos ou resgates, exibir ilustracoes SVG com textos explicativos e CTAs claros. Ex: "Voce ainda nao tem pontos. Compre em parceiros emissores para comecar a acumular!"
+
+### 9. Micro-interacoes e Feedback Tatil
+Adicionar haptic feedback (vibration API) ao favoritar, resgatar e navegar entre tabs. Incluir animacao de confetti ao completar um resgate.
+
+### 10. Onboarding Tour para Novos Usuarios
+Detectar primeiro acesso e exibir um carrossel de boas-vindas (3-4 slides) explicando: como ganhar pontos, como resgatar, como usar cupons. Componente `RedemptionSignupCarousel` ja existe -- pode ser adaptado.
+
+---
+
+### Detalhes Tecnicos
+
+**Arquivos principais afetados:**
+- `CustomerHomePage.tsx` -- Hero card unificado, saudacao, reordenacao de secoes
+- `CustomerLayout.tsx` -- Header com saudacao, badges nos tabs
+- `SegmentNavSection.tsx` -- Saturacao, scroll horizontal, contadores
+- `HomeSectionsRenderer.tsx` -- Posicionamento do banner carousel
+- Novo: `WelcomeTour.tsx` -- Onboarding carrossel
+- Novo: `EmptyState.tsx` -- Componente reutilizavel de estado vazio
+
+**Sem mudancas no banco de dados** -- todas as melhorias sao puramente frontend, usando dados ja disponiveis.
 
