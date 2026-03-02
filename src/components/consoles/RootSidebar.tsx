@@ -71,6 +71,7 @@ const groups = [
     items: [
       { title: "Usuários", url: "/users", icon: Users },
       { title: "Módulos da Marca", url: "/brand-modules", icon: Blocks },
+      { title: "Permissões por Empresa", url: "/brand-permissions", icon: ShieldCheck },
     ],
   },
   {

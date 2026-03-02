@@ -81,6 +81,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
       { key: "sidebar.modulos", defaultTitle: "Funcionalidades", url: "/brand-modules", icon: Blocks },
+      { key: "sidebar.perm_parceiros", defaultTitle: "Permissões dos Parceiros", url: "/brand-permissions", icon: Shield },
       { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList },
     ],
   },
