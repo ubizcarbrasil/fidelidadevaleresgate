@@ -1,22 +1,31 @@
 
 
-## Plano
+## Plano: Unificar fluxo de Nova Organização com Provisionamento
 
-Adicionar um link de acesso ao painel correspondente em cada card de conta de teste na tela de sucesso do wizard.
+### Problema atual
+- `/tenants/new` (TenantForm) cria apenas o Tenant (nome, slug, plano, status) — sem marca, cidade ou contas de teste.
+- `/provision-brand` (ProvisionBrandWizard) cria Tenant + Brand + Branch + contas de teste automaticamente.
+- São dois caminhos desconectados para o mesmo objetivo.
 
-### Alteração
+### Solução
 
-**`src/pages/ProvisionBrandWizard.tsx`** — No step "done", adicionar um botão com ícone `ExternalLink` em cada card de conta de teste que abre `https://{result.domain}/auth` em nova aba. Como todas as contas acessam via `/auth` e o sistema redireciona para o painel correto após login, o link será o mesmo mas com label contextual:
+Modificar o `TenantForm.tsx` para que, após salvar o Tenant com sucesso (modo criação), exiba uma **opção de continuar para o wizard de provisionamento** da marca, pré-preenchendo os dados já informados.
 
-- Administrador → "Abrir Painel Admin"
-- Cliente Teste → "Abrir App Cliente"  
-- Parceiro Teste → "Abrir Portal Parceiro"
+#### Alterações
 
-Cada link abrirá `https://{result.domain}/auth` em nova aba (`window.open`).
+**1. `src/pages/TenantForm.tsx`**
+- Após criar o Tenant com sucesso, em vez de redirecionar direto para `/tenants`, exibir um card de confirmação com dois botões:
+  - "Voltar para Organizações" → navega para `/tenants`
+  - "Provisionar Marca Completa" → navega para `/provision-brand?tenant_name={name}&tenant_slug={slug}` passando os dados via query params
+- No modo edição, o comportamento permanece igual (redireciona para `/tenants` após salvar).
+
+**2. `src/pages/ProvisionBrandWizard.tsx`**
+- Ler query params `tenant_name` e `tenant_slug` na inicialização.
+- Se presentes, pré-preencher `company_name` e `brand_slug` com esses valores e iniciar no step "company" com os campos já preenchidos.
 
 ### Detalhes técnicos
 
-- Adicionar um mapeamento `rolePanelLink` com labels descritivos por role
-- Adicionar botão `ExternalLink` abaixo do email/senha em cada card
-- O ícone `ExternalLink` já está importado no componente
+- Usar `useSearchParams` do react-router-dom para ler os query params no wizard.
+- No TenantForm, usar um state `created` para controlar a exibição do card pós-criação ao invés do redirect imediato.
+- Nenhuma alteração de banco de dados necessária — a Edge Function `provision-brand` já reutiliza Tenant existente por slug.
 
