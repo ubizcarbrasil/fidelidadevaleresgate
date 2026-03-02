@@ -1,26 +1,45 @@
 
-## Plano: Jornada Completa do Catálogo Digital para Conferência
 
-### Problema Atual
-- Existem lojas EMISSORA com itens de catálogo, mas **nenhuma tem WhatsApp configurado** (checkout não funciona)
-- **Nenhuma categoria** foi criada (`store_catalog_categories` vazio) — os chips de navegação não aparecem
-- Cada loja tem apenas **1 item** — o grid fica vazio visualmente
-- A **Jornada do Empreendedor** (`BrandJourneyGuidePage`) não menciona o Catálogo Digital
+## Plano: Criar Template + Preview Visual no App
 
 ### O Que Será Feito
 
-**1. Migration de dados de teste** (seed)
-- Escolher uma loja EMISSORA (ex: "Churrascaria Brasa Viva") e configurar `whatsapp` e `points_per_real = 2`
-- Criar 3-4 categorias para essa loja: "Carnes", "Acompanhamentos", "Bebidas", "Sobremesas"
-- Inserir ~8-10 itens de catálogo com categorias, preços e imagens variadas
-- Garantir que o fluxo completo é testável: categorias → grid → carrinho → WhatsApp
+**1. Formulário de criação/edição de template** (Dialog ou full-page dentro de `HomeTemplatesPage.tsx`)
+- Campos: `name`, `key`, `description`, ícone (select entre emojis disponíveis)
+- Toggle `is_default`
+- Editor de seções dinâmico:
+  - Botão "Adicionar Seção" que permite escolher o `template_type` (dropdown dos 11 tipos existentes em `section_templates`)
+  - Cada seção editável: `title`, `subtitle`, `cta_text`, `visual_json` (editor JSON simples), fontes de dados (`source_type`, `filters_json`, `limit`)
+  - Reordenação por drag ou botões up/down
+  - Remover seção
+- Botão "Salvar" que faz `INSERT` ou `UPDATE` no `home_template_library`
+- Botão "Editar" nos cards existentes (além de Preview e Aplicar)
 
-**2. Adicionar fase do Catálogo na Jornada do Empreendedor**
-- Inserir nova fase (ex: Fase 5.5 entre Páginas Personalizadas e Parceiros) no `BrandJourneyGuidePage`
-- Título: "Ativar o Catálogo Digital"
-- Passos: ativar emissor, configurar pontos, criar categorias, adicionar produtos, testar checkout WhatsApp
-- Dicas: destacar a regra de 1pt mínimo, o checkout via WhatsApp e o destaque de pontos
+**2. Preview visual estilo app do cliente** (Dialog grande ou panel lateral)
+- Ao clicar "Preview", ao invés de exibir a lista técnica atual (JSON/badges), renderizar um **mockup mobile** com moldura de smartphone
+- Dentro da moldura, renderizar cada seção do `template_payload_json` com os mesmos componentes visuais do `HomeSectionsRenderer` (cabeçalhos, placeholders de cards, banners)
+- Como o template não tem dados reais, usar **placeholders visuais** (skeletons estilizados ou cards fictícios com ícones e textos genéricos) que representem cada tipo de seção:
+  - `BANNER_CAROUSEL` → retângulo com gradiente e ícone de imagem
+  - `OFFERS_CAROUSEL` → row de cards genéricos com título e preço fictício
+  - `OFFERS_GRID` → grid 2-col com cards placeholder
+  - `STORES_GRID` / `STORES_LIST` → avatares com nome placeholder
+  - `VOUCHERS_CARDS` → ticket rosa estilo cupom
+  - `MANUAL_LINKS_*` → ícones em grid/carrossel
+- Header do mockup: barra de status + greeting "Bom dia, Cliente!" + hero card de saldo
 
-### Arquivos Modificados
-- **Nova migration SQL**: seed de whatsapp, categorias e itens para a loja de teste
-- **`src/pages/BrandJourneyGuidePage.tsx`**: adicionar fase do Catálogo Digital no array `journeySteps`
+### Arquivos
+
+| Arquivo | Ação |
+|---|---|
+| `src/pages/HomeTemplatesPage.tsx` | Adicionar estado e dialogs para criar/editar template + preview visual mobile |
+| `src/components/HomeTemplateEditor.tsx` | **Novo** — formulário reutilizável para criação e edição de templates |
+| `src/components/HomeTemplateMobilePreview.tsx` | **Novo** — mockup mobile que renderiza placeholders visuais por tipo de seção |
+
+### Detalhes Técnicos
+
+- O editor constrói o `template_payload_json` interativamente, mantendo o mesmo formato JSON que já existe na tabela
+- O preview mobile é um `div` com `max-w-[375px]`, `aspect-ratio: 9/19.5`, `border-radius`, `border` e `overflow-y: auto` para simular um smartphone
+- Os 11 tipos de `section_templates` serão mapeados para componentes placeholder dentro do preview
+- O insert/update usa `supabase.from("home_template_library").upsert(...)` com o `key` como identificador
+- Nenhuma migration necessária — a tabela `home_template_library` já tem todas as colunas
+
