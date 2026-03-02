@@ -544,7 +544,7 @@ function LiveSectionBlock({
                   <span className="text-[10px] font-semibold uppercase tracking-wide">Cupom</span>
                 </div>
                 <span className="text-2xl font-black block leading-tight">
-                  {v.discount_percent}% OFF
+                  Pague {v.discount_percent}% com Pontos
                 </span>
                 <h3 className="font-medium text-xs mt-1 line-clamp-1 opacity-90">{v.title}</h3>
               </div>

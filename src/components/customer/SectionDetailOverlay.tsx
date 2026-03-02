@@ -196,7 +196,7 @@ export default function SectionDetailOverlay({
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   {hasDiscount && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${primary}12`, color: primary }}>
-                      {item.discount_percent}% OFF
+                      Pague {item.discount_percent}% com Pontos
                     </span>
                   )}
                   {item.value_rescue > 0 && (
