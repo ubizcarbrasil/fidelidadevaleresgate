@@ -69,6 +69,7 @@ const ProvisionBrandWizard = lazy(() => import("@/pages/ProvisionBrandWizard"));
 const BrandPermissionOverflowPage = lazy(() => import("@/pages/BrandPermissionOverflowPage"));
 const StarterKitConfigPage = lazy(() => import("@/pages/StarterKitConfigPage"));
 const EmitterRequestsPage = lazy(() => import("@/pages/EmitterRequestsPage"));
+const EmitterJourneyGuidePage = lazy(() => import("@/pages/EmitterJourneyGuidePage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -160,6 +161,7 @@ function AppRoutes() {
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
           <Route path="root-journey" element={<RootJourneyGuidePage />} />
           <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
+          <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

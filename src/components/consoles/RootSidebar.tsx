@@ -19,6 +19,7 @@ const groups = [
       { title: "Painel Principal", url: "/", icon: LayoutDashboard },
       { title: "Jornada Completa", url: "/root-journey", icon: Rocket },
       { title: "Jornada do Empreendedor", url: "/brand-journey", icon: Store },
+      { title: "Jornada do Emissor", url: "/emitter-journey", icon: Zap },
     ],
   },
   {
