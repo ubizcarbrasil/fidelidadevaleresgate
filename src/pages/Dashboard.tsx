@@ -106,12 +106,22 @@ function BrandQuickLinks() {
   const testAccounts = settings?.test_accounts as
     | { email: string; role: string; is_active: boolean }[]
     | undefined;
-  const domainUrl = domain?.domain ? `https://${domain.domain}` : null;
+  const baseUrl = domain?.domain ? `https://${domain.domain}` : window.location.origin;
 
   const roleLabel: Record<string, string> = {
-    brand_admin: "🔑 Admin",
-    customer: "👤 Cliente",
-    store_admin: "🏪 Parceiro",
+    brand_admin: "Admin",
+    customer: "Cliente",
+    store_admin: "Parceiro",
+  };
+  const roleIcon: Record<string, string> = {
+    brand_admin: "🔑",
+    customer: "👤",
+    store_admin: "🏪",
+  };
+  const roleColor: Record<string, string> = {
+    brand_admin: "bg-primary/10 border-primary/20",
+    customer: "bg-green-500/10 border-green-500/20",
+    store_admin: "bg-amber-500/10 border-amber-500/20",
   };
 
   const copyText = (t: string) => {
@@ -119,80 +129,85 @@ function BrandQuickLinks() {
     toast.info("Copiado!");
   };
 
-  const loginAsTest = async (email: string) => {
-    copyText(`${email} / 123456`);
-    toast.info("Credenciais copiadas! Use-as para fazer login em outra aba.");
-  };
-
   if (!brand) return null;
 
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
+  const quickLinks = [
+    { label: "App do Cliente (PWA)", url: baseUrl, icon: ExternalLink, description: "Link público do aplicativo para clientes" },
+    { label: "Cadastro de Parceiro", url: `${baseUrl}/register-store`, icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
+    { label: "Painel do Parceiro", url: `${baseUrl}/store-panel`, icon: Store, description: "Painel de gestão das lojas parceiras" },
+  ];
+
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="space-y-4">
       {/* Quick Links */}
-      {domainUrl && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-primary" />
-              Links Úteis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">App do Cliente</span>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(domainUrl)}>
-                  <Copy className="h-3 w-3" /> Copiar
-                </Button>
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
-                  <a href={domainUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-3 w-3" /> Abrir
-                  </a>
-                </Button>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Link2 className="h-4 w-4 text-primary" />
+            Links Úteis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {quickLinks.map((link) => (
+              <div key={link.label} className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <link.icon className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">{link.label}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{link.description}</p>
+                <div className="flex gap-1">
+                  <Button variant="outline" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => copyText(link.url)}>
+                    <Copy className="h-3 w-3" /> Copiar
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" asChild>
+                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Cadastro de Parceiro</span>
-              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(`${domainUrl}/register-store`)}>
-                <Copy className="h-3 w-3" /> Copiar
-              </Button>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Painel do Parceiro</span>
-              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(`${domainUrl}/store-panel`)}>
-                <Copy className="h-3 w-3" /> Copiar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Test Accounts */}
       {hasTestAccounts && (
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <LogIn className="h-4 w-4 text-primary" />
-              Acessos de Teste
+              Acessos Rápidos de Teste
+              <Badge variant="secondary" className="text-[10px] ml-auto">Senha: 123456</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {testAccounts!
-              .filter((a) => a.is_active)
-              .map((acc) => (
-                <div key={acc.email} className="flex items-center justify-between text-sm">
-                  <div>
-                    <span className="mr-2">{roleLabel[acc.role] || acc.role}</span>
-                    <code className="text-xs text-muted-foreground">{acc.email}</code>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {testAccounts!
+                .filter((a) => a.is_active)
+                .map((acc) => (
+                  <div key={acc.email} className={`rounded-lg border p-3 space-y-2 ${roleColor[acc.role] || ""}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{roleIcon[acc.role] || "👤"}</span>
+                      <span className="text-sm font-semibold">{roleLabel[acc.role] || acc.role}</span>
+                    </div>
+                    <code className="block text-xs truncate">{acc.email}</code>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="h-7 text-xs w-full gap-1"
+                      onClick={() => {
+                        copyText(`${acc.email} / 123456`);
+                      }}
+                    >
+                      <Copy className="h-3 w-3" /> Copiar credenciais
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => loginAsTest(acc.email)}>
-                    <Copy className="h-3 w-3" /> Copiar
-                  </Button>
-                </div>
-              ))}
-            <p className="text-xs text-muted-foreground">Senha padrão: 123456</p>
+                ))}
+            </div>
           </CardContent>
         </Card>
       )}
