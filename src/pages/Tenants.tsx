@@ -22,12 +22,13 @@ export default function Tenants() {
   const { data, isLoading } = useQuery({
     queryKey: ["tenants", debouncedSearch, page],
     queryFn: async () => {
-      let query = supabase.from("tenants").select("*", { count: "exact" });
+      let query = supabase.from("tenants").select("*, brands(id)", { count: "exact" });
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,slug.ilike.%${debouncedSearch}%`);
       query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       const { data, error, count } = await query;
       if (error) throw error;
-      return { rows: data, count: count ?? 0 };
+      const rows = data?.map((t: any) => ({ ...t, brand_count: Array.isArray(t.brands) ? t.brands.length : 0 }));
+      return { rows, count: count ?? 0 };
     },
   });
 
@@ -55,13 +56,14 @@ export default function Tenants() {
         <CardContent>
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Identificador</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Identificador</TableHead><TableHead>Marcas</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma organização cadastrada</TableCell></TableRow>}
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma organização cadastrada</TableCell></TableRow>}
               {data?.rows?.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{t.slug}</TableCell>
+                   <TableCell className="text-muted-foreground">{t.slug}</TableCell>
+                   <TableCell><Badge variant="outline">{t.brand_count}</Badge></TableCell>
                   <TableCell><Badge variant="secondary">{t.plan}</Badge></TableCell>
                   <TableCell><Badge variant={t.is_active ? "default" : "destructive"}>{t.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-2">
