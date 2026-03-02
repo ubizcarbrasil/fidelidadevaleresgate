@@ -456,8 +456,9 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               <div className="relative">
                 <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
                 {o.discount_percent > 0 && (
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: "#E91E63" }}>
-                    {o.discount_percent}% OFF
+                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: primary }}>
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Pague {o.discount_percent}% com Pontos
                   </div>
                 )}
               </div>
@@ -465,8 +466,9 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               <div className="h-24 w-full flex items-center justify-center relative" style={{ backgroundColor: `${primary}06` }}>
                 <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
                 {o.discount_percent > 0 && (
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: "#E91E63" }}>
-                    {o.discount_percent}% OFF
+                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: primary }}>
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Pague {o.discount_percent}% com Pontos
                   </div>
                 )}
               </div>
@@ -517,8 +519,9 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               <div className="relative">
                 <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
                 {o.discount_percent > 0 && (
-                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-white text-[9px] font-bold" style={{ backgroundColor: "#E91E63" }}>
-                    {o.discount_percent}% OFF
+                  <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-white text-[9px] font-bold" style={{ backgroundColor: primary }}>
+                    <Sparkles className="h-2 w-2" />
+                    Pague {o.discount_percent}% com Pontos
                   </div>
                 )}
               </div>
