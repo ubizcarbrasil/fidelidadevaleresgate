@@ -109,6 +109,12 @@ export default function ProvisionBrandWizard() {
     store_admin: "Parceiro Teste",
   };
 
+  const rolePanelLink: Record<string, string> = {
+    brand_admin: "Abrir Painel Admin",
+    customer: "Abrir App Cliente",
+    store_admin: "Abrir Portal Parceiro",
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -429,6 +435,15 @@ export default function ProvisionBrandWizard() {
                     </Badge>
                     <p className="text-xs font-mono">{acc.email}</p>
                     <p className="text-xs text-muted-foreground">Senha: 123456</p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs mt-1"
+                      onClick={() => window.open(`https://${result.domain}/auth`, "_blank")}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {rolePanelLink[acc.role] || "Abrir Painel"}
+                    </Button>
                   </div>
                   <Button
                     variant="ghost"
