@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,16 +36,21 @@ interface ProvisionResult {
 
 export default function ProvisionBrandWizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<Step>("company");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ProvisionResult | null>(null);
+
+  const tenantName = searchParams.get("tenant_name") || "";
+  const tenantSlug = searchParams.get("tenant_slug") || "";
+
   const [form, setForm] = useState<FormData>({
-    company_name: "",
-    brand_slug: "",
+    company_name: tenantName,
+    brand_slug: tenantSlug,
     city_name: "",
     city_slug: "",
     state: "",
-    subdomain: "",
+    subdomain: tenantSlug,
     logo_url: "",
     primary_color: "#6366f1",
     secondary_color: "#f59e0b",
