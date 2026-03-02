@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -261,8 +262,8 @@ const journeySteps: JourneyStep[] = [
 ];
 
 export default function RootJourneyGuidePage() {
+  const navigate = useNavigate();
   const [expandedStep, setExpandedStep] = useState<string | null>("1");
-
   const toggleStep = (id: string) => {
     setExpandedStep(expandedStep === id ? null : id);
   };
@@ -378,7 +379,7 @@ export default function RootJourneyGuidePage() {
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs"
-                          onClick={() => window.location.href = step.route}
+                          onClick={() => navigate(step.route)}
                         >
                           Ir para esta página
                           <ChevronRight className="h-3 w-3 ml-1" />
