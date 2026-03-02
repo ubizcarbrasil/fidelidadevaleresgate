@@ -2,7 +2,7 @@ import {
   Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users,
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
-  Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap,
+  Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -30,6 +30,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "📊 Visão Geral",
     items: [
       { key: "sidebar.dashboard", defaultTitle: "Painel Principal", url: "/", icon: LayoutDashboard },
+      { key: "sidebar.jornada", defaultTitle: "Jornada do Empreendedor", url: "/brand-journey", icon: Rocket },
     ],
   },
   {
