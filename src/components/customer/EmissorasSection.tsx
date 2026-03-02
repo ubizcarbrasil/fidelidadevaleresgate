@@ -96,9 +96,8 @@ export default function EmissorasSection() {
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: idx * 0.04, duration: 0.25 }}
-            className="flex-shrink-0 w-[140px] rounded-2xl overflow-hidden cursor-pointer relative group"
+            className="flex-shrink-0 w-[140px] rounded-2xl overflow-hidden cursor-pointer relative group bg-card"
             style={{
-              backgroundColor: "#FFFFFF",
               boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)",
             }}
             onClick={() => openStore(store)}
@@ -129,7 +128,7 @@ export default function EmissorasSection() {
                   className="max-h-[60px] max-w-[100px] object-contain"
                 />
               ) : (
-                <div className="h-14 w-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "#F5F5F5" }}>
+                <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-muted">
                   <Store className="h-6 w-6" style={{ color: "#CCC" }} />
                 </div>
               )}
@@ -163,11 +162,7 @@ export default function EmissorasSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="flex-shrink-0 w-[100px] rounded-2xl flex flex-col items-center justify-center cursor-pointer active:opacity-70"
-          style={{
-            backgroundColor: "#F8F8FA",
-            border: "1px dashed rgba(0,0,0,0.12)",
-          }}
+          className="flex-shrink-0 w-[100px] rounded-2xl flex flex-col items-center justify-center cursor-pointer active:opacity-70 bg-muted border border-dashed border-border"
           onClick={() => openEmissorasList?.()}
         >
           <div

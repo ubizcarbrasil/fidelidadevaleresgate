@@ -72,7 +72,7 @@ export default function AchadinhoSection() {
         <Skeleton className="h-6 w-36 rounded-lg mb-4" />
         <div className="flex gap-3 overflow-hidden">
           {[1, 2, 3].map(i => (
-            <div key={i} className="min-w-[160px] rounded-[18px] bg-white overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+            <div key={i} className="min-w-[160px] rounded-[18px] bg-card overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
               <Skeleton className="h-32 w-full" />
               <div className="p-3 space-y-2">
                 <Skeleton className="h-3 w-3/4 rounded-lg" />
@@ -126,7 +126,7 @@ export default function AchadinhoSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.3 }}
               whileTap={{ scale: 0.97 }}
-              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-white cursor-pointer"
+              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer"
               style={{
                 boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
                 scrollSnapAlign: "start",
