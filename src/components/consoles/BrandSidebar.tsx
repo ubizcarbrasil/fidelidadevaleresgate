@@ -7,6 +7,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandName } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import {
@@ -102,6 +103,7 @@ export function BrandSidebar() {
   const { user, signOut } = useAuth();
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
+  const brandName = useBrandName();
 
   return (
     <Sidebar collapsible="icon">
@@ -112,7 +114,7 @@ export function BrandSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
+              <span className="text-sm font-bold text-sidebar-foreground">{brandName || "Carregando..."}</span>
               <span className="text-xs text-sidebar-foreground/60">Painel do Empreendedor</span>
             </div>
           )}

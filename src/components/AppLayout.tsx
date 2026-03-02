@@ -7,6 +7,7 @@ import { BrandSidebar } from "@/components/consoles/BrandSidebar";
 import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
+import { useBrandName } from "@/hooks/useBrandName";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Painel Raiz",
@@ -19,6 +20,7 @@ const CONSOLE_TITLES: Record<string, string> = {
 
 export default function AppLayout() {
   const { consoleScope } = useBrandGuard();
+  const brandName = useBrandName();
 
   // Parceiros usam o portal dedicado
   if (consoleScope === "STORE_ADMIN") {
@@ -40,7 +42,7 @@ export default function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b px-3 sm:px-4 bg-card shrink-0">
             <SidebarTrigger className="mr-2 sm:mr-4" />
-            <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Vale Resgate — {CONSOLE_TITLES[consoleScope]}</h1>
+            <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
           </header>
           <main className="flex-1 p-3 sm:p-6 overflow-auto">
             <Outlet />
