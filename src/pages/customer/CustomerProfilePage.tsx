@@ -7,7 +7,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle, Heart, Tag } from "lucide-react";
+import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle, Heart, Tag, Moon, Sun } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import { motion } from "framer-motion";
@@ -178,9 +178,12 @@ export default function CustomerProfilePage() {
         variants={sectionVariant}
         initial="hidden"
         animate="visible"
-        className="rounded-[20px] overflow-hidden bg-white mb-5"
+        className="rounded-[20px] overflow-hidden bg-white dark:bg-[hsl(var(--card))] mb-5"
         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
       >
+        {/* Dark mode toggle */}
+        <DarkModeToggle primary={primary} fg={fg} />
+        <div style={{ borderBottom: `1px solid ${fg}08` }} />
         {[
           { icon: Shield, label: "Privacidade e Segurança" },
           { icon: HelpCircle, label: "Ajuda e Suporte" },
@@ -211,6 +214,51 @@ export default function CustomerProfilePage() {
         </Button>
       </motion.div>
     </div>
+  );
+}
+
+// --- Dark Mode Toggle ---
+function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  const toggle = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("customer_dark_mode", next ? "dark" : "light");
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem("customer_dark_mode");
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    }
+  }, []);
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.98 }}
+      onClick={toggle}
+      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-black/[0.02] transition-colors"
+    >
+      {isDark ? (
+        <Sun className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+      ) : (
+        <Moon className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+      )}
+      <span className="flex-1">{isDark ? "Modo claro" : "Modo escuro"}</span>
+      <div
+        className="relative h-7 w-12 rounded-full transition-colors duration-300"
+        style={{ backgroundColor: isDark ? primary : `${fg}20` }}
+      >
+        <motion.div
+          className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm"
+          animate={{ left: isDark ? 22 : 2 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        />
+      </div>
+    </motion.button>
   );
 }
 
