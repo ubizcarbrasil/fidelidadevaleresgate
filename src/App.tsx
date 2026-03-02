@@ -60,6 +60,7 @@ import MenuLabelsPage from "@/pages/MenuLabelsPage";
 import PageBuilderPage from "@/pages/PageBuilderPage";
 import ProvisionBrandWizard from "@/pages/ProvisionBrandWizard";
 import BrandPermissionOverflowPage from "@/pages/BrandPermissionOverflowPage";
+import StarterKitConfigPage from "@/pages/StarterKitConfigPage";
 
 import TaxonomyPage from "@/pages/TaxonomyPage";
 import CustomPage from "@/pages/customer/CustomPage";
@@ -136,6 +137,7 @@ function AppRoutes() {
         <Route path="provision-brand" element={<ProvisionBrandWizard />} />
         <Route path="brand-permissions" element={<BrandPermissionOverflowPage />} />
         <Route path="taxonomy" element={<TaxonomyPage />} />
+        <Route path="starter-kit" element={<StarterKitConfigPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

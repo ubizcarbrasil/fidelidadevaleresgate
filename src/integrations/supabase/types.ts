@@ -1419,6 +1419,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_config: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value_json: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value_json?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value_json?: Json
+        }
+        Relationships: []
+      }
       points_ledger: {
         Row: {
           branch_id: string
