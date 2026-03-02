@@ -62,6 +62,7 @@ import ProvisionBrandWizard from "@/pages/ProvisionBrandWizard";
 import BrandPermissionOverflowPage from "@/pages/BrandPermissionOverflowPage";
 import StarterKitConfigPage from "@/pages/StarterKitConfigPage";
 import EmitterRequestsPage from "@/pages/EmitterRequestsPage";
+import RootJourneyGuidePage from "@/pages/RootJourneyGuidePage";
 
 import TaxonomyPage from "@/pages/TaxonomyPage";
 import CustomPage from "@/pages/customer/CustomPage";
@@ -140,6 +141,7 @@ function AppRoutes() {
         <Route path="taxonomy" element={<TaxonomyPage />} />
         <Route path="starter-kit" element={<StarterKitConfigPage />} />
         <Route path="emitter-requests" element={<EmitterRequestsPage />} />
+        <Route path="root-journey" element={<RootJourneyGuidePage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
