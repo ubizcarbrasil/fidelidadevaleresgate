@@ -14,6 +14,7 @@ import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
+import RootJourneyGuidePage from "@/pages/RootJourneyGuidePage";
 
 // Lazy-loaded pages
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -67,7 +68,7 @@ const ProvisionBrandWizard = lazy(() => import("@/pages/ProvisionBrandWizard"));
 const BrandPermissionOverflowPage = lazy(() => import("@/pages/BrandPermissionOverflowPage"));
 const StarterKitConfigPage = lazy(() => import("@/pages/StarterKitConfigPage"));
 const EmitterRequestsPage = lazy(() => import("@/pages/EmitterRequestsPage"));
-const RootJourneyGuidePage = lazy(() => import("@/pages/RootJourneyGuidePage"));
+
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
 const WebviewPage = lazy(() => import("@/pages/customer/WebviewPage"));
