@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.match-taxonomy]
 verify_jwt = false
+
+[functions.provision-brand]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false

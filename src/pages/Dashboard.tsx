@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio } from "lucide-react";
+import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -66,6 +68,136 @@ function useRealtimeRefresh() {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
+}
+
+function BrandQuickLinks() {
+  const { currentBrandId } = useBrandGuard();
+
+  const { data: brand } = useQuery({
+    queryKey: ["brand-quick-links", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return null;
+      const { data } = await supabase
+        .from("brands")
+        .select("brand_settings_json, slug")
+        .eq("id", currentBrandId)
+        .single();
+      return data;
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const { data: domain } = useQuery({
+    queryKey: ["brand-domain", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return null;
+      const { data } = await supabase
+        .from("brand_domains")
+        .select("domain, subdomain")
+        .eq("brand_id", currentBrandId)
+        .eq("is_primary", true)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const settings = brand?.brand_settings_json as any;
+  const testAccounts = settings?.test_accounts as
+    | { email: string; role: string; is_active: boolean }[]
+    | undefined;
+  const domainUrl = domain?.domain ? `https://${domain.domain}` : null;
+
+  const roleLabel: Record<string, string> = {
+    brand_admin: "🔑 Admin",
+    customer: "👤 Cliente",
+    store_admin: "🏪 Parceiro",
+  };
+
+  const copyText = (t: string) => {
+    navigator.clipboard.writeText(t);
+    toast.info("Copiado!");
+  };
+
+  const loginAsTest = async (email: string) => {
+    copyText(`${email} / 123456`);
+    toast.info("Credenciais copiadas! Use-as para fazer login em outra aba.");
+  };
+
+  if (!brand) return null;
+
+  const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {/* Quick Links */}
+      {domainUrl && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              Links Úteis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">App do Cliente</span>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(domainUrl)}>
+                  <Copy className="h-3 w-3" /> Copiar
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
+                  <a href={domainUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-3 w-3" /> Abrir
+                  </a>
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Cadastro de Parceiro</span>
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(`${domainUrl}/register-store`)}>
+                <Copy className="h-3 w-3" /> Copiar
+              </Button>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Painel do Parceiro</span>
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(`${domainUrl}/store-panel`)}>
+                <Copy className="h-3 w-3" /> Copiar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Test Accounts */}
+      {hasTestAccounts && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <LogIn className="h-4 w-4 text-primary" />
+              Acessos de Teste
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {testAccounts!
+              .filter((a) => a.is_active)
+              .map((acc) => (
+                <div key={acc.email} className="flex items-center justify-between text-sm">
+                  <div>
+                    <span className="mr-2">{roleLabel[acc.role] || acc.role}</span>
+                    <code className="text-xs text-muted-foreground">{acc.email}</code>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => loginAsTest(acc.email)}>
+                    <Copy className="h-3 w-3" /> Copiar
+                  </Button>
+                </div>
+              ))}
+            <p className="text-xs text-muted-foreground">Senha padrão: 123456</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -209,6 +341,9 @@ export default function Dashboard() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Quick Links & Test Accounts for Brand Admins */}
+      {showBrand && !isRoot && <BrandQuickLinks />}
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

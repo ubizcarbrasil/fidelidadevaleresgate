@@ -27,6 +27,7 @@ const groups = [
       { title: "Cidades", url: "/branches", icon: MapPin },
       { title: "Clonar Cidade", url: "/clone-branch", icon: Copy },
       { title: "Domínios", url: "/domains", icon: Globe },
+      { title: "Nova Empresa", url: "/provision-brand", icon: Rocket },
     ],
   },
   {
