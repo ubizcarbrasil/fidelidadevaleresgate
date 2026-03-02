@@ -210,13 +210,8 @@ export default function HomeTemplatesPage() {
   const openPreview = (t: HomeTemplate) => { setSelectedTemplate(t); setPreviewOpen(true); };
   const openEditor = (t?: HomeTemplate) => { setEditingTemplate(t || null); setEditorOpen(true); };
   const duplicateTemplate = (t: HomeTemplate) => {
-    setEditingTemplate(null);
+    setEditingTemplate({ ...t, id: "" as any, key: t.key + "-copia", name: t.name + " (cópia)" } as HomeTemplate);
     setEditorOpen(true);
-    // Pre-fill editor will be handled via initialData below
-    setTimeout(() => {
-      setEditingTemplate({ ...t, id: "", key: t.key + "-copia", name: t.name + " (cópia)" } as any);
-      setEditorOpen(true);
-    }, 0);
   };
 
   return (
