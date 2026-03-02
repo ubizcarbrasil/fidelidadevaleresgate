@@ -233,6 +233,11 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
     if (saved === "dark") {
       document.documentElement.classList.add("dark");
       setIsDark(true);
+    } else if (saved === "light") {
+      document.documentElement.classList.remove("dark");
+      setIsDark(false);
+    } else {
+      setIsDark(document.documentElement.classList.contains("dark"));
     }
   }, []);
 

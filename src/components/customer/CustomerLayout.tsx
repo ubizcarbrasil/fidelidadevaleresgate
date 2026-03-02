@@ -96,6 +96,8 @@ export default function CustomerLayout() {
     const saved = localStorage.getItem("customer_dark_mode");
     if (saved === "dark") {
       document.documentElement.classList.add("dark");
+    } else if (saved === "light") {
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
