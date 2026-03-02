@@ -1,50 +1,124 @@
 
 
-## Dark Mode Test Results
+## Cardápio Digital — Plano de Implementação
 
-### What's Working
-- Hero card (Saldo/Pontos) — purple gradient displays correctly
-- Bottom navigation — adapts to dark mode
-- Profile page — dark backgrounds, proper contrast
-- Carteira (Wallet) page — correct dark styling
-- Home sections (Ofertas do Dia, Lojas Parceiras, Vouchers) — mostly good with `bg-card` already applied
-- VoucherTickets notch circles — already using `bg-background` class
+### Situação Atual
 
-### Issues Found
+Já existe:
+- Tabela `store_catalog_items` (id, store_id, name, description, price, image_url, is_active, order_index)
+- Módulo `catalog` registrado em `module_definitions` (categoria: comercial)
+- `StoreCatalogPage` para admin gerenciar itens
+- Seção de catálogo básica no `CustomerStoreDetailPage` (grid simples de produtos)
+- `StoreVoucherWizard` já consulta `store_catalog_items` para vincular produto a ofertas
+- Campo `store_type` (RECEPTORA/EMISSORA/MISTA) e `points_per_real` na tabela `stores`
+- Campo `whatsapp` na tabela `stores`
 
-**1. CustomerOffersPage — offer list cards use `bg-white` (line 195)**
-- Cards have hardcoded `bg-white` instead of `bg-card`
-- Search bar uses hardcoded `backgroundColor: "#F2F2F7"` (line 123)
-- Skeleton loading cards also use `bg-white` (line 101)
+### O Que Falta (Escopo da Feature)
 
-**2. EmissorasSection — "Compre e pontue" cards use `#FFFFFF` (line 101)**
-- Store cards have `backgroundColor: "#FFFFFF"` — white in dark mode
-- Placeholder store icon background `#F5F5F5` (line 132) — doesn't adapt
-- "Ver todos" trailing card uses `backgroundColor: "#F8F8FA"` and light border (lines 168-169)
-- Favorite heart button background `rgba(255,255,255,0.85)` (line 113) — acceptable but could improve
+A feature envolve 5 frentes:
 
-**3. AchadinhoSection — deal cards use `bg-white` (line 129)**
-- Skeleton loading also uses `bg-white` (line 75)
+---
 
-**4. CustomerOffersPage — segment chips use `${fg}06` which may be invisible in dark**
+### 1. Schema — Evolução do Catálogo
 
-### Plan
+Adicionar à tabela `store_catalog_items`:
+- `category` (text, nullable) — agrupar itens em categorias (ex: "Pizzas", "Bebidas")
+- `brand_id` (uuid, NOT NULL, FK → brands) — para RLS e scoping
+- `branch_id` (uuid, NOT NULL, FK → branches) — seguindo a regra arquitetural
 
-**Files to modify:**
+Criar tabela `store_catalog_categories`:
+- `id`, `store_id`, `name`, `order_index`, `image_url`, `is_active`, `created_at`
 
-1. **`src/pages/customer/CustomerOffersPage.tsx`**
-   - Line 101: `bg-white` → `bg-card`
-   - Line 123: `backgroundColor: "#F2F2F7"` → `className="bg-muted"`
-   - Line 195: `bg-white` → `bg-card`
+Criar tabela `catalog_cart_orders` (log de pedidos enviados ao WhatsApp):
+- `id`, `store_id`, `customer_id` (nullable), `brand_id`, `branch_id`
+- `items_json` (jsonb — snapshot dos itens, qtd, preço)
+- `total_amount` (numeric)
+- `points_earned_estimate` (integer)
+- `whatsapp_url_sent` (text)
+- `created_at`
 
-2. **`src/components/customer/EmissorasSection.tsx`**
-   - Line 101: `backgroundColor: "#FFFFFF"` → remove, add `className` with `bg-card`
-   - Line 132: `backgroundColor: "#F5F5F5"` → `bg-muted`
-   - Lines 168-169: `backgroundColor: "#F8F8FA"` and border → `bg-muted` and `border-border`
+RLS: leitura pública de itens ativos; gestão pelo dono da loja (store_admin) e admins de brand/branch.
 
-3. **`src/components/customer/AchadinhoSection.tsx`**
-   - Line 75: `bg-white` → `bg-card`
-   - Line 129: `bg-white` → `bg-card`
+---
 
-All changes replace hardcoded light colors with semantic Tailwind tokens (`bg-card`, `bg-muted`) that automatically adapt to dark mode.
+### 2. Regra de Pontos do Catálogo
+
+- O catálogo só aparece para lojas com `store_type` = `EMISSORA` ou `MISTA`
+- Cada R$1 gasto gera por padrão 1 ponto (valor mínimo fixo, não pode ser reduzido pelo lojista)
+- O lojista pode aumentar `points_per_real` (já existe esse campo) mas nunca abaixo de 1
+- No `StoreOwnerPanel`, adicionar validação: campo `points_per_real` com `min=1`
+
+---
+
+### 3. Portal do Parceiro — Gestão do Catálogo
+
+Adicionar tab "Catálogo" no `StoreOwnerPanel` (visível apenas se `store_type !== 'RECEPTORA'`):
+- CRUD de categorias (drag-to-reorder)
+- CRUD de itens com upload de imagem, preço, descrição
+- Preview mobile inline do cardápio
+- Configuração de layout do cardápio (cores, banner de destaque)
+- Armazenar config visual em `store_catalog_config_json` (novo campo na tabela `stores`)
+
+---
+
+### 4. App do Cliente — Cardápio Digital Completo
+
+No `CustomerStoreDetailPage`, substituir o grid simples por uma experiência completa:
+
+**Aba "Catálogo"** (tab ao lado de "Ofertas"):
+- Hero banner com logo da loja + destaque de pontos: "Ganhe X pontos por R$1 gasto"
+- Navegação por categorias (scroll horizontal de chips)
+- Grid de produtos com imagem, nome, preço e botão "+"
+- Carrinho flutuante (FAB no canto inferior) com badge de quantidade
+- Drawer do carrinho com:
+  - Lista de itens, +/- quantidade, preço subtotal
+  - Resumo de pontos estimados (total × points_per_real)
+  - Destaque visual: "Você vai ganhar **X pontos** neste pedido!"
+  - Botão "Enviar pedido pelo WhatsApp"
+
+**Checkout via WhatsApp:**
+- Ao confirmar, gera mensagem formatada com:
+  - Nome do cliente (se logado)
+  - Lista de itens (nome × qtd = R$)
+  - Total
+  - Pontos estimados
+- Abre `wa.me/{whatsapp}?text={mensagem_encoded}`
+- Salva registro em `catalog_cart_orders` para tracking
+
+---
+
+### 5. Destaque de Pontos (Fator de Atração)
+
+Em todos os cards de produto, exibir embaixo do preço:
+- Badge: "🎯 Ganhe X pts" (calculado: price × points_per_real)
+- No carrinho, totalizar: "Este pedido rende Y pontos!"
+- Usar cores da marca (primary) para destacar visualmente
+
+---
+
+### Arquivos a Criar/Modificar
+
+**Criar:**
+- `src/components/customer/StoreCatalogView.tsx` — página completa do catálogo (categorias, grid, carrinho)
+- `src/components/customer/CatalogCartDrawer.tsx` — drawer do carrinho com resumo e checkout WhatsApp
+- `src/components/store-owner/StoreCatalogTab.tsx` — gestão do catálogo no portal do parceiro
+
+**Modificar:**
+- `src/pages/customer/CustomerStoreDetailPage.tsx` — adicionar tabs (Ofertas | Catálogo)
+- `src/pages/StoreOwnerPanel.tsx` — adicionar tab "Catálogo" (condicional a store_type)
+- `store_catalog_items` — adicionar colunas category, brand_id, branch_id
+- Migrations para novas tabelas e colunas
+
+---
+
+### Resumo das Regras de Negócio
+
+| Regra | Detalhe |
+|-------|---------|
+| Acesso ao catálogo (lojista) | Apenas EMISSORA ou MISTA |
+| Pontos mínimos | 1 ponto por R$1 (nunca abaixo) |
+| Pontos máximos | Lojista pode aumentar livremente |
+| Checkout | WhatsApp com resumo completo |
+| Pontos no card | Exibido em cada item e no total do carrinho |
+| Módulo | Protegido pelo module `catalog` |
 
