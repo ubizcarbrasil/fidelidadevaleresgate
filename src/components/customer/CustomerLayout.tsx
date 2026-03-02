@@ -19,6 +19,7 @@ import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
+import { haptic } from "@/lib/haptics";
 
 // Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
 interface CustomerNavContextType {
@@ -210,7 +211,7 @@ export default function CustomerLayout() {
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => { haptic("light"); setActiveTab(tab.key); }}
                   className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 transition-all relative"
                 >
                   {isActive && (

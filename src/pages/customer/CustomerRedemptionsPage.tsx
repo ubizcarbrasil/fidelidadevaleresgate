@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Search, MapPin, Phone, Globe, Clock, AlertTriangle, Store, QrCode, Info, DollarSign, CreditCard, ArrowLeft, RotateCcw } from "lucide-react";
+import EmptyState from "@/components/customer/EmptyState";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -165,9 +166,8 @@ export default function CustomerRedemptionsPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="px-5 text-center py-12">
-            <QrCode className="h-12 w-12 mx-auto mb-3" style={{ color: `${fg}20` }} />
-            <p className="text-sm" style={{ color: `${fg}50` }}>Nenhum resgate encontrado</p>
+          <div className="px-5">
+            <EmptyState type="redemptions" primary={primary} />
           </div>
         ) : (
           <div className="px-5 space-y-4">

@@ -6,6 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp, Percent } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import EmptyState from "@/components/customer/EmptyState";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -167,17 +168,12 @@ export default function CustomerOffersPage() {
       </p>
 
       {filtered.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-16 opacity-40"
-        >
-          <div className="h-14 w-14 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-            <ShoppingBag className="h-6 w-6" style={{ color: primary }} />
-          </div>
-          <p className="font-semibold text-sm mb-1">Nenhuma oferta encontrada</p>
-          <p className="text-xs">Tente outra busca ou categoria</p>
-        </motion.div>
+        <EmptyState
+          type="offers"
+          primary={primary}
+          ctaLabel={query || selectedSegmentId ? "Limpar filtros" : undefined}
+          onCta={query || selectedSegmentId ? () => { setQuery(""); setSelectedSegmentId(null); } : undefined}
+        />
       ) : (
         <div className="space-y-2.5">
           {filtered.map((offer, idx) => {
