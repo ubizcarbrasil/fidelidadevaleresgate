@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import type { Json } from "@/integrations/supabase/types";
 
+export interface BadgeConfig {
+  bg_color?: string;         // hex e.g. "#E91E63"
+  text_color?: string;       // hex e.g. "#FFFFFF"
+  text_template?: string;    // e.g. "Pague {percent}% com Pontos"
+  icon?: string;             // lucide icon name e.g. "sparkles", "tag", "percent", "star"
+}
+
 export interface BrandTheme {
   colors?: {
     primary?: string;       // HSL: "220 70% 50%"
@@ -19,6 +26,7 @@ export interface BrandTheme {
   display_name?: string;
   slogan?: string;
   footer_text?: string;
+  badge_config?: BadgeConfig;
 }
 
 const CSS_VAR_MAP: Record<string, string> = {

@@ -6,6 +6,8 @@ import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store,
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { motion } from "framer-motion";
+import OfferBadge from "@/components/customer/OfferBadge";
+import type { BadgeConfig } from "@/hooks/useBrandTheme";
 
 type Voucher = Tables<"vouchers">;
 
@@ -138,6 +140,7 @@ export default function HomeSectionsRenderer() {
   const cardBg = "#FFFFFF";
   const accent = hslToCss(theme?.colors?.accent, "hsl(var(--accent))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const brandBadgeConfig = theme?.badge_config || null;
 
   return (
     <div className="space-y-1">
@@ -161,6 +164,7 @@ export default function HomeSectionsRenderer() {
             cardBg={cardBg}
             accent={accent}
             fontHeading={fontHeading}
+            brandBadgeConfig={brandBadgeConfig}
           />
         </motion.div>
       ))}
@@ -176,9 +180,10 @@ interface SectionBlockProps {
   cardBg: string;
   accent: string;
   fontHeading: string;
+  brandBadgeConfig: BadgeConfig | null;
 }
 
-function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHeading }: SectionBlockProps) {
+function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHeading, brandBadgeConfig }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { openOffer, openStore, openSectionDetail } = useCustomerNav();
@@ -362,9 +367,9 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       {loading ? renderSkeleton() : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
-        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
+        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
-        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} />
+        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} />
       ) : templateType === "STORES_GRID" ? (
         <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} />
       ) : templateType === "STORES_LIST" ? (
@@ -433,7 +438,7 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_CAROUSEL ---
-function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick }: any) {
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -455,22 +460,16 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
             {o.image_url ? (
               <div className="relative">
                 <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
-                {o.discount_percent > 0 && (
-                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: primary }}>
-                    <Sparkles className="h-2.5 w-2.5" />
-                    Pague {o.discount_percent}% com Pontos
-                  </div>
-                )}
+                <div className="absolute top-2 left-2">
+                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={primary} />
+                </div>
               </div>
             ) : (
               <div className="h-24 w-full flex items-center justify-center relative" style={{ backgroundColor: `${primary}06` }}>
                 <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                {o.discount_percent > 0 && (
-                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: primary }}>
-                    <Sparkles className="h-2.5 w-2.5" />
-                    Pague {o.discount_percent}% com Pontos
-                  </div>
-                )}
+                <div className="absolute top-2 left-2">
+                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={primary} />
+                </div>
               </div>
             )}
             <div className="px-3 py-2.5">
@@ -501,7 +500,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
 }
 
 // --- OFFERS_GRID (2-col Méliuz style) ---
-function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick }: any) {
+function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   return (
     <div className="max-w-lg mx-auto px-5">
       <div className={`grid gap-2.5`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
@@ -518,12 +517,9 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
             {o.image_url ? (
               <div className="relative">
                 <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
-                {o.discount_percent > 0 && (
-                  <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-white text-[9px] font-bold" style={{ backgroundColor: primary }}>
-                    <Sparkles className="h-2 w-2" />
-                    Pague {o.discount_percent}% com Pontos
-                  </div>
-                )}
+                <div className="absolute top-1.5 left-1.5">
+                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={primary} size="sm" />
+                </div>
               </div>
             ) : (
               <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>

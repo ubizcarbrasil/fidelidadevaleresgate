@@ -1240,6 +1240,7 @@ export type Database = {
         Row: {
           allowed_hours: string | null
           allowed_weekdays: number[] | null
+          badge_config_json: Json | null
           branch_id: string
           brand_id: string
           coupon_category: string | null
@@ -1280,6 +1281,7 @@ export type Database = {
         Insert: {
           allowed_hours?: string | null
           allowed_weekdays?: number[] | null
+          badge_config_json?: Json | null
           branch_id: string
           brand_id: string
           coupon_category?: string | null
@@ -1320,6 +1322,7 @@ export type Database = {
         Update: {
           allowed_hours?: string | null
           allowed_weekdays?: number[] | null
+          badge_config_json?: Json | null
           branch_id?: string
           brand_id?: string
           coupon_category?: string | null

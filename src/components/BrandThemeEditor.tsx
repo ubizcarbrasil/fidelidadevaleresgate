@@ -5,6 +5,7 @@ import { Palette, Type, Image, FileText } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
+import BadgeConfigEditor from "@/components/BadgeConfigEditor";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
@@ -229,6 +230,12 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
           </div>
         </CardContent>
       </Card>
+
+      {/* Badge Config */}
+      <BadgeConfigEditor
+        value={value.badge_config || {}}
+        onChange={(badge_config) => update({ badge_config })}
+      />
       </div>
 
       {/* Live Preview - sticky sidebar */}
