@@ -17,6 +17,7 @@ const groups = [
     label: "📊 Visão Geral",
     items: [
       { title: "Painel Principal", url: "/", icon: LayoutDashboard },
+      { title: "Jornada Completa", url: "/root-journey", icon: Rocket },
     ],
   },
   {
