@@ -20,6 +20,7 @@ interface CloneOptions {
   offers: boolean;
   adjustOfferDates: boolean;
   brandSections: boolean;
+  pointsRules: boolean;
 }
 
 interface CloneLog {
@@ -39,6 +40,7 @@ export default function CloneBranchPage() {
     offers: true,
     adjustOfferDates: true,
     brandSections: false,
+    pointsRules: true,
   });
   const [logs, setLogs] = useState<CloneLog[]>([]);
 
@@ -197,6 +199,49 @@ export default function CloneBranchPage() {
         }
       }
 
+      // ── Clone Points Rules ──
+      if (options.pointsRules) {
+        addLog({ type: "info", message: "Clonando regras de pontos..." });
+        const { data: sourceRules, error: prErr } = await supabase
+          .from("points_rules")
+          .select("rule_type, points_per_real, money_per_point, min_purchase_to_earn, max_points_per_purchase, max_points_per_customer_per_day, max_points_per_store_per_day, require_receipt_code, is_active, allow_store_custom_rule, store_points_per_real_min, store_points_per_real_max, store_rule_requires_approval")
+          .eq("branch_id", sourceBranchId)
+          .eq("brand_id", brandId);
+
+        if (prErr) {
+          addLog({ type: "error", message: `Erro ao ler regras de pontos: ${prErr.message}` });
+        } else if (sourceRules && sourceRules.length > 0) {
+          const { data: existingRules } = await supabase
+            .from("points_rules")
+            .select("rule_type")
+            .eq("branch_id", targetBranchId)
+            .eq("brand_id", brandId);
+          const existingTypes = new Set((existingRules || []).map(r => r.rule_type));
+
+          let created = 0;
+          let skipped = 0;
+          for (const rule of sourceRules) {
+            if (existingTypes.has(rule.rule_type)) {
+              skipped++;
+              continue;
+            }
+            const { error } = await supabase.from("points_rules").insert({
+              ...rule,
+              brand_id: brandId,
+              branch_id: targetBranchId,
+            });
+            if (error) {
+              addLog({ type: "error", message: `Erro ao criar regra "${rule.rule_type}": ${error.message}` });
+            } else {
+              created++;
+            }
+          }
+          addLog({ type: "success", message: `Regras de pontos: ${created} criadas, ${skipped} já existentes (ignoradas)` });
+        } else {
+          addLog({ type: "info", message: "Nenhuma regra de pontos na origem." });
+        }
+      }
+
       // ── Clone Brand Sections ──
       if (options.brandSections) {
         addLog({ type: "info", message: "Brand sections são por brand (não por branch). Ignorado." });
@@ -215,9 +260,9 @@ export default function CloneBranchPage() {
           clone_stores: options.stores,
           clone_offers: options.offers,
           adjust_dates: options.adjustOfferDates,
+          clone_points_rules: options.pointsRules,
         } as any,
       }]);
-
       addLog({ type: "success", message: "Clonagem concluída!" });
       return cloneLogs;
     },
@@ -230,7 +275,7 @@ export default function CloneBranchPage() {
     },
   });
 
-  const canClone = brandId && sourceBranchId && targetBranchId && sourceBranchId !== targetBranchId && (options.stores || options.offers);
+  const canClone = brandId && sourceBranchId && targetBranchId && sourceBranchId !== targetBranchId && (options.stores || options.offers || options.pointsRules);
   const isDone = cloneMutation.isSuccess;
 
   return (
@@ -329,6 +374,14 @@ export default function CloneBranchPage() {
               </div>
             </div>
           )}
+
+          <div className="flex items-start gap-3">
+            <Checkbox id="clone-points-rules" checked={options.pointsRules} onCheckedChange={v => setOptions(o => ({ ...o, pointsRules: !!v }))} />
+            <div>
+              <Label htmlFor="clone-points-rules" className="font-medium">Clonar Regras de Pontos</Label>
+              <p className="text-xs text-muted-foreground">Copia regras de acúmulo de pontos. Regras com mesmo tipo no destino serão ignoradas.</p>
+            </div>
+          </div>
 
           <Separator />
 
