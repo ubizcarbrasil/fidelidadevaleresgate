@@ -1,27 +1,22 @@
 
 
-## Problema
+## Plano
 
-O nome **"Vale Resgate"** está hardcoded em dois lugares:
+Adicionar um link de acesso ao painel correspondente em cada card de conta de teste na tela de sucesso do wizard.
 
-1. **`src/components/consoles/BrandSidebar.tsx`** (linha 115) — header da sidebar mostra "Vale Resgate" fixo
-2. **`src/components/AppLayout.tsx`** (linha 43) — header superior mostra "Vale Resgate — Painel do Empreendedor"
+### Alteração
 
-Quando o usuário `teste-ubizresgata@teste.com` (brand_admin da marca "Ubiz Resgata") acessa o painel, deveria ver o nome da sua marca, não "Vale Resgate".
+**`src/pages/ProvisionBrandWizard.tsx`** — No step "done", adicionar um botão com ícone `ExternalLink` em cada card de conta de teste que abre `https://{result.domain}/auth` em nova aba. Como todas as contas acessam via `/auth` e o sistema redireciona para o painel correto após login, o link será o mesmo mas com label contextual:
 
-## Solução
+- Administrador → "Abrir Painel Admin"
+- Cliente Teste → "Abrir App Cliente"  
+- Parceiro Teste → "Abrir Portal Parceiro"
 
-Usar o `useBrand()` do `BrandContext` para obter o nome da marca dinamicamente. Como o `BrandContext` não resolve marca em ambientes de preview (lovable.app), precisamos de um fallback: buscar o nome da marca a partir do `brand_id` presente nos `roles` do usuário.
-
-### Alterações
-
-1. **`BrandSidebar.tsx`** — Importar `useBrand()` e obter `brand.name`. Adicionar fallback com query ao banco caso `brand` seja null (cenário preview). Substituir o texto fixo "Vale Resgate" por `brandName`.
-
-2. **`AppLayout.tsx`** — Mesma lógica: usar `useBrand()` para obter o nome da marca e substituir "Vale Resgate" no header superior por um nome dinâmico. Para o console ROOT, usar "Plataforma" ou similar como fallback.
+Cada link abrirá `https://{result.domain}/auth` em nova aba (`window.open`).
 
 ### Detalhes técnicos
 
-- No `BrandSidebar`, adicionar um `useState`/`useEffect` que, quando `brand` do context é null, busca o nome da marca via `supabase.from("brands").select("name").eq("id", currentBrandId)` usando o `brand_id` dos roles do AuthContext.
-- No `AppLayout`, a mesma lógica se aplica — ou extrair para um hook compartilhado `useBrandName()` que retorna o nome resolvido.
-- Fallback final: mostrar "Carregando..." ou string vazia enquanto o nome não está disponível.
+- Adicionar um mapeamento `rolePanelLink` com labels descritivos por role
+- Adicionar botão `ExternalLink` abaixo do email/senha em cada card
+- O ícone `ExternalLink` já está importado no componente
 
