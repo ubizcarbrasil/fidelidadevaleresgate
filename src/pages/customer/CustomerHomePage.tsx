@@ -16,6 +16,17 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+/** Parse "H S% L%" into components for safe alpha usage */
+function parseHsl(hsl: string | undefined, fallback: string): { h: string; s: string; l: string; raw: string } {
+  const raw = hsl || fallback;
+  const parts = raw.replace(/,/g, " ").split(/\s+/).filter(Boolean);
+  return { h: parts[0] || "250", s: parts[1] || "65%", l: parts[2] || "55%", raw };
+}
+
+function hslAlpha(parsed: { h: string; s: string; l: string }, alpha: number): string {
+  return `hsla(${parsed.h}, ${parsed.s}, ${parsed.l}, ${alpha})`;
+}
+
 function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Bom dia";
@@ -42,6 +53,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const { navigateToTab, navigateToOffersWithSegment } = useCustomerNav();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const primaryParsed = parseHsl(theme?.colors?.primary, "250 65% 55%");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
@@ -80,8 +92,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           <div
             className="w-full rounded-3xl p-0 relative overflow-hidden"
             style={{
-              background: `linear-gradient(145deg, ${primary} 0%, ${primary}DD 40%, ${primary}AA 100%)`,
-              boxShadow: `0 8px 32px -8px ${primary}60`,
+              background: `linear-gradient(145deg, ${hslAlpha(primaryParsed, 1)} 0%, ${hslAlpha(primaryParsed, 0.87)} 40%, ${hslAlpha(primaryParsed, 0.67)} 100%)`,
+              boxShadow: `0 8px 32px -8px ${hslAlpha(primaryParsed, 0.38)}`,
             }}
           >
             {/* Decorative shapes */}
