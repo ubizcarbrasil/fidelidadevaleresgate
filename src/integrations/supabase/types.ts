@@ -378,6 +378,44 @@ export type Database = {
           },
         ]
       }
+      brand_permission_config: {
+        Row: {
+          allowed_for_brand: boolean
+          allowed_for_store: boolean
+          brand_id: string
+          created_at: string
+          id: string
+          permission_key: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_for_brand?: boolean
+          allowed_for_store?: boolean
+          brand_id: string
+          created_at?: string
+          id?: string
+          permission_key: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_for_brand?: boolean
+          allowed_for_store?: boolean
+          brand_id?: string
+          created_at?: string
+          id?: string
+          permission_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_permission_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_section_manual_items: {
         Row: {
           brand_section_id: string
