@@ -46,6 +46,7 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 function LazyImage({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
@@ -61,16 +62,21 @@ function LazyImage({ src, alt, className, style }: { src: string; alt: string; c
 
   return (
     <div ref={imgRef} className={`relative overflow-hidden ${className || ""}`} style={style}>
-      {!loaded && <div className="absolute inset-0 shimmer-skeleton rounded-none" />}
-      {inView && (
+      {!loaded && !errored && <div className="absolute inset-0 shimmer-skeleton rounded-none" />}
+      {errored ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+          <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
+        </div>
+      ) : inView ? (
         <img
           src={src}
           alt={alt}
           loading="lazy"
           onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
           className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
         />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -85,7 +91,7 @@ function SectionSkeleton() {
       </div>
       <div className="flex gap-3 overflow-hidden">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="min-w-[140px] rounded-[16px] bg-white overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+          <div key={i} className="min-w-[140px] rounded-[16px] bg-card overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
             <div className="h-24 w-full shimmer-skeleton" />
             <div className="p-3 space-y-2">
               <div className="h-3 w-3/4 rounded-lg shimmer-skeleton" />
@@ -137,7 +143,7 @@ export default function HomeSectionsRenderer() {
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
-  const cardBg = "#FFFFFF";
+  const cardBg = "hsl(var(--card))";
   const accent = hslToCss(theme?.colors?.accent, "hsl(var(--accent))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const brandBadgeConfig = theme?.badge_config || null;
@@ -401,8 +407,8 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
             }}
           >
             {/* Ticket notch */}
-            <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
-            <div className="absolute right-0 top-[55%] -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full" style={{ backgroundColor: "#FAFAFA" }} />
+            <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-background" />
+            <div className="absolute right-0 top-[55%] -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-background" />
 
             <div className="px-4 pt-3 pb-2 text-white">
               <div className="flex items-center gap-1 mb-1 opacity-80">
@@ -450,7 +456,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[16px] overflow-hidden bg-white cursor-pointer active:scale-[0.97] transition-transform"
+            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[16px] overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
             style={{
               boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
               scrollSnapAlign: "start",
@@ -510,7 +516,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="rounded-[16px] overflow-hidden bg-white cursor-pointer active:scale-[0.97] transition-transform"
+            className="rounded-[16px] overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
             style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
             onClick={() => onOfferClick?.(o)}
           >
@@ -571,11 +577,11 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
               >
                 <div className="relative mb-1.5">
                   {b.logo_url ? (
-                    <div className="h-14 w-14 rounded-2xl overflow-hidden bg-white" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                    <div className="h-14 w-14 rounded-2xl overflow-hidden bg-card" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
                       <LazyImage src={b.logo_url} alt={b.name} className="h-14 w-14" />
                     </div>
                   ) : (
-                    <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-white" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                    <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-card" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
                       <Store className="h-6 w-6" style={{ color: `${primary}60` }} />
                     </div>
                   )}
@@ -625,7 +631,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="rounded-[14px] p-3 flex items-center gap-3 bg-white cursor-pointer active:scale-[0.98] transition-transform"
+            className="rounded-[14px] p-3 flex items-center gap-3 bg-card cursor-pointer active:scale-[0.98] transition-transform"
             style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
             onClick={() => onStoreClick?.(b)}
           >

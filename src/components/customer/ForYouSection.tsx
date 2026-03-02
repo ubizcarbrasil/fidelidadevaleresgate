@@ -80,7 +80,7 @@ export default function ForYouSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
             whileTap={{ scale: 0.97 }}
-            className="min-w-[150px] max-w-[170px] flex-shrink-0 rounded-2xl overflow-hidden bg-white cursor-pointer"
+            className="min-w-[150px] max-w-[170px] flex-shrink-0 rounded-2xl overflow-hidden bg-card cursor-pointer"
             style={{
               boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
               scrollSnapAlign: "start",
@@ -89,7 +89,7 @@ export default function ForYouSection() {
           >
             {o.image_url ? (
               <div className="relative">
-                <img src={o.image_url} alt={o.title} className="h-24 w-full object-cover" loading="lazy" />
+                <img src={o.image_url} alt={o.title} className="h-24 w-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                 <div className="absolute top-2 left-2">
                   <OfferBadge
                     discountPercent={o.discount_percent}
