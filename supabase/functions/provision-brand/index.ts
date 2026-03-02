@@ -80,12 +80,24 @@ Deno.serve(async (req) => {
 
     // 1. Create tenant
     const tenantSlug = brand_slug;
-    const { data: tenant, error: tenantErr } = await supabaseAdmin
+    // Try to find existing tenant with same slug, or create new one
+    let tenant: { id: string };
+    const { data: existingTenant } = await supabaseAdmin
       .from("tenants")
-      .insert({ name: company_name, slug: tenantSlug })
       .select("id")
-      .single();
-    if (tenantErr) throw new Error(`Tenant: ${tenantErr.message}`);
+      .eq("slug", tenantSlug)
+      .maybeSingle();
+    if (existingTenant) {
+      tenant = existingTenant;
+    } else {
+      const { data: newTenant, error: tenantErr } = await supabaseAdmin
+        .from("tenants")
+        .insert({ name: company_name, slug: tenantSlug })
+        .select("id")
+        .single();
+      if (tenantErr) throw new Error(`Tenant: ${tenantErr.message}`);
+      tenant = newTenant;
+    }
 
     // 2. Create brand
     const brandSettings = {
