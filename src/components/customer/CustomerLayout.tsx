@@ -91,6 +91,14 @@ export default function CustomerLayout() {
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
 
+  // Initialize dark mode from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("customer_dark_mode");
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
   // Show welcome tour on first visit
   useEffect(() => {
     if (!customer) return;
@@ -101,13 +109,10 @@ export default function CustomerLayout() {
   }, [customer]);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const bg = "#FAFAFA";
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
-  const cardBg = "#FFFFFF";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const fontBody = theme?.font_body ? `"${theme.font_body}", sans-serif` : "inherit";
   const displayName = theme?.display_name || brand?.name || "";
-
   const navigateToOffersWithSegment = (segmentId: string) => {
     setSegmentFilter(segmentId);
     setActiveTab("offers");
@@ -119,15 +124,14 @@ export default function CustomerLayout() {
 
   return (
     <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: bg, color: fg, fontFamily: fontBody }}>
+      <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody }}>
         {/* Modern Header */}
         <header className="sticky top-0 z-50">
           {/* Top bar with brand tint */}
           <div
-            className="pt-2 pb-0"
+            className="pt-2 pb-0 bg-card"
             style={{
               background: `linear-gradient(180deg, ${primary}22 0%, ${primary}10 60%, transparent 100%)`,
-              backgroundColor: cardBg,
             }}
           >
             <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
@@ -168,9 +172,8 @@ export default function CustomerLayout() {
             <div className="max-w-lg mx-auto px-5 pb-3">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-shadow"
+                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-shadow bg-muted"
                 style={{
-                  backgroundColor: "#F2F2F7",
                   boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
@@ -203,7 +206,7 @@ export default function CustomerLayout() {
         </main>
 
         {/* Bottom Tab Bar */}
-        <nav className="fixed bottom-0 inset-x-0 z-50" style={{ backgroundColor: cardBg, boxShadow: "0 -4px 20px rgba(0,0,0,0.06)" }}>
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-card" style={{ boxShadow: "0 -4px 20px rgba(0,0,0,0.06)" }}>
           <div className="max-w-lg mx-auto flex">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
