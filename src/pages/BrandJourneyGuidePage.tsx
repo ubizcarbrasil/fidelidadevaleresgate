@@ -128,6 +128,31 @@ const journeySteps: JourneyStep[] = [
   {
     id: "6",
     phase: "Fase 6",
+    phaseIcon: PackageSearch,
+    phaseColor: "bg-lime-100 text-lime-700 dark:bg-lime-950 dark:text-lime-300",
+    title: "Ativar o Catálogo Digital",
+    description: "Configure o cardápio digital com categorias, produtos e checkout via WhatsApp.",
+    route: "/store-panel",
+    steps: [
+      "Certifique-se de que o parceiro é do tipo 'Emissora' ou 'Mista' (necessário para exibir o catálogo).",
+      "No Portal do Parceiro → aba 'Perfil', configure o número de WhatsApp do parceiro.",
+      "Configure a regra de pontos da loja (mínimo 1 pt/R$) em → aba 'Pontos'.",
+      "Acesse → aba 'Catálogo' e crie categorias (ex: Carnes, Bebidas, Sobremesas).",
+      "Adicione produtos com nome, descrição, preço e foto para cada categoria.",
+      "Teste no app do cliente: acesse a página do parceiro → aba 'Catálogo'.",
+      "Verifique os chips de categoria, o grid de produtos e o badge '🎯 Ganhe X pts'.",
+      "Adicione itens ao carrinho e finalize pelo botão WhatsApp para conferir a mensagem formatada.",
+    ],
+    tips: [
+      "O catálogo só aparece para lojas EMISSORA ou MISTA — lojas RECEPTORA não exibem a aba.",
+      "O checkout via WhatsApp envia uma mensagem formatada com itens, total e estimativa de pontos.",
+      "Cada pedido é registrado automaticamente na tabela de pedidos para auditoria.",
+      "Sem WhatsApp configurado, o botão de checkout fica desabilitado.",
+    ],
+  },
+  {
+    id: "8",
+    phase: "Fase 8",
     phaseIcon: ShoppingBag,
     phaseColor: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
     title: "Atrair e Aprovar Parceiros",
@@ -146,8 +171,8 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "7",
-    phase: "Fase 7",
+    id: "8",
+    phase: "Fase 8",
     phaseIcon: Tag,
     phaseColor: "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300",
     title: "Acompanhar Ofertas e Resgates",
@@ -165,8 +190,8 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "8",
-    phase: "Fase 8",
+    id: "9",
+    phase: "Fase 9",
     phaseIcon: Coins,
     phaseColor: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
     title: "Configurar Programa de Pontos",
@@ -185,8 +210,8 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "9",
-    phase: "Fase 9",
+    id: "10",
+    phase: "Fase 10",
     phaseIcon: Zap,
     phaseColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
     title: "Gerenciar Emissores de Pontos",
@@ -205,8 +230,8 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "10",
-    phase: "Fase 10",
+    id: "11",
+    phase: "Fase 11",
     phaseIcon: UserCheck,
     phaseColor: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300",
     title: "Acompanhar Clientes e Engajamento",
@@ -225,8 +250,8 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "11",
-    phase: "Fase 11",
+    id: "12",
+    phase: "Fase 12",
     phaseIcon: Shield,
     phaseColor: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
     title: "Configurar Permissões dos Parceiros",
@@ -244,8 +269,8 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "12",
-    phase: "Fase 12",
+    id: "13",
+    phase: "Fase 13",
     phaseIcon: Eye,
     phaseColor: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
     title: "Testar o App do Cliente",
@@ -287,12 +312,12 @@ export default function BrandJourneyGuidePage() {
             <div>
               <h3 className="font-bold text-sm mb-1">Sua Jornada até o Lançamento</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Siga as 12 fases abaixo para configurar sua marca, atrair parceiros, lançar o app e começar a operar.
-                Cada fase inclui passos detalhados e dicas práticas para garantir o melhor resultado.
-              </p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <Badge variant="secondary" className="text-xs">12 Fases</Badge>
-                <Badge variant="secondary" className="text-xs">~50 passos</Badge>
+                 Siga as 13 fases abaixo para configurar sua marca, atrair parceiros, lançar o app e começar a operar.
+                 Cada fase inclui passos detalhados e dicas práticas para garantir o melhor resultado.
+               </p>
+               <div className="flex flex-wrap gap-2 mt-3">
+                 <Badge variant="secondary" className="text-xs">13 Fases</Badge>
+                 <Badge variant="secondary" className="text-xs">~60 passos</Badge>
                 <Badge variant="secondary" className="text-xs">Tempo estimado: 20–40 min</Badge>
               </div>
             </div>
