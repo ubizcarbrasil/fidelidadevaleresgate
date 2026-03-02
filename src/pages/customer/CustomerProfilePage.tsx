@@ -96,20 +96,20 @@ export default function CustomerProfilePage() {
         variants={sectionVariant}
         initial="hidden"
         animate="visible"
-        className="rounded-[20px] p-5 space-y-4 mb-5 bg-white"
+        className="rounded-[20px] p-5 space-y-4 mb-5 bg-card"
         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
       >
         <div>
           <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Nome</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl h-11 border-0" style={{ backgroundColor: "#F2F2F7" }} />
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
           <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Telefone</Label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" className="rounded-xl h-11 border-0" style={{ backgroundColor: "#F2F2F7" }} />
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
           <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Email</Label>
-          <Input value={user?.email || ""} disabled className="rounded-xl h-11 border-0 opacity-60" style={{ backgroundColor: "#F2F2F7" }} />
+          <Input value={user?.email || ""} disabled className="rounded-xl h-11 border-0 opacity-60 bg-muted" />
         </div>
         <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-2xl font-bold text-sm" style={{ backgroundColor: primary, color: "#fff" }}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
@@ -124,7 +124,7 @@ export default function CustomerProfilePage() {
           variants={sectionVariant}
           initial="hidden"
           animate="visible"
-          className="rounded-[20px] p-5 mb-5 bg-white"
+          className="rounded-[20px] p-5 mb-5 bg-card"
           style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
         >
           <div className="flex items-center gap-2 mb-3">
@@ -139,9 +139,9 @@ export default function CustomerProfilePage() {
                   key={branch.id}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedBranch(branch)}
-                  className="w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between"
+                  className={`w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between ${isSelected ? "" : "bg-muted"}`}
                   style={{
-                    backgroundColor: isSelected ? `${primary}10` : "#F2F2F7",
+                    backgroundColor: isSelected ? `${primary}10` : undefined,
                     border: isSelected ? `1.5px solid ${primary}40` : "1.5px solid transparent",
                   }}
                 >
@@ -178,7 +178,7 @@ export default function CustomerProfilePage() {
         variants={sectionVariant}
         initial="hidden"
         animate="visible"
-        className="rounded-[20px] overflow-hidden bg-white dark:bg-[hsl(var(--card))] mb-5"
+        className="rounded-[20px] overflow-hidden bg-card mb-5"
         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
       >
         {/* Dark mode toggle */}
@@ -285,7 +285,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
 
   if (loading) {
     return (
-      <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-white" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center gap-2 mb-3">
           <Heart className="h-4 w-4" style={{ color: primary }} />
           <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
@@ -306,7 +306,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
   }
 
   return (
-    <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-white" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+    <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
       <div className="flex items-center gap-2 mb-3">
         <Heart className="h-4 w-4" style={{ color: primary }} />
         <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
