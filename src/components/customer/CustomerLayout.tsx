@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useBrand } from "@/contexts/BrandContext";
+import { useCustomer } from "@/contexts/CustomerContext";
 import { Home, Tag, Wallet, UserCircle, Bell, Search, Ticket } from "lucide-react";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
@@ -17,6 +18,7 @@ import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
 import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
+import WelcomeTour from "@/components/customer/WelcomeTour";
 
 // Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
 interface CustomerNavContextType {
@@ -74,6 +76,7 @@ const tabVariants = {
 
 export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
+  const { customer } = useCustomer();
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
@@ -83,8 +86,18 @@ export default function CustomerLayout() {
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [emissorasOpen, setEmissorasOpen] = useState(false);
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
+  const [showTour, setShowTour] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
+
+  // Show welcome tour on first visit
+  useEffect(() => {
+    if (!customer) return;
+    const key = `welcome_tour_${customer.id}`;
+    if (!localStorage.getItem(key)) {
+      setShowTour(true);
+    }
+  }, [customer]);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const bg = "#FAFAFA";
@@ -117,14 +130,13 @@ export default function CustomerLayout() {
             }}
           >
             <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
-              <div className="flex items-center gap-2.5">
-                {theme?.logo_url ? (
-                  <img src={theme.logo_url} alt={displayName} className="h-10 w-10 object-contain rounded-xl" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} />
-                ) : (
-                  <span className="font-extrabold text-xl tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
-                    {displayName}
-                  </span>
+              <div className="flex items-center gap-3">
+                {theme?.logo_url && (
+                  <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} />
                 )}
+                <span className="font-extrabold text-base tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
+                  {displayName}
+                </span>
               </div>
               <div className="flex items-center gap-0.5">
                 <BranchPickerSheet />
@@ -282,6 +294,20 @@ export default function CustomerLayout() {
 
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
+
+        {/* Welcome Tour */}
+        <AnimatePresence>
+          {showTour && (
+            <WelcomeTour
+              primary={primary}
+              brandName={displayName}
+              onComplete={() => {
+                setShowTour(false);
+                if (customer) localStorage.setItem(`welcome_tour_${customer.id}`, "done");
+              }}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </CustomerNavContext.Provider>
   );

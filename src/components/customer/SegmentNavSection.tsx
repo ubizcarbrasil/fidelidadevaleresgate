@@ -1,9 +1,10 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { icons, Store } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface SegmentItem {
   id: string;
@@ -23,7 +24,6 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
-// Deterministic color from segment name
 function segmentColor(name: string): string {
   const colors = [
     "#FF6B35", "#E91E63", "#7C3AED", "#059669",
@@ -35,7 +35,6 @@ function segmentColor(name: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
-// Convert kebab-case icon name to PascalCase for lucide-react icons map
 function kebabToPascal(name: string): string {
   return name
     .split("-")
@@ -44,17 +43,10 @@ function kebabToPascal(name: string): string {
 }
 
 function SegmentIcon({ iconName, color }: { iconName: string | null; color: string }) {
-  if (!iconName) {
-    return <Store className="h-6 w-6" style={{ color }} />;
-  }
-
+  if (!iconName) return <Store className="h-6 w-6" style={{ color }} />;
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-
-  if (!LucideIcon) {
-    return <Store className="h-6 w-6" style={{ color }} />;
-  }
-
+  if (!LucideIcon) return <Store className="h-6 w-6" style={{ color }} />;
   return <LucideIcon className="h-6 w-6" style={{ color }} />;
 }
 
@@ -102,7 +94,7 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
       setSegments(
         Array.from(map.values())
           .sort((a, b) => b.store_count - a.store_count)
-          .slice(0, 12)
+          .slice(0, 16)
       );
       setLoading(false);
     };
@@ -127,41 +119,62 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
 
   if (segments.length < 2) return null;
 
+  const useScroll = segments.length > 8;
+
+  const segmentItems = segments.map((seg, idx) => {
+    const color = segmentColor(seg.name);
+    const iconName = seg.icon_name || seg.category_icon_name;
+    return (
+      <motion.button
+        key={seg.id}
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: idx * 0.03, duration: 0.25 }}
+        whileTap={{ scale: 0.9 }}
+        className="flex flex-col items-center gap-1.5"
+        style={{ minWidth: useScroll ? 72 : undefined }}
+        onClick={() => onSegmentClick(seg.id, seg.name)}
+      >
+        <div
+          className="h-14 w-14 rounded-2xl flex items-center justify-center relative"
+          style={{ backgroundColor: `${color}20` }}
+        >
+          <SegmentIcon iconName={iconName} color={color} />
+          {/* Store count badge */}
+          <span
+            className="absolute -top-1 -right-1 h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+            style={{ backgroundColor: color, fontSize: 9 }}
+          >
+            {seg.store_count}
+          </span>
+        </div>
+        <span
+          className="text-[11px] font-semibold text-center leading-tight line-clamp-2"
+          style={{ color: `${fg}70` }}
+        >
+          {seg.name}
+        </span>
+      </motion.button>
+    );
+  });
+
   return (
     <section className="max-w-lg mx-auto px-5">
       <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>
         Categorias
       </h3>
-      <div className="grid grid-cols-4 gap-x-3 gap-y-4">
-        {segments.map((seg, idx) => {
-          const color = segmentColor(seg.name);
-          // Prefer segment icon, fallback to category icon
-          const iconName = seg.icon_name || seg.category_icon_name;
-          return (
-            <motion.button
-              key={seg.id}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.04, duration: 0.25 }}
-              className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
-              onClick={() => onSegmentClick(seg.id, seg.name)}
-            >
-              <div
-                className="h-14 w-14 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: `${color}12` }}
-              >
-                <SegmentIcon iconName={iconName} color={color} />
-              </div>
-              <span
-                className="text-[10px] font-semibold text-center leading-tight line-clamp-2"
-                style={{ color: `${fg}70` }}
-              >
-                {seg.name}
-              </span>
-            </motion.button>
-          );
-        })}
-      </div>
+      {useScroll ? (
+        <ScrollArea className="w-full">
+          <div className="flex gap-3 pb-2">
+            {segmentItems}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      ) : (
+        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
+          {segmentItems}
+        </div>
+      )}
     </section>
   );
 }
