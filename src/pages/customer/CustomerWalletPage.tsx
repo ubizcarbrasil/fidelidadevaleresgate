@@ -6,6 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Loader2, Star, Wallet, Coins, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import EmptyState from "@/components/customer/EmptyState";
 
 type LedgerEntry = Tables<"points_ledger">;
 
@@ -126,17 +127,7 @@ export default function CustomerWalletPage() {
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="text-center py-16 opacity-30"
-        >
-          <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-            <Wallet className="h-7 w-7" style={{ color: primary }} />
-          </div>
-          <p className="text-sm font-medium">Nenhuma transação ainda</p>
-        </motion.div>
+        <EmptyState type="points" primary={primary} />
       ) : (
         <div className="space-y-2">
           {entries.map((entry, idx) => {

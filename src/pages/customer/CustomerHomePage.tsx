@@ -6,8 +6,10 @@ import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
+import ForYouSection from "@/components/customer/ForYouSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { haptic } from "@/lib/haptics";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -94,7 +96,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
             <div className="relative z-10 flex items-stretch gap-4">
               {/* Saldo em R$ */}
               <button
-                onClick={() => navigateToTab("redemptions")}
+                onClick={() => { haptic("light"); navigateToTab("redemptions"); }}
                 className="flex-1 text-left active:scale-[0.97] transition-transform"
               >
                 <div className="flex items-center gap-2 mb-1.5">
@@ -113,7 +115,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
 
               {/* Pontos */}
               <button
-                onClick={onOpenLedger}
+                onClick={() => { haptic("light"); onOpenLedger?.(); }}
                 className="flex-1 text-left active:scale-[0.97] transition-transform"
               >
                 <div className="flex items-center gap-2 mb-1.5">
@@ -154,7 +156,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 transition={{ delay: 0.04 * idx, duration: 0.25 }}
                 whileTap={{ scale: 0.88 }}
                 className="flex flex-col items-center gap-1.5 py-1"
-                onClick={() => action.tab && navigateToTab(action.tab)}
+                onClick={() => { haptic("light"); action.tab && navigateToTab(action.tab); }}
               >
                 <div
                   className="h-14 w-14 rounded-2xl flex items-center justify-center"
@@ -187,6 +189,15 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
       >
         <HomeSectionsRenderer />
+      </motion.div>
+
+      {/* "Para Você" - Personalized recommendations */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.22, ease: "easeOut" as const }}
+      >
+        <ForYouSection />
       </motion.div>
 
       {/* Parceiros Emissores Section */}
