@@ -1,7 +1,7 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles } from "lucide-react";
+import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, Wallet } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
@@ -12,6 +12,13 @@ import { motion } from "framer-motion";
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
 }
 
 const QUICK_ACTIONS = [
@@ -36,45 +43,104 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  const firstName = customer?.name?.split(" ")[0] || "Visitante";
+  const greeting = getGreeting();
+
   return (
-    <div className="space-y-4">
-      {/* Meus Resgates - clean banner */}
+    <div className="space-y-5">
+      {/* Greeting */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ duration: 0.3 }}
         className="max-w-lg mx-auto px-5 pt-3"
       >
-        <button
-          onClick={() => navigateToTab("redemptions")}
-          className="w-full rounded-2xl p-4 relative overflow-hidden active:scale-[0.98] transition-transform"
-          style={{
-            background: `linear-gradient(135deg, ${primary}30 0%, ${primary}18 100%)`,
-            border: `1px solid ${primary}20`,
-          }}
+        <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
+          {greeting}, <span style={{ color: primary }}>{firstName}</span>! 👋
+        </h2>
+        <p className="text-xs mt-0.5" style={{ color: `${fg}50` }}>
+          Confira suas ofertas e saldos
+        </p>
+      </motion.div>
+
+      {/* Unified Hero Card — R$ + Pontos */}
+      {loading ? (
+        <div className="max-w-lg mx-auto px-5">
+          <Skeleton className="h-[110px] w-full rounded-2xl" />
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          className="max-w-lg mx-auto px-5"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-                Meus Resgates
-              </h3>
-              <p className="text-[11px] mt-0.5" style={{ color: `${fg}60` }}>Saldo disponível</p>
+          <div
+            className="w-full rounded-2xl p-5 relative overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, ${primary} 0%, ${primary}CC 50%, ${primary}99 100%)`,
+            }}
+          >
+            {/* Decorative circle */}
+            <div
+              className="absolute -top-8 -right-8 h-32 w-32 rounded-full"
+              style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+            />
+            <div
+              className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full"
+              style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+            />
+
+            <div className="relative z-10 flex items-stretch gap-4">
+              {/* Saldo em R$ */}
+              <button
+                onClick={() => navigateToTab("redemptions")}
+                className="flex-1 text-left active:scale-[0.97] transition-transform"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                    <Wallet className="h-3.5 w-3.5 text-white" strokeWidth={2} />
+                  </div>
+                  <span className="text-[11px] font-medium text-white/70">Saldo</span>
+                </div>
+                <span className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: fontHeading }}>
+                  R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
+                </span>
+              </button>
+
+              {/* Divider */}
+              <div className="w-px self-stretch" style={{ backgroundColor: "rgba(255,255,255,0.2)" }} />
+
+              {/* Pontos */}
+              <button
+                onClick={onOpenLedger}
+                className="flex-1 text-left active:scale-[0.97] transition-transform"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                    <Coins className="h-3.5 w-3.5 text-white" strokeWidth={2} />
+                  </div>
+                  <span className="text-[11px] font-medium text-white/70">Pontos</span>
+                </div>
+                <span className="text-2xl font-black text-white tracking-tight" style={{ fontFamily: fontHeading }}>
+                  {customer ? Number(customer.points_balance).toLocaleString("pt-BR") : "0"}
+                </span>
+              </button>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl font-black" style={{ fontFamily: fontHeading, color: primary }}>
-                R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
-              </span>
-              <ChevronRight className="h-4 w-4" style={{ color: `${primary}80` }} />
+
+            {/* CTA arrow */}
+            <div className="absolute right-3 bottom-3">
+              <ChevronRight className="h-4 w-4 text-white/40" />
             </div>
           </div>
-        </button>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Quick Actions Grid */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.08 }}
+        transition={{ duration: 0.35, delay: 0.1 }}
         className="max-w-lg mx-auto px-5"
       >
         <div className="grid grid-cols-6 gap-2">
@@ -86,7 +152,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.04 * idx, duration: 0.25 }}
-                className="flex flex-col items-center gap-1.5 py-1 active:scale-95 transition-transform"
+                whileTap={{ scale: 0.88 }}
+                className="flex flex-col items-center gap-1.5 py-1"
                 onClick={() => action.tab && navigateToTab(action.tab)}
               >
                 <div
@@ -95,7 +162,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 >
                   <Icon className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
                 </div>
-                <span className="text-[10px] font-semibold leading-tight text-center" style={{ color: `${fg}80` }}>
+                <span className="text-[11px] font-semibold leading-tight text-center" style={{ color: `${fg}80` }}>
                   {action.label}
                 </span>
               </motion.button>
@@ -103,45 +170,6 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           })}
         </div>
       </motion.div>
-
-      {/* Points Balance Card */}
-      {loading ? (
-        <div className="max-w-lg mx-auto px-5">
-          <Skeleton className="h-[72px] w-full rounded-2xl" />
-        </div>
-      ) : customer ? (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.12 }}
-          className="max-w-lg mx-auto px-5"
-        >
-          <button
-            onClick={onOpenLedger}
-            className="w-full text-left rounded-2xl px-4 py-3.5 flex items-center justify-between active:scale-[0.98] transition-transform"
-            style={{
-              backgroundColor: "#FFFFFF",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: "#FEF3C7" }}
-              >
-                <Coins className="h-5 w-5" style={{ color: "#D97706" }} />
-              </div>
-              <div>
-                <span className="text-[11px] font-medium block" style={{ color: `${fg}50` }}>Meus pontos</span>
-                <span className="text-lg font-black tracking-tight" style={{ fontFamily: fontHeading, color: fg }}>
-                  {Number(customer.points_balance).toLocaleString("pt-BR")}
-                </span>
-              </div>
-            </div>
-            <ChevronRight className="h-4 w-4" style={{ color: `${fg}30` }} />
-          </button>
-        </motion.div>
-      ) : null}
 
       {/* Segment Categories */}
       <motion.div
