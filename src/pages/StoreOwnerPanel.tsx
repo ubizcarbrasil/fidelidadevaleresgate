@@ -21,6 +21,7 @@ import StoreEmployeesTab from "@/components/store-owner/StoreEmployeesTab";
 import { StoreTermosTab, StoreTutorialTab, StoreSuporteTab } from "@/components/store-owner/StoreInfoTabs";
 import StoreBranchesTab from "@/components/store-owner/StoreBranchesTab";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
+import EmitterUpgradeCard from "@/components/store-owner/EmitterUpgradeCard";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
 } from "@/components/ui/sheet";
@@ -367,6 +368,9 @@ function StoreOwnerDashboard({ store }: { store: any }) {
               </CardContent>
             </Card>
           </div>
+
+          {/* Emitter upgrade request card */}
+          <EmitterUpgradeCard store={store} />
 
           {stats.proximosVencer.length > 0 && (
             <Card className="rounded-2xl border-amber-200 bg-amber-50/50 shadow-sm">

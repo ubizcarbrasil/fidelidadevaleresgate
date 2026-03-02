@@ -1,6 +1,6 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine, Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -51,6 +51,7 @@ const groups = [
       { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet },
       { title: "Aprovação de Parceiros", url: "/store-approvals", icon: ShieldCheck },
       { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
+      { title: "Solicitações de Emissor", url: "/emitter-requests", icon: Zap },
       { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
       { title: "Enviar Notificação", url: "/send-notification", icon: Bell },

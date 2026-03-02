@@ -2140,6 +2140,63 @@ export type Database = {
           },
         ]
       }
+      store_type_requests: {
+        Row: {
+          brand_id: string
+          current_type: string
+          id: string
+          reason: string | null
+          rejection_reason: string | null
+          requested_at: string
+          requested_type: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          store_id: string
+        }
+        Insert: {
+          brand_id: string
+          current_type: string
+          id?: string
+          reason?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          requested_type: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          store_id: string
+        }
+        Update: {
+          brand_id?: string
+          current_type?: string
+          id?: string
+          reason?: string | null
+          rejection_reason?: string | null
+          requested_at?: string
+          requested_type?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_type_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_type_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           address: string | null
