@@ -634,11 +634,17 @@ export type Database = {
         Row: {
           branch_id: string
           brand_id: string
+          confirmed_by_user_id: string | null
           created_at: string
+          customer_cpf: string | null
           customer_id: string | null
+          customer_name: string | null
           id: string
           items_json: Json
+          notes: string | null
+          points_confirmed_at: string | null
           points_earned_estimate: number
+          status: string
           store_id: string
           total_amount: number
           whatsapp_url_sent: string | null
@@ -646,11 +652,17 @@ export type Database = {
         Insert: {
           branch_id: string
           brand_id: string
+          confirmed_by_user_id?: string | null
           created_at?: string
+          customer_cpf?: string | null
           customer_id?: string | null
+          customer_name?: string | null
           id?: string
           items_json?: Json
+          notes?: string | null
+          points_confirmed_at?: string | null
           points_earned_estimate?: number
+          status?: string
           store_id: string
           total_amount?: number
           whatsapp_url_sent?: string | null
@@ -658,11 +670,17 @@ export type Database = {
         Update: {
           branch_id?: string
           brand_id?: string
+          confirmed_by_user_id?: string | null
           created_at?: string
+          customer_cpf?: string | null
           customer_id?: string | null
+          customer_name?: string | null
           id?: string
           items_json?: Json
+          notes?: string | null
+          points_confirmed_at?: string | null
           points_earned_estimate?: number
+          status?: string
           store_id?: string
           total_amount?: number
           whatsapp_url_sent?: string | null
@@ -865,6 +883,7 @@ export type Database = {
         Row: {
           branch_id: string
           brand_id: string
+          cpf: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -878,6 +897,7 @@ export type Database = {
         Insert: {
           branch_id: string
           brand_id: string
+          cpf?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -891,6 +911,7 @@ export type Database = {
         Update: {
           branch_id?: string
           brand_id?: string
+          cpf?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -2066,11 +2087,13 @@ export type Database = {
       }
       store_catalog_items: {
         Row: {
+          allow_half: boolean
           branch_id: string
           brand_id: string
           category: string | null
           created_at: string
           description: string | null
+          half_price: number | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -2081,11 +2104,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_half?: boolean
           branch_id: string
           brand_id: string
           category?: string | null
           created_at?: string
           description?: string | null
+          half_price?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -2096,11 +2121,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_half?: boolean
           branch_id?: string
           brand_id?: string
           category?: string | null
           created_at?: string
           description?: string | null
+          half_price?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean

@@ -30,10 +30,12 @@ interface ItemForm {
   is_active: boolean;
   category: string;
   order_index: string;
+  allow_half: boolean;
+  half_price: string;
 }
 
 const emptyCat: CategoryForm = { name: "", image_url: "", is_active: true };
-const emptyItem: ItemForm = { name: "", description: "", price: "0", image_url: "", is_active: true, category: "", order_index: "0" };
+const emptyItem: ItemForm = { name: "", description: "", price: "0", image_url: "", is_active: true, category: "", order_index: "0", allow_half: false, half_price: "" };
 
 export default function StoreCatalogTab({ store }: Props) {
   const [categories, setCategories] = useState<any[]>([]);
@@ -105,6 +107,8 @@ export default function StoreCatalogTab({ store }: Props) {
       store_id: store.id,
       brand_id: store.brand_id,
       branch_id: store.branch_id,
+      allow_half: itemForm.allow_half,
+      half_price: itemForm.half_price ? Number(itemForm.half_price) : null,
     };
     if (itemEditId) {
       await supabase.from("store_catalog_items").update(payload).eq("id", itemEditId);
@@ -122,11 +126,47 @@ export default function StoreCatalogTab({ store }: Props) {
     fetchAll();
   };
 
+  const catalogConfig = store.store_catalog_config_json as any || {};
+  const [tabLabel, setTabLabel] = useState(catalogConfig.tab_label || "Catálogo");
+
+  const saveTabLabel = async (newLabel: string) => {
+    setTabLabel(newLabel);
+    await supabase.from("stores" as any).update({
+      store_catalog_config_json: { ...catalogConfig, tab_label: newLabel },
+    }).eq("id", store.id);
+    toast.success("Rótulo atualizado!");
+  };
+
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-bold">Catálogo Digital</h1>
         <p className="text-xs text-muted-foreground mt-0.5">Gerencie seus produtos e categorias</p>
+      </div>
+
+      {/* Tab label config */}
+      <div className="bg-muted/30 rounded-xl p-3 space-y-2">
+        <Label className="text-xs font-semibold">Nome da aba no app do cliente</Label>
+        <div className="flex gap-2">
+          {["Cardápio", "Catálogo", "Loja", "Serviços"].map(opt => (
+            <button
+              key={opt}
+              onClick={() => saveTabLabel(opt)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                tabLabel === opt ? "bg-primary text-primary-foreground" : "bg-background border hover:bg-muted"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        <Input
+          value={tabLabel}
+          onChange={e => setTabLabel(e.target.value)}
+          onBlur={() => saveTabLabel(tabLabel)}
+          placeholder="Nome personalizado..."
+          className="h-8 text-xs mt-1"
+        />
       </div>
 
       {/* Subtab toggle */}
@@ -186,6 +226,7 @@ export default function StoreCatalogTab({ store }: Props) {
                           name: item.name, description: item.description || "", price: String(item.price),
                           image_url: item.image_url || "", is_active: item.is_active,
                           category: item.category || "", order_index: String(item.order_index),
+                          allow_half: item.allow_half || false, half_price: item.half_price ? String(item.half_price) : "",
                         });
                         setItemOpen(true);
                       }} className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted">
@@ -290,6 +331,16 @@ export default function StoreCatalogTab({ store }: Props) {
               <Label>Imagem</Label>
               <ImageUploadField value={itemForm.image_url} onChange={url => setItemForm(f => ({ ...f, image_url: url }))} folder="catalog-items" label="Imagem" />
             </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={itemForm.allow_half} onCheckedChange={v => setItemForm(f => ({ ...f, allow_half: v }))} />
+              <Label>Permite meia porção</Label>
+            </div>
+            {itemForm.allow_half && (
+              <div className="space-y-2">
+                <Label>Preço da meia (R$)</Label>
+                <Input type="number" min="0" step="0.01" value={itemForm.half_price} onChange={e => setItemForm(f => ({ ...f, half_price: e.target.value }))} placeholder="Deixe vazio para metade do preço" />
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <Switch checked={itemForm.is_active} onCheckedChange={v => setItemForm(f => ({ ...f, is_active: v }))} />
               <Label>Ativo</Label>
