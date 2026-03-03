@@ -69,6 +69,7 @@ export default function HomeTemplatesPage() {
   const [scopeType, setScopeType] = useState<"BRAND" | "TENANT" | "ALL">("BRAND");
   const [scopeId, setScopeId] = useState<string>("");
   const [overwrite, setOverwrite] = useState(true);
+  const [liveSections, setLiveSections] = useState<TemplateSection[]>([]);
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["home-templates"],
@@ -208,7 +209,7 @@ export default function HomeTemplatesPage() {
 
   const openApplyDialog = (t: HomeTemplate) => { setSelectedTemplate(t); setScopeType("BRAND"); setScopeId(""); setOverwrite(true); setApplyOpen(true); };
   const openPreview = (t: HomeTemplate) => { setSelectedTemplate(t); setPreviewOpen(true); };
-  const openEditor = (t?: HomeTemplate) => { setEditingTemplate(t || null); setEditorOpen(true); };
+  const openEditor = (t?: HomeTemplate) => { setEditingTemplate(t || null); setLiveSections(t?.template_payload_json.sections || []); setEditorOpen(true); };
   const duplicateTemplate = (t: HomeTemplate) => {
     setEditingTemplate({ ...t, id: "" as any, key: t.key + "-copia", name: t.name + " (cópia)" } as HomeTemplate);
     setEditorOpen(true);
@@ -297,25 +298,33 @@ export default function HomeTemplatesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Editor Dialog */}
-      <Dialog open={editorOpen} onOpenChange={v => { if (!v) { setEditorOpen(false); setEditingTemplate(null); } }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Editor Dialog with live preview */}
+      <Dialog open={editorOpen} onOpenChange={v => { if (!v) { setEditorOpen(false); setEditingTemplate(null); setLiveSections([]); } }}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingTemplate?.id ? "Editar Template" : "Novo Template"}</DialogTitle>
           </DialogHeader>
-          <HomeTemplateEditor
-            initialData={editingTemplate ? {
-              id: editingTemplate.id || undefined,
-              key: editingTemplate.key,
-              name: editingTemplate.name,
-              description: editingTemplate.description || "",
-              is_default: editingTemplate.is_default,
-              template_payload_json: editingTemplate.template_payload_json,
-            } : undefined}
-            onSave={async (data) => { await saveMutation.mutateAsync(data); }}
-            onCancel={() => { setEditorOpen(false); setEditingTemplate(null); }}
-            saving={saveMutation.isPending}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
+            <div className="min-w-0">
+              <HomeTemplateEditor
+                initialData={editingTemplate ? {
+                  id: editingTemplate.id || undefined,
+                  key: editingTemplate.key,
+                  name: editingTemplate.name,
+                  description: editingTemplate.description || "",
+                  is_default: editingTemplate.is_default,
+                  template_payload_json: editingTemplate.template_payload_json,
+                } : undefined}
+                onSave={async (data) => { await saveMutation.mutateAsync(data); }}
+                onCancel={() => { setEditorOpen(false); setEditingTemplate(null); setLiveSections([]); }}
+                saving={saveMutation.isPending}
+                onSectionsChange={setLiveSections}
+              />
+            </div>
+            <div className="hidden lg:block sticky top-0">
+              <HomeTemplateMobilePreview sections={liveSections} />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

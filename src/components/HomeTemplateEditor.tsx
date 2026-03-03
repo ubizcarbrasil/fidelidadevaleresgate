@@ -57,9 +57,10 @@ interface HomeTemplateEditorProps {
   onSave: (data: TemplateData) => Promise<void>;
   onCancel: () => void;
   saving?: boolean;
+  onSectionsChange?: (sections: TemplateSection[]) => void;
 }
 
-export default function HomeTemplateEditor({ initialData, onSave, onCancel, saving }: HomeTemplateEditorProps) {
+export default function HomeTemplateEditor({ initialData, onSave, onCancel, saving, onSectionsChange }: HomeTemplateEditorProps) {
   const isEdit = !!initialData?.id;
   const [data, setData] = useState<TemplateData>(
     initialData || {
@@ -78,10 +79,12 @@ export default function HomeTemplateEditor({ initialData, onSave, onCancel, savi
   };
 
   const setSections = (newSections: TemplateSection[]) => {
+    const indexed = newSections.map((s, i) => ({ ...s, order_index: i }));
     setData(prev => ({
       ...prev,
-      template_payload_json: { sections: newSections.map((s, i) => ({ ...s, order_index: i })) },
+      template_payload_json: { sections: indexed },
     }));
+    onSectionsChange?.(indexed);
   };
 
   const addSection = (type: string) => {
