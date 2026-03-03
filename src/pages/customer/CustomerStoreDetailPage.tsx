@@ -337,28 +337,32 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
         )}
 
         {/* Tab switcher for Ofertas / Catálogo */}
-        {hasCatalog && (
-          <div className="flex gap-1.5 mx-4 mt-5 bg-white/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
-            <button
-              onClick={() => setActiveTab("ofertas")}
-              className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "ofertas" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              <Tag className="h-3.5 w-3.5 inline mr-1.5" />
-              Ofertas
-            </button>
-            <button
-              onClick={() => setActiveTab("catalogo")}
-              className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "catalogo" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              <ShoppingBag className="h-3.5 w-3.5 inline mr-1.5" />
-              Catálogo
-            </button>
-          </div>
-        )}
+        {hasCatalog && (() => {
+          const catalogConfig = (store as any).store_catalog_config_json as any;
+          const tabLabel = catalogConfig?.tab_label || "Catálogo";
+          return (
+            <div className="flex gap-1.5 mx-4 mt-5 bg-white/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+              <button
+                onClick={() => setActiveTab("ofertas")}
+                className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "ofertas" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <Tag className="h-3.5 w-3.5 inline mr-1.5" />
+                Ofertas
+              </button>
+              <button
+                onClick={() => setActiveTab("catalogo")}
+                className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "catalogo" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <ShoppingBag className="h-3.5 w-3.5 inline mr-1.5" />
+                {tabLabel}
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Offers section */}
         {(activeTab === "ofertas" || !hasCatalog) && (
@@ -497,9 +501,11 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             pointsPerReal={Number(store.points_per_real) || 1}
             whatsapp={store.whatsapp}
             customerName={customer?.name}
+            customerCpf={(customer as any)?.cpf || ""}
             customerId={customer?.id}
             primary={primary}
             fontHeading={fontHeading}
+            onOfferClick={onOfferClick}
           />
         )}
       </div>

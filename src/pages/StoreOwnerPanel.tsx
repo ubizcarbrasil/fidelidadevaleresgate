@@ -23,11 +23,12 @@ import StoreBranchesTab from "@/components/store-owner/StoreBranchesTab";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import EmitterUpgradeCard from "@/components/store-owner/EmitterUpgradeCard";
 import StoreCatalogTab from "@/components/store-owner/StoreCatalogTab";
+import StoreOrdersTab from "@/components/store-owner/StoreOrdersTab";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
 } from "@/components/ui/sheet";
 
-type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo";
+type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos";
 
 const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
@@ -38,6 +39,7 @@ const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashb
 
 const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "perfil", label: "Meu Perfil", icon: User },
+  { key: "pedidos", label: "Pedidos", icon: ClipboardList },
   { key: "catalogo", label: "Catálogo", icon: ClipboardList },
   { key: "funcionarios", label: "Funcionários", icon: Users },
   { key: "filiais", label: "Cidades", icon: Building2 },
@@ -88,6 +90,7 @@ export default function StoreOwnerPanel() {
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const filteredMoreItems = MORE_MENU_ITEMS.filter(item => {
     if (item.key === "catalogo" && !isEmitter) return false;
+    if (item.key === "pedidos" && !isEmitter) return false;
     return true;
   });
 
@@ -182,6 +185,7 @@ export default function StoreOwnerPanel() {
         {activeTab === "extrato" && <StoreExtratoTab store={store} />}
         {activeTab === "funcionarios" && <StoreEmployeesTab store={store} />}
         {activeTab === "catalogo" && isEmitter && <StoreCatalogTab store={store} />}
+        {activeTab === "pedidos" && isEmitter && <StoreOrdersTab store={store} />}
         {activeTab === "termos" && <StoreTermosTab />}
         {activeTab === "filiais" && <StoreBranchesTab store={store} />}
         {activeTab === "tutorial" && <StoreTutorialTab />}

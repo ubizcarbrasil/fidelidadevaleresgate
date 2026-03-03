@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, Plus, Sparkles, Search } from "lucide-react";
+import { ShoppingBag, Plus, Sparkles, Search, Tag, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -14,18 +14,21 @@ interface Props {
   pointsPerReal: number;
   whatsapp: string | null;
   customerName?: string;
+  customerCpf?: string;
   customerId?: string;
   primary: string;
   fontHeading: string;
+  onOfferClick?: (offer: any) => void;
 }
 
 export default function StoreCatalogView({
   storeId, storeName, brandId, branchId,
-  pointsPerReal, whatsapp, customerName, customerId,
-  primary, fontHeading,
+  pointsPerReal, whatsapp, customerName, customerCpf, customerId,
+  primary, fontHeading, onOfferClick,
 }: Props) {
   const [items, setItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -35,7 +38,7 @@ export default function StoreCatalogView({
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [itemsRes, catsRes] = await Promise.all([
+      const [itemsRes, catsRes, offersRes] = await Promise.all([
         supabase
           .from("store_catalog_items")
           .select("*")
@@ -48,28 +51,31 @@ export default function StoreCatalogView({
           .eq("store_id", storeId)
           .eq("is_active", true)
           .order("order_index"),
+        supabase
+          .from("offers")
+          .select("*, stores!offers_store_id_fkey(name, logo_url)")
+          .eq("store_id", storeId)
+          .eq("is_active", true)
+          .eq("status", "ACTIVE")
+          .order("created_at", { ascending: false })
+          .limit(10),
       ]);
       setItems(itemsRes.data || []);
       setCategories(catsRes.data || []);
+      setOffers(offersRes.data || []);
       setLoading(false);
     };
     fetchData();
   }, [storeId]);
 
   const uniqueCategories = useMemo(() => {
-    // Use store_catalog_categories if available, fallback to item.category field
-    if (categories.length > 0) {
-      return categories.map((c: any) => c.name);
-    }
-    const cats = [...new Set(items.map(i => i.category).filter(Boolean))];
-    return cats;
+    if (categories.length > 0) return categories.map((c: any) => c.name);
+    return [...new Set(items.map(i => i.category).filter(Boolean))];
   }, [items, categories]);
 
   const filteredItems = useMemo(() => {
     let filtered = items;
-    if (activeCategory) {
-      filtered = filtered.filter(i => i.category === activeCategory);
-    }
+    if (activeCategory) filtered = filtered.filter(i => i.category === activeCategory);
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter(i => i.name.toLowerCase().includes(q));
@@ -79,20 +85,22 @@ export default function StoreCatalogView({
 
   const cartTotal = cart.reduce((s, i) => s + i.qty, 0);
 
-  const addToCart = (item: any) => {
+  const addToCart = (item: any, isHalf = false) => {
+    const price = isHalf ? (item.half_price ? Number(item.half_price) : Number(item.price) / 2) : Number(item.price);
+    const cartKey = `${item.id}-${isHalf}`;
     setCart(prev => {
-      const existing = prev.find(c => c.id === item.id);
-      if (existing) return prev.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c);
-      return [...prev, { id: item.id, name: item.name, price: Number(item.price), image_url: item.image_url, qty: 1 }];
+      const existing = prev.find(c => `${c.id}-${c.is_half}` === cartKey);
+      if (existing) return prev.map(c => `${c.id}-${c.is_half}` === cartKey ? { ...c, qty: c.qty + 1 } : c);
+      return [...prev, { id: item.id, name: item.name, price, image_url: item.image_url, qty: 1, is_half: isHalf }];
     });
   };
 
-  const updateQty = (id: string, qty: number) => {
-    setCart(prev => prev.map(c => c.id === id ? { ...c, qty } : c));
+  const updateQty = (cartKey: string, qty: number) => {
+    setCart(prev => prev.map(c => `${c.id}-${c.is_half}` === cartKey ? { ...c, qty } : c));
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(c => c.id !== id));
+  const removeFromCart = (cartKey: string) => {
+    setCart(prev => prev.filter(c => `${c.id}-${c.is_half}` !== cartKey));
   };
 
   if (loading) {
@@ -109,7 +117,7 @@ export default function StoreCatalogView({
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && offers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
         <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${primary}10` }}>
@@ -123,6 +131,47 @@ export default function StoreCatalogView({
 
   return (
     <div className="pb-24">
+      {/* Offer banners carousel */}
+      {offers.length > 0 && (
+        <div className="px-4 mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold" style={{ fontFamily: fontHeading }}>
+              <Tag className="h-3.5 w-3.5 inline mr-1" style={{ color: primary }} />
+              Ofertas
+            </h3>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {offers.map(offer => (
+              <button
+                key={offer.id}
+                onClick={() => onOfferClick?.({ ...offer, stores: offer.stores || { name: storeName } })}
+                className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-white text-left"
+                style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
+              >
+                {offer.image_url ? (
+                  <img src={offer.image_url} alt={offer.title} className="w-full h-24 object-cover" />
+                ) : (
+                  <div className="w-full h-24 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                    <Tag className="h-8 w-8" style={{ color: `${primary}30` }} />
+                  </div>
+                )}
+                <div className="p-2.5">
+                  <p className="text-xs font-semibold line-clamp-2" style={{ fontFamily: fontHeading }}>{offer.title}</p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    {offer.discount_percent > 0 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: primary }}>
+                        -{offer.discount_percent}%
+                      </span>
+                    )}
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Points hero banner */}
       {pointsPerReal > 0 && (
         <div
@@ -142,17 +191,19 @@ export default function StoreCatalogView({
       )}
 
       {/* Search */}
-      <div className="px-4 mt-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar no cardápio..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 rounded-xl h-10 border-0 bg-muted/50"
-          />
+      {items.length > 0 && (
+        <div className="px-4 mt-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar no cardápio..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9 rounded-xl h-10 border-0 bg-muted/50"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Category chips */}
       {uniqueCategories.length > 0 && (
@@ -187,7 +238,8 @@ export default function StoreCatalogView({
       <div className="grid grid-cols-2 gap-3 px-4 mt-4">
         {filteredItems.map((item, idx) => {
           const pts = Math.floor(Number(item.price) * pointsPerReal);
-          const inCart = cart.find(c => c.id === item.id);
+          const inCart = cart.filter(c => c.id === item.id);
+          const totalInCart = inCart.reduce((s, c) => s + c.qty, 0);
           return (
             <motion.div
               key={item.id}
@@ -214,6 +266,11 @@ export default function StoreCatalogView({
                 <p className="text-sm font-bold mt-1.5">
                   R$ {Number(item.price).toFixed(2).replace(".", ",")}
                 </p>
+                {item.allow_half && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Meia: R$ {(item.half_price ? Number(item.half_price) : Number(item.price) / 2).toFixed(2).replace(".", ",")}
+                  </p>
+                )}
                 {pts > 0 && (
                   <span
                     className="inline-flex items-center gap-1 text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full"
@@ -224,22 +281,35 @@ export default function StoreCatalogView({
                 )}
               </div>
 
-              {/* Add button */}
-              <button
-                onClick={() => addToCart(item)}
-                className="absolute top-2 right-2 h-8 w-8 rounded-full flex items-center justify-center text-white shadow-lg"
-                style={{ backgroundColor: primary }}
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              {/* Add buttons */}
+              <div className="absolute top-2 right-2 flex flex-col gap-1">
+                <button
+                  onClick={() => addToCart(item, false)}
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-white shadow-lg"
+                  style={{ backgroundColor: primary }}
+                  title="Adicionar inteira"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                {item.allow_half && (
+                  <button
+                    onClick={() => addToCart(item, true)}
+                    className="h-7 rounded-full px-2 flex items-center justify-center text-[9px] font-bold text-white shadow-lg"
+                    style={{ backgroundColor: `${primary}CC` }}
+                    title="Adicionar meia"
+                  >
+                    ½
+                  </button>
+                )}
+              </div>
 
               {/* Cart qty badge */}
-              {inCart && (
+              {totalInCart > 0 && (
                 <div
                   className="absolute top-2 left-2 h-6 min-w-[24px] px-1 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
                   style={{ backgroundColor: primary }}
                 >
-                  {inCart.qty}
+                  {totalInCart}
                 </div>
               )}
             </motion.div>
@@ -276,6 +346,7 @@ export default function StoreCatalogView({
         whatsapp={whatsapp}
         storeName={storeName}
         customerName={customerName}
+        customerCpf={customerCpf}
         customerId={customerId}
         brandId={brandId}
         branchId={branchId}
