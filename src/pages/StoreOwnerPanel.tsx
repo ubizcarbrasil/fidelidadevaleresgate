@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,6 +56,8 @@ export default function StoreOwnerPanel() {
   const [showWizard, setShowWizard] = useState(false);
   const [editingOffer, setEditingOffer] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const notifPermissionRef = useRef<NotificationPermission>("default");
 
   useEffect(() => {
     if (!user) return;
@@ -71,6 +73,82 @@ export default function StoreOwnerPanel() {
     };
     fetch();
   }, [user]);
+
+  // Request browser notification permission
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then(perm => {
+        notifPermissionRef.current = perm;
+      });
+    } else if ("Notification" in window) {
+      notifPermissionRef.current = Notification.permission;
+    }
+  }, []);
+
+  // Fetch pending orders count + realtime listener for new orders
+  useEffect(() => {
+    if (!store) return;
+
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("catalog_cart_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", store.id)
+        .eq("status", "PENDING");
+      setPendingOrdersCount(count || 0);
+    };
+    fetchCount();
+
+    const channel = supabase
+      .channel("store-new-orders-notif")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "catalog_cart_orders",
+        filter: `store_id=eq.${store.id}`,
+      }, (payload) => {
+        // Increment badge
+        setPendingOrdersCount(prev => prev + 1);
+
+        // Show browser notification
+        const order = payload.new as any;
+        const customerName = order.customer_name || "Novo cliente";
+        const total = Number(order.total_amount || 0).toFixed(2);
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            new Notification("🛒 Novo Pedido!", {
+              body: `${customerName} fez um pedido de R$ ${total}`,
+              icon: store.logo_url || "/pwa-192x192.png",
+              tag: `order-${order.id}`,
+            });
+          } catch {
+            // Notification API not available (e.g. iOS PWA)
+          }
+        }
+
+        // Also show in-app toast
+        toast({
+          title: "🛒 Novo Pedido!",
+          description: `${customerName} — R$ ${total}`,
+        });
+      })
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "catalog_cart_orders",
+        filter: `store_id=eq.${store.id}`,
+      }, (payload) => {
+        const newStatus = (payload.new as any).status;
+        const oldStatus = (payload.old as any).status;
+        if (oldStatus === "PENDING" && newStatus === "CONFIRMED") {
+          setPendingOrdersCount(prev => Math.max(0, prev - 1));
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [store?.id]);
 
   if (loading) {
     return (
@@ -141,7 +219,12 @@ export default function StoreOwnerPanel() {
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      {item.label}
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.key === "pedidos" && pendingOrdersCount > 0 && (
+                        <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground rounded-full">
+                          {pendingOrdersCount}
+                        </Badge>
+                      )}
                     </button>
                   );
                 })}
@@ -216,14 +299,21 @@ export default function StoreOwnerPanel() {
           })}
           <button
             onClick={() => setMenuOpen(true)}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
               !isInBottomTabs ? "text-primary" : "text-muted-foreground"
             }`}
           >
             {!isInBottomTabs && (
               <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
             )}
-            <Menu className={`h-5 w-5 ${!isInBottomTabs ? "stroke-[2.5]" : ""}`} />
+            <div className="relative">
+              <Menu className={`h-5 w-5 ${!isInBottomTabs ? "stroke-[2.5]" : ""}`} />
+              {pendingOrdersCount > 0 && activeTab !== "pedidos" && (
+                <span className="absolute -top-1 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                  {pendingOrdersCount > 99 ? "99+" : pendingOrdersCount}
+                </span>
+              )}
+            </div>
             <span className={`text-[10px] ${!isInBottomTabs ? "font-bold" : "font-medium"}`}>Mais</span>
           </button>
         </div>
