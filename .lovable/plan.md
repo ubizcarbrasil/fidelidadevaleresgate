@@ -1,45 +1,26 @@
 
 
-## Plano: Criar Template + Preview Visual no App
+## Plano: Preview ao vivo lado a lado no Editor
 
 ### O Que Será Feito
 
-**1. Formulário de criação/edição de template** (Dialog ou full-page dentro de `HomeTemplatesPage.tsx`)
-- Campos: `name`, `key`, `description`, ícone (select entre emojis disponíveis)
-- Toggle `is_default`
-- Editor de seções dinâmico:
-  - Botão "Adicionar Seção" que permite escolher o `template_type` (dropdown dos 11 tipos existentes em `section_templates`)
-  - Cada seção editável: `title`, `subtitle`, `cta_text`, `visual_json` (editor JSON simples), fontes de dados (`source_type`, `filters_json`, `limit`)
-  - Reordenação por drag ou botões up/down
-  - Remover seção
-- Botão "Salvar" que faz `INSERT` ou `UPDATE` no `home_template_library`
-- Botão "Editar" nos cards existentes (além de Preview e Aplicar)
+Quando o dialog do editor abrir (criar ou editar), o layout será dividido em **duas colunas**:
+- **Esquerda**: formulário do `HomeTemplateEditor` (como está hoje)
+- **Direita**: `HomeTemplateMobilePreview` renderizando em tempo real as seções que estão sendo editadas
 
-**2. Preview visual estilo app do cliente** (Dialog grande ou panel lateral)
-- Ao clicar "Preview", ao invés de exibir a lista técnica atual (JSON/badges), renderizar um **mockup mobile** com moldura de smartphone
-- Dentro da moldura, renderizar cada seção do `template_payload_json` com os mesmos componentes visuais do `HomeSectionsRenderer` (cabeçalhos, placeholders de cards, banners)
-- Como o template não tem dados reais, usar **placeholders visuais** (skeletons estilizados ou cards fictícios com ícones e textos genéricos) que representem cada tipo de seção:
-  - `BANNER_CAROUSEL` → retângulo com gradiente e ícone de imagem
-  - `OFFERS_CAROUSEL` → row de cards genéricos com título e preço fictício
-  - `OFFERS_GRID` → grid 2-col com cards placeholder
-  - `STORES_GRID` / `STORES_LIST` → avatares com nome placeholder
-  - `VOUCHERS_CARDS` → ticket rosa estilo cupom
-  - `MANUAL_LINKS_*` → ícones em grid/carrossel
-- Header do mockup: barra de status + greeting "Bom dia, Cliente!" + hero card de saldo
+A cada mudança no editor (adicionar/remover/reordenar seções, editar títulos), o preview atualiza automaticamente.
 
-### Arquivos
+### Alterações
 
-| Arquivo | Ação |
+| Arquivo | Mudança |
 |---|---|
-| `src/pages/HomeTemplatesPage.tsx` | Adicionar estado e dialogs para criar/editar template + preview visual mobile |
-| `src/components/HomeTemplateEditor.tsx` | **Novo** — formulário reutilizável para criação e edição de templates |
-| `src/components/HomeTemplateMobilePreview.tsx` | **Novo** — mockup mobile que renderiza placeholders visuais por tipo de seção |
+| `src/components/HomeTemplateEditor.tsx` | Recebe prop opcional `renderPreview` (render prop) que recebe as seções atuais e exibe o preview. Alternativa: expor as seções via callback `onSectionsChange` para o pai renderizar o preview ao lado. |
+| `src/pages/HomeTemplatesPage.tsx` | Aumentar o dialog do editor para `max-w-6xl`. Dividir o conteúdo em grid 2 colunas: editor à esquerda, `HomeTemplateMobilePreview` à direita com as seções em tempo real. |
 
 ### Detalhes Técnicos
 
-- O editor constrói o `template_payload_json` interativamente, mantendo o mesmo formato JSON que já existe na tabela
-- O preview mobile é um `div` com `max-w-[375px]`, `aspect-ratio: 9/19.5`, `border-radius`, `border` e `overflow-y: auto` para simular um smartphone
-- Os 11 tipos de `section_templates` serão mapeados para componentes placeholder dentro do preview
-- O insert/update usa `supabase.from("home_template_library").upsert(...)` com o `key` como identificador
-- Nenhuma migration necessária — a tabela `home_template_library` já tem todas as colunas
+- O `HomeTemplateEditor` ganhará uma prop `onSectionsChange?: (sections: TemplateSection[]) => void` chamada a cada `setSections`.
+- No `HomeTemplatesPage`, um estado local `liveSections` será atualizado pelo callback e passado ao `HomeTemplateMobilePreview`.
+- O dialog do editor usará `max-w-6xl` com layout `grid grid-cols-1 lg:grid-cols-[1fr_auto]` — o preview fica sticky à direita.
+- Em telas menores, o preview ficará oculto (hidden em mobile) para não quebrar o layout.
 
