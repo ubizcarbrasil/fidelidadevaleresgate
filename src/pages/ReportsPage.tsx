@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon, Tag, icons, Store } from "lucide-react";
+import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon, Tag, icons, Store, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -18,7 +18,7 @@ import {
   ResponsiveContainer, Legend, PieChart, Pie, Cell,
 } from "recharts";
 
-type ReportType = "redemptions" | "earning_events" | "customers" | "vouchers" | "affiliate_clicks" | "coupon_performance";
+type ReportType = "redemptions" | "earning_events" | "customers" | "vouchers" | "affiliate_clicks" | "coupon_performance" | "catalog_orders";
 
 const REPORT_OPTIONS: { value: ReportType; label: string }[] = [
   { value: "redemptions", label: "Resgates" },
@@ -27,6 +27,7 @@ const REPORT_OPTIONS: { value: ReportType; label: string }[] = [
   { value: "vouchers", label: "Vouchers" },
   { value: "affiliate_clicks", label: "Cliques em Achadinhos" },
   { value: "coupon_performance", label: "Performance por Cupom" },
+  { value: "catalog_orders", label: "Vendas do Catálogo" },
 ];
 
 function formatDate(d: string) {
@@ -103,6 +104,10 @@ export default function ReportsPage() {
 
           {reportType === "coupon_performance" && data && data.length > 0 && (
             <CouponPerformanceSummary data={data} />
+          )}
+
+          {reportType === "catalog_orders" && data && data.length > 0 && (
+            <CatalogOrdersSummary data={data} />
           )}
 
           <ReportTable
@@ -247,6 +252,42 @@ function CouponPerformanceSummary({ data }: { data: Record<string, any>[] }) {
       <Card className="border-primary/30 bg-primary/5"><CardContent className="pt-4">
         <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Ganho Líquido</p>
         <p className="text-2xl font-bold">{netGain >= 0 ? "+" : ""}R$ {netGain.toFixed(2)}</p>
+      </CardContent></Card>
+    </div>
+  );
+}
+
+// --- Catalog Orders Summary ---
+function CatalogOrdersSummary({ data }: { data: Record<string, any>[] }) {
+  const totalOrders = data.length;
+  const pending = data.filter(r => r["Status"] === "PENDING").length;
+  const confirmed = data.filter(r => r["Status"] === "CONFIRMED").length;
+  const totalRevenue = data.reduce((s, r) => s + (parseFloat(String(r["Total (R$)"]).replace(",", ".")) || 0), 0);
+  const totalPoints = data.reduce((s, r) => s + (Number(r["Pontos Estimados"]) || 0), 0);
+  const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  return (
+    <div className="grid gap-4 md:grid-cols-5">
+      <Card><CardContent className="pt-4">
+        <p className="text-xs text-muted-foreground">Total Pedidos</p>
+        <p className="text-2xl font-bold">{totalOrders}</p>
+        <p className="text-xs text-muted-foreground mt-1">Pendentes: {pending} · Confirmados: {confirmed}</p>
+      </CardContent></Card>
+      <Card><CardContent className="pt-4">
+        <p className="text-xs text-muted-foreground">Faturamento</p>
+        <p className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</p>
+      </CardContent></Card>
+      <Card><CardContent className="pt-4">
+        <p className="text-xs text-muted-foreground">Ticket Médio</p>
+        <p className="text-2xl font-bold">R$ {avgTicket.toFixed(2)}</p>
+      </CardContent></Card>
+      <Card><CardContent className="pt-4">
+        <p className="text-xs text-muted-foreground">Pontos Distribuídos</p>
+        <p className="text-2xl font-bold">{totalPoints.toLocaleString("pt-BR")}</p>
+      </CardContent></Card>
+      <Card className="border-primary/30 bg-primary/5"><CardContent className="pt-4">
+        <p className="text-xs text-muted-foreground flex items-center gap-1"><ShoppingBag className="h-3 w-3" /> Taxa Confirmação</p>
+        <p className="text-2xl font-bold">{totalOrders > 0 ? ((confirmed / totalOrders) * 100).toFixed(0) : 0}%</p>
       </CardContent></Card>
     </div>
   );
@@ -709,6 +750,33 @@ function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; date
     },
   });
 
+  // Catalog orders over time (daily)
+  const { data: catalogByDay, isLoading: loadingC } = useQuery({
+    queryKey: ["chart-catalog-orders", dateFrom, dateTo, brandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("catalog_cart_orders")
+        .select("created_at, status, total_amount, points_earned_estimate")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(1000);
+      if (brandId) q = q.eq("brand_id", brandId);
+      const { data } = await q;
+      if (!data) return [];
+      const byDay: Record<string, { date: string; pedidos: number; faturamento: number; pontos: number; confirmados: number }> = {};
+      for (const r of data) {
+        const day = r.created_at.slice(0, 10);
+        if (!byDay[day]) byDay[day] = { date: day, pedidos: 0, faturamento: 0, pontos: 0, confirmados: 0 };
+        byDay[day].pedidos++;
+        byDay[day].faturamento += Number(r.total_amount);
+        byDay[day].pontos += r.points_earned_estimate || 0;
+        if (r.status === "CONFIRMED") byDay[day].confirmados++;
+      }
+      return Object.values(byDay);
+    },
+  });
+
   // Coupon status distribution (pie)
   const statusDistribution = useMemo(() => {
     if (!redemptionsByDay?.length) return [];
@@ -826,6 +894,42 @@ function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; date
           </CardContent>
         </Card>
       </div>
+
+      {/* Catalog Orders chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4" /> Vendas do Catálogo por Dia
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingC ? <Skeleton className="h-64 w-full" /> :
+            !catalogByDay?.length ? (
+              <p className="text-muted-foreground text-sm text-center py-12">Sem pedidos de catálogo no período</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={catalogByDay}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" tickFormatter={formatTick} className="text-xs" />
+                  <YAxis yAxisId="left" className="text-xs" />
+                  <YAxis yAxisId="right" orientation="right" className="text-xs" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                    labelFormatter={(v) => `Data: ${formatTick(v as string)}`}
+                    formatter={(value: number, name: string) => [
+                      name === "Faturamento R$" ? `R$ ${value.toFixed(2)}` : value,
+                      name,
+                    ]}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="pedidos" name="Pedidos" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="left" dataKey="confirmados" name="Confirmados" fill={CHART_COLORS[3]} radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="faturamento" name="Faturamento R$" stroke={CHART_COLORS[5]} strokeWidth={2} dot={false} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -955,6 +1059,27 @@ async function fetchReport(reportType: ReportType, dateFrom: string, dateTo: str
         "Crédito Aplicado": v.credit.toFixed(2),
         "Vendas (R$)": v.purchase.toFixed(2),
         "Ganho Líquido": (v.purchase - v.credit).toFixed(2),
+      }));
+    }
+    case "catalog_orders": {
+      let q = supabase
+        .from("catalog_cart_orders")
+        .select("id, status, customer_name, customer_cpf, total_amount, points_earned_estimate, created_at, points_confirmed_at, store_id, stores(name)")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
+      return (data || []).map(r => ({
+        "Loja": (r.stores as any)?.name || r.store_id?.slice(0, 8) || "—",
+        "Cliente": r.customer_name || "—",
+        "CPF": r.customer_cpf || "—",
+        "Total (R$)": Number(r.total_amount).toFixed(2),
+        "Pontos Estimados": r.points_earned_estimate || 0,
+        "Status": r.status,
+        "Data": formatDate(r.created_at),
+        "Confirmado em": r.points_confirmed_at ? formatDate(r.points_confirmed_at) : "—",
       }));
     }
     default: return [];
