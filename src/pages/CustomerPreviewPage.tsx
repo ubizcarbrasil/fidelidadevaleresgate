@@ -10,7 +10,7 @@ type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
 
 export default function CustomerPreviewPage() {
-  const { user, roles, loading: authLoading } = useAuth();
+  const { user, roles, isRootAdmin, loading: authLoading } = useAuth();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,30 +31,49 @@ export default function CustomerPreviewPage() {
     }
 
     const resolveBrandId = async (): Promise<string | null> => {
-      // 0) Explicit URL override (used by quick links) - still protected by RLS on next queries
-      if (forcedBrandId) return forcedBrandId;
+      const brandCandidates = new Set<string>();
 
-      // 1) Try from profile first (more deterministic for users with multiple roles)
+      // 1) Collect candidates from roles.brand_id
+      roles.forEach((r) => {
+        if (r.brand_id) brandCandidates.add(r.brand_id);
+      });
+
+      // 2) Collect candidates from roles.branch_id -> branches.brand_id
+      const roleBranchIds = Array.from(new Set(roles.map((r) => r.branch_id).filter(Boolean) as string[]));
+      if (roleBranchIds.length > 0) {
+        const { data: roleBranches } = await supabase
+          .from("branches")
+          .select("brand_id")
+          .in("id", roleBranchIds);
+
+        roleBranches?.forEach((b) => {
+          if (b.brand_id) brandCandidates.add(b.brand_id);
+        });
+      }
+
+      // 3) Profile brand as deterministic fallback/disambiguation
       const { data: profile } = await supabase
         .from("profiles")
         .select("brand_id")
         .eq("id", user.id)
         .single();
-      if (profile?.brand_id) return profile.brand_id;
+      const profileBrandId = profile?.brand_id ?? null;
 
-      // 2) Try from roles directly
-      const roleWithBrand = roles.find((r) => r.brand_id);
-      if (roleWithBrand?.brand_id) return roleWithBrand.brand_id;
+      // 4) URL override only when user is root or when it belongs to user's accessible brands
+      if (forcedBrandId && (isRootAdmin || brandCandidates.has(forcedBrandId) || brandCandidates.size === 0)) {
+        return forcedBrandId;
+      }
 
-      // 3) Try from branch_id in roles → get brand_id from branch
-      const roleWithBranch = roles.find((r) => r.branch_id);
-      if (roleWithBranch?.branch_id) {
-        const { data: branchRow } = await supabase
-          .from("branches")
-          .select("brand_id")
-          .eq("id", roleWithBranch.branch_id)
-          .single();
-        if (branchRow?.brand_id) return branchRow.brand_id;
+      if (brandCandidates.size === 1) {
+        return Array.from(brandCandidates)[0];
+      }
+
+      if (profileBrandId && (brandCandidates.size === 0 || brandCandidates.has(profileBrandId))) {
+        return profileBrandId;
+      }
+
+      if (brandCandidates.size > 0) {
+        return Array.from(brandCandidates)[0];
       }
 
       return null;
@@ -94,7 +113,7 @@ export default function CustomerPreviewPage() {
       setLoading(false);
     };
     fetchData();
-  }, [user, roles, authLoading, forcedBrandId]);
+  }, [user, roles, isRootAdmin, authLoading, forcedBrandId]);
 
   if (loading || authLoading) {
     return (
