@@ -42,7 +42,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
   const [cpf, setCpf] = useState("");
-  const [_productValue] = useState(""); // kept for compatibility
+  
   const [pin, setPin] = useState<string | null>(null);
   const [completedRedemption, setCompletedRedemption] = useState<any>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
