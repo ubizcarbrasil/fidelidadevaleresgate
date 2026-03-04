@@ -80,7 +80,9 @@ export default function CustomerAuthPage({ onSkip }: Props) {
         {/* Brand header */}
         <div className="text-center mb-7">
           {theme?.logo_url ? (
-            <img src={theme.logo_url} alt={displayName} className="h-14 mx-auto mb-4 object-contain rounded-2xl" />
+            <div className="h-14 w-14 mx-auto mb-4 rounded-2xl overflow-hidden" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}>
+              <img src={theme.logo_url} alt={displayName} className="h-full w-full object-cover" />
+            </div>
           ) : (
             <div
               className="h-14 w-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl font-bold"
