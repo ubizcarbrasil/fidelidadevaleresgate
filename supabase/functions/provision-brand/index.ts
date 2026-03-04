@@ -130,30 +130,50 @@ Deno.serve(async (req) => {
       brand = newBrand;
     }
 
-    // 3. Create branch
-    const { data: branch, error: branchErr } = await supabaseAdmin
+    // 3. Create branch (idempotent)
+    let branch: { id: string };
+    const { data: existingBranch } = await supabaseAdmin
       .from("branches")
-      .insert({
-        name: city_name,
-        slug: city_slug,
-        brand_id: brand.id,
-        city: city_name,
-        state: state || null,
-      })
       .select("id")
-      .single();
-    if (branchErr) throw new Error(`Branch: ${branchErr.message}`);
+      .eq("brand_id", brand.id)
+      .eq("slug", city_slug)
+      .maybeSingle();
+    if (existingBranch) {
+      branch = existingBranch;
+    } else {
+      const { data: newBranch, error: branchErr } = await supabaseAdmin
+        .from("branches")
+        .insert({
+          name: city_name,
+          slug: city_slug,
+          brand_id: brand.id,
+          city: city_name,
+          state: state || null,
+        })
+        .select("id")
+        .single();
+      if (branchErr) throw new Error(`Branch: ${branchErr.message}`);
+      branch = newBranch;
+    }
 
-    // 4. Create brand_domain
+    // 4. Create brand_domain (idempotent)
     const domainValue = subdomain
       ? `${subdomain}.valeresgate.com`
       : `${brand_slug}.valeresgate.com`;
-    await supabaseAdmin.from("brand_domains").insert({
-      brand_id: brand.id,
-      domain: domainValue,
-      subdomain: subdomain || brand_slug,
-      is_primary: true,
-    });
+    const { data: existingDomain } = await supabaseAdmin
+      .from("brand_domains")
+      .select("id")
+      .eq("brand_id", brand.id)
+      .eq("domain", domainValue)
+      .maybeSingle();
+    if (!existingDomain) {
+      await supabaseAdmin.from("brand_domains").insert({
+        brand_id: brand.id,
+        domain: domainValue,
+        subdomain: subdomain || brand_slug,
+        is_primary: true,
+      });
+    }
 
     // Helper: get or create auth user
     const getOrCreateUser = async (email: string, fullName: string) => {
@@ -185,12 +205,15 @@ Deno.serve(async (req) => {
       .eq("id", adminUser.id);
 
     // Assign brand_admin role
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: adminUser.id,
-      role: "brand_admin",
-      brand_id: brand.id,
-      tenant_id: tenant.id,
-    }).throwOnError().catch(() => {/* ignore duplicate */});
+    await supabaseAdmin.from("user_roles").upsert(
+      {
+        user_id: adminUser.id,
+        role: "brand_admin",
+        brand_id: brand.id,
+        tenant_id: tenant.id,
+      },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
 
     // 6. Create customer test user
     const customerEmail = `cliente-${emailPrefix}@teste.com`;
@@ -235,10 +258,13 @@ Deno.serve(async (req) => {
     }
 
     // Assign customer role
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: customerUser.id,
-      role: "customer",
-    }).throwOnError().catch(() => {/* ignore duplicate */});
+    await supabaseAdmin.from("user_roles").upsert(
+      {
+        user_id: customerUser.id,
+        role: "customer",
+      },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
 
     // 7. Create store test user
     const storeEmail = `loja-${emailPrefix}@teste.com`;
@@ -268,10 +294,13 @@ Deno.serve(async (req) => {
     }
 
     // Assign store_admin role
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: storeUser.id,
-      role: "store_admin",
-    }).throwOnError().catch(() => {/* ignore duplicate */});
+    await supabaseAdmin.from("user_roles").upsert(
+      {
+        user_id: storeUser.id,
+        role: "store_admin",
+      },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
 
     // 8. Copy core modules
     const { data: coreMods } = await supabaseAdmin
