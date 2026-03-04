@@ -5,9 +5,54 @@ import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
+import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
+
+/**
+ * Standalone brand-themed auth page shown when user is not logged in
+ * but we can resolve the brand from the URL param.
+ */
+function BrandThemedAuth({ brandId }: { brandId: string }) {
+  const [brand, setBrand] = useState<Brand | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("brands")
+      .select("*")
+      .eq("id", brandId)
+      .eq("is_active", true)
+      .single()
+      .then(({ data }) => {
+        setBrand(data);
+        setLoading(false);
+      });
+  }, [brandId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!brand) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Marca não encontrada.</p>
+      </div>
+    );
+  }
+
+  return (
+    <BrandProviderOverride brand={brand} branches={[]}>
+      <CustomerAuthPage />
+    </BrandProviderOverride>
+  );
+}
 
 export default function CustomerPreviewPage() {
   const { user, roles, loading: authLoading } = useAuth();
@@ -25,16 +70,14 @@ export default function CustomerPreviewPage() {
     if (authLoading) return;
 
     if (!user) {
-      setError("Usuário não autenticado.");
+      // Not authenticated — we'll show the brand-themed auth page
       setLoading(false);
       return;
     }
 
     const resolveBrandId = async (): Promise<string | null> => {
-      // 0) Explicit URL override (used by quick links) - still protected by RLS on next queries
       if (forcedBrandId) return forcedBrandId;
 
-      // 1) Try from profile first (more deterministic for users with multiple roles)
       const { data: profile } = await supabase
         .from("profiles")
         .select("brand_id")
@@ -42,11 +85,9 @@ export default function CustomerPreviewPage() {
         .single();
       if (profile?.brand_id) return profile.brand_id;
 
-      // 2) Try from roles directly
       const roleWithBrand = roles.find((r) => r.brand_id);
       if (roleWithBrand?.brand_id) return roleWithBrand.brand_id;
 
-      // 3) Try from branch_id in roles → get brand_id from branch
       const roleWithBranch = roles.find((r) => r.branch_id);
       if (roleWithBranch?.branch_id) {
         const { data: branchRow } = await supabase
@@ -100,6 +141,18 @@ export default function CustomerPreviewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Not authenticated: show brand-themed login if we have a brandId from URL
+  if (!user) {
+    if (forcedBrandId) {
+      return <BrandThemedAuth brandId={forcedBrandId} />;
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Usuário não autenticado.</p>
       </div>
     );
   }
