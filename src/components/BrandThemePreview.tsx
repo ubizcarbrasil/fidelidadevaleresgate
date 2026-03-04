@@ -53,9 +53,9 @@ export default function BrandThemePreview({ theme, brandName }: BrandThemePrevie
               {theme.logo_url ? (
                 <img
                   src={theme.logo_url}
-                  alt="Logo"
-                  className="h-7 object-contain"
-                  style={{ filter: "brightness(0) invert(1)" }}
+                  alt={displayName}
+                  className="h-8 w-8 rounded-xl object-contain"
+                  style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }}
                 />
               ) : (
                 <Ticket className="h-5 w-5" />
