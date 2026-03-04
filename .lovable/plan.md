@@ -1,47 +1,30 @@
 
 
-## Problema Raiz
+## Problema
 
-Existem **dois problemas** impedindo os links de funcionar:
+O `CustomerPreviewPage.tsx` busca **qualquer branch ativa** no banco e carrega a marca associada — ignorando completamente qual empreendedor está logado. Por isso, ao clicar em "App do Cliente", o preview mostra a marca errada.
 
-1. **A marca "Ubiz Resgata" está desativada** (`is_active = false` no banco). Isso impede a resolução white-label no domínio `ubiz-resgata.valeresgate.com`.
+## Correção
 
-2. **O domínio `ubiz-resgata.valeresgate.com` não tem DNS apontando para o app**. O registro existe no banco mas o DNS do domínio `valeresgate.com` não aponta o subdomínio para o IP correto (185.158.133.1). Por isso o Safari mostra "servidor não pode ser encontrado".
+Modificar `CustomerPreviewPage.tsx` para usar o `currentBrandId` do hook `useBrandGuard()`, garantindo que cada empreendedor veja **apenas o app da sua própria marca**.
 
-3. **Os links usam o domínio externo como base**, que não funciona sem o DNS configurado.
+### Mudança em `src/pages/CustomerPreviewPage.tsx`
 
-## Plano de Correção
-
-### 1. Ativar a marca no banco
-Executar migração SQL para corrigir `is_active = true` na marca `effc4685-375e-40c8-8a44-d71bd550f422`.
-
-### 2. Reformular os links no Dashboard para suportar os dois cenários
-No `src/pages/Dashboard.tsx` (componente `BrandQuickLinks`):
-
-- **Link primário (funciona agora)**: Usar o `window.location.origin` + rotas internas (`/customer-preview`, `/register-store`, `/store-panel`). Esses caminhos funcionam imediatamente porque são rotas do SPA onde o brand_admin já está logado.
-
-- **Link secundário (domínio próprio)**: Mostrar o domínio customizado (`ubiz-resgata.valeresgate.com`) como URL de produção com aviso de que precisa configurar DNS. Botão de copiar para facilitar.
-
-Estrutura dos 3 links:
+- Importar e usar `useBrandGuard` para obter o `currentBrandId`
+- Buscar a marca e branches usando esse `currentBrandId` em vez de pegar qualquer branch aleatória
+- Se `currentBrandId` não existir, mostrar erro informativo
 
 ```text
-App do Cliente
-  Principal: {origin}/customer-preview  ← funciona agora
-  Produção:  https://ubiz-resgata.valeresgate.com  ← requer DNS
+Antes:
+  branches.select → limit(1) → pega qualquer brand_id
+  brands.select → usa esse brand_id aleatório
 
-Cadastro de Parceiro  
-  Principal: {origin}/register-store  ← funciona agora
-  Produção:  https://ubiz-resgata.valeresgate.com/register-store  ← requer DNS
-
-Painel do Parceiro
-  Principal: {origin}/store-panel  ← funciona agora
-  Produção:  https://ubiz-resgata.valeresgate.com/store-panel  ← requer DNS
+Depois:
+  useBrandGuard() → currentBrandId
+  brands.select → usa currentBrandId do usuário logado
+  branches.select → filtra por esse brand_id
 ```
 
-### 3. Indicar status do domínio
-Adicionar um badge visual no card de "Links Úteis" indicando se o domínio próprio está ativo (DNS resolvendo) ou pendente de configuração, com um tooltip explicando como configurar.
-
-### Arquivos a modificar
-- **Migração SQL**: Ativar a marca no banco (`UPDATE brands SET is_active = true`)
-- **`src/pages/Dashboard.tsx`**: Reformular `BrandQuickLinks` com links internos + links de produção
+### Arquivo a modificar
+- `src/pages/CustomerPreviewPage.tsx`
 
