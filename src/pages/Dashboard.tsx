@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn } from "lucide-react";
+import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn, Globe, AlertCircle } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -107,33 +107,11 @@ function BrandQuickLinks() {
     | { email: string; role: string; is_active: boolean }[]
     | undefined;
 
-  const normalizeBaseUrl = (rawDomain?: string | null) => {
-    if (!rawDomain) return window.location.origin;
-    const trimmed = rawDomain.trim().replace(/\/$/, "");
-    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    try {
-      return new URL(withProtocol).origin;
-    } catch {
-      return window.location.origin;
-    }
-  };
-
-  const buildUrl = (base: string, path = "") => {
-    try {
-      return new URL(path || "/", `${base}/`).toString().replace(/\/$/, path ? "" : "/");
-    } catch {
-      return `${window.location.origin}${path}`;
-    }
-  };
-
-  const openExternal = (url: string) => {
-    const popup = window.open(url, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      window.location.href = url;
-    }
-  };
-
-  const baseUrl = normalizeBaseUrl(domain?.domain || domain?.subdomain || null);
+  const origin = window.location.origin;
+  const customDomain = domain?.domain || domain?.subdomain || null;
+  const productionUrl = customDomain
+    ? `https://${customDomain.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}`
+    : null;
 
   const roleLabel: Record<string, string> = {
     brand_admin: "Admin",
@@ -156,14 +134,21 @@ function BrandQuickLinks() {
     toast.info("Copiado!");
   };
 
+  const openExternal = (url: string) => {
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      window.location.href = url;
+    }
+  };
+
   if (!brand) return null;
 
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
   const quickLinks = [
-    { label: "App do Cliente (PWA)", url: buildUrl(baseUrl), icon: ExternalLink, description: "Link público do aplicativo para clientes" },
-    { label: "Cadastro de Parceiro", url: buildUrl(baseUrl, "/register-store"), icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
-    { label: "Painel do Parceiro", url: buildUrl(baseUrl, "/store-panel"), icon: Store, description: "Painel de gestão das lojas parceiras" },
+    { label: "App do Cliente (PWA)", path: "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app como cliente" },
+    { label: "Cadastro de Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
+    { label: "Painel do Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Painel de gestão das lojas parceiras" },
   ];
 
   return (
@@ -171,31 +156,63 @@ function BrandQuickLinks() {
       {/* Quick Links */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Link2 className="h-4 w-4 text-primary" />
-            Links Úteis
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              Links Úteis
+            </CardTitle>
+            {productionUrl ? (
+              <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/30 text-amber-600">
+                <AlertCircle className="h-3 w-3" />
+                DNS pendente
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[10px]">Sem domínio próprio</Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
-            {quickLinks.map((link) => (
-              <div key={link.label} className="rounded-lg border p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <link.icon className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">{link.label}</span>
+            {quickLinks.map((link) => {
+              const internalUrl = `${origin}${link.path}`;
+              const prodUrl = productionUrl ? `${productionUrl}${link.prodPath === "/" ? "" : link.prodPath}` : null;
+              return (
+                <div key={link.label} className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <link.icon className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">{link.label}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{link.description}</p>
+
+                  {/* Primary: internal link (works now) */}
+                  <div className="flex gap-1">
+                    <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => openExternal(internalUrl)}>
+                      <ExternalLink className="h-3 w-3" /> Abrir
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(internalUrl)}>
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  {/* Secondary: production domain */}
+                  {prodUrl && (
+                    <div className="flex gap-1 items-center">
+                      <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <code className="text-[10px] text-muted-foreground truncate flex-1" title={prodUrl}>{prodUrl}</code>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => copyText(prodUrl)}>
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">{link.description}</p>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => copyText(link.url)}>
-                    <Copy className="h-3 w-3" /> Copiar
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => openExternal(link.url)}>
-                    <ExternalLink className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {productionUrl && (
+            <p className="text-[10px] text-muted-foreground mt-3">
+              ⚠️ O domínio de produção requer configuração DNS (A record → 185.158.133.1). Use os links internos acima enquanto o DNS não estiver ativo.
+            </p>
+          )}
         </CardContent>
       </Card>
 
