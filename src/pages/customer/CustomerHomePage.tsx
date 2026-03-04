@@ -1,7 +1,7 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles, Wallet } from "lucide-react";
+import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles } from "lucide-react";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
@@ -73,7 +73,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           {greeting}, <span style={{ color: primary }}>{firstName}</span>! 👋
         </h2>
         <p className="text-xs mt-0.5" style={{ color: `${fg}50` }}>
-          Confira suas ofertas e saldos
+          Confira suas ofertas e pontos
         </p>
       </motion.div>
 
@@ -112,38 +112,19 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
 
             {/* Content */}
             <div className="relative z-10 p-5 pb-4">
-              <div className="flex items-stretch gap-0">
-                {/* Saldo em R$ */}
-                <button
-                  onClick={() => { haptic("light"); navigateToTab("redemptions"); }}
-                  className="flex-1 text-left active:scale-[0.97] transition-transform pr-5"
-                >
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}>
-                      <Wallet className="h-4 w-4 text-white" strokeWidth={2.2} />
-                    </div>
-                    <span className="text-xs font-semibold text-white/65 tracking-wide uppercase">Saldo</span>
-                  </div>
-                  <span className="text-[28px] font-black text-white tracking-tight leading-none" style={{ fontFamily: fontHeading }}>
-                    R$ {customer ? Number(customer.money_balance).toFixed(2).replace(".", ",") : "0,00"}
-                  </span>
-                </button>
-
-                {/* Divider */}
-                <div className="w-px self-stretch my-1" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.25) 70%, transparent 100%)" }} />
-
+              <div className="flex flex-col items-center text-center">
                 {/* Pontos */}
                 <button
                   onClick={() => { haptic("light"); onOpenLedger?.(); }}
-                  className="flex-1 text-left active:scale-[0.97] transition-transform pl-5"
+                  className="active:scale-[0.97] transition-transform"
                 >
-                  <div className="flex items-center gap-2.5 mb-2">
+                  <div className="flex items-center gap-2.5 mb-2 justify-center">
                     <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}>
                       <Coins className="h-4 w-4 text-white" strokeWidth={2.2} />
                     </div>
-                    <span className="text-xs font-semibold text-white/65 tracking-wide uppercase">Pontos</span>
+                    <span className="text-xs font-semibold text-white/65 tracking-wide uppercase">Seus Pontos</span>
                   </div>
-                  <span className="text-[28px] font-black text-white tracking-tight leading-none" style={{ fontFamily: fontHeading }}>
+                  <span className="text-[36px] font-black text-white tracking-tight leading-none" style={{ fontFamily: fontHeading }}>
                     {customer ? Number(customer.points_balance).toLocaleString("pt-BR") : "0"}
                   </span>
                 </button>
