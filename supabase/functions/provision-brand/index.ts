@@ -155,104 +155,123 @@ Deno.serve(async (req) => {
       is_primary: true,
     });
 
+    // Helper: get or create auth user
+    const getOrCreateUser = async (email: string, fullName: string) => {
+      const { data: created, error: createErr } =
+        await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: "123456",
+          email_confirm: true,
+          user_metadata: { full_name: fullName },
+        });
+      if (created?.user) return created.user;
+      // User already exists – look up by email
+      if (createErr?.message?.includes("already been registered")) {
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+        const existing = listData?.users?.find((u: any) => u.email === email);
+        if (existing) return existing;
+      }
+      throw new Error(`User ${email}: ${createErr?.message}`);
+    };
+
     // 5. Create admin test user
     const adminEmail = `teste-${emailPrefix}@teste.com`;
-    const { data: adminUser, error: adminUserErr } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: adminEmail,
-        password: "123456",
-        email_confirm: true,
-        user_metadata: { full_name: `Admin ${company_name}` },
-      });
-    if (adminUserErr) throw new Error(`Admin user: ${adminUserErr.message}`);
+    const adminUser = await getOrCreateUser(adminEmail, `Admin ${company_name}`);
 
     // Update profile with brand/tenant link
     await supabaseAdmin
       .from("profiles")
       .update({ brand_id: brand.id, tenant_id: tenant.id })
-      .eq("id", adminUser.user.id);
+      .eq("id", adminUser.id);
 
     // Assign brand_admin role
     await supabaseAdmin.from("user_roles").insert({
-      user_id: adminUser.user.id,
+      user_id: adminUser.id,
       role: "brand_admin",
       brand_id: brand.id,
       tenant_id: tenant.id,
-    });
+    }).throwOnError().catch(() => {/* ignore duplicate */});
 
     // 6. Create customer test user
     const customerEmail = `cliente-${emailPrefix}@teste.com`;
-    const { data: customerUser, error: custUserErr } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: customerEmail,
-        password: "123456",
-        email_confirm: true,
-        user_metadata: { full_name: `Cliente Teste` },
-      });
-    if (custUserErr) throw new Error(`Customer user: ${custUserErr.message}`);
+    const customerUser = await getOrCreateUser(customerEmail, "Cliente Teste");
 
-    // Create customer record
-    const { data: customer, error: custErr } = await supabaseAdmin
+    // Create customer record (idempotent)
+    let customer: { id: string };
+    const { data: existingCust } = await supabaseAdmin
       .from("customers")
-      .insert({
-        name: "Cliente Teste",
-        user_id: customerUser.user.id,
+      .select("id")
+      .eq("user_id", customerUser.id)
+      .eq("brand_id", brand.id)
+      .maybeSingle();
+    if (existingCust) {
+      customer = existingCust;
+    } else {
+      const { data: newCust, error: custErr } = await supabaseAdmin
+        .from("customers")
+        .insert({
+          name: "Cliente Teste",
+          user_id: customerUser.id,
+          brand_id: brand.id,
+          branch_id: branch.id,
+          points_balance: test_points,
+        })
+        .select("id")
+        .single();
+      if (custErr) throw new Error(`Customer: ${custErr.message}`);
+      customer = newCust;
+
+      // Add points ledger entry
+      await supabaseAdmin.from("points_ledger").insert({
+        customer_id: customer.id,
         brand_id: brand.id,
         branch_id: branch.id,
-        points_balance: test_points,
-      })
-      .select("id")
-      .single();
-    if (custErr) throw new Error(`Customer: ${custErr.message}`);
-
-    // Add points ledger entry
-    await supabaseAdmin.from("points_ledger").insert({
-      customer_id: customer.id,
-      brand_id: brand.id,
-      branch_id: branch.id,
-      points_amount: test_points,
-      entry_type: "CREDIT",
-      reference_type: "MANUAL",
-      reason: "Crédito inicial de teste",
-      created_by_user_id: callerUserId,
-    });
+        points_amount: test_points,
+        entry_type: "CREDIT",
+        reference_type: "MANUAL",
+        reason: "Crédito inicial de teste",
+        created_by_user_id: callerUserId,
+      });
+    }
 
     // Assign customer role
     await supabaseAdmin.from("user_roles").insert({
-      user_id: customerUser.user.id,
+      user_id: customerUser.id,
       role: "customer",
-    });
+    }).throwOnError().catch(() => {/* ignore duplicate */});
 
     // 7. Create store test user
     const storeEmail = `loja-${emailPrefix}@teste.com`;
-    const { data: storeUser, error: storeUserErr } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: storeEmail,
-        password: "123456",
-        email_confirm: true,
-        user_metadata: { full_name: `Loja Teste` },
-      });
-    if (storeUserErr) throw new Error(`Store user: ${storeUserErr.message}`);
+    const storeUser = await getOrCreateUser(storeEmail, "Loja Teste");
 
     // Create store record
-    await supabaseAdmin.from("stores").insert({
-      name: "Loja Teste Demo",
-      slug: `loja-teste-${emailPrefix}`,
-      brand_id: brand.id,
-      branch_id: branch.id,
-      owner_user_id: storeUser.user.id,
-      approval_status: "APPROVED",
-      is_active: true,
-      approved_at: new Date().toISOString(),
-      description: "Parceiro de demonstração criado automaticamente.",
-      email: storeEmail,
-    });
+    // Store record (idempotent)
+    const { data: existingStore } = await supabaseAdmin
+      .from("stores")
+      .select("id")
+      .eq("owner_user_id", storeUser.id)
+      .eq("brand_id", brand.id)
+      .maybeSingle();
+    if (!existingStore) {
+      await supabaseAdmin.from("stores").insert({
+        name: "Loja Teste Demo",
+        slug: `loja-teste-${emailPrefix}`,
+        brand_id: brand.id,
+        branch_id: branch.id,
+        owner_user_id: storeUser.id,
+        approval_status: "APPROVED",
+        is_active: true,
+        approved_at: new Date().toISOString(),
+        description: "Parceiro de demonstração criado automaticamente.",
+        email: storeEmail,
+      });
+    }
 
     // Assign store_admin role
     await supabaseAdmin.from("user_roles").insert({
-      user_id: storeUser.user.id,
+      user_id: storeUser.id,
       role: "store_admin",
-    });
+    }).throwOnError().catch(() => {/* ignore duplicate */});
 
     // 8. Copy core modules
     const { data: coreMods } = await supabaseAdmin
