@@ -42,7 +42,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
   const [cpf, setCpf] = useState("");
-  const [productValue, setProductValue] = useState("");
+  const [_productValue] = useState(""); // kept for compatibility
   const [pin, setPin] = useState<string | null>(null);
   const [completedRedemption, setCompletedRedemption] = useState<any>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -85,19 +85,24 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
   const isValidCpf = (v: string) => v.replace(/\D/g, "").length === 11;
 
   // Calculate required points for redemption
-  const getRequiredPoints = (pValue?: string) => {
-    if (offer.coupon_type === "PRODUCT") {
-      const val = pValue ? Number(pValue.replace(",", ".")) : 0;
-      return val > 0 && Number(offer.discount_percent) > 0
-        ? Math.round(val * (Number(offer.discount_percent) / 100))
-        : 0;
-    }
+  const getRequiredPoints = () => {
     return Math.round(Number(offer.value_rescue) || 0);
   };
 
-  const requiredPoints = getRequiredPoints(productValue);
+  const requiredPoints = getRequiredPoints();
   const customerPoints = Math.round(customer?.points_balance || 0);
   const hasEnoughPoints = customerPoints >= requiredPoints;
+
+  // Pre-calculated product values for PRODUCT offers
+  const discountPctOffer = Number(offer.discount_percent) || 0;
+  const termsParamsOffer = offer.terms_params_json as any;
+  const productPriceOffer = termsParamsOffer?.product_price
+    ? Number(termsParamsOffer.product_price)
+    : (discountPctOffer > 0 && Number(offer.value_rescue) > 0)
+      ? Number(offer.value_rescue) / (discountPctOffer / 100)
+      : Number(offer.value_rescue) || 0;
+  const creditAmountOffer = Number(offer.value_rescue) || 0;
+  const remainingAfterCredit = Math.max(0, productPriceOffer - creditAmountOffer);
 
   const handleRedeem = async () => {
     if (!brand || !selectedBranch) return;
@@ -107,7 +112,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
     }
 
     // Points balance validation
-    const finalRequired = getRequiredPoints(productValue);
+    const finalRequired = getRequiredPoints();
     if (finalRequired > 0 && customerPoints < finalRequired) {
       toast({
         title: "Saldo insuficiente",
@@ -157,12 +162,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         terms_text: offer.terms_text,
       };
 
-      const parsedProductValue = offer.coupon_type === "PRODUCT" && productValue
-        ? Number(productValue.replace(",", "."))
-        : undefined;
-      const creditApplied = parsedProductValue && Number(offer.discount_percent) > 0
-        ? parsedProductValue * (Number(offer.discount_percent) / 100)
-        : undefined;
+      const parsedProductValue = offer.coupon_type === "PRODUCT" ? productPriceOffer : undefined;
+      const creditApplied = offer.coupon_type === "PRODUCT" ? creditAmountOffer : undefined;
 
       const { data: created, error } = await supabase.from("redemptions").insert({
         offer_id: offer.id,
@@ -932,7 +933,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     </h3>
                     <p className="text-sm" style={{ color: `${fg}50` }}>
                       {offer.coupon_type === "PRODUCT" ? (
-                        <>Informe o valor do produto e seu CPF para gerar o cupom de desconto</>
+                        <>Confira os valores e informe seu CPF para gerar o cupom</>
                       ) : (
                         <>
                           Você está resgatando{" "}
@@ -951,44 +952,41 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     )}
                   </div>
 
-                  {/* Product value input - only for PRODUCT offers */}
+                  {/* Product value summary - for PRODUCT offers */}
                   {offer.coupon_type === "PRODUCT" && (
-                    <div className="mb-4">
-                      <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>Valor do produto (R$)</label>
-                      <input
-                        type="text" inputMode="decimal" value={productValue}
-                        onChange={e => {
-                          const v = e.target.value.replace(/[^\d,\.]/g, "");
-                          setProductValue(v);
-                        }}
-                        placeholder="0,00"
-                        className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                        style={{ borderColor: `${fg}15` }}
-                      />
-                      {productValue && Number(productValue.replace(",", ".")) > 0 && (() => {
-                        const ptsNeeded = getRequiredPoints(productValue);
-                        const insufficient = ptsNeeded > 0 && customerPoints < ptsNeeded;
-                        return (
-                          <div className="mt-2 space-y-2">
-                            <div className="rounded-xl p-3 text-center" style={{ backgroundColor: "#FFF8E1", border: "1px solid #FFD54F" }}>
-                              <p className="text-xs" style={{ color: `${fg}60` }}>
-                                Desconto de <strong style={{ color: "#E65100" }}>{offer.discount_percent}%</strong> ={" "}
-                                <strong style={{ color: "#E65100" }}>
-                                  R$ {(Number(productValue.replace(",", ".")) * (Number(offer.discount_percent) / 100)).toFixed(2).replace(".", ",")}
-                                </strong>{" "}
-                                = {ptsNeeded.toLocaleString("pt-BR")} pontos
-                              </p>
-                            </div>
-                            {insufficient && (
-                              <div className="rounded-xl p-3 text-center" style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA" }}>
-                                <p className="text-xs font-bold" style={{ color: "#991B1B" }}>
-                                  🔒 Saldo insuficiente — faltam {(ptsNeeded - customerPoints).toLocaleString("pt-BR")} pontos
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
+                    <div className="mb-4 space-y-2">
+                      {/* Product price */}
+                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${fg}04`, border: `1px solid ${fg}08` }}>
+                        <span className="text-sm" style={{ color: `${fg}60` }}>Valor do produto</span>
+                        <span className="text-sm font-bold" style={{ color: fg }}>
+                          R$ {productPriceOffer.toFixed(2).replace(".", ",")}
+                        </span>
+                      </div>
+                      {/* Credit applied */}
+                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
+                        <span className="text-sm" style={{ color: `${fg}60` }}>Desconto ({discountPctOffer}% em pontos)</span>
+                        <span className="text-sm font-bold" style={{ color: primary }}>
+                          - R$ {creditAmountOffer.toFixed(2).replace(".", ",")}
+                        </span>
+                      </div>
+                      {/* Remaining to pay */}
+                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: "#FFF8E1", border: "1.5px solid #FFD54F" }}>
+                        <span className="text-sm font-semibold" style={{ color: `${fg}80` }}>Você paga</span>
+                        <span className="text-lg font-bold" style={{ color: "#E65100" }}>
+                          R$ {remainingAfterCredit.toFixed(2).replace(".", ",")}
+                        </span>
+                      </div>
+                      {/* Points cost */}
+                      <div className="rounded-xl p-2 text-center">
+                        <span className="text-xs" style={{ color: `${fg}50` }}>
+                          Custo: <strong style={{ color: primary }}>{requiredPoints.toLocaleString("pt-BR")} pontos</strong>
+                        </span>
+                        {!hasEnoughPoints && (
+                          <p className="text-xs font-bold mt-1" style={{ color: "#991B1B" }}>
+                            🔒 Saldo insuficiente — faltam {(requiredPoints - customerPoints).toLocaleString("pt-BR")} pontos
+                          </p>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1010,7 +1008,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       Voltar
                     </button>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
-                      disabled={redeeming || !isValidCpf(cpf) || !hasEnoughPoints || (offer.coupon_type === "PRODUCT" && (!productValue || Number(productValue.replace(",", ".")) <= 0 || getRequiredPoints(productValue) > customerPoints))}
+                      disabled={redeeming || !isValidCpf(cpf) || !hasEnoughPoints}
                       className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50"
                       style={{ backgroundColor: primary }}>
                       {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
