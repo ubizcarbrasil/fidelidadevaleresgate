@@ -84,12 +84,39 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
   const isValidCpf = (v: string) => v.replace(/\D/g, "").length === 11;
 
+  // Calculate required points for redemption
+  const getRequiredPoints = (pValue?: string) => {
+    if (offer.coupon_type === "PRODUCT") {
+      const val = pValue ? Number(pValue.replace(",", ".")) : 0;
+      return val > 0 && Number(offer.discount_percent) > 0
+        ? Math.round(val * (Number(offer.discount_percent) / 100))
+        : 0;
+    }
+    return Math.round(Number(offer.value_rescue) || 0);
+  };
+
+  const requiredPoints = getRequiredPoints(productValue);
+  const customerPoints = Math.round(customer?.points_balance || 0);
+  const hasEnoughPoints = customerPoints >= requiredPoints;
+
   const handleRedeem = async () => {
     if (!brand || !selectedBranch) return;
     if (!isValidCpf(cpf)) {
       toast({ title: "CPF inválido", description: "Informe os 11 dígitos do CPF.", variant: "destructive" });
       return;
     }
+
+    // Points balance validation
+    const finalRequired = getRequiredPoints(productValue);
+    if (finalRequired > 0 && customerPoints < finalRequired) {
+      toast({
+        title: "Saldo insuficiente",
+        description: `Você precisa de ${finalRequired.toLocaleString("pt-BR")} pontos, mas possui apenas ${customerPoints.toLocaleString("pt-BR")}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setRedeeming(true);
     try {
       // Ensure we have a valid authenticated session
@@ -603,21 +630,28 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
                 <span className="text-sm" style={{ color: `${fg}50` }}>Seu saldo:</span>
-                <span className="text-sm font-bold" style={{ color: primary }}>
-                  {Math.round(customer.points_balance || 0).toLocaleString("pt-BR")} pontos
+                <span className="text-sm font-bold" style={{ color: customerPoints > 0 ? primary : "#DC2626" }}>
+                  {customerPoints.toLocaleString("pt-BR")} pontos
                 </span>
               </div>
             )}
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
-              setRedemptionStep("terms");
-              setTermsAccepted(false);
-              setIsSigningUp(false);
-              setShowConfirm(true);
-            }}
-              className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
-              style={{ backgroundColor: "#FFD54F", color: "#1F2937", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
-              PAGUE {offer.discount_percent}% COM PONTOS
-            </motion.button>
+            {customer && customerPoints <= 0 ? (
+              <div className="w-full py-4 rounded-2xl font-bold text-sm text-center"
+                style={{ backgroundColor: `${fg}08`, color: `${fg}40` }}>
+                🔒 Você precisa acumular pontos para resgatar
+              </div>
+            ) : (
+              <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
+                setRedemptionStep("terms");
+                setTermsAccepted(false);
+                setIsSigningUp(false);
+                setShowConfirm(true);
+              }}
+                className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
+                style={{ backgroundColor: "#FFD54F", color: "#1F2937", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
+                PAGUE {offer.discount_percent}% COM PONTOS
+              </motion.button>
+            )}
           </div>
         </div>
       )}
@@ -626,18 +660,38 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       {!redeemed && offer.coupon_type !== "PRODUCT" && (
         <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
-              setRedemptionStep("terms");
-              setTermsAccepted(false);
-              setIsSigningUp(false);
-              setShowConfirm(true);
-            }}
-              className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
-              style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
-              {Number(offer.value_rescue) > 0
-                ? `Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
-                : "Resgatar agora"}
-            </motion.button>
+            {customer && (
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className="text-sm" style={{ color: `${fg}50` }}>Seu saldo:</span>
+                <span className="text-sm font-bold" style={{ color: customerPoints >= requiredPoints ? primary : "#DC2626" }}>
+                  {customerPoints.toLocaleString("pt-BR")} pontos
+                </span>
+              </div>
+            )}
+            {customer && requiredPoints > 0 && customerPoints < requiredPoints ? (
+              <div className="w-full py-4 rounded-2xl text-center space-y-1"
+                style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA" }}>
+                <p className="text-sm font-bold" style={{ color: "#991B1B" }}>
+                  🔒 Saldo insuficiente
+                </p>
+                <p className="text-xs" style={{ color: "#B91C1C" }}>
+                  Necessário: {requiredPoints.toLocaleString("pt-BR")} pts · Faltam {(requiredPoints - customerPoints).toLocaleString("pt-BR")} pts
+                </p>
+              </div>
+            ) : (
+              <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
+                setRedemptionStep("terms");
+                setTermsAccepted(false);
+                setIsSigningUp(false);
+                setShowConfirm(true);
+              }}
+                className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
+                style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
+                {Number(offer.value_rescue) > 0
+                  ? `Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
+                  : "Resgatar agora"}
+              </motion.button>
+            )}
           </div>
         </div>
       )}
@@ -902,17 +956,30 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
                         style={{ borderColor: `${fg}15` }}
                       />
-                      {productValue && Number(productValue.replace(",", ".")) > 0 && (
-                        <div className="mt-2 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFF8E1", border: "1px solid #FFD54F" }}>
-                          <p className="text-xs" style={{ color: `${fg}60` }}>
-                            Desconto de <strong style={{ color: "#E65100" }}>{offer.discount_percent}%</strong> ={" "}
-                            <strong style={{ color: "#E65100" }}>
-                              R$ {(Number(productValue.replace(",", ".")) * (Number(offer.discount_percent) / 100)).toFixed(2).replace(".", ",")}
-                            </strong>{" "}
-                            pagos com pontos
-                          </p>
-                        </div>
-                      )}
+                      {productValue && Number(productValue.replace(",", ".")) > 0 && (() => {
+                        const ptsNeeded = getRequiredPoints(productValue);
+                        const insufficient = ptsNeeded > 0 && customerPoints < ptsNeeded;
+                        return (
+                          <div className="mt-2 space-y-2">
+                            <div className="rounded-xl p-3 text-center" style={{ backgroundColor: "#FFF8E1", border: "1px solid #FFD54F" }}>
+                              <p className="text-xs" style={{ color: `${fg}60` }}>
+                                Desconto de <strong style={{ color: "#E65100" }}>{offer.discount_percent}%</strong> ={" "}
+                                <strong style={{ color: "#E65100" }}>
+                                  R$ {(Number(productValue.replace(",", ".")) * (Number(offer.discount_percent) / 100)).toFixed(2).replace(".", ",")}
+                                </strong>{" "}
+                                = {ptsNeeded.toLocaleString("pt-BR")} pontos
+                              </p>
+                            </div>
+                            {insufficient && (
+                              <div className="rounded-xl p-3 text-center" style={{ backgroundColor: "#FEF2F2", border: "1.5px solid #FECACA" }}>
+                                <p className="text-xs font-bold" style={{ color: "#991B1B" }}>
+                                  🔒 Saldo insuficiente — faltam {(ptsNeeded - customerPoints).toLocaleString("pt-BR")} pontos
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
@@ -934,7 +1001,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       Voltar
                     </button>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
-                      disabled={redeeming || !isValidCpf(cpf) || (offer.coupon_type === "PRODUCT" && (!productValue || Number(productValue.replace(",", ".")) <= 0))}
+                      disabled={redeeming || !isValidCpf(cpf) || !hasEnoughPoints || (offer.coupon_type === "PRODUCT" && (!productValue || Number(productValue.replace(",", ".")) <= 0 || getRequiredPoints(productValue) > customerPoints))}
                       className="flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50"
                       style={{ backgroundColor: primary }}>
                       {redeeming ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar"}
