@@ -1,30 +1,47 @@
 
 
-## Problema Identificado
+## Problema Raiz
 
-Quando o `brand_admin` (`teste-ubizresgata@teste.com`) acessa "Aparência da Marca" no menu lateral, é direcionado para `/brands` - uma página de listagem pensada para o ROOT. Ele vê uma tabela com sua marca e um botão "Nova Marca" irrelevante, ao invés de acessar diretamente o editor de temas da sua marca.
+Existem **dois problemas** impedindo os links de funcionar:
 
-Os dados e permissões estão corretos no banco (RLS permite SELECT e UPDATE para brand_admin na sua própria marca). O problema é puramente de UX/roteamento.
+1. **A marca "Ubiz Resgata" está desativada** (`is_active = false` no banco). Isso impede a resolução white-label no domínio `ubiz-resgata.valeresgate.com`.
 
-## Plano
+2. **O domínio `ubiz-resgata.valeresgate.com` não tem DNS apontando para o app**. O registro existe no banco mas o DNS do domínio `valeresgate.com` não aponta o subdomínio para o IP correto (185.158.133.1). Por isso o Safari mostra "servidor não pode ser encontrado".
 
-### 1. Redirecionar brand_admin para edição direta da sua marca
+3. **Os links usam o domínio externo como base**, que não funciona sem o DNS configurado.
 
-No componente `Brands.tsx`, adicionar lógica no início: se o usuário for `brand_admin` (não root), extrair o `brand_id` do `useBrandGuard()` e fazer redirect automático para `/brands/{brand_id}`.
+## Plano de Correção
 
-### 2. Ajustar BrandForm para brand_admin
+### 1. Ativar a marca no banco
+Executar migração SQL para corrigir `is_active = true` na marca `effc4685-375e-40c8-8a44-d71bd550f422`.
 
-No `BrandForm.tsx`, quando o usuário for brand_admin:
-- Ocultar o campo de seleção de Tenant (somente leitura)
-- Ocultar campos de slug e status que não devem ser alterados pelo empreendedor
-- Focar a experiência na aba de Tema (cores, logo, etc.) e Seções
+### 2. Reformular os links no Dashboard para suportar os dois cenários
+No `src/pages/Dashboard.tsx` (componente `BrandQuickLinks`):
 
-### 3. Atualizar link no BrandSidebar
+- **Link primário (funciona agora)**: Usar o `window.location.origin` + rotas internas (`/customer-preview`, `/register-store`, `/store-panel`). Esses caminhos funcionam imediatamente porque são rotas do SPA onde o brand_admin já está logado.
 
-No `BrandSidebar.tsx`, alterar a URL do item "Aparência da Marca" para apontar diretamente a `/brands/{brandId}` quando o `currentBrandId` estiver disponível, evitando o passo intermediário da listagem.
+- **Link secundário (domínio próprio)**: Mostrar o domínio customizado (`ubiz-resgata.valeresgate.com`) como URL de produção com aviso de que precisa configurar DNS. Botão de copiar para facilitar.
+
+Estrutura dos 3 links:
+
+```text
+App do Cliente
+  Principal: {origin}/customer-preview  ← funciona agora
+  Produção:  https://ubiz-resgata.valeresgate.com  ← requer DNS
+
+Cadastro de Parceiro  
+  Principal: {origin}/register-store  ← funciona agora
+  Produção:  https://ubiz-resgata.valeresgate.com/register-store  ← requer DNS
+
+Painel do Parceiro
+  Principal: {origin}/store-panel  ← funciona agora
+  Produção:  https://ubiz-resgata.valeresgate.com/store-panel  ← requer DNS
+```
+
+### 3. Indicar status do domínio
+Adicionar um badge visual no card de "Links Úteis" indicando se o domínio próprio está ativo (DNS resolvendo) ou pendente de configuração, com um tooltip explicando como configurar.
 
 ### Arquivos a modificar
-- `src/pages/Brands.tsx` - Redirect para brand_admin
-- `src/pages/BrandForm.tsx` - Ocultar campos admin-only para brand_admin  
-- `src/components/consoles/BrandSidebar.tsx` - Link direto para a marca do empreendedor
+- **Migração SQL**: Ativar a marca no banco (`UPDATE brands SET is_active = true`)
+- **`src/pages/Dashboard.tsx`**: Reformular `BrandQuickLinks` com links internos + links de produção
 
