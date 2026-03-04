@@ -93,7 +93,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/customer-preview" element={<CustomerPreviewPage />} />
+        <Route path="/customer-preview" element={<ProtectedRoute><CustomerPreviewPage /></ProtectedRoute>} />
         <Route path="/webview" element={<WebviewPage />} />
         <Route path="/p/:slug" element={<CustomPage />} />
         <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
