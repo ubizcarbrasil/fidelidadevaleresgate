@@ -14,11 +14,13 @@ import { ArrowLeft } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
 import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function BrandForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
+  const { isRootAdmin } = useBrandGuard();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -33,6 +35,7 @@ export default function BrandForm() {
       const { data } = await supabase.from("tenants").select("id, name").eq("is_active", true).order("name");
       return data || [];
     },
+    enabled: isRootAdmin,
   });
 
   useEffect(() => {
@@ -52,81 +55,97 @@ export default function BrandForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tenantId) {
+    if (isRootAdmin && !tenantId) {
       toast.error("Selecione um tenant");
       return;
     }
     setLoading(true);
 
-    // Clean empty values from theme
     const cleanTheme = JSON.parse(JSON.stringify(theme, (_, v) => (v === "" || v === undefined ? undefined : v)));
-    const payload = {
+    const basePayload = {
       name,
-      slug,
-      tenant_id: tenantId,
-      is_active: isActive,
       brand_settings_json: Object.keys(cleanTheme).length > 0 ? cleanTheme : null,
     };
 
     const { error } = isEdit
-      ? await supabase.from("brands").update(payload).eq("id", id!)
-      : await supabase.from("brands").insert(payload);
+      ? await supabase.from("brands").update({
+          ...basePayload,
+          ...(isRootAdmin ? { slug, tenant_id: tenantId, is_active: isActive } : {}),
+        }).eq("id", id!)
+      : await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive }]);
 
     if (error) toast.error(error.message);
-    else { toast.success(isEdit ? "Brand atualizada!" : "Brand criada!"); navigate("/brands"); }
+    else { toast.success(isEdit ? "Marca atualizada!" : "Marca criada!"); if (isRootAdmin) navigate("/brands"); }
     setLoading(false);
   };
 
+  // Brand admins default to theme tab
+  const defaultTab = !isRootAdmin && isEdit ? "theme" : "general";
+
   return (
     <div className="space-y-6 max-w-5xl">
-      <Button variant="ghost" onClick={() => navigate("/brands")} className="gap-2">
-        <ArrowLeft className="h-4 w-4" />Voltar
-      </Button>
+      {isRootAdmin && (
+        <Button variant="ghost" onClick={() => navigate("/brands")} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />Voltar
+        </Button>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Tabs defaultValue="general">
+        <Tabs defaultValue={defaultTab}>
           <TabsList>
-            <TabsTrigger value="general">Geral</TabsTrigger>
+            {isRootAdmin && <TabsTrigger value="general">Geral</TabsTrigger>}
             <TabsTrigger value="theme">Tema Visual</TabsTrigger>
             {isEdit && <TabsTrigger value="sections">Seções da Home</TabsTrigger>}
           </TabsList>
 
-          <TabsContent value="general" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{isEdit ? "Editar Marca" : "Nova Marca"}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                   <Label>Organização</Label>
-                   <Select value={tenantId} onValueChange={setTenantId}>
-                     <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
-                    <SelectContent>
-                      {tenants?.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
+          {isRootAdmin && (
+            <TabsContent value="general" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{isEdit ? "Editar Marca" : "Nova Marca"}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Nome</Label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                     <Label>Organização</Label>
+                     <Select value={tenantId} onValueChange={setTenantId}>
+                       <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
+                      <SelectContent>
+                        {tenants?.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Nome</Label>
+                      <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Identificador</Label>
+                      <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Identificador</Label>
-                    <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
+                    <Label>Ativo</Label>
+                    <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Ativo</Label>
-                  <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="theme" className="mt-4">
+            {!isRootAdmin && (
+              <Card className="mb-4">
+                <CardContent className="pt-4">
+                  <div className="space-y-2">
+                    <Label>Nome da Marca</Label>
+                    <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} />
           </TabsContent>
 
@@ -139,7 +158,7 @@ export default function BrandForm() {
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/brands")}>Cancelar</Button>
+          {isRootAdmin && <Button type="button" variant="outline" onClick={() => navigate("/brands")}>Cancelar</Button>}
         </div>
       </form>
     </div>

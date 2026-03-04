@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,20 @@ import { Plus, Pencil, Power } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
 export default function Brands() {
+  const { isRootAdmin, currentBrandId } = useBrandGuard();
+  const navigate = useNavigate();
+
+  // Brand admins go directly to their brand editor
+  useEffect(() => {
+    if (!isRootAdmin && currentBrandId) {
+      navigate(`/brands/${currentBrandId}`, { replace: true });
+    }
+  }, [isRootAdmin, currentBrandId, navigate]);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
