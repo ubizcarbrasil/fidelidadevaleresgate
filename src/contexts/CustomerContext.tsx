@@ -29,8 +29,8 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
 
-    // Try to find existing customer
-    const { data: existing } = await supabase
+    // Try to find existing customer in selected branch first
+    const { data: existingInBranch } = await supabase
       .from("customers")
       .select("*")
       .eq("user_id", user.id)
@@ -38,8 +38,36 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       .eq("branch_id", selectedBranch.id)
       .maybeSingle();
 
-    if (existing) {
-      setCustomer(existing);
+    if (existingInBranch) {
+      setCustomer(existingInBranch);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback: reuse any existing customer from same brand to avoid creating a new zero-balance profile
+    const { data: existingInBrand } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("brand_id", brand.id)
+      .order("points_balance", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingInBrand) {
+      if (existingInBrand.branch_id !== selectedBranch.id) {
+        const { data: movedCustomer } = await supabase
+          .from("customers")
+          .update({ branch_id: selectedBranch.id })
+          .eq("id", existingInBrand.id)
+          .select("*")
+          .maybeSingle();
+
+        setCustomer(movedCustomer || existingInBrand);
+      } else {
+        setCustomer(existingInBrand);
+      }
       setLoading(false);
       return;
     }

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Loader2, Star, Wallet, Coins, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Loader2, Star, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
@@ -64,7 +64,7 @@ export default function CustomerWalletPage() {
 
       {/* Balance Cards */}
       {customer && (
-        <div className="grid grid-cols-2 gap-3 mb-7">
+        <div className="mb-7">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -86,30 +86,12 @@ export default function CustomerWalletPage() {
               </span>
             </div>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" as const }}
-            className="rounded-[20px] p-4 bg-white relative overflow-hidden"
-            style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
-          >
-            <div className="relative z-10">
-              <div className="flex items-center gap-1.5 mb-2" style={{ color: `${fg}50` }}>
-                <Coins className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Valor (R$)</span>
-              </div>
-              <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-                {Number(customer.money_balance).toFixed(2)}
-              </span>
-            </div>
-          </motion.div>
         </div>
       )}
 
       {/* Transaction History */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold" style={{ color: `${fg}70` }}>Histórico</h3>
+        <h3 className="text-sm font-bold" style={{ color: `${fg}70` }}>Histórico de pontos</h3>
         <span className="text-xs font-medium" style={{ color: primary }}>Ver todos</span>
       </div>
 
