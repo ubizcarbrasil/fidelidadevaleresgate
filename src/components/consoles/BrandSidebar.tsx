@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandName } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -106,6 +107,18 @@ export function BrandSidebar() {
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
   const brandName = useBrandName();
+  const { currentBrandId } = useBrandGuard();
+
+  // Dynamically resolve brand theme URL
+  const resolvedGroups = groups.map(group => ({
+    ...group,
+    items: group.items.map(item => {
+      if (item.key === "sidebar.tema_marca" && currentBrandId) {
+        return { ...item, url: `/brands/${currentBrandId}` };
+      }
+      return item;
+    }),
+  }));
 
   return (
     <Sidebar collapsible="icon">
@@ -123,7 +136,7 @@ export function BrandSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {groups.map((group) => {
+        {resolvedGroups.map((group) => {
           const visibleItems = group.items.filter(
             (item) => !item.moduleKey || isModuleEnabled(item.moduleKey)
           );
