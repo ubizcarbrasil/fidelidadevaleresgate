@@ -12,5 +12,8 @@ verify_jwt = false
 [functions.provision-brand]
 verify_jwt = false
 
+[functions.seed-demo-stores]
+verify_jwt = false
+
 [functions.send-push-notification]
 verify_jwt = false

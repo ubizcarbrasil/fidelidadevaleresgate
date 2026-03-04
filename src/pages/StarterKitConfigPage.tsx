@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Package, Store, Coins, Layout, Save } from "lucide-react";
+import { Loader2, Package, Store, Coins, Layout, Save, Rocket } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StarterKitConfig {
   demo_sections_count: number;
@@ -19,12 +19,15 @@ interface StarterKitConfig {
 
 export default function StarterKitConfigPage() {
   const queryClient = useQueryClient();
+  const { roles } = useAuth();
   const [config, setConfig] = useState<StarterKitConfig>({
     demo_sections_count: 3,
     demo_stores_count: 2,
     initial_customer_points: 1000,
     default_home_template_id: null,
   });
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [seeding, setSeeding] = useState(false);
 
   const { data: configRow, isLoading } = useQuery({
     queryKey: ["platform_config", "starter_kit"],
@@ -50,6 +53,35 @@ export default function StarterKitConfigPage() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: brands } = useQuery({
+    queryKey: ["brands-for-seed"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: branches } = useQuery({
+    queryKey: ["branches-for-seed", selectedBrandId],
+    queryFn: async () => {
+      if (!selectedBrandId) return [];
+      const { data, error } = await supabase
+        .from("branches")
+        .select("id, name")
+        .eq("brand_id", selectedBrandId)
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedBrandId,
   });
 
   useEffect(() => {
@@ -80,6 +112,41 @@ export default function StarterKitConfigPage() {
       toast({ title: "Erro", description: "Não foi possível salvar.", variant: "destructive" });
     },
   });
+
+  const handleSeedDemoStores = async () => {
+    if (!selectedBrandId) {
+      toast({ title: "Selecione uma marca", variant: "destructive" });
+      return;
+    }
+
+    const branchId = branches?.[0]?.id;
+    if (!branchId) {
+      toast({ title: "Nenhuma filial encontrada para essa marca", variant: "destructive" });
+      return;
+    }
+
+    setSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-demo-stores", {
+        body: { brand_id: selectedBrandId, branch_id: branchId },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Parceiros demo criados!",
+        description: `${data.created} criados, ${data.skipped} já existiam.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Erro ao criar parceiros demo",
+        description: err.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -158,6 +225,58 @@ export default function StarterKitConfigPage() {
           Salvar Configuração
         </Button>
       </div>
+
+      {/* Seed Demo Stores Section */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Rocket className="h-4 w-4 text-primary" />
+            Injetar 40 Parceiros Demo em Marca Existente
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Cria 40 estabelecimentos fictícios com ofertas, catálogo e logos realistas na marca selecionada. Parceiros já existentes não serão duplicados.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Marca</label>
+              <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma marca" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands?.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Filial</label>
+              <Select disabled value={branches?.[0]?.id || ""}>
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedBrandId ? (branches?.length ? branches[0].name : "Nenhuma filial") : "Selecione a marca primeiro"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches?.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSeedDemoStores}
+            disabled={seeding || !selectedBrandId || !branches?.length}
+            className="w-full sm:w-auto"
+          >
+            {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Rocket className="h-4 w-4 mr-2" />}
+            {seeding ? "Criando parceiros..." : "Injetar 40 Parceiros Demo"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
