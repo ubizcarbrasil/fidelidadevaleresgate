@@ -3,31 +3,68 @@ import { supabase } from "@/integrations/supabase/client";
 import { BrandProviderOverride } from "@/contexts/BrandContext";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import { Loader2 } from "lucide-react";
-import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
 
 export default function CustomerPreviewPage() {
-  const { currentBrandId } = useBrandGuard();
+  const { user, roles, loading: authLoading } = useAuth();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!currentBrandId) {
-      setError("Não foi possível identificar a marca do usuário logado.");
+    if (authLoading) return;
+
+    if (!user) {
+      setError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
 
+    const resolveBrandId = async (): Promise<string | null> => {
+      // 1) Try from roles directly
+      const roleWithBrand = roles.find((r) => r.brand_id);
+      if (roleWithBrand?.brand_id) return roleWithBrand.brand_id;
+
+      // 2) Try from profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("brand_id")
+        .eq("id", user.id)
+        .single();
+      if (profile?.brand_id) return profile.brand_id;
+
+      // 3) Try from branch_id in roles → get brand_id from branch
+      const roleWithBranch = roles.find((r) => r.branch_id);
+      if (roleWithBranch?.branch_id) {
+        const { data: branchRow } = await supabase
+          .from("branches")
+          .select("brand_id")
+          .eq("id", roleWithBranch.branch_id)
+          .single();
+        if (branchRow?.brand_id) return branchRow.brand_id;
+      }
+
+      return null;
+    };
+
     const fetchData = async () => {
+      const brandId = await resolveBrandId();
+
+      if (!brandId) {
+        setError("Não foi possível identificar a marca do usuário logado.");
+        setLoading(false);
+        return;
+      }
+
       const { data: brandData, error: brandErr } = await supabase
         .from("brands")
         .select("*")
-        .eq("id", currentBrandId)
+        .eq("id", brandId)
         .eq("is_active", true)
         .single();
 
@@ -49,9 +86,9 @@ export default function CustomerPreviewPage() {
       setLoading(false);
     };
     fetchData();
-  }, [currentBrandId]);
+  }, [user, roles, authLoading]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
