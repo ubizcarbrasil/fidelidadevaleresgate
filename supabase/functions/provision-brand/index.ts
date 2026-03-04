@@ -99,24 +99,36 @@ Deno.serve(async (req) => {
       tenant = newTenant;
     }
 
-    // 2. Create brand
+    // 2. Create brand (idempotent)
     const brandSettings = {
       logo_url: logo_url || null,
       primary_color: primary_color || "#6366f1",
       secondary_color: secondary_color || "#f59e0b",
       test_accounts: [] as any[],
     };
-    const { data: brand, error: brandErr } = await supabaseAdmin
+    let brand: { id: string };
+    const { data: existingBrand } = await supabaseAdmin
       .from("brands")
-      .insert({
-        name: company_name,
-        slug: brand_slug,
-        tenant_id: tenant.id,
-        brand_settings_json: brandSettings,
-      })
       .select("id")
-      .single();
-    if (brandErr) throw new Error(`Brand: ${brandErr.message}`);
+      .eq("tenant_id", tenant.id)
+      .eq("slug", brand_slug)
+      .maybeSingle();
+    if (existingBrand) {
+      brand = existingBrand;
+    } else {
+      const { data: newBrand, error: brandErr } = await supabaseAdmin
+        .from("brands")
+        .insert({
+          name: company_name,
+          slug: brand_slug,
+          tenant_id: tenant.id,
+          brand_settings_json: brandSettings,
+        })
+        .select("id")
+        .single();
+      if (brandErr) throw new Error(`Brand: ${brandErr.message}`);
+      brand = newBrand;
+    }
 
     // 3. Create branch
     const { data: branch, error: branchErr } = await supabaseAdmin
