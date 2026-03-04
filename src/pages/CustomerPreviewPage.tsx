@@ -3,39 +3,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { BrandProviderOverride } from "@/contexts/BrandContext";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import { Loader2 } from "lucide-react";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
 
 export default function CustomerPreviewPage() {
+  const { currentBrandId } = useBrandGuard();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetch = async () => {
-      // Find a brand that has at least one active branch
-      const { data: branchWithBrand } = await supabase
-        .from("branches")
-        .select("brand_id")
-        .eq("is_active", true)
-        .limit(1)
-        .single();
+    if (!currentBrandId) {
+      setError("Não foi possível identificar a marca do usuário logado.");
+      setLoading(false);
+      return;
+    }
 
-      const targetBrandId = branchWithBrand?.brand_id;
-
+    const fetchData = async () => {
       const { data: brandData, error: brandErr } = await supabase
         .from("brands")
         .select("*")
+        .eq("id", currentBrandId)
         .eq("is_active", true)
-        .eq("id", targetBrandId || "00000000-0000-0000-0000-000000000000")
-        .limit(1)
         .single();
 
       if (brandErr || !brandData) {
-        setError("Nenhuma brand ativa encontrada no banco.");
+        setError("Marca não encontrada ou inativa.");
         setLoading(false);
         return;
       }
@@ -51,8 +48,8 @@ export default function CustomerPreviewPage() {
       setBranches(branchData || []);
       setLoading(false);
     };
-    fetch();
-  }, []);
+    fetchData();
+  }, [currentBrandId]);
 
   if (loading) {
     return (
