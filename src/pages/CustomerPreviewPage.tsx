@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandProviderOverride } from "@/contexts/BrandContext";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
@@ -16,6 +16,11 @@ export default function CustomerPreviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const forcedBrandId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("brandId");
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -26,17 +31,20 @@ export default function CustomerPreviewPage() {
     }
 
     const resolveBrandId = async (): Promise<string | null> => {
-      // 1) Try from roles directly
-      const roleWithBrand = roles.find((r) => r.brand_id);
-      if (roleWithBrand?.brand_id) return roleWithBrand.brand_id;
+      // 0) Explicit URL override (used by quick links) - still protected by RLS on next queries
+      if (forcedBrandId) return forcedBrandId;
 
-      // 2) Try from profile
+      // 1) Try from profile first (more deterministic for users with multiple roles)
       const { data: profile } = await supabase
         .from("profiles")
         .select("brand_id")
         .eq("id", user.id)
         .single();
       if (profile?.brand_id) return profile.brand_id;
+
+      // 2) Try from roles directly
+      const roleWithBrand = roles.find((r) => r.brand_id);
+      if (roleWithBrand?.brand_id) return roleWithBrand.brand_id;
 
       // 3) Try from branch_id in roles → get brand_id from branch
       const roleWithBranch = roles.find((r) => r.branch_id);
@@ -86,7 +94,7 @@ export default function CustomerPreviewPage() {
       setLoading(false);
     };
     fetchData();
-  }, [user, roles, authLoading]);
+  }, [user, roles, authLoading, forcedBrandId]);
 
   if (loading || authLoading) {
     return (
