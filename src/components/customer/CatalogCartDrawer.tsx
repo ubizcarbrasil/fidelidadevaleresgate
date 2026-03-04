@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus, Trash2, ShoppingBag, MessageCircle, Sparkles, User } from "lucide-react";
+import { openLink } from "@/lib/openLink";
 
 export interface CartItem {
   id: string;
@@ -110,7 +111,23 @@ export default function CatalogCartDrawer({
     } catch {}
 
     setSending(false);
-    window.open(url, "_blank");
+    await openLink({
+      url,
+      mode: "REDIRECT",
+      tracking: {
+        brand_id: brandId,
+        branch_id: branchId,
+        customer_id: customerId,
+        click_type: "catalog_whatsapp_checkout",
+        source_context_json: {
+          store_id: storeId,
+          store_name: storeName,
+          total_amount: total,
+          total_items: totalQty,
+          points_estimate: pointsEstimate,
+        },
+      },
+    });
     onOrderSent?.();
     onOpenChange(false);
   };

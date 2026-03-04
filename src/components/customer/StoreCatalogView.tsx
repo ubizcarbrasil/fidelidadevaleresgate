@@ -246,8 +246,18 @@ export default function StoreCatalogView({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="rounded-2xl bg-white overflow-hidden relative"
+              className="rounded-2xl bg-white overflow-hidden relative cursor-pointer"
               style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
+              onClick={() => addToCart(item, false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  addToCart(item, false);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Adicionar ${item.name} ao carrinho`}
             >
               {item.image_url ? (
                 <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover" />
@@ -284,7 +294,10 @@ export default function StoreCatalogView({
               {/* Add buttons */}
               <div className="absolute top-2 right-2 flex flex-col gap-1">
                 <button
-                  onClick={() => addToCart(item, false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(item, false);
+                  }}
                   className="h-8 w-8 rounded-full flex items-center justify-center text-white shadow-lg"
                   style={{ backgroundColor: primary }}
                   title="Adicionar inteira"
@@ -293,7 +306,10 @@ export default function StoreCatalogView({
                 </button>
                 {item.allow_half && (
                   <button
-                    onClick={() => addToCart(item, true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(item, true);
+                    }}
                     className="h-7 rounded-full px-2 flex items-center justify-center text-[9px] font-bold text-white shadow-lg"
                     style={{ backgroundColor: `${primary}CC` }}
                     title="Adicionar meia"
