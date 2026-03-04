@@ -106,7 +106,34 @@ function BrandQuickLinks() {
   const testAccounts = settings?.test_accounts as
     | { email: string; role: string; is_active: boolean }[]
     | undefined;
-  const baseUrl = domain?.domain ? `https://${domain.domain}` : window.location.origin;
+
+  const normalizeBaseUrl = (rawDomain?: string | null) => {
+    if (!rawDomain) return window.location.origin;
+    const trimmed = rawDomain.trim().replace(/\/$/, "");
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    try {
+      return new URL(withProtocol).origin;
+    } catch {
+      return window.location.origin;
+    }
+  };
+
+  const buildUrl = (base: string, path = "") => {
+    try {
+      return new URL(path || "/", `${base}/`).toString().replace(/\/$/, path ? "" : "/");
+    } catch {
+      return `${window.location.origin}${path}`;
+    }
+  };
+
+  const openExternal = (url: string) => {
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      window.location.href = url;
+    }
+  };
+
+  const baseUrl = normalizeBaseUrl(domain?.domain || domain?.subdomain || null);
 
   const roleLabel: Record<string, string> = {
     brand_admin: "Admin",
@@ -134,9 +161,9 @@ function BrandQuickLinks() {
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
   const quickLinks = [
-    { label: "App do Cliente (PWA)", url: baseUrl, icon: ExternalLink, description: "Link público do aplicativo para clientes" },
-    { label: "Cadastro de Parceiro", url: `${baseUrl}/register-store`, icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
-    { label: "Painel do Parceiro", url: `${baseUrl}/store-panel`, icon: Store, description: "Painel de gestão das lojas parceiras" },
+    { label: "App do Cliente (PWA)", url: buildUrl(baseUrl), icon: ExternalLink, description: "Link público do aplicativo para clientes" },
+    { label: "Cadastro de Parceiro", url: buildUrl(baseUrl, "/register-store"), icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
+    { label: "Painel do Parceiro", url: buildUrl(baseUrl, "/store-panel"), icon: Store, description: "Painel de gestão das lojas parceiras" },
   ];
 
   return (
@@ -162,7 +189,7 @@ function BrandQuickLinks() {
                   <Button variant="outline" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => copyText(link.url)}>
                     <Copy className="h-3 w-3" /> Copiar
                   </Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => window.open(link.url, "_blank", "noopener,noreferrer")}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => openExternal(link.url)}>
                     <ExternalLink className="h-3 w-3" />
                   </Button>
                 </div>
