@@ -146,7 +146,7 @@ function BrandQuickLinks() {
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
   const quickLinks = [
-    { label: "App do Cliente (PWA)", path: "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app como cliente" },
+    { label: "App do Cliente (PWA)", path: currentBrandId ? `/customer-preview?brandId=${currentBrandId}` : "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app como cliente" },
     { label: "Cadastro de Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
     { label: "Painel do Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Painel de gestão das lojas parceiras" },
   ];
