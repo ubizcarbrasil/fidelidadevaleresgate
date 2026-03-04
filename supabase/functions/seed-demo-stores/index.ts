@@ -303,12 +303,18 @@ Deno.serve(async (req) => {
 
       // Create offers
       for (const offer of demo.offers) {
+        const productPrice = offer.coupon_type === "PRODUCT" && offer.discount_percent > 0
+          ? offer.value_rescue / (offer.discount_percent / 100)
+          : 0;
         await supabaseAdmin.from("offers").insert({
           title: offer.title, description: offer.description,
           coupon_type: offer.coupon_type, discount_percent: offer.discount_percent,
           value_rescue: offer.value_rescue, image_url: offer.image_url || logoUrl,
           store_id: newStore.id, brand_id, branch_id,
           status: "ACTIVE", is_active: true, allowed_weekdays: [0, 1, 2, 3, 4, 5, 6],
+          terms_params_json: offer.coupon_type === "PRODUCT"
+            ? { product_price: productPrice, discount_percent: offer.discount_percent }
+            : {},
         });
       }
 

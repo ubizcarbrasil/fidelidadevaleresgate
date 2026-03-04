@@ -236,10 +236,19 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
         {(() => {
           const isProduct = offer.coupon_type === "PRODUCT";
           const termsParams = offer.terms_params_json as any;
-          const productPrice = termsParams?.product_price || 0;
           const discountPct = Number(offer.discount_percent) || 0;
-          const pointsValue = Math.round((discountPct / 100) * productPrice);
-          const creditAmount = (discountPct / 100) * productPrice;
+          // Product price: try terms_params_json first, then fall back to value_rescue / (discount/100)
+          const productPrice = termsParams?.product_price
+            ? Number(termsParams.product_price)
+            : (discountPct > 0 && Number(offer.value_rescue) > 0)
+              ? Number(offer.value_rescue) / (discountPct / 100)
+              : Number(offer.value_rescue) || 0;
+          const pointsValue = discountPct > 0 && productPrice > 0
+            ? Math.round((discountPct / 100) * productPrice)
+            : Math.round(Number(offer.value_rescue) || 0);
+          const creditAmount = discountPct > 0 && productPrice > 0
+            ? (discountPct / 100) * productPrice
+            : Number(offer.value_rescue) || 0;
 
           if (isProduct) {
             return (
