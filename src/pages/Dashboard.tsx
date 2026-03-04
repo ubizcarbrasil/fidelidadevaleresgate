@@ -162,10 +162,8 @@ function BrandQuickLinks() {
                   <Button variant="outline" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => copyText(link.url)}>
                     <Copy className="h-3 w-3" /> Copiar
                   </Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" asChild>
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => window.open(link.url, "_blank", "noopener,noreferrer")}>
+                    <ExternalLink className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
