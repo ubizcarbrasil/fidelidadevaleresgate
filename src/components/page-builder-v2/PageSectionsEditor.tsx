@@ -104,11 +104,20 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     setAdding(true);
 
     // Find template_id for this type
-    const { data: templates } = await supabase
+    // Find template_id: try by key first, then by type
+    let { data: templates } = await supabase
       .from("section_templates")
       .select("id, key")
       .eq("key", newSectionType)
       .limit(1);
+    if (!templates?.length) {
+      const res = await supabase
+        .from("section_templates")
+        .select("id, key")
+        .eq("type", newSectionType as any)
+        .limit(1);
+      templates = res.data;
+    }
 
     if (!templates?.length) {
       toast({ title: "Template não encontrado", variant: "destructive" });

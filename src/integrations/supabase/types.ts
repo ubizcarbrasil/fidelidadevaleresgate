@@ -718,40 +718,61 @@ export type Database = {
       }
       custom_pages: {
         Row: {
+          banner_config_json: Json
           brand_id: string
           created_at: string
           elements_json: Json
           id: string
           is_published: boolean
+          page_version: number
           permissions_json: Json
+          published_at: string | null
+          search_enabled: boolean
           slug: string
+          subtitle: string | null
           tags_json: Json
           title: string
           updated_at: string
+          visibility_config_json: Json
+          visibility_type: string
         }
         Insert: {
+          banner_config_json?: Json
           brand_id: string
           created_at?: string
           elements_json?: Json
           id?: string
           is_published?: boolean
+          page_version?: number
           permissions_json?: Json
+          published_at?: string | null
+          search_enabled?: boolean
           slug: string
+          subtitle?: string | null
           tags_json?: Json
           title: string
           updated_at?: string
+          visibility_config_json?: Json
+          visibility_type?: string
         }
         Update: {
+          banner_config_json?: Json
           brand_id?: string
           created_at?: string
           elements_json?: Json
           id?: string
           is_published?: boolean
+          page_version?: number
           permissions_json?: Json
+          published_at?: string | null
+          search_enabled?: boolean
           slug?: string
+          subtitle?: string | null
           tags_json?: Json
           title?: string
           updated_at?: string
+          visibility_config_json?: Json
+          visibility_type?: string
         }
         Relationships: [
           {

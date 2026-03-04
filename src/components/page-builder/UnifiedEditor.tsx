@@ -189,11 +189,20 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
     if (!newSectionType) return;
     setAddingSection(true);
     const brandId = brand?.id || page.brand_id;
-    const { data: templates } = await supabase
+    // Try by key first, then fallback to type column
+    let { data: templates } = await supabase
       .from("section_templates")
       .select("id, key")
       .eq("key", newSectionType)
       .limit(1);
+    if (!templates?.length) {
+      const res = await supabase
+        .from("section_templates")
+        .select("id, key")
+        .eq("type", newSectionType as any)
+        .limit(1);
+      templates = res.data;
+    }
     if (!templates?.length) {
       toast({ title: "Template não encontrado", variant: "destructive" });
       setAddingSection(false);
