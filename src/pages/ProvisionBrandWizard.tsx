@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Building2, MapPin, Palette, Rocket, CheckCircle2, Loader2, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import ImageUploadField from "@/components/ImageUploadField";
 
 type Step = "company" | "city" | "branding" | "review" | "done";
 const STEPS: Step[] = ["company", "city", "branding", "review", "done"];
@@ -238,11 +239,13 @@ export default function ProvisionBrandWizard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>URL do Logo (opcional)</Label>
-              <Input
+              <Label>Logo (opcional)</Label>
+              <ImageUploadField
                 value={form.logo_url}
-                onChange={(e) => update("logo_url", e.target.value)}
-                placeholder="https://..."
+                onChange={(url) => update("logo_url", url)}
+                folder="brand-logos"
+                label="Logo"
+                previewClassName="h-10 object-contain"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
