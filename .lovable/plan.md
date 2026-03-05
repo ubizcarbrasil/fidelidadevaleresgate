@@ -1,34 +1,51 @@
 
 
-## Diagnóstico: Cupons não aparecem no front
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-### Causa raiz
+## Resumo
 
-O usuário logado (`mtdomingos79@gmail.com` / `563335b8-...`) **não possui nenhuma role** na tabela `user_roles`. A política RLS da tabela `vouchers` exige `user_has_permission(auth.uid(), 'vouchers.read')`, que depende de o usuário ter um papel (role) atribuído. Sem role, a query retorna 0 linhas.
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-Existem 3 vouchers no banco, todos com `status = active` e `branch_id = 15ab8bf5-...`.
+## O que muda para o usuário
 
-### Solução
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-Duas ações são necessárias:
+## Mudanças Técnicas
 
-1. **Atribuir role ao usuário** -- Inserir o papel correto (provavelmente `root_admin` ou `brand_admin`) para o usuário `563335b8-5779-48c7-9938-5391129100e0` na tabela `user_roles`, com os escopos adequados (tenant_id, brand_id, branch_id).
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-2. **Verificar se o papel `vouchers.read` está configurado** -- Confirmar que a permissão `vouchers.read` existe na tabela `permissions` e está atribuída ao papel do usuário via `role_permissions`.
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-### Ação imediata (migração SQL)
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
 
-Atribuir `root_admin` ao usuário atual para desbloquear o acesso imediato:
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
 
-```sql
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('563335b8-5779-48c7-9938-5391129100e0', 'root_admin')
-ON CONFLICT DO NOTHING;
-```
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
 
-Isso resolve o problema porque `user_has_permission` retorna `true` para qualquer permissão quando o usuário é `root_admin`.
+### 2. Seções de vitrine automáticas
 
-### Arquivos modificados
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
 
-Nenhum arquivo de código precisa ser alterado -- o problema é exclusivamente de dados/permissão no banco.
+### 3. Nenhuma alteração no banco de dados
+
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 
