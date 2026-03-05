@@ -1,51 +1,98 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Plan: API Edge Functions for Agent Integration
 
-## Resumo
+### Overview
+Create a single Edge Function `agent-api` that acts as a router for all 15 endpoints. Auth is via `AGENT_SECRET` (not Supabase JWT). The function uses `SERVICE_ROLE_KEY` to bypass RLS since the agent is a trusted server-side caller.
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+### Pre-requisite: Add `AGENT_SECRET`
+A new secret `AGENT_SECRET` must be configured before the function can work. Will use the `add_secret` tool to request it from the user.
 
-## O que muda para o usuário
+### Pre-requisite: Create `coupons` table
+Endpoints 7-9 reference a `coupons` table that does not exist. A migration is needed:
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+```sql
+CREATE TABLE public.coupons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id uuid NOT NULL REFERENCES public.stores(id),
+  brand_id uuid NOT NULL,
+  branch_id uuid NOT NULL,
+  offer_id uuid REFERENCES public.offers(id),
+  type text NOT NULL CHECK (type IN ('PERCENT', 'FIXED')),
+  value numeric NOT NULL DEFAULT 0,
+  code text NOT NULL DEFAULT upper(substr(gen_random_uuid()::text, 1, 8)),
+  status text NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE', 'EXPIRED')),
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
-## Mudanças Técnicas
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+-- RLS: service_role bypasses RLS, so no policies needed for the agent.
+-- For admin console access:
+CREATE POLICY "Admin read coupons" ON public.coupons FOR SELECT
+  USING (has_role(auth.uid(), 'root_admin'::app_role)
+    OR brand_id IN (SELECT get_user_brand_ids(auth.uid()))
+    OR branch_id IN (SELECT get_user_branch_ids(auth.uid())));
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+CREATE POLICY "Store owners manage own coupons" ON public.coupons FOR ALL
+  USING (store_id IN (SELECT s.id FROM stores s WHERE s.owner_user_id = auth.uid()))
+  WITH CHECK (store_id IN (SELECT s.id FROM stores s WHERE s.owner_user_id = auth.uid()));
+```
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+### Edge Function: `agent-api`
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+**File**: `supabase/functions/agent-api/index.ts`
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+**Config** (`supabase/config.toml`): `verify_jwt = false`
 
-### 2. Seções de vitrine automáticas
+**Architecture**: Single Deno.serve handler with URL path matching.
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+```text
+Route Map:
+[GET]   /agent-api/health                          -> healthcheck
+[GET]   /agent-api/me                              -> token context (stub 501)
+[GET]   /agent-api/stores                          -> list stores
+[GET]   /agent-api/stores/:id                      -> get store
+[GET]   /agent-api/offers                           -> list offers
+[POST]  /agent-api/offers                           -> create offer
+[PATCH] /agent-api/offers/:id                       -> update offer
+[PATCH] /agent-api/offers/:id/status                -> toggle offer status
+[POST]  /agent-api/coupons                          -> create coupon
+[GET]   /agent-api/coupons                          -> list coupons
+[PATCH] /agent-api/coupons/:id/status               -> toggle coupon status
+[POST]  /agent-api/redemptions                      -> validate redemption
+[GET]   /agent-api/redemptions                      -> list redemptions
+[GET]   /agent-api/customers                        -> find by CPF
+[GET]   /agent-api/customers/:id/points-ledger      -> points ledger
+```
 
-### 3. Nenhuma alteração no banco de dados
+**Key implementation details**:
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+1. **Auth helper** -- reads `Authorization: Bearer <AGENT_SECRET>`, compares to env var, returns 401/500 per spec.
 
-## Escopo
+2. **Supabase client** -- uses `SERVICE_ROLE_KEY` to bypass RLS (agent is trusted).
 
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+3. **Cursor pagination** -- uses `id` as cursor with `.gt("id", cursor)` + `.limit(limit)` + `.order("id")`. Returns `next_cursor` as last item's id.
+
+4. **`/me` endpoint** -- returns 501 stub since AGENT_SECRET is not a user JWT and has no tenant/brand/role context.
+
+5. **`POST /redemptions`** -- looks up customer by CPF, finds PENDING redemption by PIN+offer_id, validates, updates status to USED.
+
+6. **Response format** -- all responses follow `{ ok: true, data }` or `{ ok: false, error, details? }`.
+
+### Files to create/modify
+
+| File | Action |
+|---|---|
+| `supabase/functions/agent-api/index.ts` | Create (~400 lines, full router) |
+| `supabase/config.toml` | Add `[functions.agent-api]` with `verify_jwt = false` |
+| DB migration | Create `coupons` table |
+
+### Implementation order
+1. Request `AGENT_SECRET` from user
+2. Run DB migration for `coupons` table
+3. Create `agent-api` edge function with all 15 routes
+4. Update `config.toml`
 
