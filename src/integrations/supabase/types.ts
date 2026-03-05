@@ -716,6 +716,80 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          offer_id: string | null
+          status: string
+          store_id: string
+          type: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          code?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          offer_id?: string | null
+          status?: string
+          store_id: string
+          type: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          offer_id?: string | null
+          status?: string
+          store_id?: string
+          type?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_pages: {
         Row: {
           banner_config_json: Json
