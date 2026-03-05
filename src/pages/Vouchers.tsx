@@ -13,8 +13,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 const PAGE_SIZE = 20;
 
-const statusLabels: Record<string, string> = { active: "Ativo", expired: "Expirado", depleted: "Esgotado", cancelled: "Cancelado" };
-const statusVariant: Record<string, "default" | "destructive" | "secondary" | "outline"> = { active: "default", expired: "secondary", depleted: "outline", cancelled: "destructive" };
+const statusLabels: Record<string, string> = { ACTIVE: "Ativo", EXPIRED: "Expirado", INACTIVE: "Inativo" };
+const statusVariant: Record<string, "default" | "destructive" | "secondary" | "outline"> = { ACTIVE: "default", EXPIRED: "secondary", INACTIVE: "destructive" };
 
 export default function Vouchers() {
   const queryClient = useQueryClient();
@@ -23,10 +23,10 @@ export default function Vouchers() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["vouchers", debouncedSearch, page],
+    queryKey: ["coupons", debouncedSearch, page],
     queryFn: async () => {
-      let query = supabase.from("vouchers").select("*, branches(name, brands(name))", { count: "exact" });
-      if (debouncedSearch) query = query.or(`code.ilike.%${debouncedSearch}%,title.ilike.%${debouncedSearch}%,customer_name.ilike.%${debouncedSearch}%`);
+      let query = supabase.from("coupons").select("*, branches:branch_id(name, brands:brand_id(name))", { count: "exact" });
+      if (debouncedSearch) query = query.ilike("code", `%${debouncedSearch}%`);
       query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       const { data, error, count } = await query;
       if (error) throw error;
@@ -36,11 +36,11 @@ export default function Vouchers() {
 
   const toggleStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const newStatus = status === "active" ? "cancelled" : "active";
-      const { error } = await supabase.from("vouchers").update({ status: newStatus }).eq("id", id);
+      const newStatus = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      const { error } = await supabase.from("coupons").update({ status: newStatus }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["vouchers"] }); toast.success("Status atualizado!"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupons"] }); toast.success("Status atualizado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -48,41 +48,38 @@ export default function Vouchers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Vouchers</h2>
-          <p className="text-muted-foreground">Gerencie os vales de desconto</p>
+          <h2 className="text-2xl font-bold tracking-tight">Cupons</h2>
+          <p className="text-muted-foreground">Gerencie os cupons de desconto</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline"><Link to="/vouchers/redeem"><Search className="h-4 w-4 mr-2" />Resgatar</Link></Button>
-          <Button asChild><Link to="/vouchers/new"><Plus className="h-4 w-4 mr-2" />Novo Voucher</Link></Button>
+          <Button asChild><Link to="/vouchers/new"><Plus className="h-4 w-4 mr-2" />Novo Cupom</Link></Button>
         </div>
       </div>
-      <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por código, título ou cliente..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por código..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
-        <CardHeader><CardTitle className="text-base">Lista de Vouchers</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Lista de Cupons</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Título</TableHead><TableHead>Desconto</TableHead><TableHead>Branch</TableHead><TableHead>Usos</TableHead><TableHead>Validade</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Tipo</TableHead><TableHead>Valor</TableHead><TableHead>Branch</TableHead><TableHead>Validade</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum voucher cadastrado</TableCell></TableRow>}
-              {data?.rows?.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell className="font-mono font-medium">{v.code}</TableCell>
-                  <TableCell>{v.title}</TableCell>
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum cupom cadastrado</TableCell></TableRow>}
+              {data?.rows?.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-mono font-medium">{c.code}</TableCell>
+                  <TableCell>{c.type === "FIXED" ? "Fixo" : "Percentual"}</TableCell>
                   <TableCell>
-                    {(v as any).discount_type === "FIXED"
-                      ? `R$ ${Number((v as any).discount_fixed_value).toFixed(2)}`
-                      : (v as any).discount_type === "FREE_SHIPPING"
-                      ? "Frete Grátis"
-                      : `${v.discount_percent}%`}
+                    {c.type === "FIXED"
+                      ? `R$ ${Number(c.value).toFixed(2)}`
+                      : `${Number(c.value)}%`}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{(v.branches as any)?.name || "—"}</TableCell>
-                  <TableCell>{v.current_uses}/{v.max_uses}</TableCell>
-                  <TableCell className="text-muted-foreground">{v.expires_at ? new Date(v.expires_at).toLocaleDateString("pt-BR") : "Sem validade"}</TableCell>
-                  <TableCell><Badge variant={statusVariant[v.status] || "secondary"}>{statusLabels[v.status] || v.status}</Badge></TableCell>
+                  <TableCell className="text-muted-foreground">{(c.branches as any)?.name || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("pt-BR") : "—"}</TableCell>
+                  <TableCell><Badge variant={statusVariant[c.status] || "secondary"}>{statusLabels[c.status] || c.status}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="icon" asChild><Link to={`/vouchers/${v.id}`}><Pencil className="h-4 w-4" /></Link></Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleStatus.mutate({ id: v.id, status: v.status })}><Power className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" asChild><Link to={`/vouchers/${c.id}`}><Pencil className="h-4 w-4" /></Link></Button>
+                    <Button variant="ghost" size="icon" onClick={() => toggleStatus.mutate({ id: c.id, status: c.status })}><Power className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
