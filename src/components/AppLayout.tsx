@@ -72,7 +72,6 @@ export default function AppLayout() {
             <Outlet />
           </main>
           <TrialExpiredBlocker />
-          </main>
           <ContextualHelpDrawer />
         </div>
       </div>
