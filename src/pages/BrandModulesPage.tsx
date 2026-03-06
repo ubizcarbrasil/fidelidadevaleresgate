@@ -8,7 +8,38 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { toast } from "sonner";
-import { Blocks } from "lucide-react";
+import {
+  Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
+  Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3,
+} from "lucide-react";
+
+const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
+  core: { label: "Essencial", emoji: "🔧", description: "Funcionalidades fundamentais da plataforma" },
+  comercial: { label: "Comercial", emoji: "🏪", description: "Gestão de parceiros, ofertas e catálogo" },
+  fidelidade: { label: "Fidelidade & Pontos", emoji: "⭐", description: "Programa de pontos e regras de acúmulo" },
+  visual: { label: "Visual & Conteúdo", emoji: "🎨", description: "Personalização visual e páginas" },
+  engajamento: { label: "Engajamento", emoji: "📣", description: "Notificações e comunicação com clientes" },
+  general: { label: "Geral", emoji: "📦", description: "Outros módulos" },
+};
+
+const MODULE_ICONS: Record<string, any> = {
+  stores: Store,
+  branches: MapPin,
+  customers: Users,
+  offers: Tag,
+  vouchers: Ticket,
+  catalog: PackageSearch,
+  affiliate_deals: Sparkles,
+  points: Coins,
+  points_rules: Settings2,
+  earn_points_store: Coins,
+  banners: Image,
+  custom_pages: Layers,
+  notifications: Bell,
+  home_sections: Layers,
+  wallet: Coins,
+  redemption_qr: BarChart3,
+};
 
 export default function BrandModulesPage() {
   const qc = useQueryClient();
@@ -17,7 +48,6 @@ export default function BrandModulesPage() {
 
   const brandId = isRootAdmin ? selectedBrandId : currentBrandId;
 
-  // ROOT needs a brand picker
   const { data: allBrands } = useQuery({
     queryKey: ["brands-list"],
     queryFn: async () => {
@@ -82,10 +112,20 @@ export default function BrandModulesPage() {
     return acc;
   }, {} as Record<string, typeof definitions>) || {};
 
+  // Sort categories: core first, then alphabetical
+  const sortedCategories = Object.keys(grouped).sort((a, b) => {
+    if (a === "core") return -1;
+    if (b === "core") return 1;
+    return a.localeCompare(b);
+  });
+
+  const enabledCount = definitions?.filter(d => isEnabled(d.id)).length || 0;
+  const totalCount = definitions?.length || 0;
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div><h2 className="text-2xl font-bold tracking-tight">Módulos da Marca</h2></div>
+        <div><h2 className="text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2></div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />)}
         </div>
@@ -96,8 +136,8 @@ export default function BrandModulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Módulos da Marca</h2>
-        <p className="text-muted-foreground">Ative ou desative funcionalidades para esta marca</p>
+        <h2 className="text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2>
+        <p className="text-muted-foreground">Ative ou desative os módulos disponíveis para esta marca</p>
       </div>
 
       {isRootAdmin && (
@@ -119,37 +159,65 @@ export default function BrandModulesPage() {
         <p className="text-muted-foreground text-sm">Selecione uma marca para gerenciar seus módulos.</p>
       )}
 
-      {brandId && Object.entries(grouped).map(([category, mods]) => (
-        <div key={category} className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{category}</h3>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {mods!.map(def => (
-              <Card key={def.id} className={isEnabled(def.id) ? "border-primary/30" : "opacity-60"}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Blocks className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base">{def.name}</CardTitle>
-                    </div>
-                    <Switch
-                      checked={isEnabled(def.id)}
-                      onCheckedChange={v => toggle.mutate({ defId: def.id, enabled: v })}
-                      disabled={def.is_core}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-xs">{def.description || "Sem descrição"}</CardDescription>
-                  <div className="mt-2 flex gap-2">
-                    {def.is_core && <Badge variant="secondary" className="text-xs">Core</Badge>}
-                    <Badge variant="outline" className="text-xs">{def.key}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+      {brandId && (
+        <>
+          {/* Summary bar */}
+          <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
+            <Blocks className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">
+              <strong className="text-primary">{enabledCount}</strong> de {totalCount} módulos ativos
+            </span>
           </div>
-        </div>
-      ))}
+
+          {sortedCategories.map((category) => {
+            const mods = grouped[category]!;
+            const meta = CATEGORY_META[category] || CATEGORY_META.general;
+
+            return (
+              <div key={category} className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{meta.emoji}</span>
+                  <div>
+                    <h3 className="text-sm font-bold">{meta.label}</h3>
+                    <p className="text-xs text-muted-foreground">{meta.description}</p>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {mods.map(def => {
+                    const IconComp = MODULE_ICONS[def.key] || Blocks;
+                    const enabled = isEnabled(def.id);
+                    return (
+                      <Card key={def.id} className={`transition-all ${enabled ? "border-primary/30 shadow-sm" : "opacity-60"}`}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${enabled ? "bg-primary/10" : "bg-muted"}`}>
+                                <IconComp className={`h-4.5 w-4.5 ${enabled ? "text-primary" : "text-muted-foreground"}`} />
+                              </div>
+                              <CardTitle className="text-sm">{def.name}</CardTitle>
+                            </div>
+                            <Switch
+                              checked={enabled}
+                              onCheckedChange={v => toggle.mutate({ defId: def.id, enabled: v })}
+                              disabled={def.is_core}
+                            />
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <CardDescription className="text-xs">{def.description || "Sem descrição"}</CardDescription>
+                          <div className="mt-2 flex gap-2">
+                            {def.is_core && <Badge variant="secondary" className="text-[10px]">Essencial</Badge>}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }
