@@ -359,14 +359,6 @@ export default function GanhaGanhaClosingReportsPage() {
         </CardContent>
       </Card>
 
-      {!config && (
-        <Card className="border-dashed">
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            <p>O módulo Ganha-Ganha não está ativo para esta marca.</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
