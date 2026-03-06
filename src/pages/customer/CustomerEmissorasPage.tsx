@@ -188,10 +188,10 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02, duration: 0.2 }}
                   className="rounded-2xl overflow-hidden cursor-pointer relative group active:scale-[0.98] transition-transform"
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)",
-                  }}
+                   style={{
+                     backgroundColor: "hsl(var(--card))",
+                     boxShadow: "0 1px 6px hsl(var(--foreground) / 0.06), 0 0 0 1px hsl(var(--border))",
+                   }}
                   onClick={() => openStore(store)}
                 >
                   {/* Favorite heart */}
