@@ -165,10 +165,10 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F5F5F5" }}>
-                <Store className="h-7 w-7" style={{ color: "#CCC" }} />
-              </div>
-              <p className="text-sm font-medium" style={{ color: "#999" }}>Nenhum parceiro encontrado</p>
+               <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-muted">
+                 <Store className="h-7 w-7 text-muted-foreground" />
+               </div>
+               <p className="text-sm font-medium text-muted-foreground">Nenhum parceiro encontrado</p>
               {activeFilter !== "all" && (
                 <button
                   onClick={() => setActiveFilter("all")}
