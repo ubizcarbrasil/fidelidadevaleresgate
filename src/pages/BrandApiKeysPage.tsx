@@ -109,10 +109,10 @@ export default function BrandApiKeysPage() {
 
       {/* Generated key alert */}
       {generatedKey && (
-        <Card className="border-yellow-500/50 bg-yellow-500/5">
+        <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="pt-6 space-y-3">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="font-semibold text-sm">Chave criada! Copie agora — ela não será exibida novamente.</p>
                 <div className="flex items-center gap-2">
