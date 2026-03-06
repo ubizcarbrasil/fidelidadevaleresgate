@@ -24,6 +24,7 @@ import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import EmitterUpgradeCard from "@/components/store-owner/EmitterUpgradeCard";
 import StoreCatalogTab from "@/components/store-owner/StoreCatalogTab";
 import StoreOrdersTab from "@/components/store-owner/StoreOrdersTab";
+import GanhaGanhaStoreSummaryPage from "@/pages/GanhaGanhaStoreSummaryPage";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
 } from "@/components/ui/sheet";
