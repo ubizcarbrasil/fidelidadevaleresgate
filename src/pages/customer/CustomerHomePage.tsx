@@ -36,13 +36,13 @@ function getGreeting(): string {
   return "Boa noite";
 }
 
-const QUICK_ACTIONS = [
-  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", bg: "#FFE0CC", tab: "offers" as const },
-  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", bg: "#F8C8D8", tab: "offers" as const },
-  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", bg: "#DDD6FE", tab: null },
-  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", bg: "#A7F3D0", tab: "wallet" as const },
-  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", bg: "#FDE68A", tab: "offers" as const },
-  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#BAE6FD", tab: null },
+const QUICK_ACTIONS: { key: string; label: string; iconKey: AppIconKey; color: string; bg: string; tab: "offers" | "wallet" | null }[] = [
+  { key: "ofertas", label: "Ofertas", iconKey: "quick_ofertas", color: "#FF6B35", bg: "#FFE0CC", tab: "offers" },
+  { key: "cupons", label: "Cupons", iconKey: "quick_cupons", color: "#E91E63", bg: "#F8C8D8", tab: "offers" },
+  { key: "lojas", label: "Parceiros", iconKey: "quick_parceiros", color: "#7C3AED", bg: "#DDD6FE", tab: null },
+  { key: "pontos", label: "Pontos", iconKey: "quick_pontos", color: "#059669", bg: "#A7F3D0", tab: "wallet" },
+  { key: "presentes", label: "Presentes", iconKey: "quick_presentes", color: "#D97706", bg: "#FDE68A", tab: "offers" },
+  { key: "achadinhos", label: "Achadinhos", iconKey: "quick_achadinhos", color: "#0EA5E9", bg: "#BAE6FD", tab: null },
 ];
 
 interface CustomerHomePageProps {
