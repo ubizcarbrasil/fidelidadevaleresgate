@@ -828,7 +828,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     )}
 
                     {/* Rules card */}
-                    <div className="rounded-2xl p-4 mb-4 space-y-3" style={{ backgroundColor: "#F9FAFB", border: `1px solid ${fg}08` }}>
+                    <div className="rounded-2xl p-4 mb-4 space-y-3 bg-muted" style={{ border: `1px solid ${fg}08` }}>
                       <p className="text-[11px] font-bold tracking-wider" style={{ color: `${fg}50` }}>REGRAS DE USO</p>
                       {Number(offer.min_purchase) > 0 && (
                         <TermsRuleItem icon={<ShoppingBag className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
