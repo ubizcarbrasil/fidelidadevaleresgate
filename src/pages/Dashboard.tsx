@@ -282,7 +282,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
     queryFn: async () => {
       const { data } = await supabase
         .from("stores")
-        .select("id, name, city, approval_status")
+        .select("id, name, address, approval_status")
         .eq("brand_id", currentBrandId!)
         .order("name");
       return data || [];
