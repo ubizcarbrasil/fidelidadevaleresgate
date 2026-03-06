@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,9 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 ];
 
 export default function StoreOwnerPanel() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isRootAdmin, roles } = useAuth();
+  const [searchParams] = useSearchParams();
+  const overrideStoreId = searchParams.get("storeId");
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
@@ -63,18 +65,28 @@ export default function StoreOwnerPanel() {
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("owner_user_id", user.id)
-        .eq("approval_status", "APPROVED")
-        .maybeSingle();
-      setStore(data);
+    const fetchStore = async () => {
+      if (overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id))) {
+        // Admin override: load specific store by id
+        const { data } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("id", overrideStoreId)
+          .maybeSingle();
+        setStore(data);
+      } else {
+        const { data } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("owner_user_id", user.id)
+          .eq("approval_status", "APPROVED")
+          .maybeSingle();
+        setStore(data);
+      }
       setLoading(false);
     };
-    fetch();
-  }, [user]);
+    fetchStore();
+  }, [user, overrideStoreId, isRootAdmin]);
 
   // Request browser notification permission
   useEffect(() => {
