@@ -70,6 +70,7 @@ const BrandPermissionOverflowPage = lazy(() => import("@/pages/BrandPermissionOv
 const StarterKitConfigPage = lazy(() => import("@/pages/StarterKitConfigPage"));
 const EmitterRequestsPage = lazy(() => import("@/pages/EmitterRequestsPage"));
 const EmitterJourneyGuidePage = lazy(() => import("@/pages/EmitterJourneyGuidePage"));
+const PlatformThemePage = lazy(() => import("@/pages/PlatformThemePage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -162,6 +163,7 @@ function AppRoutes() {
           <Route path="root-journey" element={<RootJourneyGuidePage />} />
           <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
+          <Route path="platform-theme" element={<PlatformThemePage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

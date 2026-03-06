@@ -8,6 +8,10 @@ import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import { useBrandName } from "@/hooks/useBrandName";
+import { useBrandTheme } from "@/hooks/useBrandTheme";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Painel Raiz",
@@ -21,6 +25,20 @@ const CONSOLE_TITLES: Record<string, string> = {
 export default function AppLayout() {
   const { consoleScope } = useBrandGuard();
   const brandName = useBrandName();
+  const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("platform_config")
+      .select("value_json")
+      .eq("key", "platform_theme")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value_json) setPlatformTheme(data.value_json);
+      });
+  }, []);
+
+  useBrandTheme(platformTheme);
 
   // Parceiros usam o portal dedicado
   if (consoleScope === "STORE_ADMIN") {

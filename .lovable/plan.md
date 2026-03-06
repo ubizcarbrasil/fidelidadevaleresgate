@@ -1,36 +1,51 @@
 
 
-## Criar página de Configurações Visuais do Sistema Matriz
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-### Contexto
+## Resumo
 
-Já existe a tabela `platform_config` com registros key/value JSON. Vamos usá-la para armazenar o tema visual da plataforma (key: `platform_theme`), reutilizando o componente `BrandThemeEditor` que já existe para marcas.
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-### Plano
+## O que muda para o usuário
 
-**1. Criar a página `src/pages/PlatformThemePage.tsx`**
-- Busca o registro `platform_config` onde `key = 'platform_theme'`
-- Se não existir, inicializa com valores padrão (cores atuais do `index.css`)
-- Renderiza o `BrandThemeEditor` existente para edição de cores, fontes, logo, favicon, slogan e textos
-- Botão "Salvar" faz upsert no `platform_config` via Supabase
-- Toast de confirmação ao salvar
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-**2. Registrar rota no `App.tsx`**
-- Adicionar rota `/platform-theme` dentro do layout protegido
+## Mudanças Técnicas
 
-**3. Adicionar link no `RootSidebar.tsx`**
-- No grupo "🎨 Identidade & Vitrine", adicionar item "Tema da Plataforma" com ícone `Settings2`
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-**4. Aplicar o tema na raiz (opcional mas recomendado)**
-- No `AppLayout.tsx`, buscar o `platform_theme` do `platform_config` e aplicar via `useBrandTheme` para que o painel administrativo reflita as cores configuradas
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-### Arquivos modificados
-| Arquivo | Ação |
-|---|---|
-| `src/pages/PlatformThemePage.tsx` | Criar |
-| `src/App.tsx` | Adicionar rota lazy |
-| `src/components/consoles/RootSidebar.tsx` | Adicionar item de menu |
-| `src/components/AppLayout.tsx` | Aplicar tema da plataforma |
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
 
-Nenhuma migração de banco necessária — a tabela `platform_config` já suporta o formato key/value JSON.
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+
+### 2. Seções de vitrine automáticas
+
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+
+### 3. Nenhuma alteração no banco de dados
+
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 
