@@ -227,6 +227,16 @@ export default function EarnPointsPage() {
         .eq("id", selectedCustomerId);
       if (custErr) throw custErr;
 
+      // Record Ganha-Ganha billing event (fire-and-forget)
+      recordGanhaGanhaBillingEvent({
+        brandId: currentBrandId,
+        storeId,
+        eventType: "EARN",
+        pointsAmount: preview.points,
+        referenceId: event.id,
+        referenceType: "EARNING_EVENT",
+      });
+
       return { points: preview.points, money: preview.money, newBalance: newPoints };
     },
     onSuccess: (data) => {

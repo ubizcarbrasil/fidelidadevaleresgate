@@ -275,6 +275,7 @@ export default function StoreOwnerPanel() {
         {activeTab === "filiais" && <StoreBranchesTab store={store} />}
         {activeTab === "tutorial" && <StoreTutorialTab />}
         {activeTab === "suporte" && <StoreSuporteTab />}
+        {activeTab === "ganha-ganha" && <GanhaGanhaStoreSummaryPage store={store} />}
       </main>
 
       {/* Bottom tab bar - PWA style */}
