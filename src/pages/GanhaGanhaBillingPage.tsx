@@ -41,7 +41,44 @@ export default function GanhaGanhaBillingPage() {
     enabled: !!currentBrandId,
   });
 
-  // Fetch stores for filter
+  // Fetch last 6 months of billing for evolution chart
+  const { data: evolutionEvents } = useQuery({
+    queryKey: ["gg-billing-evolution", currentBrandId],
+    queryFn: async () => {
+      const months: string[] = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(d.toISOString().slice(0, 7));
+      }
+      const { data, error } = await supabase
+        .from("ganha_ganha_billing_events")
+        .select("event_type, fee_total, points_amount, period_month")
+        .eq("brand_id", currentBrandId!)
+        .in("period_month", months);
+      if (error) throw error;
+      return { rows: data, months };
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const evolutionChart = useMemo(() => {
+    if (!evolutionEvents) return [];
+    const { rows, months } = evolutionEvents;
+    return months.map(m => {
+      const mEvents = rows.filter((e: any) => e.period_month === m);
+      const earnFee = mEvents.filter((e: any) => e.event_type === "EARN").reduce((s: number, e: any) => s + Number(e.fee_total), 0);
+      const redeemFee = mEvents.filter((e: any) => e.event_type === "REDEEM").reduce((s: number, e: any) => s + Number(e.fee_total), 0);
+      const [y, mo] = m.split("-");
+      return {
+        month: `${mo}/${y.slice(2)}`,
+        "Fat. Geração": Number(earnFee.toFixed(2)),
+        "Fat. Resgate": Number(redeemFee.toFixed(2)),
+        Total: Number((earnFee + redeemFee).toFixed(2)),
+      };
+    });
+  }, [evolutionEvents]);
+
   const { data: stores } = useQuery({
     queryKey: ["gg-billing-stores", currentBrandId],
     queryFn: async () => {
