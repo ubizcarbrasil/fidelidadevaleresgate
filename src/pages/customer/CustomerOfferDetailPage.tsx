@@ -751,7 +751,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <motion.div
               initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white overflow-hidden"
+              className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-card overflow-hidden"
               style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)", maxHeight: "85vh" }}>
 
               {isSigningUp ? (
