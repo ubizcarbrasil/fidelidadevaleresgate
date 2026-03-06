@@ -172,6 +172,7 @@ function AppRoutes() {
           <Route path="app-icons" element={<AppIconsConfigPage />} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
+          <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
