@@ -505,7 +505,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   </div>
                 )}
                 {offer.likes_count > 0 && (
-                  <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 backdrop-blur text-xs font-semibold shadow-sm">
+                  <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-card/80 backdrop-blur text-xs font-semibold shadow-sm">
                     <ThumbsUp className="h-3 w-3" style={{ color: primary }} />
                     {offer.likes_count}
                   </div>
