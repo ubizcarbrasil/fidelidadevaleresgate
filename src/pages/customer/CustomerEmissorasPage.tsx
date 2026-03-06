@@ -118,9 +118,8 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#CCC" }}
-              >
+                 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center bg-muted-foreground/50"
+               >
                 <X className="h-3 w-3 text-white" />
               </button>
             )}
