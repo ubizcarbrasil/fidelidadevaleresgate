@@ -41,6 +41,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.tema_marca", defaultTitle: "Aparência da Marca", url: "/brands", icon: Palette },
       { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe },
       { key: "sidebar.galeria_icones", defaultTitle: "Galeria de Ícones", url: "/icon-library", icon: Image },
+      { key: "sidebar.app_icons", defaultTitle: "Ícones do App", url: "/app-icons", icon: Palette },
     ],
   },
   {

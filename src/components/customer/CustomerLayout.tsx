@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { Home, Tag, Wallet, UserCircle, Bell, Search, Ticket } from "lucide-react";
+import { Bell, Search, Wallet } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
@@ -53,12 +54,14 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 
 type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
-const TABS: { key: Tab; label: string; icon: typeof Home }[] = [
-  { key: "home", label: "Início", icon: Home },
-  { key: "offers", label: "Ofertas", icon: Tag },
-  { key: "redemptions", label: "Meus resgates", icon: Ticket },
-  { key: "wallet", label: "Carteira", icon: Wallet },
-  { key: "profile", label: "Perfil", icon: UserCircle },
+import type { AppIconKey } from "@/hooks/useAppIcons";
+
+const TABS: { key: Tab; label: string; iconKey: AppIconKey }[] = [
+  { key: "home", label: "Início", iconKey: "nav_home" },
+  { key: "offers", label: "Ofertas", iconKey: "nav_offers" },
+  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions" },
+  { key: "wallet", label: "Carteira", iconKey: "nav_wallet" },
+  { key: "profile", label: "Perfil", iconKey: "nav_profile" },
 ];
 
 const TAB_CONTENT: Record<Tab, React.FC<any>> = {
@@ -212,7 +215,6 @@ export default function CustomerLayout() {
           <div className="max-w-lg mx-auto flex">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
-              const Icon = tab.icon;
               return (
                 <button
                   key={tab.key}
@@ -232,7 +234,7 @@ export default function CustomerLayout() {
                     animate={{ backgroundColor: isActive ? `${primary}12` : "transparent", scale: isActive ? 1.05 : 1 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Icon className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : `${fg}45` }} />
+                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : `${fg}45` }} />
                   </motion.div>
                   <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : `${fg}45` }}>
                     {tab.label}

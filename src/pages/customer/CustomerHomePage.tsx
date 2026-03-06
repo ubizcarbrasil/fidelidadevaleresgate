@@ -1,7 +1,9 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles } from "lucide-react";
+import { ChevronRight, Coins } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
+import type { AppIconKey } from "@/hooks/useAppIcons";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
@@ -34,13 +36,13 @@ function getGreeting(): string {
   return "Boa noite";
 }
 
-const QUICK_ACTIONS = [
-  { key: "ofertas", label: "Ofertas", icon: Tag, color: "#FF6B35", bg: "#FFE0CC", tab: "offers" as const },
-  { key: "cupons", label: "Cupons", icon: Percent, color: "#E91E63", bg: "#F8C8D8", tab: "offers" as const },
-  { key: "lojas", label: "Parceiros", icon: Store, color: "#7C3AED", bg: "#DDD6FE", tab: null },
-  { key: "pontos", label: "Pontos", icon: Coins, color: "#059669", bg: "#A7F3D0", tab: "wallet" as const },
-  { key: "presentes", label: "Presentes", icon: Gift, color: "#D97706", bg: "#FDE68A", tab: "offers" as const },
-  { key: "achadinhos", label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#BAE6FD", tab: null },
+const QUICK_ACTIONS: { key: string; label: string; iconKey: AppIconKey; color: string; bg: string; tab: "offers" | "wallet" | null }[] = [
+  { key: "ofertas", label: "Ofertas", iconKey: "quick_ofertas", color: "#FF6B35", bg: "#FFE0CC", tab: "offers" },
+  { key: "cupons", label: "Cupons", iconKey: "quick_cupons", color: "#E91E63", bg: "#F8C8D8", tab: "offers" },
+  { key: "lojas", label: "Parceiros", iconKey: "quick_parceiros", color: "#7C3AED", bg: "#DDD6FE", tab: null },
+  { key: "pontos", label: "Pontos", iconKey: "quick_pontos", color: "#059669", bg: "#A7F3D0", tab: "wallet" },
+  { key: "presentes", label: "Presentes", iconKey: "quick_presentes", color: "#D97706", bg: "#FDE68A", tab: "offers" },
+  { key: "achadinhos", label: "Achadinhos", iconKey: "quick_achadinhos", color: "#0EA5E9", bg: "#BAE6FD", tab: null },
 ];
 
 interface CustomerHomePageProps {
@@ -153,9 +155,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         className="max-w-lg mx-auto px-5"
       >
         <div className="grid grid-cols-6 gap-2">
-          {QUICK_ACTIONS.map((action, idx) => {
-            const Icon = action.icon;
-            return (
+          {QUICK_ACTIONS.map((action, idx) => (
               <motion.button
                 key={action.key}
                 initial={{ opacity: 0, scale: 0.85 }}
@@ -169,14 +169,13 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                   className="h-14 w-14 rounded-2xl flex items-center justify-center"
                   style={{ backgroundColor: action.bg }}
                 >
-                  <Icon className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
+                  <AppIcon iconKey={action.iconKey} className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
                 </div>
                 <span className="text-[11px] font-semibold leading-tight text-center" style={{ color: `${fg}80` }}>
                   {action.label}
                 </span>
               </motion.button>
-            );
-          })}
+            ))}
         </div>
       </motion.div>
 
