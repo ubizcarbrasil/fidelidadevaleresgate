@@ -147,7 +147,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
           })}
         </div>
 
-        <div className="h-px" style={{ backgroundColor: "rgba(0,0,0,0.06)" }} />
+        <div className="h-px bg-border" />
       </header>
 
       {/* Grid */}
