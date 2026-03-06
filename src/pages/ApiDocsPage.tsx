@@ -442,7 +442,7 @@ Console.WriteLine(body);`,
         <CardContent className="space-y-5">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs">200</Badge>
+              <Badge className="bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-xs">200</Badge>
               <span className="text-sm font-medium">Sucesso</span>
             </div>
             <CodeBlock

@@ -177,6 +177,7 @@ function AppRoutes() {
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
           <Route path="api-keys" element={<BrandApiKeysPage />} />
+          <Route path="api-docs" element={<ApiDocsPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
