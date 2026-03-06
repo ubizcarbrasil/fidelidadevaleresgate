@@ -657,7 +657,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
       {/* Sticky CTA - Product type */}
       {!redeemed && offer.coupon_type === "PRODUCT" && (
-        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
+        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, hsl(var(--background)) 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
