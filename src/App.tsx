@@ -86,6 +86,7 @@ const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
 const WebviewPage = lazy(() => import("@/pages/customer/WebviewPage"));
 const PageBuilderV2Page = lazy(() => import("@/pages/PageBuilderV2Page"));
 const PublicVouchers = lazy(() => import("@/pages/PublicVouchers"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
 
 const queryClient = new QueryClient();
 
