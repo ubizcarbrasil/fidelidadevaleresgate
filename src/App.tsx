@@ -77,6 +77,7 @@ const GanhaGanhaBillingPage = lazy(() => import("@/pages/GanhaGanhaBillingPage")
 const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDashboardPage"));
 const GanhaGanhaClosingReportsPage = lazy(() => import("@/pages/GanhaGanhaClosingReportsPage"));
 const BrandApiKeysPage = lazy(() => import("@/pages/BrandApiKeysPage"));
+const ApiDocsPage = lazy(() => import("@/pages/ApiDocsPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -176,6 +177,7 @@ function AppRoutes() {
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
           <Route path="api-keys" element={<BrandApiKeysPage />} />
+          <Route path="api-docs" element={<ApiDocsPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
