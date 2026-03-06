@@ -1,11 +1,59 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, CheckCircle2, Zap, Crown } from "lucide-react";
+import { CreditCard, CheckCircle2, Zap, Crown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SubscriptionPage() {
-  const handleSubscribe = () => {
-    toast.info("Integração com pagamento será ativada em breve. Entre em contato pelo suporte.");
+  const { currentBrandId } = useBrandGuard();
+  const [loading, setLoading] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      toast.success("Assinatura ativada com sucesso! 🎉");
+      queryClient.invalidateQueries({ queryKey: ["brand-trial-blocker"] });
+    }
+    if (searchParams.get("canceled") === "true") {
+      toast.info("Assinatura cancelada. Você pode tentar novamente.");
+    }
+  }, [searchParams, queryClient]);
+
+  const handleSubscribe = async (plan: string) => {
+    if (!currentBrandId) {
+      toast.error("Marca não encontrada.");
+      return;
+    }
+
+    setLoading(plan);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Você precisa estar logado.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan, brand_id: currentBrandId },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("URL de checkout não recebida");
+      }
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast.error(err.message || "Erro ao criar sessão de pagamento.");
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
@@ -44,8 +92,16 @@ export default function SubscriptionPage() {
                 </li>
               ))}
             </ul>
-            <Button className="w-full gap-2" onClick={handleSubscribe}>
-              <CreditCard className="h-4 w-4" />
+            <Button
+              className="w-full gap-2"
+              onClick={() => handleSubscribe("starter")}
+              disabled={!!loading}
+            >
+              {loading === "starter" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="h-4 w-4" />
+              )}
               Assinar Starter
             </Button>
           </CardContent>
@@ -80,8 +136,16 @@ export default function SubscriptionPage() {
                 </li>
               ))}
             </ul>
-            <Button className="w-full gap-2 bg-amber-500 hover:bg-amber-600" onClick={handleSubscribe}>
-              <CreditCard className="h-4 w-4" />
+            <Button
+              className="w-full gap-2 bg-amber-500 hover:bg-amber-600"
+              onClick={() => handleSubscribe("profissional")}
+              disabled={!!loading}
+            >
+              {loading === "profissional" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="h-4 w-4" />
+              )}
               Assinar Profissional
             </Button>
           </CardContent>
@@ -89,7 +153,7 @@ export default function SubscriptionPage() {
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        Os valores são apenas para demonstração. A integração com pagamento será ativada em breve.
+        Pagamento seguro processado pelo Stripe. Cancele quando quiser.
       </p>
     </div>
   );
