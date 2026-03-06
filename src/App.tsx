@@ -78,6 +78,8 @@ const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDas
 const GanhaGanhaClosingReportsPage = lazy(() => import("@/pages/GanhaGanhaClosingReportsPage"));
 const BrandApiKeysPage = lazy(() => import("@/pages/BrandApiKeysPage"));
 const ApiDocsPage = lazy(() => import("@/pages/ApiDocsPage"));
+const TrialSignupPage = lazy(() => import("@/pages/TrialSignupPage"));
+const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -104,6 +106,7 @@ function AppRoutes() {
         <Route path="/customer-preview" element={<CustomerPreviewPage />} />
         <Route path="/webview" element={<WebviewPage />} />
         <Route path="/p/:slug" element={<CustomPage />} />
+        <Route path="/trial" element={<TrialSignupPage />} />
         <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
         <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
         <Route
@@ -178,6 +181,7 @@ function AppRoutes() {
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
           <Route path="api-keys" element={<BrandApiKeysPage />} />
           <Route path="api-docs" element={<ApiDocsPage />} />
+          <Route path="subscription" element={<SubscriptionPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

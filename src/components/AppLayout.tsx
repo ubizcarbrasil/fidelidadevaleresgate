@@ -1,4 +1,6 @@
 import { Outlet, Navigate } from "react-router-dom";
+import TrialBanner from "@/components/TrialBanner";
+import TrialExpiredBlocker from "@/components/TrialExpiredBlocker";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { RootSidebar } from "@/components/consoles/RootSidebar";
@@ -66,8 +68,10 @@ export default function AppLayout() {
             <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
           </header>
           <main className="flex-1 p-3 sm:p-6 overflow-auto">
+            <TrialBanner />
             <Outlet />
           </main>
+          <TrialExpiredBlocker />
           <ContextualHelpDrawer />
         </div>
       </div>

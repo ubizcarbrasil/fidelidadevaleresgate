@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Ticket, Store } from "lucide-react";
+import { Ticket, Store, Rocket } from "lucide-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -127,8 +127,22 @@ export default function Auth() {
           </div>
 
           {/* Store owner CTA */}
-          <div className="mt-6 pt-5 border-t">
-            <p className="text-xs text-muted-foreground text-center mb-3">Tem um estabelecimento? Seja um parceiro!</p>
+          <div className="mt-6 pt-5 border-t space-y-3">
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-center space-y-2">
+              <p className="text-xs font-medium text-primary">🚀 Quer ter sua própria plataforma?</p>
+              <p className="text-[11px] text-muted-foreground">Crie seu programa de fidelidade e teste 30 dias grátis!</p>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => navigate("/trial")}
+              >
+                <Rocket className="h-4 w-4" />
+                Começar 30 dias grátis
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">Tem um estabelecimento?</p>
             <Button
               type="button"
               variant="outline"
