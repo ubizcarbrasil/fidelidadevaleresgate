@@ -110,8 +110,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       <div className="flex-1 overflow-y-auto pb-28">
         {/* Hero header */}
