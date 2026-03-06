@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.send-push-notification]
 verify_jwt = false
+
+[functions.earn-webhook]
+verify_jwt = false
+
+[functions.agent-api]
+verify_jwt = false
