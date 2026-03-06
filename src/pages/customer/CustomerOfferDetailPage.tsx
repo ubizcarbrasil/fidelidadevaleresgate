@@ -437,7 +437,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         <motion.div
                           key={sim.id}
                           whileTap={{ scale: 0.98 }}
-                          className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
+                          className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer"
                           style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
                           onClick={() => {
                             setIsFading(true);
