@@ -513,7 +513,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               </div>
 
               {/* Content card */}
-              <div className="relative -mt-6 mx-4 rounded-[24px] bg-white p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+              <div className="relative -mt-6 mx-4 rounded-[24px] bg-card p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
                 {offer.stores?.name && (
                   <div className="flex items-center gap-2 mb-3">
                     {offer.stores.logo_url ? (
