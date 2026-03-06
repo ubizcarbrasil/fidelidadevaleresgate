@@ -113,9 +113,8 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar parceiro..."
-              className="pl-9 pr-8 h-10 rounded-full border-none text-sm"
-              style={{ backgroundColor: "#F2F2F7" }}
-            />
+               className="pl-9 pr-8 h-10 rounded-full border-none text-sm bg-muted"
+             />
             {search && (
               <button
                 onClick={() => setSearch("")}
