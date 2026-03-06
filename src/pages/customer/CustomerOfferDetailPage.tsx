@@ -485,7 +485,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
-                <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                   <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
                 </button>
                 <div className="absolute top-4 right-4 flex gap-2">
