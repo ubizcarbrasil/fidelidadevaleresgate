@@ -18,7 +18,7 @@ export default function BranchForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
-  const { isRootAdmin, currentBrandId, applyBrandFilter } = useBrandGuard();
+  const { isRootAdmin, currentBrandId } = useBrandGuard();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
