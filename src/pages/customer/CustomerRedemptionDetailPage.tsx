@@ -65,6 +65,48 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         .eq("id", redemption.id)
         .eq("status", "PENDING");
       if (error) throw error;
+
+      // Refund points: check if there's a debit ledger entry for this redemption
+      const { data: debitEntry } = await supabase
+        .from("points_ledger")
+        .select("points_amount, customer_id, brand_id, branch_id")
+        .eq("reference_id", redemption.id)
+        .eq("reference_type", "REDEMPTION")
+        .eq("entry_type", "DEBIT")
+        .maybeSingle();
+
+      if (debitEntry && debitEntry.points_amount > 0) {
+        const userId = (await supabase.auth.getUser()).data.user?.id;
+        if (userId) {
+          // Insert credit (refund) entry
+          await supabase.from("points_ledger").insert({
+            customer_id: debitEntry.customer_id,
+            brand_id: debitEntry.brand_id,
+            branch_id: debitEntry.branch_id,
+            entry_type: "CREDIT" as any,
+            points_amount: debitEntry.points_amount,
+            money_amount: 0,
+            reference_type: "REDEMPTION" as any,
+            reference_id: redemption.id,
+            reason: "Estorno de resgate",
+            created_by_user_id: userId,
+          });
+
+          // Restore customer balance
+          const { data: cust } = await supabase
+            .from("customers")
+            .select("points_balance")
+            .eq("id", debitEntry.customer_id)
+            .single();
+
+          if (cust) {
+            await supabase.from("customers").update({
+              points_balance: Number(cust.points_balance) + debitEntry.points_amount,
+            }).eq("id", debitEntry.customer_id);
+          }
+        }
+      }
+
       toast.success("Resgate estornado com sucesso!");
       onCanceled?.();
     } catch (err: any) {
@@ -91,10 +133,10 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className="fixed inset-0 z-[60] overflow-y-auto bg-white"
+      className="fixed inset-0 z-[60] overflow-y-auto bg-background"
     >
       {/* Top bar */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-white border-b">
+      <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-card border-b">
         <button onClick={onBack} className="h-9 w-9 rounded-full flex items-center justify-center">
           <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
         </button>
@@ -103,8 +145,8 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
       <div className="pb-6">
         {/* Hero section - image + title */}
-        <div className="flex flex-col items-center py-6 border-b" style={{ backgroundColor: "#FAFAFA" }}>
-          <div className="h-40 w-40 rounded-2xl overflow-hidden mb-4 bg-white flex items-center justify-center" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div className="flex flex-col items-center py-6 border-b bg-muted">
+          <div className="h-40 w-40 rounded-2xl overflow-hidden mb-4 bg-card flex items-center justify-center" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
             {heroImage ? (
               <img src={heroImage} alt={heroTitle} className="h-full w-full object-contain" />
             ) : (
@@ -117,13 +159,13 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
         {/* Info cards row: CRÉDITO / VALIDADE / STATUS */}
         <div className="grid grid-cols-3 gap-2 px-5 py-4">
-          <div className="rounded-2xl p-3 text-center" style={{ backgroundColor: "#F9FAFB" }}>
+          <div className="rounded-2xl p-3 text-center bg-muted">
             <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>CRÉDITO</p>
             <p className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
               {formatCurrency(Number(creditValue))}
             </p>
           </div>
-          <div className="rounded-2xl p-3 text-center" style={{ backgroundColor: "#F9FAFB" }}>
+          <div className="rounded-2xl p-3 text-center bg-muted">
             <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>VALIDADE</p>
             <p className="text-sm font-bold" style={{ color: fg, fontFamily: fontHeading }}>
               {redemption.expires_at
@@ -133,14 +175,14 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
                   : "—"}
             </p>
           </div>
-          <div className="rounded-2xl p-3 text-center" style={{ backgroundColor: "#F9FAFB" }}>
+          <div className="rounded-2xl p-3 text-center bg-muted">
             <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>STATUS</p>
             <p className="text-sm font-bold" style={{ color: statusColor, fontFamily: fontHeading }}>{statusLabel}</p>
           </div>
         </div>
 
         {/* PIN section */}
-        <div className="mx-5 rounded-2xl p-5 mb-4" style={{ backgroundColor: "#F9FAFB" }}>
+        <div className="mx-5 rounded-2xl p-5 mb-4 bg-muted">
           <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: `${fg}60` }}>COPIE SEU PIN</p>
           <div className="flex items-center justify-between rounded-xl p-4" style={{ border: `2px dashed ${primary}40`, backgroundColor: `${primary}06` }}>
             <span className="text-3xl font-mono font-bold tracking-[0.3em]" style={{ color: primary }}>
@@ -233,7 +275,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         )}
 
         {/* Rules section */}
-        <div className="mx-5 rounded-2xl p-5 mb-4 bg-white border" style={{ borderColor: `${fg}10` }}>
+        <div className="mx-5 rounded-2xl p-5 mb-4 bg-card border" style={{ borderColor: `${fg}10` }}>
           <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: `${fg}60` }}>REGRAS DE RESGATE</p>
           <div className="space-y-4">
             {(offer?.end_at || redemption.expires_at) && (
@@ -262,7 +304,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         </div>
 
         {/* Order details */}
-        <div className="mx-5 rounded-2xl p-5 mb-6" style={{ backgroundColor: "#F9FAFB" }}>
+        <div className="mx-5 rounded-2xl p-5 mb-6 bg-muted">
           <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: `${fg}60` }}>DETALHES DO PEDIDO</p>
           <div className="text-sm">
             <DetailRow label="Código do pedido" fg={fg}>

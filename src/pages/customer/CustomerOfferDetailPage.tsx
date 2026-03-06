@@ -179,6 +179,28 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       if (error) throw error;
       setPin(created.token);
 
+      // ── Deduct points from customer balance ──
+      if (finalRequired > 0) {
+        // 1. Insert debit entry in points_ledger
+        await supabase.from("points_ledger").insert({
+          customer_id: customer.id,
+          brand_id: brand.id,
+          branch_id: selectedBranch.id,
+          entry_type: "DEBIT" as any,
+          points_amount: finalRequired,
+          money_amount: 0,
+          reference_type: "REDEMPTION" as any,
+          reference_id: created.id,
+          reason: `Resgate: ${offer.title}`,
+          created_by_user_id: (await supabase.auth.getUser()).data.user!.id,
+        });
+
+        // 2. Decrement customer balance
+        await supabase.from("customers").update({
+          points_balance: Math.max(0, customerPoints - finalRequired),
+        }).eq("id", customer.id);
+      }
+
       // Fetch the full redemption record to show the detail page
       const { data: fullRedemption } = await supabase
         .from("redemptions")
@@ -227,7 +249,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      style={{ backgroundColor: "hsl(var(--background))" }}
     >
       <div
         ref={scrollRef}
@@ -265,21 +287,21 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       <Store className="h-16 w-16" style={{ color: `${primary}30` }} />
                     </div>
                   )}
-                  <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                  <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
                   </button>
                   <div className="absolute top-4 right-4 flex gap-2">
-                    <button onClick={handleShare} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                    <button onClick={handleShare} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                       <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
                     </button>
-                    <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                    <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                       <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
                     </motion.button>
                   </div>
                   {/* Store logo circle overlay */}
                   {offer.stores?.logo_url && (
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
-                      <div className="h-16 w-16 rounded-2xl bg-white shadow-lg border-2 border-white overflow-hidden">
+                      <div className="h-16 w-16 rounded-2xl bg-card shadow-lg border-2 border-card overflow-hidden">
                         <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-full object-cover" />
                       </div>
                     </div>
@@ -415,7 +437,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         <motion.div
                           key={sim.id}
                           whileTap={{ scale: 0.98 }}
-                          className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
+                          className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer"
                           style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
                           onClick={() => {
                             setIsFading(true);
@@ -463,14 +485,14 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
-                <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                   <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
                 </button>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button onClick={handleShare} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                  <button onClick={handleShare} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
                   </button>
-                  <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                  <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
                   </motion.button>
                 </div>
@@ -483,7 +505,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   </div>
                 )}
                 {offer.likes_count > 0 && (
-                  <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 backdrop-blur text-xs font-semibold shadow-sm">
+                  <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full bg-card/80 backdrop-blur text-xs font-semibold shadow-sm">
                     <ThumbsUp className="h-3 w-3" style={{ color: primary }} />
                     {offer.likes_count}
                   </div>
@@ -491,7 +513,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               </div>
 
               {/* Content card */}
-              <div className="relative -mt-6 mx-4 rounded-[24px] bg-white p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+              <div className="relative -mt-6 mx-4 rounded-[24px] bg-card p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
                 {offer.stores?.name && (
                   <div className="flex items-center gap-2 mb-3">
                     {offer.stores.logo_url ? (
@@ -539,7 +561,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               </div>
 
               {/* Rules section */}
-              <div className="mx-4 mt-4 rounded-[20px] bg-white p-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
+              <div className="mx-4 mt-4 rounded-[20px] bg-card p-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
                 <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Regras da oferta</h3>
                 <div className="space-y-3">
                   {offer.end_at && (
@@ -594,7 +616,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       <motion.div
                         key={sim.id}
                         whileTap={{ scale: 0.98 }}
-                        className="flex gap-3 p-3 rounded-2xl bg-white cursor-pointer"
+                        className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer"
                         style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
                         onClick={() => {
                           setIsFading(true);
@@ -635,7 +657,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
       {/* Sticky CTA - Product type */}
       {!redeemed && offer.coupon_type === "PRODUCT" && (
-        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
+        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, hsl(var(--background)) 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
@@ -658,7 +680,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 setShowConfirm(true);
               }}
                 className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
-                style={{ backgroundColor: "#FFD54F", color: "#1F2937", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
+                style={{ backgroundColor: "#FFD54F", color: "hsl(var(--foreground))", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
                 PAGUE {offer.discount_percent}% COM PONTOS
               </motion.button>
             )}
@@ -668,7 +690,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
       {/* Sticky CTA - Store type */}
       {!redeemed && offer.coupon_type !== "PRODUCT" && (
-        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, #FAFAFA 60%, transparent)` }}>
+        <div className="fixed bottom-0 inset-x-0 z-[61] px-5 pb-6 pt-3" style={{ background: `linear-gradient(to top, hsl(var(--background)) 60%, transparent)` }}>
           <div className="max-w-lg mx-auto">
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
@@ -729,7 +751,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <motion.div
               initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-white overflow-hidden"
+              className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-card overflow-hidden"
               style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)", maxHeight: "85vh" }}>
 
               {isSigningUp ? (
@@ -806,7 +828,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     )}
 
                     {/* Rules card */}
-                    <div className="rounded-2xl p-4 mb-4 space-y-3" style={{ backgroundColor: "#F9FAFB", border: `1px solid ${fg}08` }}>
+                    <div className="rounded-2xl p-4 mb-4 space-y-3 bg-muted" style={{ border: `1px solid ${fg}08` }}>
                       <p className="text-[11px] font-bold tracking-wider" style={{ color: `${fg}50` }}>REGRAS DE USO</p>
                       {Number(offer.min_purchase) > 0 && (
                         <TermsRuleItem icon={<ShoppingBag className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
