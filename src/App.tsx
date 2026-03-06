@@ -185,6 +185,7 @@ function AppRoutes() {
           <Route path="api-keys" element={<BrandApiKeysPage />} />
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="access-hub" element={<AccessHubPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

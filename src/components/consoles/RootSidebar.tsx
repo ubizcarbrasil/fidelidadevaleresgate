@@ -31,6 +31,7 @@ const groups = [
       { title: "Clonar Cidade", url: "/clone-branch", icon: Copy },
       { title: "Domínios", url: "/domains", icon: Globe },
       { title: "Nova Empresa", url: "/provision-brand", icon: Rocket },
+      { title: "Central de Acessos", url: "/access-hub", icon: Eye },
     ],
   },
   {
