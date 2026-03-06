@@ -49,23 +49,10 @@ interface StoreSummary {
 
 export default function GanhaGanhaClosingReportsPage() {
   const { currentBrandId: selectedBrandId } = useBrandGuard();
+  const navigate = useNavigate();
+  const { config: ggConfig, isLoading: ggLoading } = useGanhaGanhaConfig();
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
-
-  const { data: config } = useQuery({
-    queryKey: ["gg-config", selectedBrandId],
-    queryFn: async () => {
-      if (!selectedBrandId) return null;
-      const { data } = await supabase
-        .from("ganha_ganha_config")
-        .select("*")
-        .eq("brand_id", selectedBrandId)
-        .eq("is_active", true)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!selectedBrandId,
-  });
 
   const { data: brand } = useQuery({
     queryKey: ["brand-info", selectedBrandId],
