@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Handshake, DollarSign, TrendingUp, ArrowDownCircle, ArrowUpCircle, Download, Loader2, Search } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
