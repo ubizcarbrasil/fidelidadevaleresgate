@@ -181,6 +181,7 @@ function AppRoutes() {
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
           <Route path="api-keys" element={<BrandApiKeysPage />} />
           <Route path="api-docs" element={<ApiDocsPage />} />
+          <Route path="subscription" element={<SubscriptionPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
