@@ -293,7 +293,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
            className="fixed inset-0 z-[70] flex flex-col bg-background"
          >
           {/* Header */}
-          <header className="sticky top-0 z-10 bg-white">
+          <header className="sticky top-0 z-10 bg-background">
             <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-3">
               <button
                 onClick={onBack}

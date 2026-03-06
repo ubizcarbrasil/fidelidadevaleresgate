@@ -344,7 +344,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
           <button
             onClick={() => { onBack(); navigateToTab("home"); }}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold transition-transform active:scale-[0.98]"
-            style={{ backgroundColor: "#1F2937", color: "#fff" }}
+            style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
           >
             VOLTAR PARA HOME
           </button>

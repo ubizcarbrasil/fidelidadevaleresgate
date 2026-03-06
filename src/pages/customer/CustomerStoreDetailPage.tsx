@@ -169,8 +169,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
 
         {/* Info card */}
         <div
-          className="relative -mt-4 mx-4 rounded-[20px] bg-white p-5"
-          style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}
+           className="relative -mt-4 mx-4 rounded-[20px] bg-card p-5"
+           style={{ boxShadow: "0 4px 20px hsl(var(--foreground) / 0.05)" }}
         >
           {store.address && (
             <div className="flex items-start gap-3 mb-3">

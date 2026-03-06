@@ -128,9 +128,9 @@ export default function EmissorasSection() {
                   className="max-h-[60px] max-w-[100px] object-contain"
                 />
               ) : (
-                <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-muted">
-                  <Store className="h-6 w-6" style={{ color: "#CCC" }} />
-                </div>
+                 <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-muted">
+                   <Store className="h-6 w-6 text-muted-foreground" />
+                 </div>
               )}
             </div>
 
