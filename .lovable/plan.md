@@ -1,51 +1,31 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Remover registros duplicados da Ubiz Resgata
 
-## Resumo
+### Registros a remover
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+| Tabela | ID | slug | Motivo |
+|---|---|---|---|
+| `brands` | `46ca6f73-b385-4ac3-8313-b79ca8c2b35c` | `ubizresgata` | Duplicata sem branches, stores, offers ou domínios |
+| `tenants` | `6274ade5-989b-4738-a8db-f7c356d06bbc` | `ubiz-resgataa` | Duplicata -- único vínculo é a brand acima |
 
-## O que muda para o usuário
+### Verificação de segurança
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+Confirmado que a brand duplicada tem **0 branches, 0 stores, 0 offers, 0 domínios**. O tenant duplicado possui apenas essa brand como dependência. Nenhum dado será perdido.
 
-## Mudanças Técnicas
+### Execução
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+Duas operações DELETE via ferramenta de dados (não migração):
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+1. **Deletar a brand duplicada** -- `DELETE FROM brands WHERE id = '46ca6f73-...'`
+2. **Deletar o tenant duplicado** -- `DELETE FROM tenants WHERE id = '6274ade5-...'`
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+A brand precisa ser deletada primeiro por causa da foreign key `brands.tenant_id → tenants.id`.
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+### Registros que permanecem (corretos)
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+- **Tenant**: `2432d756-...` (slug: `ubiz-resgata`)
+- **Brand**: `effc4685-...` (slug: `ubiz-resgata`) -- com 2 branches, 20 stores, domínio configurado
 
-### 2. Seções de vitrine automáticas
-
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
-
-### 3. Nenhuma alteração no banco de dados
-
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
-
-## Escopo
-
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+Nenhuma alteração de código é necessária.
 
