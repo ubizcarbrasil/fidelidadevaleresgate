@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
@@ -17,6 +18,7 @@ export default function BranchForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
+  const { isRootAdmin, currentBrandId, applyBrandFilter } = useBrandGuard();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -30,12 +32,21 @@ export default function BranchForm() {
   const [loading, setLoading] = useState(false);
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: ["brands-select", currentBrandId, isRootAdmin],
     queryFn: async () => {
-      const { data } = await supabase.from("brands").select("id, name, tenants(name)").eq("is_active", true).order("name");
+      let query = supabase.from("brands").select("id, name, tenants(name)").eq("is_active", true);
+      query = applyBrandFilter(query);
+      const { data } = await query.order("name");
       return data || [];
     },
   });
+
+  // Auto-select brand when user has access to only one
+  useEffect(() => {
+    if (!brandId && brands && brands.length === 1) {
+      setBrandId(brands[0].id);
+    }
+  }, [brands, brandId]);
 
   useEffect(() => {
     if (isEdit) {
