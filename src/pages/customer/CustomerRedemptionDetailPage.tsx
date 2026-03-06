@@ -133,10 +133,10 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className="fixed inset-0 z-[60] overflow-y-auto bg-white"
+      className="fixed inset-0 z-[60] overflow-y-auto bg-background"
     >
       {/* Top bar */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-white border-b">
+      <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-card border-b">
         <button onClick={onBack} className="h-9 w-9 rounded-full flex items-center justify-center">
           <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
         </button>
