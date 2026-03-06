@@ -24,6 +24,7 @@ interface Props {
 }
 
 export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
+  const { config: ggConfig, isLoading: ggLoading } = useGanhaGanhaConfig();
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
 
   const { data: events, isLoading } = useQuery({
