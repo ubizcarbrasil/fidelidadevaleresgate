@@ -135,11 +135,11 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                 key={pill.key}
                 onClick={() => setActiveFilter(pill.key)}
                 className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border"
-                style={{
-                  backgroundColor: isActive ? primary : "#FFFFFF",
-                  color: isActive ? "#FFFFFF" : fg,
-                  borderColor: isActive ? primary : "rgba(0,0,0,0.1)",
-                }}
+                 style={{
+                   backgroundColor: isActive ? primary : "hsl(var(--card))",
+                   color: isActive ? "hsl(var(--primary-foreground, 0 0% 100%))" : fg,
+                   borderColor: isActive ? primary : "hsl(var(--border))",
+                 }}
               >
                 {pill.label}
               </button>
