@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,10 +9,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+
+async function geocodeCity(city: string, state: string): Promise<{ lat: string; lon: string } | null> {
+  if (!city || !state) return null;
+  try {
+    const query = encodeURIComponent(`${city}, ${state}, Brazil`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=br`, {
+      headers: { "Accept-Language": "pt-BR" },
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return { lat: data[0].lat, lon: data[0].lon };
+    }
+  } catch {
+    // silently fail
+  }
+  return null;
+}
 
 export default function BranchForm() {
   const { id } = useParams();
@@ -30,6 +47,9 @@ export default function BranchForm() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [loading, setLoading] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout>>();
+  const isLoadingEdit = useRef(false);
 
   const { data: brands } = useQuery({
     queryKey: ["brands-select", currentBrandId, isRootAdmin],
@@ -43,7 +63,6 @@ export default function BranchForm() {
     },
   });
 
-  // Auto-select brand when user has access to only one
   useEffect(() => {
     if (!brandId && brands && brands.length === 1) {
       setBrandId(brands[0].id);
@@ -52,6 +71,7 @@ export default function BranchForm() {
 
   useEffect(() => {
     if (isEdit) {
+      isLoadingEdit.current = true;
       supabase.from("branches").select("*").eq("id", id).single().then(({ data, error }) => {
         if (error) { toast.error("Branch não encontrada"); navigate("/branches"); return; }
         setName(data.name);
@@ -63,9 +83,36 @@ export default function BranchForm() {
         setIsActive(data.is_active);
         setLatitude((data as any).latitude?.toString() || "");
         setLongitude((data as any).longitude?.toString() || "");
+        setTimeout(() => { isLoadingEdit.current = false; }, 500);
       });
     }
   }, [id, isEdit, navigate]);
+
+  const triggerGeocode = useCallback((newCity: string, newState: string) => {
+    if (isLoadingEdit.current) return;
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+    if (!newCity || !newState) return;
+
+    geocodeTimer.current = setTimeout(async () => {
+      setGeocoding(true);
+      const result = await geocodeCity(newCity, newState);
+      if (result) {
+        setLatitude(parseFloat(result.lat).toFixed(6));
+        setLongitude(parseFloat(result.lon).toFixed(6));
+      }
+      setGeocoding(false);
+    }, 800);
+  }, []);
+
+  const handleCityChange = (val: string) => {
+    setCity(val);
+    triggerGeocode(val, state);
+  };
+
+  const handleStateChange = (val: string) => {
+    setState(val);
+    triggerGeocode(city, val);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,17 +172,17 @@ export default function BranchForm() {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} />
-              </div>
-              <div className="space-y-2">
                 <Label>UF</Label>
-                <Select value={state} onValueChange={setState}>
+                <Select value={state} onValueChange={handleStateChange}>
                   <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
                   <SelectContent>
                     {STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={city} onChange={(e) => handleCityChange(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Timezone</Label>
@@ -144,14 +191,26 @@ export default function BranchForm() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Latitude</Label>
+                <Label className="flex items-center gap-2">
+                  Latitude
+                  {geocoding && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                </Label>
                 <Input type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="-23.5505" />
               </div>
               <div className="space-y-2">
-                <Label>Longitude</Label>
+                <Label className="flex items-center gap-2">
+                  Longitude
+                  {geocoding && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                </Label>
                 <Input type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="-46.6333" />
               </div>
             </div>
+            {latitude && longitude && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Coordenadas preenchidas automaticamente. Ajuste manualmente se necessário.
+              </p>
+            )}
             <div className="space-y-2">
               <Label>Ativo</Label>
               <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
