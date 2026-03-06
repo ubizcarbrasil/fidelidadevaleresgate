@@ -1,4 +1,6 @@
 import { Outlet, Navigate } from "react-router-dom";
+import TrialBanner from "@/components/TrialBanner";
+import TrialExpiredBlocker from "@/components/TrialExpiredBlocker";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { RootSidebar } from "@/components/consoles/RootSidebar";
