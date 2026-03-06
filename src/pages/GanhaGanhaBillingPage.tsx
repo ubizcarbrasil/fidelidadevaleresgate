@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Handshake, DollarSign, TrendingUp, ArrowDownCircle, ArrowUpCircle, Download, Loader2, Search } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -40,7 +41,44 @@ export default function GanhaGanhaBillingPage() {
     enabled: !!currentBrandId,
   });
 
-  // Fetch stores for filter
+  // Fetch last 6 months of billing for evolution chart
+  const { data: evolutionEvents } = useQuery({
+    queryKey: ["gg-billing-evolution", currentBrandId],
+    queryFn: async () => {
+      const months: string[] = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(d.toISOString().slice(0, 7));
+      }
+      const { data, error } = await supabase
+        .from("ganha_ganha_billing_events")
+        .select("event_type, fee_total, points_amount, period_month")
+        .eq("brand_id", currentBrandId!)
+        .in("period_month", months);
+      if (error) throw error;
+      return { rows: data, months };
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const evolutionChart = useMemo(() => {
+    if (!evolutionEvents) return [];
+    const { rows, months } = evolutionEvents;
+    return months.map(m => {
+      const mEvents = rows.filter((e: any) => e.period_month === m);
+      const earnFee = mEvents.filter((e: any) => e.event_type === "EARN").reduce((s: number, e: any) => s + Number(e.fee_total), 0);
+      const redeemFee = mEvents.filter((e: any) => e.event_type === "REDEEM").reduce((s: number, e: any) => s + Number(e.fee_total), 0);
+      const [y, mo] = m.split("-");
+      return {
+        month: `${mo}/${y.slice(2)}`,
+        "Fat. Geração": Number(earnFee.toFixed(2)),
+        "Fat. Resgate": Number(redeemFee.toFixed(2)),
+        Total: Number((earnFee + redeemFee).toFixed(2)),
+      };
+    });
+  }, [evolutionEvents]);
+
   const { data: stores } = useQuery({
     queryKey: ["gg-billing-stores", currentBrandId],
     queryFn: async () => {
@@ -175,7 +213,40 @@ export default function GanhaGanhaBillingPage() {
         ))}
       </div>
 
-      {/* Per-store table */}
+      {/* Evolution chart */}
+      {evolutionChart.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Evolução Mensal do Faturamento</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={evolutionChart} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="colorEarn" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorRedeem" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="month" className="text-xs fill-muted-foreground" tick={{ fontSize: 11 }} />
+                <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 11 }} tickFormatter={v => `R$${v}`} />
+                <Tooltip formatter={(v: number) => formatMoney(v)} />
+                <Legend />
+                <Area type="monotone" dataKey="Fat. Geração" stroke="hsl(var(--chart-1))" fill="url(#colorEarn)" strokeWidth={2} />
+                <Area type="monotone" dataKey="Fat. Resgate" stroke="hsl(var(--chart-2))" fill="url(#colorRedeem)" strokeWidth={2} />
+                <Area type="monotone" dataKey="Total" stroke="hsl(var(--primary))" fill="none" strokeWidth={2} strokeDasharray="5 5" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Resumo por Parceiro</CardTitle>
