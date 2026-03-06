@@ -489,10 +489,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
                 </button>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button onClick={handleShare} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                  <button onClick={handleShare} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
                   </button>
-                  <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md">
+                  <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
                   </motion.button>
                 </div>
