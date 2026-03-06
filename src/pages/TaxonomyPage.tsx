@@ -320,7 +320,7 @@ export default function TaxonomyPage() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`flex-1 text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 flex items-center gap-2 ${selectedCategory === cat.id ? "bg-primary/10 text-primary font-medium" : ""}`}
                     >
-                      <LucideIconPreview name={cat.icon_name} className="h-4 w-4 shrink-0" />
+                      <IconPreview name={cat.icon_name} className="h-4 w-4 shrink-0" />
                       <span className="truncate flex-1">{cat.name}</span>
                       <Badge variant="secondary" className="text-xs ml-auto shrink-0">{segCountByCat(cat.id)}</Badge>
                     </button>
