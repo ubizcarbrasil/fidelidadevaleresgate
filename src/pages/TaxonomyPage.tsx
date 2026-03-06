@@ -53,36 +53,64 @@ function kebabToPascal(name: string): string {
     .join("");
 }
 
-function LucideIconPreview({ name, className = "h-4 w-4" }: { name: string | null; className?: string }) {
+function IconPreview({ name, className = "h-4 w-4" }: { name: string | null; className?: string }) {
   if (!name) return <Store className={className + " text-muted-foreground"} />;
+  // If it's a URL (custom icon from gallery)
+  if (name.startsWith("http")) {
+    return <img src={name} alt="icon" className={className + " object-contain"} />;
+  }
   const pascalName = kebabToPascal(name);
   const Icon = (icons as Record<string, any>)[pascalName];
   if (!Icon) return <Store className={className + " text-muted-foreground"} />;
   return <Icon className={className} />;
 }
 
-function IconInput({ value, onChange, label = "Ícone (nome Lucide)" }: { value: string; onChange: (v: string) => void; label?: string }) {
-  const isValid = value ? !!(icons as Record<string, any>)[kebabToPascal(value)] : true;
+function IconPickerField({
+  value,
+  onChange,
+  label,
+  brandId,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  brandId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const isUrl = value?.startsWith("http");
+  const displayName = isUrl ? "Personalizado" : value || "Padrão";
+
   return (
     <div>
       <Label>{label}</Label>
       <div className="flex items-center gap-2">
         <div className="h-9 w-9 rounded-lg border flex items-center justify-center shrink-0 bg-muted/30">
-          <LucideIconPreview name={value || null} className="h-5 w-5" />
+          <IconPreview name={value || null} className="h-5 w-5" />
         </div>
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Ex: coffee, pizza, scissors"
-          className={!isValid && value ? "border-destructive" : ""}
-        />
+        <Button variant="outline" size="sm" className="flex-1 justify-start gap-2" onClick={() => setOpen(true)}>
+          {isUrl ? <ImageIcon className="h-3.5 w-3.5" /> : null}
+          <span className="truncate text-xs">{displayName}</span>
+        </Button>
+        {value && (
+          <Button variant="ghost" size="sm" onClick={() => onChange("")} className="text-xs text-muted-foreground">
+            Limpar
+          </Button>
+        )}
       </div>
-      {value && !isValid && (
-        <p className="text-xs text-destructive mt-1">Ícone "{value}" não encontrado no Lucide</p>
-      )}
-      <p className="text-xs text-muted-foreground mt-1">
-        Use nomes do <a href="https://lucide.dev/icons" target="_blank" rel="noopener" className="underline">lucide.dev</a> em kebab-case
-      </p>
+      <IconPickerDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onSelect={(icon) => {
+          if (icon.type === "lucide") {
+            // Store as kebab-case for consistency with existing data
+            const kebab = icon.name.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+            onChange(kebab);
+          } else {
+            onChange(icon.url);
+          }
+        }}
+        brandId={brandId}
+      />
     </div>
   );
 }
