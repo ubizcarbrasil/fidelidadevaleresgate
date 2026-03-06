@@ -1153,6 +1153,149 @@ export type Database = {
         }
         Relationships: []
       }
+      ganha_ganha_billing_events: {
+        Row: {
+          brand_id: string
+          created_at: string
+          event_type: string
+          fee_per_point: number
+          fee_total: number
+          id: string
+          period_month: string
+          points_amount: number
+          reference_id: string | null
+          reference_type: string | null
+          store_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          event_type: string
+          fee_per_point?: number
+          fee_total?: number
+          id?: string
+          period_month?: string
+          points_amount?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          store_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          event_type?: string
+          fee_per_point?: number
+          fee_total?: number
+          id?: string
+          period_month?: string
+          points_amount?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ganha_ganha_billing_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ganha_ganha_billing_events_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ganha_ganha_config: {
+        Row: {
+          brand_id: string
+          created_at: string
+          fee_mode: string
+          fee_per_point_earned: number
+          fee_per_point_redeemed: number
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          fee_mode?: string
+          fee_per_point_earned?: number
+          fee_per_point_redeemed?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          fee_mode?: string
+          fee_per_point_earned?: number
+          fee_per_point_redeemed?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ganha_ganha_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ganha_ganha_store_fees: {
+        Row: {
+          brand_id: string
+          created_at: string
+          fee_per_point_earned: number
+          fee_per_point_redeemed: number
+          id: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          fee_per_point_earned?: number
+          fee_per_point_redeemed?: number
+          id?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          fee_per_point_earned?: number
+          fee_per_point_redeemed?: number
+          id?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ganha_ganha_store_fees_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ganha_ganha_store_fees_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       home_template_apply_jobs: {
         Row: {
           created_at: string
