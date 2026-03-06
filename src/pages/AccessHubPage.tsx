@@ -157,7 +157,7 @@ function BrandStoresTab({ brandId }: { brandId: string }) {
               <TableRow key={store.id}>
                 <TableCell className="font-medium">{store.name}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {store.city || "—"}
+                  {store.address || "—"}
                 </TableCell>
                 <TableCell>
                   <Badge
