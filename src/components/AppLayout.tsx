@@ -8,6 +8,10 @@ import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import { useBrandName } from "@/hooks/useBrandName";
+import { useBrandTheme } from "@/hooks/useBrandTheme";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Painel Raiz",
