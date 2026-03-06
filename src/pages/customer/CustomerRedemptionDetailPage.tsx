@@ -175,7 +175,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
                   : "—"}
             </p>
           </div>
-          <div className="rounded-2xl p-3 text-center" style={{ backgroundColor: "#F9FAFB" }}>
+          <div className="rounded-2xl p-3 text-center bg-muted">
             <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>STATUS</p>
             <p className="text-sm font-bold" style={{ color: statusColor, fontFamily: fontHeading }}>{statusLabel}</p>
           </div>
