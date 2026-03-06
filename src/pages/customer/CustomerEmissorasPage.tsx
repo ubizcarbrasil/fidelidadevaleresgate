@@ -153,7 +153,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
       {/* Grid */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <p className="text-xs font-medium mb-3" style={{ color: "#999" }}>
+          <p className="text-xs font-medium mb-3 text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? "parceiro" : "parceiros"}
           </p>
 
