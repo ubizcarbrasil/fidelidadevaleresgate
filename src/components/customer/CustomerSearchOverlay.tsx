@@ -214,7 +214,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
            className="fixed inset-0 z-[60] flex flex-col bg-background"
          >
           {/* Search Header */}
-          <div className="sticky top-0 z-10 bg-white">
+          <div className="sticky top-0 z-10 bg-background">
             <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3">
               <div
                 className="flex-1 flex items-center gap-2.5 rounded-full px-4 py-2.5"
