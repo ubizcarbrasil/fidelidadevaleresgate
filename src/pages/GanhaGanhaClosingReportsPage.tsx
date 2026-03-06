@@ -227,10 +227,27 @@ export default function GanhaGanhaClosingReportsPage() {
     storeSummaries.forEach((store) => generateStorePdf(store));
   }
 
-  if (isLoading) {
+  if (isLoading || ggLoading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!ggConfig) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <Card className="max-w-md w-full border-dashed">
+          <CardContent className="py-10 text-center space-y-4">
+            <Settings className="h-10 w-10 mx-auto text-muted-foreground/50" />
+            <h3 className="text-lg font-semibold">Módulo Ganha-Ganha não configurado</h3>
+            <p className="text-sm text-muted-foreground">
+              Ative e configure o módulo Ganha-Ganha para visualizar os relatórios de fechamento mensal.
+            </p>
+            <Button onClick={() => navigate("/ganha-ganha-config")}>Configurar Ganha-Ganha</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
