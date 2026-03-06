@@ -242,7 +242,7 @@ function RedemptionCard({
     : 30;
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+    <div className="rounded-2xl overflow-hidden bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.06)" }}>
       {/* Card header */}
       <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${fg}08` }}>
         <div>

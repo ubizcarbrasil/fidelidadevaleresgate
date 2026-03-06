@@ -251,7 +251,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         )}
 
         {hasActions && (
-          <div className="mx-5 rounded-2xl p-5 mb-4" style={{ border: "2px solid #FBBF24", backgroundColor: "#FFFBEB" }}>
+          <div className="mx-5 rounded-2xl p-5 mb-4 bg-amber-50 dark:bg-amber-950/30" style={{ border: "2px solid #FBBF24" }}>
             <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: `${fg}60` }}>COMO RESGATAR</p>
             <div className="space-y-2">
               {store?.address && (
@@ -344,7 +344,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
           <button
             onClick={() => { onBack(); navigateToTab("home"); }}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold transition-transform active:scale-[0.98]"
-            style={{ backgroundColor: "#1F2937", color: "#fff" }}
+            style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
           >
             VOLTAR PARA HOME
           </button>

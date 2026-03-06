@@ -211,16 +211,14 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[60] flex flex-col"
-          style={{ backgroundColor: "#FAFAFA" }}
-        >
+           className="fixed inset-0 z-[60] flex flex-col bg-background"
+         >
           {/* Search Header */}
-          <div className="sticky top-0 z-10 bg-white">
+          <div className="sticky top-0 z-10 bg-background">
             <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3">
               <div
-                className="flex-1 flex items-center gap-2.5 rounded-full px-4 py-2.5"
-                style={{ backgroundColor: "#F2F2F7" }}
-              >
+                 className="flex-1 flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted"
+               >
                 <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
                 <input
                   ref={inputRef}

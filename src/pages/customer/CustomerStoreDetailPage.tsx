@@ -110,8 +110,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       <div className="flex-1 overflow-y-auto pb-28">
         {/* Hero header */}
@@ -124,7 +123,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           {/* Back button */}
           <button
             onClick={onBack}
-            className="absolute top-4 left-4 h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-md"
+            className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
           >
             <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
           </button>
@@ -170,8 +169,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
 
         {/* Info card */}
         <div
-          className="relative -mt-4 mx-4 rounded-[20px] bg-white p-5"
-          style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}
+           className="relative -mt-4 mx-4 rounded-[20px] bg-card p-5"
+           style={{ boxShadow: "0 4px 20px hsl(var(--foreground) / 0.05)" }}
         >
           {store.address && (
             <div className="flex items-start gap-3 mb-3">

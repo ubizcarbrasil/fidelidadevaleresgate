@@ -50,15 +50,14 @@ export default function SectionDetailOverlay({
 
   return (
     <motion.div
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white">
+      <div className="sticky top-0 z-10 bg-background">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
           <button
             onClick={onBack}
@@ -82,9 +81,8 @@ export default function SectionDetailOverlay({
         {/* Search bar */}
         <div className="max-w-lg mx-auto px-4 pb-3">
           <div
-            className="flex items-center gap-2.5 rounded-full px-4 py-2.5"
-            style={{ backgroundColor: "#F2F2F7" }}
-          >
+             className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted"
+           >
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
             <input
               type="text"

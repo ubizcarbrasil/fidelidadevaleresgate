@@ -92,11 +92,10 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       {/* Header */}
-      <header className="sticky top-0 z-10" style={{ backgroundColor: "#FFFFFF" }}>
+      <header className="sticky top-0 z-10 bg-background">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
           <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5">
             <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
@@ -109,20 +108,18 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
         {/* Search bar */}
         <div className="max-w-lg mx-auto px-4 pb-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#999" }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar parceiro..."
-              className="pl-9 pr-8 h-10 rounded-full border-none text-sm"
-              style={{ backgroundColor: "#F2F2F7" }}
-            />
+               className="pl-9 pr-8 h-10 rounded-full border-none text-sm bg-muted"
+             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#CCC" }}
-              >
+                 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center bg-muted-foreground/50"
+               >
                 <X className="h-3 w-3 text-white" />
               </button>
             )}
@@ -138,11 +135,11 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                 key={pill.key}
                 onClick={() => setActiveFilter(pill.key)}
                 className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border"
-                style={{
-                  backgroundColor: isActive ? primary : "#FFFFFF",
-                  color: isActive ? "#FFFFFF" : fg,
-                  borderColor: isActive ? primary : "rgba(0,0,0,0.1)",
-                }}
+                 style={{
+                   backgroundColor: isActive ? primary : "hsl(var(--card))",
+                   color: isActive ? "hsl(var(--primary-foreground, 0 0% 100%))" : fg,
+                   borderColor: isActive ? primary : "hsl(var(--border))",
+                 }}
               >
                 {pill.label}
               </button>
@@ -150,13 +147,13 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
           })}
         </div>
 
-        <div className="h-px" style={{ backgroundColor: "rgba(0,0,0,0.06)" }} />
+        <div className="h-px bg-border" />
       </header>
 
       {/* Grid */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <p className="text-xs font-medium mb-3" style={{ color: "#999" }}>
+          <p className="text-xs font-medium mb-3 text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? "parceiro" : "parceiros"}
           </p>
 
@@ -168,10 +165,10 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F5F5F5" }}>
-                <Store className="h-7 w-7" style={{ color: "#CCC" }} />
-              </div>
-              <p className="text-sm font-medium" style={{ color: "#999" }}>Nenhum parceiro encontrado</p>
+               <div className="h-16 w-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-muted">
+                 <Store className="h-7 w-7 text-muted-foreground" />
+               </div>
+               <p className="text-sm font-medium text-muted-foreground">Nenhum parceiro encontrado</p>
               {activeFilter !== "all" && (
                 <button
                   onClick={() => setActiveFilter("all")}
@@ -191,10 +188,10 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02, duration: 0.2 }}
                   className="rounded-2xl overflow-hidden cursor-pointer relative group active:scale-[0.98] transition-transform"
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)",
-                  }}
+                   style={{
+                     backgroundColor: "hsl(var(--card))",
+                     boxShadow: "0 1px 6px hsl(var(--foreground) / 0.06), 0 0 0 1px hsl(var(--border))",
+                   }}
                   onClick={() => openStore(store)}
                 >
                   {/* Favorite heart */}
@@ -204,7 +201,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                       toggleFavoriteStore(store.id);
                     }}
                     className="absolute top-2.5 right-2.5 z-10 h-8 w-8 flex items-center justify-center rounded-full transition-colors"
-                    style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
+                    style={{ backgroundColor: "hsl(var(--card) / 0.9)" }}
                   >
                     <Heart
                       className="h-4 w-4 transition-colors"
@@ -223,9 +220,9 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                         className="max-h-[64px] max-w-[120px] object-contain"
                       />
                     ) : (
-                      <div className="h-16 w-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "#F5F5F5" }}>
-                        <Store className="h-7 w-7" style={{ color: "#CCC" }} />
-                      </div>
+                       <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-muted">
+                         <Store className="h-7 w-7 text-muted-foreground" />
+                       </div>
                     )}
                   </div>
 

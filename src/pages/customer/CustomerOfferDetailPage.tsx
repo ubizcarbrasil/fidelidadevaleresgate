@@ -354,16 +354,15 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
                 {/* Pague com Pontos card */}
                 {discountPct > 0 && (
-                  <div className="mx-4 mt-2 rounded-2xl p-4" style={{
-                    backgroundColor: "#FFF8E1",
-                    border: "2px solid #FFD54F",
-                  }}>
+                   <div className="mx-4 mt-2 rounded-2xl p-4 bg-amber-50 dark:bg-amber-950/30" style={{
+                     border: "2px solid hsl(var(--chart-4, 45 93% 58%))",
+                   }}>
                     <div className="flex items-center gap-2 mb-3">
                       <DollarSign className="h-5 w-5" style={{ color: "#E65100" }} />
                       <span className="text-base font-bold" style={{ color: "#E65100" }}>Pague com Pontos</span>
                     </div>
                     <div className="flex gap-3 mb-3">
-                      <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "rgba(255,255,255,0.7)" }}>
+                      <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
                         <p className="text-[11px] font-medium" style={{ color: `${fg}50` }}>Você pode usar</p>
                         <p className="text-3xl font-bold" style={{ color: "#E65100" }}>{discountPct}%</p>
                         <p className="text-[11px]" style={{ color: `${fg}50` }}>do valor em pontos</p>
@@ -992,7 +991,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         </span>
                       </div>
                       {/* Remaining to pay */}
-                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: "#FFF8E1", border: "1.5px solid #FFD54F" }}>
+                      <div className="rounded-2xl p-3 flex justify-between items-center bg-amber-50 dark:bg-amber-950/30" style={{ border: "1.5px solid hsl(var(--chart-4, 45 93% 58%))" }}>
                         <span className="text-sm font-semibold" style={{ color: `${fg}80` }}>Você paga</span>
                         <span className="text-lg font-bold" style={{ color: "#E65100" }}>
                           R$ {remainingAfterCredit.toFixed(2).replace(".", ",")}
