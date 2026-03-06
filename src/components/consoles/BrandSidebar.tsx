@@ -71,6 +71,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "stores" },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { key: "sidebar.operador_pdv", defaultTitle: "Operador PDV", url: "/pdv", icon: ScanLine },
+      { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key },
     ],
   },
   {
