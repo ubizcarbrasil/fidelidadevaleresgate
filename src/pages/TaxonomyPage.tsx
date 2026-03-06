@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, Tag, FolderTree, ChevronRight, icons, Store } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Tag, FolderTree, ChevronRight, icons, Store, ImageIcon } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import IconPickerDialog from "@/components/IconPickerDialog";
+import { useBrand } from "@/contexts/BrandContext";
 
 interface Category {
   id: string;
@@ -51,41 +53,70 @@ function kebabToPascal(name: string): string {
     .join("");
 }
 
-function LucideIconPreview({ name, className = "h-4 w-4" }: { name: string | null; className?: string }) {
+function IconPreview({ name, className = "h-4 w-4" }: { name: string | null; className?: string }) {
   if (!name) return <Store className={className + " text-muted-foreground"} />;
+  // If it's a URL (custom icon from gallery)
+  if (name.startsWith("http")) {
+    return <img src={name} alt="icon" className={className + " object-contain"} />;
+  }
   const pascalName = kebabToPascal(name);
   const Icon = (icons as Record<string, any>)[pascalName];
   if (!Icon) return <Store className={className + " text-muted-foreground"} />;
   return <Icon className={className} />;
 }
 
-function IconInput({ value, onChange, label = "Ícone (nome Lucide)" }: { value: string; onChange: (v: string) => void; label?: string }) {
-  const isValid = value ? !!(icons as Record<string, any>)[kebabToPascal(value)] : true;
+function IconPickerField({
+  value,
+  onChange,
+  label,
+  brandId,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  brandId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const isUrl = value?.startsWith("http");
+  const displayName = isUrl ? "Personalizado" : value || "Padrão";
+
   return (
     <div>
       <Label>{label}</Label>
       <div className="flex items-center gap-2">
         <div className="h-9 w-9 rounded-lg border flex items-center justify-center shrink-0 bg-muted/30">
-          <LucideIconPreview name={value || null} className="h-5 w-5" />
+          <IconPreview name={value || null} className="h-5 w-5" />
         </div>
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Ex: coffee, pizza, scissors"
-          className={!isValid && value ? "border-destructive" : ""}
-        />
+        <Button variant="outline" size="sm" className="flex-1 justify-start gap-2" onClick={() => setOpen(true)}>
+          {isUrl ? <ImageIcon className="h-3.5 w-3.5" /> : null}
+          <span className="truncate text-xs">{displayName}</span>
+        </Button>
+        {value && (
+          <Button variant="ghost" size="sm" onClick={() => onChange("")} className="text-xs text-muted-foreground">
+            Limpar
+          </Button>
+        )}
       </div>
-      {value && !isValid && (
-        <p className="text-xs text-destructive mt-1">Ícone "{value}" não encontrado no Lucide</p>
-      )}
-      <p className="text-xs text-muted-foreground mt-1">
-        Use nomes do <a href="https://lucide.dev/icons" target="_blank" rel="noopener" className="underline">lucide.dev</a> em kebab-case
-      </p>
+      <IconPickerDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onSelect={(icon) => {
+          if (icon.type === "lucide") {
+            // Store as kebab-case for consistency with existing data
+            const kebab = icon.name.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+            onChange(kebab);
+          } else {
+            onChange(icon.url);
+          }
+        }}
+        brandId={brandId}
+      />
     </div>
   );
 }
 
 export default function TaxonomyPage() {
+  const { brand } = useBrand();
   const [categories, setCategories] = useState<Category[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -289,7 +320,7 @@ export default function TaxonomyPage() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`flex-1 text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 flex items-center gap-2 ${selectedCategory === cat.id ? "bg-primary/10 text-primary font-medium" : ""}`}
                     >
-                      <LucideIconPreview name={cat.icon_name} className="h-4 w-4 shrink-0" />
+                      <IconPreview name={cat.icon_name} className="h-4 w-4 shrink-0" />
                       <span className="truncate flex-1">{cat.name}</span>
                       <Badge variant="secondary" className="text-xs ml-auto shrink-0">{segCountByCat(cat.id)}</Badge>
                     </button>
@@ -342,7 +373,7 @@ export default function TaxonomyPage() {
                         className="group flex items-start gap-3 p-3 rounded-xl border hover:border-primary/30 transition-colors"
                       >
                         <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
-                          <LucideIconPreview name={seg.icon_name} className="h-5 w-5" />
+                          <IconPreview name={seg.icon_name} className="h-5 w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -409,11 +440,12 @@ export default function TaxonomyPage() {
               <Label>Nome</Label>
               <Input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} placeholder="Ex: Alimentação" />
             </div>
-            <IconInput
-              value={catForm.icon_name}
-              onChange={(v) => setCatForm({ ...catForm, icon_name: v })}
-              label="Ícone da Categoria"
-            />
+             <IconPickerField
+               value={catForm.icon_name}
+               onChange={(v) => setCatForm({ ...catForm, icon_name: v })}
+               label="Ícone da Categoria"
+               brandId={brand?.id}
+             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCatDialog(false)}>Cancelar</Button>
@@ -433,11 +465,12 @@ export default function TaxonomyPage() {
               <Label>Nome</Label>
               <Input value={segForm.name} onChange={(e) => setSegForm({ ...segForm, name: e.target.value })} placeholder="Ex: Hamburgueria" />
             </div>
-            <IconInput
-              value={segForm.icon_name}
-              onChange={(v) => setSegForm({ ...segForm, icon_name: v })}
-              label="Ícone do Segmento"
-            />
+             <IconPickerField
+               value={segForm.icon_name}
+               onChange={(v) => setSegForm({ ...segForm, icon_name: v })}
+               label="Ícone do Segmento"
+               brandId={brand?.id}
+             />
             <div>
               <Label>Descrição (opcional)</Label>
               <Textarea value={segForm.description} onChange={(e) => setSegForm({ ...segForm, description: e.target.value })} placeholder="Descreva este segmento..." rows={2} />

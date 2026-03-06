@@ -44,6 +44,10 @@ function kebabToPascal(name: string): string {
 
 function SegmentIcon({ iconName, color }: { iconName: string | null; color: string }) {
   if (!iconName) return <Store className="h-6 w-6" style={{ color }} />;
+  // Support custom image URLs from icon gallery
+  if (iconName.startsWith("http")) {
+    return <img src={iconName} alt="" className="h-6 w-6 object-contain" />;
+  }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
   if (!LucideIcon) return <Store className="h-6 w-6" style={{ color }} />;
