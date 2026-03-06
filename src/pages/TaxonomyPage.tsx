@@ -440,11 +440,12 @@ export default function TaxonomyPage() {
               <Label>Nome</Label>
               <Input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} placeholder="Ex: Alimentação" />
             </div>
-            <IconInput
-              value={catForm.icon_name}
-              onChange={(v) => setCatForm({ ...catForm, icon_name: v })}
-              label="Ícone da Categoria"
-            />
+             <IconPickerField
+               value={catForm.icon_name}
+               onChange={(v) => setCatForm({ ...catForm, icon_name: v })}
+               label="Ícone da Categoria"
+               brandId={brand?.id}
+             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCatDialog(false)}>Cancelar</Button>
