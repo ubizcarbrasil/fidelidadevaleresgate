@@ -179,6 +179,28 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       if (error) throw error;
       setPin(created.token);
 
+      // ── Deduct points from customer balance ──
+      if (finalRequired > 0) {
+        // 1. Insert debit entry in points_ledger
+        await supabase.from("points_ledger").insert({
+          customer_id: customer.id,
+          brand_id: brand.id,
+          branch_id: selectedBranch.id,
+          entry_type: "DEBIT" as any,
+          points_amount: finalRequired,
+          money_amount: 0,
+          reference_type: "REDEMPTION" as any,
+          reference_id: created.id,
+          reason: `Resgate: ${offer.title}`,
+          created_by_user_id: (await supabase.auth.getUser()).data.user!.id,
+        });
+
+        // 2. Decrement customer balance
+        await supabase.from("customers").update({
+          points_balance: Math.max(0, customerPoints - finalRequired),
+        }).eq("id", customer.id);
+      }
+
       // Fetch the full redemption record to show the detail page
       const { data: fullRedemption } = await supabase
         .from("redemptions")
