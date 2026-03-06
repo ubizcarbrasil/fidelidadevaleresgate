@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Handshake, DollarSign, TrendingUp, ArrowDownCircle, ArrowUpCircle, Download, Loader2, Search } from "lucide-react";
+import { Handshake, DollarSign, TrendingUp, ArrowDownCircle, ArrowUpCircle, Download, Loader2, Search, Settings } from "lucide-react";
+import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
+import { useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 function formatMoney(v: number) {
@@ -22,8 +24,13 @@ function getCurrentMonth() {
 
 export default function GanhaGanhaBillingPage() {
   const { currentBrandId } = useBrandGuard();
+  const navigate = useNavigate();
+  const { config: ggConfig, isLoading: ggLoading } = useGanhaGanhaConfig();
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
   const [storeFilter, setStoreFilter] = useState<string>("all");
+
+
+
 
   // Fetch all billing events for period
   const { data: events, isLoading } = useQuery({
@@ -154,10 +161,27 @@ export default function GanhaGanhaBillingPage() {
     a.click();
   };
 
-  if (isLoading) {
+  if (isLoading || ggLoading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!ggConfig) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <Card className="max-w-md w-full border-dashed">
+          <CardContent className="py-10 text-center space-y-4">
+            <Settings className="h-10 w-10 mx-auto text-muted-foreground/50" />
+            <h3 className="text-lg font-semibold">Módulo Ganha-Ganha não configurado</h3>
+            <p className="text-sm text-muted-foreground">
+              Ative e configure o módulo Ganha-Ganha para visualizar o faturamento e os eventos de billing.
+            </p>
+            <Button onClick={() => navigate("/ganha-ganha-config")}>Configurar Ganha-Ganha</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

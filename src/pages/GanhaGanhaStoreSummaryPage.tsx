@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Handshake, ArrowUpCircle, ArrowDownCircle, DollarSign, Loader2 } from "lucide-react";
+import { Handshake, ArrowUpCircle, ArrowDownCircle, DollarSign, Loader2, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -22,6 +24,7 @@ interface Props {
 }
 
 export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
+  const { config: ggConfig, isLoading: ggLoading } = useGanhaGanhaConfig();
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
 
   const { data: events, isLoading } = useQuery({
@@ -52,10 +55,22 @@ export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
     };
   }, [events]);
 
-  if (isLoading) {
+  if (isLoading || ggLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!ggConfig) {
+    return (
+      <div className="py-12 text-center space-y-4">
+        <Settings className="h-10 w-10 mx-auto text-muted-foreground/50" />
+        <h3 className="text-lg font-semibold">Módulo Ganha-Ganha não configurado</h3>
+        <p className="text-sm text-muted-foreground">
+          O módulo Ganha-Ganha precisa ser ativado pelo administrador da marca para exibir o consumo.
+        </p>
       </div>
     );
   }

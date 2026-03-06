@@ -1,26 +1,51 @@
 
 
-## Problema
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-A página de Fechamento Mensal GG (`/ganha-ganha-closing`) não exibe nenhuma mensagem informativa quando o módulo Ganha-Ganha ainda não foi configurado para a marca. A tabela `ganha_ganha_config` não possui registro para a Ubiz Resgata, então a página aparece vazia sem orientação.
+## Resumo
 
-O mesmo ocorre nas páginas `/ganha-ganha-config` e `/ganha-ganha-billing` — não há dados porque o módulo nunca foi ativado.
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-## Solução
+## O que muda para o usuário
 
-### 1. Adicionar estado vazio informativo nas 3 páginas GG
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-Nas páginas `GanhaGanhaClosingReportsPage`, `GanhaGanhaBillingPage` e `GanhaGanhaStoreSummaryPage`, quando `config` for null, exibir um card informativo com:
-- Ícone e título "Módulo Ganha-Ganha não configurado"
-- Texto explicando que é necessário ativar primeiro
-- Botão "Configurar Ganha-Ganha" que navega para `/ganha-ganha-config`
+## Mudanças Técnicas
 
-### 2. Garantir que a página de configuração permite criar o registro inicial
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-A `GanhaGanhaConfigPage` já permite criar/atualizar a config via upsert. Verificar que funciona corretamente para criação inicial (sem registro existente).
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-### Arquivos alterados
-- `src/pages/GanhaGanhaClosingReportsPage.tsx` — adicionar empty state quando config é null
-- `src/pages/GanhaGanhaBillingPage.tsx` — adicionar empty state quando config é null  
-- `src/pages/GanhaGanhaStoreSummaryPage.tsx` — adicionar empty state quando config é null (se existir)
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+
+### 2. Seções de vitrine automáticas
+
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+
+### 3. Nenhuma alteração no banco de dados
+
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 
