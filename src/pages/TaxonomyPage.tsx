@@ -465,11 +465,12 @@ export default function TaxonomyPage() {
               <Label>Nome</Label>
               <Input value={segForm.name} onChange={(e) => setSegForm({ ...segForm, name: e.target.value })} placeholder="Ex: Hamburgueria" />
             </div>
-            <IconInput
-              value={segForm.icon_name}
-              onChange={(v) => setSegForm({ ...segForm, icon_name: v })}
-              label="Ícone do Segmento"
-            />
+             <IconPickerField
+               value={segForm.icon_name}
+               onChange={(v) => setSegForm({ ...segForm, icon_name: v })}
+               label="Ícone do Segmento"
+               brandId={brand?.id}
+             />
             <div>
               <Label>Descrição (opcional)</Label>
               <Textarea value={segForm.description} onChange={(e) => setSegForm({ ...segForm, description: e.target.value })} placeholder="Descreva este segmento..." rows={2} />
