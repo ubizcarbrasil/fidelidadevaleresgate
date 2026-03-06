@@ -65,6 +65,48 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         .eq("id", redemption.id)
         .eq("status", "PENDING");
       if (error) throw error;
+
+      // Refund points: check if there's a debit ledger entry for this redemption
+      const { data: debitEntry } = await supabase
+        .from("points_ledger")
+        .select("points_amount, customer_id, brand_id, branch_id")
+        .eq("reference_id", redemption.id)
+        .eq("reference_type", "REDEMPTION")
+        .eq("entry_type", "DEBIT")
+        .maybeSingle();
+
+      if (debitEntry && debitEntry.points_amount > 0) {
+        const userId = (await supabase.auth.getUser()).data.user?.id;
+        if (userId) {
+          // Insert credit (refund) entry
+          await supabase.from("points_ledger").insert({
+            customer_id: debitEntry.customer_id,
+            brand_id: debitEntry.brand_id,
+            branch_id: debitEntry.branch_id,
+            entry_type: "CREDIT" as any,
+            points_amount: debitEntry.points_amount,
+            money_amount: 0,
+            reference_type: "REDEMPTION" as any,
+            reference_id: redemption.id,
+            reason: "Estorno de resgate",
+            created_by_user_id: userId,
+          });
+
+          // Restore customer balance
+          const { data: cust } = await supabase
+            .from("customers")
+            .select("points_balance")
+            .eq("id", debitEntry.customer_id)
+            .single();
+
+          if (cust) {
+            await supabase.from("customers").update({
+              points_balance: Number(cust.points_balance) + debitEntry.points_amount,
+            }).eq("id", debitEntry.customer_id);
+          }
+        }
+      }
+
       toast.success("Resgate estornado com sucesso!");
       onCanceled?.();
     } catch (err: any) {
