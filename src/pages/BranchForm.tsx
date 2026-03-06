@@ -104,13 +104,26 @@ export default function BranchForm() {
     }, 800);
   }, []);
 
+  const normalizeSlug = (text: string) =>
+    text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  const autoFillNameSlug = (newCity: string, newState: string) => {
+    if (isLoadingEdit.current) return;
+    if (newCity && newState) {
+      setName(`${newCity} - ${newState}`);
+      setSlug(normalizeSlug(`${newCity}-${newState}`));
+    }
+  };
+
   const handleCityChange = (val: string) => {
     setCity(val);
+    autoFillNameSlug(val, state);
     triggerGeocode(val, state);
   };
 
   const handleStateChange = (val: string) => {
     setState(val);
+    autoFillNameSlug(city, val);
     triggerGeocode(city, val);
   };
 
