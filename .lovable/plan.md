@@ -1,51 +1,123 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Módulo Ganha-Ganha — Plano de Implementação
 
-## Resumo
+### Conceito
+Um modelo de negócio onde **todos os parceiros são simultaneamente emissores e receptores de pontos**. Os clientes acumulam pontos em qualquer parceiro e resgatam em qualquer outro. O faturamento do SaaS é cobrado **por ponto gerado e por ponto resgatado**, com valores configuráveis pelo painel raiz.
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+### O que já existe e será reaproveitado
+- `store_type` enum (`RECEPTORA`, `EMISSORA`, `MISTA`) — lojas no Ganha-Ganha serão forçadas a `MISTA`
+- `points_rules`, `store_points_rules`, `earning_events`, `points_ledger` — motor de pontos completo
+- `brand_modules` / `module_definitions` — sistema modular para ativar/desativar por marca
+- Fluxos de `EarnPointsPage` e redemption já funcionais
 
-## O que muda para o usuário
+---
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+### 1. Banco de Dados (Migrações)
 
-## Mudanças Técnicas
+**a) Nova `module_definition`** — inserir registro `ganha_ganha` na categoria `fidelidade`
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+**b) Tabela `ganha_ganha_config`** — configuração do módulo por marca:
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | uuid PK | — |
+| `brand_id` | uuid NOT NULL | FK brands |
+| `is_active` | boolean | Módulo ativo |
+| `fee_per_point_earned` | numeric | Valor cobrado por ponto gerado (ex: R$ 0.01) |
+| `fee_per_point_redeemed` | numeric | Valor cobrado por ponto resgatado |
+| `fee_mode` | text | `UNIFORM` (mesma regra p/ todos) ou `CUSTOM` (personalizado por loja) |
+| `created_at` / `updated_at` | timestamptz | — |
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+RLS: Root e Brand admins do escopo.
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+**c) Tabela `ganha_ganha_store_fees`** — taxa personalizada por loja (quando `fee_mode = CUSTOM`):
+| Coluna | Tipo |
+|--------|------|
+| `id` | uuid PK |
+| `brand_id` | uuid |
+| `store_id` | uuid |
+| `fee_per_point_earned` | numeric |
+| `fee_per_point_redeemed` | numeric |
+| `created_at` / `updated_at` | timestamptz |
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+RLS: Root e Brand admins.
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+**d) Tabela `ganha_ganha_billing_events`** — registro de cada evento cobrável:
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | uuid PK | — |
+| `brand_id` | uuid | — |
+| `store_id` | uuid | Loja que gerou ou recebeu |
+| `event_type` | text | `EARN` ou `REDEEM` |
+| `points_amount` | integer | Qtd de pontos |
+| `fee_per_point` | numeric | Taxa aplicada no momento |
+| `fee_total` | numeric | `points_amount × fee_per_point` |
+| `reference_id` | uuid | ID do earning_event ou redemption |
+| `reference_type` | text | `EARNING_EVENT` ou `REDEMPTION` |
+| `period_month` | text | `2026-03` (para agrupamento) |
+| `created_at` | timestamptz | — |
 
-### 2. Seções de vitrine automáticas
+RLS: Root e Brand admins. Realtime habilitado para dashboards.
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+---
 
-### 3. Nenhuma alteração no banco de dados
+### 2. Páginas Admin (Frontend)
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+**a) `GanhaGanhaConfigPage.tsx`** — Configuração do módulo (Brand Admin / Root):
+- Ativar/desativar o módulo Ganha-Ganha para a marca
+- Definir `fee_per_point_earned` e `fee_per_point_redeemed`
+- Escolher `fee_mode`: Uniforme ou Personalizado
+- Se personalizado: lista de lojas com campos para taxas individuais
+- Quando ativado, forçar `store_type = MISTA` para todos os parceiros da marca
 
-## Escopo
+**b) `GanhaGanhaBillingPage.tsx`** — Painel Financeiro robusto:
+- **KPIs no topo**: Total Pontos Gerados, Total Pontos Resgatados, Faturamento Geração, Faturamento Resgate, Faturamento Total
+- **Filtros**: Período (mês, intervalo customizado), Loja específica
+- **Tabela detalhada por loja**: Nome, Pontos Gerados, Pontos Resgatados, Taxa Geração, Taxa Resgate, Total a Cobrar
+- **Extrato por loja**: drill-down mostrando cada evento (data, tipo, pontos, valor cobrado, referência)
+- Exportação CSV
 
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+**c) `GanhaGanhaStoreSummaryPage.tsx`** — Visão do Parceiro (Store Admin):
+- Meus pontos gerados no período
+- Pontos resgatados na minha loja no período
+- Custo estimado de uso (baseado nas taxas)
+- Extrato detalhado
+
+---
+
+### 3. Lógica de Negócio
+
+- **Ao ativar o módulo**: uma mutation atualiza todas as lojas da marca para `store_type = 'MISTA'`
+- **Ao registrar pontos (EarnPointsPage)**: inserir um `ganha_ganha_billing_events` com `event_type = EARN`
+- **Ao criar resgate (CustomerOfferDetailPage)**: inserir um `ganha_ganha_billing_events` com `event_type = REDEEM`
+- A taxa aplicada é buscada de `ganha_ganha_store_fees` (se CUSTOM) ou `ganha_ganha_config` (se UNIFORM)
+
+---
+
+### 4. Navegação e Roteamento
+
+- Registrar `ganha_ganha` em `module_definitions`
+- Adicionar ao `BrandSidebar` uma seção "🤝 Ganha-Ganha" com:
+  - Configuração (`/ganha-ganha-config`)
+  - Painel Financeiro (`/ganha-ganha-billing`)
+- Adicionar ao `RootSidebar` o item Painel Financeiro GG
+- Rotas em `App.tsx` com `ModuleGuard moduleKey="ganha_ganha"`
+- No `StoreOwnerPanel`, adicionar aba "Meu Consumo GG" quando o módulo estiver ativo
+
+---
+
+### 5. Escopo de Arquivos
+
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/pages/GanhaGanhaConfigPage.tsx` |
+| Criar | `src/pages/GanhaGanhaBillingPage.tsx` |
+| Criar | `src/pages/GanhaGanhaStoreSummaryPage.tsx` |
+| Editar | `src/App.tsx` — rotas |
+| Editar | `src/components/consoles/BrandSidebar.tsx` — menu |
+| Editar | `src/components/consoles/RootSidebar.tsx` — menu |
+| Editar | `src/pages/EarnPointsPage.tsx` — inserir billing event |
+| Editar | `src/pages/customer/CustomerOfferDetailPage.tsx` — inserir billing event no resgate |
+| Editar | `src/pages/StoreOwnerPanel.tsx` — aba consumo |
+| Migration | 3 tabelas + insert module_definition + RLS |
 
