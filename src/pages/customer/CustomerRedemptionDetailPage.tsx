@@ -165,7 +165,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
               {formatCurrency(Number(creditValue))}
             </p>
           </div>
-          <div className="rounded-2xl p-3 text-center" style={{ backgroundColor: "#F9FAFB" }}>
+          <div className="rounded-2xl p-3 text-center bg-muted">
             <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>VALIDADE</p>
             <p className="text-sm font-bold" style={{ color: fg, fontFamily: fontHeading }}>
               {redemption.expires_at
