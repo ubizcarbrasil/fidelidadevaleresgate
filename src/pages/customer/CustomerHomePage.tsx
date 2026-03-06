@@ -1,7 +1,9 @@
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight, Coins, Tag, Gift, Percent, Store, Sparkles } from "lucide-react";
+import { ChevronRight, Coins } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
+import type { AppIconKey } from "@/hooks/useAppIcons";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
