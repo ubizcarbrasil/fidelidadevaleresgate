@@ -24,7 +24,7 @@ const CONSOLE_TITLES: Record<string, string> = {
 
 export default function AppLayout() {
   const { consoleScope } = useBrandGuard();
-  const brandName = useBrandName();
+  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
 
   useEffect(() => {
