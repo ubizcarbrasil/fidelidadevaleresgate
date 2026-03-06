@@ -116,6 +116,7 @@ function IconPickerField({
 }
 
 export default function TaxonomyPage() {
+  const { brand } = useBrand();
   const [categories, setCategories] = useState<Category[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
