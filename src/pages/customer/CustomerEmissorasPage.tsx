@@ -92,8 +92,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       {/* Header */}
       <header className="sticky top-0 z-10" style={{ backgroundColor: "#FFFFFF" }}>
