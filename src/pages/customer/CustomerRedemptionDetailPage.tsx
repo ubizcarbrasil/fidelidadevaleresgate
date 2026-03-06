@@ -145,8 +145,8 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
       <div className="pb-6">
         {/* Hero section - image + title */}
-        <div className="flex flex-col items-center py-6 border-b" style={{ backgroundColor: "#FAFAFA" }}>
-          <div className="h-40 w-40 rounded-2xl overflow-hidden mb-4 bg-white flex items-center justify-center" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div className="flex flex-col items-center py-6 border-b bg-muted">
+          <div className="h-40 w-40 rounded-2xl overflow-hidden mb-4 bg-card flex items-center justify-center" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
             {heroImage ? (
               <img src={heroImage} alt={heroTitle} className="h-full w-full object-contain" />
             ) : (
