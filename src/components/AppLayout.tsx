@@ -60,6 +60,9 @@ export default function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b px-3 sm:px-4 bg-card shrink-0">
             <SidebarTrigger className="mr-2 sm:mr-4" />
+            {brandLogoUrl && (
+              <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2" />
+            )}
             <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
           </header>
           <main className="flex-1 p-3 sm:p-6 overflow-auto">
