@@ -48,7 +48,42 @@ export default function GanhaGanhaRootDashboardPage() {
     },
   });
 
-  // Global KPIs
+  // Fetch last 6 months for evolution chart
+  const { data: evolutionEvents } = useQuery({
+    queryKey: ["gg-root-evolution"],
+    queryFn: async () => {
+      const months: string[] = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(d.toISOString().slice(0, 7));
+      }
+      const { data, error } = await supabase
+        .from("ganha_ganha_billing_events")
+        .select("event_type, fee_total, points_amount, period_month")
+        .in("period_month", months);
+      if (error) throw error;
+      return { rows: data, months };
+    },
+  });
+
+  const evolutionChart = useMemo(() => {
+    if (!evolutionEvents) return [];
+    const { rows, months } = evolutionEvents;
+    return months.map(m => {
+      const mEvents = rows.filter((e: any) => e.period_month === m);
+      const earnFee = mEvents.filter((e: any) => e.event_type === "EARN").reduce((s: number, e: any) => s + Number(e.fee_total), 0);
+      const redeemFee = mEvents.filter((e: any) => e.event_type === "REDEEM").reduce((s: number, e: any) => s + Number(e.fee_total), 0);
+      const [y, mo] = m.split("-");
+      return {
+        month: `${mo}/${y.slice(2)}`,
+        "Fat. Geração": Number(earnFee.toFixed(2)),
+        "Fat. Resgate": Number(redeemFee.toFixed(2)),
+        Total: Number((earnFee + redeemFee).toFixed(2)),
+      };
+    });
+  }, [evolutionEvents]);
+
   const kpis = useMemo(() => {
     if (!events) return { earnPts: 0, redeemPts: 0, earnFee: 0, redeemFee: 0, total: 0, eventCount: 0 };
     const earn = events.filter((e: any) => e.event_type === "EARN");
