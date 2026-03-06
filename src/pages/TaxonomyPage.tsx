@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, Tag, FolderTree, ChevronRight, icons, Store } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Tag, FolderTree, ChevronRight, icons, Store, ImageIcon } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import IconPickerDialog from "@/components/IconPickerDialog";
+import { useBrand } from "@/contexts/BrandContext";
 
 interface Category {
   id: string;
