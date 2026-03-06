@@ -197,8 +197,15 @@ export default function GanhaGanhaBillingPage() {
               </TableHeader>
               <TableBody>
                 {storeSummary.map(([sid, s]) => (
-                  <TableRow key={sid}>
-                    <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableRow
+                    key={sid}
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setStoreFilter(storeFilter === sid ? "all" : sid)}
+                  >
+                    <TableCell className="font-medium flex items-center gap-2">
+                      {storeFilter === sid && <Badge variant="outline" className="text-xs">Filtrado</Badge>}
+                      {s.name}
+                    </TableCell>
                     <TableCell className="text-right">{s.earnPts.toLocaleString("pt-BR")}</TableCell>
                     <TableCell className="text-right">{s.redeemPts.toLocaleString("pt-BR")}</TableCell>
                     <TableCell className="text-right">{formatMoney(s.earnFee)}</TableCell>
