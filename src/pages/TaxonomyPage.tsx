@@ -373,7 +373,7 @@ export default function TaxonomyPage() {
                         className="group flex items-start gap-3 p-3 rounded-xl border hover:border-primary/30 transition-colors"
                       >
                         <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
-                          <LucideIconPreview name={seg.icon_name} className="h-5 w-5" />
+                          <IconPreview name={seg.icon_name} className="h-5 w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
