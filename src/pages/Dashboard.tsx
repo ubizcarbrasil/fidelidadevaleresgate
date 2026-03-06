@@ -305,7 +305,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Eye className="h-4 w-4 text-primary" />
-              Central de Acessos
+              Painéis dos Empreendedores
             </CardTitle>
             <div className="relative w-48">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -331,19 +331,24 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
             <div className="divide-y max-h-[320px] overflow-y-auto">
               {filtered.map((brand) => (
                 <div key={brand.id} className="flex items-center justify-between py-2.5 gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{brand.name}</p>
-                    <p className="text-xs text-muted-foreground">{brand.slug}</p>
+                  <div className="min-w-0 flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Store className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium truncate">{brand.name}</p>
+                      <p className="text-xs text-muted-foreground">{brand.slug}</p>
+                    </div>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <Button
                       size="sm"
                       variant="outline"
                       className="h-7 text-xs gap-1"
-                      onClick={() => window.open(`/?brandId=${brand.id}`, "_blank")}
+                      onClick={() => window.open(`/brands/${brand.id}`, "_blank")}
                     >
                       <Building2 className="h-3 w-3" />
-                      Admin
+                      Painel Admin
                     </Button>
                     <Button
                       size="sm"
@@ -352,7 +357,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
                       onClick={() => window.open(`/customer-preview?brandId=${brand.id}`, "_blank")}
                     >
                       <Smartphone className="h-3 w-3" />
-                      Cliente
+                      App Cliente
                     </Button>
                   </div>
                 </div>
@@ -375,7 +380,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Eye className="h-4 w-4 text-primary" />
-            Central de Acessos
+            Painéis dos Parceiros
           </CardTitle>
           <div className="flex gap-2 items-center">
             {currentBrandId && (
