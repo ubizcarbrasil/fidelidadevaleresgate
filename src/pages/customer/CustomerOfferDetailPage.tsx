@@ -249,7 +249,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      style={{ backgroundColor: "hsl(var(--background))" }}
     >
       <div
         ref={scrollRef}
