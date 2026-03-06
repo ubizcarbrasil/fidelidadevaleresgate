@@ -78,6 +78,8 @@ const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDas
 const GanhaGanhaClosingReportsPage = lazy(() => import("@/pages/GanhaGanhaClosingReportsPage"));
 const BrandApiKeysPage = lazy(() => import("@/pages/BrandApiKeysPage"));
 const ApiDocsPage = lazy(() => import("@/pages/ApiDocsPage"));
+const TrialSignupPage = lazy(() => import("@/pages/TrialSignupPage"));
+const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
