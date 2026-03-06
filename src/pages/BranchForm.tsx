@@ -175,32 +175,24 @@ export default function BranchForm() {
             )}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Identificador</Label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
-              </div>
+                 <Label>UF</Label>
+                 <Select value={state} onValueChange={handleStateChange}>
+                   <SelectTrigger><SelectValue placeholder="Selecione o estado" /></SelectTrigger>
+                   <SelectContent>
+                     {STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                   </SelectContent>
+                 </Select>
+               </div>
+               <div className="space-y-2">
+                 <Label>Cidade</Label>
+                 <Input value={city} onChange={(e) => handleCityChange(e.target.value)} required placeholder="Ex: Curitiba" />
+               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>UF</Label>
-                <Select value={state} onValueChange={handleStateChange}>
-                  <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
-                  <SelectContent>
-                    {STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input value={city} onChange={(e) => handleCityChange(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Timezone</Label>
-                <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+               <div className="space-y-2">
+                 <Label>Timezone</Label>
+                 <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
