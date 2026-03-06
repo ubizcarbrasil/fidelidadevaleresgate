@@ -100,6 +100,7 @@ export default function BranchForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {(!brands || brands.length > 1) && (
             <div className="space-y-2">
                <Label>Marca</Label>
                <Select value={brandId} onValueChange={setBrandId}>
@@ -111,6 +112,7 @@ export default function BranchForm() {
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nome</Label>
