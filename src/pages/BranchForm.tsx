@@ -104,13 +104,26 @@ export default function BranchForm() {
     }, 800);
   }, []);
 
+  const normalizeSlug = (text: string) =>
+    text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  const autoFillNameSlug = (newCity: string, newState: string) => {
+    if (isLoadingEdit.current) return;
+    if (newCity && newState) {
+      setName(`${newCity} - ${newState}`);
+      setSlug(normalizeSlug(`${newCity}-${newState}`));
+    }
+  };
+
   const handleCityChange = (val: string) => {
     setCity(val);
+    autoFillNameSlug(val, state);
     triggerGeocode(val, state);
   };
 
   const handleStateChange = (val: string) => {
     setState(val);
+    autoFillNameSlug(city, val);
     triggerGeocode(city, val);
   };
 
@@ -162,32 +175,24 @@ export default function BranchForm() {
             )}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Identificador</Label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required />
-              </div>
+                 <Label>UF</Label>
+                 <Select value={state} onValueChange={handleStateChange}>
+                   <SelectTrigger><SelectValue placeholder="Selecione o estado" /></SelectTrigger>
+                   <SelectContent>
+                     {STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                   </SelectContent>
+                 </Select>
+               </div>
+               <div className="space-y-2">
+                 <Label>Cidade</Label>
+                 <Input value={city} onChange={(e) => handleCityChange(e.target.value)} required placeholder="Ex: Curitiba" />
+               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>UF</Label>
-                <Select value={state} onValueChange={handleStateChange}>
-                  <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
-                  <SelectContent>
-                    {STATES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input value={city} onChange={(e) => handleCityChange(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Timezone</Label>
-                <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+               <div className="space-y-2">
+                 <Label>Timezone</Label>
+                 <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
