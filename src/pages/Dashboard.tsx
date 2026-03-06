@@ -380,7 +380,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Eye className="h-4 w-4 text-primary" />
-            Central de Acessos
+            Painéis dos Parceiros
           </CardTitle>
           <div className="flex gap-2 items-center">
             {currentBrandId && (
