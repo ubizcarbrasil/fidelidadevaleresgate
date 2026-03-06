@@ -68,7 +68,10 @@ export default function AppLayout() {
             <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
           </header>
           <main className="flex-1 p-3 sm:p-6 overflow-auto">
+            <TrialBanner />
             <Outlet />
+          </main>
+          <TrialExpiredBlocker />
           </main>
           <ContextualHelpDrawer />
         </div>
