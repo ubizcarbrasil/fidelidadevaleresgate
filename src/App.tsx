@@ -108,6 +108,7 @@ function AppRoutes() {
         <Route path="/webview" element={<WebviewPage />} />
         <Route path="/p/:slug" element={<CustomPage />} />
         <Route path="/trial" element={<TrialSignupPage />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
         <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
         <Route
