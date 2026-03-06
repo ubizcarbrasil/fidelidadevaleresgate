@@ -77,6 +77,7 @@ const groups = [
       { title: "Dashboard Consolidado", url: "/ganha-ganha-dashboard", icon: Handshake },
       { title: "Configuração GG", url: "/ganha-ganha-config", icon: Settings2 },
       { title: "Painel Financeiro GG", url: "/ganha-ganha-billing", icon: ReceiptText },
+      { title: "Fechamento Mensal", url: "/ganha-ganha-closing", icon: ScrollText },
     ],
   },
   {
