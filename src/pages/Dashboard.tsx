@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn, Globe, AlertCircle } from "lucide-react";
+import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn, Globe, AlertCircle, Eye, Smartphone, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -257,6 +258,184 @@ function BrandQuickLinks() {
   );
 }
 
+function AccessHubSection({ consoleScope }: { consoleScope: string }) {
+  const { currentBrandId } = useBrandGuard();
+  const isRoot = consoleScope === "ROOT";
+  const isBrand = ["BRAND", "TENANT"].includes(consoleScope);
+
+  const [search, setSearch] = useState("");
+
+  const { data: brands, isLoading: brandsLoading } = useQuery({
+    queryKey: ["access-hub-brands"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brands")
+        .select("id, name, slug, is_active")
+        .order("name");
+      return data || [];
+    },
+    enabled: isRoot,
+  });
+
+  const { data: stores, isLoading: storesLoading } = useQuery({
+    queryKey: ["access-hub-stores", currentBrandId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("stores")
+        .select("id, name, address, approval_status")
+        .eq("brand_id", currentBrandId!)
+        .order("name");
+      return data || [];
+    },
+    enabled: isBrand && !!currentBrandId,
+  });
+
+  if (!isRoot && !isBrand) return null;
+
+  if (isRoot) {
+    const filtered = (brands || []).filter(
+      (b) =>
+        b.name.toLowerCase().includes(search.toLowerCase()) ||
+        b.slug.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              Central de Acessos
+            </CardTitle>
+            <div className="relative w-48">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar marca..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 pl-8 text-xs"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {brandsLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Nenhuma marca encontrada.</p>
+          ) : (
+            <div className="divide-y max-h-[320px] overflow-y-auto">
+              {filtered.map((brand) => (
+                <div key={brand.id} className="flex items-center justify-between py-2.5 gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{brand.name}</p>
+                    <p className="text-xs text-muted-foreground">{brand.slug}</p>
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => window.open(`/?brandId=${brand.id}`, "_blank")}
+                    >
+                      <Building2 className="h-3 w-3" />
+                      Admin
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => window.open(`/customer-preview?brandId=${brand.id}`, "_blank")}
+                    >
+                      <Smartphone className="h-3 w-3" />
+                      Cliente
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Brand scope
+  const filteredStores = (stores || []).filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Eye className="h-4 w-4 text-primary" />
+            Central de Acessos
+          </CardTitle>
+          <div className="flex gap-2 items-center">
+            {currentBrandId && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1.5"
+                onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
+              >
+                <Smartphone className="h-3.5 w-3.5" />
+                App do Cliente
+              </Button>
+            )}
+            <div className="relative w-40">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar loja..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 pl-8 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {storesLoading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : filteredStores.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">Nenhum parceiro encontrado.</p>
+        ) : (
+          <div className="divide-y max-h-[320px] overflow-y-auto">
+            {filteredStores.map((store) => (
+              <div key={store.id} className="flex items-center justify-between py-2.5 gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{store.name}</p>
+                  <p className="text-xs text-muted-foreground">{store.address || "—"}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 shrink-0"
+                  onClick={() => window.open(`/store-panel?storeId=${store.id}`, "_blank")}
+                >
+                  <Eye className="h-3 w-3" />
+                  Ver Painel
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const { isRedirecting } = useStoreOwnerRedirect();
@@ -401,6 +580,9 @@ export default function Dashboard() {
 
       {/* Quick Links & Test Accounts for Brand Admins */}
       {showBrand && !isRoot && <BrandQuickLinks />}
+
+      {/* Access Hub */}
+      <AccessHubSection consoleScope={consoleScope} />
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

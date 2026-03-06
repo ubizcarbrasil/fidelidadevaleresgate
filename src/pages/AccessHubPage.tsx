@@ -116,7 +116,7 @@ function BrandStoresTab({ brandId }: { brandId: string }) {
   useEffect(() => {
     supabase
       .from("stores")
-      .select("id, name, city, approval_status, store_type")
+      .select("id, name, address, approval_status, store_type")
       .eq("brand_id", brandId)
       .order("name")
       .then(({ data }) => {
@@ -157,7 +157,7 @@ function BrandStoresTab({ brandId }: { brandId: string }) {
               <TableRow key={store.id}>
                 <TableCell className="font-medium">{store.name}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {store.city || "—"}
+                  {store.address || "—"}
                 </TableCell>
                 <TableCell>
                   <Badge
