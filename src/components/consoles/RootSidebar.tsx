@@ -72,6 +72,13 @@ const groups = [
     ],
   },
   {
+    label: "🤝 Ganha-Ganha",
+    items: [
+      { title: "Configuração GG", url: "/ganha-ganha-config", icon: Handshake },
+      { title: "Painel Financeiro GG", url: "/ganha-ganha-billing", icon: ReceiptText },
+    ],
+  },
+  {
     label: "👥 Usuários & Permissões",
     items: [
       { title: "Usuários", url: "/users", icon: Users },

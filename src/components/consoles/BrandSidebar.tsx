@@ -83,6 +83,13 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    label: "🤝 Ganha-Ganha",
+    items: [
+      { key: "sidebar.gg_config", defaultTitle: "Configuração GG", url: "/ganha-ganha-config", icon: Settings2, moduleKey: "ganha_ganha" },
+      { key: "sidebar.gg_billing", defaultTitle: "Painel Financeiro GG", url: "/ganha-ganha-billing", icon: ReceiptText, moduleKey: "ganha_ganha" },
+    ],
+  },
+  {
     label: "👥 Usuários & Permissões",
     items: [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },

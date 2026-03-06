@@ -168,6 +168,8 @@ function AppRoutes() {
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
           <Route path="platform-theme" element={<PlatformThemePage />} />
           <Route path="app-icons" element={<AppIconsConfigPage />} />
+          <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
+          <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
