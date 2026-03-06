@@ -58,7 +58,7 @@ export default function SectionDetailOverlay({
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white">
+      <div className="sticky top-0 z-10 bg-background">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
           <button
             onClick={onBack}
