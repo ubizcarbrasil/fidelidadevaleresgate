@@ -416,7 +416,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
               <div key={store.id} className="flex items-center justify-between py-2.5 gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{store.name}</p>
-                  <p className="text-xs text-muted-foreground">{store.city || "—"}</p>
+                  <p className="text-xs text-muted-foreground">{store.address || "—"}</p>
                 </div>
                 <Button
                   size="sm"
