@@ -261,7 +261,7 @@ Console.WriteLine(body);`,
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
-            <Badge className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs px-2.5">POST</Badge>
+            <Badge className="bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-xs px-2.5">POST</Badge>
             <code className="bg-muted px-3 py-2 rounded text-sm font-mono break-all flex-1">{WEBHOOK_URL}</code>
             <Button
               size="icon"
