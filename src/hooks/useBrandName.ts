@@ -3,8 +3,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useBrandName(): string {
+  const { name } = useBrandInfo();
+  return name;
+}
+
+export function useBrandInfo(): { name: string; logoUrl: string | null } {
   const { roles } = useAuth();
-  const [brandName, setBrandName] = useState("");
+  const [name, setName] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const brandId = roles.find((r) => r.brand_id)?.brand_id ?? null;
 
@@ -12,13 +18,17 @@ export function useBrandName(): string {
     if (!brandId) return;
     supabase
       .from("brands")
-      .select("name")
+      .select("name, brand_settings_json")
       .eq("id", brandId)
       .single()
       .then(({ data }) => {
-        if (data?.name) setBrandName(data.name);
+        if (data?.name) setName(data.name);
+        if (data?.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
+          const settings = data.brand_settings_json as Record<string, any>;
+          if (settings.logo_url) setLogoUrl(settings.logo_url);
+        }
       });
   }, [brandId]);
 
-  return brandName;
+  return { name, logoUrl };
 }

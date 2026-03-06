@@ -7,7 +7,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBrandName } from "@/hooks/useBrandName";
+import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -106,7 +106,7 @@ export function BrandSidebar() {
   const { user, signOut } = useAuth();
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
-  const brandName = useBrandName();
+  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
 
   // Dynamically resolve brand theme URL
@@ -124,9 +124,13 @@ export function BrandSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Store className="h-4 w-4 text-sidebar-primary-foreground" />
-          </div>
+          {brandLogoUrl ? (
+            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+              <Store className="h-4 w-4 text-sidebar-primary-foreground" />
+            </div>
+          )}
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">{brandName || "Carregando..."}</span>
