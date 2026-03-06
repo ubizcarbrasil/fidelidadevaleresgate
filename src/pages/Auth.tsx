@@ -78,9 +78,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-            <Ticket className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <img src="/logo-vale-resgate.jpeg" alt="Vale Resgate" className="mx-auto h-16 w-auto rounded-2xl shadow-md" />
           <CardTitle className="text-2xl font-bold">Vale Resgate</CardTitle>
           <CardDescription>
             {isForgot ? "Recuperar senha" : isLogin ? "Acesse sua conta" : "Crie sua conta"}
