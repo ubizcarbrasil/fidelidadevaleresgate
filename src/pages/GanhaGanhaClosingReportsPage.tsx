@@ -46,7 +46,7 @@ interface StoreSummary {
 }
 
 export default function GanhaGanhaClosingReportsPage() {
-  const { selectedBrandId } = useBrand();
+  const { currentBrandId: selectedBrandId } = useBrandGuard();
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
