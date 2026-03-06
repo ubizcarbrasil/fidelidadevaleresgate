@@ -35,7 +35,9 @@ export default function BranchForm() {
     queryKey: ["brands-select", currentBrandId, isRootAdmin],
     queryFn: async () => {
       let query = supabase.from("brands").select("id, name, tenants(name)").eq("is_active", true);
-      query = applyBrandFilter(query);
+      if (!isRootAdmin && currentBrandId) {
+        query = query.eq("id", currentBrandId);
+      }
       const { data } = await query.order("name");
       return data || [];
     },
