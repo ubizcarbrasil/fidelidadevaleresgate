@@ -86,6 +86,7 @@ const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
 const WebviewPage = lazy(() => import("@/pages/customer/WebviewPage"));
 const PageBuilderV2Page = lazy(() => import("@/pages/PageBuilderV2Page"));
 const PublicVouchers = lazy(() => import("@/pages/PublicVouchers"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ function AppRoutes() {
         <Route path="/webview" element={<WebviewPage />} />
         <Route path="/p/:slug" element={<CustomPage />} />
         <Route path="/trial" element={<TrialSignupPage />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
         <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
         <Route
