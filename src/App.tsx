@@ -163,6 +163,7 @@ function AppRoutes() {
           <Route path="root-journey" element={<RootJourneyGuidePage />} />
           <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
+          <Route path="platform-theme" element={<PlatformThemePage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

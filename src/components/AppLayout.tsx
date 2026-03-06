@@ -25,6 +25,20 @@ const CONSOLE_TITLES: Record<string, string> = {
 export default function AppLayout() {
   const { consoleScope } = useBrandGuard();
   const brandName = useBrandName();
+  const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("platform_config")
+      .select("value_json")
+      .eq("key", "platform_theme")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value_json) setPlatformTheme(data.value_json);
+      });
+  }, []);
+
+  useBrandTheme(platformTheme);
 
   // Parceiros usam o portal dedicado
   if (consoleScope === "STORE_ADMIN") {
