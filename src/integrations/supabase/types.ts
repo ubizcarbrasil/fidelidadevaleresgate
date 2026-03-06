@@ -292,6 +292,50 @@ export type Database = {
           },
         ]
       }
+      brand_api_keys: {
+        Row: {
+          api_key_hash: string
+          api_key_prefix: string
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          label: string
+          last_used_at: string | null
+        }
+        Insert: {
+          api_key_hash: string
+          api_key_prefix: string
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_used_at?: string | null
+        }
+        Update: {
+          api_key_hash?: string
+          api_key_prefix?: string
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_api_keys_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_domains: {
         Row: {
           brand_id: string

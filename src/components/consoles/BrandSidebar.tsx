@@ -2,7 +2,7 @@ import {
   Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users,
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
-  Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket,
+  Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket, Key,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -71,6 +71,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "stores" },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { key: "sidebar.operador_pdv", defaultTitle: "Operador PDV", url: "/pdv", icon: ScanLine },
+      { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key },
     ],
   },
   {
