@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Download, Loader2, CheckCircle2, Store } from "lucide-react";
+import { FileText, Download, Loader2, CheckCircle2, Store, Settings } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
+import { useNavigate } from "react-router-dom";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
