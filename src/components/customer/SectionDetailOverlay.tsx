@@ -50,8 +50,7 @@ export default function SectionDetailOverlay({
 
   return (
     <motion.div
-      className="fixed inset-0 z-[60] flex flex-col"
-      style={{ backgroundColor: "#FAFAFA" }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
