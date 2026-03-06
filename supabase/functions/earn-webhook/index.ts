@@ -20,10 +20,21 @@ async function sha256(text: string): Promise<string> {
     .join("");
 }
 
+function getClientIp(req: Request): string | null {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    req.headers.get("cf-connecting-ip") ||
+    null
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const clientIp = getClientIp(req);
 
   if (req.method !== "POST") {
     return json({ ok: false, error: "Method not allowed" }, 405);
@@ -38,6 +49,32 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(supabaseUrl, serviceRoleKey);
 
+  // Helper to log audit events (fire-and-forget)
+  function logAudit(
+    action: string,
+    opts: {
+      brandId?: string;
+      entityId?: string;
+      details?: Record<string, unknown>;
+      changes?: Record<string, unknown>;
+    } = {}
+  ) {
+    sb.from("audit_logs")
+      .insert({
+        action,
+        entity_type: "EARN_WEBHOOK",
+        entity_id: opts.entityId || null,
+        scope_type: opts.brandId ? "BRAND" : null,
+        scope_id: opts.brandId || null,
+        ip_address: clientIp,
+        details_json: opts.details || {},
+        changes_json: opts.changes || {},
+      })
+      .then(({ error }) => {
+        if (error) console.error("audit_log insert error:", error);
+      });
+  }
+
   // 1. Validate API key
   const keyHash = await sha256(apiKey);
   const { data: keyRow, error: keyErr } = await sb
@@ -49,6 +86,9 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (keyErr || !keyRow) {
+    logAudit("EARN_WEBHOOK_AUTH_FAILED", {
+      details: { reason: "Invalid or inactive API key", key_prefix: apiKey.substring(0, 11) },
+    });
     return json({ ok: false, error: "Invalid or inactive API key" }, 403);
   }
 
@@ -62,17 +102,29 @@ Deno.serve(async (req) => {
   try {
     body = await req.json();
   } catch {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Invalid JSON body", api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Invalid JSON body" }, 400);
   }
 
   const { cpf, store_id, purchase_value, receipt_code } = body;
   if (!cpf || !store_id || !purchase_value || typeof purchase_value !== "number" || purchase_value <= 0) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Missing required fields", payload: { cpf: !!cpf, store_id: !!store_id, purchase_value }, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Required fields: cpf (string), store_id (uuid), purchase_value (number > 0)" }, 400);
   }
 
   // Sanitize CPF (digits only)
   const cleanCpf = cpf.replace(/\D/g, "");
   if (cleanCpf.length < 11 || cleanCpf.length > 14) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Invalid CPF format", cpf_length: cleanCpf.length, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Invalid CPF format" }, 400);
   }
 
@@ -86,6 +138,10 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (storeErr || !store) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Store not found or inactive", store_id, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Store not found or inactive for this brand" }, 404);
   }
 
@@ -99,6 +155,10 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (custErr || !customer) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Customer not found", cpf_masked: `***${cleanCpf.slice(-4)}`, store_id, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Customer not found for this CPF" }, 404);
   }
 
@@ -114,6 +174,10 @@ Deno.serve(async (req) => {
 
   const rule = rules?.[0];
   if (!rule) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "No active points rule", store_id, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "No active points rule for this brand/branch" }, 422);
   }
 
@@ -142,6 +206,10 @@ Deno.serve(async (req) => {
 
   // 6. Min purchase check
   if (purchase_value < Number(rule.min_purchase_to_earn)) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Below minimum purchase", purchase_value, min_required: Number(rule.min_purchase_to_earn), store_id, customer_id: customer.id, api_key_id: keyRow.id },
+    });
     return json({
       ok: false,
       error: `Minimum purchase is R$ ${Number(rule.min_purchase_to_earn).toFixed(2)}`,
@@ -172,6 +240,10 @@ Deno.serve(async (req) => {
     .gte("created_at", todayISO);
   const custDayTotal = (custToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
   if (custDayTotal + points > rule.max_points_per_customer_per_day) {
+    logAudit("EARN_WEBHOOK_ANTIFRAUD", {
+      brandId,
+      details: { reason: "Customer daily limit reached", customer_id: customer.id, day_total: custDayTotal, attempted: points, limit: rule.max_points_per_customer_per_day, store_id, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Customer daily points limit reached" }, 429);
   }
 
@@ -184,6 +256,10 @@ Deno.serve(async (req) => {
     .gte("created_at", todayISO);
   const storeDayTotal = (storeToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
   if (storeDayTotal + points > rule.max_points_per_store_per_day) {
+    logAudit("EARN_WEBHOOK_ANTIFRAUD", {
+      brandId,
+      details: { reason: "Store daily limit reached", store_id, day_total: storeDayTotal, attempted: points, limit: rule.max_points_per_store_per_day, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Store daily points limit reached" }, 429);
   }
 
@@ -196,9 +272,17 @@ Deno.serve(async (req) => {
       .eq("receipt_code", receipt_code)
       .limit(1);
     if (existing && existing.length > 0) {
+      logAudit("EARN_WEBHOOK_ANTIFRAUD", {
+        brandId,
+        details: { reason: "Duplicate receipt code", receipt_code, store_id, api_key_id: keyRow.id },
+      });
       return json({ ok: false, error: "Receipt code already used for this store" }, 409);
     }
   } else if (rule.require_receipt_code) {
+    logAudit("EARN_WEBHOOK_REJECTED", {
+      brandId,
+      details: { reason: "Receipt code required but missing", store_id, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Receipt code is required" }, 400);
   }
 
@@ -223,7 +307,7 @@ Deno.serve(async (req) => {
       points_earned: points,
       money_earned: money,
       source: "API",
-      created_by_user_id: keyRow.id, // use key id as creator reference
+      created_by_user_id: keyRow.id,
       status: "APPROVED",
       rule_snapshot_json: ruleSnapshot,
     })
@@ -232,6 +316,10 @@ Deno.serve(async (req) => {
 
   if (eventErr) {
     console.error("earning_events insert error:", eventErr);
+    logAudit("EARN_WEBHOOK_ERROR", {
+      brandId,
+      details: { reason: "earning_events insert failed", error: eventErr.message, store_id, customer_id: customer.id, api_key_id: keyRow.id },
+    });
     return json({ ok: false, error: "Failed to create earning event" }, 500);
   }
 
@@ -294,6 +382,26 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("GG billing error (non-fatal):", e);
   }
+
+  // 13. Audit log — success
+  logAudit("EARN_WEBHOOK_SUCCESS", {
+    brandId,
+    entityId: event.id,
+    details: {
+      api_key_id: keyRow.id,
+      store_id,
+      store_name: store.name,
+      customer_id: customer.id,
+      customer_name: customer.name,
+      purchase_value,
+      receipt_code: receipt_code || null,
+    },
+    changes: {
+      points_earned: points,
+      money_earned: money,
+      new_balance: newPoints,
+    },
+  });
 
   return json({
     ok: true,
