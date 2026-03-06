@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
@@ -213,6 +214,19 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
       if (fullRedemption) {
         setCompletedRedemption(fullRedemption);
       }
+
+      // Record Ganha-Ganha billing event for the redemption (fire-and-forget)
+      if (finalRequired > 0) {
+        recordGanhaGanhaBillingEvent({
+          brandId: brand.id,
+          storeId: offer.store_id,
+          eventType: "REDEEM",
+          pointsAmount: finalRequired,
+          referenceId: created.id,
+          referenceType: "REDEMPTION",
+        });
+      }
+
       toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
     } catch (err: any) {
       toast({ title: "Erro ao resgatar", description: translateError(err.message), variant: "destructive" });

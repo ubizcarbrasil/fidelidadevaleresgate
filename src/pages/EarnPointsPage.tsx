@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -225,6 +226,16 @@ export default function EarnPointsPage() {
         .update({ points_balance: newPoints, money_balance: newMoney })
         .eq("id", selectedCustomerId);
       if (custErr) throw custErr;
+
+      // Record Ganha-Ganha billing event (fire-and-forget)
+      recordGanhaGanhaBillingEvent({
+        brandId: currentBrandId,
+        storeId,
+        eventType: "EARN",
+        pointsAmount: preview.points,
+        referenceId: event.id,
+        referenceType: "EARNING_EVENT",
+      });
 
       return { points: preview.points, money: preview.money, newBalance: newPoints };
     },
