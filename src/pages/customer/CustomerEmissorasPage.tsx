@@ -201,7 +201,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                       toggleFavoriteStore(store.id);
                     }}
                     className="absolute top-2.5 right-2.5 z-10 h-8 w-8 flex items-center justify-center rounded-full transition-colors"
-                    style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
+                    style={{ backgroundColor: "hsl(var(--card) / 0.9)" }}
                   >
                     <Heart
                       className="h-4 w-4 transition-colors"
