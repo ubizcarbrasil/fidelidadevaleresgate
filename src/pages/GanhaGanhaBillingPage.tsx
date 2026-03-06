@@ -213,7 +213,40 @@ export default function GanhaGanhaBillingPage() {
         ))}
       </div>
 
-      {/* Per-store table */}
+      {/* Evolution chart */}
+      {evolutionChart.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Evolução Mensal do Faturamento</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={evolutionChart} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="colorEarn" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorRedeem" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="month" className="text-xs fill-muted-foreground" tick={{ fontSize: 11 }} />
+                <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 11 }} tickFormatter={v => `R$${v}`} />
+                <Tooltip formatter={(v: number) => formatMoney(v)} />
+                <Legend />
+                <Area type="monotone" dataKey="Fat. Geração" stroke="hsl(var(--chart-1))" fill="url(#colorEarn)" strokeWidth={2} />
+                <Area type="monotone" dataKey="Fat. Resgate" stroke="hsl(var(--chart-2))" fill="url(#colorRedeem)" strokeWidth={2} />
+                <Area type="monotone" dataKey="Total" stroke="hsl(var(--primary))" fill="none" strokeWidth={2} strokeDasharray="5 5" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Resumo por Parceiro</CardTitle>
