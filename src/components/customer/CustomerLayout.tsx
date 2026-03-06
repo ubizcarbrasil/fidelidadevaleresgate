@@ -54,12 +54,14 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 
 type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
-const TABS: { key: Tab; label: string; icon: typeof Home }[] = [
-  { key: "home", label: "Início", icon: Home },
-  { key: "offers", label: "Ofertas", icon: Tag },
-  { key: "redemptions", label: "Meus resgates", icon: Ticket },
-  { key: "wallet", label: "Carteira", icon: Wallet },
-  { key: "profile", label: "Perfil", icon: UserCircle },
+import type { AppIconKey } from "@/hooks/useAppIcons";
+
+const TABS: { key: Tab; label: string; iconKey: AppIconKey }[] = [
+  { key: "home", label: "Início", iconKey: "nav_home" },
+  { key: "offers", label: "Ofertas", iconKey: "nav_offers" },
+  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions" },
+  { key: "wallet", label: "Carteira", iconKey: "nav_wallet" },
+  { key: "profile", label: "Perfil", iconKey: "nav_profile" },
 ];
 
 const TAB_CONTENT: Record<Tab, React.FC<any>> = {
