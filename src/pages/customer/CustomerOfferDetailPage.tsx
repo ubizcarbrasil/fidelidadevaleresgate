@@ -354,10 +354,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
                 {/* Pague com Pontos card */}
                 {discountPct > 0 && (
-                  <div className="mx-4 mt-2 rounded-2xl p-4" style={{
-                    backgroundColor: "#FFF8E1",
-                    border: "2px solid #FFD54F",
-                  }}>
+                   <div className="mx-4 mt-2 rounded-2xl p-4 bg-amber-50 dark:bg-amber-950/30" style={{
+                     border: "2px solid hsl(var(--chart-4, 45 93% 58%))",
+                   }}>
                     <div className="flex items-center gap-2 mb-3">
                       <DollarSign className="h-5 w-5" style={{ color: "#E65100" }} />
                       <span className="text-base font-bold" style={{ color: "#E65100" }}>Pague com Pontos</span>
