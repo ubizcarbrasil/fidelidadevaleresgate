@@ -108,7 +108,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
         {/* Search bar */}
         <div className="max-w-lg mx-auto px-4 pb-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#999" }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
