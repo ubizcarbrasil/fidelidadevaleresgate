@@ -680,7 +680,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 setShowConfirm(true);
               }}
                 className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
-                style={{ backgroundColor: "#FFD54F", color: "#1F2937", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
+                style={{ backgroundColor: "#FFD54F", color: "hsl(var(--foreground))", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
                 PAGUE {offer.discount_percent}% COM PONTOS
               </motion.button>
             )}
