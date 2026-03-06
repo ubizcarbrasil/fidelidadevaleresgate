@@ -75,6 +75,7 @@ const AppIconsConfigPage = lazy(() => import("@/pages/AppIconsConfigPage"));
 const GanhaGanhaConfigPage = lazy(() => import("@/pages/GanhaGanhaConfigPage"));
 const GanhaGanhaBillingPage = lazy(() => import("@/pages/GanhaGanhaBillingPage"));
 const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDashboardPage"));
+const GanhaGanhaClosingReportsPage = lazy(() => import("@/pages/GanhaGanhaClosingReportsPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -171,6 +172,7 @@ function AppRoutes() {
           <Route path="app-icons" element={<AppIconsConfigPage />} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
+          <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
