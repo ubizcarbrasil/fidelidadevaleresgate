@@ -11,7 +11,7 @@ import { FileText, Download, Loader2, CheckCircle2, Store } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useBrand } from "@/contexts/BrandContext";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
