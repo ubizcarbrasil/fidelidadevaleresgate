@@ -403,6 +403,9 @@ export default function Dashboard() {
       {/* Quick Links & Test Accounts for Brand Admins */}
       {showBrand && !isRoot && <BrandQuickLinks />}
 
+      {/* Access Hub */}
+      <AccessHubSection consoleScope={consoleScope} />
+
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
