@@ -1,31 +1,36 @@
 
 
-## Remover registros duplicados da Ubiz Resgata
+## Criar página de Configurações Visuais do Sistema Matriz
 
-### Registros a remover
+### Contexto
 
-| Tabela | ID | slug | Motivo |
-|---|---|---|---|
-| `brands` | `46ca6f73-b385-4ac3-8313-b79ca8c2b35c` | `ubizresgata` | Duplicata sem branches, stores, offers ou domínios |
-| `tenants` | `6274ade5-989b-4738-a8db-f7c356d06bbc` | `ubiz-resgataa` | Duplicata -- único vínculo é a brand acima |
+Já existe a tabela `platform_config` com registros key/value JSON. Vamos usá-la para armazenar o tema visual da plataforma (key: `platform_theme`), reutilizando o componente `BrandThemeEditor` que já existe para marcas.
 
-### Verificação de segurança
+### Plano
 
-Confirmado que a brand duplicada tem **0 branches, 0 stores, 0 offers, 0 domínios**. O tenant duplicado possui apenas essa brand como dependência. Nenhum dado será perdido.
+**1. Criar a página `src/pages/PlatformThemePage.tsx`**
+- Busca o registro `platform_config` onde `key = 'platform_theme'`
+- Se não existir, inicializa com valores padrão (cores atuais do `index.css`)
+- Renderiza o `BrandThemeEditor` existente para edição de cores, fontes, logo, favicon, slogan e textos
+- Botão "Salvar" faz upsert no `platform_config` via Supabase
+- Toast de confirmação ao salvar
 
-### Execução
+**2. Registrar rota no `App.tsx`**
+- Adicionar rota `/platform-theme` dentro do layout protegido
 
-Duas operações DELETE via ferramenta de dados (não migração):
+**3. Adicionar link no `RootSidebar.tsx`**
+- No grupo "🎨 Identidade & Vitrine", adicionar item "Tema da Plataforma" com ícone `Settings2`
 
-1. **Deletar a brand duplicada** -- `DELETE FROM brands WHERE id = '46ca6f73-...'`
-2. **Deletar o tenant duplicado** -- `DELETE FROM tenants WHERE id = '6274ade5-...'`
+**4. Aplicar o tema na raiz (opcional mas recomendado)**
+- No `AppLayout.tsx`, buscar o `platform_theme` do `platform_config` e aplicar via `useBrandTheme` para que o painel administrativo reflita as cores configuradas
 
-A brand precisa ser deletada primeiro por causa da foreign key `brands.tenant_id → tenants.id`.
+### Arquivos modificados
+| Arquivo | Ação |
+|---|---|
+| `src/pages/PlatformThemePage.tsx` | Criar |
+| `src/App.tsx` | Adicionar rota lazy |
+| `src/components/consoles/RootSidebar.tsx` | Adicionar item de menu |
+| `src/components/AppLayout.tsx` | Aplicar tema da plataforma |
 
-### Registros que permanecem (corretos)
-
-- **Tenant**: `2432d756-...` (slug: `ubiz-resgata`)
-- **Brand**: `effc4685-...` (slug: `ubiz-resgata`) -- com 2 branches, 20 stores, domínio configurado
-
-Nenhuma alteração de código é necessária.
+Nenhuma migração de banco necessária — a tabela `platform_config` já suporta o formato key/value JSON.
 
