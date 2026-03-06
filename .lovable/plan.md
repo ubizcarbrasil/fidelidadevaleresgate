@@ -1,55 +1,51 @@
 
 
-# Integrar Stripe para Cobranca Automatica pos-Trial
+# Plano: Simulador Realista com 40 Parceiros Demo
 
 ## Resumo
 
-Conectar Stripe ao projeto para que os empreendedores possam assinar um plano (Starter R$97/mes ou Profissional R$197/mes) diretamente pela SubscriptionPage. Ao pagar, o `subscription_status` da brand muda de TRIAL/EXPIRED para ACTIVE, desbloqueando o acesso.
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-## Arquitetura
+## O que muda para o usuário
 
-```text
-SubscriptionPage ──> Edge Function (create-checkout) ──> Stripe Checkout Session
-                                                              │
-Stripe Webhook ──> Edge Function (stripe-webhook) ──> UPDATE brands SET subscription_status='ACTIVE'
-                                                              │
-TrialExpiredBlocker ──> brands.subscription_status == 'ACTIVE' ──> Acesso liberado
-```
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-## Etapas
+## Mudanças Técnicas
 
-### 1. Habilitar Stripe
-Usar a ferramenta de integracão Stripe do Lovable para configurar a chave secreta e habilitar o conector. Isso disponibiliza ferramentas para criar produtos/precos e o webhook automaticamente.
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-### 2. Criar Produtos e Precos no Stripe
-- **Starter**: R$97/mes (recorrente)
-- **Profissional**: R$197/mes (recorrente)
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-### 3. Adicionar coluna `stripe_customer_id` na tabela `brands`
-Para vincular a brand ao customer do Stripe e permitir gerenciamento futuro (portal do cliente, cancelamento).
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
 
-### 4. Edge Function `create-checkout`
-- Recebe `brand_id` e `price_id`
-- Cria ou recupera Stripe Customer usando email do usuario
-- Cria Checkout Session com `mode: 'subscription'`
-- Retorna URL do checkout
-- Metadata: `brand_id` para o webhook identificar qual brand atualizar
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
 
-### 5. Edge Function `stripe-webhook`
-- Valida assinatura do webhook Stripe
-- Evento `checkout.session.completed`: atualiza `brands.subscription_status = 'ACTIVE'` e salva `stripe_customer_id`
-- Evento `customer.subscription.deleted`: atualiza status para `EXPIRED`
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
 
-### 6. Atualizar SubscriptionPage
-- Botoes "Assinar" chamam `create-checkout` e redirecionam para Stripe Checkout
-- Apos pagamento, Stripe redireciona para `/subscription?success=true`
-- Exibir toast de sucesso e invalidar query do trial blocker
+### 2. Seções de vitrine automáticas
 
-### 7. Atualizar TrialExpiredBlocker
-- Ja funciona: verifica `subscription_status === 'ACTIVE'` e libera. Nenhuma mudanca necessaria.
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
 
-## Seguranca
-- Webhook validado com `stripe.webhooks.constructEvent` usando signing secret
-- Checkout session criada server-side (edge function) com service role
-- Price IDs hardcoded no backend, nao aceitos do cliente
+### 3. Nenhuma alteração no banco de dados
+
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 
