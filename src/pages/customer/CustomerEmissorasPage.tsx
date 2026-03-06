@@ -220,9 +220,9 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
                         className="max-h-[64px] max-w-[120px] object-contain"
                       />
                     ) : (
-                      <div className="h-16 w-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "#F5F5F5" }}>
-                        <Store className="h-7 w-7" style={{ color: "#CCC" }} />
-                      </div>
+                       <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-muted">
+                         <Store className="h-7 w-7 text-muted-foreground" />
+                       </div>
                     )}
                   </div>
 
