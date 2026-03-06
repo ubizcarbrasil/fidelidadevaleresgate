@@ -1,51 +1,118 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Pontuação Automática via Webhook (Integração API Externa)
 
-## Resumo
+### Contexto
+O sistema atual pontua clientes apenas via PDV manual (`EarnPointsPage`). Precisamos permitir que apps externos (ex: Ubiz Car) enviem um webhook ao final de uma corrida para pontuar automaticamente o cliente pelo CPF.
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+### Arquitetura
 
-## O que muda para o usuário
+```text
+┌──────────────┐    POST /earn-webhook     ┌───────────────────────┐
+│  App Externo  │ ──────────────────────── > │  Edge Function         │
+│  (Ubiz Car)   │   { cpf, purchase_value,  │  earn-webhook          │
+│               │     store_id, receipt_code}│                        │
+└──────────────┘   + Header: x-api-key     │  1. Valida API key     │
+                                            │  2. Busca customer CPF │
+                                            │  3. Busca points_rule  │
+                                            │  4. Anti-fraude        │
+                                            │  5. Insere earning_event│
+                                            │  6. Insere points_ledger│
+                                            │  7. Atualiza saldo     │
+                                            │  8. Billing GG         │
+                                            └───────────────────────┘
+```
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+### Implementação — 4 partes
 
-## Mudanças Técnicas
+#### 1. Nova tabela `brand_api_keys`
+Armazena as API keys que cada marca (SaaS) configura no painel para permitir integração externa.
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+```sql
+CREATE TABLE public.brand_api_keys (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_id uuid NOT NULL,
+  label text NOT NULL DEFAULT 'default',
+  api_key_hash text NOT NULL,        -- SHA-256 hash da chave
+  api_key_prefix text NOT NULL,      -- primeiros 8 chars para exibição
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  last_used_at timestamptz,
+  created_by uuid
+);
+ALTER TABLE public.brand_api_keys ENABLE ROW LEVEL SECURITY;
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+-- RLS: brand admins manage their own keys
+CREATE POLICY "Brand admins manage api keys" ON public.brand_api_keys
+  FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'root_admin'::app_role) 
+    OR brand_id IN (SELECT get_user_brand_ids(auth.uid()))
+    OR brand_id IN (SELECT b.id FROM brands b WHERE b.tenant_id IN (SELECT get_user_tenant_ids(auth.uid()))));
+```
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+#### 2. Edge Function `earn-webhook`
+Nova Edge Function que:
+- Valida `x-api-key` header contra `brand_api_keys` (hash SHA-256)
+- Identifica `brand_id` a partir da key
+- Busca customer por CPF + brand_id
+- Busca `points_rules` ativa para a brand/store
+- Aplica anti-fraude (limites diários, compra mínima)
+- Insere `earning_event` (source: `API`), `points_ledger`, atualiza saldo
+- Registra billing GG se ativo
+- Retorna pontos creditados
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+**Payload esperado:**
+```json
+{
+  "cpf": "12345678900",
+  "store_id": "uuid",
+  "purchase_value": 25.50,
+  "receipt_code": "CORRIDA-12345"
+}
+```
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+**Resposta:**
+```json
+{
+  "ok": true,
+  "data": {
+    "points_earned": 25,
+    "money_earned": 2.50,
+    "new_balance": 125,
+    "customer_name": "João"
+  }
+}
+```
 
-### 2. Seções de vitrine automáticas
+#### 3. Adicionar enum value `API` ao earning_source
+```sql
+ALTER TYPE public.earning_source ADD VALUE IF NOT EXISTS 'API';
+```
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+#### 4. Página de configuração de API Keys no painel da marca
+Nova página `src/pages/BrandApiKeysPage.tsx` acessível pelo sidebar:
+- Gerar nova API key (exibida uma única vez)
+- Listar keys ativas com prefixo e data de criação
+- Desativar/revogar keys
+- Documentação inline do endpoint com exemplo curl
+- Rota no sidebar: "🔑 Integrações API"
 
-### 3. Nenhuma alteração no banco de dados
+#### 5. Atualizações menores
+- `supabase/config.toml`: adicionar `[functions.earn-webhook]` com `verify_jwt = false`
+- `BrandSidebar.tsx`: adicionar item "Integrações API" no grupo de configurações
+- `useMenuLabels.ts`: adicionar label `sidebar.api_keys`
+- `App.tsx`: adicionar rota `/api-keys`
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+### Fluxo do administrador da marca
+1. Acessa "Integrações API" no sidebar
+2. Clica "Gerar Nova Chave"
+3. Copia a API key (exibida uma vez)
+4. Configura no app externo (Ubiz Car) o endpoint + header `x-api-key`
+5. Corridas finalizadas enviam automaticamente o webhook → pontos creditados
 
-## Escopo
-
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+### Segurança
+- API keys armazenadas como hash SHA-256 (nunca em texto plano)
+- Prefixo visível para identificação (ex: `dk_a1b2c3d4...`)
+- Anti-fraude mantido (limites diários por cliente/loja)
+- RLS protege gerenciamento das keys por brand
 
