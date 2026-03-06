@@ -95,7 +95,7 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
       className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       {/* Header */}
-      <header className="sticky top-0 z-10" style={{ backgroundColor: "#FFFFFF" }}>
+      <header className="sticky top-0 z-10 bg-background">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
           <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5">
             <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
