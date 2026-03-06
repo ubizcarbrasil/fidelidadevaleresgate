@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Handshake, ArrowUpCircle, ArrowDownCircle, DollarSign, Loader2 } from "lucide-react";
+import { Handshake, ArrowUpCircle, ArrowDownCircle, DollarSign, Loader2, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
