@@ -642,7 +642,9 @@ export type Database = {
           is_active: boolean
           name: string
           slug: string
+          subscription_status: string
           tenant_id: string
+          trial_expires_at: string | null
         }
         Insert: {
           brand_settings_json?: Json | null
@@ -652,7 +654,9 @@ export type Database = {
           is_active?: boolean
           name: string
           slug: string
+          subscription_status?: string
           tenant_id: string
+          trial_expires_at?: string | null
         }
         Update: {
           brand_settings_json?: Json | null
@@ -662,7 +666,9 @@ export type Database = {
           is_active?: boolean
           name?: string
           slug?: string
+          subscription_status?: string
           tenant_id?: string
+          trial_expires_at?: string | null
         }
         Relationships: [
           {
