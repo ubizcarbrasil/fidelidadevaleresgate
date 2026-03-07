@@ -30,7 +30,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
 } from "@/components/ui/sheet";
 
-type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos" | "ganha-ganha";
+type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos" | "ganha-ganha" | "campanhas";
 
 const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
