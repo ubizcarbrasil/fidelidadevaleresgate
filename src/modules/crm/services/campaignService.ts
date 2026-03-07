@@ -122,7 +122,7 @@ export async function createCampaign(params: {
     status: "PENDING_APPROVAL",
     offer_config_json: params.offerConfig,
     created_by: params.createdBy,
-  });
+  }]);
 
   if (error) {
     log.error("Failed to create campaign", error);
