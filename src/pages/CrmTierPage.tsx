@@ -1,7 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTierDistribution } from "@/hooks/useTierStats";
+import { useTierDistribution } from "@/modules/crm";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Users } from "lucide-react";
 
@@ -20,7 +20,6 @@ export default function CrmTierPage() {
         </div>
       ) : (
         <>
-          {/* Tier cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {distribution?.map((tier) => (
               <Card key={tier.name} className="relative overflow-hidden">
@@ -40,7 +39,6 @@ export default function CrmTierPage() {
             ))}
           </div>
 
-          {/* Summary card */}
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center gap-2">
@@ -51,7 +49,6 @@ export default function CrmTierPage() {
             </CardContent>
           </Card>
 
-          {/* Chart */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Distribuição por Tier</CardTitle>

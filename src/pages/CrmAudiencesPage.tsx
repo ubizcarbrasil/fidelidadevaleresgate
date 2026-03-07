@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
+import { campaignService, type AudienceFilters } from "@/modules/crm";
 import PageHeader from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Users, Trash2, Filter } from "lucide-react";
-
-interface AudienceFilters {
-  gender?: string;
-  os_platform?: string;
-  source?: string;
-  min_events?: number;
-  max_events?: number;
-}
 
 export default function CrmAudiencesPage() {
   const { currentBrandId } = useBrandGuard();
@@ -34,42 +26,21 @@ export default function CrmAudiencesPage() {
 
   const { data: audiences, isLoading } = useQuery({
     queryKey: ["crm-audiences", currentBrandId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_audiences")
-        .select("*")
-        .eq("brand_id", currentBrandId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => campaignService.fetchAudiences(currentBrandId!),
     enabled: !!currentBrandId,
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      // Estimate count
-      let query = supabase
-        .from("crm_contacts")
-        .select("id", { count: "exact", head: true })
-        .eq("brand_id", currentBrandId!)
-        .eq("is_active", true);
-
-      if (filters.gender) query = query.eq("gender", filters.gender);
-      if (filters.os_platform) query = query.eq("os_platform", filters.os_platform);
-      if (filters.source) query = query.eq("source", filters.source);
-
-      const { count } = await query;
-
-      const { error } = await supabase.from("crm_audiences").insert([{
-        brand_id: currentBrandId!,
+      const estimatedCount = await campaignService.estimateAudienceCount(currentBrandId!, filters);
+      await campaignService.createAudience({
+        brandId: currentBrandId!,
         name,
         description,
-        filters_json: filters as any,
-        estimated_count: count || 0,
-        created_by: user?.id,
-      }]);
-      if (error) throw error;
+        filters,
+        estimatedCount,
+        createdBy: user?.id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["crm-audiences"] });
@@ -83,10 +54,7 @@ export default function CrmAudiencesPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("crm_audiences").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => campaignService.deleteAudience(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["crm-audiences"] });
       toast({ title: "Público removido" });
@@ -108,7 +76,7 @@ export default function CrmAudiencesPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {(audiences || []).map((aud) => {
+          {(audiences || []).map((aud: any) => {
             const f = aud.filters_json as AudienceFilters;
             return (
               <Card key={aud.id}>
@@ -153,7 +121,6 @@ export default function CrmAudiencesPage() {
         </div>
       )}
 
-      {/* Create dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
