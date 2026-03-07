@@ -444,6 +444,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
+  const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope } = useBrandGuard();
 
