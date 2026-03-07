@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Customer not found", cpf_masked: `***${cleanCpf.slice(-4)}`, store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Customer not found for this CPF" }, 404);
+    return json({ ok: false, error: "Customer not found for this CPF", code: "CUSTOMER_NOT_FOUND" }, 404);
   }
 
   // 5. Get active points rule
