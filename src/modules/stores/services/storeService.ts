@@ -54,7 +54,7 @@ export async function fetchStoreById(id: string): Promise<Store | null> {
     throw error;
   }
 
-  return data as Store | null;
+  return data as unknown as Store | null;
 }
 
 export async function updateStoreApproval(
