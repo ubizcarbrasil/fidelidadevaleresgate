@@ -17,7 +17,10 @@ export function useStoreOwnerRedirect() {
     // If user has store_admin role, redirect immediately
     const isStoreAdmin = roles.some(r => r.role === "store_admin");
 
-    if (hasAdminRole) return;
+    if (hasAdminRole) {
+      setIsRedirecting(false);
+      return;
+    }
 
     if (isStoreAdmin) {
       setIsRedirecting(true);
