@@ -1,12 +1,14 @@
 /**
- * Módulo de logging centralizado.
- * Cada módulo cria um logger nomeado para facilitar a identificação de erros.
+ * Módulo de logging centralizado com métricas, timers e alertas.
  *
  * Uso:
  *   import { createLogger } from "@/lib/logger";
  *   const log = createLogger("crm");
  *   log.info("Contato criado", { id: "..." });
  *   log.error("Falha ao buscar contatos", error);
+ *   log.time("fetchContacts");
+ *   // ... operação
+ *   log.timeEnd("fetchContacts"); // logs duration
  */
 
 type LogLevel = "debug" | "info" | "warn" | "error";
@@ -37,7 +39,7 @@ function getMinLevel(): LogLevel {
   return import.meta.env.DEV ? "debug" : "warn";
 }
 
-// Ring buffer for recent log inspection
+// ── Ring Buffer ──────────────────────────────────────────────────────
 const LOG_BUFFER_SIZE = 200;
 const logBuffer: LogEntry[] = [];
 
@@ -54,17 +56,58 @@ export function getRecentLogs(module?: string, level?: LogLevel): LogEntry[] {
   return logs;
 }
 
-// Expose globally for browser console debugging
-if (typeof window !== "undefined") {
-  (window as any).__getLogs = getRecentLogs;
+// ── Metrics ──────────────────────────────────────────────────────────
+interface ModuleMetrics {
+  errorCount: number;
+  warnCount: number;
+  timers: Record<string, { totalMs: number; count: number }>;
 }
 
+const metricsMap = new Map<string, ModuleMetrics>();
+
+function getModuleMetrics(module: string): ModuleMetrics {
+  if (!metricsMap.has(module)) {
+    metricsMap.set(module, { errorCount: 0, warnCount: 0, timers: {} });
+  }
+  return metricsMap.get(module)!;
+}
+
+/** Get all metrics for all modules */
+export function getAllMetrics(): Record<string, ModuleMetrics> {
+  const result: Record<string, ModuleMetrics> = {};
+  metricsMap.forEach((metrics, module) => {
+    result[module] = { ...metrics, timers: { ...metrics.timers } };
+  });
+  return result;
+}
+
+// ── Alert System ─────────────────────────────────────────────────────
+type AlertCallback = (entry: LogEntry) => void;
+let alertCallback: AlertCallback | null = null;
+
+/** Set a callback for critical errors (e.g., show toast) */
+export function setAlertCallback(cb: AlertCallback | null): void {
+  alertCallback = cb;
+}
+
+// ── Expose globally for browser console debugging ────────────────────
+if (typeof window !== "undefined") {
+  (window as any).__getLogs = getRecentLogs;
+  (window as any).__getMetrics = getAllMetrics;
+}
+
+// ── Logger Interface ─────────────────────────────────────────────────
 export interface Logger {
   debug: (message: string, data?: unknown) => void;
   info: (message: string, data?: unknown) => void;
   warn: (message: string, data?: unknown) => void;
   error: (message: string, data?: unknown) => void;
+  time: (label: string) => void;
+  timeEnd: (label: string) => void;
 }
+
+// Timer storage per module
+const activeTimers = new Map<string, number>();
 
 export function createLogger(module: string): Logger {
   function log(level: LogLevel, message: string, data?: unknown) {
@@ -81,6 +124,22 @@ export function createLogger(module: string): Logger {
 
     pushToBuffer(entry);
 
+    // Update metrics
+    const metrics = getModuleMetrics(module);
+    if (level === "error") {
+      metrics.errorCount++;
+      // Trigger alert callback for errors
+      if (alertCallback) {
+        try {
+          alertCallback(entry);
+        } catch {
+          // Prevent alert callback errors from cascading
+        }
+      }
+    } else if (level === "warn") {
+      metrics.warnCount++;
+    }
+
     const prefix = `[${module}]`;
     const consoleFn = level === "error" ? console.error
       : level === "warn" ? console.warn
@@ -90,10 +149,38 @@ export function createLogger(module: string): Logger {
     consoleFn(prefix, message, data !== undefined ? data : "");
   }
 
+  function time(label: string) {
+    activeTimers.set(`${module}:${label}`, performance.now());
+  }
+
+  function timeEnd(label: string) {
+    const key = `${module}:${label}`;
+    const start = activeTimers.get(key);
+    if (start === undefined) {
+      log("warn", `Timer "${label}" not found`);
+      return;
+    }
+
+    const durationMs = Math.round((performance.now() - start) * 100) / 100;
+    activeTimers.delete(key);
+
+    // Store in metrics
+    const metrics = getModuleMetrics(module);
+    if (!metrics.timers[label]) {
+      metrics.timers[label] = { totalMs: 0, count: 0 };
+    }
+    metrics.timers[label].totalMs += durationMs;
+    metrics.timers[label].count++;
+
+    log("debug", `⏱ ${label}: ${durationMs}ms`);
+  }
+
   return {
     debug: (msg, data) => log("debug", msg, data),
     info: (msg, data) => log("info", msg, data),
     warn: (msg, data) => log("warn", msg, data),
     error: (msg, data) => log("error", msg, data),
+    time,
+    timeEnd,
   };
 }
