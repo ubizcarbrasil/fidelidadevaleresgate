@@ -340,7 +340,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Store not found or inactive", store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Store not found or inactive for this brand" }, 404);
+    return json({ ok: false, error: "Store not found or inactive for this brand", code: "STORE_NOT_FOUND" }, 404);
   }
 
   // 4. Find customer
