@@ -44,6 +44,7 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
   { key: "pedidos", label: "Pedidos", icon: ClipboardList },
   { key: "catalogo", label: "Catálogo", icon: ClipboardList },
   { key: "ganha-ganha", label: "Consumo GG", icon: BarChart3 },
+  { key: "campanhas", label: "Campanhas", icon: Bell },
   { key: "funcionarios", label: "Funcionários", icon: Users },
   { key: "filiais", label: "Cidades", icon: Building2 },
   { key: "termos", label: "Termos e Uso", icon: BookOpen },
