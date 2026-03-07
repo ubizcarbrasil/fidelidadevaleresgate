@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { useCrmAnalytics, CrmCustomer } from "@/hooks/useCrmAnalytics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, UserX } from "lucide-react";
+import { ArrowLeft, UserX, Flame, Snowflake, UserMinus, Download } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type InactiveFilter = "30" | "60" | "90" | "all";
 
 export default function CrmLostCustomersPage() {
-  const { lostCustomers, atRiskCustomers, isLoading } = useCrmAnalytics();
+  const { lostCustomers, atRiskCustomers, criticalScenario, isLoading } = useCrmAnalytics();
   const [filter, setFilter] = useState<InactiveFilter>("all");
   const navigate = useNavigate();
 
@@ -28,21 +30,32 @@ export default function CrmLostCustomersPage() {
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Relatório - Clientes Perdidos", 14, 16);
+    autoTable(doc, {
+      startY: 22,
+      head: [["Nome", "Dias Inativo", "Última Pontuação", "Último Resgate", "Pontos", "Status"]],
+      body: filtered.map(c => [c.name, c.days_inactive, formatDate(c.last_earning_at), formatDate(c.last_redemption_at), c.points_balance, c.status === "lost" ? "Perdido" : "Em risco"]),
+    });
+    doc.save("clientes-perdidos.pdf");
+  };
+
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-[400px]" />
-      </div>
-    );
+    return <div className="space-y-6"><Skeleton className="h-8 w-48" /><Skeleton className="h-[400px]" /></div>;
   }
+
+  const buckets = [
+    { label: "Morno (30-45d)", count: criticalScenario.warm.length, icon: Flame, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Frio (45-60d)", count: criticalScenario.cold.length, icon: Snowflake, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Perdido (60-90d)", count: criticalScenario.lost60.length, icon: UserMinus, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { label: "Crítico (90+d)", count: criticalScenario.lost90.length, icon: UserX, color: "text-destructive", bg: "bg-destructive/10" },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/crm")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/crm")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <UserX className="h-6 w-6 text-destructive" /> Clientes Perdidos & Em Risco
@@ -51,11 +64,22 @@ export default function CrmLostCustomersPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Bucket cards */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {buckets.map((b) => (
+          <Card key={b.label}>
+            <CardContent className="py-4 text-center">
+              <b.icon className={`h-5 w-5 mx-auto mb-1 ${b.color}`} />
+              <p className={`text-2xl font-bold ${b.color}`}>{b.count}</p>
+              <p className="text-[10px] text-muted-foreground">{b.label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
         <Select value={filter} onValueChange={(v) => setFilter(v as InactiveFilter)}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por período" />
-          </SelectTrigger>
+          <SelectTrigger className="w-[200px]"><SelectValue placeholder="Filtrar por período" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os inativos</SelectItem>
             <SelectItem value="30">30–59 dias (em risco)</SelectItem>
@@ -64,6 +88,9 @@ export default function CrmLostCustomersPage() {
           </SelectContent>
         </Select>
         <Badge variant="secondary">{filtered.length} resultados</Badge>
+        <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1.5 ml-auto">
+          <Download className="h-3.5 w-3.5" /> Exportar PDF
+        </Button>
       </div>
 
       <Card>
@@ -86,10 +113,8 @@ export default function CrmLostCustomersPage() {
                 {filtered.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium text-sm">{c.name}</p>
-                        <p className="text-xs text-muted-foreground">{c.phone || c.cpf || "—"}</p>
-                      </div>
+                      <p className="font-medium text-sm">{c.name}</p>
+                      <p className="text-xs text-muted-foreground">{c.phone || c.cpf || "—"}</p>
                     </TableCell>
                     <TableCell>
                       <span className={c.days_inactive >= 90 ? "text-destructive font-bold" : c.days_inactive >= 60 ? "text-destructive" : "text-amber-500"}>
