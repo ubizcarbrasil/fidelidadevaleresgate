@@ -388,7 +388,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Below minimum purchase", purchase_value, min_required: Number(rule.min_purchase_to_earn), store_id, customer_id: customer.id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: `Minimum purchase is R$ ${Number(rule.min_purchase_to_earn).toFixed(2)}` }, 422);
+    return json({ ok: false, error: `Minimum purchase is R$ ${Number(rule.min_purchase_to_earn).toFixed(2)}`, code: "BELOW_MIN_PURCHASE" }, 422);
   }
 
   // 7. Calculate points
