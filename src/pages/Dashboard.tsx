@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -443,6 +444,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
+  const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope } = useBrandGuard();
 
@@ -600,8 +602,8 @@ export default function Dashboard() {
               </div>
               <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais — tudo integrado ao seu programa de fidelidade.</p>
             </div>
-            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => window.open("https://valeresgatacrm.lovable.app/", "_blank", "noopener,noreferrer")}>
-              <ExternalLink className="h-3.5 w-3.5" />
+            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => navigate("/crm")}>
+              <TrendingUp className="h-3.5 w-3.5" />
               Abrir CRM
             </Button>
           </CardContent>

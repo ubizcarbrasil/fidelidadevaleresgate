@@ -88,6 +88,9 @@ const PageBuilderV2Page = lazy(() => import("@/pages/PageBuilderV2Page"));
 const PublicVouchers = lazy(() => import("@/pages/PublicVouchers"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
+const CrmDashboardPage = lazy(() => import("@/pages/CrmDashboardPage"));
+const CrmLostCustomersPage = lazy(() => import("@/pages/CrmLostCustomersPage"));
+const CrmPotentialCustomersPage = lazy(() => import("@/pages/CrmPotentialCustomersPage"));
 
 const queryClient = new QueryClient();
 
@@ -186,6 +189,9 @@ function AppRoutes() {
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
+          <Route path="crm" element={<CrmDashboardPage />} />
+          <Route path="crm/lost" element={<CrmLostCustomersPage />} />
+          <Route path="crm/potential" element={<CrmPotentialCustomersPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

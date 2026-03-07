@@ -96,7 +96,7 @@ function CRMPhoneMockup() {
 
 export default function LandingCRM() {
   const openCRM = () => {
-    window.open("https://valeresgatacrm.lovable.app/", "_blank", "noopener,noreferrer");
+    window.location.href = "/trial";
   };
 
   return (
@@ -139,7 +139,7 @@ export default function LandingCRM() {
 
               <motion.div variants={fadeUp} custom={6} className="pt-4">
                 <Button size="lg" className="rounded-full px-8 py-6 text-base shadow-lg" onClick={openCRM}>
-                  Experimente o CRM — 30 dias grátis <ArrowRight className="ml-2 h-5 w-5" />
+                  CRM integrado — comece agora <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </motion.div>
             </div>
