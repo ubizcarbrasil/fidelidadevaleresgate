@@ -1,51 +1,71 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Plano: Integração CRM + Harmonização Landing + White-Label
 
-## Resumo
+### Contexto
+O CRM Vale Resgate (https://valeresgatacrm.lovable.app/) é um produto complementar ao sistema de fidelidade. O objetivo é posicioná-lo como ferramenta estratégica integrada, unificando a comunicação na landing page, no painel admin e reforçando o modelo white-label.
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+---
 
-## O que muda para o usuário
+### 1. Nova seção na Landing Page: "CRM Estratégico"
+**Arquivo:** Criar `src/components/landing/LandingCRM.tsx`
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+Seção visual entre "Commercial Model" e "FAQ" com:
+- Título: "CRM Inteligente: Descubra clientes perdidos e potenciais"
+- 3 cards com benefícios do CRM: Diagnóstico do Negócio, Clientes Perdidos, Potenciais Clientes
+- Mockup de celular simulando dashboard do CRM (CSS puro, como já feito no AppPreview)
+- CTA: "Experimente o CRM — 30 dias grátis" com link externo para o CRM
+- Badge: "Incluso no ecossistema Vale Resgate"
 
-## Mudanças Técnicas
+### 2. Nova seção na Landing Page: "White-Label / Marca Própria"
+**Arquivo:** Criar `src/components/landing/LandingWhiteLabel.tsx`
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+Seção entre "Benefits" e "Testimonials" explicando o modelo white-label:
+- Título: "Sua marca, seu app, seu domínio"
+- Mockup mostrando 2-3 variações de marca (cores/logos diferentes) no mesmo app
+- 3 pontos: App com sua marca, Domínio personalizado, Identidade visual completa
+- Texto reforçando que o empreendedor tem marca própria sem parecer plataforma de terceiros
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+### 3. Atualizar Landing Page layout
+**Arquivo:** Editar `src/pages/LandingPage.tsx`
+- Adicionar link "CRM" e "Marca Própria" na navbar
+- Inserir `LandingWhiteLabel` após Benefits
+- Inserir `LandingCRM` após Commercial Model
+- Ordem final: Hero → Pain Points → App Preview → Benefits → **White-Label** → Testimonials → How It Works → Commercial Model → **CRM** → FAQ → Next Step → Footer
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+### 4. Adicionar acesso ao CRM no painel do Empreendedor
+**Arquivo:** Editar `src/components/consoles/BrandSidebar.tsx`
+- Adicionar item "CRM Estratégico" no grupo "📈 Análises" com ícone `BarChart3` ou `TrendingUp`
+- Link abre o CRM em nova aba (link externo para https://valeresgatacrm.lovable.app/)
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+### 5. Card de CRM no Dashboard
+**Arquivo:** Editar `src/pages/Dashboard.tsx`
+- Adicionar card "CRM Estratégico" na seção de quick links (BrandQuickLinks) com:
+  - Descrição: "Diagnóstico do negócio, clientes perdidos e potenciais"
+  - Botão "Abrir CRM" abrindo em nova aba
+  - Badge "30 dias grátis"
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+### 6. Atualizar Hero e Next Step com mensagem unificada
+**Arquivos:** Editar `LandingHero.tsx` e `LandingNextStep.tsx`
+- Adicionar check "CRM Estratégico incluso" nos trust signals do Hero
+- No Next Step, adicionar texto: "Fidelidade + CRM: tudo com sua marca"
 
-### 2. Seções de vitrine automáticas
+### 7. Atualizar Footer
+**Arquivo:** Editar `LandingFooter.tsx`
+- Adicionar link "CRM Estratégico" no footer
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+---
 
-### 3. Nenhuma alteração no banco de dados
+### Resumo de arquivos
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
-
-## Escopo
-
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+| Arquivo | Ação |
+|---------|------|
+| `src/components/landing/LandingCRM.tsx` | Criar |
+| `src/components/landing/LandingWhiteLabel.tsx` | Criar |
+| `src/pages/LandingPage.tsx` | Editar — nova ordem + navbar |
+| `src/components/landing/LandingHero.tsx` | Editar — trust signal CRM |
+| `src/components/landing/LandingNextStep.tsx` | Editar — mensagem unificada |
+| `src/components/landing/LandingFooter.tsx` | Editar — link CRM |
+| `src/components/consoles/BrandSidebar.tsx` | Editar — item CRM |
+| `src/pages/Dashboard.tsx` | Editar — card CRM |
 
