@@ -205,6 +205,11 @@ function AppRoutes() {
           <Route path="crm/journey" element={<ModuleGuard moduleKey="crm"><CrmJourneyPage /></ModuleGuard>} />
           <Route path="crm/lost" element={<ModuleGuard moduleKey="crm"><CrmLostCustomersPage /></ModuleGuard>} />
           <Route path="crm/potential" element={<ModuleGuard moduleKey="crm"><CrmPotentialCustomersPage /></ModuleGuard>} />
+          <Route path="crm/contacts" element={<ModuleGuard moduleKey="crm"><CrmContactsPage /></ModuleGuard>} />
+          <Route path="crm/tiers" element={<ModuleGuard moduleKey="crm"><CrmTierPage /></ModuleGuard>} />
+          <Route path="crm/audiences" element={<ModuleGuard moduleKey="crm"><CrmAudiencesPage /></ModuleGuard>} />
+          <Route path="crm/campaigns" element={<ModuleGuard moduleKey="crm"><CrmCampaignsPage /></ModuleGuard>} />
+          <Route path="crm/analytics" element={<ModuleGuard moduleKey="crm"><CrmAnalyticsPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
