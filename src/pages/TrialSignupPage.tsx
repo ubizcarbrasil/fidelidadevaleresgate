@@ -10,12 +10,14 @@ import { toast } from "sonner";
 import {
   Rocket, Building2, MapPin, User, CheckCircle2, Loader2,
   Copy, ExternalLink, Gift, Star, Shield, Zap, Clock,
+  ArrowRight, Store, Users, QrCode, BarChart3, Megaphone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ImageUploadField from "@/components/ImageUploadField";
+import { motion } from "framer-motion";
 
-type Step = "info" | "location" | "branding" | "creating" | "done";
-const STEPS: Step[] = ["info", "location", "branding", "creating", "done"];
+type Step = "guide" | "info" | "location" | "branding" | "creating" | "done";
+const STEPS: Step[] = ["guide", "info", "location", "branding", "creating", "done"];
 
 interface FormData {
   company_name: string;
