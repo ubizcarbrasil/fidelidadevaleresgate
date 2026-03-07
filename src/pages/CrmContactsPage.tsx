@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useDeferredValue, memo } from "react";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
