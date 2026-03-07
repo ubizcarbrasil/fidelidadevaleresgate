@@ -13,6 +13,7 @@ import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight } f
 
 export default function CrmContactsPage() {
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [source, setSource] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [os, setOs] = useState<string>("");
@@ -20,7 +21,7 @@ export default function CrmContactsPage() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
 
   const { data, isLoading } = useCrmContacts({
-    search: search || undefined,
+    search: deferredSearch || undefined,
     source: source || undefined,
     gender: gender || undefined,
     os_platform: os || undefined,
