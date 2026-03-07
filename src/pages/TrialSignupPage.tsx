@@ -47,7 +47,7 @@ const BENEFITS = [
 
 export default function TrialSignupPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("info");
+  const [step, setStep] = useState<Step>("guide");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
