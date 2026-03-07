@@ -500,6 +500,7 @@ Deno.serve(async (req) => {
 
   return json({
     ok: true,
+    code: "EARN_SUCCESS",
     data: {
       earning_event_id: event.id,
       points_earned: points,
