@@ -96,7 +96,7 @@ function CRMPhoneMockup() {
 
 export default function LandingCRM() {
   const openCRM = () => {
-    window.open("https://valeresgatacrm.lovable.app/", "_blank", "noopener,noreferrer");
+    window.location.href = "/trial";
   };
 
   return (
