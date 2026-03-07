@@ -56,7 +56,7 @@ export async function toggleVoucherStatus(id: string, currentStatus: string) {
 export async function createVoucher(payload: Record<string, any>) {
   log.info("Creating voucher", { code: payload.code });
 
-  const { error } = await supabase.from("vouchers").insert(payload);
+  const { error } = await supabase.from("vouchers").insert(payload as any);
 
   if (error) {
     log.error("Failed to create voucher", error);
