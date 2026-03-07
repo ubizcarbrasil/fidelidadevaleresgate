@@ -321,7 +321,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: parsed.error, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: parsed.error }, 400);
+    return json({ ok: false, error: parsed.error, code: "VALIDATION_ERROR" }, 400);
   }
 
   const { cleanCpf, store_id, purchase_value, receipt_code } = parsed;
