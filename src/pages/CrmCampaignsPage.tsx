@@ -137,7 +137,7 @@ export default function CrmCampaignsPage() {
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" /> Nova Campanha
         </Button>
-      </PageHeader>
+      </div>
 
       {isLoading ? (
         <div className="space-y-3">

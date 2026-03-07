@@ -12,7 +12,7 @@ export default function CrmTierPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Tiers de Engajamento" subtitle="Distribuição de contatos por nível de atividade" />
+      <PageHeader title="Tiers de Engajamento" description="Distribuição de contatos por nível de atividade" />
 
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

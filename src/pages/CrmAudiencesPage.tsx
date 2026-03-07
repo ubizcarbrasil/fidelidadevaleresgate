@@ -100,7 +100,7 @@ export default function CrmAudiencesPage() {
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" /> Novo Público
         </Button>
-      </PageHeader>
+      </div>
 
       {isLoading ? (
         <div className="space-y-3">

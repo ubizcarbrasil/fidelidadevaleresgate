@@ -30,7 +30,7 @@ export default function CrmAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Analytics CRM" subtitle="Visão avançada de contatos, eventos e engajamento" />
+      <PageHeader title="Analytics CRM" description="Visão avançada de contatos, eventos e engajamento" />
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4">

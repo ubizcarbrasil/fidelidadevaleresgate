@@ -48,7 +48,7 @@ export default function CrmContactsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Contatos CRM" subtitle="Base unificada de contatos de todas as fontes" />
+      <PageHeader title="Contatos CRM" description="Base unificada de contatos de todas as fontes" />
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
