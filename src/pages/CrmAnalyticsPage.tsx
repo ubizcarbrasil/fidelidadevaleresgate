@@ -1,8 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCrmContactStats, useCrmEventStats } from "@/hooks/useCrmContacts";
-import { useTierDistribution } from "@/hooks/useTierStats";
+import { useCrmContactStats, useCrmEventStats, useTierDistribution } from "@/modules/crm";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie,
@@ -38,7 +37,6 @@ export default function CrmAnalyticsPage() {
         </div>
       ) : (
         <>
-          {/* Summary row */}
           <div className="grid grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-4 pb-3 text-center">
@@ -61,7 +59,6 @@ export default function CrmAnalyticsPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Source distribution */}
             <Card>
               <CardHeader><CardTitle className="text-base">Contatos por Origem</CardTitle></CardHeader>
               <CardContent>
@@ -78,7 +75,6 @@ export default function CrmAnalyticsPage() {
               </CardContent>
             </Card>
 
-            {/* Gender distribution */}
             <Card>
               <CardHeader><CardTitle className="text-base">Contatos por Gênero</CardTitle></CardHeader>
               <CardContent>
@@ -95,7 +91,6 @@ export default function CrmAnalyticsPage() {
               </CardContent>
             </Card>
 
-            {/* OS distribution */}
             <Card>
               <CardHeader><CardTitle className="text-base">Sistema Operacional</CardTitle></CardHeader>
               <CardContent>
@@ -112,7 +107,6 @@ export default function CrmAnalyticsPage() {
               </CardContent>
             </Card>
 
-            {/* Event types */}
             <Card>
               <CardHeader><CardTitle className="text-base">Top Tipos de Evento</CardTitle></CardHeader>
               <CardContent>
@@ -130,7 +124,6 @@ export default function CrmAnalyticsPage() {
             </Card>
           </div>
 
-          {/* Tier distribution */}
           {tierDist && tierDist.length > 0 && (
             <Card>
               <CardHeader><CardTitle className="text-base">Distribuição por Tier</CardTitle></CardHeader>

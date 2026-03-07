@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
+import { campaignService, CHANNEL_CONFIG } from "@/modules/crm";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Send, Clock, CheckCircle, XCircle, DollarSign, Megaphone } from "lucide-react";
-
-const CHANNEL_CONFIG = {
-  WHATSAPP: { label: "WhatsApp", cost: 0.50, color: "bg-green-100 text-green-700" },
-  PUSH: { label: "Push", cost: 0.03, color: "bg-blue-100 text-blue-700" },
-  EMAIL: { label: "E-mail", cost: 0.03, color: "bg-purple-100 text-purple-700" },
-  IN_APP: { label: "In-App", cost: 0.01, color: "bg-amber-100 text-amber-700" },
-};
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
   DRAFT: { label: "Rascunho", icon: Clock, color: "bg-gray-100 text-gray-700" },
@@ -40,7 +33,6 @@ export default function CrmCampaignsPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
 
-  // Form state
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [channel, setChannel] = useState<string>("PUSH");
@@ -51,57 +43,38 @@ export default function CrmCampaignsPage() {
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ["crm-campaigns", currentBrandId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_campaigns")
-        .select("*, crm_audiences(name, estimated_count)")
-        .eq("brand_id", currentBrandId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => campaignService.fetchCampaigns(currentBrandId!),
     enabled: !!currentBrandId,
   });
 
   const { data: audiences } = useQuery({
     queryKey: ["crm-audiences-select", currentBrandId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_audiences")
-        .select("id, name, estimated_count")
-        .eq("brand_id", currentBrandId!)
-        .order("name");
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => campaignService.fetchAudiences(currentBrandId!),
     enabled: !!currentBrandId,
   });
 
-  const selectedAudience = audiences?.find(a => a.id === audienceId);
+  const selectedAudience = audiences?.find((a: any) => a.id === audienceId);
   const channelCfg = CHANNEL_CONFIG[channel as keyof typeof CHANNEL_CONFIG];
   const estimatedCost = (selectedAudience?.estimated_count || 0) * (channelCfg?.cost || 0);
 
   const createMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("crm_campaigns").insert({
-        brand_id: currentBrandId!,
-        audience_id: audienceId || null,
+    mutationFn: () =>
+      campaignService.createCampaign({
+        brandId: currentBrandId!,
+        audienceId,
         title,
-        message_template: message,
+        messageTemplate: message,
         channel,
-        cost_per_send: channelCfg?.cost || 0.03,
-        total_cost: estimatedCost,
-        total_recipients: selectedAudience?.estimated_count || 0,
-        status: "PENDING_APPROVAL",
-        offer_config_json: {
+        costPerSend: channelCfg?.cost || 0.03,
+        totalCost: estimatedCost,
+        totalRecipients: selectedAudience?.estimated_count || 0,
+        offerConfig: {
           giftback_value: giftbackValue ? Number(giftbackValue) : null,
           min_purchase: minPurchase ? Number(minPurchase) : null,
           validity_days: Number(validityDays) || 7,
         },
-        created_by: user?.id,
-      });
-      if (error) throw error;
-    },
+        createdBy: user?.id,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["crm-campaigns"] });
       setShowCreate(false);
@@ -112,13 +85,7 @@ export default function CrmCampaignsPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("crm_campaigns")
-        .update({ status: "APPROVED", approved_by: user?.id, approved_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => campaignService.approveCampaign(id, user?.id || ""),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["crm-campaigns"] });
       toast({ title: "Campanha aprovada" });
@@ -190,7 +157,6 @@ export default function CrmCampaignsPage() {
         </div>
       )}
 
-      {/* Create campaign dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -206,7 +172,7 @@ export default function CrmCampaignsPage() {
               <Select value={audienceId} onValueChange={setAudienceId}>
                 <SelectTrigger><SelectValue placeholder="Selecione um público" /></SelectTrigger>
                 <SelectContent>
-                  {(audiences || []).map(a => (
+                  {(audiences || []).map((a: any) => (
                     <SelectItem key={a.id} value={a.id}>{a.name} ({a.estimated_count} contatos)</SelectItem>
                   ))}
                 </SelectContent>
@@ -248,7 +214,6 @@ export default function CrmCampaignsPage() {
               </div>
             </div>
 
-            {/* Cost estimate */}
             {selectedAudience && (
               <Card className="bg-muted/50">
                 <CardContent className="pt-3 pb-3">

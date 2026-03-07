@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -8,22 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCrmContacts, useCrmContactEvents, useCrmContactStats } from "@/hooks/useCrmContacts";
+import { useCrmContacts, useCrmContactEvents, useCrmContactStats, SOURCE_LABELS, SOURCE_COLORS } from "@/modules/crm";
 import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight } from "lucide-react";
-
-const SOURCE_LABELS: Record<string, string> = {
-  MOBILITY_APP: "App Mobilidade",
-  LOYALTY: "Fidelidade",
-  STORE_UPLOAD: "Upload Loja",
-  MANUAL: "Manual",
-};
-
-const SOURCE_COLORS: Record<string, string> = {
-  MOBILITY_APP: "bg-blue-100 text-blue-700",
-  LOYALTY: "bg-green-100 text-green-700",
-  STORE_UPLOAD: "bg-amber-100 text-amber-700",
-  MANUAL: "bg-gray-100 text-gray-700",
-};
 
 export default function CrmContactsPage() {
   const [search, setSearch] = useState("");
@@ -235,7 +221,7 @@ function ContactDetail({ contact, events }: { contact: any; events: any[] }) {
       <div>
         <h4 className="font-semibold mb-3">Histórico de Eventos ({events.length})</h4>
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {events.map((e) => (
+          {events.map((e: any) => (
             <div key={e.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 text-sm">
               <div>
                 <span className="font-medium">{e.event_type}</span>
