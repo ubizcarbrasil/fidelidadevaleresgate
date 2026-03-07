@@ -65,7 +65,7 @@ export default function CrmAudiencesPage() {
         brand_id: currentBrandId!,
         name,
         description,
-        filters_json: filters,
+        filters_json: filters as any,
         estimated_count: count || 0,
         created_by: user?.id,
       }]);
