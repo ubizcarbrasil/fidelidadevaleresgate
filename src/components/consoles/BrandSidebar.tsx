@@ -3,6 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
   Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Target, Crown, UserX, Users2,
+  Contact, Layers3, Megaphone, PieChart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -113,10 +114,15 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "📊 CRM Estratégico",
     items: [
       { key: "sidebar.crm", defaultTitle: "Dashboard CRM", url: "/crm", icon: TrendingUp, moduleKey: "crm" },
+      { key: "sidebar.crm_contacts", defaultTitle: "Contatos", url: "/crm/contacts", icon: Contact, moduleKey: "crm" },
       { key: "sidebar.crm_customers", defaultTitle: "Clientes CRM", url: "/crm/customers", icon: Users2, moduleKey: "crm" },
+      { key: "sidebar.crm_tiers", defaultTitle: "Tiers", url: "/crm/tiers", icon: Layers3, moduleKey: "crm" },
       { key: "sidebar.crm_opportunities", defaultTitle: "Oportunidades", url: "/crm/opportunities", icon: Target, moduleKey: "crm" },
       { key: "sidebar.crm_pareto", defaultTitle: "Análise Pareto", url: "/crm/pareto", icon: Crown, moduleKey: "crm" },
       { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm/journey", icon: Sparkles, moduleKey: "crm" },
+      { key: "sidebar.crm_audiences", defaultTitle: "Públicos", url: "/crm/audiences", icon: PieChart, moduleKey: "crm" },
+      { key: "sidebar.crm_campaigns", defaultTitle: "Campanhas", url: "/crm/campaigns", icon: Megaphone, moduleKey: "crm" },
+      { key: "sidebar.crm_analytics", defaultTitle: "Analytics", url: "/crm/analytics", icon: BarChart3, moduleKey: "crm" },
       { key: "sidebar.crm_lost", defaultTitle: "Clientes Perdidos", url: "/crm/lost", icon: UserX, moduleKey: "crm" },
       { key: "sidebar.crm_potential", defaultTitle: "Clientes Potenciais", url: "/crm/potential", icon: Target, moduleKey: "crm" },
     ],

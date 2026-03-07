@@ -11,7 +11,7 @@ import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
   HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus,
   ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2,
-  Menu, ChevronLeft, Settings
+  Menu, ChevronLeft, Settings, Bell
 } from "lucide-react";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
@@ -25,11 +25,12 @@ import EmitterUpgradeCard from "@/components/store-owner/EmitterUpgradeCard";
 import StoreCatalogTab from "@/components/store-owner/StoreCatalogTab";
 import StoreOrdersTab from "@/components/store-owner/StoreOrdersTab";
 import GanhaGanhaStoreSummaryPage from "@/pages/GanhaGanhaStoreSummaryPage";
+import StoreCampaignTab from "@/components/store-owner/StoreCampaignTab";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger
 } from "@/components/ui/sheet";
 
-type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos" | "ganha-ganha";
+type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos" | "ganha-ganha" | "campanhas";
 
 const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
@@ -43,6 +44,7 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
   { key: "pedidos", label: "Pedidos", icon: ClipboardList },
   { key: "catalogo", label: "Catálogo", icon: ClipboardList },
   { key: "ganha-ganha", label: "Consumo GG", icon: BarChart3 },
+  { key: "campanhas", label: "Campanhas", icon: Bell },
   { key: "funcionarios", label: "Funcionários", icon: Users },
   { key: "filiais", label: "Cidades", icon: Building2 },
   { key: "termos", label: "Termos e Uso", icon: BookOpen },
@@ -288,6 +290,7 @@ export default function StoreOwnerPanel() {
         {activeTab === "tutorial" && <StoreTutorialTab />}
         {activeTab === "suporte" && <StoreSuporteTab />}
         {activeTab === "ganha-ganha" && <GanhaGanhaStoreSummaryPage store={store} />}
+        {activeTab === "campanhas" && <StoreCampaignTab store={store} />}
       </main>
 
       {/* Bottom tab bar - PWA style */}
