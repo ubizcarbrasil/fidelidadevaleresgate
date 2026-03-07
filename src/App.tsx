@@ -103,7 +103,9 @@ const CrmAudiencesPage = lazy(() => import("@/pages/CrmAudiencesPage"));
 const CrmCampaignsPage = lazy(() => import("@/pages/CrmCampaignsPage"));
 const CrmAnalyticsPage = lazy(() => import("@/pages/CrmAnalyticsPage"));
 
-const queryClient = new QueryClient();
+// QueryClient is now centralized in src/lib/queryClient.ts
+// Initialize event bus → query bridge for automatic cache invalidation
+initEventBusQueryBridge(queryClient);
 
 function PageLoader() {
   return (

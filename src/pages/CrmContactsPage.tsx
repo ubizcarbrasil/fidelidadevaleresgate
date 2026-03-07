@@ -240,4 +240,4 @@ const ContactDetail = memo(function ContactDetail({ contact, events }: { contact
       </div>
     </div>
   );
-}
+});

@@ -446,7 +446,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "earning_events insert failed", error: eventErr.message, store_id, customer_id: customer.id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Failed to create earning event" }, 500);
+    return json({ ok: false, error: "Failed to create earning event", code: "INSERT_ERROR" }, 500);
   }
 
   // 10. Insert ledger entry
