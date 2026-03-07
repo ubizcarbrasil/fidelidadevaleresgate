@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
   const clientIp = getClientIp(req);
 
   if (req.method !== "POST") {
-    return json({ ok: false, error: "Method not allowed" }, 405);
+    return json({ ok: false, error: "Method not allowed", code: "METHOD_NOT_ALLOWED" }, 405);
   }
 
   const apiKey = req.headers.get("x-api-key");
