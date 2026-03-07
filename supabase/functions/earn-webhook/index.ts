@@ -401,7 +401,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: dailyCheck.reason, store_id, customer_id: customer.id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: dailyCheck.reason }, 429);
+    return json({ ok: false, error: dailyCheck.reason, code: "DAILY_LIMIT_EXCEEDED" }, 429);
   }
 
   const receiptCheck = await checkReceiptUniqueness(sb, store_id, receipt_code, rule.require_receipt_code);
