@@ -843,6 +843,372 @@ export type Database = {
           },
         ]
       }
+      crm_audiences: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimated_count: number
+          filters_json: Json
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_count?: number
+          filters_json?: Json
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_count?: number
+          filters_json?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_audiences_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campaign_logs: {
+        Row: {
+          campaign_id: string
+          channel: string
+          contact_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          channel: string
+          contact_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campaign_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "crm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campaign_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campaigns: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audience_id: string | null
+          brand_id: string
+          channel: string
+          cost_per_send: number
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          message_template: string | null
+          offer_config_json: Json
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          store_id: string | null
+          title: string
+          total_cost: number
+          total_recipients: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience_id?: string | null
+          brand_id: string
+          channel?: string
+          cost_per_send?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          message_template?: string | null
+          offer_config_json?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          store_id?: string | null
+          title: string
+          total_cost?: number
+          total_recipients?: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience_id?: string | null
+          brand_id?: string
+          channel?: string
+          cost_per_send?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          message_template?: string | null
+          offer_config_json?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          store_id?: string | null
+          title?: string
+          total_cost?: number
+          total_recipients?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campaigns_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "crm_audiences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          cpf: string | null
+          created_at: string
+          customer_id: string | null
+          email: string | null
+          external_id: string | null
+          gender: string | null
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          metadata_json: Json
+          name: string | null
+          os_platform: string | null
+          phone: string | null
+          source: string
+          tags_json: Json
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          cpf?: string | null
+          created_at?: string
+          customer_id?: string | null
+          email?: string | null
+          external_id?: string | null
+          gender?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          metadata_json?: Json
+          name?: string | null
+          os_platform?: string | null
+          phone?: string | null
+          source?: string
+          tags_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          cpf?: string | null
+          created_at?: string
+          customer_id?: string | null
+          email?: string | null
+          external_id?: string | null
+          gender?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          metadata_json?: Json
+          name?: string | null
+          os_platform?: string | null
+          phone?: string | null
+          source?: string
+          tags_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_events: {
+        Row: {
+          brand_id: string
+          contact_id: string
+          created_at: string
+          event_subtype: string | null
+          event_type: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          payload_json: Json
+        }
+        Insert: {
+          brand_id: string
+          contact_id: string
+          created_at?: string
+          event_subtype?: string | null
+          event_type: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          payload_json?: Json
+        }
+        Update: {
+          brand_id?: string
+          contact_id?: string
+          created_at?: string
+          event_subtype?: string | null
+          event_type?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          payload_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tiers: {
+        Row: {
+          brand_id: string
+          color: string
+          created_at: string
+          icon: string | null
+          id: string
+          max_events: number | null
+          min_events: number
+          name: string
+          order_index: number
+        }
+        Insert: {
+          brand_id: string
+          color?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          max_events?: number | null
+          min_events?: number
+          name: string
+          order_index?: number
+        }
+        Update: {
+          brand_id?: string
+          color?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          max_events?: number | null
+          min_events?: number
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tiers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_pages: {
         Row: {
           banner_config_json: Json
