@@ -1,35 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Ghost,
-  AlertTriangle,
-  TrendingDown,
-  Megaphone,
-  Frown,
-  ShieldAlert,
-  Zap,
-  Users,
-  Trophy,
-  Store,
-  Star,
-  Handshake,
-  HeadphonesIcon,
-  Smartphone,
-  MessageCircle,
-  DollarSign,
-  Percent,
-  Gift,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import LandingHero from "@/components/landing/LandingHero";
 import LandingPainPoints from "@/components/landing/LandingPainPoints";
 import LandingBenefits from "@/components/landing/LandingBenefits";
@@ -42,7 +13,7 @@ import LandingFooter from "@/components/landing/LandingFooter";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navbar — espelhando valeresgate.com.br */}
+      {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
