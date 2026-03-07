@@ -68,7 +68,7 @@ export default function CrmAudiencesPage() {
         filters_json: filters,
         estimated_count: count || 0,
         created_by: user?.id,
-      });
+      }]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -80,7 +80,7 @@ export default function CrmAudiencesPage() {
       toast({ title: "Público criado com sucesso" });
     },
     onError: () => toast({ title: "Erro ao criar público", variant: "destructive" }),
-      }]);
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
