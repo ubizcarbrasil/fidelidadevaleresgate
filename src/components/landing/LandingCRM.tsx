@@ -15,7 +15,7 @@ const scaleIn = {
   hidden: { opacity: 0, scale: 0.85 },
   visible: (i: number) => ({
     opacity: 1, scale: 1,
-    transition: { delay: i * 0.13, duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.13, duration: 0.7, ease: "easeOut" as const },
   }),
 };
 
