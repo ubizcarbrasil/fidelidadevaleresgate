@@ -110,7 +110,7 @@ export async function createCampaign(params: {
 }) {
   log.info("Creating campaign", { title: params.title, channel: params.channel });
 
-  const { error } = await supabase.from("crm_campaigns").insert({
+  const { error } = await supabase.from("crm_campaigns").insert([{
     brand_id: params.brandId,
     audience_id: params.audienceId || null,
     title: params.title,
