@@ -37,7 +37,7 @@ export async function fetchStores(params: {
     throw error;
   }
 
-  return { stores: (data || []) as Store[], total: count || 0 };
+  return { stores: (data || []) as unknown as Store[], total: count || 0 };
 }
 
 export async function fetchStoreById(id: string): Promise<Store | null> {
