@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
     logAudit("EARN_WEBHOOK_AUTH_FAILED", {
       details: { reason: "Invalid or inactive API key", key_prefix: apiKey.substring(0, 11) },
     });
-    return json({ ok: false, error: "Invalid or inactive API key" }, 403);
+    return json({ ok: false, error: "Invalid or inactive API key", code: "INVALID_API_KEY" }, 403);
   }
 
   const brandId = keyRow.brand_id;
