@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("x-api-secret");
     const secret = Deno.env.get("MOBILITY_API_SECRET");
     if (!secret || authHeader !== secret) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized", code: "AUTH_FAILED" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
