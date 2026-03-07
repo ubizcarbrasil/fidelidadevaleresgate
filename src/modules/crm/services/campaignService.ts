@@ -120,7 +120,7 @@ export async function createCampaign(params: {
     total_cost: params.totalCost,
     total_recipients: params.totalRecipients,
     status: "PENDING_APPROVAL",
-    offer_config_json: params.offerConfig,
+    offer_config_json: params.offerConfig as any,
     created_by: params.createdBy,
   }]);
 
