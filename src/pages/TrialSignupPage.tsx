@@ -10,12 +10,14 @@ import { toast } from "sonner";
 import {
   Rocket, Building2, MapPin, User, CheckCircle2, Loader2,
   Copy, ExternalLink, Gift, Star, Shield, Zap, Clock,
+  ArrowRight, Store, Users, QrCode, BarChart3, Megaphone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ImageUploadField from "@/components/ImageUploadField";
+import { motion } from "framer-motion";
 
-type Step = "info" | "location" | "branding" | "creating" | "done";
-const STEPS: Step[] = ["info", "location", "branding", "creating", "done"];
+type Step = "guide" | "info" | "location" | "branding" | "creating" | "done";
+const STEPS: Step[] = ["guide", "info", "location", "branding", "creating", "done"];
 
 interface FormData {
   company_name: string;
@@ -45,7 +47,7 @@ const BENEFITS = [
 
 export default function TrialSignupPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("info");
+  const [step, setStep] = useState<Step>("guide");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export default function TrialSignupPage() {
   })();
 
   const strengthLabel = ["", "Fraca", "Razoável", "Boa", "Forte"];
-  const strengthColor = ["", "bg-destructive", "bg-amber-500", "bg-primary", "bg-green-500"];
+  const strengthColor = ["", "bg-destructive", "bg-amber-500", "bg-primary", "bg-emerald-500"];
 
   const handleProvision = async () => {
     setStep("creating");
@@ -136,6 +138,123 @@ export default function TrialSignupPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* STEP: Guide — Manual passo a passo */}
+      {step === "guide" && (
+        <>
+          <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 px-4">
+            <div className="max-w-4xl mx-auto text-center space-y-4">
+              <img
+                src="/logo-vale-resgate.jpeg"
+                alt="Vale Resgate"
+                className="mx-auto h-16 w-auto rounded-2xl shadow-lg"
+              />
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+                Bem-vindo ao Vale Resgate!
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Antes de começar, entenda como funciona o fluxo da sua plataforma de fidelidade.
+              </p>
+            </div>
+          </section>
+
+          <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold mb-2">Como funciona — Passo a Passo</h2>
+              <p className="text-sm text-muted-foreground">Entenda a jornada completa em 6 etapas simples</p>
+            </div>
+
+            {[
+              {
+                num: 1,
+                icon: User,
+                title: "Crie sua conta",
+                desc: "Preencha seus dados, escolha o nome da sua empresa e defina a cidade onde vai operar. Em menos de 2 minutos sua plataforma estará no ar.",
+                color: "bg-primary/10 text-primary",
+              },
+              {
+                num: 2,
+                icon: Building2,
+                title: "Personalize sua marca",
+                desc: "Adicione seu logotipo, escolha as cores da sua identidade visual. Seus clientes verão a SUA marca, não a nossa. É 100% white-label.",
+                color: "bg-primary/10 text-primary",
+              },
+              {
+                num: 3,
+                icon: Store,
+                title: "Convide parceiros",
+                desc: "Compartilhe o link de cadastro com estabelecimentos da sua cidade (restaurantes, lojas, serviços). Eles se cadastram sozinhos e você aprova com um clique.",
+                color: "bg-primary/10 text-primary",
+              },
+              {
+                num: 4,
+                icon: Megaphone,
+                title: "Parceiros publicam ofertas",
+                desc: "Cada parceiro cria suas próprias ofertas de resgate — descontos em produtos, serviços grátis, combos especiais. Tudo gerenciado por eles mesmos.",
+                color: "bg-primary/10 text-primary",
+              },
+              {
+                num: 5,
+                icon: Users,
+                title: "Clientes acumulam e resgatam",
+                desc: "Seus clientes fazem compras nos parceiros, acumulam pontos automaticamente e resgatam ofertas exclusivas via QR Code. Tudo pelo app com a sua marca.",
+                color: "bg-primary/10 text-primary",
+              },
+              {
+                num: 6,
+                icon: BarChart3,
+                title: "Acompanhe tudo pelo painel",
+                desc: "Monitore métricas em tempo real: resgates, clientes ativos, performance dos parceiros. Tome decisões com base em dados concretos.",
+                color: "bg-primary/10 text-primary",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.num}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.4 }}
+                className="flex gap-4 items-start"
+              >
+                <div className="flex-shrink-0">
+                  <div className={`h-12 w-12 rounded-xl ${item.color} flex items-center justify-center relative`}>
+                    <item.icon className="h-6 w-6" />
+                    <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow">
+                      {item.num}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-1 pt-1">
+                  <h3 className="font-semibold text-base mb-1">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+
+            <div className="rounded-xl border bg-primary/5 border-primary/20 p-5 text-center space-y-3">
+              <QrCode className="h-8 w-8 text-primary mx-auto" />
+              <p className="font-semibold">Resumo do fluxo</p>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                <strong>Você cria</strong> → <strong>Parceiros publicam</strong> → <strong>Clientes resgatam</strong> → <strong>Todos ganham!</strong>
+              </p>
+            </div>
+
+            <Button
+              size="lg"
+              className="w-full rounded-xl py-6 text-base"
+              onClick={() => setStep("info")}
+            >
+              Entendi! Vamos começar <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Já tem conta?{" "}
+              <button onClick={() => navigate("/auth")} className="text-primary hover:underline">
+                Fazer login
+              </button>
+            </p>
+          </div>
+        </>
+      )}
+
       {/* Hero Section */}
       {step === "info" && (
         <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-16 px-4">
@@ -175,7 +294,7 @@ export default function TrialSignupPage() {
 
       {/* Form */}
       <div className="max-w-lg mx-auto px-4 py-10 space-y-6">
-        {step !== "info" && step !== "done" && step !== "creating" && (
+        {step !== "guide" && step !== "info" && step !== "done" && step !== "creating" && (
           <Progress value={progress} className="h-2" />
         )}
 
