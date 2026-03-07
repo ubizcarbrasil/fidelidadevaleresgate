@@ -193,9 +193,13 @@ function AppRoutes() {
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
-          <Route path="crm" element={<CrmDashboardPage />} />
-          <Route path="crm/lost" element={<CrmLostCustomersPage />} />
-          <Route path="crm/potential" element={<CrmPotentialCustomersPage />} />
+          <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
+          <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
+          <Route path="crm/opportunities" element={<ModuleGuard moduleKey="crm"><CrmOpportunitiesPage /></ModuleGuard>} />
+          <Route path="crm/pareto" element={<ModuleGuard moduleKey="crm"><CrmParetoPage /></ModuleGuard>} />
+          <Route path="crm/journey" element={<ModuleGuard moduleKey="crm"><CrmJourneyPage /></ModuleGuard>} />
+          <Route path="crm/lost" element={<ModuleGuard moduleKey="crm"><CrmLostCustomersPage /></ModuleGuard>} />
+          <Route path="crm/potential" element={<ModuleGuard moduleKey="crm"><CrmPotentialCustomersPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

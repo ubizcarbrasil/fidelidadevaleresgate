@@ -107,9 +107,18 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { key: "sidebar.central_acessos", defaultTitle: "Central de Acessos", url: "/access-hub", icon: Eye },
-      { key: "sidebar.crm", defaultTitle: "CRM Estratégico", url: "/crm", icon: TrendingUp },
-      { key: "sidebar.crm_lost", defaultTitle: "Clientes Perdidos", url: "/crm/lost", icon: TrendingUp },
-      { key: "sidebar.crm_potential", defaultTitle: "Clientes Potenciais", url: "/crm/potential", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "📊 CRM Estratégico",
+    items: [
+      { key: "sidebar.crm", defaultTitle: "Dashboard CRM", url: "/crm", icon: TrendingUp, moduleKey: "crm" },
+      { key: "sidebar.crm_customers", defaultTitle: "Clientes CRM", url: "/crm/customers", icon: Users2, moduleKey: "crm" },
+      { key: "sidebar.crm_opportunities", defaultTitle: "Oportunidades", url: "/crm/opportunities", icon: Target, moduleKey: "crm" },
+      { key: "sidebar.crm_pareto", defaultTitle: "Análise Pareto", url: "/crm/pareto", icon: Crown, moduleKey: "crm" },
+      { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm/journey", icon: Sparkles, moduleKey: "crm" },
+      { key: "sidebar.crm_lost", defaultTitle: "Clientes Perdidos", url: "/crm/lost", icon: UserX, moduleKey: "crm" },
+      { key: "sidebar.crm_potential", defaultTitle: "Clientes Potenciais", url: "/crm/potential", icon: Target, moduleKey: "crm" },
     ],
   },
 ];
