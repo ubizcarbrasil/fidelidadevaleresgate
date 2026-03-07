@@ -1,51 +1,101 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Plano: CRM Completo como Módulo Nativo do Empreendedor
 
-## Resumo
+### Contexto
+O CRM externo (valeresgatacrm) possui ~30 páginas com funcionalidades complexas baseadas em um modelo de dados de mobilidade (corridas, tiers por frequência de corridas). O sistema de fidelidade atual tem um modelo diferente (pontos, resgates, ofertas). O plano adapta as funcionalidades mais relevantes do CRM ao modelo de dados existente.
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+### Funcionalidades a Construir
 
-## O que muda para o usuário
+#### 1. Dashboard CRM Expandido (reformular `CrmDashboardPage.tsx`)
+- Gráficos com **recharts** (já instalado): evolução de clientes por mês, distribuição por status, pontuações vs resgates ao longo do tempo
+- Cards de resumo aprimorados com tendência (seta subindo/descendo)
+- Seção "Cenário Crítico": morno (30-45 dias), frio (45-60 dias), perdidos (60+), não convertidos (0 resgates)
+- Score de saúde visual com gauge chart
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+#### 2. Página de Clientes CRM (`CrmCustomersPage.tsx`) — NOVA
+- Tabela completa paginada com busca e filtros (status, faixa de pontos, período de inatividade)
+- Drawer de detalhe do cliente: histórico de pontuações, resgates, timeline de atividade
+- Exportação Excel/PDF (jspdf-autotable já instalado)
+- Ordenação por colunas (nome, pontos, dias inativo, total earnings)
 
-## Mudanças Técnicas
+#### 3. Análise Pareto (`CrmParetoPage.tsx`) — NOVA
+- Identificar os 20% de clientes que geram 80% das pontuações
+- Cards: total do grupo Pareto, % de pontuações, média de pontos, frequência média
+- Tabela dos top clientes com métricas
+- Gráfico de distribuição acumulada
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+#### 4. Oportunidades de Engajamento (`CrmOpportunitiesPage.tsx`) — NOVA
+- Segmentos automáticos baseados no modelo de fidelidade:
+  - "Alta frequência sem resgate" (muitas pontuações, 0 resgates)
+  - "Alto saldo parado" (>X pontos, inativo 15+ dias)
+  - "Resgatador ativo esfriando" (tinha resgates frequentes, desacelerando)
+  - "Novo cliente promissor" (<30 dias, já pontuou 3+ vezes)
+- Cards com contagem e ação rápida "Ver clientes"
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+#### 5. Jornada do Cliente (`CrmJourneyPage.tsx`) — NOVA
+- Visualização Kanban/funil das etapas: Novo → Engajando → Fiel → Em Risco → Perdido
+- Contagem de clientes em cada estágio
+- Transições recentes (quem mudou de estágio nos últimos 7 dias — calculado comparando atividade)
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+#### 6. Reformular Clientes Perdidos (`CrmLostCustomersPage.tsx`)
+- Adicionar buckets visuais tipo cards (30-45d, 45-60d, 60-90d, 90+d) com contagem
+- Botão de exportar lista em Excel/PDF
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+#### 7. Reformular Clientes Potenciais (`CrmPotentialCustomersPage.tsx`)
+- Adicionar aba "Pareto" além das existentes
+- Métricas visuais de oportunidade por aba
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+#### 8. Hook expandido (`useCrmAnalytics.ts`)
+- Adicionar métricas: earning_events por mês (últimos 6 meses), redemptions por mês
+- Adicionar cálculos Pareto (top 20% por total_earnings)
+- Adicionar segmentos de oportunidade
+- Adicionar dados de jornada/funil
 
-### 2. Seções de vitrine automáticas
+---
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+### Integração no Sistema
 
-### 3. Nenhuma alteração no banco de dados
+#### Sidebar — Reorganizar grupo CRM
+```
+📊 CRM Estratégico
+  ├── Dashboard CRM        /crm
+  ├── Clientes CRM         /crm/customers
+  ├── Oportunidades        /crm/opportunities
+  ├── Análise Pareto       /crm/pareto
+  ├── Jornada do Cliente   /crm/journey
+  ├── Clientes Perdidos    /crm/lost
+  └── Clientes Potenciais  /crm/potential
+```
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+#### Rotas — `App.tsx`
+Adicionar rotas: `/crm/customers`, `/crm/opportunities`, `/crm/pareto`, `/crm/journey`
 
-## Escopo
+#### Module Guard
+Proteger todas as rotas CRM com `moduleKey: "crm"` e registrar módulo `crm` no catálogo (migration SQL).
 
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+---
+
+### Arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `src/hooks/useCrmAnalytics.ts` | Expandir — métricas mensais, Pareto, oportunidades, jornada |
+| `src/pages/CrmDashboardPage.tsx` | Reformular — gráficos recharts, cenário crítico |
+| `src/pages/CrmCustomersPage.tsx` | Criar — tabela completa com busca/filtros/detalhe/export |
+| `src/pages/CrmParetoPage.tsx` | Criar — análise 80/20 |
+| `src/pages/CrmOpportunitiesPage.tsx` | Criar — segmentos de engajamento |
+| `src/pages/CrmJourneyPage.tsx` | Criar — funil/Kanban de jornada |
+| `src/pages/CrmLostCustomersPage.tsx` | Reformular — buckets visuais + export |
+| `src/pages/CrmPotentialCustomersPage.tsx` | Reformular — aba Pareto + métricas |
+| `src/components/consoles/BrandSidebar.tsx` | Editar — grupo CRM dedicado |
+| `src/App.tsx` | Editar — novas rotas |
+| Migration SQL | Criar — módulo `crm` em `module_definitions` |
+
+### Notas
+- Zero migrações de tabelas: usa `customers`, `earning_events`, `redemptions` existentes
+- Gráficos com `recharts` (já instalado)
+- Export PDF com `jspdf-autotable` (já instalado)
+- Dados filtrados por `brand_id` via `useBrandGuard`
+- RLS existente já cobre todos os acessos necessários
 
