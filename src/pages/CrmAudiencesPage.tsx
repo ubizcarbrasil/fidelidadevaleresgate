@@ -80,7 +80,7 @@ export default function CrmAudiencesPage() {
       toast({ title: "Público criado com sucesso" });
     },
     onError: () => toast({ title: "Erro ao criar público", variant: "destructive" }),
-  });
+      }]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
