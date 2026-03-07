@@ -312,7 +312,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Invalid JSON body", api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Invalid JSON body" }, 400);
+    return json({ ok: false, error: "Invalid JSON body", code: "INVALID_JSON" }, 400);
   }
 
   const parsed = parseAndValidateBody(body);
