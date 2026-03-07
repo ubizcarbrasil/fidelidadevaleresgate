@@ -95,7 +95,8 @@ export default function CrmAudiencesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Públicos" subtitle="Crie segmentos de contatos para campanhas de disparo">
+      <div className="flex items-center justify-between">
+        <PageHeader title="Públicos" description="Crie segmentos de contatos para campanhas de disparo" />
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" /> Novo Público
         </Button>
