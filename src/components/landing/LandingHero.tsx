@@ -106,18 +106,22 @@ export default function LandingHero() {
               </Button>
             </div>
 
-            <div className="flex items-center justify-center lg:justify-start gap-6 text-sm text-muted-foreground flex-wrap">
+            <div className="flex items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-sm text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Sem custo de desconto
+                100% White-Label
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Integração em dias
+                CRM Estratégico incluso
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                 WhatsApp API incluso
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                Integração em dias
               </span>
             </div>
           </motion.div>

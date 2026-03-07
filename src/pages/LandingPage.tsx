@@ -48,9 +48,11 @@ export default function LandingPage() {
       <LandingPainPoints />
       <LandingAppPreview />
       <LandingBenefits />
+      <LandingWhiteLabel />
       <LandingTestimonials />
       <LandingHowItWorks />
       <LandingCommercialModel />
+      <LandingCRM />
       <LandingFAQ />
       <LandingNextStep />
       <LandingFooter />
