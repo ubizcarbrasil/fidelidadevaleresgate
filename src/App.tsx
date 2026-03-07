@@ -88,6 +88,9 @@ const PageBuilderV2Page = lazy(() => import("@/pages/PageBuilderV2Page"));
 const PublicVouchers = lazy(() => import("@/pages/PublicVouchers"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
+const CrmDashboardPage = lazy(() => import("@/pages/CrmDashboardPage"));
+const CrmLostCustomersPage = lazy(() => import("@/pages/CrmLostCustomersPage"));
+const CrmPotentialCustomersPage = lazy(() => import("@/pages/CrmPotentialCustomersPage"));
 
 const queryClient = new QueryClient();
 
