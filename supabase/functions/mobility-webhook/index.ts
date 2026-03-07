@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("x-api-secret");
     const secret = Deno.env.get("MOBILITY_API_SECRET");
     if (!secret || authHeader !== secret) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized", code: "AUTH_FAILED" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const { brand_id, events } = body;
 
     if (!brand_id || !Array.isArray(events) || events.length === 0) {
-      return new Response(JSON.stringify({ error: "brand_id and events[] required" }), {
+      return new Response(JSON.stringify({ ok: false, error: "brand_id and events[] required", code: "INVALID_BODY" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -107,15 +107,17 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        success: true,
-        contacts_upserted: contactsUpserted,
-        events_inserted: eventsInserted,
+        ok: true,
+        data: {
+          contacts_upserted: contactsUpserted,
+          events_inserted: eventsInserted,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("Webhook error:", err);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    return new Response(JSON.stringify({ ok: false, error: "Internal server error", code: "INTERNAL_ERROR" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

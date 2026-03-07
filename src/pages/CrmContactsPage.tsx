@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useDeferredValue, memo } from "react";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight } f
 
 export default function CrmContactsPage() {
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [source, setSource] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [os, setOs] = useState<string>("");
@@ -20,7 +21,7 @@ export default function CrmContactsPage() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
 
   const { data, isLoading } = useCrmContacts({
-    search: search || undefined,
+    search: deferredSearch || undefined,
     source: source || undefined,
     gender: gender || undefined,
     os_platform: os || undefined,
@@ -196,7 +197,7 @@ export default function CrmContactsPage() {
   );
 }
 
-function ContactDetail({ contact, events }: { contact: any; events: any[] }) {
+const ContactDetail = memo(function ContactDetail({ contact, events }: { contact: any; events: any[] }) {
   if (!contact) return null;
 
   return (
@@ -239,4 +240,4 @@ function ContactDetail({ contact, events }: { contact: any; events: any[] }) {
       </div>
     </div>
   );
-}
+});

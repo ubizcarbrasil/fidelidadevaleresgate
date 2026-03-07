@@ -1,158 +1,51 @@
 
 
-## Plano: Escalabilidade, Observabilidade, Segurança e Performance
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-O projeto já possui uma base modular sólida (6 módulos com services/types/tests). Este plano foca em **infraestrutura transversal** que eleva a qualidade de todos os módulos sem reorganizar arquivos existentes.
+## Resumo
 
----
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-### 1. QueryClient Otimizado e Cache Inteligente
+## O que muda para o usuário
 
-**Problema**: O `QueryClient` em `App.tsx` usa config padrão (sem staleTime, sem retry customizado, sem gc). Cada página define seus próprios tempos de cache inconsistentemente.
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-**Solução**: Criar `src/lib/queryClient.ts` com configuração centralizada:
-- `staleTime` global de 30s para dados operacionais
-- `gcTime` de 10min para liberar memória
-- Retry com backoff exponencial (max 2 retries)
-- `refetchOnWindowFocus` desabilitado por padrão
-- Query key factory por módulo (`src/lib/queryKeys.ts`) para invalidação precisa
+## Mudanças Técnicas
 
-**Arquivos**:
-- Criar `src/lib/queryClient.ts`
-- Criar `src/lib/queryKeys.ts`
-- Editar `src/App.tsx` — importar queryClient centralizado
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
----
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-### 2. Logger Aprimorado com Métricas e Alertas
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
 
-**Problema**: O logger atual grava apenas no console e num ring buffer local. Sem métricas de performance, sem rastreamento de duração de operações.
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
 
-**Solução**: Expandir `src/lib/logger.ts` com:
-- **`logger.time(label)`** / **`logger.timeEnd(label)`** para medir duração de operações
-- **Contadores de erro por módulo** acessíveis via `window.__getMetrics()`
-- **Callback de alerta** configurável para erros críticos (ex: toast automático)
-- **Batch de logs** para futura integração com serviço externo
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
 
-**Arquivos**:
-- Editar `src/lib/logger.ts` — adicionar timer, metrics, alert callback
+### 2. Seções de vitrine automáticas
 
----
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
 
-### 3. API Response Wrapper Padronizado
+### 3. Nenhuma alteração no banco de dados
 
-**Problema**: Edge functions têm padrões de resposta ligeiramente diferentes (`{ ok, data }` vs `{ success, ... }` vs `{ error }`). Tratamento de erro inconsistente.
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
 
-**Solução**: Criar helpers reutilizáveis para Edge Functions:
-- `src/lib/apiResponse.ts` — helper client-side para parsing consistente
-- `supabase/functions/_shared/response.ts` — padrão não funciona em Edge; em vez disso, documentar e padronizar o pattern `{ ok: boolean, data?, error?, code? }` nos edge functions existentes
-- Refatorar `mobility-webhook` e `earn-webhook` para usar resposta padronizada com campo `code` para erros máquina-legíveis
+## Escopo
 
-**Arquivos**:
-- Criar `src/lib/apiResponse.ts`
-- Editar `supabase/functions/mobility-webhook/index.ts`
-- Editar `supabase/functions/earn-webhook/index.ts` (padronizar codes)
-
----
-
-### 4. Validação de Input com Zod nos Services
-
-**Problema**: Services aceitam `Record<string, any>` em vários pontos. Edge functions fazem validação manual.
-
-**Solução**: Adicionar schemas Zod nos pontos de entrada críticos:
-- `src/modules/crm/schemas.ts` — schemas para criação de contato, evento, audiência, campanha
-- `src/modules/loyalty/schemas.ts` — schema para earning request
-- `src/modules/vouchers/schemas.ts` — schema para criação de voucher
-- Edge functions: validar body com Zod inline (importar do esm.sh)
-
-**Arquivos**:
-- Criar `src/modules/crm/schemas.ts`
-- Criar `src/modules/loyalty/schemas.ts`
-- Criar `src/modules/vouchers/schemas.ts`
-- Editar services que usam `Record<string, any>` para usar schemas
-
----
-
-### 5. Event Bus Leve para Comunicação entre Módulos
-
-**Problema**: Módulos se comunicam via imports diretos ou invalidação manual de queries. Sem desacoplamento real.
-
-**Solução**: Criar um event bus simples e tipado:
-- `src/lib/eventBus.ts` — pub/sub tipado com `emit<T>(event, data)` / `on<T>(event, callback)`
-- Eventos definidos: `EARNING_CREATED`, `REDEMPTION_COMPLETED`, `CONTACT_UPSERTED`, `CAMPAIGN_SENT`
-- Integrar com React Query invalidation automaticamente via listener global
-- Não-bloqueante: todos os handlers executam em microtask
-
-**Arquivos**:
-- Criar `src/lib/eventBus.ts`
-- Criar `src/lib/eventBusQueryBridge.ts` — listener que invalida queries automaticamente
-
----
-
-### 6. Otimização de Renderização
-
-**Problema**: Páginas pesadas (CrmContactsPage, Dashboard) re-renderizam desnecessariamente.
-
-**Solução**:
-- Adicionar `React.memo` em componentes de lista (cards de contato, rows de tabela)
-- Usar `useDeferredValue` para campos de busca em tabelas grandes
-- Implementar virtualização de listas longas usando scroll area existente
-- Skeleton loaders consistentes via componente `DataSkeleton`
-
-**Arquivos**:
-- Criar `src/components/DataSkeleton.tsx`
-- Editar `src/pages/CrmContactsPage.tsx` — useDeferredValue no search
-- Editar `src/pages/Dashboard.tsx` — memo em cards de stats
-
----
-
-### 7. Testes de Integração para Services
-
-**Problema**: Testes existentes (81) são unitários de funções puras. Nenhum teste de integração dos services com Supabase mockado.
-
-**Solução**: Criar testes de integração com mock do Supabase client:
-- `src/modules/crm/__tests__/contactService.test.ts`
-- `src/modules/loyalty/__tests__/earningService.test.ts`
-- `src/modules/vouchers/__tests__/voucherService.test.ts`
-- Usar vitest mock para `@/integrations/supabase/client`
-
-**Arquivos**:
-- Criar 3 arquivos de teste de integração
-- Editar `src/test/setup.ts` — adicionar mock factory para supabase
-
----
-
-### Resumo de Arquivos
-
-| Ação | Arquivo |
-|------|---------|
-| Criar | `src/lib/queryClient.ts` |
-| Criar | `src/lib/queryKeys.ts` |
-| Criar | `src/lib/apiResponse.ts` |
-| Criar | `src/lib/eventBus.ts` |
-| Criar | `src/lib/eventBusQueryBridge.ts` |
-| Criar | `src/modules/crm/schemas.ts` |
-| Criar | `src/modules/loyalty/schemas.ts` |
-| Criar | `src/modules/vouchers/schemas.ts` |
-| Criar | `src/components/DataSkeleton.tsx` |
-| Criar | `src/modules/crm/__tests__/contactService.test.ts` |
-| Criar | `src/modules/loyalty/__tests__/earningService.test.ts` |
-| Criar | `src/modules/vouchers/__tests__/voucherService.test.ts` |
-| Editar | `src/lib/logger.ts` — timers, metrics, alertas |
-| Editar | `src/App.tsx` — queryClient centralizado |
-| Editar | `src/test/setup.ts` — supabase mock factory |
-| Editar | `supabase/functions/mobility-webhook/index.ts` — resposta padronizada |
-| Editar | `supabase/functions/earn-webhook/index.ts` — error codes |
-| Editar | `src/pages/CrmContactsPage.tsx` — useDeferredValue |
-| Editar | `src/pages/Dashboard.tsx` — memo |
-| Editar | `src/modules/vouchers/services/voucherService.ts` — Zod validation |
-| Editar | `src/modules/crm/services/contactService.ts` — Zod validation |
-
-### Impacto Esperado
-
-- **Cache**: ~60% menos queries repetidas via staleTime/gcTime centralizados
-- **Segurança**: Validação Zod em todos os pontos de entrada de dados
-- **Observabilidade**: Métricas de duração/erro por módulo acessíveis via console
-- **Desacoplamento**: Event bus elimina dependências diretas entre módulos
-- **UX**: Skeleton loaders + deferred search = interface nunca "trava"
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 

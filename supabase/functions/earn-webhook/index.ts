@@ -277,12 +277,12 @@ Deno.serve(async (req) => {
   const clientIp = getClientIp(req);
 
   if (req.method !== "POST") {
-    return json({ ok: false, error: "Method not allowed" }, 405);
+    return json({ ok: false, error: "Method not allowed", code: "METHOD_NOT_ALLOWED" }, 405);
   }
 
   const apiKey = req.headers.get("x-api-key");
   if (!apiKey) {
-    return json({ ok: false, error: "Missing x-api-key header" }, 401);
+    return json({ ok: false, error: "Missing x-api-key header", code: "MISSING_API_KEY" }, 401);
   }
 
   const sb = createClient(
@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
     logAudit("EARN_WEBHOOK_AUTH_FAILED", {
       details: { reason: "Invalid or inactive API key", key_prefix: apiKey.substring(0, 11) },
     });
-    return json({ ok: false, error: "Invalid or inactive API key" }, 403);
+    return json({ ok: false, error: "Invalid or inactive API key", code: "INVALID_API_KEY" }, 403);
   }
 
   const brandId = keyRow.brand_id;
@@ -312,7 +312,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Invalid JSON body", api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Invalid JSON body" }, 400);
+    return json({ ok: false, error: "Invalid JSON body", code: "INVALID_JSON" }, 400);
   }
 
   const parsed = parseAndValidateBody(body);
@@ -321,7 +321,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: parsed.error, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: parsed.error }, 400);
+    return json({ ok: false, error: parsed.error, code: "VALIDATION_ERROR" }, 400);
   }
 
   const { cleanCpf, store_id, purchase_value, receipt_code } = parsed;
@@ -340,7 +340,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Store not found or inactive", store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Store not found or inactive for this brand" }, 404);
+    return json({ ok: false, error: "Store not found or inactive for this brand", code: "STORE_NOT_FOUND" }, 404);
   }
 
   // 4. Find customer
@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Customer not found", cpf_masked: `***${cleanCpf.slice(-4)}`, store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Customer not found for this CPF" }, 404);
+    return json({ ok: false, error: "Customer not found for this CPF", code: "CUSTOMER_NOT_FOUND" }, 404);
   }
 
   // 5. Get active points rule
@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "No active points rule", store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "No active points rule for this brand/branch" }, 422);
+    return json({ ok: false, error: "No active points rule for this brand/branch", code: "NO_ACTIVE_RULE" }, 422);
   }
 
   // 5b. Effective points per real
@@ -388,7 +388,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "Below minimum purchase", purchase_value, min_required: Number(rule.min_purchase_to_earn), store_id, customer_id: customer.id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: `Minimum purchase is R$ ${Number(rule.min_purchase_to_earn).toFixed(2)}` }, 422);
+    return json({ ok: false, error: `Minimum purchase is R$ ${Number(rule.min_purchase_to_earn).toFixed(2)}`, code: "BELOW_MIN_PURCHASE" }, 422);
   }
 
   // 7. Calculate points
@@ -401,7 +401,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: dailyCheck.reason, store_id, customer_id: customer.id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: dailyCheck.reason }, 429);
+    return json({ ok: false, error: dailyCheck.reason, code: "DAILY_LIMIT_EXCEEDED" }, 429);
   }
 
   const receiptCheck = await checkReceiptUniqueness(sb, store_id, receipt_code, rule.require_receipt_code);
@@ -410,7 +410,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: receiptCheck.error, receipt_code, store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: receiptCheck.error }, receiptCheck.status!);
+    return json({ ok: false, error: receiptCheck.error, code: "RECEIPT_ERROR" }, receiptCheck.status!);
   }
 
   // 9. Insert earning_event
@@ -446,7 +446,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "earning_events insert failed", error: eventErr.message, store_id, customer_id: customer.id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Failed to create earning event" }, 500);
+    return json({ ok: false, error: "Failed to create earning event", code: "INSERT_ERROR" }, 500);
   }
 
   // 10. Insert ledger entry
@@ -500,6 +500,7 @@ Deno.serve(async (req) => {
 
   return json({
     ok: true,
+    code: "EARN_SUCCESS",
     data: {
       earning_event_id: event.id,
       points_earned: points,
