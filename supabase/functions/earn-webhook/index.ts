@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: "No active points rule", store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "No active points rule for this brand/branch" }, 422);
+    return json({ ok: false, error: "No active points rule for this brand/branch", code: "NO_ACTIVE_RULE" }, 422);
   }
 
   // 5b. Effective points per real
