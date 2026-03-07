@@ -616,20 +616,7 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className={stat.highlight ? "border-primary/50 bg-primary/5" : ""}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              {stat.value === undefined ? (
-                <Skeleton className="h-9 w-20" />
-              ) : (
-                <div className="text-3xl font-bold transition-all duration-300">{stat.value}</div>
-              )}
-              {stat.sub && <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>}
-            </CardContent>
-          </Card>
+          <StatCard key={stat.title} stat={stat} />
         ))}
       </div>
 
