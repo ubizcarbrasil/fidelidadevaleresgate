@@ -83,7 +83,7 @@ export default function TrialSignupPage() {
   })();
 
   const strengthLabel = ["", "Fraca", "Razoável", "Boa", "Forte"];
-  const strengthColor = ["", "bg-destructive", "bg-amber-500", "bg-primary", "bg-green-500"];
+  const strengthColor = ["", "bg-destructive", "bg-amber-500", "bg-primary", "bg-emerald-500"];
 
   const handleProvision = async () => {
     setStep("creating");
