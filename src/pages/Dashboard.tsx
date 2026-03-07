@@ -600,8 +600,8 @@ export default function Dashboard() {
               </div>
               <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais — tudo integrado ao seu programa de fidelidade.</p>
             </div>
-            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => window.open("https://valeresgatacrm.lovable.app/", "_blank", "noopener,noreferrer")}>
-              <ExternalLink className="h-3.5 w-3.5" />
+            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => navigate("/crm")}>
+              <TrendingUp className="h-3.5 w-3.5" />
               Abrir CRM
             </Button>
           </CardContent>

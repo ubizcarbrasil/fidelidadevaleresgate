@@ -107,7 +107,9 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { key: "sidebar.central_acessos", defaultTitle: "Central de Acessos", url: "/access-hub", icon: Eye },
-      { key: "sidebar.crm", defaultTitle: "CRM Estratégico", url: "https://valeresgatacrm.lovable.app/", icon: TrendingUp },
+      { key: "sidebar.crm", defaultTitle: "CRM Estratégico", url: "/crm", icon: TrendingUp },
+      { key: "sidebar.crm_lost", defaultTitle: "Clientes Perdidos", url: "/crm/lost", icon: TrendingUp },
+      { key: "sidebar.crm_potential", defaultTitle: "Clientes Potenciais", url: "/crm/potential", icon: TrendingUp },
     ],
   },
 ];

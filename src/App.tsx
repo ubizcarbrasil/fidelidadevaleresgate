@@ -189,6 +189,9 @@ function AppRoutes() {
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
+          <Route path="crm" element={<CrmDashboardPage />} />
+          <Route path="crm/lost" element={<CrmLostCustomersPage />} />
+          <Route path="crm/potential" element={<CrmPotentialCustomersPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
