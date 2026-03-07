@@ -30,19 +30,24 @@ export default function LandingHowItWorks() {
           </motion.p>
         </motion.div>
 
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {steps.map((s, i) => (
-            <motion.div key={s.title} variants={fadeUp} custom={i + 2} className="text-center">
-              <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 relative">
-                <s.icon className="h-7 w-7 text-primary" />
-                <span className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow">
-                  {i + 1}
-                </span>
-              </div>
-              <h3 className="font-semibold text-lg mb-2">{s.title}</h3>
-              <p className="text-muted-foreground text-sm">{s.desc}</p>
-            </motion.div>
-          ))}
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} className="relative max-w-4xl mx-auto">
+          {/* Connector line (desktop) */}
+          <div className="hidden md:block absolute top-[3.5rem] left-[calc(16.67%+2rem)] right-[calc(16.67%+2rem)] h-0.5 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((s, i) => (
+              <motion.div key={s.title} variants={fadeUp} custom={i + 2} className="text-center relative">
+                <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 relative z-10 border-4 border-background">
+                  <s.icon className="h-7 w-7 text-primary" />
+                  <span className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow">
+                    {i + 1}
+                  </span>
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{s.title}</h3>
+                <p className="text-muted-foreground text-sm">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mt-12">
