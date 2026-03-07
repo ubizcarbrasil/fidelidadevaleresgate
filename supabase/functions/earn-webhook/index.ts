@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
 
   const apiKey = req.headers.get("x-api-key");
   if (!apiKey) {
-    return json({ ok: false, error: "Missing x-api-key header" }, 401);
+    return json({ ok: false, error: "Missing x-api-key header", code: "MISSING_API_KEY" }, 401);
   }
 
   const sb = createClient(
