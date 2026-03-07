@@ -132,7 +132,8 @@ export default function CrmCampaignsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Campanhas" subtitle="Gerencie disparos em massa para seus contatos">
+      <div className="flex items-center justify-between">
+        <PageHeader title="Campanhas" description="Gerencie disparos em massa para seus contatos" />
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" /> Nova Campanha
         </Button>
