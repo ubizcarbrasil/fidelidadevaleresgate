@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const { brand_id, events } = body;
 
     if (!brand_id || !Array.isArray(events) || events.length === 0) {
-      return new Response(JSON.stringify({ error: "brand_id and events[] required" }), {
+      return new Response(JSON.stringify({ ok: false, error: "brand_id and events[] required", code: "INVALID_BODY" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
