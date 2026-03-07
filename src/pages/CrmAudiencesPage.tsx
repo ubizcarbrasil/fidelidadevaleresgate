@@ -61,7 +61,7 @@ export default function CrmAudiencesPage() {
 
       const { count } = await query;
 
-      const { error } = await supabase.from("crm_audiences").insert({
+      const { error } = await supabase.from("crm_audiences").insert([{
         brand_id: currentBrandId!,
         name,
         description,
