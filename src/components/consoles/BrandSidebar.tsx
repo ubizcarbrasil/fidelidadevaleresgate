@@ -163,28 +163,45 @@ export function BrandSidebar() {
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {visibleItems.map((item) => (
-                    <SidebarMenuItem key={item.key}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={
-                          location.pathname === item.url ||
-                          (item.url !== "/" && location.pathname.startsWith(item.url))
-                        }
-                        tooltip={getLabel(item.key)}
-                      >
-                        <NavLink
-                          to={item.url}
-                          end={item.url === "/"}
-                          className="hover:bg-sidebar-accent/50"
-                          activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  {visibleItems.map((item) => {
+                    const isExternal = item.url.startsWith("http");
+                    return (
+                      <SidebarMenuItem key={item.key}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={
+                            !isExternal && (
+                              location.pathname === item.url ||
+                              (item.url !== "/" && location.pathname.startsWith(item.url))
+                            )
+                          }
+                          tooltip={getLabel(item.key)}
                         >
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{getLabel(item.key)}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                          {isExternal ? (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                            >
+                              <item.icon className="h-4 w-4" />
+                              {!collapsed && <span>{getLabel(item.key)}</span>}
+                            </a>
+                          ) : (
+                            <NavLink
+                              to={item.url}
+                              end={item.url === "/"}
+                              className="hover:bg-sidebar-accent/50"
+                              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            >
+                              <item.icon className="h-4 w-4" />
+                              {!collapsed && <span>{getLabel(item.key)}</span>}
+                            </NavLink>
+                          )}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
