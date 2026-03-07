@@ -30,7 +30,7 @@ export default function LandingNextStep() {
             Acesso completo a todas as funcionalidades. Sem cartão de crédito, sem pegadinhas.
           </motion.p>
           <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-sm mb-8">
-            Monte sua plataforma de fidelidade em menos de 2 minutos e comece a fidelizar seus clientes hoje mesmo.
+            Fidelidade + CRM: tudo com sua marca. Monte sua plataforma em menos de 2 minutos e comece a fidelizar seus clientes hoje mesmo.
           </motion.p>
 
           {/* Trust signals */}

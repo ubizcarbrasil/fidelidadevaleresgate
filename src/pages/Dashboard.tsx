@@ -586,6 +586,28 @@ export default function Dashboard() {
       {/* Quick Links & Test Accounts for Brand Admins */}
       {showBrand && !isRoot && <BrandQuickLinks />}
 
+      {/* CRM Card */}
+      {showBrand && !isRoot && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+          <CardContent className="flex items-center gap-4 py-5">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <h3 className="font-bold text-sm">CRM Estratégico</h3>
+                <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais — tudo integrado ao seu programa de fidelidade.</p>
+            </div>
+            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => window.open("https://valeresgatacrm.lovable.app/", "_blank", "noopener,noreferrer")}>
+              <ExternalLink className="h-3.5 w-3.5" />
+              Abrir CRM
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Access Hub */}
       <AccessHubSection consoleScope={consoleScope} />
 

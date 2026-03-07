@@ -5,9 +5,11 @@ import LandingHero from "@/components/landing/LandingHero";
 import LandingPainPoints from "@/components/landing/LandingPainPoints";
 import LandingAppPreview from "@/components/landing/LandingAppPreview";
 import LandingBenefits from "@/components/landing/LandingBenefits";
+import LandingWhiteLabel from "@/components/landing/LandingWhiteLabel";
 import LandingTestimonials from "@/components/landing/LandingTestimonials";
 import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
 import LandingCommercialModel from "@/components/landing/LandingCommercialModel";
+import LandingCRM from "@/components/landing/LandingCRM";
 import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingNextStep from "@/components/landing/LandingNextStep";
 import LandingFooter from "@/components/landing/LandingFooter";
@@ -23,11 +25,11 @@ export default function LandingPage() {
             <span className="font-bold text-lg hidden sm:inline">Vale Resgate</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <a href="#marca-propria" className="hover:text-primary transition-colors">Marca Própria</a>
             <a href="#como-funciona" className="hover:text-primary transition-colors">Como Funciona</a>
-            <a href="#para-quem" className="hover:text-primary transition-colors">Para Quem É?</a>
+            <a href="#crm" className="hover:text-primary transition-colors">CRM</a>
             <a href="#modelo-comercial" className="hover:text-primary transition-colors">Modelo Comercial</a>
             <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
-            <a href="#proximo-passo" className="hover:text-primary transition-colors">Próximo Passo</a>
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
@@ -46,9 +48,11 @@ export default function LandingPage() {
       <LandingPainPoints />
       <LandingAppPreview />
       <LandingBenefits />
+      <LandingWhiteLabel />
       <LandingTestimonials />
       <LandingHowItWorks />
       <LandingCommercialModel />
+      <LandingCRM />
       <LandingFAQ />
       <LandingNextStep />
       <LandingFooter />

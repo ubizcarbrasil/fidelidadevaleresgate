@@ -11,6 +11,7 @@ export default function LandingFooter() {
         <div className="flex gap-6">
           <Link to="/auth" className="hover:text-foreground transition-colors">Entrar</Link>
           <Link to="/trial" className="hover:text-foreground transition-colors">Criar conta</Link>
+          <a href="https://valeresgatacrm.lovable.app/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">CRM Estratégico</a>
         </div>
       </div>
     </footer>
