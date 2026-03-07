@@ -410,7 +410,7 @@ Deno.serve(async (req) => {
       brandId,
       details: { reason: receiptCheck.error, receipt_code, store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: receiptCheck.error }, receiptCheck.status!);
+    return json({ ok: false, error: receiptCheck.error, code: "RECEIPT_ERROR" }, receiptCheck.status!);
   }
 
   // 9. Insert earning_event
