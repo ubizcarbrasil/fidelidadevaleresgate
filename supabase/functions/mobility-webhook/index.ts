@@ -107,9 +107,11 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        success: true,
-        contacts_upserted: contactsUpserted,
-        events_inserted: eventsInserted,
+        ok: true,
+        data: {
+          contacts_upserted: contactsUpserted,
+          events_inserted: eventsInserted,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
