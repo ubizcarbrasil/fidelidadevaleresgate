@@ -95,6 +95,11 @@ const CrmCustomersPage = lazy(() => import("@/pages/CrmCustomersPage"));
 const CrmParetoPage = lazy(() => import("@/pages/CrmParetoPage"));
 const CrmOpportunitiesPage = lazy(() => import("@/pages/CrmOpportunitiesPage"));
 const CrmJourneyPage = lazy(() => import("@/pages/CrmJourneyPage"));
+const CrmContactsPage = lazy(() => import("@/pages/CrmContactsPage"));
+const CrmTierPage = lazy(() => import("@/pages/CrmTierPage"));
+const CrmAudiencesPage = lazy(() => import("@/pages/CrmAudiencesPage"));
+const CrmCampaignsPage = lazy(() => import("@/pages/CrmCampaignsPage"));
+const CrmAnalyticsPage = lazy(() => import("@/pages/CrmAnalyticsPage"));
 
 const queryClient = new QueryClient();
 
