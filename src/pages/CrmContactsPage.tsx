@@ -197,7 +197,7 @@ export default function CrmContactsPage() {
   );
 }
 
-function ContactDetail({ contact, events }: { contact: any; events: any[] }) {
+const ContactDetail = memo(function ContactDetail({ contact, events }: { contact: any; events: any[] }) {
   if (!contact) return null;
 
   return (
