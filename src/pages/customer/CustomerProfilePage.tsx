@@ -103,7 +103,7 @@ export default function CustomerProfilePage() {
         initial="hidden"
         animate="visible"
         className="rounded-[20px] p-5 space-y-4 mb-5 bg-card"
-        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+        style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
         <div>
           <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Nome</Label>
