@@ -574,7 +574,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               </div>
 
               {/* Rules section */}
-              <div className="mx-4 mt-4 rounded-[20px] bg-card p-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
+              <div className="mx-4 mt-4 rounded-[20px] bg-card p-5" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.03)" }}>
                 <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Regras da oferta</h3>
                 <div className="space-y-3">
                   {offer.end_at && (
