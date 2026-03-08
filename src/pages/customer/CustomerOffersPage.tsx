@@ -151,8 +151,8 @@ export default function CustomerOffersPage() {
               onClick={() => setSelectedSegmentId(selectedSegmentId === seg.id ? null : seg.id)}
               className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
               style={{
-                backgroundColor: selectedSegmentId === seg.id ? primary : `${fg}06`,
-                color: selectedSegmentId === seg.id ? "#fff" : `${fg}60`,
+                backgroundColor: selectedSegmentId === seg.id ? primary : "hsl(var(--muted))",
+                color: selectedSegmentId === seg.id ? "#fff" : "hsl(var(--muted-foreground))",
               }}
             >
               {seg.name}
