@@ -139,8 +139,8 @@ export default function CustomerOffersPage() {
             onClick={() => setSelectedSegmentId(null)}
             className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={{
-              backgroundColor: !selectedSegmentId ? primary : `${fg}06`,
-              color: !selectedSegmentId ? "#fff" : `${fg}60`,
+              backgroundColor: !selectedSegmentId ? primary : "hsl(var(--muted))",
+              color: !selectedSegmentId ? "#fff" : "hsl(var(--muted-foreground))",
             }}
           >
             Todas
