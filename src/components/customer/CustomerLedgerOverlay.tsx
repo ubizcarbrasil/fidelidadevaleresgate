@@ -297,7 +297,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
             <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-3">
               <button
                 onClick={onBack}
-                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
+                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
               </button>
