@@ -349,8 +349,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 {/* Product info */}
                 <div className="mx-4 mt-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <Tag className="h-3.5 w-3.5" style={{ color: `${fg}40` }} />
-                    <span className="text-xs" style={{ color: `${fg}50` }}>{offer.stores?.name}</span>
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">{offer.stores?.name}</span>
                   </div>
                   <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                   {offer.description && (
