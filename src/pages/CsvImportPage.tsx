@@ -143,7 +143,7 @@ export default function CsvImportPage() {
 
       // Validate
       const errors: ValidationError[] = [];
-      const validator = importType === "STORES" ? validateStoreRow : validateOfferRow;
+      const validator = importType === "STORES" ? validateStoreRow : importType === "OFFERS" ? validateOfferRow : validateCustomerRow;
       parsed.rows.forEach((row, i) => errors.push(...validator(row, i)));
       setValidationErrors(errors);
       setStep("preview");
