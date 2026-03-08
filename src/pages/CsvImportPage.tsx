@@ -416,6 +416,7 @@ export default function CsvImportPage() {
                   <Download className="h-3 w-3 mr-1" />Template
                 </Button>
               </div>
+            </div>
 
             <div className="space-y-2">
               <Label>Arquivo CSV</Label>
