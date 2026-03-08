@@ -553,7 +553,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </p>
-                        <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>crédito condicionado à compra mínima</p>
+                        <p className="text-[11px] mt-0.5 text-muted-foreground">crédito condicionado à compra mínima</p>
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
