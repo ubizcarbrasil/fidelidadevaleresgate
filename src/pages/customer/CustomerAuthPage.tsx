@@ -125,7 +125,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
                 </div>
               </div>
               <div>
-                <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Telefone</Label>
+                <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Telefone</Label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: `${fg}35` }} />
                   <Input
