@@ -403,8 +403,19 @@ export default function CsvImportPage() {
                   </Badge>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">Badges destacadas são obrigatórias. Separador: ponto e vírgula (;)</p>
-            </div>
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">Badges destacadas são obrigatórias. Separador: ponto e vírgula (;)</p>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const cols = importType === "STORES" ? STORE_COLUMNS : importType === "OFFERS" ? OFFER_COLUMNS : CUSTOMER_COLUMNS;
+                  const blob = new Blob([cols.join(";") + "\n"], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = `template-${importType.toLowerCase()}.csv`; a.click();
+                  URL.revokeObjectURL(url);
+                }}>
+                  <Download className="h-3 w-3 mr-1" />Template
+                </Button>
+              </div>
 
             <div className="space-y-2">
               <Label>Arquivo CSV</Label>
