@@ -131,8 +131,8 @@ export default function CustomerWalletPage() {
                 initial="hidden"
                 animate="visible"
                 whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-3 rounded-[16px] bg-white p-3 transition-shadow hover:shadow-md"
-                style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.03)" }}
+                className="flex items-center gap-3 rounded-[16px] bg-card p-3 transition-shadow hover:shadow-md"
+                style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.03)" }}
               >
                 <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: iconBg }}>
                   {isCredit ? (
