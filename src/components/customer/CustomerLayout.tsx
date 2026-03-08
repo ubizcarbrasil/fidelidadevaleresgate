@@ -240,7 +240,7 @@ export default function CustomerLayout() {
                     animate={{ backgroundColor: isActive ? `${primary}12` : "transparent", scale: isActive ? 1.05 : 1 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : `${fg}45` }} />
+                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }} />
                   </motion.div>
                   <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : `${fg}45` }}>
                     {tab.label}
