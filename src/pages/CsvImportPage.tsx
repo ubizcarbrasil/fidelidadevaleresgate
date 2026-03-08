@@ -37,6 +37,9 @@ const STORE_COLUMNS = ["name", "slug", "logo_url", "category", "address", "whats
 const OFFER_REQUIRED = ["title", "store_name"];
 const OFFER_COLUMNS = ["store_name", "store_slug", "title", "image_url", "description", "value_rescue", "min_purchase", "start_at", "end_at", "allowed_weekdays", "allowed_hours", "max_daily_redemptions", "category", "status", "is_active"];
 
+const CUSTOMER_REQUIRED = ["name"];
+const CUSTOMER_COLUMNS = ["name", "phone", "cpf", "email", "points_balance", "money_balance", "is_active"];
+
 const WEEKDAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 
 interface ValidationError { row: number; field: string; message: string; }
