@@ -285,11 +285,11 @@ function RedemptionCard({
             </span>
           </div>
           {isProduct && purchaseValue > 0 ? (
-            <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
+            <p className="text-xs mt-0.5 text-muted-foreground">
               {formatCurrency(purchaseValue)}
             </p>
           ) : !isProduct && creditValue > 0 ? (
-            <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
+            <p className="text-xs mt-0.5 text-muted-foreground">
               Vale Resgate {formatCurrency(creditValue)}
               {minPurchase > 0 && <span> · Compra mín. {formatCurrency(minPurchase)}</span>}
             </p>
