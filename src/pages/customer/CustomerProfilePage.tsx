@@ -201,7 +201,7 @@ export default function CustomerProfilePage() {
           >
             <Icon className="h-4.5 w-4.5 text-muted-foreground" />
             <span className="flex-1">{label}</span>
-            <ChevronRight className="h-4 w-4" style={{ color: `${fg}25` }} />
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
           </motion.button>
         ))}
       </motion.div>
