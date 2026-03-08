@@ -436,7 +436,7 @@ export default function CsvImportPage() {
               <Label>Colunas esperadas</Label>
               <div className="flex flex-wrap gap-1.5">
                 {expectedColumns.map(c => (
-                  <Badge key={c} variant={(importType === "STORES" ? STORE_REQUIRED : importType === "OFFERS" ? OFFER_REQUIRED : CUSTOMER_REQUIRED).includes(c) ? "default" : "outline"}>
+                  <Badge key={c} variant={(importType === "STORES" ? STORE_REQUIRED : importType === "OFFERS" ? OFFER_REQUIRED : importType === "CUSTOMERS" ? CUSTOMER_REQUIRED : CRM_CONTACT_REQUIRED).includes(c) ? "default" : "outline"}>
                     {c}
                   </Badge>
                 ))}
