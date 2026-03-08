@@ -253,7 +253,7 @@ export default function CsvImportPage() {
             result.errors.push({ row: i + 2, message: err.message });
           }
         }
-      } else {
+      } else if (importType === "CUSTOMERS") {
         // CUSTOMERS
         for (let i = 0; i < csvData.rows.length; i++) {
           const row = csvData.rows[i];
@@ -282,6 +282,31 @@ export default function CsvImportPage() {
                 source: "STORE_UPLOAD",
               });
             }
+            result.success++;
+          } catch (err: any) {
+            result.errors.push({ row: i + 2, message: err.message });
+          }
+        }
+      } else {
+        // CRM_CONTACTS
+        for (let i = 0; i < csvData.rows.length; i++) {
+          const row = csvData.rows[i];
+          try {
+            const tags = row.tags?.trim() ? row.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+            const { error } = await supabase.from("crm_contacts").insert({
+              brand_id: brandId,
+              branch_id: branchId,
+              name: row.name.trim(),
+              phone: row.phone?.trim() || null,
+              email: row.email?.trim() || null,
+              cpf: row.cpf?.trim() || null,
+              gender: row.gender?.trim() || null,
+              os_platform: row.os_platform?.trim() || null,
+              source: row.source?.trim() || "CSV_IMPORT",
+              tags_json: tags,
+              is_active: row.is_active ? parseBool(row.is_active) : true,
+            });
+            if (error) throw error;
             result.success++;
           } catch (err: any) {
             result.errors.push({ row: i + 2, message: err.message });
