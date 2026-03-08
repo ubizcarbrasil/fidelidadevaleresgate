@@ -189,7 +189,7 @@ export default function CsvImportPage() {
             result.errors.push({ row: i + 2, message: err.message });
           }
         }
-      } else {
+      } else if (importType === "OFFERS") {
         // OFFERS: need store lookup
         const { data: existingStores } = await supabase.from("stores").select("id, name, slug").eq("brand_id", brandId).eq("branch_id", branchId);
         const storeByName = new Map((existingStores || []).map(s => [s.name.toLowerCase(), s.id]));
