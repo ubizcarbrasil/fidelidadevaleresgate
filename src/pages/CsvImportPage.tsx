@@ -255,7 +255,7 @@ export default function CsvImportPage() {
           }
         }
       } else if (importType === "CUSTOMERS") {
-        // CUSTOMERS
+        // CUSTOMERS → always mirror to crm_contacts
         for (let i = 0; i < csvData.rows.length; i++) {
           const row = csvData.rows[i];
           try {
@@ -271,7 +271,8 @@ export default function CsvImportPage() {
             }).select("id").single();
             if (error) throw error;
 
-            if (autoCreateCrmContacts && newCustomer) {
+            // Always create CRM contact mirror
+            if (newCustomer) {
               await supabase.from("crm_contacts").insert({
                 brand_id: brandId,
                 branch_id: branchId,
@@ -289,14 +290,31 @@ export default function CsvImportPage() {
           }
         }
       } else {
-        // CRM_CONTACTS
+        // CRM_CONTACTS → always mirror to customers
         for (let i = 0; i < csvData.rows.length; i++) {
           const row = csvData.rows[i];
           try {
             const tags = row.tags?.trim() ? row.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+            const effectiveBranchId = branchId || null;
+
+            // Create customer mirror first (branch_id required for customers)
+            let customerId: string | null = null;
+            if (effectiveBranchId) {
+              const { data: newCustomer } = await supabase.from("customers").insert({
+                name: row.name.trim(),
+                phone: row.phone?.trim() || null,
+                cpf: row.cpf?.trim() || null,
+                brand_id: brandId,
+                branch_id: effectiveBranchId,
+                is_active: row.is_active ? parseBool(row.is_active) : true,
+              }).select("id").single();
+              customerId = newCustomer?.id || null;
+            }
+
             const { error } = await supabase.from("crm_contacts").insert({
               brand_id: brandId,
-              branch_id: branchId,
+              branch_id: effectiveBranchId,
+              customer_id: customerId,
               name: row.name.trim(),
               phone: row.phone?.trim() || null,
               email: row.email?.trim() || null,
