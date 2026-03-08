@@ -541,7 +541,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                 {offer.description && (
-                  <p className="text-sm leading-relaxed mb-4" style={{ color: `${fg}60` }}>{offer.description}</p>
+                  <p className="text-sm leading-relaxed mb-4 text-muted-foreground">{offer.description}</p>
                 )}
 
                 {/* Vale Resgate value highlight */}
