@@ -153,9 +153,12 @@ export default function CustomerLayout() {
 
   return (
     <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
-      <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody }}>
-        {/* Modern Header */}
-        <header className="sticky top-0 z-50">
+      <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
+        {/* Modern Header — auto-hides on scroll */}
+        <header
+          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform"
+          style={{ transform: headerVisible ? "translateY(0)" : "translateY(-100%)" }}
+        >
           {/* Top bar with brand tint */}
           <div
             className="pt-2 pb-0 bg-card"
