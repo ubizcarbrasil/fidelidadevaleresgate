@@ -145,7 +145,7 @@ export default function CustomerWalletPage() {
                   <p className="text-sm font-semibold truncate">
                     {entry.reason || (isCredit ? "Crédito de pontos" : "Débito de pontos")}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: `${fg}40` }}>
+                  <p className="text-xs mt-0.5 text-muted-foreground">
                     {new Date(entry.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>

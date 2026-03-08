@@ -480,7 +480,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           {offer.end_at && (
                             <div
                               className="flex items-center gap-0.5 text-[10px]"
-                              style={{ color: `${fg}35` }}
+                              className="flex items-center gap-0.5 text-[10px] text-muted-foreground"
                             >
                               <Clock className="h-2.5 w-2.5" />
                               {new Date(offer.end_at).toLocaleDateString("pt-BR")}

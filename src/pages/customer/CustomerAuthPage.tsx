@@ -206,8 +206,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
         {onSkip && (
           <button
             onClick={onSkip}
-            className="mt-5 w-full text-center text-sm flex items-center justify-center gap-1.5 py-2"
-            style={{ color: `${fg}40` }}
+            className="mt-5 w-full text-center text-sm flex items-center justify-center gap-1.5 py-2 text-muted-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Continuar sem login

@@ -242,7 +242,7 @@ export default function CustomerLayout() {
                   >
                     <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }} />
                   </motion.div>
-                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : `${fg}45` }}>
+                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }}>
                     {tab.label}
                   </span>
                 </button>

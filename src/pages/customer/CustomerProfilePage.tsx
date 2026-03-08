@@ -354,7 +354,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{offer.title}</p>
                 {offer.stores?.name && (
-                  <p className="text-[10px] truncate" style={{ color: `${fg}45` }}>{offer.stores.name}</p>
+                  <p className="text-[10px] truncate text-muted-foreground">{offer.stores.name}</p>
                 )}
               </div>
               {Number(offer.value_rescue) > 0 && (
