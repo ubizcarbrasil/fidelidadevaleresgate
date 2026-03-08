@@ -110,7 +110,7 @@ export default function CustomerProfilePage() {
           <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
-          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Telefone</Label>
+          <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Telefone</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
