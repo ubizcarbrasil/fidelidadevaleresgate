@@ -199,7 +199,7 @@ export default function CustomerProfilePage() {
             whileTap={{ scale: 0.98 }}
             className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors ${idx === 0 ? "border-b border-border/50" : ""}`}
           >
-            <Icon className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+            <Icon className="h-4.5 w-4.5 text-muted-foreground" />
             <span className="flex-1">{label}</span>
             <ChevronRight className="h-4 w-4" style={{ color: `${fg}25` }} />
           </motion.button>
