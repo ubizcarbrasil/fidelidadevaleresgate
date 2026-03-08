@@ -156,8 +156,11 @@ export default function CustomerLayout() {
       <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
         {/* Modern Header — auto-hides on scroll */}
         <header
-          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform"
-          style={{ transform: headerVisible ? "translateY(0)" : "translateY(-100%)" }}
+          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform bg-background"
+          style={{
+            transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
+            boxShadow: headerVisible ? "0 1px 8px hsl(var(--foreground) / 0.06)" : "none",
+          }}
         >
           {/* Top bar with solid background + subtle brand tint */}
           <div
