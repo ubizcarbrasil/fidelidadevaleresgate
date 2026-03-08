@@ -100,6 +100,24 @@ export default function CustomerLayout() {
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
 
+  // Auto-hide header on scroll down, show on scroll up
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const currentY = el.scrollTop;
+    const delta = currentY - lastScrollY.current;
+    if (delta > 8 && currentY > 60) {
+      setHeaderVisible(false);
+    } else if (delta < -5) {
+      setHeaderVisible(true);
+    }
+    lastScrollY.current = currentY;
+  }, []);
+
   // Initialize dark mode from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("customer_dark_mode");
