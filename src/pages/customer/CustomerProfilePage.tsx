@@ -340,7 +340,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
               key={offer.id}
               whileTap={{ scale: 0.97 }}
               onClick={() => openOffer(offer)}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-black/[0.02] transition-colors text-left"
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left"
             >
               <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: `${primary}08` }}>
                 {offer.image_url ? (
