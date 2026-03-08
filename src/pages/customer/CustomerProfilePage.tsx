@@ -260,7 +260,7 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
       <span className="flex-1">{isDark ? "Modo claro" : "Modo escuro"}</span>
       <div
         className="relative h-7 w-12 rounded-full transition-colors duration-300"
-        style={{ backgroundColor: isDark ? primary : `${fg}20` }}
+        style={{ backgroundColor: isDark ? primary : "hsl(var(--muted-foreground) / 0.2)" }}
       >
         <motion.div
           className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm"
