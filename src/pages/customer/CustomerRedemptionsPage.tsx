@@ -168,7 +168,7 @@ export default function CustomerRedemptionsPage() {
         {isLoading ? (
           <div className="px-5 space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-2xl h-40 animate-pulse" style={{ backgroundColor: "#F2F2F7" }} />
+              <div key={i} className="rounded-2xl h-40 animate-pulse bg-muted" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
