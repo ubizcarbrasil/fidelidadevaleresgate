@@ -250,12 +250,12 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={toggle}
-      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-black/[0.02] transition-colors"
+      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
     >
       {isDark ? (
-        <Sun className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+        <Sun className="h-4.5 w-4.5 text-muted-foreground" />
       ) : (
-        <Moon className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+        <Moon className="h-4.5 w-4.5 text-muted-foreground" />
       )}
       <span className="flex-1">{isDark ? "Modo claro" : "Modo escuro"}</span>
       <div
