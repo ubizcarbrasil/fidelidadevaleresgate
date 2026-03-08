@@ -252,7 +252,7 @@ function RedemptionCard({
       {/* Card header */}
       <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-border/50">
         <div>
-          <span className="text-[10px] font-bold tracking-wider block" style={{ color: `${fg}40` }}>RESGATE</span>
+          <span className="text-[10px] font-bold tracking-wider block text-muted-foreground">RESGATE</span>
           <span className="text-xs font-mono font-semibold" style={{ color: fg }}>
             #PED{r.id.replace(/-/g, "").slice(0, 14).toUpperCase()}
           </span>
