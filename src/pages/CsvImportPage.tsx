@@ -40,6 +40,9 @@ const OFFER_COLUMNS = ["store_name", "store_slug", "title", "image_url", "descri
 const CUSTOMER_REQUIRED = ["name"];
 const CUSTOMER_COLUMNS = ["name", "phone", "cpf", "email", "points_balance", "money_balance", "is_active"];
 
+const CRM_CONTACT_REQUIRED = ["name"];
+const CRM_CONTACT_COLUMNS = ["name", "phone", "email", "cpf", "gender", "os_platform", "source", "tags", "is_active"];
+
 const WEEKDAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 
 interface ValidationError { row: number; field: string; message: string; }
@@ -76,6 +79,15 @@ function validateCustomerRow(row: Record<string, string>, idx: number): Validati
   return errors;
 }
 
+function validateCrmContactRow(row: Record<string, string>, idx: number): ValidationError[] {
+  const errors: ValidationError[] = [];
+  if (!row.name?.trim()) errors.push({ row: idx + 2, field: "name", message: "Nome é obrigatório" });
+  if (row.is_active && !["true", "false", "1", "0", "sim", "não", "nao", "yes", "no", ""].includes(row.is_active.toLowerCase())) {
+    errors.push({ row: idx + 2, field: "is_active", message: "Valor inválido (use true/false)" });
+  }
+  return errors;
+}
+
 function parseBool(val: string): boolean {
   return ["true", "1", "sim", "yes"].includes(val.toLowerCase().trim());
 }
@@ -89,7 +101,7 @@ function slugify(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-type ImportType = "STORES" | "OFFERS" | "CUSTOMERS";
+type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS";
 type Step = "config" | "preview" | "importing" | "done";
 
 export default function CsvImportPage() {
@@ -128,7 +140,7 @@ export default function CsvImportPage() {
     enabled: !!brandId,
   });
 
-  const expectedColumns = importType === "STORES" ? STORE_COLUMNS : importType === "OFFERS" ? OFFER_COLUMNS : CUSTOMER_COLUMNS;
+  const expectedColumns = importType === "STORES" ? STORE_COLUMNS : importType === "OFFERS" ? OFFER_COLUMNS : importType === "CUSTOMERS" ? CUSTOMER_COLUMNS : CRM_CONTACT_COLUMNS;
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -143,7 +155,7 @@ export default function CsvImportPage() {
 
       // Validate
       const errors: ValidationError[] = [];
-      const validator = importType === "STORES" ? validateStoreRow : importType === "OFFERS" ? validateOfferRow : validateCustomerRow;
+      const validator = importType === "STORES" ? validateStoreRow : importType === "OFFERS" ? validateOfferRow : importType === "CUSTOMERS" ? validateCustomerRow : validateCrmContactRow;
       parsed.rows.forEach((row, i) => errors.push(...validator(row, i)));
       setValidationErrors(errors);
       setStep("preview");
@@ -153,7 +165,8 @@ export default function CsvImportPage() {
 
   const importMutation = useMutation({
     mutationFn: async () => {
-      if (!csvData || !user || !brandId || !branchId) throw new Error("Dados insuficientes");
+      if (!csvData || !user || !brandId) throw new Error("Dados insuficientes");
+      if (importType !== "CRM_CONTACTS" && !branchId) throw new Error("Selecione uma filial");
 
       setStep("importing");
       const result = { success: 0, skipped: 0, errors: [] as { row: number; message: string }[] };
@@ -241,7 +254,7 @@ export default function CsvImportPage() {
             result.errors.push({ row: i + 2, message: err.message });
           }
         }
-      } else {
+      } else if (importType === "CUSTOMERS") {
         // CUSTOMERS
         for (let i = 0; i < csvData.rows.length; i++) {
           const row = csvData.rows[i];
@@ -275,6 +288,31 @@ export default function CsvImportPage() {
             result.errors.push({ row: i + 2, message: err.message });
           }
         }
+      } else {
+        // CRM_CONTACTS
+        for (let i = 0; i < csvData.rows.length; i++) {
+          const row = csvData.rows[i];
+          try {
+            const tags = row.tags?.trim() ? row.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+            const { error } = await supabase.from("crm_contacts").insert({
+              brand_id: brandId,
+              branch_id: branchId,
+              name: row.name.trim(),
+              phone: row.phone?.trim() || null,
+              email: row.email?.trim() || null,
+              cpf: row.cpf?.trim() || null,
+              gender: row.gender?.trim() || null,
+              os_platform: row.os_platform?.trim() || null,
+              source: row.source?.trim() || "CSV_IMPORT",
+              tags_json: tags,
+              is_active: row.is_active ? parseBool(row.is_active) : true,
+            });
+            if (error) throw error;
+            result.success++;
+          } catch (err: any) {
+            result.errors.push({ row: i + 2, message: err.message });
+          }
+        }
       }
 
       // Update job
@@ -291,7 +329,7 @@ export default function CsvImportPage() {
       await supabase.from("audit_logs").insert({
         actor_user_id: user.id,
         action: "CSV_IMPORT",
-        entity_type: importType === "STORES" ? "stores" : importType === "OFFERS" ? "offers" : "customers",
+        entity_type: importType === "STORES" ? "stores" : importType === "OFFERS" ? "offers" : importType === "CUSTOMERS" ? "customers" : "crm_contacts",
         details_json: { brand_id: brandId, branch_id: branchId, type: importType, success: result.success, errors: result.errors.length },
       });
 
@@ -351,6 +389,7 @@ export default function CsvImportPage() {
                      <SelectItem value="STORES">Lojas</SelectItem>
                      <SelectItem value="OFFERS">Ofertas</SelectItem>
                      <SelectItem value="CUSTOMERS">Clientes</SelectItem>
+                     <SelectItem value="CRM_CONTACTS">Contatos CRM</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -398,7 +437,7 @@ export default function CsvImportPage() {
               <Label>Colunas esperadas</Label>
               <div className="flex flex-wrap gap-1.5">
                 {expectedColumns.map(c => (
-                  <Badge key={c} variant={(importType === "STORES" ? STORE_REQUIRED : importType === "OFFERS" ? OFFER_REQUIRED : CUSTOMER_REQUIRED).includes(c) ? "default" : "outline"}>
+                  <Badge key={c} variant={(importType === "STORES" ? STORE_REQUIRED : importType === "OFFERS" ? OFFER_REQUIRED : importType === "CUSTOMERS" ? CUSTOMER_REQUIRED : CRM_CONTACT_REQUIRED).includes(c) ? "default" : "outline"}>
                     {c}
                   </Badge>
                 ))}
