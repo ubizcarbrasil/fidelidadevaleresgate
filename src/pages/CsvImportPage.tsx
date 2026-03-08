@@ -114,7 +114,7 @@ export default function CsvImportPage() {
   const [brandId, setBrandId] = useState(currentBrandId || "");
   const [branchId, setBranchId] = useState(currentBranchId || "");
   const [autoCreateStores, setAutoCreateStores] = useState(true);
-  const [autoCreateCrmContacts, setAutoCreateCrmContacts] = useState(true);
+  
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: Record<string, string>[] } | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; errors: { row: number; message: string }[] } | null>(null);
