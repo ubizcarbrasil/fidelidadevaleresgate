@@ -11,6 +11,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Rate limiting: 30 requests per 60s per IP
+  try {
+    const rlSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const rlKey = rateLimitKey("mobility-webhook", req);
+    const rl = await checkRateLimit(rlSb, rlKey, { maxRequests: 30, windowSeconds: 60 });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+  } catch (e) {
+    console.error("Rate limit check failed (allowing):", e);
+  }
+
   try {
     // Auth via MOBILITY_API_SECRET header
     const authHeader = req.headers.get("x-api-secret");

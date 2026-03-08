@@ -281,6 +281,12 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "Method not allowed", code: "METHOD_NOT_ALLOWED" }, 405);
   }
 
+  // Rate limiting: 30 requests per 60s per IP
+  const rlSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const rlKey = rateLimitKey("earn-webhook", req);
+  const rl = await checkRateLimit(rlSb, rlKey, { maxRequests: 30, windowSeconds: 60 });
+  if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
   const apiKey = req.headers.get("x-api-key");
   if (!apiKey) {
     return json({ ok: false, error: "Missing x-api-key header", code: "MISSING_API_KEY" }, 401);
