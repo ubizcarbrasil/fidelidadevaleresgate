@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 // ── CORS ────────────────────────────────────────────────────────────────
 const corsHeaders = {
@@ -421,6 +422,12 @@ Deno.serve(async (req) => {
   // Auth gate
   const authErr = requireAgentAuth(req);
   if (authErr) return authErr;
+
+  // Rate limiting: 100 requests per 60s per IP
+  const rlSb = getSupabase();
+  const rlKey = rateLimitKey("agent-api", req);
+  const rl = await checkRateLimit(rlSb, rlKey, { maxRequests: 100, windowSeconds: 60 });
+  if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
   const segments = parsePath(req.url);
   const method = req.method;

@@ -2437,6 +2437,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_entries: {
+        Row: {
+          id: string
+          key: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       redemptions: {
         Row: {
           branch_id: string
@@ -3576,6 +3597,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      rate_limit_cleanup: { Args: never; Returns: undefined }
       user_has_permission: {
         Args: {
           _permission_key: string
