@@ -123,8 +123,8 @@ export default function CustomerRedemptionsPage() {
 
         {/* Search */}
         <div className="px-5 mb-3">
-          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5" style={{ backgroundColor: "#F2F2F7" }}>
-            <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
+          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted">
+            <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
