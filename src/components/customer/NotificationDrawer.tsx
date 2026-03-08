@@ -59,7 +59,7 @@ export default function NotificationDrawer({ open, onClose }: NotificationDrawer
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[61] max-h-[80vh] rounded-t-[24px] bg-white overflow-hidden flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-[61] max-h-[80vh] rounded-t-[24px] bg-card overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
