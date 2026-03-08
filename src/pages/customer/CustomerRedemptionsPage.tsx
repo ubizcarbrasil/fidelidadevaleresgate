@@ -108,9 +108,9 @@ export default function CustomerRedemptionsPage() {
           </div>
           {/* Balance card */}
           <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
-            <span className="text-white/80 text-sm font-medium">Saldo disponível</span>
+            <span className="text-white/80 text-sm font-medium">Seus pontos</span>
             <span className="text-white text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-              {formatCurrency(customer?.money_balance || 0)}
+              {Number(customer?.points_balance || 0).toLocaleString("pt-BR")} <span className="text-sm font-normal text-white/70">pts</span>
             </span>
           </div>
         </div>
