@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { Bell, Search, Wallet } from "lucide-react";
