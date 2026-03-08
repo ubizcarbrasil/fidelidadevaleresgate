@@ -92,7 +92,7 @@ export default function CustomerProfilePage() {
         </div>
         <div>
           <p className="font-bold text-lg" style={{ fontFamily: fontHeading }}>{name || "Cliente"}</p>
-          <p className="text-sm" style={{ color: `${fg}50` }}>{user?.email}</p>
+          <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
       </motion.div>
 
