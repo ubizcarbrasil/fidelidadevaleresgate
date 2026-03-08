@@ -346,7 +346,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           const catalogConfig = (store as any).store_catalog_config_json as any;
           const tabLabel = catalogConfig?.tab_label || "Catálogo";
           return (
-            <div className="flex gap-1.5 mx-4 mt-5 bg-white/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+            <div className="flex gap-1.5 mx-4 mt-5 bg-card/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.04)" }}>
               <button
                 onClick={() => setActiveTab("ofertas")}
                 className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
