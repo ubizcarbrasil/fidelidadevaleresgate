@@ -135,7 +135,7 @@ export default function CustomerProfilePage() {
         >
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="h-4 w-4" style={{ color: primary }} />
-            <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Filial</span>
+            <span className="text-sm font-bold text-muted-foreground">Filial</span>
           </div>
           <div className="space-y-2">
             {branches.map((branch) => {
