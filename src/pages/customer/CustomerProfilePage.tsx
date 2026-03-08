@@ -114,7 +114,7 @@ export default function CustomerProfilePage() {
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
-          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Email</Label>
+          <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Email</Label>
           <Input value={user?.email || ""} disabled className="rounded-xl h-11 border-0 opacity-60 bg-muted" />
         </div>
         <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-2xl font-bold text-sm" style={{ backgroundColor: primary, color: "#fff" }}>
