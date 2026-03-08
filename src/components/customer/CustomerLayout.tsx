@@ -159,11 +159,12 @@ export default function CustomerLayout() {
           className="sticky top-0 z-50 transition-transform duration-300 will-change-transform"
           style={{ transform: headerVisible ? "translateY(0)" : "translateY(-100%)" }}
         >
-          {/* Top bar with brand tint */}
+          {/* Top bar with solid background + subtle brand tint */}
           <div
-            className="pt-2 pb-0 bg-card"
+            className="pt-2 pb-0"
             style={{
-              background: `linear-gradient(180deg, ${primary}22 0%, ${primary}10 60%, transparent 100%)`,
+              background: `linear-gradient(180deg, ${primary}18 0%, ${primary}08 60%, hsl(var(--background)) 100%)`,
+              backgroundColor: "hsl(var(--background))",
             }}
           >
             <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
