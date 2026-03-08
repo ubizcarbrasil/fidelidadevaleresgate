@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { Bell, Search, Wallet } from "lucide-react";
@@ -100,6 +100,24 @@ export default function CustomerLayout() {
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
 
+  // Auto-hide header on scroll down, show on scroll up
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const currentY = el.scrollTop;
+    const delta = currentY - lastScrollY.current;
+    if (delta > 8 && currentY > 60) {
+      setHeaderVisible(false);
+    } else if (delta < -5) {
+      setHeaderVisible(true);
+    }
+    lastScrollY.current = currentY;
+  }, []);
+
   // Initialize dark mode from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("customer_dark_mode");
@@ -135,9 +153,12 @@ export default function CustomerLayout() {
 
   return (
     <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
-      <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody }}>
-        {/* Modern Header */}
-        <header className="sticky top-0 z-50">
+      <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
+        {/* Modern Header — auto-hides on scroll */}
+        <header
+          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform"
+          style={{ transform: headerVisible ? "translateY(0)" : "translateY(-100%)" }}
+        >
           {/* Top bar with brand tint */}
           <div
             className="pt-2 pb-0 bg-card"
@@ -198,7 +219,12 @@ export default function CustomerLayout() {
         </header>
 
         {/* Content with tab transition */}
-        <main className="flex-1 pb-24 overflow-y-auto">
+        <main
+          ref={mainRef}
+          onScroll={handleScroll}
+          className="flex-1 pb-24 overflow-y-auto"
+          style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
