@@ -114,14 +114,13 @@ export default function CustomerAuthPage({ onSkip }: Props) {
               <div>
                 <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Nome</Label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: `${fg}35` }} />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome"
                     required
-                    className="pl-10 h-12 rounded-xl border-0"
-                    style={{ backgroundColor: "#F2F2F7" }}
+                    className="pl-10 h-12 rounded-xl border-0 bg-muted"
                   />
                 </div>
               </div>
