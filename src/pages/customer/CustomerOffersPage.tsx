@@ -121,7 +121,7 @@ export default function CustomerOffersPage() {
       <div
         className="flex items-center gap-2.5 rounded-full px-4 py-2.5 mb-4 bg-muted"
       >
-        <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
+        <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <input
           type="text"
           value={query}
