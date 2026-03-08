@@ -478,7 +478,6 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           )}
                           {offer.end_at && (
                             <div
-                              className="flex items-center gap-0.5 text-[10px]"
                               className="flex items-center gap-0.5 text-[10px] text-muted-foreground"
                             >
                               <Clock className="h-2.5 w-2.5" />
