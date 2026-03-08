@@ -52,6 +52,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
@@ -152,7 +158,7 @@ export default function CustomerLayout() {
                 <BranchPickerSheet />
                 <button
                   onClick={() => setNotifOpen(true)}
-                  className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
+                  className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
                 >
                   <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                   {unreadCount > 0 && (
@@ -165,7 +171,7 @@ export default function CustomerLayout() {
                   )}
                 </button>
                 <button
-                  className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
+                  className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
                   onClick={() => setActiveTab("wallet")}
                 >
                   <Wallet className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
@@ -182,8 +188,8 @@ export default function CustomerLayout() {
                   boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                <Search className="h-5 w-5 flex-shrink-0" style={{ color: `${fg}40` }} />
-                <span className="text-sm font-medium" style={{ color: `${fg}35` }}>
+                <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground/70">
                   Busque por parceiros e ofertas
                 </span>
               </button>
@@ -211,7 +217,7 @@ export default function CustomerLayout() {
         </main>
 
         {/* Bottom Tab Bar */}
-        <nav className="fixed bottom-0 inset-x-0 z-50 bg-card" style={{ boxShadow: "0 -4px 20px rgba(0,0,0,0.06)" }}>
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-card" style={{ boxShadow: "0 -4px 20px hsl(var(--foreground) / 0.06)" }}>
           <div className="max-w-lg mx-auto flex">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
@@ -234,9 +240,9 @@ export default function CustomerLayout() {
                     animate={{ backgroundColor: isActive ? `${primary}12` : "transparent", scale: isActive ? 1.05 : 1 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : `${fg}45` }} />
+                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }} />
                   </motion.div>
-                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : `${fg}45` }}>
+                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }}>
                     {tab.label}
                   </span>
                 </button>

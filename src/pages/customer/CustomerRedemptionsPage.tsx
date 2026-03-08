@@ -15,6 +15,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 type StatusFilter = "ALL" | "PENDING" | "USED" | "EXPIRED";
 
 const STATUS_LABELS: Record<StatusFilter, string> = {
@@ -117,8 +123,8 @@ export default function CustomerRedemptionsPage() {
 
         {/* Search */}
         <div className="px-5 mb-3">
-          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5" style={{ backgroundColor: "#F2F2F7" }}>
-            <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
+          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted">
+            <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -139,16 +145,16 @@ export default function CustomerRedemptionsPage() {
                 onClick={() => setFilter(key)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
                 style={{
-                  backgroundColor: active ? primary : "#F2F2F7",
-                  color: active ? "#fff" : `${fg}80`,
+                  backgroundColor: active ? primary : "hsl(var(--muted))",
+                  color: active ? "#fff" : "hsl(var(--muted-foreground))",
                 }}
               >
                 {STATUS_LABELS[key]}
                 <span
                   className="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                   style={{
-                    backgroundColor: active ? "rgba(255,255,255,0.25)" : `${fg}10`,
-                    color: active ? "#fff" : `${fg}60`,
+                    backgroundColor: active ? "rgba(255,255,255,0.25)" : "hsl(var(--foreground) / 0.06)",
+                    color: active ? "#fff" : "hsl(var(--muted-foreground))",
                   }}
                 >
                   {counts[key]}
@@ -162,7 +168,7 @@ export default function CustomerRedemptionsPage() {
         {isLoading ? (
           <div className="px-5 space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-2xl h-40 animate-pulse" style={{ backgroundColor: "#F2F2F7" }} />
+              <div key={i} className="rounded-2xl h-40 animate-pulse bg-muted" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -244,9 +250,9 @@ function RedemptionCard({
   return (
     <div className="rounded-2xl overflow-hidden bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.06)" }}>
       {/* Card header */}
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${fg}08` }}>
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-border/50">
         <div>
-          <span className="text-[10px] font-bold tracking-wider block" style={{ color: `${fg}40` }}>RESGATE</span>
+          <span className="text-[10px] font-bold tracking-wider block text-muted-foreground">RESGATE</span>
           <span className="text-xs font-mono font-semibold" style={{ color: fg }}>
             #PED{r.id.replace(/-/g, "").slice(0, 14).toUpperCase()}
           </span>
@@ -279,11 +285,11 @@ function RedemptionCard({
             </span>
           </div>
           {isProduct && purchaseValue > 0 ? (
-            <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
+            <p className="text-xs mt-0.5 text-muted-foreground">
               {formatCurrency(purchaseValue)}
             </p>
           ) : !isProduct && creditValue > 0 ? (
-            <p className="text-xs mt-0.5" style={{ color: `${fg}60` }}>
+            <p className="text-xs mt-0.5 text-muted-foreground">
               Vale Resgate {formatCurrency(creditValue)}
               {minPurchase > 0 && <span> · Compra mín. {formatCurrency(minPurchase)}</span>}
             </p>
@@ -387,14 +393,14 @@ function RedemptionCard({
       </div>
 
       {/* Credit + dates */}
-      <div className="px-4 py-3 space-y-1" style={{ borderTop: `1px solid ${fg}06` }}>
+      <div className="px-4 py-3 space-y-1 border-t border-border/50">
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-[11px] font-semibold block" style={{ color: `${fg}50` }}>
+            <span className="text-[11px] font-semibold block text-muted-foreground">
               CRÉDITO DO {isProduct ? "PRODUTO" : "CUPOM"}
             </span>
             {!isProduct && minPurchase > 0 && (
-              <span className="text-[10px]" style={{ color: `${fg}40` }}>
+              <span className="text-[10px] text-muted-foreground">
                 Crédito condicionado à compra mínima de {formatCurrency(minPurchase)}
               </span>
             )}
@@ -403,13 +409,13 @@ function RedemptionCard({
             {formatCurrency(creditValue)}
           </span>
         </div>
-        <div className="flex justify-between text-[11px]" style={{ color: `${fg}50` }}>
+        <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>Resgate:</span>
           <span>{formatDate(r.created_at)}</span>
         </div>
         {r.expires_at && (
           <div className="flex justify-between text-[11px]">
-            <span style={{ color: `${fg}50` }}>Expira:</span>
+            <span className="text-muted-foreground">Expira:</span>
             <span style={{ color: r.status === "EXPIRED" ? "#DC2626" : primary }}>
               {formatDate(r.expires_at)}
             </span>

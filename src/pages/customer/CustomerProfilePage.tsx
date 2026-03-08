@@ -18,6 +18,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 const sectionVariant = {
   hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
@@ -86,7 +92,7 @@ export default function CustomerProfilePage() {
         </div>
         <div>
           <p className="font-bold text-lg" style={{ fontFamily: fontHeading }}>{name || "Cliente"}</p>
-          <p className="text-sm" style={{ color: `${fg}50` }}>{user?.email}</p>
+          <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
       </motion.div>
 
@@ -100,15 +106,15 @@ export default function CustomerProfilePage() {
         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
       >
         <div>
-          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Nome</Label>
+          <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Nome</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
-          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Telefone</Label>
+          <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Telefone</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
-          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Email</Label>
+          <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Email</Label>
           <Input value={user?.email || ""} disabled className="rounded-xl h-11 border-0 opacity-60 bg-muted" />
         </div>
         <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-2xl font-bold text-sm" style={{ backgroundColor: primary, color: "#fff" }}>
@@ -129,7 +135,7 @@ export default function CustomerProfilePage() {
         >
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="h-4 w-4" style={{ color: primary }} />
-            <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Filial</span>
+            <span className="text-sm font-bold text-muted-foreground">Filial</span>
           </div>
           <div className="space-y-2">
             {branches.map((branch) => {
@@ -191,12 +197,11 @@ export default function CustomerProfilePage() {
           <motion.button
             key={label}
             whileTap={{ scale: 0.98 }}
-            className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-black/[0.02] transition-colors"
-            style={{ borderBottom: idx === 0 ? `1px solid ${fg}08` : "none" }}
+            className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors ${idx === 0 ? "border-b border-border/50" : ""}`}
           >
-            <Icon className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+            <Icon className="h-4.5 w-4.5 text-muted-foreground" />
             <span className="flex-1">{label}</span>
-            <ChevronRight className="h-4 w-4" style={{ color: `${fg}25` }} />
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
           </motion.button>
         ))}
       </motion.div>
@@ -245,17 +250,17 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={toggle}
-      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-black/[0.02] transition-colors"
+      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
     >
       {isDark ? (
-        <Sun className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+        <Sun className="h-4.5 w-4.5 text-muted-foreground" />
       ) : (
-        <Moon className="h-4.5 w-4.5" style={{ color: `${fg}45` }} />
+        <Moon className="h-4.5 w-4.5 text-muted-foreground" />
       )}
       <span className="flex-1">{isDark ? "Modo claro" : "Modo escuro"}</span>
       <div
         className="relative h-7 w-12 rounded-full transition-colors duration-300"
-        style={{ backgroundColor: isDark ? primary : `${fg}20` }}
+        style={{ backgroundColor: isDark ? primary : "hsl(var(--muted-foreground) / 0.2)" }}
       >
         <motion.div
           className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm"
@@ -293,7 +298,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
       <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center gap-2 mb-3">
           <Heart className="h-4 w-4" style={{ color: primary }} />
-          <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
+        <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
         </div>
         <div className="space-y-2">
           {[1, 2].map((i) => (
@@ -314,7 +319,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
     <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
       <div className="flex items-center gap-2 mb-3">
         <Heart className="h-4 w-4" style={{ color: primary }} />
-        <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
+        <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
         {favorites.length > 0 && (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
             {favorites.length}
@@ -335,7 +340,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
               key={offer.id}
               whileTap={{ scale: 0.97 }}
               onClick={() => openOffer(offer)}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-black/[0.02] transition-colors text-left"
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left"
             >
               <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: `${primary}08` }}>
                 {offer.image_url ? (
@@ -349,7 +354,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{offer.title}</p>
                 {offer.stores?.name && (
-                  <p className="text-[10px] truncate" style={{ color: `${fg}45` }}>{offer.stores.name}</p>
+                  <p className="text-[10px] truncate text-muted-foreground">{offer.stores.name}</p>
                 )}
               </div>
               {Number(offer.value_rescue) > 0 && (

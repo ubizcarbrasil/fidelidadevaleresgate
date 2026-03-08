@@ -1,42 +1,51 @@
 
 
-## Plano: Corrigir contraste de cores no modo escuro e claro do app do cliente
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-### Problema identificado
+## Resumo
 
-Diversas páginas do app do cliente usam **cores hardcoded** que só funcionam no modo claro:
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-1. **`#F2F2F7`** (cinza claro iOS) — usado em search bars, filtros e skeletons na `CustomerRedemptionsPage` e `CustomerAuthPage`. No dark mode fica como bloco branco sem contraste.
+## O que muda para o usuário
 
-2. **`bg-white`** — usado diretamente em:
-   - `CustomerWalletPage` (cards de histórico de pontos, skeletons)
-   - `CustomerStoreDetailPage` (cards de ofertas, FAQ, tabs)
-   - `CustomerAuthPage` (container do form)
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-3. **`hover:bg-black/[0.02]`** e **`rgba(0,0,0,...)`** para sombras — invisíveis ou feios no dark mode.
+## Mudanças Técnicas
 
-4. **Texto com opacidade hex** (ex: `${fg}50`, `${fg}80`) — funciona visualmente mas `${fg}` resolve para `hsl(...)`, e concatenar hex alpha em `hsl(...)50` não é CSS válido. Isso pode causar cores invisíveis em ambos os modos.
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-### Correções planejadas
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-**Arquivos a alterar:**
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
 
-| Arquivo | Mudança |
-|---|---|
-| `CustomerRedemptionsPage.tsx` | `#F2F2F7` → `hsl(var(--muted))` via classe `bg-muted` |
-| `CustomerWalletPage.tsx` | `bg-white` → `bg-card` nos cards de histórico e skeletons |
-| `CustomerAuthPage.tsx` | `bg-white` → `bg-card`, `#F2F2F7` → `bg-muted` nos inputs |
-| `CustomerStoreDetailPage.tsx` | `bg-white` → `bg-card` nos cards, tabs, FAQ |
-| `CustomerProfilePage.tsx` | `hover:bg-black/[0.02]` → `hover:bg-muted/50` |
-| `CustomerLayout.tsx` | Verificar header e tab bar para contraste dark |
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
 
-### Abordagem
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
 
-- Substituir todas as cores hardcoded por **variáveis semânticas do Tailwind** (`bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`)
-- Para inline styles que precisam de alpha, usar `hsla()` com parsing correto em vez de concatenação hex inválida
-- Manter a identidade visual vibrante (gradientes da marca no hero card) que já funcionam bem em ambos os modos
+### 2. Seções de vitrine automáticas
 
-### Resultado esperado
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
 
-O app do cliente terá contraste correto tanto no modo claro quanto no escuro, sem blocos brancos em fundo escuro nem textos invisíveis.
+### 3. Nenhuma alteração no banco de dados
+
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 

@@ -54,6 +54,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
@@ -307,7 +313,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             <h2 className="text-lg font-bold mb-3" style={{ fontFamily: fontHeading }}>
               Dúvidas frequentes
             </h2>
-            <div className="rounded-2xl bg-white overflow-hidden" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+            <div className="rounded-2xl bg-card overflow-hidden" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
               <Accordion type="single" collapsible>
                 {(store.faq_json as any[]).map((faq: any, idx: number) => (
                   <AccordionItem key={idx} value={`faq-${idx}`} className="border-b last:border-b-0">
@@ -340,11 +346,11 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           const catalogConfig = (store as any).store_catalog_config_json as any;
           const tabLabel = catalogConfig?.tab_label || "Catálogo";
           return (
-            <div className="flex gap-1.5 mx-4 mt-5 bg-white/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+            <div className="flex gap-1.5 mx-4 mt-5 bg-card/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.04)" }}>
               <button
                 onClick={() => setActiveTab("ofertas")}
                 className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "ofertas" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                  activeTab === "ofertas" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 <Tag className="h-3.5 w-3.5 inline mr-1.5" />
@@ -353,7 +359,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
               <button
                 onClick={() => setActiveTab("catalogo")}
                 className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "catalogo" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                  activeTab === "catalogo" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 <ShoppingBag className="h-3.5 w-3.5 inline mr-1.5" />
@@ -382,8 +388,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="rounded-[18px] overflow-hidden bg-white"
-                    style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}
+                    className="rounded-[18px] overflow-hidden bg-card"
+                    style={{ boxShadow: "0 2px 10px hsl(var(--foreground) / 0.03)" }}
                   >
                     <Skeleton className="h-32 w-full" />
                     <div className="p-3 space-y-2">
@@ -414,8 +420,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05, duration: 0.3 }}
-                    className="rounded-[18px] overflow-hidden bg-white cursor-pointer"
-                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+                    className="rounded-[18px] overflow-hidden bg-card cursor-pointer"
+                    style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
                     onClick={() => onOfferClick?.({ ...offer, stores: { name: store.name, logo_url: store.logo_url } })}
                   >
                     <div className="flex">
@@ -454,8 +460,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           </div>
                           {offer.description && (
                             <p
-                              className="text-[11px] line-clamp-1 mt-0.5"
-                              style={{ color: `${fg}45` }}
+                              className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground"
                             >
                               {offer.description}
                             </p>
@@ -473,8 +478,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           )}
                           {offer.end_at && (
                             <div
-                              className="flex items-center gap-0.5 text-[10px]"
-                              style={{ color: `${fg}35` }}
+                              className="flex items-center gap-0.5 text-[10px] text-muted-foreground"
                             >
                               <Clock className="h-2.5 w-2.5" />
                               {new Date(offer.end_at).toLocaleDateString("pt-BR")}
