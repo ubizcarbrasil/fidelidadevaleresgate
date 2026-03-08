@@ -156,14 +156,18 @@ export default function CustomerLayout() {
       <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
         {/* Modern Header — auto-hides on scroll */}
         <header
-          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform"
-          style={{ transform: headerVisible ? "translateY(0)" : "translateY(-100%)" }}
+          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform bg-background"
+          style={{
+            transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
+            boxShadow: headerVisible ? "0 1px 8px hsl(var(--foreground) / 0.06)" : "none",
+          }}
         >
-          {/* Top bar with brand tint */}
+          {/* Top bar with solid background + subtle brand tint */}
           <div
-            className="pt-2 pb-0 bg-card"
+            className="pt-2 pb-0"
             style={{
-              background: `linear-gradient(180deg, ${primary}22 0%, ${primary}10 60%, transparent 100%)`,
+              background: `linear-gradient(180deg, ${primary}18 0%, ${primary}08 60%, hsl(var(--background)) 100%)`,
+              backgroundColor: "hsl(var(--background))",
             }}
           >
             <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
@@ -250,7 +254,13 @@ export default function CustomerLayout() {
               return (
                 <button
                   key={tab.key}
-                  onClick={() => { haptic("light"); setActiveTab(tab.key); }}
+                  onClick={() => {
+                    haptic("light");
+                    setActiveTab(tab.key);
+                    setHeaderVisible(true);
+                    if (mainRef.current) mainRef.current.scrollTop = 0;
+                    lastScrollY.current = 0;
+                  }}
                   className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 transition-all relative"
                 >
                   {isActive && (
