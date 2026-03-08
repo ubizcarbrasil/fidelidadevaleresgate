@@ -185,7 +185,7 @@ export default function CustomerProfilePage() {
         initial="hidden"
         animate="visible"
         className="rounded-[20px] overflow-hidden bg-card mb-5"
-        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+        style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
         {/* Dark mode toggle */}
         <DarkModeToggle primary={primary} fg={fg} />
