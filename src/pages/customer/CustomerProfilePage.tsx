@@ -106,7 +106,7 @@ export default function CustomerProfilePage() {
         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
       >
         <div>
-          <Label className="text-xs font-semibold mb-1.5 block" style={{ color: `${fg}55` }}>Nome</Label>
+          <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Nome</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl h-11 border-0 bg-muted" />
         </div>
         <div>
