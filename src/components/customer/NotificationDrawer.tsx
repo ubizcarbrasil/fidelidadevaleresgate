@@ -90,7 +90,7 @@ export default function NotificationDrawer({ open, onClose }: NotificationDrawer
                 )}
                 <button
                   onClick={onClose}
-                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-black/5"
+                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted/50"
                 >
                   <X className="h-4.5 w-4.5" style={{ color: `${fg}50` }} />
                 </button>
