@@ -153,8 +153,8 @@ export default function CustomerRedemptionsPage() {
                 <span
                   className="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                   style={{
-                    backgroundColor: active ? "rgba(255,255,255,0.25)" : `${fg}10`,
-                    color: active ? "#fff" : `${fg}60`,
+                    backgroundColor: active ? "rgba(255,255,255,0.25)" : "hsl(var(--foreground) / 0.06)",
+                    color: active ? "#fff" : "hsl(var(--muted-foreground))",
                   }}
                 >
                   {counts[key]}
