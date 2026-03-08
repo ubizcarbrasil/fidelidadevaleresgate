@@ -194,7 +194,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
               </button>
             </p>
           ) : (
-            <p style={{ color: `${fg}60` }}>
+            <p className="text-muted-foreground">
               Já tem conta?{" "}
               <button onClick={() => setMode("login")} className="font-bold hover:underline" style={{ color: primary }}>
                 Entrar
