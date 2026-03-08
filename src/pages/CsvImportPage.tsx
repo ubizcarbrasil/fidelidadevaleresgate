@@ -348,8 +348,9 @@ export default function CsvImportPage() {
                 <Select value={importType} onValueChange={v => setImportType(v as ImportType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="STORES">Lojas</SelectItem>
-                    <SelectItem value="OFFERS">Ofertas</SelectItem>
+                     <SelectItem value="STORES">Lojas</SelectItem>
+                     <SelectItem value="OFFERS">Ofertas</SelectItem>
+                     <SelectItem value="CUSTOMERS">Clientes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
