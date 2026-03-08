@@ -98,7 +98,7 @@ export default function CustomerOffersPage() {
       <div className="max-w-lg mx-auto px-5 py-4 space-y-3">
         <Skeleton className="h-10 w-full rounded-full" />
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex gap-3 p-3 rounded-2xl bg-card" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div key={i} className="flex gap-3 p-3 rounded-2xl bg-card" style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.04)" }}>
             <Skeleton className="h-20 w-20 rounded-xl flex-shrink-0" />
             <div className="flex-1 space-y-2 py-1">
               <Skeleton className="h-3 w-20 rounded" />
@@ -121,7 +121,7 @@ export default function CustomerOffersPage() {
       <div
         className="flex items-center gap-2.5 rounded-full px-4 py-2.5 mb-4 bg-muted"
       >
-        <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
+        <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <input
           type="text"
           value={query}
@@ -139,8 +139,8 @@ export default function CustomerOffersPage() {
             onClick={() => setSelectedSegmentId(null)}
             className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={{
-              backgroundColor: !selectedSegmentId ? primary : `${fg}06`,
-              color: !selectedSegmentId ? "#fff" : `${fg}60`,
+              backgroundColor: !selectedSegmentId ? primary : "hsl(var(--muted))",
+              color: !selectedSegmentId ? "#fff" : "hsl(var(--muted-foreground))",
             }}
           >
             Todas
@@ -151,8 +151,8 @@ export default function CustomerOffersPage() {
               onClick={() => setSelectedSegmentId(selectedSegmentId === seg.id ? null : seg.id)}
               className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
               style={{
-                backgroundColor: selectedSegmentId === seg.id ? primary : `${fg}06`,
-                color: selectedSegmentId === seg.id ? "#fff" : `${fg}60`,
+                backgroundColor: selectedSegmentId === seg.id ? primary : "hsl(var(--muted))",
+                color: selectedSegmentId === seg.id ? "#fff" : "hsl(var(--muted-foreground))",
               }}
             >
               {seg.name}
@@ -162,7 +162,7 @@ export default function CustomerOffersPage() {
       )}
 
       {/* Results count */}
-      <p className="text-xs mb-3" style={{ color: `${fg}40` }}>
+      <p className="text-xs mb-3 text-muted-foreground">
         {filtered.length} oferta{filtered.length !== 1 ? "s" : ""} disponíve{filtered.length !== 1 ? "is" : "l"}
       </p>
 
@@ -192,7 +192,7 @@ export default function CustomerOffersPage() {
                 transition={{ delay: idx * 0.04, duration: 0.3 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer relative"
-                style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}
+                style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.05)" }}
                 onClick={() => openOffer(offer)}
               >
                 {/* Image */}

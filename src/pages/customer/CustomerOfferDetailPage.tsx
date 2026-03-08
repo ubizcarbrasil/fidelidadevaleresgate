@@ -330,7 +330,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 </div>
 
                 {/* Product image with badge */}
-                <div className="mx-4 mt-2 relative rounded-2xl overflow-hidden" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.08)" }}>
+                <div className="mx-4 mt-2 relative rounded-2xl overflow-hidden" style={{ boxShadow: "0 2px 16px hsl(var(--foreground) / 0.08)" }}>
                   {discountPct > 0 && (
                     <span className="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white"
                       style={{ backgroundColor: primary }}>
@@ -349,16 +349,16 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 {/* Product info */}
                 <div className="mx-4 mt-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <Tag className="h-3.5 w-3.5" style={{ color: `${fg}40` }} />
-                    <span className="text-xs" style={{ color: `${fg}50` }}>{offer.stores?.name}</span>
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">{offer.stores?.name}</span>
                   </div>
                   <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                   {offer.description && (
-                    <p className="text-sm leading-relaxed mb-2" style={{ color: `${fg}60` }}>{offer.description}</p>
+                    <p className="text-sm leading-relaxed mb-2 text-muted-foreground">{offer.description}</p>
                   )}
                   {productPrice > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs" style={{ color: `${fg}50` }}>Preço</p>
+                      <p className="text-xs text-muted-foreground">Preço</p>
                       <p className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
                         R$ {Number(productPrice).toFixed(2).replace(".", ",")}
                       </p>
@@ -377,7 +377,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     </div>
                     <div className="flex gap-3 mb-3">
                       <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
-                        <p className="text-[11px] font-medium" style={{ color: `${fg}50` }}>Você pode usar</p>
+                        <p className="text-[11px] font-medium text-muted-foreground">Você pode usar</p>
                         <p className="text-3xl font-bold" style={{ color: "#E65100" }}>{discountPct}%</p>
                         <p className="text-[11px]" style={{ color: `${fg}50` }}>do valor em pontos</p>
                       </div>
@@ -451,7 +451,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           key={sim.id}
                           whileTap={{ scale: 0.98 }}
                           className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer"
-                          style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
+                          style={{ boxShadow: "0 1px 5px hsl(var(--foreground) / 0.04)" }}
                           onClick={() => {
                             setIsFading(true);
                             setTimeout(() => {
@@ -526,7 +526,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               </div>
 
               {/* Content card */}
-              <div className="relative -mt-6 mx-4 rounded-[24px] bg-card p-5" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+              <div className="relative -mt-6 mx-4 rounded-[24px] bg-card p-5" style={{ boxShadow: "0 4px 24px hsl(var(--foreground) / 0.06)" }}>
                 {offer.stores?.name && (
                   <div className="flex items-center gap-2 mb-3">
                     {offer.stores.logo_url ? (
@@ -536,12 +536,12 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
-                    <span className="text-sm font-medium" style={{ color: `${fg}70` }}>{offer.stores.name}</span>
+                    <span className="text-sm font-medium text-muted-foreground">{offer.stores.name}</span>
                   </div>
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                 {offer.description && (
-                  <p className="text-sm leading-relaxed mb-4" style={{ color: `${fg}60` }}>{offer.description}</p>
+                  <p className="text-sm leading-relaxed mb-4 text-muted-foreground">{offer.description}</p>
                 )}
 
                 {/* Vale Resgate value highlight */}
@@ -549,16 +549,16 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
                       <div>
-                        <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate em Crédito</p>
+                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Crédito</p>
                         <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </p>
-                        <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>crédito condicionado à compra mínima</p>
+                        <p className="text-[11px] mt-0.5 text-muted-foreground">crédito condicionado à compra mínima</p>
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
-                          <p className="text-[10px] font-medium" style={{ color: `${fg}40` }}>Compra mínima</p>
-                          <p className="text-sm font-bold" style={{ color: `${fg}70` }}>
+                          <p className="text-[10px] font-medium text-muted-foreground">Compra mínima</p>
+                          <p className="text-sm font-bold text-muted-foreground">
                             R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
                           </p>
                         </div>
@@ -574,7 +574,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               </div>
 
               {/* Rules section */}
-              <div className="mx-4 mt-4 rounded-[20px] bg-card p-5" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}>
+              <div className="mx-4 mt-4 rounded-[20px] bg-card p-5" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.03)" }}>
                 <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>Regras da oferta</h3>
                 <div className="space-y-3">
                   {offer.end_at && (
@@ -630,7 +630,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         key={sim.id}
                         whileTap={{ scale: 0.98 }}
                         className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer"
-                        style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
+                        style={{ boxShadow: "0 1px 5px hsl(var(--foreground) / 0.04)" }}
                         onClick={() => {
                           setIsFading(true);
                           setTimeout(() => {
@@ -765,7 +765,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed bottom-0 inset-x-0 z-[71] mx-4 mb-4 rounded-[28px] bg-card overflow-hidden"
-              style={{ boxShadow: "0 -8px 40px rgba(0,0,0,0.12)", maxHeight: "85vh" }}>
+              style={{ boxShadow: "0 -8px 40px hsl(var(--foreground) / 0.12)", maxHeight: "85vh" }}>
 
               {isSigningUp ? (
                 <div className="p-6">

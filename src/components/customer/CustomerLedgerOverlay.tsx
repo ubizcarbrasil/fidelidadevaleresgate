@@ -297,7 +297,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
             <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-3">
               <button
                 onClick={onBack}
-                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
+                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
               </button>
@@ -306,7 +306,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               </h1>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
+                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
               >
                 <Search className="h-4 w-4" style={{ color: fg }} />
               </button>
@@ -446,7 +446,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               {loading ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-white">
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-card">
                       <Skeleton className="h-10 w-10 rounded-xl" />
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-4 w-2/3" />
@@ -478,8 +478,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                               initial={{ opacity: 0, y: 8 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: idx * 0.03 }}
-                              className="flex items-center gap-3 p-3 rounded-2xl bg-white"
-                              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-card"
+                              style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.03)" }}
                             >
                               {/* Icon */}
                               <div

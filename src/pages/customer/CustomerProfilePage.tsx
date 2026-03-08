@@ -103,7 +103,7 @@ export default function CustomerProfilePage() {
         initial="hidden"
         animate="visible"
         className="rounded-[20px] p-5 space-y-4 mb-5 bg-card"
-        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+        style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
         <div>
           <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Nome</Label>
@@ -131,7 +131,7 @@ export default function CustomerProfilePage() {
           initial="hidden"
           animate="visible"
           className="rounded-[20px] p-5 mb-5 bg-card"
-          style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+          style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
         >
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="h-4 w-4" style={{ color: primary }} />
@@ -185,7 +185,7 @@ export default function CustomerProfilePage() {
         initial="hidden"
         animate="visible"
         className="rounded-[20px] overflow-hidden bg-card mb-5"
-        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+        style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
         {/* Dark mode toggle */}
         <DarkModeToggle primary={primary} fg={fg} />
@@ -295,7 +295,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
 
   if (loading) {
     return (
-      <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
         <div className="flex items-center gap-2 mb-3">
           <Heart className="h-4 w-4" style={{ color: primary }} />
         <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
@@ -316,7 +316,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
   }
 
   return (
-    <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+    <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
       <div className="flex items-center gap-2 mb-3">
         <Heart className="h-4 w-4" style={{ color: primary }} />
         <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>

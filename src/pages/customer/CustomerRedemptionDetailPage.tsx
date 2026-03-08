@@ -146,7 +146,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
       <div className="pb-6">
         {/* Hero section - image + title */}
         <div className="flex flex-col items-center py-6 border-b bg-muted">
-          <div className="h-40 w-40 rounded-2xl overflow-hidden mb-4 bg-card flex items-center justify-center" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div className="h-40 w-40 rounded-2xl overflow-hidden mb-4 bg-card flex items-center justify-center" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.06)" }}>
             {heroImage ? (
               <img src={heroImage} alt={heroTitle} className="h-full w-full object-contain" />
             ) : (
@@ -154,7 +154,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             )}
           </div>
           <p className="text-xl font-bold" style={{ color: fg, fontFamily: fontHeading }}>{heroTitle}</p>
-          <p className="text-sm mt-0.5" style={{ color: `${fg}60` }}>{store?.name || "Parceiro"}</p>
+          <p className="text-sm mt-0.5 text-muted-foreground">{store?.name || "Parceiro"}</p>
         </div>
 
         {/* Info cards row: CRÉDITO / VALIDADE / STATUS */}

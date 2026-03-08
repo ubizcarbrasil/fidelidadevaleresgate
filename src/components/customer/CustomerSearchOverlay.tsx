@@ -280,7 +280,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
             {loading && (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-white">
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-card">
                     <Skeleton className="h-11 w-11 rounded-xl" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-2/3 rounded" />
@@ -305,8 +305,8 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     <button
                       key={seg.id}
                       onClick={() => applySuggestion(seg)}
-                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-black/[0.02] transition-colors text-left"
-                      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card hover:bg-muted/50 transition-colors text-left"
+                      style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.04)" }}
                     >
                       <div
                         className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
@@ -356,8 +356,8 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     <button
                       key={store.id}
                       onClick={() => { openStore(store); onClose(); }}
-                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-black/[0.02] transition-colors text-left"
-                      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card hover:bg-muted/50 transition-colors text-left"
+                      style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.04)" }}
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
@@ -392,8 +392,8 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     <button
                       key={offer.id}
                       onClick={() => { openOffer(offer); onClose(); }}
-                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-black/[0.02] transition-colors text-left"
-                      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card hover:bg-muted/50 transition-colors text-left"
+                      style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.04)" }}
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"

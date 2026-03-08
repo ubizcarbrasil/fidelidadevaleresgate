@@ -61,7 +61,7 @@ export default function SectionDetailOverlay({
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
           <button
             onClick={onBack}
-            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors"
+            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
           </button>
@@ -129,8 +129,8 @@ export default function SectionDetailOverlay({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03, duration: 0.25 }}
-                className="flex items-center gap-3 rounded-[16px] p-3 bg-white cursor-pointer active:scale-[0.98] transition-transform relative"
-                style={{ boxShadow: "0 1px 5px rgba(0,0,0,0.04)" }}
+                className="flex items-center gap-3 rounded-[16px] p-3 bg-card cursor-pointer active:scale-[0.98] transition-transform relative"
+                style={{ boxShadow: "0 1px 5px hsl(var(--foreground) / 0.04)" }}
                 onClick={() => isStore ? openStore(item) : openOffer(item)}
               >
                 {/* Image/Logo */}
