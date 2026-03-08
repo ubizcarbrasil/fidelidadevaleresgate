@@ -442,11 +442,11 @@ export default function CsvImportPage() {
               </div>
             )}
 
-            {importType === "CUSTOMERS" && (
-              <div className="flex items-center gap-2">
-                <Checkbox id="auto-crm" checked={autoCreateCrmContacts} onCheckedChange={v => setAutoCreateCrmContacts(!!v)} />
-                <Label htmlFor="auto-crm">Criar contato CRM automaticamente para cada cliente</Label>
-              </div>
+            {(importType === "CUSTOMERS" || importType === "CRM_CONTACTS") && (
+              <Alert>
+                <AlertDescription>Os registros serão espelhados automaticamente: importar Clientes cria contatos CRM e vice-versa.</AlertDescription>
+              </Alert>
+            )}
             )}
 
             <Separator />
