@@ -306,7 +306,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               </h1>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
+                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
               >
                 <Search className="h-4 w-4" style={{ color: fg }} />
               </button>
