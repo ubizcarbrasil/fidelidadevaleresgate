@@ -385,6 +385,13 @@ export default function CsvImportPage() {
               </div>
             )}
 
+            {importType === "CUSTOMERS" && (
+              <div className="flex items-center gap-2">
+                <Checkbox id="auto-crm" checked={autoCreateCrmContacts} onCheckedChange={v => setAutoCreateCrmContacts(!!v)} />
+                <Label htmlFor="auto-crm">Criar contato CRM automaticamente para cada cliente</Label>
+              </div>
+            )}
+
             <Separator />
 
             <div className="space-y-2">
