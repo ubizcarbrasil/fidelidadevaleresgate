@@ -549,7 +549,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
                       <div>
-                        <p className="text-xs font-medium mb-0.5" style={{ color: `${fg}50` }}>Vale Resgate em Crédito</p>
+                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Crédito</p>
                         <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </p>
