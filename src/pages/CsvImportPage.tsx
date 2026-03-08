@@ -291,7 +291,7 @@ export default function CsvImportPage() {
       await supabase.from("audit_logs").insert({
         actor_user_id: user.id,
         action: "CSV_IMPORT",
-        entity_type: importType === "STORES" ? "stores" : "offers",
+        entity_type: importType === "STORES" ? "stores" : importType === "OFFERS" ? "offers" : "customers",
         details_json: { brand_id: brandId, branch_id: branchId, type: importType, success: result.success, errors: result.errors.length },
       });
 
