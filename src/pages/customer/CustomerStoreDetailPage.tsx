@@ -388,8 +388,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="rounded-[18px] overflow-hidden bg-white"
-                    style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.03)" }}
+                    className="rounded-[18px] overflow-hidden bg-card"
+                    style={{ boxShadow: "0 2px 10px hsl(var(--foreground) / 0.03)" }}
                   >
                     <Skeleton className="h-32 w-full" />
                     <div className="p-3 space-y-2">
