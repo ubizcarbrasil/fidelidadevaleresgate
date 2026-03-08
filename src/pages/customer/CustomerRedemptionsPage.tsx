@@ -409,7 +409,7 @@ function RedemptionCard({
             {formatCurrency(creditValue)}
           </span>
         </div>
-        <div className="flex justify-between text-[11px]" style={{ color: `${fg}50` }}>
+        <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>Resgate:</span>
           <span>{formatDate(r.created_at)}</span>
         </div>
