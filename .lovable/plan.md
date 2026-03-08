@@ -1,51 +1,37 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Plano: Adicionar importação de Clientes via CSV
 
-## Resumo
+A página `CsvImportPage.tsx` atualmente suporta apenas **Lojas** e **Ofertas**. O plano é estender para suportar também **Clientes** e **Contatos CRM**.
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+### O que será feito
 
-## O que muda para o usuário
+Adicionar o tipo `CUSTOMERS` ao importador CSV existente, incluindo:
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+1. **Nova opção "Clientes" no select de tipo** -- valor `CUSTOMERS`
+2. **Colunas esperadas**: `name` (obrigatório), `phone`, `cpf`, `email`, `points_balance`, `money_balance`, `is_active`
+3. **Validação**: nome obrigatório, phone/cpf formato livre, `points_balance`/`money_balance` numéricos
+4. **Lógica de importação**: inserir na tabela `customers` com `brand_id` e `branch_id` selecionados
+5. **Sincronização CRM**: opcionalmente criar um `crm_contact` para cada cliente importado (checkbox "Criar contato CRM automaticamente", com `source = 'STORE_UPLOAD'`)
+6. **Template CSV de exemplo**: adicionar botão de download do template para clientes
 
-## Mudanças Técnicas
+### Alterações em arquivo
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+**`src/pages/CsvImportPage.tsx`** (arquivo único):
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+- Adicionar constantes `CUSTOMER_REQUIRED = ["name"]` e `CUSTOMER_COLUMNS = ["name", "phone", "cpf", "email", "points_balance", "money_balance", "is_active"]`
+- Adicionar função `validateCustomerRow`
+- Expandir `ImportType` para incluir `"CUSTOMERS"`
+- No select de tipo, adicionar `<SelectItem value="CUSTOMERS">Clientes</SelectItem>`
+- No `importMutation`, adicionar branch `else if (importType === "CUSTOMERS")` que:
+  - Insere em `customers` (name, phone, cpf, brand_id, branch_id, points_balance, money_balance, is_active)
+  - Se checkbox `autoCreateCrmContacts` ativo, insere em `crm_contacts` (brand_id, branch_id, customer_id, name, phone, email, cpf, source='STORE_UPLOAD')
+- Adicionar checkbox "Criar contatos CRM" (visível quando tipo = CUSTOMERS)
+- Invalidar queries `["customers"]` e `["crm-contacts"]` ao final
+- Atualizar `expectedColumns` para considerar o novo tipo
+- Adicionar botão "Baixar template" que gera CSV de exemplo com as colunas corretas
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+### Sem alterações de banco
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
-
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
-
-### 2. Seções de vitrine automáticas
-
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
-
-### 3. Nenhuma alteração no banco de dados
-
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
-
-## Escopo
-
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+As tabelas `customers` e `crm_contacts` já existem com RLS adequada. Nenhuma migration necessária.
 
