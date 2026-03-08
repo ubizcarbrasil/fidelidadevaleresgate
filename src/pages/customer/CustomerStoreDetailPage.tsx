@@ -420,8 +420,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05, duration: 0.3 }}
-                    className="rounded-[18px] overflow-hidden bg-white cursor-pointer"
-                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+                    className="rounded-[18px] overflow-hidden bg-card cursor-pointer"
+                    style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
                     onClick={() => onOfferClick?.({ ...offer, stores: { name: store.name, logo_url: store.logo_url } })}
                   >
                     <div className="flex">
