@@ -1,6 +1,7 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
   ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
+  TrendingUp, Contact, Users2, Layers3, Target, Crown, UserX, PieChart, Megaphone,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -87,6 +88,23 @@ const groups = [
       { title: "Usuários", url: "/users", icon: Users },
       { title: "Módulos da Marca", url: "/brand-modules", icon: Blocks },
       { title: "Permissões por Empresa", url: "/brand-permissions", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "📊 CRM Estratégico",
+    items: [
+      { title: "Dashboard CRM", url: "/crm", icon: TrendingUp },
+      { title: "Contatos", url: "/crm/contacts", icon: Contact },
+      { title: "Clientes CRM", url: "/crm/customers", icon: Users2 },
+      { title: "Tiers", url: "/crm/tiers", icon: Layers3 },
+      { title: "Oportunidades", url: "/crm/opportunities", icon: Target },
+      { title: "Análise Pareto", url: "/crm/pareto", icon: Crown },
+      { title: "Jornada do Cliente", url: "/crm/journey", icon: Sparkles },
+      { title: "Públicos", url: "/crm/audiences", icon: PieChart },
+      { title: "Campanhas", url: "/crm/campaigns", icon: Megaphone },
+      { title: "Analytics", url: "/crm/analytics", icon: BarChart3 },
+      { title: "Clientes Perdidos", url: "/crm/lost", icon: UserX },
+      { title: "Clientes Potenciais", url: "/crm/potential", icon: Target },
     ],
   },
   {
