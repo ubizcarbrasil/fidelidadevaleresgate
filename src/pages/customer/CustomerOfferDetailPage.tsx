@@ -377,7 +377,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     </div>
                     <div className="flex gap-3 mb-3">
                       <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
-                        <p className="text-[11px] font-medium" style={{ color: `${fg}50` }}>Você pode usar</p>
+                        <p className="text-[11px] font-medium text-muted-foreground">Você pode usar</p>
                         <p className="text-3xl font-bold" style={{ color: "#E65100" }}>{discountPct}%</p>
                         <p className="text-[11px]" style={{ color: `${fg}50` }}>do valor em pontos</p>
                       </div>
