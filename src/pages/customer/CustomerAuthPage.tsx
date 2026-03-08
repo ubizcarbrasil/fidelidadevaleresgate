@@ -187,7 +187,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
 
         <div className="mt-5 text-center text-sm">
           {mode === "login" ? (
-            <p style={{ color: `${fg}60` }}>
+            <p className="text-muted-foreground">
               Não tem conta?{" "}
               <button onClick={() => setMode("register")} className="font-bold hover:underline" style={{ color: primary }}>
                 Cadastre-se
