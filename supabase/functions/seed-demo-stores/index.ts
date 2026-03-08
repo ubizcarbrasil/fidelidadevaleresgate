@@ -332,7 +332,47 @@ Deno.serve(async (req) => {
       created++;
     }
 
-    // Also enable all modules for this brand
+    // Credit 1000 points to all test customers of this brand
+    let creditedCustomers = 0;
+    const { data: customers } = await supabaseAdmin
+      .from("customers")
+      .select("id")
+      .eq("brand_id", brand_id)
+      .eq("branch_id", branch_id);
+
+    if (customers?.length) {
+      for (const cust of customers) {
+        // Check if already credited (avoid duplicates)
+        const { data: existing } = await supabaseAdmin
+          .from("points_ledger")
+          .select("id")
+          .eq("customer_id", cust.id)
+          .eq("reason", "DEMO_SEED_BONUS")
+          .maybeSingle();
+
+        if (!existing) {
+          await supabaseAdmin.from("points_ledger").insert({
+            brand_id,
+            branch_id,
+            customer_id: cust.id,
+            entry_type: "CREDIT",
+            points_amount: 1000,
+            money_amount: 0,
+            reason: "DEMO_SEED_BONUS",
+            reference_type: "MANUAL_ADJUSTMENT",
+            created_by_user_id: callerUserId,
+          });
+
+          // Update cached balance
+          await supabaseAdmin
+            .from("customers")
+            .update({ points_balance: 1000 })
+            .eq("id", cust.id);
+
+          creditedCustomers++;
+        }
+      }
+    }
     const { data: allMods } = await supabaseAdmin
       .from("module_definitions").select("id").eq("is_active", true);
     if (allMods?.length) {
