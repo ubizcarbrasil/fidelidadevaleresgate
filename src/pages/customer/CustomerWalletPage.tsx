@@ -97,7 +97,7 @@ export default function CustomerWalletPage() {
 
       {/* Transaction History */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold" style={{ color: `${fg}70` }}>Histórico de pontos</h3>
+        <h3 className="text-sm font-bold text-muted-foreground">Histórico de pontos</h3>
         <span className="text-xs font-medium" style={{ color: primary }}>Ver todos</span>
       </div>
 
