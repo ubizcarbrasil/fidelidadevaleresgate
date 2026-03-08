@@ -188,8 +188,8 @@ export default function CustomerLayout() {
                   boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                <Search className="h-5 w-5 flex-shrink-0" style={{ color: `${fg}40` }} />
-                <span className="text-sm font-medium" style={{ color: `${fg}35` }}>
+                <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground/70">
                   Busque por parceiros e ofertas
                 </span>
               </button>
