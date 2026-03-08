@@ -162,7 +162,7 @@ export default function CustomerOffersPage() {
       )}
 
       {/* Results count */}
-      <p className="text-xs mb-3" style={{ color: `${fg}40` }}>
+      <p className="text-xs mb-3 text-muted-foreground">
         {filtered.length} oferta{filtered.length !== 1 ? "s" : ""} disponíve{filtered.length !== 1 ? "is" : "l"}
       </p>
 
