@@ -241,6 +241,40 @@ export default function CsvImportPage() {
             result.errors.push({ row: i + 2, message: err.message });
           }
         }
+      } else {
+        // CUSTOMERS
+        for (let i = 0; i < csvData.rows.length; i++) {
+          const row = csvData.rows[i];
+          try {
+            const { data: newCustomer, error } = await supabase.from("customers").insert({
+              name: row.name.trim(),
+              phone: row.phone?.trim() || null,
+              cpf: row.cpf?.trim() || null,
+              brand_id: brandId,
+              branch_id: branchId,
+              points_balance: row.points_balance ? Number(row.points_balance) : 0,
+              money_balance: row.money_balance ? Number(row.money_balance) : 0,
+              is_active: row.is_active ? parseBool(row.is_active) : true,
+            }).select("id").single();
+            if (error) throw error;
+
+            if (autoCreateCrmContacts && newCustomer) {
+              await supabase.from("crm_contacts").insert({
+                brand_id: brandId,
+                branch_id: branchId,
+                customer_id: newCustomer.id,
+                name: row.name.trim(),
+                phone: row.phone?.trim() || null,
+                email: row.email?.trim() || null,
+                cpf: row.cpf?.trim() || null,
+                source: "STORE_UPLOAD",
+              });
+            }
+            result.success++;
+          } catch (err: any) {
+            result.errors.push({ row: i + 2, message: err.message });
+          }
+        }
       }
 
       // Update job
