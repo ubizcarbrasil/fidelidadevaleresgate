@@ -302,6 +302,8 @@ export default function CsvImportPage() {
       setStep("done");
       qc.invalidateQueries({ queryKey: ["stores"] });
       qc.invalidateQueries({ queryKey: ["offers"] });
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      qc.invalidateQueries({ queryKey: ["crm-contacts"] });
       if (result.errors.length === 0) {
         toast.success(`${result.success} registros importados com sucesso!`);
       } else {
