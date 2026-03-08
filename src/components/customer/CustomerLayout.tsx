@@ -52,6 +52,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
