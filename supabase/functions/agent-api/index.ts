@@ -423,6 +423,12 @@ Deno.serve(async (req) => {
   const authErr = requireAgentAuth(req);
   if (authErr) return authErr;
 
+  // Rate limiting: 100 requests per 60s per IP
+  const rlSb = getSupabase();
+  const rlKey = rateLimitKey("agent-api", req);
+  const rl = await checkRateLimit(rlSb, rlKey, { maxRequests: 100, windowSeconds: 60 });
+  if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
   const segments = parsePath(req.url);
   const method = req.method;
   const params = getQuery(req.url);
