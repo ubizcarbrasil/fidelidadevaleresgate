@@ -358,7 +358,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   )}
                   {productPrice > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs" style={{ color: `${fg}50` }}>Preço</p>
+                      <p className="text-xs text-muted-foreground">Preço</p>
                       <p className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
                         R$ {Number(productPrice).toFixed(2).replace(".", ",")}
                       </p>
