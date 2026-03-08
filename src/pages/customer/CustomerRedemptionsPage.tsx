@@ -145,8 +145,8 @@ export default function CustomerRedemptionsPage() {
                 onClick={() => setFilter(key)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
                 style={{
-                  backgroundColor: active ? primary : "#F2F2F7",
-                  color: active ? "#fff" : `${fg}80`,
+                  backgroundColor: active ? primary : "hsl(var(--muted))",
+                  color: active ? "#fff" : "hsl(var(--muted-foreground))",
                 }}
               >
                 {STATUS_LABELS[key]}
