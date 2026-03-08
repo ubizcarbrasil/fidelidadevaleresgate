@@ -91,6 +91,23 @@ const groups = [
     ],
   },
   {
+    label: "📊 CRM Estratégico",
+    items: [
+      { title: "Dashboard CRM", url: "/crm", icon: TrendingUp },
+      { title: "Contatos", url: "/crm/contacts", icon: Contact },
+      { title: "Clientes CRM", url: "/crm/customers", icon: Users2 },
+      { title: "Tiers", url: "/crm/tiers", icon: Layers3 },
+      { title: "Oportunidades", url: "/crm/opportunities", icon: Target },
+      { title: "Análise Pareto", url: "/crm/pareto", icon: Crown },
+      { title: "Jornada do Cliente", url: "/crm/journey", icon: Sparkles },
+      { title: "Públicos", url: "/crm/audiences", icon: PieChart },
+      { title: "Campanhas", url: "/crm/campaigns", icon: Megaphone },
+      { title: "Analytics", url: "/crm/analytics", icon: BarChart3 },
+      { title: "Clientes Perdidos", url: "/crm/lost", icon: UserX },
+      { title: "Clientes Potenciais", url: "/crm/potential", icon: Target },
+    ],
+  },
+  {
     label: "⚙️ Plataforma",
     items: [
       { title: "Funcionalidades", url: "/modules", icon: Blocks },
