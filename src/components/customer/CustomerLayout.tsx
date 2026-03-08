@@ -254,7 +254,13 @@ export default function CustomerLayout() {
               return (
                 <button
                   key={tab.key}
-                  onClick={() => { haptic("light"); setActiveTab(tab.key); }}
+                  onClick={() => {
+                    haptic("light");
+                    setActiveTab(tab.key);
+                    setHeaderVisible(true);
+                    if (mainRef.current) mainRef.current.scrollTop = 0;
+                    lastScrollY.current = 0;
+                  }}
                   className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 transition-all relative"
                 >
                   {isActive && (
