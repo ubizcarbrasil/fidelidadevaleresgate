@@ -298,7 +298,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
       <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center gap-2 mb-3">
           <Heart className="h-4 w-4" style={{ color: primary }} />
-          <span className="text-sm font-bold" style={{ color: `${fg}70` }}>Meus Favoritos</span>
+        <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
         </div>
         <div className="space-y-2">
           {[1, 2].map((i) => (
