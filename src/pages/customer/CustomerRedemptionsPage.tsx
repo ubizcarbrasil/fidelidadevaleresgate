@@ -400,7 +400,7 @@ function RedemptionCard({
               CRÉDITO DO {isProduct ? "PRODUTO" : "CUPOM"}
             </span>
             {!isProduct && minPurchase > 0 && (
-              <span className="text-[10px]" style={{ color: `${fg}40` }}>
+              <span className="text-[10px] text-muted-foreground">
                 Crédito condicionado à compra mínima de {formatCurrency(minPurchase)}
               </span>
             )}
