@@ -460,7 +460,6 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           </div>
                           {offer.description && (
                             <p
-                              className="text-[11px] line-clamp-1 mt-0.5"
                               className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground"
                             >
                               {offer.description}
