@@ -280,7 +280,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
             {loading && (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-white">
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-card">
                     <Skeleton className="h-11 w-11 rounded-xl" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-2/3 rounded" />
