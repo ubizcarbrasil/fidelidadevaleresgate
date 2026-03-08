@@ -350,7 +350,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
               <button
                 onClick={() => setActiveTab("ofertas")}
                 className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "ofertas" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                  activeTab === "ofertas" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 <Tag className="h-3.5 w-3.5 inline mr-1.5" />
