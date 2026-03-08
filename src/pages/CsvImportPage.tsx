@@ -79,6 +79,15 @@ function validateCustomerRow(row: Record<string, string>, idx: number): Validati
   return errors;
 }
 
+function validateCrmContactRow(row: Record<string, string>, idx: number): ValidationError[] {
+  const errors: ValidationError[] = [];
+  if (!row.name?.trim()) errors.push({ row: idx + 2, field: "name", message: "Nome é obrigatório" });
+  if (row.is_active && !["true", "false", "1", "0", "sim", "não", "nao", "yes", "no", ""].includes(row.is_active.toLowerCase())) {
+    errors.push({ row: idx + 2, field: "is_active", message: "Valor inválido (use true/false)" });
+  }
+  return errors;
+}
+
 function parseBool(val: string): boolean {
   return ["true", "1", "sim", "yes"].includes(val.toLowerCase().trim());
 }
