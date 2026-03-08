@@ -369,6 +369,17 @@ export default function StoreRegistrationWizard() {
         );
       }
 
+      // Auto-seed demo stores for this brand/branch
+      if (brand && selectedBranch) {
+        try {
+          await supabase.functions.invoke("seed-demo-stores", {
+            body: { brand_id: brand.id, branch_id: selectedBranch.id },
+          });
+        } catch (seedErr) {
+          console.warn("Demo seed skipped:", seedErr);
+        }
+      }
+
       setSubmitted(true);
       toast({ title: "Cadastro enviado para análise!" });
     } catch (err: any) {
