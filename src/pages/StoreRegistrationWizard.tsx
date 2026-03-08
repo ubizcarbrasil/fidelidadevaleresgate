@@ -253,18 +253,31 @@ export default function StoreRegistrationWizard() {
   };
 
   const handleFileUpload = async (field: string, file: File) => {
-    if (!brand || !user) return;
-    setUploading(prev => ({ ...prev, [field]: true }));
-    const ext = file.name.split(".").pop();
-    const path = `${brand.id}/stores/${user.id}/${field}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("brand-assets").upload(path, file);
-    if (error) {
-      toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
-    } else {
-      const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(path);
-      update(field as keyof WizardData, urlData.publicUrl);
+    if (!brand || !user) {
+      toast({ title: "Aguarde", description: "Carregando dados da marca...", variant: "destructive" });
+      return;
     }
-    setUploading(prev => ({ ...prev, [field]: false }));
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "O tamanho máximo é 5MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(prev => ({ ...prev, [field]: true }));
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${brand.id}/stores/${user.id}/${field}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("brand-assets").upload(path, file, { upsert: true });
+      if (error) {
+        toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+      } else {
+        const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(path);
+        update(field as keyof WizardData, urlData.publicUrl);
+        toast({ title: `${field === "logo_url" ? "Logo" : "Arquivo"} enviado com sucesso!` });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro inesperado", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   const saveDraft = async (nextStep: number) => {
