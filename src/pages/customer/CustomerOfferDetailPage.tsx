@@ -330,7 +330,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 </div>
 
                 {/* Product image with badge */}
-                <div className="mx-4 mt-2 relative rounded-2xl overflow-hidden" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.08)" }}>
+                <div className="mx-4 mt-2 relative rounded-2xl overflow-hidden" style={{ boxShadow: "0 2px 16px hsl(var(--foreground) / 0.08)" }}>
                   {discountPct > 0 && (
                     <span className="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-full text-xs font-bold text-white"
                       style={{ backgroundColor: primary }}>
