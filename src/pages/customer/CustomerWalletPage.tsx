@@ -104,7 +104,7 @@ export default function CustomerWalletPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-3 rounded-[16px] bg-white p-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
+            <div key={i} className="flex items-center gap-3 rounded-[16px] bg-card p-3" style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.03)" }}>
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-4 w-3/4 rounded-lg" />
