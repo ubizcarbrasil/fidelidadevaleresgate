@@ -105,7 +105,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
           <h1 className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
             {mode === "login" ? "Bem-vindo!" : "Criar conta"}
           </h1>
-          <p className="text-sm mt-1.5" style={{ color: `${fg}50` }}>{displayName}</p>
+          <p className="text-sm mt-1.5 text-muted-foreground">{displayName}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
