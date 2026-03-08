@@ -131,7 +131,7 @@ export default function CustomerProfilePage() {
           initial="hidden"
           animate="visible"
           className="rounded-[20px] p-5 mb-5 bg-card"
-          style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+          style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
         >
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="h-4 w-4" style={{ color: primary }} />
