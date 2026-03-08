@@ -158,7 +158,7 @@ export default function CustomerLayout() {
                 <BranchPickerSheet />
                 <button
                   onClick={() => setNotifOpen(true)}
-                  className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
+                  className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
                 >
                   <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                   {unreadCount > 0 && (
