@@ -165,7 +165,8 @@ export default function CsvImportPage() {
 
   const importMutation = useMutation({
     mutationFn: async () => {
-      if (!csvData || !user || !brandId || !branchId) throw new Error("Dados insuficientes");
+      if (!csvData || !user || !brandId) throw new Error("Dados insuficientes");
+      if (importType !== "CRM_CONTACTS" && !branchId) throw new Error("Selecione uma filial");
 
       setStep("importing");
       const result = { success: 0, skipped: 0, errors: [] as { row: number; message: string }[] };
