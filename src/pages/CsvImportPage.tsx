@@ -140,7 +140,7 @@ export default function CsvImportPage() {
     enabled: !!brandId,
   });
 
-  const expectedColumns = importType === "STORES" ? STORE_COLUMNS : importType === "OFFERS" ? OFFER_COLUMNS : CUSTOMER_COLUMNS;
+  const expectedColumns = importType === "STORES" ? STORE_COLUMNS : importType === "OFFERS" ? OFFER_COLUMNS : importType === "CUSTOMERS" ? CUSTOMER_COLUMNS : CRM_CONTACT_COLUMNS;
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
