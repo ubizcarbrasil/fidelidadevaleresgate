@@ -77,7 +77,8 @@ export default function CustomerAuthPage({ onSkip }: Props) {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-5"
-      style={{ backgroundColor: "#FAFAFA", color: fg, fontFamily: fontBody }}
+      style={{ color: fg, fontFamily: fontBody }}
+      className="min-h-screen flex flex-col items-center justify-center px-5 bg-background"
     >
       <div
         className="w-full max-w-sm rounded-[24px] p-7 bg-white"
