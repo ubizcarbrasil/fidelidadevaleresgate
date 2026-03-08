@@ -392,8 +392,8 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     <button
                       key={offer.id}
                       onClick={() => { openOffer(offer); onClose(); }}
-                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-black/[0.02] transition-colors text-left"
-                      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card hover:bg-muted/50 transition-colors text-left"
+                      style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.04)" }}
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"

@@ -246,8 +246,8 @@ export default function StoreCatalogView({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="rounded-2xl bg-white overflow-hidden relative cursor-pointer"
-              style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
+              className="rounded-2xl bg-card overflow-hidden relative cursor-pointer"
+              style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)" }}
               onClick={() => addToCart(item, false)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {

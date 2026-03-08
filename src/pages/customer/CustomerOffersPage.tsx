@@ -192,7 +192,7 @@ export default function CustomerOffersPage() {
                 transition={{ delay: idx * 0.04, duration: 0.3 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer relative"
-                style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}
+                style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.05)" }}
                 onClick={() => openOffer(offer)}
               >
                 {/* Image */}

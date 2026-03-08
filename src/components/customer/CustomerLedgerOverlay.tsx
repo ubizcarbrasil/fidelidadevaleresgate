@@ -478,8 +478,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                               initial={{ opacity: 0, y: 8 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: idx * 0.03 }}
-                              className="flex items-center gap-3 p-3 rounded-2xl bg-white"
-                              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-card"
+                              style={{ boxShadow: "0 1px 4px hsl(var(--foreground) / 0.03)" }}
                             >
                               {/* Icon */}
                               <div

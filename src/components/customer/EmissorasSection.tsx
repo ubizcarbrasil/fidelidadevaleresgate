@@ -98,7 +98,7 @@ export default function EmissorasSection() {
             transition={{ delay: idx * 0.04, duration: 0.25 }}
             className="flex-shrink-0 w-[140px] rounded-2xl overflow-hidden cursor-pointer relative group bg-card"
             style={{
-              boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)",
+              boxShadow: "0 1px 6px hsl(var(--foreground) / 0.08), 0 0 0 1px hsl(var(--foreground) / 0.03)",
             }}
             onClick={() => openStore(store)}
           >

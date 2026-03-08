@@ -54,7 +54,7 @@ export default function WelcomeTour({ onComplete, primary, brandName }: WelcomeT
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="w-full max-w-lg bg-white rounded-t-3xl px-6 pt-6 pb-10 relative"
+        className="w-full max-w-lg bg-card rounded-t-3xl px-6 pt-6 pb-10 relative"
       >
         <button
           onClick={onComplete}

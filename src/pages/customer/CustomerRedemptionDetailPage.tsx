@@ -154,7 +154,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             )}
           </div>
           <p className="text-xl font-bold" style={{ color: fg, fontFamily: fontHeading }}>{heroTitle}</p>
-          <p className="text-sm mt-0.5" style={{ color: `${fg}60` }}>{store?.name || "Parceiro"}</p>
+          <p className="text-sm mt-0.5 text-muted-foreground">{store?.name || "Parceiro"}</p>
         </div>
 
         {/* Info cards row: CRÉDITO / VALIDADE / STATUS */}
