@@ -461,7 +461,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           {offer.description && (
                             <p
                               className="text-[11px] line-clamp-1 mt-0.5"
-                              style={{ color: `${fg}45` }}
+                              className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground"
                             >
                               {offer.description}
                             </p>
