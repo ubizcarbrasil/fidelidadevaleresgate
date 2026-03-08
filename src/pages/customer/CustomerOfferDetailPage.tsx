@@ -557,8 +557,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
-                          <p className="text-[10px] font-medium" style={{ color: `${fg}40` }}>Compra mínima</p>
-                          <p className="text-sm font-bold" style={{ color: `${fg}70` }}>
+                          <p className="text-[10px] font-medium text-muted-foreground">Compra mínima</p>
+                          <p className="text-sm font-bold text-muted-foreground">
                             R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
                           </p>
                         </div>
