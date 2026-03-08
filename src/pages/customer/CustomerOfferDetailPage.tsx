@@ -536,7 +536,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
-                    <span className="text-sm font-medium" style={{ color: `${fg}70` }}>{offer.stores.name}</span>
+                    <span className="text-sm font-medium text-muted-foreground">{offer.stores.name}</span>
                   </div>
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
