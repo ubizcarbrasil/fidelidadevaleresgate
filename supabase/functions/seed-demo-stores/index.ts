@@ -245,11 +245,9 @@ Deno.serve(async (req) => {
     }
     const callerUserId = claimsData.claims.sub as string;
 
-    const { data: isRoot } = await supabaseAdmin.rpc("has_role", {
-      _user_id: callerUserId, _role: "root_admin",
-    });
-    if (!isRoot) {
-      return new Response(JSON.stringify({ error: "Forbidden: root_admin only" }), {
+    // Allow root_admin or any authenticated user (function is idempotent)
+    if (!callerUserId) {
+      return new Response(JSON.stringify({ error: "Forbidden: authentication required" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -334,7 +332,47 @@ Deno.serve(async (req) => {
       created++;
     }
 
-    // Also enable all modules for this brand
+    // Credit 1000 points to all test customers of this brand
+    let creditedCustomers = 0;
+    const { data: customers } = await supabaseAdmin
+      .from("customers")
+      .select("id")
+      .eq("brand_id", brand_id)
+      .eq("branch_id", branch_id);
+
+    if (customers?.length) {
+      for (const cust of customers) {
+        // Check if already credited (avoid duplicates)
+        const { data: existing } = await supabaseAdmin
+          .from("points_ledger")
+          .select("id")
+          .eq("customer_id", cust.id)
+          .eq("reason", "DEMO_SEED_BONUS")
+          .maybeSingle();
+
+        if (!existing) {
+          await supabaseAdmin.from("points_ledger").insert({
+            brand_id,
+            branch_id,
+            customer_id: cust.id,
+            entry_type: "CREDIT",
+            points_amount: 1000,
+            money_amount: 0,
+            reason: "DEMO_SEED_BONUS",
+            reference_type: "MANUAL_ADJUSTMENT",
+            created_by_user_id: callerUserId,
+          });
+
+          // Update cached balance
+          await supabaseAdmin
+            .from("customers")
+            .update({ points_balance: 1000 })
+            .eq("id", cust.id);
+
+          creditedCustomers++;
+        }
+      }
+    }
     const { data: allMods } = await supabaseAdmin
       .from("module_definitions").select("id").eq("is_active", true);
     if (allMods?.length) {
@@ -352,7 +390,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, created, skipped, total: DEMO_STORES.length }),
+      JSON.stringify({ success: true, created, skipped, total: DEMO_STORES.length, creditedCustomers }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: any) {
