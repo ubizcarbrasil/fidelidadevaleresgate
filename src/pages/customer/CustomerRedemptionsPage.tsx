@@ -393,10 +393,10 @@ function RedemptionCard({
       </div>
 
       {/* Credit + dates */}
-      <div className="px-4 py-3 space-y-1" style={{ borderTop: `1px solid ${fg}06` }}>
+      <div className="px-4 py-3 space-y-1 border-t border-border/50">
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-[11px] font-semibold block" style={{ color: `${fg}50` }}>
+            <span className="text-[11px] font-semibold block text-muted-foreground">
               CRÉDITO DO {isProduct ? "PRODUTO" : "CUPOM"}
             </span>
             {!isProduct && minPurchase > 0 && (
