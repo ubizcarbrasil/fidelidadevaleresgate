@@ -219,7 +219,12 @@ export default function CustomerLayout() {
         </header>
 
         {/* Content with tab transition */}
-        <main className="flex-1 pb-24 overflow-y-auto">
+        <main
+          ref={mainRef}
+          onScroll={handleScroll}
+          className="flex-1 pb-24 overflow-y-auto"
+          style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
