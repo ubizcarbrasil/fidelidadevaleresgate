@@ -313,7 +313,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             <h2 className="text-lg font-bold mb-3" style={{ fontFamily: fontHeading }}>
               Dúvidas frequentes
             </h2>
-            <div className="rounded-2xl bg-white overflow-hidden" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+            <div className="rounded-2xl bg-card overflow-hidden" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
               <Accordion type="single" collapsible>
                 {(store.faq_json as any[]).map((faq: any, idx: number) => (
                   <AccordionItem key={idx} value={`faq-${idx}`} className="border-b last:border-b-0">
