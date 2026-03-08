@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initWebVitals } from "@/lib/webVitals";
+
+initWebVitals();
 
 // Fix React 18 "removeChild" error caused by third-party DOM manipulation
 // https://github.com/facebook/react/issues/11538#issuecomment-417504600
