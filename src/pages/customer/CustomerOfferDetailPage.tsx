@@ -1005,7 +1005,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       </div>
                       {/* Credit applied */}
                       <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
-                        <span className="text-sm" style={{ color: `${fg}60` }}>Desconto ({discountPctOffer}% em pontos)</span>
+                        <span className="text-sm text-muted-foreground">Desconto ({discountPctOffer}% em pontos)</span>
                         <span className="text-sm font-bold" style={{ color: primary }}>
                           - R$ {creditAmountOffer.toFixed(2).replace(".", ",")}
                         </span>
