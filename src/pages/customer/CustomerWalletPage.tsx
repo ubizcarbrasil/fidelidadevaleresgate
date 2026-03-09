@@ -85,7 +85,7 @@ export default function CustomerWalletPage() {
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-10 bg-white" />
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 mb-2 opacity-80">
-                <Star className="h-3.5 w-3.5" />
+                <AppIcon iconKey="wallet_points" className="h-3.5 w-3.5" />
                 <span className="text-xs font-medium">Pontos</span>
               </div>
               <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
