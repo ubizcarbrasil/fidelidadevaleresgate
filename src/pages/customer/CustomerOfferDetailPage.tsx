@@ -972,7 +972,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>
                       {offer.coupon_type === "PRODUCT" ? `Pague ${offer.discount_percent}% com Pontos` : "Confirmar resgate"}
                     </h3>
-                    <p className="text-sm" style={{ color: `${fg}50` }}>
+                    <p className="text-sm text-muted-foreground">
                       {offer.coupon_type === "PRODUCT" ? (
                         <>Confira os valores e informe seu CPF para gerar o cupom</>
                       ) : (
