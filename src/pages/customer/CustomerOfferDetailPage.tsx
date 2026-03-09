@@ -838,7 +838,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           <span className="text-lg font-bold" style={{ color: primary }}>$</span>
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold tracking-wider" style={{ color: `${fg}50` }}>VALOR A SER RESGATADO</p>
+                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">VALOR A SER RESGATADO</p>
                           <p className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
                             R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                           </p>
