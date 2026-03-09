@@ -1,51 +1,39 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+# Plan: Add Demo Stores + Test Customer to Self-Service Signup
 
-## Resumo
+## Problem
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+The `provision-trial` edge function (used by `TrialSignupPage`) only creates the basic infrastructure (tenant, brand, branch, domain, modules, home template). New companies get an empty app with no stores, no test accounts, and no demo content.
 
-## O que muda para o usuário
+The `provision-brand` edge function (admin wizard) already has all this — 40 demo stores, 3 test accounts (admin/customer/store), and a customer with 1000 points.
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+## Solution
 
-## Mudanças Técnicas
+Update `provision-trial` to replicate the same provisioning steps from `provision-brand`:
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+### Changes to `supabase/functions/provision-trial/index.ts`
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+1. **Add the `DEMO_STORES` data array** — copy the same 40 demo stores definition (with `logo()` helper) from `provision-brand`
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+2. **Add `getOrCreateUser` helper** — same pattern already proven in `provision-brand`
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+3. **After step 9 (home template), add these new steps:**
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+   - **Step 10: Create 3 test accounts**
+     - Admin: `teste-{slug}@teste.com` → `brand_admin` role
+     - Customer: `cliente-{slug}@teste.com` → `customer` role + 1000 points balance + points_ledger CREDIT entry
+     - Store: `loja-{slug}@teste.com` → `store_admin` role + 1 demo store
 
-### 2. Seções de vitrine automáticas
+   - **Step 11: Create 40 demo stores with offers & catalogs** — same loop as `provision-brand`
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+   - **Step 12: Save test accounts in brand_settings_json**
 
-### 3. Nenhuma alteração no banco de dados
+4. **Update the response** to include `test_accounts` and `demo_stores_count`
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+### File: 1 edge function modified
+- `supabase/functions/provision-trial/index.ts`
 
-## Escopo
-
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+### No database changes needed
+All tables already exist.
 
