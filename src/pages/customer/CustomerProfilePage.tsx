@@ -192,9 +192,9 @@ export default function CustomerProfilePage() {
         <DarkModeToggle primary={primary} fg={fg} />
         <div style={{ borderBottom: `1px solid ${fg}08` }} />
         {[
-          { icon: Shield, label: "Privacidade e Segurança" },
-          { icon: HelpCircle, label: "Ajuda e Suporte" },
-        ].map(({ icon: Icon, label }, idx) => (
+          { iconKey: "profile_privacy" as const, label: "Privacidade e Segurança" },
+          { iconKey: "profile_help" as const, label: "Ajuda e Suporte" },
+        ].map(({ iconKey, label }, idx) => (
           <motion.button
             key={label}
             whileTap={{ scale: 0.98 }}
