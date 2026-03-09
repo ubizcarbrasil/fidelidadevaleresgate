@@ -141,7 +141,6 @@ export default function CustomerWalletPage() {
                   ) : (
                     <AppIcon iconKey="wallet_debit" className="h-4.5 w-4.5" style={{ color: iconColor }} />
                   )}
-                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">
