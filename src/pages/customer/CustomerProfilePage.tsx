@@ -215,7 +215,7 @@ export default function CustomerProfilePage() {
           className="w-full h-11 rounded-2xl font-semibold text-sm border-0"
           style={{ backgroundColor: "hsl(0 72% 56% / 0.08)", color: "hsl(0 72% 51%)" }}
         >
-          <LogOut className="h-4 w-4 mr-2" />
+          <AppIcon iconKey="profile_logout" className="h-4 w-4 mr-2" />
           Sair da conta
         </Button>
       </motion.div>
