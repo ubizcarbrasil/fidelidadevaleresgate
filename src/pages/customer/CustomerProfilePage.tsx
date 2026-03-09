@@ -89,7 +89,7 @@ export default function CustomerProfilePage() {
             boxShadow: `0 4px 16px -4px ${primary}50`,
           }}
         >
-          {name ? name.charAt(0).toUpperCase() : <User className="h-7 w-7" />}
+          {name ? name.charAt(0).toUpperCase() : <AppIcon iconKey="profile_user" className="h-7 w-7" />}
         </div>
         <div>
           <p className="font-bold text-lg" style={{ fontFamily: fontHeading }}>{name || "Cliente"}</p>
