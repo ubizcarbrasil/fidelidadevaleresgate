@@ -680,7 +680,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
           <div className="max-w-lg mx-auto">
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-sm" style={{ color: `${fg}50` }}>Seu saldo:</span>
+                <span className="text-sm text-muted-foreground">Seu saldo:</span>
                 <span className="text-sm font-bold" style={{ color: customerPoints > 0 ? primary : "#DC2626" }}>
                   {customerPoints.toLocaleString("pt-BR")} pontos
                 </span>
