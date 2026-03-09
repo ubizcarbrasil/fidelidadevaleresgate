@@ -987,7 +987,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       )}
                     </p>
                     {offer.coupon_type !== "PRODUCT" && Number(offer.min_purchase) > 0 && (
-                      <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block" style={{ backgroundColor: `${fg}06`, color: `${fg}50` }}>
+                      <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block bg-muted text-muted-foreground">
                         Compra mínima: R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
                       </p>
                     )}
