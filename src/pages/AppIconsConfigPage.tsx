@@ -179,6 +179,42 @@ export default function AppIconsConfigPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">📱 Cabeçalho</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {HEADER_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">📦 Seções</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {SECTION_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">👤 Perfil</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {PROFILE_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">💰 Carteira</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {WALLET_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
       <IconPickerDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
