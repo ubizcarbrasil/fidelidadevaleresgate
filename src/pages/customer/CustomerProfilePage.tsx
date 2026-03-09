@@ -7,7 +7,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Loader2, ChevronRight, Moon, Sun } from "lucide-react";
+import { Save, Loader2, ChevronRight, Moon, Sun, Heart, Tag } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
