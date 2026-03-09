@@ -806,7 +806,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         </div>
                       )}
                       <div>
-                        <p className="text-sm font-medium" style={{ color: `${fg}60` }}>{offer.stores?.name || "Loja"}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{offer.stores?.name || "Loja"}</p>
                         <p className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
                           {offer.coupon_type === "PRODUCT"
                             ? `Pague ${offer.discount_percent}% com Pontos`
