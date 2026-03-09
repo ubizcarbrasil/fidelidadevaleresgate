@@ -152,7 +152,9 @@ export default function AchadinhoSection() {
                 ) : (
                   <div
                     className="w-full h-32 flex items-center justify-center"
-                    style={{ backgroundColor: withAlpha(primary, 0.06AppIcon iconKey="section_deals"               AppIcon iconKey="section_deals"              <Sparkles className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+                    style={{ backgroundColor: withAlpha(primary, 0.06) }}
+                  >
+                    <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
                   </div>
                 )}
 
