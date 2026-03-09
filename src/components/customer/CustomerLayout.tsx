@@ -210,9 +210,9 @@ export default function CustomerLayout() {
                 className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-shadow bg-muted"
                 style={{
                   boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
-  AppIcon iconKey="header_search"        }}
+                }}
               >
-                <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                <AppIcon iconKey="header_search" className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground/70">
                   Busque por parceiros e ofertas
                 </span>
