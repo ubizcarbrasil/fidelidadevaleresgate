@@ -895,7 +895,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
                     {/* Terms text */}
                     {offer.terms_text && (
-                      <div className="rounded-2xl p-4 mb-4 text-xs leading-relaxed" style={{ backgroundColor: `${fg}04`, color: `${fg}60`, border: `1px solid ${fg}06` }}>
+                      <div className="rounded-2xl p-4 mb-4 text-xs leading-relaxed bg-muted text-muted-foreground" style={{ border: "1px solid hsl(var(--foreground) / 0.06)" }}>
                         {offer.terms_text}
                       </div>
                     )}
