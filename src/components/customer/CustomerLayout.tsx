@@ -196,8 +196,9 @@ export default function CustomerLayout() {
                 </button>
                 <button
                   className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
-                  onClick={() => setActiveTaAppIcon iconKey="header_wallet"let")}
-            AppIcon iconKey="header_wallet"                  <Wallet className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  onClick={() => setActiveTab("wallet")}
+                >
+                  <AppIcon iconKey="header_wallet" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                 </button>
               </div>
             </div>
