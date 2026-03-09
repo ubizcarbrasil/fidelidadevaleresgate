@@ -8,21 +8,51 @@ export interface AppIconConfig {
 }
 
 export type AppIconKey =
+  // Navigation bar
   | "nav_home" | "nav_offers" | "nav_redemptions" | "nav_wallet" | "nav_profile"
-  | "quick_ofertas" | "quick_cupons" | "quick_parceiros" | "quick_pontos" | "quick_presentes" | "quick_achadinhos";
+  // Quick actions (home)
+  | "quick_ofertas" | "quick_cupons" | "quick_parceiros" | "quick_pontos" | "quick_presentes" | "quick_achadinhos"
+  // Header
+  | "header_bell" | "header_search" | "header_wallet"
+  // Sections
+  | "section_stores" | "section_foryou" | "section_deals"
+  // Profile menu
+  | "profile_user" | "profile_branch" | "profile_privacy" | "profile_help" | "profile_logout"
+  // Wallet
+  | "wallet_points" | "wallet_credit" | "wallet_debit";
 
 const DEFAULTS: Record<AppIconKey, string> = {
+  // Navigation
   nav_home: "Home",
   nav_offers: "Tag",
   nav_redemptions: "Ticket",
   nav_wallet: "Wallet",
   nav_profile: "UserCircle",
+  // Quick actions
   quick_ofertas: "Tag",
   quick_cupons: "Percent",
   quick_parceiros: "Store",
   quick_pontos: "Coins",
   quick_presentes: "Gift",
   quick_achadinhos: "Sparkles",
+  // Header
+  header_bell: "Bell",
+  header_search: "Search",
+  header_wallet: "Wallet",
+  // Sections
+  section_stores: "Store",
+  section_foryou: "Sparkles",
+  section_deals: "TrendingDown",
+  // Profile
+  profile_user: "User",
+  profile_branch: "MapPin",
+  profile_privacy: "Shield",
+  profile_help: "HelpCircle",
+  profile_logout: "LogOut",
+  // Wallet
+  wallet_points: "Star",
+  wallet_credit: "ArrowUpRight",
+  wallet_debit: "ArrowDownRight",
 };
 
 export function useAppIcons() {

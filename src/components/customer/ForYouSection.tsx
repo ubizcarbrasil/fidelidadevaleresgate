@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import OfferBadge from "@/components/customer/OfferBadge";
@@ -66,7 +67,7 @@ export default function ForYouSection() {
     <section className="max-w-lg mx-auto">
       <div className="px-5 mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4" style={{ color: primary }} />
+          <AppIcon iconKey="section_foryou" className="h-4 w-4" style={{ color: primary }} />
           <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
             Selecionados para você
           </h2>
@@ -101,7 +102,7 @@ export default function ForYouSection() {
               </div>
             ) : (
               <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                <Sparkles className="h-8 w-8" style={{ color: `${primary}30` }} />
+                <AppIcon iconKey="section_foryou" className="h-8 w-8" style={{ color: `${primary}30` }} />
               </div>
             )}
             <div className="p-3">

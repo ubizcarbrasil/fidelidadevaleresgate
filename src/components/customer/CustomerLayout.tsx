@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { Bell, Search, Wallet } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
@@ -185,7 +184,7 @@ export default function CustomerLayout() {
                   onClick={() => setNotifOpen(true)}
                   className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
                 >
-                  <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_bell" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                   {unreadCount > 0 && (
                     <span
                       className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
@@ -199,7 +198,7 @@ export default function CustomerLayout() {
                   className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
                   onClick={() => setActiveTab("wallet")}
                 >
-                  <Wallet className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_wallet" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                 </button>
               </div>
             </div>
@@ -213,7 +212,7 @@ export default function CustomerLayout() {
                   boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                <AppIcon iconKey="header_search" className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground/70">
                   Busque por parceiros e ofertas
                 </span>

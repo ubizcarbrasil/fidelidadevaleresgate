@@ -7,7 +7,8 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Save, Loader2, User, ChevronRight, MapPin, Shield, HelpCircle, Heart, Tag, Moon, Sun } from "lucide-react";
+import { Save, Loader2, ChevronRight, Moon, Sun, Heart, Tag } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import { motion } from "framer-motion";
@@ -88,7 +89,7 @@ export default function CustomerProfilePage() {
             boxShadow: `0 4px 16px -4px ${primary}50`,
           }}
         >
-          {name ? name.charAt(0).toUpperCase() : <User className="h-7 w-7" />}
+          {name ? name.charAt(0).toUpperCase() : <AppIcon iconKey="profile_user" className="h-7 w-7" />}
         </div>
         <div>
           <p className="font-bold text-lg" style={{ fontFamily: fontHeading }}>{name || "Cliente"}</p>
@@ -134,7 +135,7 @@ export default function CustomerProfilePage() {
           style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <MapPin className="h-4 w-4" style={{ color: primary }} />
+            <AppIcon iconKey="profile_branch" className="h-4 w-4" style={{ color: primary }} />
             <span className="text-sm font-bold text-muted-foreground">Filial</span>
           </div>
           <div className="space-y-2">
@@ -191,15 +192,15 @@ export default function CustomerProfilePage() {
         <DarkModeToggle primary={primary} fg={fg} />
         <div style={{ borderBottom: `1px solid ${fg}08` }} />
         {[
-          { icon: Shield, label: "Privacidade e Segurança" },
-          { icon: HelpCircle, label: "Ajuda e Suporte" },
-        ].map(({ icon: Icon, label }, idx) => (
+          { iconKey: "profile_privacy" as const, label: "Privacidade e Segurança" },
+          { iconKey: "profile_help" as const, label: "Ajuda e Suporte" },
+        ].map(({ iconKey, label }, idx) => (
           <motion.button
             key={label}
             whileTap={{ scale: 0.98 }}
             className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors ${idx === 0 ? "border-b border-border/50" : ""}`}
           >
-            <Icon className="h-4.5 w-4.5 text-muted-foreground" />
+            <AppIcon iconKey={iconKey} className="h-4.5 w-4.5 text-muted-foreground" />
             <span className="flex-1">{label}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
           </motion.button>
@@ -214,7 +215,7 @@ export default function CustomerProfilePage() {
           className="w-full h-11 rounded-2xl font-semibold text-sm border-0"
           style={{ backgroundColor: "hsl(0 72% 56% / 0.08)", color: "hsl(0 72% 51%)" }}
         >
-          <LogOut className="h-4 w-4 mr-2" />
+          <AppIcon iconKey="profile_logout" className="h-4 w-4 mr-2" />
           Sair da conta
         </Button>
       </motion.div>

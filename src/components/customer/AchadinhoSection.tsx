@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ExternalLink, Sparkles, TrendingDown } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
@@ -101,7 +102,7 @@ export default function AchadinhoSection() {
             className="h-7 w-7 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: withAlpha(primary, 0.12) }}
           >
-            <Sparkles className="h-4 w-4" style={{ color: primary }} />
+            <AppIcon iconKey="section_deals" className="h-4 w-4" style={{ color: primary }} />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
@@ -153,7 +154,7 @@ export default function AchadinhoSection() {
                     className="w-full h-32 flex items-center justify-center"
                     style={{ backgroundColor: withAlpha(primary, 0.06) }}
                   >
-                    <Sparkles className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+                    <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
                   </div>
                 )}
 
@@ -163,7 +164,7 @@ export default function AchadinhoSection() {
                     className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
                     style={{ backgroundColor: primary }}
                   >
-                    <Sparkles className="h-2.5 w-2.5" />
+                    <AppIcon iconKey="section_deals" className="h-2.5 w-2.5" />
                     Pague {discountPercent}% com Pontos
                   </div>
                 )}

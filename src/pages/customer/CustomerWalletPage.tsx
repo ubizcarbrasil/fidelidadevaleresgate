@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Loader2, Star, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
@@ -84,7 +85,7 @@ export default function CustomerWalletPage() {
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-10 bg-white" />
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 mb-2 opacity-80">
-                <Star className="h-3.5 w-3.5" />
+                <AppIcon iconKey="wallet_points" className="h-3.5 w-3.5" />
                 <span className="text-xs font-medium">Pontos</span>
               </div>
               <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
@@ -136,9 +137,9 @@ export default function CustomerWalletPage() {
               >
                 <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: iconBg }}>
                   {isCredit ? (
-                    <ArrowUpRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                    <AppIcon iconKey="wallet_credit" className="h-4.5 w-4.5" style={{ color: iconColor }} />
                   ) : (
-                    <ArrowDownRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                    <AppIcon iconKey="wallet_debit" className="h-4.5 w-4.5" style={{ color: iconColor }} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">

@@ -35,6 +35,32 @@ const QUICK_SLOTS: IconSlot[] = [
   { key: "quick_achadinhos", label: "Achadinhos", defaultIcon: "Sparkles" },
 ];
 
+const HEADER_SLOTS: IconSlot[] = [
+  { key: "header_bell", label: "Notificações", defaultIcon: "Bell" },
+  { key: "header_search", label: "Busca", defaultIcon: "Search" },
+  { key: "header_wallet", label: "Carteira", defaultIcon: "Wallet" },
+];
+
+const SECTION_SLOTS: IconSlot[] = [
+  { key: "section_stores", label: "Lojas / Parceiros", defaultIcon: "Store" },
+  { key: "section_foryou", label: "Para Você", defaultIcon: "Sparkles" },
+  { key: "section_deals", label: "Achadinhos / Deals", defaultIcon: "TrendingDown" },
+];
+
+const PROFILE_SLOTS: IconSlot[] = [
+  { key: "profile_user", label: "Avatar / Usuário", defaultIcon: "User" },
+  { key: "profile_branch", label: "Filial", defaultIcon: "MapPin" },
+  { key: "profile_privacy", label: "Privacidade", defaultIcon: "Shield" },
+  { key: "profile_help", label: "Ajuda", defaultIcon: "HelpCircle" },
+  { key: "profile_logout", label: "Sair", defaultIcon: "LogOut" },
+];
+
+const WALLET_SLOTS: IconSlot[] = [
+  { key: "wallet_points", label: "Pontos", defaultIcon: "Star" },
+  { key: "wallet_credit", label: "Crédito", defaultIcon: "ArrowUpRight" },
+  { key: "wallet_debit", label: "Débito", defaultIcon: "ArrowDownRight" },
+];
+
 export default function AppIconsConfigPage() {
   const { brand } = useBrand();
   const { currentBrandId } = useBrandGuard();
@@ -150,6 +176,42 @@ export default function AppIconsConfigPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           {QUICK_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">📱 Cabeçalho</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {HEADER_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">📦 Seções</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {SECTION_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">👤 Perfil</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {PROFILE_SLOTS.map(renderSlot)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">💰 Carteira</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {WALLET_SLOTS.map(renderSlot)}
         </CardContent>
       </Card>
 
