@@ -912,7 +912,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       >
                         {termsAccepted && <CheckCircle2 className="h-4 w-4 text-white" />}
                       </div>
-                      <span className="text-sm" style={{ color: `${fg}70` }}>
+                      <span className="text-sm text-muted-foreground">
                         Li e aceito os <strong>termos e condições</strong> desta oferta
                       </span>
                     </label>
