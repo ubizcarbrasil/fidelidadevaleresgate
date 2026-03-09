@@ -1032,7 +1032,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   )}
 
                   <div className="mb-4">
-                    <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>CPF (obrigatório)</label>
+                    <label className="text-xs font-semibold block mb-1.5 text-muted-foreground">CPF (obrigatório)</label>
                     <input
                       type="text" inputMode="numeric" value={cpf}
                       onChange={e => setCpf(formatCpf(e.target.value))}
