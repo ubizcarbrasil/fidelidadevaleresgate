@@ -102,7 +102,7 @@ export default function AchadinhoSection() {
             className="h-7 w-7 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: withAlpha(primary, 0.12) }}
           >
-            <AppIcon iconKey="section_deals"iconKey="section_deals" className="h-4 w-4" style={{ color: primary }} />
+            <AppIcon iconKey="section_deals"iconKey="section_deals"iconKey="section_deals" className="h-4 w-4" style={{ color: primary }} />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
@@ -152,8 +152,7 @@ export default function AchadinhoSection() {
                 ) : (
                   <div
                     className="w-full h-32 flex items-center justify-center"
-                    style={{ backgroundColor: withAlpha(primary, 0.06) }}
-                  AppIcon iconKey="section_deals"              <Sparkles className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+                    style={{ backgroundColor: withAlpha(primary, 0.06AppIcon iconKey="section_deals"               AppIcon iconKey="section_deals"              <Sparkles className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
                   </div>
                 )}
 
@@ -161,8 +160,7 @@ export default function AchadinhoSection() {
                 {hasDiscount && (
                   <div
                     className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
-                    style={{ backgroundColor: primary }}
-                  >
+                    style={{ backgroundColor: primarAppIcon iconKey="section_deals"               >
                     <Sparkles className="h-2.5 w-2.5" />
                     Pague {discountPercent}% com Pontos
                   </div>

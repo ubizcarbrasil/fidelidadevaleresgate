@@ -67,7 +67,7 @@ export default function ForYouSection() {
     <section className="max-w-lg mx-auto">
       <div className="px-5 mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <AppIcon iconKey="section_foryou" className="h-4 w-4" style={{ color: primary }} />
+          <AppIcon iconKey="section_foryou"iconKey="section_foryou" className="h-4 w-4" style={{ color: primary }} />
           <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
             Selecionados para você
           </h2>
@@ -101,8 +101,7 @@ export default function ForYouSection() {
                 </div>
               </div>
             ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                <Sparkles className="h-8 w-8" style={{ color: `${primary}30` }} />
+              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}0AppIcon iconKey="section_foryou"               <Sparkles className="h-8 w-8" style={{ color: `${primary}30` }} />
               </div>
             )}
             <div className="p-3">

@@ -130,7 +130,7 @@ export default function EmissorasSection() {
                 />
               ) : (
                  <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-muted">
-                   <Store className="h-6 w-6 text-muted-foreground" />
+                   <AppIcon iconKey="section_stores" className="h-6 w-6 text-muted-foreground" />
                  </div>
               )}
             </div>
