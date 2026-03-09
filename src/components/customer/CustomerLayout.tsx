@@ -184,7 +184,7 @@ export default function CustomerLayout() {
                   onClick={() => setNotifOpen(true)}
                   className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
                 >
-                  <AppIcon iconKey="header_bell"con iconKey="header_bell" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_bell"con iconKey="header_bell"con iconKey="header_bell" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                   {unreadCount > 0 && (
                     <span
                       className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
@@ -196,7 +196,7 @@ export default function CustomerLayout() {
                 </button>
                 <button
                   className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
-                  onClick={() => setActiveTab("wallet")}
+                  onClick={() => setActiveTaAppIcon iconKey="header_wallet"let")}
             AppIcon iconKey="header_wallet"                  <Wallet className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
                 </button>
               </div>
@@ -209,7 +209,7 @@ export default function CustomerLayout() {
                 className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-shadow bg-muted"
                 style={{
                   boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
-                }}
+  AppIcon iconKey="header_search"        }}
               >
                 <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground/70">
