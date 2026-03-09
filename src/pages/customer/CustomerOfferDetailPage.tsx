@@ -688,7 +688,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             )}
             {customer && customerPoints <= 0 ? (
               <div className="w-full py-4 rounded-2xl font-bold text-sm text-center"
-                style={{ backgroundColor: `${fg}08`, color: `${fg}40` }}>
+                style={{ backgroundColor: "hsl(var(--foreground) / 0.08)", color: "hsl(var(--muted-foreground))" }}>
                 🔒 Você precisa acumular pontos para resgatar
               </div>
             ) : (
