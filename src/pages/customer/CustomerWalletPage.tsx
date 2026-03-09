@@ -137,9 +137,10 @@ export default function CustomerWalletPage() {
               >
                 <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: iconBg }}>
                   {isCredit ? (
-                    <ArrowUpRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                    <AppIcon iconKey="wallet_credit" className="h-4.5 w-4.5" style={{ color: iconColor }} />
                   ) : (
-                    <ArrowDownRight className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                    <AppIcon iconKey="wallet_debit" className="h-4.5 w-4.5" style={{ color: iconColor }} />
+                  )}
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
