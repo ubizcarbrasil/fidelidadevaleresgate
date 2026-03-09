@@ -431,7 +431,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                               const isAllowed = (offer.allowed_weekdays as number[]).includes(i);
                               return (
                                 <span key={i} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                                  style={{ backgroundColor: isAllowed ? `${primary}15` : `${fg}06`, color: isAllowed ? primary : `${fg}30` }}>
+                                  style={{ backgroundColor: isAllowed ? withAlpha(primary, 0.15) : "hsl(var(--foreground) / 0.06)", color: isAllowed ? primary : "hsl(var(--muted-foreground))" }}>
                                   {label}
                                 </span>
                               );
