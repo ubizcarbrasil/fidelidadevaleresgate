@@ -13,6 +13,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
@@ -127,8 +133,7 @@ export default function CustomerOffersPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar ofertas e parceiros..."
-          className="flex-1 bg-transparent text-sm outline-none"
-          style={{ color: fg }}
+          className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
         />
       </div>
 
@@ -206,9 +211,9 @@ export default function CustomerOffersPage() {
                   ) : (
                     <div
                       className="h-20 w-20 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${primary}08` }}
+                      style={{ backgroundColor: withAlpha(primary, 0.08) }}
                     >
-                      <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
+                      <ShoppingBag className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
                     </div>
                   )}
                   {/* Badges on image */}
@@ -234,9 +239,9 @@ export default function CustomerOffersPage() {
                       {offer.stores.logo_url ? (
                         <img src={offer.stores.logo_url} alt="" className="h-4 w-4 rounded object-cover" />
                       ) : (
-                        <Store className="h-3 w-3" style={{ color: `${fg}40` }} />
+                        <Store className="h-3 w-3 text-muted-foreground" />
                       )}
-                      <span className="text-[11px] font-medium truncate" style={{ color: `${fg}50` }}>
+                      <span className="text-[11px] font-medium truncate text-muted-foreground">
                         {offer.stores.name}
                       </span>
                     </div>
@@ -255,7 +260,7 @@ export default function CustomerOffersPage() {
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </span>
                         {Number(offer.min_purchase) > 0 && (
-                          <span className="text-[10px] line-through" style={{ color: `${fg}35` }}>
+                          <span className="text-[10px] line-through text-muted-foreground">
                             R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
                           </span>
                         )}
@@ -264,7 +269,7 @@ export default function CustomerOffersPage() {
                     {hasDiscount && (
                       <span
                         className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                        style={{ backgroundColor: `${primary}12`, color: primary }}
+                        style={{ backgroundColor: withAlpha(primary, 0.12), color: primary }}
                       >
                         {offer.discount_percent}% OFF
                       </span>
@@ -278,17 +283,17 @@ export default function CustomerOffersPage() {
                     whileTap={{ scale: 1.3 }}
                     transition={{ type: "spring", stiffness: 400, damping: 12 }}
                     className="h-7 w-7 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: isFavorite(offer.id) ? `${primary}12` : `${fg}06` }}
+                    style={{ backgroundColor: isFavorite(offer.id) ? withAlpha(primary, 0.12) : "hsl(var(--foreground) / 0.06)" }}
                     onClick={(e) => { e.stopPropagation(); toggleFavorite(offer.id); }}
                   >
                     <Heart
                       className="h-3.5 w-3.5"
                       fill={isFavorite(offer.id) ? primary : "none"}
-                      style={{ color: isFavorite(offer.id) ? primary : `${fg}35` }}
+                      style={{ color: isFavorite(offer.id) ? primary : "hsl(var(--muted-foreground))" }}
                     />
                   </motion.button>
                   {offer.likes_count > 0 && (
-                    <div className="flex items-center gap-0.5 text-[10px]" style={{ color: `${fg}40` }}>
+                    <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                       <ThumbsUp className="h-2.5 w-2.5" />
                       {offer.likes_count}
                     </div>
