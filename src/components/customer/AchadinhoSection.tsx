@@ -162,8 +162,9 @@ export default function AchadinhoSection() {
                 {hasDiscount && (
                   <div
                     className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
-                    style={{ backgroundColor: primarAppIcon iconKey="section_deals"               >
-                    <Sparkles className="h-2.5 w-2.5" />
+                    style={{ backgroundColor: primary }}
+                  >
+                    <AppIcon iconKey="section_deals" className="h-2.5 w-2.5" />
                     Pague {discountPercent}% com Pontos
                   </div>
                 )}

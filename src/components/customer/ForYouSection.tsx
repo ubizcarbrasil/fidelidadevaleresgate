@@ -101,8 +101,10 @@ export default function ForYouSection() {
                 </div>
               </div>
             ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}0AppIcon iconKey="section_foryou"               <Sparkles className="h-8 w-8" style={{ color: `${primary}30` }} />
+              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                <AppIcon iconKey="section_foryou" className="h-8 w-8" style={{ color: `${primary}30` }} />
               </div>
+            )}
             )}
             <div className="p-3">
               {o.stores?.name && (
