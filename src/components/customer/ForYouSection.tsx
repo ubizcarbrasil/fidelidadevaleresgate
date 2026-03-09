@@ -105,7 +105,6 @@ export default function ForYouSection() {
                 <AppIcon iconKey="section_foryou" className="h-8 w-8" style={{ color: `${primary}30` }} />
               </div>
             )}
-            )}
             <div className="p-3">
               {o.stores?.name && (
                 <p className="text-[10px] font-medium truncate mb-0.5" style={{ color: `${fg}50` }}>
