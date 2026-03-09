@@ -135,7 +135,7 @@ export default function CustomerProfilePage() {
           style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <MapPin className="h-4 w-4" style={{ color: primary }} />
+            <AppIcon iconKey="profile_branch" className="h-4 w-4" style={{ color: primary }} />
             <span className="text-sm font-bold text-muted-foreground">Filial</span>
           </div>
           <div className="space-y-2">
