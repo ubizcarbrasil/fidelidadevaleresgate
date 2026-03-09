@@ -906,7 +906,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         onClick={() => setTermsAccepted(!termsAccepted)}
                         className="h-6 w-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors"
                         style={{
-                          borderColor: termsAccepted ? primary : `${fg}25`,
+                          borderColor: termsAccepted ? primary : "hsl(var(--muted-foreground))",
                           backgroundColor: termsAccepted ? primary : "transparent",
                         }}
                       >
