@@ -476,7 +476,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           )}
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             {sim.stores?.name && (
-                              <p className="text-[10px] font-medium truncate" style={{ color: `${fg}45` }}>{sim.stores.name}</p>
+                              <p className="text-[10px] font-medium truncate text-muted-foreground">{sim.stores.name}</p>
                             )}
                             <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
                           </div>
