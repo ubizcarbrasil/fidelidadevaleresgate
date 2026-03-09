@@ -997,7 +997,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   {offer.coupon_type === "PRODUCT" && (
                     <div className="mb-4 space-y-2">
                       {/* Product price */}
-                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${fg}04`, border: `1px solid ${fg}08` }}>
+                      <div className="rounded-2xl p-3 flex justify-between items-center bg-muted" style={{ border: "1px solid hsl(var(--foreground) / 0.08)" }}>
                         <span className="text-sm" style={{ color: `${fg}60` }}>Valor do produto</span>
                         <span className="text-sm font-bold" style={{ color: fg }}>
                           R$ {productPriceOffer.toFixed(2).replace(".", ",")}
