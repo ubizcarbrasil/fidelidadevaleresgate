@@ -922,7 +922,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   <div className="p-6 pt-3 flex gap-3">
                     <button onClick={() => setShowConfirm(false)}
                       className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
-                      style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
+                      style={{ backgroundColor: "hsl(var(--foreground) / 0.08)", color: "hsl(var(--muted-foreground))" }}>
                       Cancelar
                     </button>
                     <motion.button
