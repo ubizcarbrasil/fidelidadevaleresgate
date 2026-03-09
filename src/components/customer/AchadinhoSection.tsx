@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ExternalLink, Sparkles, TrendingDown } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 

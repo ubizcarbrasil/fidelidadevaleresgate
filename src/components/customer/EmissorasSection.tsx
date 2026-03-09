@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { useCustomerFavoriteStores } from "@/hooks/useCustomerFavoriteStores";
-import { Store, ChevronRight, Heart, Star } from "lucide-react";
+import { ChevronRight, Heart, Star } from "lucide-react";
+import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
