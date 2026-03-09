@@ -74,7 +74,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
           {greeting}, <span style={{ color: primary }}>{firstName}</span>! 👋
         </h2>
-        <p className="text-xs mt-0.5" style={{ color: `${fg}50` }}>
+        <p className="text-xs mt-0.5 text-muted-foreground">
           Confira suas ofertas e pontos
         </p>
       </motion.div>
@@ -171,7 +171,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 >
                   <AppIcon iconKey={action.iconKey} className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
                 </div>
-                <span className="text-[11px] font-semibold leading-tight text-center" style={{ color: `${fg}80` }}>
+                <span className="text-[11px] font-semibold leading-tight text-center text-muted-foreground">
                   {action.label}
                 </span>
               </motion.button>

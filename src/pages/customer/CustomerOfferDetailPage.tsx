@@ -26,6 +26,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 interface Props {
@@ -306,10 +312,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   </button>
                   <div className="absolute top-4 right-4 flex gap-2">
                     <button onClick={handleShare} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
-                      <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
+                      <Share2 className="h-5 w-5 text-muted-foreground" />
                     </button>
                     <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
-                      <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
+                      <Heart className="h-5 w-5 text-muted-foreground" />
                     </motion.button>
                   </div>
                   {/* Store logo circle overlay */}
@@ -379,15 +385,15 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
                         <p className="text-[11px] font-medium text-muted-foreground">Você pode usar</p>
                         <p className="text-3xl font-bold" style={{ color: "#E65100" }}>{discountPct}%</p>
-                        <p className="text-[11px]" style={{ color: `${fg}50` }}>do valor em pontos</p>
+                        <p className="text-[11px] text-muted-foreground">do valor em pontos</p>
                       </div>
                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
-                        <p className="text-[11px] font-medium" style={{ color: `${fg}70` }}>Equivale a</p>
-                        <p className="text-3xl font-bold" style={{ color: fg }}>{pointsValue}</p>
-                        <p className="text-[11px]" style={{ color: `${fg}70` }}>pontos</p>
+                        <p className="text-[11px] font-medium" style={{ color: "#5D4037" }}>Equivale a</p>
+                        <p className="text-3xl font-bold" style={{ color: "#3E2723" }}>{pointsValue}</p>
+                        <p className="text-[11px]" style={{ color: "#5D4037" }}>pontos</p>
                       </div>
                     </div>
-                    <p className="text-xs" style={{ color: `${fg}60` }}>
+                    <p className="text-xs text-muted-foreground">
                       Ao resgatar, você receberá um cupom de desconto de{" "}
                       <strong style={{ color: "#E65100" }}>R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
                       para usar na compra deste produto.
@@ -425,7 +431,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                               const isAllowed = (offer.allowed_weekdays as number[]).includes(i);
                               return (
                                 <span key={i} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                                  style={{ backgroundColor: isAllowed ? `${primary}15` : `${fg}06`, color: isAllowed ? primary : `${fg}30` }}>
+                                  style={{ backgroundColor: isAllowed ? withAlpha(primary, 0.15) : "hsl(var(--foreground) / 0.06)", color: isAllowed ? primary : "hsl(var(--muted-foreground))" }}>
                                   {label}
                                 </span>
                               );
@@ -470,7 +476,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           )}
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             {sim.stores?.name && (
-                              <p className="text-[10px] font-medium truncate" style={{ color: `${fg}45` }}>{sim.stores.name}</p>
+                              <p className="text-[10px] font-medium truncate text-muted-foreground">{sim.stores.name}</p>
                             )}
                             <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
                           </div>
@@ -503,10 +509,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                 </button>
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button onClick={handleShare} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
-                    <Share2 className="h-5 w-5" style={{ color: `${fg}70` }} />
+                    <Share2 className="h-5 w-5 text-muted-foreground" />
                   </button>
                   <motion.button whileTap={{ scale: 1.3 }} className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
-                    <Heart className="h-5 w-5" style={{ color: `${fg}50` }} />
+                    <Heart className="h-5 w-5 text-muted-foreground" />
                   </motion.button>
                 </div>
                 {daysLeft !== null && daysLeft <= 3 && (
@@ -597,7 +603,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                             const isAllowed = (offer.allowed_weekdays as number[]).includes(i);
                             return (
                               <span key={i} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
-                                style={{ backgroundColor: isAllowed ? `${primary}15` : `${fg}06`, color: isAllowed ? primary : `${fg}30` }}>
+                                style={{ backgroundColor: isAllowed ? withAlpha(primary, 0.15) : "hsl(var(--foreground) / 0.06)", color: isAllowed ? primary : "hsl(var(--muted-foreground))" }}>
                                 {label}
                               </span>
                             );
@@ -649,7 +655,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         )}
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           {sim.stores?.name && (
-                            <p className="text-[10px] font-medium truncate" style={{ color: `${fg}45` }}>{sim.stores.name}</p>
+                            <p className="text-[10px] font-medium truncate text-muted-foreground">{sim.stores.name}</p>
                           )}
                           <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
                           {Number(sim.value_rescue) > 0 && (
@@ -674,7 +680,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
           <div className="max-w-lg mx-auto">
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-sm" style={{ color: `${fg}50` }}>Seu saldo:</span>
+                <span className="text-sm text-muted-foreground">Seu saldo:</span>
                 <span className="text-sm font-bold" style={{ color: customerPoints > 0 ? primary : "#DC2626" }}>
                   {customerPoints.toLocaleString("pt-BR")} pontos
                 </span>
@@ -682,7 +688,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             )}
             {customer && customerPoints <= 0 ? (
               <div className="w-full py-4 rounded-2xl font-bold text-sm text-center"
-                style={{ backgroundColor: `${fg}08`, color: `${fg}40` }}>
+                style={{ backgroundColor: "hsl(var(--foreground) / 0.08)", color: "hsl(var(--muted-foreground))" }}>
                 🔒 Você precisa acumular pontos para resgatar
               </div>
             ) : (
@@ -707,7 +713,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
           <div className="max-w-lg mx-auto">
             {customer && (
               <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-sm" style={{ color: `${fg}50` }}>Seu saldo:</span>
+                <span className="text-sm text-muted-foreground">Seu saldo:</span>
                 <span className="text-sm font-bold" style={{ color: customerPoints >= requiredPoints ? primary : "#DC2626" }}>
                   {customerPoints.toLocaleString("pt-BR")} pontos
                 </span>
@@ -800,7 +806,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         </div>
                       )}
                       <div>
-                        <p className="text-sm font-medium" style={{ color: `${fg}60` }}>{offer.stores?.name || "Loja"}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{offer.stores?.name || "Loja"}</p>
                         <p className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
                           {offer.coupon_type === "PRODUCT"
                             ? `Pague ${offer.discount_percent}% com Pontos`
@@ -832,7 +838,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           <span className="text-lg font-bold" style={{ color: primary }}>$</span>
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold tracking-wider" style={{ color: `${fg}50` }}>VALOR A SER RESGATADO</p>
+                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">VALOR A SER RESGATADO</p>
                           <p className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
                             R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                           </p>
@@ -841,8 +847,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     )}
 
                     {/* Rules card */}
-                    <div className="rounded-2xl p-4 mb-4 space-y-3 bg-muted" style={{ border: `1px solid ${fg}08` }}>
-                      <p className="text-[11px] font-bold tracking-wider" style={{ color: `${fg}50` }}>REGRAS DE USO</p>
+                    <div className="rounded-2xl p-4 mb-4 space-y-3 bg-muted" style={{ border: "1px solid hsl(var(--foreground) / 0.08)" }}>
+                      <p className="text-[11px] font-bold tracking-wider text-muted-foreground">REGRAS DE USO</p>
                       {Number(offer.min_purchase) > 0 && (
                         <TermsRuleItem icon={<ShoppingBag className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
                           Compra mínima de R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
@@ -889,7 +895,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
                     {/* Terms text */}
                     {offer.terms_text && (
-                      <div className="rounded-2xl p-4 mb-4 text-xs leading-relaxed" style={{ backgroundColor: `${fg}04`, color: `${fg}60`, border: `1px solid ${fg}06` }}>
+                      <div className="rounded-2xl p-4 mb-4 text-xs leading-relaxed bg-muted text-muted-foreground" style={{ border: "1px solid hsl(var(--foreground) / 0.06)" }}>
                         {offer.terms_text}
                       </div>
                     )}
@@ -900,13 +906,13 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         onClick={() => setTermsAccepted(!termsAccepted)}
                         className="h-6 w-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors"
                         style={{
-                          borderColor: termsAccepted ? primary : `${fg}25`,
+                          borderColor: termsAccepted ? primary : "hsl(var(--muted-foreground))",
                           backgroundColor: termsAccepted ? primary : "transparent",
                         }}
                       >
                         {termsAccepted && <CheckCircle2 className="h-4 w-4 text-white" />}
                       </div>
-                      <span className="text-sm" style={{ color: `${fg}70` }}>
+                      <span className="text-sm text-muted-foreground">
                         Li e aceito os <strong>termos e condições</strong> desta oferta
                       </span>
                     </label>
@@ -916,7 +922,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   <div className="p-6 pt-3 flex gap-3">
                     <button onClick={() => setShowConfirm(false)}
                       className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
-                      style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
+                      style={{ backgroundColor: "hsl(var(--foreground) / 0.08)", color: "hsl(var(--muted-foreground))" }}>
                       Cancelar
                     </button>
                     <motion.button
@@ -966,7 +972,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>
                       {offer.coupon_type === "PRODUCT" ? `Pague ${offer.discount_percent}% com Pontos` : "Confirmar resgate"}
                     </h3>
-                    <p className="text-sm" style={{ color: `${fg}50` }}>
+                    <p className="text-sm text-muted-foreground">
                       {offer.coupon_type === "PRODUCT" ? (
                         <>Confira os valores e informe seu CPF para gerar o cupom</>
                       ) : (
@@ -981,7 +987,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       )}
                     </p>
                     {offer.coupon_type !== "PRODUCT" && Number(offer.min_purchase) > 0 && (
-                      <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block" style={{ backgroundColor: `${fg}06`, color: `${fg}50` }}>
+                      <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block bg-muted text-muted-foreground">
                         Compra mínima: R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
                       </p>
                     )}
@@ -991,29 +997,29 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   {offer.coupon_type === "PRODUCT" && (
                     <div className="mb-4 space-y-2">
                       {/* Product price */}
-                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${fg}04`, border: `1px solid ${fg}08` }}>
-                        <span className="text-sm" style={{ color: `${fg}60` }}>Valor do produto</span>
+                      <div className="rounded-2xl p-3 flex justify-between items-center bg-muted" style={{ border: "1px solid hsl(var(--foreground) / 0.08)" }}>
+                        <span className="text-sm text-muted-foreground">Valor do produto</span>
                         <span className="text-sm font-bold" style={{ color: fg }}>
                           R$ {productPriceOffer.toFixed(2).replace(".", ",")}
                         </span>
                       </div>
                       {/* Credit applied */}
                       <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
-                        <span className="text-sm" style={{ color: `${fg}60` }}>Desconto ({discountPctOffer}% em pontos)</span>
+                        <span className="text-sm text-muted-foreground">Desconto ({discountPctOffer}% em pontos)</span>
                         <span className="text-sm font-bold" style={{ color: primary }}>
                           - R$ {creditAmountOffer.toFixed(2).replace(".", ",")}
                         </span>
                       </div>
                       {/* Remaining to pay */}
                       <div className="rounded-2xl p-3 flex justify-between items-center bg-amber-50 dark:bg-amber-950/30" style={{ border: "1.5px solid hsl(var(--chart-4, 45 93% 58%))" }}>
-                        <span className="text-sm font-semibold" style={{ color: `${fg}80` }}>Você paga</span>
+                        <span className="text-sm font-semibold" style={{ color: "#5D4037" }}>Você paga</span>
                         <span className="text-lg font-bold" style={{ color: "#E65100" }}>
                           R$ {remainingAfterCredit.toFixed(2).replace(".", ",")}
                         </span>
                       </div>
                       {/* Points cost */}
                       <div className="rounded-xl p-2 text-center">
-                        <span className="text-xs" style={{ color: `${fg}50` }}>
+                        <span className="text-xs text-muted-foreground">
                           Custo: <strong style={{ color: primary }}>{requiredPoints.toLocaleString("pt-BR")} pontos</strong>
                         </span>
                         {!hasEnoughPoints && (
@@ -1026,7 +1032,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                   )}
 
                   <div className="mb-4">
-                    <label className="text-xs font-semibold block mb-1.5" style={{ color: `${fg}60` }}>CPF (obrigatório)</label>
+                    <label className="text-xs font-semibold block mb-1.5 text-muted-foreground">CPF (obrigatório)</label>
                     <input
                       type="text" inputMode="numeric" value={cpf}
                       onChange={e => setCpf(formatCpf(e.target.value))}

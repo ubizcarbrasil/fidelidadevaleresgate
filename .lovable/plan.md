@@ -1,63 +1,51 @@
 
 
-# Plan: Fix Dark Mode Contrast Across All Customer Pages
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-## Root Cause
+## Resumo
 
-The pattern `${fg}50` (e.g., `style={{ color: \`${fg}50\` }}`) appends raw hex digits to an HSL string like `hsl(220 16% 93%)50`, producing **invalid CSS**. In light mode this sometimes works by coincidence, but in dark mode text becomes invisible. There are **625+ occurrences** across 19 files.
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-## Issues Identified from Screenshots
+## O que muda para o usuário
 
-1. **Offers page (IMG_3783)**: Store names (`${fg}50`), prices (`${fg}35`), and percentage badges invisible
-2. **Offer Detail (IMG_3784)**: "Pague com Pontos" card text (`${fg}50`, `${fg}70`) invisible on yellow background
-3. **Meus Resgates (IMG_3782)**: "Saldo disponível R$ 0,00" still showing money instead of points; search/filter bars low contrast
-4. **Carteira (IMG_3779)**: History items white-on-white; card background too close to page background
-5. **Header (IMG_3780)**: Brand name area lacks separation from content below
-6. **BranchSelector**: Hardcoded `bg-white`, `#F2F2F7`, `#FAFAFA`
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-## Solution
+## Mudanças Técnicas
 
-Replace all `${fg}XX` patterns with proper alpha using the existing `withAlpha()` helper or semantic Tailwind classes. Also fix remaining hardcoded colors.
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-### Mapping Table
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-| Old Pattern | Replacement |
-|---|---|
-| `${fg}30` - `${fg}50` | `text-muted-foreground` class or `withAlpha(fg, 0.5)` |
-| `${fg}06` - `${fg}15` | `hsl(var(--foreground) / 0.06)` - `0.15` |
-| `${fg}60` - `${fg}80` | `withAlpha(fg, 0.6)` - `withAlpha(fg, 0.8)` or just `fg` |
-| `bg-white` / `#F2F2F7` / `#FAFAFA` | `bg-card` / `bg-muted` / `bg-background` |
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
 
-### Files to Edit (18 files)
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
 
-1. **CustomerOffersPage.tsx** — Store names, prices, favorite button backgrounds, like counts
-2. **CustomerOfferDetailPage.tsx** — "Pague com Pontos" card, terms text, rule rows, CTA saldo text, confirmation modal
-3. **CustomerRedemptionsPage.tsx** — Verify "Saldo disponível R$" is gone (should say "Seus pontos"); card text colors
-4. **CustomerRedemptionDetailPage.tsx** — Info grid labels, store name, detail rows
-5. **CustomerWalletPage.tsx** — Ensure history card and bg have enough contrast separation
-6. **CustomerHomePage.tsx** — Greeting subtitle, quick action labels
-7. **CustomerStoreDetailPage.tsx** — Address, description, FAQ, rule text, phone button
-8. **CustomerProfilePage.tsx** — All settings items using `${fg}` alpha
-9. **CustomerAuthPage.tsx** — Form labels and placeholders
-10. **CustomerEmissorasPage.tsx** — Store card text
-11. **CustomerLayout.tsx** — Header gradient tint, bell/wallet icon colors
-12. **BranchSelector.tsx** — Hardcoded `bg-white`, `#FAFAFA`, `#F2F2F7`, and `${fg}` patterns
-13. **BranchPickerSheet.tsx** — `${fg}40` on MapPin icons
-14. **AchadinhoSection.tsx** — Card text
-15. **EmissorasSection.tsx** — Card text
-16. **CustomerSearchOverlay.tsx** — Input and result text
-17. **CustomerLedgerOverlay.tsx** — Entry labels
-18. **NotificationDrawer.tsx** — Notification text
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
 
-### Implementation Approach
+### 2. Seções de vitrine automáticas
 
-For each file:
-- Replace `${fg}XX` with `withAlpha(fg, 0.XX)` for inline styles
-- Replace hardcoded light-only colors with Tailwind semantic classes
-- Replace `bg-white` → `bg-card`, `#FAFAFA` → `bg-background`, `#F2F2F7` → `bg-muted`
-- Ensure all text has sufficient contrast against dark backgrounds
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
 
-### Verification
+### 3. Nenhuma alteração no banco de dados
 
-After changes, all text should be legible in both light and dark modes with no invisible or near-invisible elements.
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 

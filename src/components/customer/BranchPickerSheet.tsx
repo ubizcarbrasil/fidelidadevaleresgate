@@ -13,6 +13,12 @@ interface GroupedBranches {
   };
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 export default function BranchPickerSheet() {
   const { branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const [open, setOpen] = useState(false);
@@ -61,7 +67,7 @@ export default function BranchPickerSheet() {
       <SheetTrigger asChild>
         <button
           className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-colors active:scale-95"
-          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+          style={{ backgroundColor: withAlpha(primaryColor, 0.1), color: primaryColor }}
         >
           <MapPin className="h-3 w-3" />
           <span className="font-medium max-w-[100px] truncate">{displayLabel}</span>
@@ -79,11 +85,11 @@ export default function BranchPickerSheet() {
           onClick={handleDetectLocation}
           disabled={detecting}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-4 transition-colors active:scale-[0.98]"
-          style={{ backgroundColor: `${primaryColor}08` }}
+          style={{ backgroundColor: withAlpha(primaryColor, 0.08) }}
         >
           <div
             className="h-9 w-9 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${primaryColor}15` }}
+            style={{ backgroundColor: withAlpha(primaryColor, 0.15) }}
           >
             <Navigation className="h-4 w-4" style={{ color: primaryColor }} />
           </div>
@@ -91,7 +97,7 @@ export default function BranchPickerSheet() {
             <span className="text-sm font-semibold block" style={{ color: fg }}>
               {detecting ? "Detectando..." : "Usar minha localização"}
             </span>
-            <span className="text-[11px] opacity-50">Encontrar filial mais próxima</span>
+            <span className="text-[11px] text-muted-foreground">Encontrar filial mais próxima</span>
           </div>
         </button>
 
@@ -103,7 +109,7 @@ export default function BranchPickerSheet() {
 
             return (
               <div key={state}>
-                <div className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2 opacity-40">
+                <div className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2 text-muted-foreground">
                   {state}
                 </div>
                 {sortedCities.map((city) => {
@@ -118,12 +124,12 @@ export default function BranchPickerSheet() {
                             onClick={() => handleSelect(branch)}
                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all active:scale-[0.98]"
                             style={{
-                              backgroundColor: isSelected ? `${primaryColor}10` : "transparent",
+                              backgroundColor: isSelected ? withAlpha(primaryColor, 0.1) : "transparent",
                             }}
                           >
                             <MapPin
                               className="h-4 w-4 flex-shrink-0"
-                              style={{ color: isSelected ? primaryColor : `${fg}40` }}
+                              style={{ color: isSelected ? primaryColor : "hsl(var(--muted-foreground))" }}
                             />
                             <div className="text-left flex-1">
                               <span
@@ -132,7 +138,7 @@ export default function BranchPickerSheet() {
                               >
                                 {city}
                               </span>
-                              <span className="text-[11px] opacity-40">
+                              <span className="text-[11px] text-muted-foreground">
                                 {state !== "Outros" ? state : ""}
                               </span>
                             </div>

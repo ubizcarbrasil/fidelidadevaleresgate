@@ -11,6 +11,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 interface AffiliateDeal {
   id: string;
   title: string;
@@ -93,7 +99,7 @@ export default function AchadinhoSection() {
         <div className="flex items-center gap-2">
           <div
             className="h-7 w-7 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: `${primary}12` }}
+            style={{ backgroundColor: withAlpha(primary, 0.12) }}
           >
             <Sparkles className="h-4 w-4" style={{ color: primary }} />
           </div>
@@ -101,7 +107,7 @@ export default function AchadinhoSection() {
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
               Achadinhos
             </h2>
-            <p className="text-[10px]" style={{ color: `${fg}45` }}>
+            <p className="text-[10px] text-muted-foreground">
               Ofertas exclusivas de parceiros
             </p>
           </div>
@@ -128,7 +134,7 @@ export default function AchadinhoSection() {
               whileTap={{ scale: 0.97 }}
               className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer"
               style={{
-                boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+                boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
                 scrollSnapAlign: "start",
               }}
               onClick={() => handleClick(deal)}
@@ -145,9 +151,9 @@ export default function AchadinhoSection() {
                 ) : (
                   <div
                     className="w-full h-32 flex items-center justify-center"
-                    style={{ backgroundColor: `${primary}06` }}
+                    style={{ backgroundColor: withAlpha(primary, 0.06) }}
                   >
-                    <Sparkles className="h-8 w-8" style={{ color: `${primary}30` }} />
+                    <Sparkles className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
                   </div>
                 )}
 
@@ -164,16 +170,16 @@ export default function AchadinhoSection() {
 
                 {/* External link icon */}
                 <div
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-white/80 backdrop-blur flex items-center justify-center"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center"
                 >
-                  <ExternalLink className="h-3 w-3" style={{ color: `${fg}60` }} />
+                  <ExternalLink className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Content */}
               <div className="p-3">
                 {deal.store_name && (
-                  <p className="text-[9px] font-medium mb-0.5 truncate" style={{ color: `${fg}40` }}>
+                  <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">
                     {deal.store_name}
                   </p>
                 )}
@@ -185,7 +191,7 @@ export default function AchadinhoSection() {
                     R$ {Number(deal.price).toFixed(2).replace(".", ",")}
                   </span>
                   {hasDiscount && (
-                    <span className="text-[10px] line-through" style={{ color: `${fg}35` }}>
+                    <span className="text-[10px] line-through text-muted-foreground">
                       R$ {Number(deal.original_price).toFixed(2).replace(".", ",")}
                     </span>
                   )}
