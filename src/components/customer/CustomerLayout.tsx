@@ -1,8 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { Bell, Search, Wallet } from "lucide-react";
-import AppIcon from "@/components/customer/AppIcon";
 import AppIcon from "@/components/customer/AppIcon";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
