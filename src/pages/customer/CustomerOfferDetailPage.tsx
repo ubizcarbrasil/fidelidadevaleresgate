@@ -26,6 +26,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
+function withAlpha(hslColor: string, alpha: number): string {
+  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
+  if (!inner) return hslColor;
+  return `hsl(${inner} / ${alpha})`;
+}
+
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 interface Props {
