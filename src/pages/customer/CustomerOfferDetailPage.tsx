@@ -1019,7 +1019,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       </div>
                       {/* Points cost */}
                       <div className="rounded-xl p-2 text-center">
-                        <span className="text-xs" style={{ color: `${fg}50` }}>
+                        <span className="text-xs text-muted-foreground">
                           Custo: <strong style={{ color: primary }}>{requiredPoints.toLocaleString("pt-BR")} pontos</strong>
                         </span>
                         {!hasEnoughPoints && (
