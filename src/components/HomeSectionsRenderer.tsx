@@ -390,13 +390,14 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
 // --- VOUCHERS_CARDS (Méliuz coupon style - pink/magenta accent) ---
 function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { openWebview } = useCustomerNav();
+  const navigate = (await import("react-router-dom")).useNavigate?.();
 
   const handleCouponClick = useCallback((v: any) => {
     if (v.redirect_url) {
-      openWebview?.(v.redirect_url, v.title || "Cupom");
+      // Navigate to webview page with the redirect URL
+      window.location.href = `/app/webview?url=${encodeURIComponent(v.redirect_url)}&title=${encodeURIComponent(v.title || "Cupom")}`;
     }
-  }, [openWebview]);
+  }, []);
 
   return (
     <div className="max-w-lg mx-auto">

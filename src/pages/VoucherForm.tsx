@@ -101,8 +101,8 @@ export default function VoucherForm() {
     };
 
     const { error } = isEdit
-      ? await supabase.from("vouchers").update(payload).eq("id", id!)
-      : await supabase.from("vouchers").insert(payload);
+      ? await supabase.from("vouchers").update(payload as any).eq("id", id!)
+      : await supabase.from("vouchers").insert(payload as any);
 
     if (error) toast.error(error.message);
     else { toast.success(isEdit ? "Voucher atualizado!" : "Voucher criado!"); navigate("/vouchers"); }
