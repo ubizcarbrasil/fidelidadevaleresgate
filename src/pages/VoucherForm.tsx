@@ -36,6 +36,9 @@ export default function VoucherForm() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [redirectUrl, setRedirectUrl] = useState("");
+  const [bgColor, setBgColor] = useState("#E91E63");
+  const [textColor, setTextColor] = useState("#FFFFFF");
   const [loading, setLoading] = useState(false);
 
   const { data: branches } = useQuery({
