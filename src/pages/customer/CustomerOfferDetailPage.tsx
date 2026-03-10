@@ -349,13 +349,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       {discountPct}% COM PONTOS
                     </span>
                   )}
-                  {offer.image_url ? (
-                    <img src={offer.image_url} alt={offer.title} className="w-full h-72 object-cover" />
-                  ) : (
-                    <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                      <ShoppingBag className="h-20 w-20" style={{ color: `${primary}20` }} />
-                    </div>
-                  )}
+                  <SafeImage
+                    src={offer.image_url}
+                    fallbackSrc={offer.stores?.logo_url}
+                    alt={offer.title}
+                    className="w-full h-72 object-cover"
+                    fallback={
+                      <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                        <ShoppingBag className="h-20 w-20" style={{ color: `${primary}20` }} />
+                      </div>
+                    }
+                  />
                 </div>
 
                 {/* Product info */}
