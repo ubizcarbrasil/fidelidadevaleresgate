@@ -203,6 +203,7 @@ function AppRoutes() {
           <Route path="api-keys" element={<BrandApiKeysPage />} />
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
           <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
