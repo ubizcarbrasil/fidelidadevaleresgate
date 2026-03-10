@@ -28,9 +28,13 @@ const CONSOLE_TITLES: Record<string, string> = {
 };
 
 export default function AppLayout() {
-  const { consoleScope } = useBrandGuard();
+  const { consoleScope, isRootAdmin } = useBrandGuard();
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
+  const isImpersonating = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return isRootAdmin && !!params.get("brandId");
+  }, [isRootAdmin]);
 
   useEffect(() => {
     supabase
