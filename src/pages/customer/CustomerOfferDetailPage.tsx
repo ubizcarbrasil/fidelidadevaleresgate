@@ -508,15 +508,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <>
               {/* Hero image */}
               <div className="relative">
-                {offer.image_url ? (
-                  <img src={offer.image_url} alt={offer.title} className="w-full h-64 object-cover" />
-                ) : offer.stores?.logo_url ? (
-                  <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-64 object-cover" />
-                ) : (
-                  <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                    <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
-                  </div>
-                )}
+                <SafeImage
+                  src={offer.image_url}
+                  fallbackSrc={offer.stores?.logo_url}
+                  alt={offer.title}
+                  className="w-full h-64 object-cover"
+                  fallback={
+                    <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                      <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
+                    </div>
+                  }
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
                 <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                   <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
