@@ -29,44 +29,37 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
 
-    // Try to find existing customer in selected branch first
-    const { data: existingInBranch } = await supabase
-      .from("customers")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("brand_id", brand.id)
-      .eq("branch_id", selectedBranch.id)
-      .maybeSingle();
-
-    if (existingInBranch) {
-      setCustomer(existingInBranch);
-      setLoading(false);
-      return;
-    }
-
-    // Fallback: reuse any existing customer from same brand to avoid creating a new zero-balance profile
-    const { data: existingInBrand } = await supabase
+    // Single query: fetch any existing customer for this user + brand, prefer the one in the selected branch
+    const { data: existing } = await supabase
       .from("customers")
       .select("*")
       .eq("user_id", user.id)
       .eq("brand_id", brand.id)
       .order("points_balance", { ascending: false })
       .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(5);
 
-    if (existingInBrand) {
-      if (existingInBrand.branch_id !== selectedBranch.id) {
+    // Check if one already matches the selected branch
+    const inBranch = existing?.find((c) => c.branch_id === selectedBranch.id);
+    if (inBranch) {
+      setCustomer(inBranch);
+      setLoading(false);
+      return;
+    }
+
+    // Reuse existing from another branch
+    const best = existing?.[0];
+    if (best) {
+      if (best.branch_id !== selectedBranch.id) {
         const { data: movedCustomer } = await supabase
           .from("customers")
           .update({ branch_id: selectedBranch.id })
-          .eq("id", existingInBrand.id)
+          .eq("id", best.id)
           .select("*")
           .maybeSingle();
-
-        setCustomer(movedCustomer || existingInBrand);
+        setCustomer(movedCustomer || best);
       } else {
-        setCustomer(existingInBrand);
+        setCustomer(best);
       }
       setLoading(false);
       return;

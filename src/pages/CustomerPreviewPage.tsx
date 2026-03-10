@@ -110,28 +110,30 @@ export default function CustomerPreviewPage() {
         return;
       }
 
-      const { data: brandData, error: brandErr } = await supabase
-        .from("brands")
-        .select("*")
-        .eq("id", brandId)
-        .eq("is_active", true)
-        .single();
+      // Fetch brand and branches in parallel
+      const [brandResult, branchResult] = await Promise.all([
+        supabase
+          .from("brands")
+          .select("*")
+          .eq("id", brandId)
+          .eq("is_active", true)
+          .single(),
+        supabase
+          .from("branches")
+          .select("*")
+          .eq("brand_id", brandId)
+          .eq("is_active", true)
+          .order("name"),
+      ]);
 
-      if (brandErr || !brandData) {
+      if (brandResult.error || !brandResult.data) {
         setError("Marca não encontrada ou inativa.");
         setLoading(false);
         return;
       }
 
-      const { data: branchData } = await supabase
-        .from("branches")
-        .select("*")
-        .eq("brand_id", brandData.id)
-        .eq("is_active", true)
-        .order("name");
-
-      setBrand(brandData);
-      setBranches(branchData || []);
+      setBrand(brandResult.data);
+      setBranches(branchResult.data || []);
       setLoading(false);
     };
     fetchData();
