@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandProviderOverride } from "@/contexts/BrandContext";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
