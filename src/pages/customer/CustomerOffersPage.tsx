@@ -203,20 +203,20 @@ export default function CustomerOffersPage() {
               >
                 {/* Image */}
                 <div className="relative flex-shrink-0">
-                  {offer.image_url ? (
-                    <img
-                      src={offer.image_url}
-                      alt={offer.title}
-                      className="h-20 w-20 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div
-                      className="h-20 w-20 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: withAlpha(primary, 0.08) }}
-                    >
-                      <ShoppingBag className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
-                    </div>
-                  )}
+                  <SafeImage
+                    src={offer.image_url}
+                    fallbackSrc={offer.stores?.logo_url}
+                    alt={offer.title}
+                    className="h-20 w-20 rounded-xl object-cover"
+                    fallback={
+                      <div
+                        className="h-20 w-20 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: withAlpha(primary, 0.08) }}
+                      >
+                        <ShoppingBag className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+                      </div>
+                    }
+                  />
                   {/* Badges on image */}
                   <div className="absolute top-1 left-1 flex flex-col gap-0.5">
                     {isNew && (
