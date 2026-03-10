@@ -90,6 +90,19 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         || hostname.startsWith("root.");
 
       if (isLocal) {
+        // Check for brandId URL parameter (root admin impersonation)
+        const params = new URLSearchParams(window.location.search);
+        const brandIdParam = params.get("brandId");
+        if (brandIdParam) {
+          const { data: brandData } = await supabase
+            .from("brands")
+            .select("*")
+            .eq("id", brandIdParam)
+            .single();
+          if (brandData) {
+            setBrand(brandData);
+          }
+        }
         setLoading(false);
         return;
       }
