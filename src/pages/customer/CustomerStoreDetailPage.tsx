@@ -136,20 +136,19 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           </button>
 
           <div className="max-w-lg mx-auto flex flex-col items-center text-center">
-            {store.logo_url ? (
-              <img
-                src={store.logo_url}
-                alt={store.name}
-                className="h-20 w-20 rounded-2xl object-cover mb-3 shadow-md"
-              />
-            ) : (
-              <div
-                className="h-20 w-20 rounded-2xl flex items-center justify-center mb-3 shadow-md"
-                style={{ backgroundColor: `${primary}15` }}
-              >
-                <StoreIcon className="h-10 w-10" style={{ color: primary }} />
-              </div>
-            )}
+            <SafeImage
+              src={store.logo_url}
+              alt={store.name}
+              className="h-20 w-20 rounded-2xl object-cover mb-3 shadow-md"
+              fallback={
+                <div
+                  className="h-20 w-20 rounded-2xl flex items-center justify-center mb-3 shadow-md"
+                  style={{ backgroundColor: `${primary}15` }}
+                >
+                  <StoreIcon className="h-10 w-10" style={{ color: primary }} />
+                </div>
+              }
+            />
 
             <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>
               {store.name}
