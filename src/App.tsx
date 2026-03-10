@@ -89,6 +89,8 @@ const WebviewPage = lazy(() => import("@/pages/customer/WebviewPage"));
 const PageBuilderV2Page = lazy(() => import("@/pages/PageBuilderV2Page"));
 const PublicVouchers = lazy(() => import("@/pages/PublicVouchers"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
+const PartnerLandingPage = lazy(() => import("@/pages/PartnerLandingPage"));
+const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfigPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmDashboardPage = lazy(() => import("@/pages/CrmDashboardPage"));
 const CrmLostCustomersPage = lazy(() => import("@/pages/CrmLostCustomersPage"));
@@ -126,6 +128,7 @@ function AppRoutes() {
         <Route path="/p/:slug" element={<CustomPage />} />
         <Route path="/trial" element={<TrialSignupPage />} />
         <Route path="/landing" element={<LandingPage />} />
+        <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
         <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
         <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
         <Route
@@ -201,6 +204,7 @@ function AppRoutes() {
           <Route path="api-keys" element={<BrandApiKeysPage />} />
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
           <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />

@@ -2144,6 +2144,68 @@ export type Database = {
           },
         ]
       }
+      partner_landing_config: {
+        Row: {
+          benefits_json: Json
+          brand_id: string
+          created_at: string
+          cta_button_text: string
+          cta_subtitle: string
+          cta_title: string
+          faq_json: Json
+          hero_image_url: string | null
+          hero_subtitle: string
+          hero_title: string
+          how_it_works_json: Json
+          id: string
+          is_active: boolean
+          numbers_json: Json
+          updated_at: string
+        }
+        Insert: {
+          benefits_json?: Json
+          brand_id: string
+          created_at?: string
+          cta_button_text?: string
+          cta_subtitle?: string
+          cta_title?: string
+          faq_json?: Json
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          how_it_works_json?: Json
+          id?: string
+          is_active?: boolean
+          numbers_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          benefits_json?: Json
+          brand_id?: string
+          created_at?: string
+          cta_button_text?: string
+          cta_subtitle?: string
+          cta_title?: string
+          faq_json?: Json
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          how_it_works_json?: Json
+          id?: string
+          is_active?: boolean
+          numbers_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_landing_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           created_at: string
