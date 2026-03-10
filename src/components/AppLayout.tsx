@@ -11,9 +11,12 @@ import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Painel Raiz",
@@ -25,9 +28,13 @@ const CONSOLE_TITLES: Record<string, string> = {
 };
 
 export default function AppLayout() {
-  const { consoleScope } = useBrandGuard();
+  const { consoleScope, isRootAdmin } = useBrandGuard();
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
+  const isImpersonating = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return isRootAdmin && !!params.get("brandId");
+  }, [isRootAdmin]);
 
   useEffect(() => {
     supabase
@@ -62,6 +69,18 @@ export default function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b px-3 sm:px-4 bg-card shrink-0">
             <SidebarTrigger className="mr-2 sm:mr-4" />
+            {isImpersonating && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-1 mr-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => { window.location.href = "/"; }}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Voltar ao Painel Raiz</span>
+                <span className="sm:hidden">Raiz</span>
+              </Button>
+            )}
             {brandLogoUrl && (
               <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2" />
             )}
