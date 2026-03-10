@@ -662,13 +662,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           }, 250);
                         }}
                       >
-                        {sim.image_url ? (
-                          <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                            <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
-                          </div>
-                        )}
+                        <SafeImage
+                          src={sim.image_url}
+                          fallbackSrc={sim.stores?.logo_url}
+                          alt={sim.title}
+                          className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
+                          fallback={
+                            <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
+                              <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                            </div>
+                          }
+                        />
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           {sim.stores?.name && (
                             <p className="text-[10px] font-medium truncate text-muted-foreground">{sim.stores.name}</p>
