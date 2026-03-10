@@ -299,12 +299,14 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               <>
                 {/* Store banner */}
                 <div className="relative">
-                  <SafeImage
-                    src={offer.stores?.logo_url}
-                    alt={offer.stores?.name || "Loja"}
-                    className="max-h-32 max-w-[80%] object-contain"
-                    fallback={<Store className="h-16 w-16" style={{ color: `${primary}30` }} />}
-                  />
+                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                    <SafeImage
+                      src={offer.stores?.logo_url}
+                      alt={offer.stores?.name || "Loja"}
+                      className="max-h-32 max-w-[80%] object-contain"
+                      fallback={<Store className="h-16 w-16" style={{ color: `${primary}30` }} />}
+                    />
+                  </div>
                   <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
                   </button>
