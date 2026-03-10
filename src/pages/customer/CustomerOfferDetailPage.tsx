@@ -316,11 +316,19 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       <Heart className="h-5 w-5 text-muted-foreground" />
                     </motion.button>
                   </div>
-                  {/* Store logo circle overlay */}
                   {offer.stores?.logo_url && (
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
                       <div className="h-16 w-16 rounded-2xl bg-card shadow-lg border-2 border-card overflow-hidden">
-                        <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-full object-cover" />
+                        <SafeImage
+                          src={offer.stores.logo_url}
+                          alt={offer.stores?.name || ""}
+                          className="w-full h-full object-cover"
+                          fallback={
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <Store className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          }
+                        />
                       </div>
                     </div>
                   )}
