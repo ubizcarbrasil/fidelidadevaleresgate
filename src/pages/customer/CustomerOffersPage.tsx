@@ -7,6 +7,7 @@ import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp, Percent }
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
+import SafeImage from "@/components/customer/SafeImage";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;

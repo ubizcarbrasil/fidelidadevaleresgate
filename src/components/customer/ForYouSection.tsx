@@ -8,6 +8,7 @@ import AppIcon from "@/components/customer/AppIcon";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import OfferBadge from "@/components/customer/OfferBadge";
+import SafeImage from "@/components/customer/SafeImage";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {

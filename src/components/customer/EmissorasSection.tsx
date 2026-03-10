@@ -5,6 +5,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { useCustomerFavoriteStores } from "@/hooks/useCustomerFavoriteStores";
 import { ChevronRight, Heart, Star } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
+import SafeImage from "@/components/customer/SafeImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 

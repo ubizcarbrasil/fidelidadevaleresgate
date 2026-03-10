@@ -14,6 +14,7 @@ import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDet
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
+import SafeImage from "@/components/customer/SafeImage";
 
 type Offer = Tables<"offers">;
 

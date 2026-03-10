@@ -32,6 +32,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import SafeImage from "@/components/customer/SafeImage";
 import {
   Accordion,
   AccordionContent,
