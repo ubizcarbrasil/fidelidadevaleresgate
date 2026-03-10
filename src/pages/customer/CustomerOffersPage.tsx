@@ -237,11 +237,12 @@ export default function CustomerOffersPage() {
                   {/* Store name */}
                   {offer.stores?.name && (
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      {offer.stores.logo_url ? (
-                        <img src={offer.stores.logo_url} alt="" className="h-4 w-4 rounded object-cover" />
-                      ) : (
-                        <Store className="h-3 w-3 text-muted-foreground" />
-                      )}
+                      <SafeImage
+                        src={offer.stores.logo_url}
+                        alt=""
+                        className="h-4 w-4 rounded object-cover"
+                        fallback={<Store className="h-3 w-3 text-muted-foreground" />}
+                      />
                       <span className="text-[11px] font-medium truncate text-muted-foreground">
                         {offer.stores.name}
                       </span>

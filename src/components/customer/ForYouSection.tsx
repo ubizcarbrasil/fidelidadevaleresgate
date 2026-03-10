@@ -89,21 +89,26 @@ export default function ForYouSection() {
             }}
             onClick={() => openOffer?.(o)}
           >
-            {o.image_url ? (
-              <div className="relative">
-                <img src={o.image_url} alt={o.title} className="h-24 w-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-                <div className="absolute top-2 left-2">
-                  <OfferBadge
-                    discountPercent={o.discount_percent}
-                    offerBadgeConfig={o.badge_config_json}
-                    brandBadgeConfig={brandBadgeConfig}
-                    primaryColor={primary}
-                  />
+            <SafeImage
+              src={o.image_url}
+              fallbackSrc={o.stores?.logo_url}
+              alt={o.title}
+              className="h-24 w-full object-cover"
+              loading="lazy"
+              fallback={
+                <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                  <AppIcon iconKey="section_foryou" className="h-8 w-8" style={{ color: `${primary}30` }} />
                 </div>
-              </div>
-            ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                <AppIcon iconKey="section_foryou" className="h-8 w-8" style={{ color: `${primary}30` }} />
+              }
+            />
+            {o.image_url && (
+              <div className="absolute top-2 left-2">
+                <OfferBadge
+                  discountPercent={o.discount_percent}
+                  offerBadgeConfig={o.badge_config_json}
+                  brandBadgeConfig={brandBadgeConfig}
+                  primaryColor={primary}
+                />
               </div>
             )}
             <div className="p-3">

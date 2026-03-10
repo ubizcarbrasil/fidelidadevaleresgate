@@ -425,20 +425,20 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                     onClick={() => onOfferClick?.({ ...offer, stores: { name: store.name, logo_url: store.logo_url } })}
                   >
                     <div className="flex">
-                      {offer.image_url ? (
-                        <img
-                          src={offer.image_url}
-                          alt={offer.title}
-                          className="w-28 h-28 object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div
-                          className="w-28 h-28 flex-shrink-0 flex items-center justify-center"
-                          style={{ backgroundColor: `${primary}06` }}
-                        >
-                          <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                        </div>
-                      )}
+                      <SafeImage
+                        src={offer.image_url}
+                        fallbackSrc={store.logo_url}
+                        alt={offer.title}
+                        className="w-28 h-28 object-cover flex-shrink-0"
+                        fallback={
+                          <div
+                            className="w-28 h-28 flex-shrink-0 flex items-center justify-center"
+                            style={{ backgroundColor: `${primary}06` }}
+                          >
+                            <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
+                          </div>
+                        }
+                      />
 
                       <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
                         <div>
