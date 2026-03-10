@@ -1,51 +1,63 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+## Plano: Melhorar cupons — espaçamento, link webview, cor de texto e criação ilimitada
 
-## Resumo
+### 1. Migração de banco de dados
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+Adicionar 3 novas colunas à tabela `vouchers`:
 
-## O que muda para o usuário
+```sql
+ALTER TABLE public.vouchers ADD COLUMN redirect_url text DEFAULT null;
+ALTER TABLE public.vouchers ADD COLUMN bg_color text DEFAULT null;
+ALTER TABLE public.vouchers ADD COLUMN text_color text DEFAULT null;
+```
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+- `redirect_url` — link de webview ao clicar no cupom
+- `bg_color` — cor de fundo customizada (ex: `#E91E63`)
+- `text_color` — cor do texto customizada (ex: `#FFFFFF`)
 
-## Mudanças Técnicas
+### 2. Melhorar espaçamento dos cards de cupom
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+**Arquivo:** `src/components/HomeSectionsRenderer.tsx` (função `VoucherTickets`)
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+- Aumentar padding interno (`px-4 pt-3 pb-2` → `px-5 pt-4 pb-3`)
+- Aumentar o gap entre cards (`gap-3` → `gap-4`)
+- Aumentar `min-w` e `max-w` dos cards para dar mais respiro
+- Aumentar espaçamento do rodapé (data + botão)
+- Aplicar cores customizadas (`bg_color`, `text_color`) do voucher no card, com fallback para o gradiente rosa atual
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+### 3. Link de direcionamento webview no cupom
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+**Arquivo:** `src/components/HomeSectionsRenderer.tsx` (função `VoucherTickets`)
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+- Ao clicar em "PEGAR CUPOM", se o voucher tiver `redirect_url`, usar a função `openLink` já existente para navegar via webview
+- Caso contrário, manter comportamento atual
 
-### 2. Seções de vitrine automáticas
+### 4. Edição de cupons no painel (Brand Admin + Root Admin)
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+**Arquivo:** `src/pages/VoucherForm.tsx`
 
-### 3. Nenhuma alteração no banco de dados
+Adicionar campos ao formulário de edição:
+- **Link de Redirecionamento (Webview)** — input URL para `redirect_url`
+- **Cor de Fundo** — input color para `bg_color`
+- **Cor do Texto** — input color para `text_color`
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+Incluir esses campos no payload de `insert` e `update`.
 
-## Escopo
+**Arquivo:** `src/components/voucher-wizard/VoucherWizard.tsx`
 
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+Adicionar os mesmos 3 campos ao `VoucherWizardData` e incluí-los no step de revisão e no payload de submit.
+
+### 5. Criação ilimitada
+
+Atualmente não há limite de criação de cupons no código. Verificarei se existe alguma restrição e removerei caso exista, garantindo que se possa criar quantos cupons desejar.
+
+### Resumo de arquivos alterados
+
+| Arquivo | Alteração |
+|---|---|
+| Migração SQL | 3 novas colunas na tabela `vouchers` |
+| `HomeSectionsRenderer.tsx` | Espaçamento + cores dinâmicas + link webview |
+| `VoucherForm.tsx` | Campos de redirect_url, bg_color, text_color |
+| `VoucherWizard.tsx` | Mesmos campos no wizard de criação |
 
