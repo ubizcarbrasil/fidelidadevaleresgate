@@ -72,9 +72,9 @@ function RootBrandsTab() {
                     size="sm"
                     variant="outline"
                     className="gap-1.5"
-                    onClick={() =>
-                      window.open(`/?brandId=${brand.id}`, "_blank")
-                    }
+                    onClick={() => {
+                      window.location.href = `/?brandId=${brand.id}`;
+                    }}
                   >
                     <Building2 className="h-3.5 w-3.5" />
                     Painel Admin
@@ -83,9 +83,9 @@ function RootBrandsTab() {
                     size="sm"
                     variant="outline"
                     className="gap-1.5"
-                    onClick={() =>
-                      window.open(`/customer-preview?brandId=${brand.id}`, "_blank")
-                    }
+                    onClick={() => {
+                      window.location.href = `/customer-preview?brandId=${brand.id}`;
+                    }}
                   >
                     <Smartphone className="h-3.5 w-3.5" />
                     App do Cliente
