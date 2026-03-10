@@ -346,7 +346,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
                       size="sm"
                       variant="outline"
                       className="h-7 text-xs gap-1"
-                      onClick={() => window.open(`/brands/${brand.id}`, "_blank")}
+                      onClick={() => window.open(`/?brandId=${brand.id}`, "_blank")}
                     >
                       <Building2 className="h-3 w-3" />
                       Painel Admin
