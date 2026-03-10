@@ -2,8 +2,13 @@ import { useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
 
-/**
- * Hook that provides brand-scoped query helpers.
+/** Check if root admin is impersonating a brand via ?brandId= URL param */
+function useImpersonatingBrand(): boolean {
+  return useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return !!params.get("brandId");
+  }, []);
+}
  * Non-root users are forced to use the current brand context.
  * Root admins can optionally override.
  */
