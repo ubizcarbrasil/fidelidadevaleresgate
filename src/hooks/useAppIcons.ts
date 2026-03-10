@@ -23,11 +23,11 @@ export type AppIconKey =
 
 const DEFAULTS: Record<AppIconKey, string> = {
   // Navigation
-  nav_home: "Home",
+  nav_home: "House",
   nav_offers: "Tag",
   nav_redemptions: "Ticket",
   nav_wallet: "Wallet",
-  nav_profile: "UserCircle",
+  nav_profile: "CircleUser",
   // Quick actions
   quick_ofertas: "Tag",
   quick_cupons: "Percent",
@@ -47,7 +47,7 @@ const DEFAULTS: Record<AppIconKey, string> = {
   profile_user: "User",
   profile_branch: "MapPin",
   profile_privacy: "Shield",
-  profile_help: "HelpCircle",
+  profile_help: "CircleHelp",
   profile_logout: "LogOut",
   // Wallet
   wallet_points: "Star",
