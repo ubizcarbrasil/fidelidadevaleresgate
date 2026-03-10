@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandProviderOverride } from "@/contexts/BrandContext";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
@@ -165,9 +165,22 @@ export default function CustomerPreviewPage() {
     );
   }
 
+  const isImpersonating = !!forcedBrandId;
+
   return (
     <BrandProviderOverride brand={brand} branches={branches}>
-      <WhiteLabelLayout />
+      <div className="relative">
+        {isImpersonating && (
+          <button
+            onClick={() => { window.location.href = "/"; }}
+            className="fixed top-3 right-3 z-[100] flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg bg-card border border-border text-foreground backdrop-blur-sm active:scale-95 transition-transform"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Voltar ao Painel
+          </button>
+        )}
+        <WhiteLabelLayout />
+      </div>
     </BrandProviderOverride>
   );
 }
