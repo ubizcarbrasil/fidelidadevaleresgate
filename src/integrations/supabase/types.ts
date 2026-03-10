@@ -3492,6 +3492,7 @@ export type Database = {
       }
       vouchers: {
         Row: {
+          bg_color: string | null
           branch_id: string
           campaign: string | null
           code: string
@@ -3511,14 +3512,17 @@ export type Database = {
           max_uses: number
           max_uses_per_customer: number
           min_purchase: number
+          redirect_url: string | null
           start_at: string | null
           status: Database["public"]["Enums"]["voucher_status"]
           target_audience: string
           terms: string | null
+          text_color: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          bg_color?: string | null
           branch_id: string
           campaign?: string | null
           code: string
@@ -3538,14 +3542,17 @@ export type Database = {
           max_uses?: number
           max_uses_per_customer?: number
           min_purchase?: number
+          redirect_url?: string | null
           start_at?: string | null
           status?: Database["public"]["Enums"]["voucher_status"]
           target_audience?: string
           terms?: string | null
+          text_color?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          bg_color?: string | null
           branch_id?: string
           campaign?: string | null
           code?: string
@@ -3565,10 +3572,12 @@ export type Database = {
           max_uses?: number
           max_uses_per_customer?: number
           min_purchase?: number
+          redirect_url?: string | null
           start_at?: string | null
           status?: Database["public"]["Enums"]["voucher_status"]
           target_audience?: string
           terms?: string | null
+          text_color?: string | null
           title?: string
           updated_at?: string
         }

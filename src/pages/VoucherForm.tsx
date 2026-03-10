@@ -36,6 +36,9 @@ export default function VoucherForm() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [redirectUrl, setRedirectUrl] = useState("");
+  const [bgColor, setBgColor] = useState("#E91E63");
+  const [textColor, setTextColor] = useState("#FFFFFF");
   const [loading, setLoading] = useState(false);
 
   const { data: branches } = useQuery({
@@ -62,11 +65,12 @@ export default function VoucherForm() {
         setMaxUses(String(data.max_uses));
         setExpiresAt(data.expires_at ? data.expires_at.slice(0, 16) : "");
         setCampaign(data.campaign || "");
-        // Handle new fields gracefully for edit
-
         setCustomerName(data.customer_name || "");
         setCustomerPhone(data.customer_phone || "");
         setCustomerEmail(data.customer_email || "");
+        setRedirectUrl((data as any).redirect_url || "");
+        setBgColor((data as any).bg_color || "#E91E63");
+        setTextColor((data as any).text_color || "#FFFFFF");
       });
     }
   }, [id, isEdit, navigate]);
@@ -78,7 +82,7 @@ export default function VoucherForm() {
       return;
     }
     setLoading(true);
-    const payload = {
+    const payload: Record<string, any> = {
       code,
       title,
       description: description || null,
@@ -90,12 +94,15 @@ export default function VoucherForm() {
       customer_name: customerName || null,
       customer_phone: customerPhone || null,
       customer_email: customerEmail || null,
+      redirect_url: redirectUrl || null,
+      bg_color: bgColor || null,
+      text_color: textColor || null,
       ...(isEdit ? {} : { created_by: user?.id }),
     };
 
     const { error } = isEdit
-      ? await supabase.from("vouchers").update(payload).eq("id", id!)
-      : await supabase.from("vouchers").insert(payload);
+      ? await supabase.from("vouchers").update(payload as any).eq("id", id!)
+      : await supabase.from("vouchers").insert(payload as any);
 
     if (error) toast.error(error.message);
     else { toast.success(isEdit ? "Voucher atualizado!" : "Voucher criado!"); navigate("/vouchers"); }
@@ -182,6 +189,39 @@ export default function VoucherForm() {
                 <div className="space-y-2">
                   <Label>E-mail</Label>
                   <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-3 text-muted-foreground">Personalização do Cupom</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Link de Redirecionamento (Webview)</Label>
+                  <Input type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)} placeholder="https://exemplo.com/promo" />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Cor de Fundo</Label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-10 h-10 rounded-lg border border-input cursor-pointer" />
+                      <Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="font-mono" placeholder="#E91E63" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cor do Texto</Label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="w-10 h-10 rounded-lg border border-input cursor-pointer" />
+                      <Input value={textColor} onChange={(e) => setTextColor(e.target.value)} className="font-mono" placeholder="#FFFFFF" />
+                    </div>
+                  </div>
+                </div>
+                {/* Preview */}
+                <div className="rounded-xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${bgColor} 0%, ${bgColor}cc 100%)` }}>
+                  <div className="px-5 py-4" style={{ color: textColor }}>
+                    <span className="text-lg font-bold">Prévia do Cupom</span>
+                    <p className="text-xs mt-1" style={{ opacity: 0.8 }}>Assim será exibido para o cliente</p>
+                  </div>
                 </div>
               </div>
             </div>
