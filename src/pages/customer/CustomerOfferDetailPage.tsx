@@ -14,6 +14,7 @@ import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDet
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
+import SafeImage from "@/components/customer/SafeImage";
 
 type Offer = Tables<"offers">;
 
@@ -298,15 +299,14 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               <>
                 {/* Store banner */}
                 <div className="relative">
-                  {offer.stores?.logo_url ? (
-                    <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                      <img src={offer.stores.logo_url} alt={offer.stores?.name} className="max-h-32 max-w-[80%] object-contain" />
-                    </div>
-                  ) : (
-                    <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                      <Store className="h-16 w-16" style={{ color: `${primary}30` }} />
-                    </div>
-                  )}
+                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                    <SafeImage
+                      src={offer.stores?.logo_url}
+                      alt={offer.stores?.name || "Loja"}
+                      className="max-h-32 max-w-[80%] object-contain"
+                      fallback={<Store className="h-16 w-16" style={{ color: `${primary}30` }} />}
+                    />
+                  </div>
                   <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
                   </button>
@@ -318,11 +318,19 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       <Heart className="h-5 w-5 text-muted-foreground" />
                     </motion.button>
                   </div>
-                  {/* Store logo circle overlay */}
                   {offer.stores?.logo_url && (
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
                       <div className="h-16 w-16 rounded-2xl bg-card shadow-lg border-2 border-card overflow-hidden">
-                        <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-full object-cover" />
+                        <SafeImage
+                          src={offer.stores.logo_url}
+                          alt={offer.stores?.name || ""}
+                          className="w-full h-full object-cover"
+                          fallback={
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <Store className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          }
+                        />
                       </div>
                     </div>
                   )}
@@ -343,13 +351,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                       {discountPct}% COM PONTOS
                     </span>
                   )}
-                  {offer.image_url ? (
-                    <img src={offer.image_url} alt={offer.title} className="w-full h-72 object-cover" />
-                  ) : (
-                    <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                      <ShoppingBag className="h-20 w-20" style={{ color: `${primary}20` }} />
-                    </div>
-                  )}
+                  <SafeImage
+                    src={offer.image_url}
+                    fallbackSrc={offer.stores?.logo_url}
+                    alt={offer.title}
+                    className="w-full h-72 object-cover"
+                    fallback={
+                      <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                        <ShoppingBag className="h-20 w-20" style={{ color: `${primary}20` }} />
+                      </div>
+                    }
+                  />
                 </div>
 
                 {/* Product info */}
@@ -467,13 +479,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                             }, 250);
                           }}
                         >
-                          {sim.image_url ? (
-                            <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
-                          ) : (
-                            <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                              <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
-                            </div>
-                          )}
+                          <SafeImage
+                            src={sim.image_url}
+                            fallbackSrc={sim.stores?.logo_url}
+                            alt={sim.title}
+                            className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
+                            fallback={
+                              <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
+                                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                              </div>
+                            }
+                          />
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             {sim.stores?.name && (
                               <p className="text-[10px] font-medium truncate text-muted-foreground">{sim.stores.name}</p>
@@ -494,15 +510,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
             <>
               {/* Hero image */}
               <div className="relative">
-                {offer.image_url ? (
-                  <img src={offer.image_url} alt={offer.title} className="w-full h-64 object-cover" />
-                ) : offer.stores?.logo_url ? (
-                  <img src={offer.stores.logo_url} alt={offer.stores?.name} className="w-full h-64 object-cover" />
-                ) : (
-                  <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                    <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
-                  </div>
-                )}
+                <SafeImage
+                  src={offer.image_url}
+                  fallbackSrc={offer.stores?.logo_url}
+                  alt={offer.title}
+                  className="w-full h-64 object-cover"
+                  fallback={
+                    <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                      <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
+                    </div>
+                  }
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
                 <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                   <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
@@ -646,13 +664,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                           }, 250);
                         }}
                       >
-                        {sim.image_url ? (
-                          <img src={sim.image_url} alt={sim.title} className="h-14 w-14 rounded-xl object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                            <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
-                          </div>
-                        )}
+                        <SafeImage
+                          src={sim.image_url}
+                          fallbackSrc={sim.stores?.logo_url}
+                          alt={sim.title}
+                          className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
+                          fallback={
+                            <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
+                              <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                            </div>
+                          }
+                        />
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           {sim.stores?.name && (
                             <p className="text-[10px] font-medium truncate text-muted-foreground">{sim.stores.name}</p>

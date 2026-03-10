@@ -7,6 +7,7 @@ import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp, Percent }
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
+import SafeImage from "@/components/customer/SafeImage";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -202,20 +203,20 @@ export default function CustomerOffersPage() {
               >
                 {/* Image */}
                 <div className="relative flex-shrink-0">
-                  {offer.image_url ? (
-                    <img
-                      src={offer.image_url}
-                      alt={offer.title}
-                      className="h-20 w-20 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div
-                      className="h-20 w-20 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: withAlpha(primary, 0.08) }}
-                    >
-                      <ShoppingBag className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
-                    </div>
-                  )}
+                  <SafeImage
+                    src={offer.image_url}
+                    fallbackSrc={offer.stores?.logo_url}
+                    alt={offer.title}
+                    className="h-20 w-20 rounded-xl object-cover"
+                    fallback={
+                      <div
+                        className="h-20 w-20 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: withAlpha(primary, 0.08) }}
+                      >
+                        <ShoppingBag className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+                      </div>
+                    }
+                  />
                   {/* Badges on image */}
                   <div className="absolute top-1 left-1 flex flex-col gap-0.5">
                     {isNew && (
@@ -236,11 +237,12 @@ export default function CustomerOffersPage() {
                   {/* Store name */}
                   {offer.stores?.name && (
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      {offer.stores.logo_url ? (
-                        <img src={offer.stores.logo_url} alt="" className="h-4 w-4 rounded object-cover" />
-                      ) : (
-                        <Store className="h-3 w-3 text-muted-foreground" />
-                      )}
+                      <SafeImage
+                        src={offer.stores.logo_url}
+                        alt=""
+                        className="h-4 w-4 rounded object-cover"
+                        fallback={<Store className="h-3 w-3 text-muted-foreground" />}
+                      />
                       <span className="text-[11px] font-medium truncate text-muted-foreground">
                         {offer.stores.name}
                       </span>
