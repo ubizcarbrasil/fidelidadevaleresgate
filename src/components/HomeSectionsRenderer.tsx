@@ -390,53 +390,71 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
 // --- VOUCHERS_CARDS (Méliuz coupon style - pink/magenta accent) ---
 function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { openWebview } = useCustomerNav();
+
+  const handleCouponClick = useCallback((v: any) => {
+    if (v.redirect_url) {
+      openWebview?.(v.redirect_url, v.title || "Cupom");
+    }
+  }, [openWebview]);
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((v: Voucher, idx: number) => (
-          <motion.div
-            key={v.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className="min-w-[220px] max-w-[240px] flex-shrink-0 rounded-[16px] overflow-hidden relative"
-            style={{
-              scrollSnapAlign: "start",
-              background: "linear-gradient(135deg, #E91E63 0%, #AD1457 100%)",
-            }}
-          >
-            {/* Ticket notch */}
-            <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-background" />
-            <div className="absolute right-0 top-[55%] -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-background" />
+      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((v: any, idx: number) => {
+          const bgGradient = v.bg_color
+            ? `linear-gradient(135deg, ${v.bg_color} 0%, ${v.bg_color}cc 100%)`
+            : "linear-gradient(135deg, #E91E63 0%, #AD1457 100%)";
+          const txtColor = v.text_color || "#FFFFFF";
 
-            <div className="px-4 pt-3 pb-2 text-white">
-              <div className="flex items-center gap-1 mb-1 opacity-80">
-                <Percent className="h-3 w-3" />
-                <span className="text-[10px] font-semibold uppercase tracking-wide">Cupom</span>
-              </div>
-              <span className="text-2xl font-black block leading-tight" style={{ fontFamily: fontHeading }}>
-                {v.discount_percent}% OFF
-              </span>
-              <h3 className="font-medium text-xs mt-1 line-clamp-1 opacity-90">{v.title}</h3>
-            </div>
+          return (
+            <motion.div
+              key={v.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: idx * 0.05 }}
+              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-[16px] overflow-hidden relative"
+              style={{
+                scrollSnapAlign: "start",
+                background: bgGradient,
+              }}
+            >
+              {/* Ticket notch */}
+              <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-background" />
+              <div className="absolute right-0 top-[55%] -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-background" />
 
-            {/* Dashed divider */}
-            <div className="mx-3 border-t border-dashed border-white/30" />
-
-            <div className="px-4 py-2.5 flex items-center justify-between">
-              {v.expires_at && (
-                <div className="flex items-center gap-1 text-[9px] text-white/60">
-                  <Clock className="h-2.5 w-2.5" />
-                  Até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
+              <div className="px-5 pt-4 pb-3" style={{ color: txtColor }}>
+                <div className="flex items-center gap-1.5 mb-1.5" style={{ opacity: 0.8 }}>
+                  <Percent className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wide">Cupom</span>
                 </div>
-              )}
-              <button className="text-[11px] font-bold text-white bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                PEGAR CUPOM
-              </button>
-            </div>
-          </motion.div>
-        ))}
+                <span className="text-2xl font-black block leading-tight" style={{ fontFamily: fontHeading }}>
+                  {v.discount_percent}% OFF
+                </span>
+                <h3 className="font-medium text-xs mt-1.5 line-clamp-2" style={{ opacity: 0.9 }}>{v.title}</h3>
+              </div>
+
+              {/* Dashed divider */}
+              <div className="mx-4 border-t border-dashed" style={{ borderColor: `${txtColor}40` }} />
+
+              <div className="px-5 py-3 flex items-center justify-between">
+                {v.expires_at && (
+                  <div className="flex items-center gap-1 text-[9px]" style={{ color: `${txtColor}99` }}>
+                    <Clock className="h-2.5 w-2.5" />
+                    Até {new Date(v.expires_at).toLocaleDateString("pt-BR")}
+                  </div>
+                )}
+                <button
+                  className="text-[11px] font-bold px-3.5 py-1.5 rounded-full backdrop-blur-sm"
+                  style={{ color: txtColor, backgroundColor: `${txtColor}25` }}
+                  onClick={() => handleCouponClick(v)}
+                >
+                  PEGAR CUPOM
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>

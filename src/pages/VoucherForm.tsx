@@ -193,6 +193,39 @@ export default function VoucherForm() {
               </div>
             </div>
 
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-3 text-muted-foreground">Personalização do Cupom</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Link de Redirecionamento (Webview)</Label>
+                  <Input type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)} placeholder="https://exemplo.com/promo" />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Cor de Fundo</Label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-10 h-10 rounded-lg border border-input cursor-pointer" />
+                      <Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="font-mono" placeholder="#E91E63" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cor do Texto</Label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="w-10 h-10 rounded-lg border border-input cursor-pointer" />
+                      <Input value={textColor} onChange={(e) => setTextColor(e.target.value)} className="font-mono" placeholder="#FFFFFF" />
+                    </div>
+                  </div>
+                </div>
+                {/* Preview */}
+                <div className="rounded-xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${bgColor} 0%, ${bgColor}cc 100%)` }}>
+                  <div className="px-5 py-4" style={{ color: textColor }}>
+                    <span className="text-lg font-bold">Prévia do Cupom</span>
+                    <p className="text-xs mt-1" style={{ opacity: 0.8 }}>Assim será exibido para o cliente</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-4">
               <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
               <Button type="button" variant="outline" onClick={() => navigate("/vouchers")}>Cancelar</Button>
