@@ -9,12 +9,15 @@ function useImpersonatingBrand(): boolean {
     return !!params.get("brandId");
   }, []);
 }
+/**
+ * Hook that provides brand-scoped query helpers.
  * Non-root users are forced to use the current brand context.
- * Root admins can optionally override.
+ * Root admins can optionally override via ?brandId= URL param.
  */
 export function useBrandGuard() {
   const { isRootAdmin, roles } = useAuth();
   const { brand } = useBrand();
+  const isImpersonating = useImpersonatingBrand();
 
   /** The effective brand_id for the current user */
   const currentBrandId = useMemo(() => {
