@@ -116,6 +116,52 @@ export function useBrandTheme(settings: Json | null | undefined) {
       link.href = theme.favicon_url;
     }
 
+    // Dynamic PWA manifest with brand logo
+    const logoUrl = theme.logo_url;
+    if (logoUrl) {
+      const dynamicManifest = {
+        name: theme.display_name || document.title,
+        short_name: theme.display_name || document.title,
+        description: theme.slogan || "",
+        start_url: "/",
+        display: "standalone" as const,
+        background_color: theme.colors?.background
+          ? `hsl(${theme.colors.background})`
+          : "#0f0a2e",
+        theme_color: theme.colors?.primary
+          ? `hsl(${theme.colors.primary})`
+          : "#6d4aff",
+        orientation: "any" as const,
+        icons: [
+          { src: logoUrl, sizes: "192x192", type: "image/png" },
+          { src: logoUrl, sizes: "512x512", type: "image/png" },
+          { src: logoUrl, sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      };
+
+      const blob = new Blob([JSON.stringify(dynamicManifest)], { type: "application/json" });
+      const manifestUrl = URL.createObjectURL(blob);
+
+      let manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement | null;
+      if (!manifestLink) {
+        manifestLink = document.createElement("link");
+        manifestLink.rel = "manifest";
+        document.head.appendChild(manifestLink);
+      }
+      manifestLink.href = manifestUrl;
+
+      // Apple touch icon
+      let appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement | null;
+      if (!appleIcon) {
+        appleIcon = document.createElement("link");
+        appleIcon.rel = "apple-touch-icon";
+        document.head.appendChild(appleIcon);
+      }
+      appleIcon.href = logoUrl;
+
+      appliedVars.push("__pwa_manifest__");
+    }
+
     if (theme.display_name) {
       document.title = theme.display_name;
     }
