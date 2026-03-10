@@ -47,7 +47,7 @@ const DEFAULTS: Record<AppIconKey, string> = {
   profile_user: "User",
   profile_branch: "MapPin",
   profile_privacy: "Shield",
-  profile_help: "HelpCircle",
+  profile_help: "CircleHelp",
   profile_logout: "LogOut",
   // Wallet
   wallet_points: "Star",
