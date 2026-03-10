@@ -2,14 +2,22 @@ import { useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
 
+/** Check if root admin is impersonating a brand via ?brandId= URL param */
+function useImpersonatingBrand(): boolean {
+  return useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return !!params.get("brandId");
+  }, []);
+}
 /**
  * Hook that provides brand-scoped query helpers.
  * Non-root users are forced to use the current brand context.
- * Root admins can optionally override.
+ * Root admins can optionally override via ?brandId= URL param.
  */
 export function useBrandGuard() {
   const { isRootAdmin, roles } = useAuth();
   const { brand } = useBrand();
+  const isImpersonating = useImpersonatingBrand();
 
   /** The effective brand_id for the current user */
   const currentBrandId = useMemo(() => {
@@ -71,6 +79,8 @@ export function useBrandGuard() {
 
   /** Determine user console scope */
   const consoleScope = useMemo((): "ROOT" | "TENANT" | "BRAND" | "BRANCH" | "OPERATOR" | "STORE_ADMIN" => {
+    // Root admin impersonating a brand via ?brandId= should see BRAND console
+    if (isRootAdmin && isImpersonating && brand) return "BRAND";
     if (isRootAdmin) return "ROOT";
     if (roles.some(r => r.role === "tenant_admin")) return "TENANT";
     if (roles.some(r => r.role === "brand_admin")) return "BRAND";
@@ -78,7 +88,7 @@ export function useBrandGuard() {
     if (roles.some(r => r.role === "branch_operator" || r.role === "operator_pdv")) return "OPERATOR";
     if (roles.some(r => r.role === "store_admin")) return "STORE_ADMIN";
     return "BRANCH";
-  }, [isRootAdmin, roles]);
+  }, [isRootAdmin, isImpersonating, brand, roles]);
 
   return {
     isRootAdmin,
