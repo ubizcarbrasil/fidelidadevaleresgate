@@ -82,7 +82,7 @@ export default function VoucherForm() {
       return;
     }
     setLoading(true);
-    const payload = {
+    const payload: Record<string, any> = {
       code,
       title,
       description: description || null,
@@ -94,6 +94,9 @@ export default function VoucherForm() {
       customer_name: customerName || null,
       customer_phone: customerPhone || null,
       customer_email: customerEmail || null,
+      redirect_url: redirectUrl || null,
+      bg_color: bgColor || null,
+      text_color: textColor || null,
       ...(isEdit ? {} : { created_by: user?.id }),
     };
 
