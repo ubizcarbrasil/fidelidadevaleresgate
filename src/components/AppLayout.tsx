@@ -65,6 +65,18 @@ export default function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b px-3 sm:px-4 bg-card shrink-0">
             <SidebarTrigger className="mr-2 sm:mr-4" />
+            {isImpersonating && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-1 mr-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => { window.location.href = "/"; }}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Voltar ao Painel Raiz</span>
+                <span className="sm:hidden">Raiz</span>
+              </Button>
+            )}
             {brandLogoUrl && (
               <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2" />
             )}
