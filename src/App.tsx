@@ -91,6 +91,7 @@ const PublicVouchers = lazy(() => import("@/pages/PublicVouchers"));
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const PartnerLandingPage = lazy(() => import("@/pages/PartnerLandingPage"));
 const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfigPage"));
+const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmDashboardPage = lazy(() => import("@/pages/CrmDashboardPage"));
 const CrmLostCustomersPage = lazy(() => import("@/pages/CrmLostCustomersPage"));
 const CrmPotentialCustomersPage = lazy(() => import("@/pages/CrmPotentialCustomersPage"));
