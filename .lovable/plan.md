@@ -1,51 +1,71 @@
 
 
-# Plano: Simulador Realista com 40 Parceiros Demo
+# Fix: Imagens faltando / quebradas no app do cliente
 
-## Resumo
+## Problema identificado
 
-Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
+Nas screenshots, há dois problemas distintos:
 
-## O que muda para o usuário
+1. **Imagens quebradas (ícone de "?" azul)**: Ofertas e lojas que possuem `image_url` ou `logo_url` no banco, mas a URL aponta para um arquivo inexistente ou inacessível no storage. O navegador tenta carregar e mostra o ícone de imagem quebrada.
 
-Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
-- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
-- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
-- Tipos variados: RECEPTORA, EMISSORA e MISTA
-- Itens de catálogo digital para parceiros emissores
-- Todos os módulos ativados para experimentação completa
+2. **Imagens ausentes (placeholder rosa)**: Ofertas/lojas sem `image_url` ou `logo_url` cadastrados. Isso exibe o fallback correto (ícone genérico), mas visualmente não é ideal.
 
-## Mudanças Técnicas
+O problema principal de **código** é o item 1: quando a URL existe mas falha, não há `onError` handler para exibir o fallback graciosamente. Apenas o `ForYouSection` tem `onError`, mas ele só esconde a imagem sem mostrar o placeholder.
 
-### 1. Edge Function `provision-brand/index.ts` (reescrever)
+## Solução
 
-**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
-- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
-- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
-- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
+Adicionar handlers `onError` em todos os locais que renderizam imagens de ofertas e lojas, fazendo fallback para o placeholder estilizado quando a imagem falha ao carregar. Isso resolve o ícone de "?" azul.
 
-**Lógica de criação em lote:**
-- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
-- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
-- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
-- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+### Arquivos a modificar
 
-**Ativação de todos os módulos:**
-- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+1. **`src/pages/customer/CustomerOffersPage.tsx`**
+   - Linha ~207: Adicionar `onError` na `<img>` de `offer.image_url` — ao falhar, tentar `offer.stores?.logo_url`; se também falhar, trocar para o placeholder `<ShoppingBag>`
+   - Linha ~240: Adicionar `onError` na `<img>` do logo da loja inline
 
-**Segmentos incluídos** (exemplos):
-Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+2. **`src/pages/customer/CustomerStoreDetailPage.tsx`**
+   - Linha ~429: Adicionar `onError` na `<img>` de `offer.image_url`
 
-### 2. Seções de vitrine automáticas
+3. **`src/components/customer/ForYouSection.tsx`**
+   - Linha ~93: Melhorar o `onError` existente — em vez de só esconder, substituir por placeholder com `AppIcon`
 
-Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+4. **`src/components/customer/EmissorasSection.tsx`**
+   - Linha ~127: Adicionar `onError` na `<img>` de `store.logo_url` para fallback ao ícone genérico
 
-### 3. Nenhuma alteração no banco de dados
+5. **`src/pages/customer/CustomerOfferDetailPage.tsx`**
+   - Linhas ~347, ~470, ~498, ~650: Adicionar `onError` handlers nas imagens hero e similares
 
-Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+### Estratégia técnica
 
-## Escopo
+Usar `useState` local ou manipulação direta do DOM no `onError`:
+```tsx
+// Padrão: esconder img e mostrar sibling fallback
+onError={(e) => {
+  const el = e.currentTarget;
+  el.style.display = "none";
+  const fallback = el.nextElementSibling as HTMLElement;
+  if (fallback) fallback.style.display = "flex";
+}}
+```
 
-- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
-- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
+Ou mais simplesmente, usar um estado `imgError` por card para re-renderizar com o placeholder. Para listas, a abordagem DOM é mais performática.
+
+Alternativa mais limpa: criar um componente reutilizável `<SafeImage>` que encapsula essa lógica de fallback.
+
+### Componente auxiliar proposto
+
+```tsx
+// src/components/customer/SafeImage.tsx
+function SafeImage({ src, fallbackSrc, alt, className, fallback }) {
+  const [error, setError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
+  
+  if (!src || (error && (!fallbackSrc || fallbackError))) return fallback;
+  if (error && fallbackSrc) {
+    return <img src={fallbackSrc} alt={alt} className={className} onError={() => setFallbackError(true)} />;
+  }
+  return <img src={src} alt={alt} className={className} onError={() => setError(true)} />;
+}
+```
+
+Usar este componente em todos os 5 arquivos acima substitui a lógica ternária `image_url ? <img> : <placeholder>` por `<SafeImage src={image_url} fallbackSrc={logo_url} fallback={<PlaceholderDiv/>} />`.
 
