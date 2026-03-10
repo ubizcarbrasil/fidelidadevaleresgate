@@ -78,8 +78,8 @@ export default function CustomerWalletPage() {
             transition={{ duration: 0.4, ease: "easeOut" as const }}
             className="rounded-[20px] p-4 text-white relative overflow-hidden"
             style={{
-              background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
-              boxShadow: `0 6px 24px -6px ${primary}50`,
+              background: `linear-gradient(135deg, ${primary}, ${withAlpha(primary, 0.73)})`,
+              boxShadow: `0 6px 24px -6px ${withAlpha(primary, 0.3)}`,
             }}
           >
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-10 bg-white" />
