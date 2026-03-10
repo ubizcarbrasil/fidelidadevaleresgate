@@ -245,6 +245,20 @@ const App = () => (
 
 function AppContent() {
   const { isWhiteLabel, loading } = useBrand();
+  const location = useLocation();
+
+  // Partner landing page is a public route that works regardless of white-label mode
+  const isPartnerLanding = /^\/[^/]+\/parceiro\/?$/.test(location.pathname);
+
+  if (isPartnerLanding) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   if (loading) {
     return (
