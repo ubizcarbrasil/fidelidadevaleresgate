@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { useState } from "react";
 import LandingHero from "@/components/landing/LandingHero";
-import LandingPainPoints from "@/components/landing/LandingPainPoints";
+
 import LandingAppPreview from "@/components/landing/LandingAppPreview";
 import LandingBenefits from "@/components/landing/LandingBenefits";
 import LandingWhiteLabel from "@/components/landing/LandingWhiteLabel";
