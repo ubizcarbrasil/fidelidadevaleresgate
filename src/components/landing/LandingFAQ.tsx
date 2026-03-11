@@ -17,63 +17,51 @@ const fadeUp = {
 const faqs = [
   {
     q: "O que é o Vale Resgate?",
-    a: "O Vale Resgate é uma plataforma de fidelidade em rede que transforma compras/corridas em pontos que podem ser resgatados em parceiros locais. É um mecanismo de recorrência — não um programa de desconto.",
+    a: "O Vale Resgate é uma plataforma white-label para criar programas de fidelidade com sua própria marca. Você monta um ecossistema de pontos e resgate com lojas parceiras, sem precisar programar.",
   },
   {
-    q: "Eu vou 'dar desconto'?",
-    a: "Não. O resgate é financiado pelos parceiros da rede, não por você. Sua margem fica intacta. O cliente acumula pontos e resgata em lojas que querem atrair novos clientes.",
+    q: "Preciso saber programar?",
+    a: "Não. A plataforma é 100% no-code. Você configura marca, cores, regras de pontuação, ofertas e parceiros em poucos cliques.",
   },
   {
-    q: "Como funciona o fluxo para o cliente?",
-    a: "O cliente acumula pontos a cada corrida ou compra. Esses pontos podem ser resgatados em parceiros locais (pizzarias, barbearias, lojas etc.) via QR Code, tudo de forma simples e rápida.",
+    q: "O que significa White-Label?",
+    a: "Significa que seus clientes veem apenas a sua marca — logo, cores, domínio e identidade visual. O Vale Resgate fica invisível para o usuário final.",
   },
   {
-    q: "Como o cliente pontua?",
-    a: "Os pontos podem ser concedidos automaticamente (via integração) ou manualmente (pelo operador no caixa). A regra de pontuação é configurável por você.",
+    q: "Como funciona a rede de parceiros?",
+    a: "Você convida lojas para participarem da sua rede. Elas aceitam resgate de pontos dos seus clientes e ganham tráfego qualificado. Você controla as regras.",
   },
   {
-    q: "Quanto custa para minha empresa?",
-    a: "A plataforma oferece 30 dias de teste grátis, sem cartão de crédito. Após o período de teste, os planos são acessíveis e baseados no volume de uso.",
+    q: "Posso usar meu próprio domínio?",
+    a: "Sim. Você pode configurar um domínio personalizado (ex: fidelidade.suaempresa.com.br) para total profissionalismo.",
   },
   {
-    q: "O que eu preciso para começar?",
-    a: "Apenas um cadastro rápido. Não precisa de site, app ou conhecimento técnico. A plataforma é no-code e você configura tudo em minutos.",
+    q: "Quanto custa para começar?",
+    a: "Você pode começar com 30 dias de teste grátis, sem cartão de crédito. Após o teste, os planos são flexíveis e baseados no tamanho da sua rede.",
   },
   {
-    q: "Eu consigo controlar dia e horário da oferta?",
-    a: "Sim. Você define dias da semana, horários de funcionamento, limites por cliente e por período. Total controle sobre quando e como os resgates acontecem.",
+    q: "Como os clientes acumulam pontos?",
+    a: "Os pontos podem ser concedidos automaticamente (via integração) ou manualmente (pelo operador). A regra de pontuação é totalmente configurável.",
+  },
+  {
+    q: "O CRM está incluso?",
+    a: "Sim. O CRM integrado identifica automaticamente clientes perdidos, potenciais e em risco. Você também pode criar campanhas de reativação.",
+  },
+  {
+    q: "Posso ter mais de uma marca?",
+    a: "Sim. O plano Enterprise suporta multi-marca e multi-tenant, ideal para operações com várias bandeiras ou franquias.",
   },
   {
     q: "Como funciona o resgate no caixa?",
     a: "O cliente apresenta um QR Code ou código no caixa. O operador confirma e o saldo é debitado automaticamente. Simples e sem fricção.",
   },
   {
-    q: "Em quais produtos o resgate pode ser usado?",
-    a: "Você define. Pode ser em qualquer produto, em categorias específicas ou em itens selecionados. As regras são totalmente configuráveis.",
-  },
-  {
-    q: "Minha loja precisa ter integração/PDV?",
-    a: "Não é obrigatório. O sistema funciona de forma manual ou com integração. A escolha é sua conforme a necessidade do seu negócio.",
-  },
-  {
-    q: "A plataforma divulga minha loja para a base?",
-    a: "Sim! Sua loja aparece na vitrine do app para toda a base de clientes da rede, aumentando sua visibilidade sem custo adicional de marketing.",
-  },
-  {
-    q: "Como evitar fraudes?",
-    a: "O sistema possui validações automáticas, limites configuráveis e registro completo de todas as transações. Você tem controle e auditoria total.",
-  },
-  {
-    q: "Eu vou ter relatório do que aconteceu?",
-    a: "Sim. Relatórios completos de resgates, ticket médio, horários de pico, taxa de retorno e ROI da campanha. Tudo em tempo real no painel.",
+    q: "Vocês têm API para integrações?",
+    a: "Sim. A API completa permite integrar com PDVs, ERPs, apps e qualquer sistema externo. Documentação disponível no painel.",
   },
   {
     q: "O teste de 30 dias é realmente grátis?",
-    a: "Sim, 100% grátis. Sem cartão de crédito, sem pegadinhas. Você tem acesso completo à plataforma para configurar e testar com seus clientes reais.",
-  },
-  {
-    q: "Em quanto tempo minha oferta entra no ar?",
-    a: "Em minutos. Após o cadastro, você configura sua oferta e ela já fica disponível para os clientes na vitrine do app.",
+    a: "Sim, 100% grátis. Sem cartão de crédito, sem pegadinhas. Acesso completo para configurar e testar com clientes reais.",
   },
 ];
 
@@ -89,7 +77,7 @@ export default function LandingFAQ() {
             Perguntas & Respostas
           </motion.h2>
           <motion.p variants={fadeUp} custom={2} className="text-white/50 text-lg">
-            Tudo que você precisa saber para se tornar um parceiro.
+            Tudo que você precisa saber sobre a plataforma.
           </motion.p>
         </motion.div>
 
