@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import {
-  Eye, Heart, Zap, BarChart3, Star, ChevronDown, ChevronUp,
+  Eye, Heart, Zap, BarChart3, Star, ChevronDown,
   ArrowRight, Users, Store, Gift, Shield, TrendingUp, Sparkles,
-  CheckCircle2, Loader2,
+  CheckCircle2, Loader2, Menu, X, Rocket, Target, Award,
+  Smartphone, PieChart, MessageSquare, Clock, DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRef } from "react";
 
 const ICON_MAP: Record<string, any> = {
-  Eye, Heart, Zap, BarChart3, Star, Users, Store, Gift, Shield, TrendingUp, Sparkles, CheckCircle2,
+  Eye, Heart, Zap, BarChart3, Star, Users, Store, Gift, Shield,
+  TrendingUp, Sparkles, CheckCircle2, Rocket, Target, Award,
+  Smartphone, PieChart, MessageSquare, Clock, DollarSign,
 };
 
 interface LandingConfig {
@@ -46,6 +50,94 @@ function withAlpha(hslVal: string | undefined, alpha: number, fallback: string) 
   return fallback;
 }
 
+function darken(hslVal: string | undefined, amount: number): string {
+  if (!hslVal) return "hsl(220, 20%, 10%)";
+  const parts = hslVal.replace(/,/g, " ").split(/\s+/).map(p => parseFloat(p));
+  if (parts.length >= 3) {
+    return `hsl(${parts[0]}, ${parts[1]}%, ${Math.max(0, parts[2] - amount)}%)`;
+  }
+  return "hsl(220, 20%, 10%)";
+}
+
+/* ── Animated counter ── */
+function AnimatedCounter({ value }: { value: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const numericPart = value.replace(/[^0-9.]/g, "");
+  const suffix = value.replace(/[0-9.]/g, "");
+  const target = parseFloat(numericPart) || 0;
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!isInView || target === 0) return;
+    const duration = 1500;
+    const steps = 40;
+    const increment = target / steps;
+    let step = 0;
+    const timer = setInterval(() => {
+      step++;
+      setCurrent(Math.min(step * increment, target));
+      if (step >= steps) clearInterval(timer);
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [isInView, target]);
+
+  return (
+    <span ref={ref}>
+      {target > 0 ? `${Math.round(current).toLocaleString("pt-BR")}${suffix}` : value}
+    </span>
+  );
+}
+
+/* ── FAQ Item ── */
+function FaqItem({
+  question, answer, isOpen, onToggle, primary, fg, primaryAlpha,
+}: {
+  question: string; answer: string; isOpen: boolean;
+  onToggle: () => void; primary: string; fg: string;
+  primaryAlpha: (a: number) => string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="rounded-2xl border overflow-hidden backdrop-blur-sm transition-all"
+      style={{
+        borderColor: isOpen ? primaryAlpha(0.3) : primaryAlpha(0.1),
+        backgroundColor: isOpen ? primaryAlpha(0.06) : primaryAlpha(0.02),
+      }}
+    >
+      <button
+        className="w-full flex items-center justify-between p-5 md:p-6 text-left gap-4"
+        onClick={onToggle}
+      >
+        <span className="font-semibold text-sm md:text-base" style={{ color: fg }}>{question}</span>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex-shrink-0"
+        >
+          <ChevronDown className="h-5 w-5" style={{ color: primary }} />
+        </motion.div>
+      </button>
+      <motion.div
+        initial={false}
+        animate={{
+          height: isOpen ? "auto" : 0,
+          opacity: isOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.3 }}
+        className="overflow-hidden"
+      >
+        <div className="px-5 md:px-6 pb-5 md:pb-6">
+          <p className="text-sm leading-relaxed" style={{ color: fg, opacity: 0.65 }}>{answer}</p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function PartnerLandingPage() {
   const { slug } = useParams<{ slug: string }>();
   const [config, setConfig] = useState<LandingConfig | null>(null);
@@ -53,11 +145,11 @@ export default function PartnerLandingPage() {
   const [theme, setTheme] = useState<BrandTheme | null>(null);
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
     const load = async () => {
-      // Load brand by slug
       const { data: brandData } = await supabase
         .from("brands")
         .select("id, name, slug, brand_settings_json")
@@ -73,7 +165,6 @@ export default function PartnerLandingPage() {
         setTheme(settings.theme.colors);
       }
 
-      // Load landing config
       const { data: configData } = await supabase
         .from("partner_landing_config")
         .select("*")
@@ -95,7 +186,6 @@ export default function PartnerLandingPage() {
           cta_button_text: configData.cta_button_text,
         });
       } else {
-        // Use defaults
         setConfig({
           hero_title: "Seja um Parceiro",
           hero_subtitle: "Faça parte da maior rede de benefícios da sua região e atraia mais clientes para o seu negócio.",
@@ -134,89 +224,159 @@ export default function PartnerLandingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "hsl(220, 20%, 6%)" }}>
+        <Loader2 className="h-8 w-8 animate-spin text-white/40" />
       </div>
     );
   }
 
   if (!brand || !config) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Página não encontrada.</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "hsl(220, 20%, 6%)" }}>
+        <p className="text-white/50">Página não encontrada.</p>
       </div>
     );
   }
 
-  const primary = hsl(theme?.primary, "hsl(var(--primary))");
-  const primaryAlpha = (a: number) => withAlpha(theme?.primary, a, `hsl(var(--primary) / ${a})`);
-  const fg = hsl(theme?.foreground, "hsl(var(--foreground))");
+  const primary = hsl(theme?.primary, "hsl(160, 70%, 45%)");
+  const primaryAlpha = (a: number) => withAlpha(theme?.primary, a, `hsla(160, 70%, 45%, ${a})`);
+  const bgDark = darken(theme?.primary, 35);
+  const bgDarker = darken(theme?.primary, 38);
   const logoUrl = (brand.brand_settings_json as any)?.theme?.logo_url;
   const registerUrl = "/register-store";
 
+  const fadeUp = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true },
+    transition: { duration: 0.6 },
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* Header */}
-      <header
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: bgDark, color: "#fff" }}>
+      {/* ═══ Navbar ═══ */}
+      <nav
         className="sticky top-0 z-50 backdrop-blur-xl border-b"
-        style={{ backgroundColor: `${primaryAlpha(0.05)}`, borderColor: primaryAlpha(0.1) }}
+        style={{ backgroundColor: `${bgDark}ee`, borderColor: "rgba(255,255,255,0.06)" }}
       >
-        <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             {logoUrl && <img src={logoUrl} alt="" className="h-9 w-9 rounded-xl object-cover" />}
-            <span className="font-bold text-lg" style={{ color: fg }}>{brand.name}</span>
+            <span className="font-bold text-lg text-white">{brand.name}</span>
           </div>
-          <a href={registerUrl}>
-            <Button size="sm" style={{ backgroundColor: primary, color: "#fff" }}>
-              Cadastre-se
-            </Button>
-          </a>
-        </div>
-      </header>
 
-      {/* Hero */}
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
+            <a href="#beneficios" className="hover:text-white transition-colors">Benefícios</a>
+            <a href="#como-funciona" className="hover:text-white transition-colors">Como Funciona</a>
+            <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <a href={registerUrl} className="hidden sm:block">
+              <Button
+                size="sm"
+                className="rounded-full px-6 font-semibold border-0"
+                style={{ backgroundColor: primary, color: "#fff" }}
+              >
+                Cadastre-se <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </a>
+            <button className="md:hidden text-white/60" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <div className="md:hidden border-t px-5 py-4 space-y-3" style={{ backgroundColor: bgDarker, borderColor: "rgba(255,255,255,0.06)" }}>
+            <a href="#beneficios" className="block text-sm text-white/60 hover:text-white" onClick={() => setMenuOpen(false)}>Benefícios</a>
+            <a href="#como-funciona" className="block text-sm text-white/60 hover:text-white" onClick={() => setMenuOpen(false)}>Como Funciona</a>
+            <a href="#faq" className="block text-sm text-white/60 hover:text-white" onClick={() => setMenuOpen(false)}>FAQ</a>
+            <a href={registerUrl} className="block text-sm font-semibold" style={{ color: primary }}>Cadastre-se →</a>
+          </div>
+        )}
+      </nav>
+
+      {/* ═══ Hero ═══ */}
       <section className="relative overflow-hidden">
+        {/* Background glow */}
         <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, ${primaryAlpha(0.08)} 0%, ${primaryAlpha(0.02)} 50%, transparent 100%)`,
-          }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-[120px] opacity-20"
+          style={{ background: primary }}
         />
-        <div className="max-w-5xl mx-auto px-5 py-16 md:py-24 relative z-10">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
+        <div className="absolute inset-0" style={{
+          background: `radial-gradient(ellipse at 30% 20%, ${primaryAlpha(0.1)} 0%, transparent 60%)`,
+        }} />
+
+        <div className="max-w-6xl mx-auto px-5 pt-20 pb-16 md:pt-28 md:pb-24 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
             <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-8 border"
+              style={{ backgroundColor: primaryAlpha(0.1), borderColor: primaryAlpha(0.2), color: primary }}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Programa de Parceiros {brand.name}
+            </motion.div>
+
+            <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="text-4xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight"
             >
-              <h1 className="text-3xl md:text-5xl font-black leading-tight mb-5" style={{ color: fg }}>
-                {config.hero_title}
-              </h1>
-              <p className="text-base md:text-lg mb-8 leading-relaxed" style={{ color: fg, opacity: 0.7 }}>
-                {config.hero_subtitle}
-              </p>
+              {config.hero_title}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="text-base md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed"
+            >
+              {config.hero_subtitle}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
               <a href={registerUrl}>
                 <Button
                   size="lg"
-                  className="text-base px-8 py-6 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
-                  style={{ backgroundColor: primary, color: "#fff" }}
+                  className="text-base px-10 py-7 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all w-full sm:w-auto"
+                  style={{ backgroundColor: primary, color: "#fff", boxShadow: `0 20px 60px -15px ${primaryAlpha(0.5)}` }}
                 >
                   {config.cta_button_text}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </a>
+              <a href="#como-funciona">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-base px-8 py-7 rounded-2xl font-semibold w-full sm:w-auto border-white/10 text-white/80 hover:bg-white/5 hover:text-white"
+                >
+                  Saiba mais
+                </Button>
+              </a>
             </motion.div>
+
             {config.hero_image_url && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="relative"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="mt-16"
               >
                 <img
                   src={config.hero_image_url}
                   alt=""
-                  className="w-full max-w-md mx-auto rounded-3xl shadow-2xl"
+                  className="w-full max-w-2xl mx-auto rounded-3xl shadow-2xl border border-white/10"
                 />
               </motion.div>
             )}
@@ -224,10 +384,10 @@ export default function PartnerLandingPage() {
         </div>
       </section>
 
-      {/* Numbers */}
-      <section className="py-12 border-y" style={{ borderColor: primaryAlpha(0.08) }}>
-        <div className="max-w-5xl mx-auto px-5">
-          <div className="grid grid-cols-3 gap-6">
+      {/* ═══ Numbers (Stats bar) ═══ */}
+      <section className="relative py-12 border-y" style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: primaryAlpha(0.03) }}>
+        <div className="max-w-6xl mx-auto px-5">
+          <div className={`grid gap-6 ${config.numbers_json.length <= 3 ? "grid-cols-3" : "grid-cols-2 md:grid-cols-4"}`}>
             {config.numbers_json.map((n, i) => (
               <motion.div
                 key={i}
@@ -237,47 +397,68 @@ export default function PartnerLandingPage() {
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
               >
-                <p className="text-2xl md:text-4xl font-black" style={{ color: primary }}>{n.value}</p>
-                <p className="text-xs md:text-sm mt-1" style={{ color: fg, opacity: 0.6 }}>{n.label}</p>
+                <p className="text-3xl md:text-5xl font-black tracking-tight" style={{ color: primary }}>
+                  <AnimatedCounter value={n.value} />
+                </p>
+                <p className="text-xs md:text-sm mt-2 text-white/50 font-medium">{n.label}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="py-16">
-        <div className="max-w-5xl mx-auto px-5">
-          <motion.h2
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-2xl md:text-3xl font-black text-center mb-12"
-            style={{ color: fg }}
-          >
-            Por que ser um parceiro?
-          </motion.h2>
-          <div className="grid md:grid-cols-2 gap-6">
+      {/* ═══ Benefits ═══ */}
+      <section id="beneficios" className="py-20 md:py-28">
+        <div className="max-w-6xl mx-auto px-5">
+          <motion.div {...fadeUp} className="text-center mb-16">
+            <span
+              className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
+              style={{ color: primary, backgroundColor: primaryAlpha(0.1) }}
+            >
+              Vantagens exclusivas
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight">
+              Por que ser um <span style={{ color: primary }}>parceiro</span>?
+            </h2>
+            <p className="text-white/50 mt-4 max-w-2xl mx-auto">
+              Tudo o que você precisa para atrair, fidelizar e crescer com sua base de clientes.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {config.benefits_json.map((b, i) => {
               const Icon = ICON_MAP[b.icon] || Star;
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="rounded-2xl p-6 border transition-all hover:shadow-lg"
-                  style={{ borderColor: primaryAlpha(0.12), backgroundColor: primaryAlpha(0.03) }}
+                  className="group rounded-2xl p-6 md:p-7 border transition-all duration-300 hover:border-opacity-30"
+                  style={{
+                    borderColor: primaryAlpha(0.1),
+                    backgroundColor: primaryAlpha(0.03),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = primaryAlpha(0.08);
+                    e.currentTarget.style.borderColor = primaryAlpha(0.25);
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = primaryAlpha(0.03);
+                    e.currentTarget.style.borderColor = primaryAlpha(0.1);
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
                 >
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
                     style={{ backgroundColor: primaryAlpha(0.12) }}
                   >
                     <Icon className="h-6 w-6" style={{ color: primary }} />
                   </div>
-                  <h3 className="font-bold text-lg mb-2" style={{ color: fg }}>{b.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: fg, opacity: 0.65 }}>{b.description}</p>
+                  <h3 className="font-bold text-lg mb-2 text-white">{b.title}</h3>
+                  <p className="text-sm leading-relaxed text-white/55">{b.description}</p>
                 </motion.div>
               );
             })}
@@ -285,110 +466,66 @@ export default function PartnerLandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-16" style={{ backgroundColor: primaryAlpha(0.04) }}>
-        <div className="max-w-5xl mx-auto px-5">
-          <motion.h2
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-2xl md:text-3xl font-black text-center mb-12"
-            style={{ color: fg }}
-          >
-            Como funciona?
-          </motion.h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {config.how_it_works_json.map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl font-black"
-                  style={{ backgroundColor: primary, color: "#fff" }}
-                >
-                  {s.step}
-                </div>
-                <h3 className="font-bold text-lg mb-2" style={{ color: fg }}>{s.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: fg, opacity: 0.65 }}>{s.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ═══ How it works ═══ */}
+      <section id="como-funciona" className="py-20 md:py-28 relative" style={{ backgroundColor: primaryAlpha(0.04) }}>
+        <div className="max-w-6xl mx-auto px-5">
+          <motion.div {...fadeUp} className="text-center mb-16">
+            <span
+              className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
+              style={{ color: primary, backgroundColor: primaryAlpha(0.1) }}
+            >
+              Passo a passo
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight">
+              Como <span style={{ color: primary }}>funciona</span>?
+            </h2>
+          </motion.div>
 
-      {/* FAQ */}
-      <section className="py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <motion.h2
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-2xl md:text-3xl font-black text-center mb-12"
-            style={{ color: fg }}
-          >
-            Perguntas Frequentes
-          </motion.h2>
-          <div className="space-y-3">
-            {config.faq_json.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-xl border overflow-hidden"
-                style={{ borderColor: primaryAlpha(0.12) }}
-              >
-                <button
-                  className="w-full flex items-center justify-between p-5 text-left"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+          <div className="relative">
+            {/* Connection line (desktop) */}
+            <div
+              className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[2px]"
+              style={{ background: `linear-gradient(90deg, transparent, ${primaryAlpha(0.3)}, transparent)` }}
+            />
+
+            <div className={`grid gap-8 ${config.how_it_works_json.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-4"}`}>
+              {config.how_it_works_json.map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15 }}
+                  className="text-center relative"
                 >
-                  <span className="font-semibold text-sm md:text-base pr-4" style={{ color: fg }}>{f.question}</span>
-                  {openFaq === i ? (
-                    <ChevronUp className="h-5 w-5 flex-shrink-0" style={{ color: primary }} />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 flex-shrink-0" style={{ color: primary }} />
-                  )}
-                </button>
-                {openFaq === i && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    className="px-5 pb-5"
+                  <div
+                    className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl font-black relative z-10 shadow-xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${primary}, ${primaryAlpha(0.7)})`,
+                      color: "#fff",
+                      boxShadow: `0 10px 40px -10px ${primaryAlpha(0.4)}`,
+                    }}
                   >
-                    <p className="text-sm leading-relaxed" style={{ color: fg, opacity: 0.65 }}>{f.answer}</p>
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
+                    {s.step}
+                  </div>
+                  <h3 className="font-bold text-lg mb-2 text-white">{s.title}</h3>
+                  <p className="text-sm leading-relaxed text-white/55 max-w-xs mx-auto">{s.description}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Final CTA */}
-      <section className="py-16">
-        <div className="max-w-3xl mx-auto px-5">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-3xl p-10 md:p-14 text-center relative overflow-hidden"
-            style={{ background: `linear-gradient(135deg, ${primary}, ${primaryAlpha(0.85)})` }}
+            {...fadeUp}
+            className="mt-16 text-center"
           >
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-4">{config.cta_title}</h2>
-            <p className="text-white/80 mb-8 text-sm md:text-base">{config.cta_subtitle}</p>
             <a href={registerUrl}>
               <Button
                 size="lg"
-                className="text-base px-10 py-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all bg-white hover:bg-white/90"
-                style={{ color: primary }}
+                className="text-base px-10 py-7 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all"
+                style={{ backgroundColor: primary, color: "#fff", boxShadow: `0 16px 50px -12px ${primaryAlpha(0.5)}` }}
               >
-                {config.cta_button_text}
+                Comece agora mesmo
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </a>
@@ -396,16 +533,147 @@ export default function PartnerLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t" style={{ borderColor: primaryAlpha(0.08) }}>
-        <div className="max-w-5xl mx-auto px-5 text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            {logoUrl && <img src={logoUrl} alt="" className="h-6 w-6 rounded-lg object-cover" />}
-            <span className="font-bold text-sm" style={{ color: fg }}>{brand.name}</span>
+      {/* ═══ Social Proof / Trust ═══ */}
+      <section className="py-20 md:py-24">
+        <div className="max-w-6xl mx-auto px-5">
+          <motion.div {...fadeUp} className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+              Parceiros que <span style={{ color: primary }}>confiam</span> em nós
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Shield,
+                title: "Segurança total",
+                desc: "Seus dados e transações são protegidos com criptografia de ponta a ponta.",
+              },
+              {
+                icon: TrendingUp,
+                title: "Resultados reais",
+                desc: "Nossos parceiros reportam um aumento médio de 30% no fluxo de clientes.",
+              },
+              {
+                icon: Users,
+                title: "Suporte dedicado",
+                desc: "Equipe pronta para ajudar você em todas as etapas da sua jornada.",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-2xl p-7 border text-center"
+                style={{ borderColor: primaryAlpha(0.1), backgroundColor: primaryAlpha(0.03) }}
+              >
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
+                  style={{ backgroundColor: primaryAlpha(0.1) }}
+                >
+                  <item.icon className="h-7 w-7" style={{ color: primary }} />
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-white">{item.title}</h3>
+                <p className="text-sm text-white/55 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
-          <p className="text-xs" style={{ color: fg, opacity: 0.4 }}>
-            © {new Date().getFullYear()} — Todos os direitos reservados.
-          </p>
+        </div>
+      </section>
+
+      {/* ═══ FAQ ═══ */}
+      <section id="faq" className="py-20 md:py-28" style={{ backgroundColor: primaryAlpha(0.03) }}>
+        <div className="max-w-3xl mx-auto px-5">
+          <motion.div {...fadeUp} className="text-center mb-14">
+            <span
+              className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
+              style={{ color: primary, backgroundColor: primaryAlpha(0.1) }}
+            >
+              Tire suas dúvidas
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight">
+              Perguntas <span style={{ color: primary }}>Frequentes</span>
+            </h2>
+          </motion.div>
+
+          <div className="space-y-3">
+            {config.faq_json.map((f, i) => (
+              <FaqItem
+                key={i}
+                question={f.question}
+                answer={f.answer}
+                isOpen={openFaq === i}
+                onToggle={() => setOpenFaq(openFaq === i ? null : i)}
+                primary={primary}
+                fg="#fff"
+                primaryAlpha={primaryAlpha}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ Final CTA ═══ */}
+      <section className="py-20 md:py-28">
+        <div className="max-w-4xl mx-auto px-5">
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="relative rounded-[2rem] p-10 md:p-16 text-center overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, ${primary}, ${primaryAlpha(0.75)})`,
+            }}
+          >
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/5 blur-3xl -translate-y-1/2 translate-x-1/4" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white/5 blur-3xl translate-y-1/2 -translate-x-1/4" />
+
+            <div className="relative z-10">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <Rocket className="h-12 w-12 mx-auto mb-6 text-white/90" />
+                <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+                  {config.cta_title}
+                </h2>
+                <p className="text-white/80 mb-10 text-base md:text-lg max-w-xl mx-auto">
+                  {config.cta_subtitle}
+                </p>
+                <a href={registerUrl}>
+                  <Button
+                    size="lg"
+                    className="text-base px-12 py-7 rounded-2xl font-bold shadow-2xl hover:shadow-xl hover:scale-105 transition-all bg-white hover:bg-white/95"
+                    style={{ color: primary }}
+                  >
+                    {config.cta_button_text}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </a>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ Footer ═══ */}
+      <footer className="py-10 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {logoUrl && <img src={logoUrl} alt="" className="h-8 w-8 rounded-xl object-cover" />}
+              <span className="font-bold text-white">{brand.name}</span>
+            </div>
+            <p className="text-xs text-white/30">
+              © {new Date().getFullYear()} {brand.name} — Todos os direitos reservados.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
