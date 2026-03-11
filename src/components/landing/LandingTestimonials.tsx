@@ -11,22 +11,22 @@ const fadeUp = {
 
 const testimonials = [
   {
-    name: "Carlos Mendes",
+    name: "Marcos Andrade",
     role: "Dono de frota — 12 veículos",
-    text: "Em 2 meses, a recorrência dos meus passageiros subiu 40%. Eles voltam por causa dos pontos, não por desconto.",
-    initials: "CM",
+    text: "Montei o programa de fidelidade da minha frota em 1 dia. Hoje meus passageiros voltam por causa dos pontos, não por desconto.",
+    initials: "MA",
   },
   {
-    name: "Ana Beatriz",
+    name: "Fernanda Costa",
     role: "Cooperativa de transporte",
-    text: "Montei o programa em 1 dia e os parceiros adoraram entrar. Hoje tenho 15 lojas oferecendo resgates pros meus clientes.",
-    initials: "AB",
+    text: "O app white-label ficou incrível com a nossa marca. Temos 15 lojas parceiras oferecendo resgate e a base de clientes não para de crescer.",
+    initials: "FC",
   },
   {
-    name: "Roberto Lima",
-    role: "Motorista autônomo",
-    text: "Meus passageiros me indicam pra amigos por causa do programa de pontos. Nunca tive isso antes com desconto.",
-    initials: "RL",
+    name: "Ricardo Oliveira",
+    role: "Rede de academias — 4 unidades",
+    text: "O CRM integrado me mostrou quem estava sumindo. Recuperamos 30% dos alunos inativos só com campanhas automáticas de pontos.",
+    initials: "RO",
   },
 ];
 

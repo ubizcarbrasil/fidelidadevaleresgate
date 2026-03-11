@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, Coins, Wallet, QrCode, Sparkles } from "lucide-react";
+import { ArrowRight, Settings, Store, Users, Sparkles } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -12,10 +12,10 @@ const fadeUp = {
 };
 
 const steps = [
-  { icon: Eye, num: "01", title: "Cliente vê a oferta", desc: "Cliente encontra sua loja na vitrine do app com ofertas atrativas e saldo disponível." },
-  { icon: Coins, num: "02", title: "Acumula pontos", desc: "Através de compras, nota fiscal ou integração automática, os pontos entram na conta do cliente." },
-  { icon: Wallet, num: "03", title: "Pontos viram saldo", desc: "Os pontos são convertidos em crédito de resgate que pode ser usado na sua loja." },
-  { icon: QrCode, num: "04", title: "Resgate no caixa", desc: "Cliente apresenta QR Code ou código no caixa e usa o saldo conforme as regras da oferta." },
+  { icon: Settings, num: "01", title: "Configure seu programa", desc: "Cadastre-se, personalize marca, cores e regras de pontuação. Tudo no-code, pronto em minutos." },
+  { icon: Store, num: "02", title: "Convide parceiros", desc: "Adicione lojas à sua rede de resgate. Elas recebem clientes com saldo para gastar." },
+  { icon: Users, num: "03", title: "Clientes acumulam pontos", desc: "Seus clientes ganham pontos a cada compra, corrida ou interação — automático ou manual." },
+  { icon: Sparkles, num: "04", title: "Resgate e fidelização", desc: "Clientes usam o saldo nos parceiros da rede. Você acompanha tudo pelo CRM integrado." },
 ];
 
 export default function LandingHowItWorks() {
@@ -30,10 +30,10 @@ export default function LandingHowItWorks() {
             Simples e direto
           </motion.span>
           <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-4xl font-black text-white mb-4">
-            Como funciona para o cliente?
+            Como funciona para o empreendedor?
           </motion.h2>
           <motion.p variants={fadeUp} custom={2} className="text-white/50 text-lg max-w-xl mx-auto">
-            Um fluxo simples que leva clientes até sua loja prontos para comprar.
+            Em 4 passos você cria seu programa de fidelidade completo.
           </motion.p>
         </motion.div>
 
@@ -45,7 +45,6 @@ export default function LandingHowItWorks() {
               custom={i + 3}
               className="relative text-center group"
             >
-              {/* Connector line */}
               {i < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-px bg-gradient-to-r from-emerald-500/20 to-transparent" />
               )}
@@ -68,7 +67,7 @@ export default function LandingHowItWorks() {
           <motion.div variants={fadeUp} custom={8}>
             <Button asChild size="lg" className="rounded-full px-10 py-7 bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow-[0_8px_30px_-5px_rgba(16,185,129,0.4)] border-0">
               <Link to="/trial">
-                Quero ser parceiro <ArrowRight className="ml-2 h-5 w-5" />
+                Criar meu programa <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </motion.div>

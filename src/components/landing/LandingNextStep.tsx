@@ -26,11 +26,11 @@ export default function LandingNextStep() {
           </motion.div>
 
           <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-5xl font-black text-white mb-5">
-            Pronto para aumentar suas vendas?
+            Pronto para criar seu programa de fidelidade?
           </motion.h2>
 
           <motion.p variants={fadeUp} custom={2} className="text-white/50 text-lg mb-4 max-w-xl mx-auto">
-            Junte-se a centenas de lojistas que já estão recebendo clientes com saldo para gastar. Cadastro rápido, sem burocracia.
+            Junte-se a centenas de empreendedores que já criaram seus próprios programas de pontos e resgate. Cadastro rápido, sem burocracia.
           </motion.p>
 
           <motion.div variants={fadeUp} custom={3} className="flex items-center justify-center gap-6 mb-10 flex-wrap">
@@ -51,7 +51,7 @@ export default function LandingNextStep() {
               className="text-lg px-12 py-7 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow-[0_8px_30px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_12px_40px_-5px_rgba(16,185,129,0.5)] transition-all border-0"
             >
               <Link to="/trial">
-                Quero ser parceiro <ArrowRight className="ml-2 h-5 w-5" />
+                Começar grátis por 30 dias <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button

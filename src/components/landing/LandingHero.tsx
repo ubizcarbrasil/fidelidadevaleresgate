@@ -1,22 +1,20 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Users, ShoppingBag, Store, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Rocket, Globe, Palette } from "lucide-react";
 
 const stats = [
-  { value: "+2 Milhões", label: "de Clientes", icon: Users },
-  { value: "50.000+", label: "Resgates / mês", icon: ShoppingBag },
-  { value: "500+", label: "Parceiros", icon: Store },
+  { value: "100%", label: "White-Label", icon: Palette },
+  { value: "No-Code", label: "Sem programação", icon: Rocket },
+  { value: "Global", label: "Domínio próprio", icon: Globe },
 ];
 
 export default function LandingHero() {
   return (
     <section className="relative overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/40 via-[hsl(160,30%,6%)] to-[hsl(160,30%,6%)]" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/8 rounded-full blur-[120px]" />
 
-      {/* Floating stars */}
       <motion.div
         className="absolute top-16 left-[10%]"
         animate={{ y: [-5, 5, -5], rotate: [0, 10, 0] }}
@@ -33,7 +31,6 @@ export default function LandingHero() {
       </motion.div>
 
       <div className="max-w-6xl mx-auto px-5 pt-16 pb-20 md:pt-24 md:pb-28 relative z-10">
-        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -42,11 +39,10 @@ export default function LandingHero() {
         >
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-semibold border border-emerald-500/20">
             <Sparkles className="h-4 w-4" />
-            Ecossistema de Pontos + Resgate
+            Plataforma de Fidelidade White-Label
           </span>
         </motion.div>
 
-        {/* Main heading */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -54,23 +50,22 @@ export default function LandingHero() {
           className="text-center max-w-4xl mx-auto mb-8"
         >
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-white">
-            Aumente suas vendas com{" "}
-            <span className="text-emerald-400">clientes prontos para comprar</span>
+            Crie seu próprio{" "}
+            <span className="text-emerald-400">programa de fidelidade</span>{" "}
+            com sua marca
           </h1>
         </motion.div>
 
-        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-center text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-10"
         >
-          O Vale Resgate conecta sua loja a milhares de clientes com saldo para gastar. 
-          Mais tráfego, mais vendas, menor custo de aquisição.
+          App completo, domínio próprio e CRM integrado. Monte seu ecossistema de pontos e resgate
+          sem escrever uma linha de código.
         </motion.p>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,12 +78,11 @@ export default function LandingHero() {
             className="text-base md:text-lg px-10 py-7 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow-[0_8px_30px_-5px_rgba(16,185,129,0.4)] hover:shadow-[0_12px_40px_-5px_rgba(16,185,129,0.5)] transition-all border-0"
           >
             <Link to="/trial">
-              Quero ser parceiro <ArrowRight className="ml-2 h-5 w-5" />
+              Começar grátis por 30 dias <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
         </motion.div>
 
-        {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -113,7 +107,6 @@ export default function LandingHero() {
         </motion.div>
       </div>
 
-      {/* Bottom fade to next section */}
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-b from-transparent to-[hsl(160,30%,8%)]" />
     </section>
   );

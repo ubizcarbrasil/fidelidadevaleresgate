@@ -13,40 +13,40 @@ const fadeUp = {
 
 const models = [
   {
-    title: "Parceiro de Resgate",
-    subtitle: "Aceita saldo/vale-resgate",
-    desc: "Você permite que clientes usem o saldo Vale Resgate na sua loja, com regras definidas por você.",
+    title: "Starter",
+    subtitle: "Para começar rápido",
+    desc: "Ideal para empreendedores que querem lançar um programa de fidelidade simples e eficiente.",
     features: [
-      "Receba clientes com saldo para gastar",
-      "Defina suas próprias regras",
-      "Controle dias e horários",
-      "Ideal para começar",
+      "App white-label com sua marca",
+      "Até 3 lojas parceiras",
+      "Pontuação manual ou automática",
+      "Relatórios básicos",
     ],
     highlighted: false,
   },
   {
-    title: "Emissor de Pontos",
-    subtitle: "Gera pontos para clientes",
-    desc: "Você concede pontos aos clientes por compras na sua loja, criando um ciclo de fidelização.",
+    title: "Profissional",
+    subtitle: "Para escalar sua rede",
+    desc: "Tudo do Starter + CRM inteligente, campanhas e rede ilimitada de parceiros.",
     features: [
-      "Fidelize seus clientes",
-      "Pontuação por compra",
-      "Integração automática ou manual",
-      "Aumente a recorrência",
-    ],
-    highlighted: false,
-  },
-  {
-    title: "Modelo Completo",
-    subtitle: "Emite pontos + aceita resgate",
-    desc: "O melhor dos dois mundos: você gera pontos para fidelizar e aceita saldo para atrair novos clientes.",
-    features: [
-      "Máximo potencial de vendas",
-      "Fidelização + aquisição",
-      "Relatórios completos",
-      "Suporte prioritário",
+      "Parceiros ilimitados",
+      "CRM com diagnóstico automático",
+      "Campanhas de reativação",
+      "Domínio personalizado",
     ],
     highlighted: true,
+  },
+  {
+    title: "Enterprise",
+    subtitle: "Para grandes operações",
+    desc: "Solução completa com API, multi-marca, suporte dedicado e integrações avançadas.",
+    features: [
+      "Multi-marca e multi-tenant",
+      "API completa para integrações",
+      "Suporte prioritário dedicado",
+      "SLA e customizações",
+    ],
+    highlighted: false,
   },
 ];
 
@@ -58,13 +58,13 @@ export default function LandingCommercialModel() {
       <div className="max-w-6xl mx-auto px-5 relative z-10">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} className="text-center mb-14">
           <motion.span variants={fadeUp} custom={0} className="inline-flex px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold mb-4 border border-emerald-500/20">
-            Modelos flexíveis
+            Planos flexíveis
           </motion.span>
           <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-4xl font-black text-white mb-4">
-            Como sua loja pode participar?
+            Escolha o plano ideal para seu negócio
           </motion.h2>
           <motion.p variants={fadeUp} custom={2} className="text-white/50 text-lg max-w-xl mx-auto">
-            Escolha o modelo que faz mais sentido para o seu negócio.
+            Comece grátis por 30 dias. Escale conforme sua rede cresce.
           </motion.p>
         </motion.div>
 
@@ -83,7 +83,7 @@ export default function LandingCommercialModel() {
               {m.highlighted && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold shadow-lg">
-                    <Star className="h-3 w-3" /> RECOMENDADO
+                    <Star className="h-3 w-3" /> MAIS POPULAR
                   </span>
                 </div>
               )}
@@ -110,7 +110,7 @@ export default function LandingCommercialModel() {
                 }`}
               >
                 <Link to="/trial">
-                  Quero esse modelo <ArrowRight className="ml-2 h-4 w-4" />
+                  Começar grátis <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </motion.div>
