@@ -32,13 +32,13 @@ const testimonials = [
 
 export default function LandingTestimonials() {
   return (
-    <section className="py-20 md:py-28 bg-card/50">
-      <div className="container mx-auto px-4">
+    <section className="py-20 md:py-28 bg-[hsl(160,30%,8%)]">
+      <div className="max-w-6xl mx-auto px-5">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} className="text-center mb-14">
-          <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-4xl font-bold mb-4">
+          <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-4xl font-black text-white mb-4">
             Quem usa, recomenda
           </motion.h2>
-          <motion.p variants={fadeUp} custom={1} className="text-muted-foreground text-lg">
+          <motion.p variants={fadeUp} custom={1} className="text-white/50 text-lg">
             Veja o que empreendedores como você estão dizendo.
           </motion.p>
         </motion.div>
@@ -54,24 +54,24 @@ export default function LandingTestimonials() {
               key={t.name}
               variants={fadeUp}
               custom={i + 2}
-              className="relative rounded-2xl border border-border bg-background p-6 shadow-sm hover:shadow-md transition-shadow"
+              className="relative rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 hover:border-emerald-500/20 transition-colors"
             >
-              <Quote className="h-8 w-8 text-primary/20 absolute top-4 right-4" />
+              <Quote className="h-8 w-8 text-emerald-500/15 absolute top-4 right-4" />
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                <div className="h-11 w-11 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-bold text-emerald-400">
                   {t.initials}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm text-foreground">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                  <p className="font-semibold text-sm text-white">{t.name}</p>
+                  <p className="text-xs text-white/40">{t.role}</p>
                 </div>
               </div>
               <div className="flex gap-0.5 mb-3">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="h-3.5 w-3.5 fill-primary text-primary" />
+                  <Star key={s} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">"{t.text}"</p>
+              <p className="text-sm text-white/60 leading-relaxed">"{t.text}"</p>
             </motion.div>
           ))}
         </motion.div>

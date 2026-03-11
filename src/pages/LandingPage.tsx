@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
+import { useState } from "react";
 import LandingHero from "@/components/landing/LandingHero";
-import LandingPainPoints from "@/components/landing/LandingPainPoints";
+
 import LandingAppPreview from "@/components/landing/LandingAppPreview";
 import LandingBenefits from "@/components/landing/LandingBenefits";
 import LandingWhiteLabel from "@/components/landing/LandingWhiteLabel";
@@ -15,44 +16,62 @@ import LandingNextStep from "@/components/landing/LandingNextStep";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[hsl(160,30%,6%)] text-white overflow-x-hidden">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
+      <nav className="sticky top-0 z-50 bg-[hsl(160,30%,6%)]/90 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <img src="/logo-vale-resgate.jpeg" alt="Vale Resgate" className="h-9 w-auto rounded-lg" />
-            <span className="font-bold text-lg hidden sm:inline">Vale Resgate</span>
+            <span className="font-bold text-lg hidden sm:inline text-white">Vale Resgate</span>
           </div>
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <a href="#marca-propria" className="hover:text-primary transition-colors">Marca Própria</a>
-            <a href="#como-funciona" className="hover:text-primary transition-colors">Como Funciona</a>
-            <a href="#crm" className="hover:text-primary transition-colors">CRM</a>
-            <a href="#modelo-comercial" className="hover:text-primary transition-colors">Modelo Comercial</a>
-            <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/70">
+            <a href="#como-funciona" className="hover:text-white transition-colors">Como Funciona</a>
+            <a href="#beneficios" className="hover:text-white transition-colors">Benefícios</a>
+            <a href="#modelo-comercial" className="hover:text-white transition-colors">Modelos</a>
+            <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
+
+          <div className="flex items-center gap-3">
+            <Button asChild variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 hidden sm:inline-flex">
               <Link to="/auth">Entrar</Link>
             </Button>
-            <Button asChild size="sm" className="rounded-full px-5">
+            <Button asChild size="sm" className="rounded-full px-6 bg-emerald-500 hover:bg-emerald-400 text-white border-0">
               <Link to="/trial">
                 Começar Agora <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
+            {/* Mobile menu toggle */}
+            <button className="md:hidden text-white/70" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden bg-[hsl(160,30%,8%)] border-t border-white/5 px-5 py-4 space-y-3">
+            <a href="#como-funciona" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Como Funciona</a>
+            <a href="#beneficios" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Benefícios</a>
+            <a href="#modelo-comercial" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Modelos</a>
+            <a href="#faq" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>FAQ</a>
+            <Link to="/auth" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Entrar</Link>
+          </div>
+        )}
       </nav>
 
       <LandingHero />
-      <LandingPainPoints />
-      <LandingAppPreview />
       <LandingBenefits />
-      <LandingWhiteLabel />
-      <LandingTestimonials />
+      <LandingAppPreview />
       <LandingHowItWorks />
+      <LandingWhiteLabel />
       <LandingCommercialModel />
       <LandingCRM />
+      <LandingTestimonials />
       <LandingFAQ />
       <LandingNextStep />
       <LandingFooter />
