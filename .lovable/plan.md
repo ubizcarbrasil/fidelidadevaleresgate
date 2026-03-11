@@ -1,35 +1,51 @@
 
 
-## Plano: Redesign profissional da Landing Page de Parceiros
+# Plano: Simulador Realista com 40 Parceiros Demo
 
-Sim, entendi perfeitamente — é a **Partner Landing Page** (`/:slug/parceiro`) no arquivo `src/pages/PartnerLandingPage.tsx`.
+## Resumo
 
-### O que será feito
+Expandir a edge function `provision-brand` para criar automaticamente 40 parceiros fictícios de diversos segmentos, cada um com logomarca real, ofertas de produto, ofertas de loja toda, parceiros emissores, e dados de catálogo. Todos os módulos serão ativados (não apenas os `is_core`).
 
-Reescrever completamente o `PartnerLandingPage.tsx` inspirado na referência `ubiz-shop-connect.lovable.app`, mantendo o sistema dinâmico existente (dados vindos do `partner_landing_config` + cores/logo da marca).
+## O que muda para o usuário
 
-### Seções da nova LP (inspiradas na referência)
+Ao criar uma nova empresa pelo Wizard, o app do cliente virá **pré-populado** com 40 estabelecimentos realistas de segmentos variados (pizzaria, pet shop, barbearia, farmácia, academia, padaria, etc.), cada um com:
+- Logo e imagem de produto reais (via URLs públicas de imagens gratuitas como `ui-avatars.com` para logos e `picsum.photos`/`unsplash` para produtos)
+- 1-3 ofertas ativas (mix de ofertas de produto e loja toda)
+- Tipos variados: RECEPTORA, EMISSORA e MISTA
+- Itens de catálogo digital para parceiros emissores
+- Todos os módulos ativados para experimentação completa
 
-1. **Hero** — Headline grande com destaque em cor da marca, subtítulo, CTA principal + botão secundário, vídeo embed opcional (campo `hero_image_url` aceita URL do YouTube)
-2. **Barra de números** — Contadores animados (já existente, será polido)
-3. **Benefícios** — Grid 3x2 com ícones, títulos e descrições mais detalhados no estilo da referência ("Mais clientes no caixa", "Menor CAC", "Vendas incrementais", etc.)
-4. **Como funciona** — 4 passos verticais com numeração grande (01, 02, 03, 04) e linha conectora, no estilo da referência
-5. **Modelos de participação** — NOVA SEÇÃO: 3 cards (Parceiro de Resgate, Emissor de Pontos, Modelo Completo com badge "Recomendado") com lista de benefícios e CTA individual — configurável via novo campo `models_json` no config, com fallback hardcoded
-6. **FAQ** — Expandido para 15 perguntas no estilo da referência, com accordion animado
-7. **CTA final** — Seção com mascote/ícone, headline e dois botões (cadastro + WhatsApp)
-8. **Footer** — Logo + copyright
+## Mudanças Técnicas
 
-### Mudanças técnicas
+### 1. Edge Function `provision-brand/index.ts` (reescrever)
 
-- **Arquivo único**: `src/pages/PartnerLandingPage.tsx` — reescrita completa
-- **Backward compatible**: Todos os campos do `partner_landing_config` continuam funcionando. Novos campos (`models_json`) terão fallback no código
-- **Sem migração de banco**: Os defaults no código cobrem o conteúdo da referência
-- **Animações**: Framer Motion mantido, com efeitos de parallax e hover mais sofisticados
-- **Visual**: Dark theme com glassmorphism, gradientes mais ricos, tipografia mais impactante, espaçamento generoso
+**Seção de dados demo** - Adicionar um array hardcoded com ~40 parceiros fictícios contendo:
+- `name`, `slug`, `segment`, `description`, `store_type` (RECEPTORA/EMISSORA/MISTA)
+- `logo_url` (usando `https://ui-avatars.com/api/?name=NOME&background=COR&color=fff&size=256&rounded=true` para gerar logos automaticamente com iniciais coloridas)
+- `image_url` para ofertas (usando URLs do `https://images.unsplash.com` com IDs fixos para cada segmento)
 
-### O que NÃO muda
-- Roteamento (`/:slug/parceiro`)
-- Lógica de fetch de dados (brands + partner_landing_config)
-- Sistema de cores dinâmicas (HSL da marca)
-- Banco de dados (sem migrations)
+**Lógica de criação em lote:**
+- Loop pelos 40 parceiros: `INSERT` em `stores` com `approval_status: APPROVED`, `is_active: true`
+- Para cada parceiro, criar 1-3 ofertas em `offers` com `status: ACTIVE`, variando entre `coupon_type: PRODUCT` e `coupon_type: STORE`
+- Para parceiros do tipo EMISSORA/MISTA, criar 2-3 itens em `store_catalog_items`
+- Valores de desconto variados (5%, 10%, 15%, 20%, R$5, R$10)
+
+**Ativação de todos os módulos:**
+- Alterar o passo 8 para buscar **todos** os `module_definitions` ativos (remover filtro `is_core = true`), garantindo que tudo fique ativado
+
+**Segmentos incluídos** (exemplos):
+Pizzaria, Hamburgueria, Barbearia, Pet Shop, Farmácia, Academia, Padaria, Sorveteria, Restaurante Japonês, Cafeteria, Loja de Roupas, Ótica, Lavanderia, Oficina Mecânica, Floricultura, Livraria, Papelaria, Açaíteria, Cervejaria, Doceria, Clínica Estética, Dentista, Salão de Beleza, Mercadinho, Loja de Calçados, Casa de Carnes, Loja de Eletrônicos, Restaurante Italiano, Churrascaria, Loja de Brinquedos, Loja de Cosméticos, Estúdio de Tatuagem, Escola de Idiomas, Loja de Suplementos, Loja de Vinhos, Restaurante Vegano, Pastelaria, Loja de Celulares, Confeitaria, Lanchonete
+
+### 2. Seções de vitrine automáticas
+
+Além do template padrão, criar seções de vitrine (`brand_sections`) para categorias como "Gastronomia", "Saúde & Beleza", "Serviços" para que o app já tenha navegação por segmentos.
+
+### 3. Nenhuma alteração no banco de dados
+
+Todas as tabelas necessárias (`stores`, `offers`, `store_catalog_items`, `brand_modules`, `brand_sections`) já existem. Apenas a edge function precisa ser atualizada.
+
+## Escopo
+
+- **1 arquivo modificado**: `supabase/functions/provision-brand/index.ts`
+- **Impacto**: Apenas novas empresas provisionadas após a mudança terão os 40 parceiros. Empresas existentes não são afetadas.
 
