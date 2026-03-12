@@ -370,6 +370,9 @@ export default function CsvImportPage() {
               name: row.name.trim(), phone: row.phone?.trim() || null, email: row.email?.trim() || null,
               cpf: row.cpf?.trim() || null, gender: row.gender?.trim() || null,
               os_platform: row.os_platform?.trim() || null,
+              ride_count: row.ride_count ? parseInt(row.ride_count, 10) || 0 : 0,
+              first_ride_at: row.first_ride_at?.trim() || null,
+              last_ride_at: row.last_ride_at?.trim() || null,
               source: row.source?.trim() || "CSV_IMPORT", tags_json: tags,
               is_active: row.is_active ? parseBool(row.is_active) : true,
             });

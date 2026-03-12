@@ -210,6 +210,9 @@ const ContactDetail = memo(function ContactDetail({ contact, events }: { contact
           <div><span className="text-muted-foreground">CPF:</span> {contact.cpf || "—"}</div>
           <div><span className="text-muted-foreground">Gênero:</span> {contact.gender || "—"}</div>
           <div><span className="text-muted-foreground">SO:</span> {contact.os_platform || "—"}</div>
+          <div><span className="text-muted-foreground">Corridas:</span> {contact.ride_count || 0}</div>
+          <div><span className="text-muted-foreground">Ativo desde:</span> {contact.first_ride_at ? new Date(contact.first_ride_at).toLocaleDateString("pt-BR") : "—"}</div>
+          <div><span className="text-muted-foreground">Última corrida:</span> {contact.last_ride_at ? new Date(contact.last_ride_at).toLocaleDateString("pt-BR") : "—"}</div>
           <div>
             <span className="text-muted-foreground">Origem:</span>{" "}
             <Badge variant="secondary" className={SOURCE_COLORS[contact.source] || ""}>
