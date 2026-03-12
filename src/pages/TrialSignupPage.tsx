@@ -144,10 +144,7 @@ export default function TrialSignupPage() {
         <>
           <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 px-4">
             <div className="max-w-4xl mx-auto text-center space-y-4">
-              <img
-                src="/logo-vale-resgate.jpeg"
-                alt="Vale Resgate"
-                className="mx-auto h-16 w-auto rounded-2xl shadow-lg"
+              <PlatformLogo className="mx-auto h-16 w-16 rounded-2xl shadow-lg"
               />
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
                 Bem-vindo ao Vale Resgate!
