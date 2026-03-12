@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import type { Database } from "@/integrations/supabase/types";
 
 type OfferStatus = Database["public"]["Enums"]["offer_status"];
