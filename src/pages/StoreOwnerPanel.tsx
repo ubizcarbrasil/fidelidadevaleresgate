@@ -331,7 +331,7 @@ export default function StoreOwnerPanel() {
       {/* Bottom tab bar - PWA style */}
       <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-md border-t pwa-safe-bottom">
         <div className="flex items-stretch h-16 max-w-lg mx-auto">
-          {BOTTOM_TABS.map(tab => {
+          {filteredBottomTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
             return (
