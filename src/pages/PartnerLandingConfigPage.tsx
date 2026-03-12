@@ -28,6 +28,7 @@ export default function PartnerLandingConfigPage() {
   const [heroTitle, setHeroTitle] = useState("Seja um Parceiro");
   const [heroSubtitle, setHeroSubtitle] = useState("Faça parte da maior rede de benefícios da sua região e atraia mais clientes para o seu negócio.");
   const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [numbers, setNumbers] = useState<NumberItem[]>([
     { value: "10.000+", label: "Usuários ativos" },
     { value: "500+", label: "Parceiros" },
