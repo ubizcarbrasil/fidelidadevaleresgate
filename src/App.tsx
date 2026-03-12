@@ -158,7 +158,7 @@ function AppRoutes() {
           <Route path="vouchers/new" element={<ModuleGuard moduleKey="vouchers"><VoucherWizardPage /></ModuleGuard>} />
           <Route path="vouchers/redeem" element={<ModuleGuard moduleKey="vouchers"><VoucherRedeem /></ModuleGuard>} />
           <Route path="vouchers/:id" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
-          <Route path="domains" element={<BrandDomains />} />
+          <Route path="domains" element={<RootGuard><BrandDomains /></RootGuard>} />
           <Route path="users" element={<UsersPage />} />
           <Route path="stores" element={<ModuleGuard moduleKey="stores"><StoresPage /></ModuleGuard>} />
           <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />

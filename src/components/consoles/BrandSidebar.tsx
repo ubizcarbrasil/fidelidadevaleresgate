@@ -138,7 +138,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key, moduleKey: "api_keys" },
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
-      { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe, moduleKey: "domains" },
+      
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree, moduleKey: "taxonomy" },
     ],
   },
