@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Save, ExternalLink, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import ImageUploadField from "@/components/ImageUploadField";
 
 interface NumberItem { value: string; label: string; }
 interface BenefitItem { title: string; description: string; icon: string; }
@@ -27,6 +28,7 @@ export default function PartnerLandingConfigPage() {
   const [heroTitle, setHeroTitle] = useState("Seja um Parceiro");
   const [heroSubtitle, setHeroSubtitle] = useState("Faça parte da maior rede de benefícios da sua região e atraia mais clientes para o seu negócio.");
   const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [numbers, setNumbers] = useState<NumberItem[]>([
     { value: "10.000+", label: "Usuários ativos" },
     { value: "500+", label: "Parceiros" },
@@ -67,6 +69,7 @@ export default function PartnerLandingConfigPage() {
         setHeroTitle(data.hero_title);
         setHeroSubtitle(data.hero_subtitle);
         setHeroImageUrl(data.hero_image_url || "");
+        setLogoUrl((data as any).logo_url || "");
         setNumbers(data.numbers_json as any);
         setBenefits(data.benefits_json as any);
         setHowItWorks(data.how_it_works_json as any);
@@ -90,6 +93,7 @@ export default function PartnerLandingConfigPage() {
       hero_title: heroTitle,
       hero_subtitle: heroSubtitle,
       hero_image_url: heroImageUrl || null,
+      logo_url: logoUrl || null,
       numbers_json: numbers,
       benefits_json: benefits,
       how_it_works_json: howItWorks,
@@ -163,6 +167,16 @@ export default function PartnerLandingConfigPage() {
         <CardHeader><CardTitle className="text-base">🎯 Hero</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label>Logomarca da Marca</Label>
+            <ImageUploadField
+              value={logoUrl}
+              onChange={setLogoUrl}
+              folder={`partner-landing/${currentBrandId}`}
+              label="Logomarca"
+              previewClassName="h-16 object-contain"
+            />
+          </div>
+          <div className="space-y-2">
             <Label>Título Principal</Label>
             <Input value={heroTitle} onChange={e => setHeroTitle(e.target.value)} />
           </div>
@@ -171,8 +185,15 @@ export default function PartnerLandingConfigPage() {
             <Textarea value={heroSubtitle} onChange={e => setHeroSubtitle(e.target.value)} rows={3} />
           </div>
           <div className="space-y-2">
-            <Label>URL da Imagem (opcional)</Label>
-            <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="https://..." />
+            <Label>Imagem do Hero (opcional)</Label>
+            <ImageUploadField
+              value={heroImageUrl}
+              onChange={setHeroImageUrl}
+              folder={`partner-landing/${currentBrandId}`}
+              label="Imagem do Hero"
+              previewClassName="h-32 w-full object-cover rounded-lg"
+              aspectRatio={16 / 9}
+            />
           </div>
         </CardContent>
       </Card>

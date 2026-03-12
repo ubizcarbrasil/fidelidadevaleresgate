@@ -23,6 +23,7 @@ interface LandingConfig {
   hero_title: string;
   hero_subtitle: string;
   hero_image_url: string | null;
+  logo_url: string | null;
   numbers_json: { value: string; label: string }[];
   benefits_json: { title: string; description: string; icon: string }[];
   how_it_works_json: { step: string; title: string; description: string }[];
@@ -335,6 +336,7 @@ export default function PartnerLandingPage() {
           hero_title: configData.hero_title,
           hero_subtitle: configData.hero_subtitle,
           hero_image_url: configData.hero_image_url,
+          logo_url: (configData as any).logo_url || null,
           numbers_json: configData.numbers_json as any,
           benefits_json: configData.benefits_json as any,
           how_it_works_json: configData.how_it_works_json as any,
@@ -348,6 +350,7 @@ export default function PartnerLandingPage() {
           hero_title: "Aumente suas vendas com clientes prontos para comprar",
           hero_subtitle: "Conectamos sua loja a milhares de clientes com saldo para gastar. Mais tráfego, mais vendas, menor custo de aquisição.",
           hero_image_url: null,
+          logo_url: null,
           numbers_json: [
             { value: "2.000.000+", label: "Clientes na base" },
             { value: "500+", label: "Parceiros ativos" },
@@ -400,7 +403,7 @@ export default function PartnerLandingPage() {
   const primaryLight = lighten(theme?.primary, 15);
   const bgDark = darken(theme?.primary, 38);
   const bgDarker = darken(theme?.primary, 42);
-  const logoUrl = (brand.brand_settings_json as any)?.theme?.logo_url;
+  const logoUrl = config?.logo_url || (brand.brand_settings_json as any)?.theme?.logo_url;
   const registerUrl = "/register-store";
 
   const fadeUp = {
