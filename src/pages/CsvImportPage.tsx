@@ -383,10 +383,18 @@ export default function CsvImportPage() {
 
           const { error: contactError } = await supabase.from("crm_contacts").insert(contactPayloads);
           if (contactError) {
-            batch.forEach((_, j) => {
-              result.errors.push({ row: batchStart + j + 2, message: contactError.message });
-            });
-            result.skipped += batch.length;
+            // Batch failed — retry one-by-one to maximize sync
+            let batchOk = 0;
+            for (let k = 0; k < contactPayloads.length; k++) {
+              const { error: singleErr } = await supabase.from("crm_contacts").insert(contactPayloads[k]);
+              if (singleErr) {
+                result.errors.push({ row: batchStart + k + 2, message: `CRM: ${singleErr.message}` });
+              } else {
+                batchOk++;
+              }
+            }
+            result.success += batchOk;
+            result.skipped += (contactPayloads.length - batchOk);
           } else {
             result.success += inserted.length;
           }
