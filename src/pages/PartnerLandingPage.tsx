@@ -350,6 +350,7 @@ export default function PartnerLandingPage() {
           hero_title: "Aumente suas vendas com clientes prontos para comprar",
           hero_subtitle: "Conectamos sua loja a milhares de clientes com saldo para gastar. Mais tráfego, mais vendas, menor custo de aquisição.",
           hero_image_url: null,
+          logo_url: null,
           numbers_json: [
             { value: "2.000.000+", label: "Clientes na base" },
             { value: "500+", label: "Parceiros ativos" },
