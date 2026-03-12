@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DataTableControls } from "@/components/DataTableControls";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import type { Database } from "@/integrations/supabase/types";
 
 type RedemptionStatus = Database["public"]["Enums"]["redemption_status"];
