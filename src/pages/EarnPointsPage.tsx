@@ -303,6 +303,7 @@ export default function EarnPointsPage() {
                     <div>
                       <span className="font-medium text-sm">{c.name}</span>
                       <span className="text-xs text-muted-foreground ml-2">{c.phone}</span>
+                      {c.cpf && <span className="text-xs text-muted-foreground ml-2">CPF: {c.cpf}</span>}
                     </div>
                     <Badge variant="secondary">{c.points_balance} pts</Badge>
                   </button>
