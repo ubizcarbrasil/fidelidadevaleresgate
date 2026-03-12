@@ -563,7 +563,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               {/* Content card */}
               <div className="relative -mt-6 mx-4 rounded-[24px] bg-card p-5" style={{ boxShadow: "0 4px 24px hsl(var(--foreground) / 0.06)" }}>
                 {offer.stores?.name && (
-                  <div className="flex items-center gap-2 mb-3">
+                  <button
+                    onClick={handleOpenStore}
+                    className="flex items-center gap-2 mb-3 active:opacity-70 transition-opacity"
+                  >
                     {offer.stores.logo_url ? (
                       <img src={offer.stores.logo_url} alt={offer.stores.name} className="h-8 w-8 rounded-lg object-cover" />
                     ) : (
@@ -571,8 +574,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
-                    <span className="text-sm font-medium text-muted-foreground">{offer.stores.name}</span>
-                  </div>
+                    <span className="text-sm font-semibold" style={{ color: primary }}>{offer.stores.name}</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" style={{ color: primary }} />
+                  </button>
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                 {offer.description && (
