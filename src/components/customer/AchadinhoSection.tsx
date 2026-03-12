@@ -142,7 +142,7 @@ export default function AchadinhoSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.3 }}
               whileTap={{ scale: 0.97 }}
-              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer"
+              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
               style={{
                 boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
                 scrollSnapAlign: "start",
