@@ -293,7 +293,7 @@ export default function BrandPermissionOverflowPage() {
             <Card key={mod}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Badge variant="outline">{mod}</Badge>
+                  <Badge variant="outline">{friendlyModule(mod)}</Badge>
                   <span className="text-muted-foreground font-normal">
                     {perms.length} permissão{perms.length > 1 ? "ões" : ""}
                   </span>
