@@ -12,6 +12,7 @@ import {
   SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import PlatformLogo from "@/components/PlatformLogo";
 
 const groups = [
   {
