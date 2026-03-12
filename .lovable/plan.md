@@ -1,13 +1,17 @@
 
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+## Plano: Remover "Domínios" do sidebar do Empreendedor e manter apenas no Root
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
+### Problema
+A página `BrandDomains` não aplica filtro por `brand_id`, mostrando domínios de todas as marcas. Essa é uma funcionalidade administrativa de nível ROOT — empreendedores não devem gerenciá-la.
 
-### Ação
+### Solução
+1. **Remover o item "Domínios" do `BrandSidebar.tsx`** — retirar a entrada `{ key: "sidebar.dominios", ... }` do grupo "Técnico".
+2. **Manter no `RootSidebar.tsx`** — já existe lá e funciona corretamente para o root admin.
+3. **Proteger a rota `/domains`** — garantir que no `App.tsx` a rota esteja acessível apenas para root (ou já esteja dentro de um wrapper `RootGuard`).
 
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
-
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
+### Resultado
+- Empreendedores não verão mais "Domínios" no sidebar.
+- Root admin continua gerenciando domínios normalmente.
+- Nenhuma alteração de banco necessária.
 
