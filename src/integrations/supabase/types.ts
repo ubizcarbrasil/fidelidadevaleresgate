@@ -3756,6 +3756,10 @@ export type Database = {
         Returns: boolean
       }
       rate_limit_cleanup: { Args: never; Returns: undefined }
+      seed_affiliate_categories: {
+        Args: { p_brand_id: string }
+        Returns: undefined
+      }
       user_has_permission: {
         Args: {
           _permission_key: string
