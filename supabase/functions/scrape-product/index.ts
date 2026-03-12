@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -9,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, brand_id } = await req.json();
 
     if (!url) {
       return new Response(
@@ -56,12 +58,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract structured product data from the scraped content
     const data = raw.data || raw;
     const metadata = data.metadata || {};
     const markdown = data.markdown || '';
 
-    // Try to extract price patterns from markdown (R$ XX,XX or R$XX.XX)
+    // Extract price patterns
     const pricePattern = /R\$\s*([\d.,]+)/g;
     const prices: number[] = [];
     let match;
@@ -73,32 +74,70 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Usually: first price = current, second = original (strikethrough)
     const currentPrice = prices.length > 0 ? prices[0] : null;
     const originalPrice = prices.length > 1 ? prices[1] : null;
 
-    // If original < current, swap (common pattern: original shown first with strikethrough)
     let price = currentPrice;
     let origPrice = originalPrice;
     if (price && origPrice && origPrice < price) {
       [price, origPrice] = [origPrice, price];
     }
 
-    // Extract image from OG metadata
     const imageUrl = metadata.ogImage || metadata['og:image'] || null;
-
-    // Extract store/site name
     const siteName = metadata.ogSiteName || metadata['og:site_name'] || '';
+    const title = metadata.ogTitle || metadata.title || '';
+    const description = metadata.ogDescription || metadata.description || '';
 
-    // Build result
+    // Auto-categorize: match against brand's categories using keywords
+    let matched_category_id: string | null = null;
+    let matched_category_name: string | null = null;
+
+    if (brand_id) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const sb = createClient(supabaseUrl, supabaseKey);
+
+        const { data: cats } = await sb
+          .from('affiliate_deal_categories')
+          .select('id, name, keywords')
+          .eq('brand_id', brand_id)
+          .eq('is_active', true);
+
+        if (cats && cats.length > 0) {
+          const searchText = `${title} ${description} ${formattedUrl} ${siteName}`.toLowerCase();
+
+          let bestScore = 0;
+          for (const cat of cats) {
+            const kws = (cat.keywords as string[]) || [];
+            let score = 0;
+            for (const kw of kws) {
+              if (searchText.includes(kw.toLowerCase())) {
+                score += kw.length; // longer keyword matches = higher confidence
+              }
+            }
+            if (score > bestScore) {
+              bestScore = score;
+              matched_category_id = cat.id;
+              matched_category_name = cat.name;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Category matching error:', e);
+      }
+    }
+
     const product = {
-      title: metadata.ogTitle || metadata.title || '',
-      description: metadata.ogDescription || metadata.description || '',
+      title,
+      description,
       image_url: imageUrl,
-      price: price,
+      price,
       original_price: origPrice && origPrice > (price || 0) ? origPrice : null,
       store_name: siteName,
-      store_logo_url: metadata.ogImage ? null : null, // OG doesn't usually have logo
+      store_logo_url: null,
+      category_id: matched_category_id,
+      category_name: matched_category_name,
     };
 
     console.log('Extracted product:', JSON.stringify(product));

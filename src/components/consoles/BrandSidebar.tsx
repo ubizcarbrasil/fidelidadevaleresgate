@@ -71,6 +71,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Emissor", url: "/emitter-requests", icon: Zap, moduleKey: "earn_points_store" },
       { key: "sidebar.importar_csv", defaultTitle: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias Achadinhos", url: "/affiliate-categories", icon: Sparkles },
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "stores" },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { key: "sidebar.operador_pdv", defaultTitle: "Operador PDV", url: "/pdv", icon: ScanLine },

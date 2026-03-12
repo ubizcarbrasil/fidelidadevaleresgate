@@ -61,6 +61,7 @@ const StoreRegistrationWizard = lazy(() => import("@/pages/StoreRegistrationWiza
 const StoreApprovalsPage = lazy(() => import("@/pages/StoreApprovalsPage"));
 const StoreOwnerPanel = lazy(() => import("@/pages/StoreOwnerPanel"));
 const AffiliateDealsPage = lazy(() => import("@/pages/AffiliateDealsPage"));
+const AffiliateCategoriesPage = lazy(() => import("@/pages/AffiliateCategoriesPage"));
 const StoreCatalogPage = lazy(() => import("@/pages/StoreCatalogPage"));
 const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
 const SendNotificationPage = lazy(() => import("@/pages/SendNotificationPage"));
@@ -180,6 +181,7 @@ function AppRoutes() {
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
           <Route path="store-approvals" element={<StoreApprovalsPage />} />
           <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
+          <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="stores"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="send-notification" element={<SendNotificationPage />} />

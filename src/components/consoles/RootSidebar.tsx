@@ -60,6 +60,7 @@ const groups = [
       { title: "Aprovar Regras", url: "/approve-store-rules", icon: Shield },
       { title: "Solicitações de Emissor", url: "/emitter-requests", icon: Zap },
       { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
+      { title: "Categorias Achadinhos", url: "/affiliate-categories", icon: Sparkles },
       { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
       { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { title: "Operador PDV", url: "/pdv", icon: ScanLine },

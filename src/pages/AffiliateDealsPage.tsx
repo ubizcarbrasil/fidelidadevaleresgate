@@ -31,6 +31,7 @@ interface DealDraft {
   price: string;
   original_price: string;
   category: string;
+  category_id: string;
   badge_label: string;
 }
 
@@ -47,6 +48,7 @@ const newDraft = (): DealDraft => ({
   price: "",
   original_price: "",
   category: "",
+  category_id: "",
   badge_label: "",
 });
 
@@ -70,6 +72,22 @@ export default function AffiliateDealsPage() {
   // Edit inline in existing table
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<DealDraft | null>(null);
+
+  // Categories for dropdown
+  const { data: brandCategories } = useQuery({
+    queryKey: ["affiliate-categories", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return [];
+      const { data } = await supabase
+        .from("affiliate_deal_categories")
+        .select("id, name, icon_name, color")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .order("order_index");
+      return data || [];
+    },
+    enabled: !!currentBrandId,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId],
@@ -102,7 +120,7 @@ export default function AffiliateDealsPage() {
     setScrapingIds((s) => new Set(s).add(draftId));
     try {
       const { data, error } = await supabase.functions.invoke("scrape-product", {
-        body: { url: draft.affiliate_url.trim() },
+        body: { url: draft.affiliate_url.trim(), brand_id: currentBrandId },
       });
       if (error || !data?.success) {
         toast.error(data?.error || error?.message || "Não foi possível buscar dados do produto.");
@@ -121,6 +139,8 @@ export default function AffiliateDealsPage() {
                 original_price: p.original_price != null ? String(p.original_price) : d.original_price,
                 store_name: p.store_name || d.store_name,
                 store_logo_url: p.store_logo_url || d.store_logo_url,
+                category_id: p.category_id || d.category_id,
+                category: p.category_name || d.category,
               }
             : d
         )
@@ -155,6 +175,7 @@ export default function AffiliateDealsPage() {
         price: d.price ? Number(d.price) : null,
         original_price: d.original_price ? Number(d.original_price) : null,
         category: d.category.trim() || null,
+        category_id: d.category_id.trim() || null,
         badge_label: d.badge_label.trim() || null,
         is_active: true,
         order_index: idx,
@@ -198,6 +219,7 @@ export default function AffiliateDealsPage() {
             affiliate_url: cols[5] || "",
             store_name: "",
             category: "",
+            category_id: "",
             badge_label: "",
           });
         }
@@ -276,6 +298,7 @@ export default function AffiliateDealsPage() {
       price: d.price != null ? String(d.price) : "",
       original_price: d.original_price != null ? String(d.original_price) : "",
       category: d.category || "",
+      category_id: d.category_id || "",
       badge_label: d.badge_label || "",
     });
   };
@@ -295,6 +318,7 @@ export default function AffiliateDealsPage() {
           price: editForm.price ? Number(editForm.price) : null,
           original_price: editForm.original_price ? Number(editForm.original_price) : null,
           category: editForm.category || null,
+          category_id: editForm.category_id || null,
           badge_label: editForm.badge_label?.trim() || null,
         })
         .eq("id", editId);
@@ -650,11 +674,23 @@ export default function AffiliateDealsPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Categoria</Label>
-                      <Input
-                        value={draft.category}
-                        onChange={(e) => updateDraft(draft.id, "category", e.target.value)}
-                        placeholder="Ex: Eletrônicos"
-                      />
+                      <select
+                        value={draft.category_id}
+                        onChange={(e) => {
+                          const cat = (brandCategories || []).find(c => c.id === e.target.value);
+                          updateDraft(draft.id, "category_id", e.target.value);
+                          if (cat) updateDraft(draft.id, "category", cat.name);
+                        }}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Selecionar...</option>
+                        {(brandCategories || []).map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {draft.category_id && (
+                        <p className="text-[10px] text-muted-foreground">Auto-detectada ou selecionada</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
