@@ -161,7 +161,7 @@ function AppRoutes() {
           <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />
           <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
           <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
-          <Route path="templates" element={<ModuleGuard moduleKey="home_sections"><SectionTemplatesPage /></ModuleGuard>} />
+          <Route path="templates" element={<RootGuard><SectionTemplatesPage /></RootGuard>} />
           <Route path="modules" element={<ModuleDefinitionsPage />} />
           <Route path="permissions" element={<PermissionsPage />} />
           <Route path="flags" element={<FeatureFlagsPage />} />
