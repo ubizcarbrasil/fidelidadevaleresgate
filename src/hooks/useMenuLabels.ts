@@ -47,6 +47,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.taxonomia": "Taxonomia",
     "sidebar.api_keys": "Integrações API",
     "sidebar.api_docs": "Documentação API",
+    "sidebar.configuracoes": "Configurações da Marca",
     "sidebar.central_acessos": "Central de Acessos",
     "sidebar.crm": "Dashboard CRM",
     "sidebar.crm_contacts": "Contatos",
