@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Upload, X, Loader2, Crop } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import ImageCropDialog from "@/components/ImageCropDialog";
 
@@ -62,13 +61,11 @@ export default function ImageUploadField({
       return;
     }
 
-    // For SVG/ICO, skip crop
     if (file.type === "image/svg+xml" || file.type === "image/x-icon") {
       uploadBlob(file, file.name.split(".").pop() || "png");
       return;
     }
 
-    // Open crop dialog
     setPendingFile(file);
     const reader = new FileReader();
     reader.onload = () => setCropSrc(reader.result as string);
@@ -83,7 +80,6 @@ export default function ImageUploadField({
 
   const handleCropCancel = () => {
     setCropSrc(null);
-    // Upload original if user cancels crop
     if (pendingFile) {
       uploadBlob(pendingFile, pendingFile.name.split(".").pop() || "png");
       setPendingFile(null);
@@ -94,37 +90,30 @@ export default function ImageUploadField({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        {value ? (
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <img
-              src={value}
-              alt={label}
-              className={`${previewClassName} rounded border border-input p-1 shrink-0`}
-            />
-            <Input
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              className="text-xs font-mono flex-1"
-              placeholder="URL da imagem"
-            />
-            <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={handleRemove}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="text-xs font-mono flex-1"
-            placeholder="URL ou faça upload"
+      {value ? (
+        <div className="relative inline-block">
+          <img
+            src={value}
+            alt={label}
+            className={`${previewClassName} rounded border border-input p-1`}
           />
-        )}
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md"
+            onClick={handleRemove}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      ) : null}
+      <div className="flex items-center gap-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="shrink-0 gap-1.5"
+          className="gap-1.5"
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
         >
@@ -133,7 +122,7 @@ export default function ImageUploadField({
           ) : (
             <Upload className="h-3.5 w-3.5" />
           )}
-          Upload
+          {value ? "Trocar" : "Upload"}
         </Button>
       </div>
       <input
