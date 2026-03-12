@@ -96,6 +96,20 @@ const CRM_CONTACT_FIELDS: TargetField[] = [
 const WEEKDAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 interface ValidationError { row: number; field: string; message: string; }
 
+/** Parse Brazilian date "DD/MM/YYYY HH:mm" → ISO 8601, or pass-through ISO strings */
+function parseBrDate(val: string): string | null {
+  if (!val?.trim()) return null;
+  const match = val.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2})(?::(\d{2}))?)?$/);
+  if (match) {
+    const [, dd, mm, yyyy, time, sec] = match;
+    return `${yyyy}-${mm}-${dd}T${time || "00:00"}:${sec || "00"}`;
+  }
+  if (!isNaN(Date.parse(val))) return new Date(val).toISOString();
+  return null;
+}
+
+const BATCH_SIZE = 100;
+
 function validateMappedRow(row: Record<string, string>, idx: number, importType: ImportType): ValidationError[] {
   const errors: ValidationError[] = [];
   const rowNum = idx + 2;
