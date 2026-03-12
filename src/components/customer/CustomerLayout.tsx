@@ -87,6 +87,7 @@ const tabVariants = {
 export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
@@ -99,6 +100,11 @@ export default function CustomerLayout() {
   const [showTour, setShowTour] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
+
+  const filteredTabs = useMemo(() =>
+    TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
+    [isModuleEnabled]
+  );
 
   // Auto-hide header on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
