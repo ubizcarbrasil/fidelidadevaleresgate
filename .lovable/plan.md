@@ -1,13 +1,22 @@
 
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+## Plano: Otimizar importação CSV de clientes
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
+### Problema
+A importação atual insere registros **um a um** (1 request HTTP por linha). Para 3700 registros, isso gera ~7400 requisições sequenciais (customer + crm_contact). Além disso, datas no formato "DD/MM/YYYY HH:mm" causam erro `22008` no banco.
 
-### Ação
+### Solução
 
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
+**1. Inserção em lotes (batch)**
+Agrupar os inserts em lotes de 100 registros usando o Supabase `.insert([...array])`, reduzindo ~7400 requests para ~74.
 
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
+**2. Corrigir parsing de datas brasileiras**
+Criar função `parseBrDate(val)` que converte "DD/MM/YYYY HH:mm" para ISO 8601 antes de enviar ao banco.
 
+### Alterações em `src/pages/CsvImportPage.tsx`
+
+1. Adicionar helper `parseBrDate`:
+```typescript
+function parseBrDate(val: string): string | null {
+  if (!val?.trim()) return null;
+  const match = val.match(/^(\d{2})\/(\d{2})\/(\d{4})\s*(\d{2}:\d{2})?
