@@ -54,6 +54,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder", icon: Layers },
       { key: "sidebar.partner_landing", defaultTitle: "LP de Parceiros", url: "/partner-landing-config", icon: FileUp },
       { key: "sidebar.welcome_tour", defaultTitle: "Tour de Boas-Vindas", url: "/welcome-tour", icon: Rocket },
+      { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText },
     ],
   },
   {
