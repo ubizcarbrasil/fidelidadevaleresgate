@@ -514,7 +514,7 @@ export default function AffiliateDealsPage() {
         </TabsContent>
 
         {/* ==================== ADICIONAR EM MASSA ==================== */}
-        <TabsContent value="manual" className="space-y-4">
+        <TabsContent value="manual" forceMount className={activeTab !== "manual" ? "hidden" : "space-y-4"}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Adicione vários achadinhos de uma vez. Somente título e link são obrigatórios.
