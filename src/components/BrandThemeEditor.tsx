@@ -15,8 +15,8 @@ interface BrandThemeEditorProps {
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
-  { key: "primary", label: "Primária" },
-  { key: "secondary", label: "Secundária" },
+  { key: "primary", label: "Primária (painel admin)" },
+  { key: "secondary", label: "Secundária (identidade do app)" },
   { key: "accent", label: "Destaque" },
   { key: "background", label: "Fundo" },
   { key: "foreground", label: "Texto" },
