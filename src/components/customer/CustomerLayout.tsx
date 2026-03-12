@@ -137,6 +137,7 @@ export default function CustomerLayout() {
   }, [customer]);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const fontBody = theme?.font_body ? `"${theme.font_body}", sans-serif` : "inherit";
@@ -165,7 +166,7 @@ export default function CustomerLayout() {
           <div
             className="pt-2 pb-0"
             style={{
-              background: `linear-gradient(180deg, ${primary}18 0%, ${primary}08 60%, hsl(var(--background)) 100%)`,
+              background: `linear-gradient(180deg, ${accent}18 0%, ${accent}08 60%, hsl(var(--background)) 100%)`,
               backgroundColor: "hsl(var(--background))",
             }}
           >
@@ -174,7 +175,7 @@ export default function CustomerLayout() {
                 {theme?.logo_url && (
                   <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} />
                 )}
-                <span className="font-extrabold text-base tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
+                <span className="font-extrabold text-base tracking-tight" style={{ fontFamily: fontHeading, color: accent }}>
                   {displayName}
                 </span>
               </div>
@@ -266,18 +267,18 @@ export default function CustomerLayout() {
                     <motion.div
                       layoutId="tab-indicator"
                       className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                      style={{ backgroundColor: primary }}
+                      style={{ backgroundColor: accent }}
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
                   <motion.div
                     className="h-8 w-8 rounded-xl flex items-center justify-center"
-                    animate={{ backgroundColor: isActive ? `${primary}12` : "transparent", scale: isActive ? 1.05 : 1 }}
+                    animate={{ backgroundColor: isActive ? `${accent}12` : "transparent", scale: isActive ? 1.05 : 1 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }} />
+                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }} />
                   </motion.div>
-                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? primary : "hsl(var(--muted-foreground))" }}>
+                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}>
                     {tab.label}
                   </span>
                 </button>

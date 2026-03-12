@@ -55,7 +55,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const { navigateToTab, navigateToOffersWithSegment } = useCustomerNav();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const primaryParsed = parseHsl(theme?.colors?.primary, "250 65% 55%");
+  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
+  const accentParsed = parseHsl(theme?.colors?.secondary || theme?.colors?.primary, "250 65% 55%");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
@@ -72,7 +73,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         className="max-w-lg mx-auto px-5 pt-3"
       >
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-          {greeting}, <span style={{ color: primary }}>{firstName}</span>! 👋
+          {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
         </h2>
         <p className="text-xs mt-0.5 text-muted-foreground">
           Confira suas ofertas e pontos
@@ -94,8 +95,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           <div
             className="w-full rounded-3xl p-0 relative overflow-hidden"
             style={{
-              background: `linear-gradient(145deg, ${hslAlpha(primaryParsed, 1)} 0%, ${hslAlpha(primaryParsed, 0.87)} 40%, ${hslAlpha(primaryParsed, 0.67)} 100%)`,
-              boxShadow: `0 8px 32px -8px ${hslAlpha(primaryParsed, 0.38)}`,
+              background: `linear-gradient(145deg, ${hslAlpha(accentParsed, 1)} 0%, ${hslAlpha(accentParsed, 0.87)} 40%, ${hslAlpha(accentParsed, 0.67)} 100%)`,
+              boxShadow: `0 8px 32px -8px ${hslAlpha(accentParsed, 0.38)}`,
             }}
           >
             {/* Decorative shapes */}

@@ -34,7 +34,7 @@ export default function CustomerAuthPage({ onSkip }: Props) {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const fontBody = theme?.font_body ? `"${theme.font_body}", sans-serif` : "inherit";
