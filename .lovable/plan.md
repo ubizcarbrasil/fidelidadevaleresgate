@@ -1,29 +1,13 @@
 
 
-## Plano: Restringir roles disponíveis por nível do usuário logado
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-### Problema
-Atualmente, o empreendedor (`brand_admin`) consegue atribuir qualquer role, incluindo `root_admin`, `tenant_admin` e `brand_admin`, que são superiores ou iguais ao seu nível. Isso é uma falha de segurança e UX.
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-### Solução
-Filtrar a lista de roles no dialog "Atribuir Role" com base no nível do usuário logado:
+### Ação
 
-- **root_admin**: vê todos os roles
-- **brand_admin**: vê apenas `branch_admin`, `branch_operator`, `operator_pdv`, `store_admin`, `customer`
-- **branch_admin**: vê apenas `branch_operator`, `operator_pdv`, `store_admin`, `customer`
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-### Alteração
-
-**`src/pages/UsersPage.tsx`**:
-1. Criar um mapa de roles permitidos por nível:
-   ```typescript
-   const ALLOWED_ROLES: Record<string, AppRole[]> = {
-     root_admin: ["root_admin","tenant_admin","brand_admin","branch_admin","branch_operator","operator_pdv","store_admin","customer"],
-     brand_admin: ["branch_admin","branch_operator","operator_pdv","store_admin","customer"],
-     branch_admin: ["branch_operator","operator_pdv","store_admin","customer"],
-   };
-   ```
-2. Determinar o nível do usuário logado e filtrar `Object.entries(ROLE_LABELS)` para mostrar apenas os roles permitidos no `<Select>` de "Papel".
-3. Ajustar o `selectedRole` default para o primeiro role permitido (ex: `branch_admin` para empreendedores).
-4. Também ocultar o campo "Organização" (tenant) e "Marca" (brand) para brand_admin, já que ele só opera dentro da própria marca.
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 

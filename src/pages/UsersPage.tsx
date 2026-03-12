@@ -12,16 +12,38 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { ROLE_LABELS } from "@/hooks/usePermissions";
 type AppRole = Database["public"]["Enums"]["app_role"];
 
+const ALL_ROLES: AppRole[] = ["root_admin","tenant_admin","brand_admin","branch_admin","branch_operator","operator_pdv","store_admin","customer"];
+
+const ALLOWED_ROLES_BY_LEVEL: Record<string, AppRole[]> = {
+  root_admin: ALL_ROLES,
+  tenant_admin: ["brand_admin","branch_admin","branch_operator","operator_pdv","store_admin","customer"],
+  brand_admin: ["branch_admin","branch_operator","operator_pdv","store_admin","customer"],
+  branch_admin: ["branch_operator","operator_pdv","store_admin","customer"],
+};
+
+function getUserLevel(isRoot: boolean, roles: { role: AppRole }[]): string {
+  if (isRoot) return "root_admin";
+  if (roles.some(r => r.role === "tenant_admin")) return "tenant_admin";
+  if (roles.some(r => r.role === "brand_admin")) return "brand_admin";
+  if (roles.some(r => r.role === "branch_admin")) return "branch_admin";
+  return "branch_admin";
+}
+
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const { roles: authRoles } = useAuth();
+  const userLevel = getUserLevel(isRootAdmin, authRoles);
+  const allowedRoles = ALLOWED_ROLES_BY_LEVEL[userLevel] || [];
+
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedRole, setSelectedRole] = useState<AppRole>("tenant_admin");
+  const [selectedRole, setSelectedRole] = useState<AppRole>(allowedRoles[0] || "branch_admin");
   const [selectedTenantId, setSelectedTenantId] = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState("");
   const [selectedBranchId, setSelectedBranchId] = useState("");
@@ -158,13 +180,15 @@ export default function UsersPage() {
                 <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as AppRole)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([k, v]) => (
+                    {Object.entries(ROLE_LABELS)
+                      .filter(([k]) => allowedRoles.includes(k as AppRole))
+                      .map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              {needsScope(selectedRole) && selectedRole === "tenant_admin" && (
+              {isRootAdmin && selectedRole === "tenant_admin" && (
                 <div className="space-y-2">
                   <Label>Organização</Label>
                   <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
@@ -175,7 +199,7 @@ export default function UsersPage() {
                   </Select>
                 </div>
               )}
-              {selectedRole === "brand_admin" && (
+              {isRootAdmin && selectedRole === "brand_admin" && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
                   <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
