@@ -31,6 +31,7 @@ interface DealDraft {
   price: string;
   original_price: string;
   category: string;
+  category_id: string;
   badge_label: string;
 }
 
