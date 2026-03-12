@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Ticket, Store, Rocket } from "lucide-react";
+import PlatformLogo from "@/components/PlatformLogo";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
