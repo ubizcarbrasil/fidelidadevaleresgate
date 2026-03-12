@@ -48,7 +48,7 @@ const CSS_VAR_MAP: Record<string, string> = {
   card: "--card",
 };
 
-const DARK_FALLBACK_KEYS = new Set(["primary", "secondary", "accent"]);
+// All dark_colors keys are now applied when in dark mode (no filter)
 
 function loadGoogleFont(fontName: string) {
   const id = `gfont-${fontName.replace(/\s+/g, "-")}`;
