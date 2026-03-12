@@ -260,6 +260,32 @@ function BrandQuickLinks() {
   );
 }
 
+function DemoStoresSection() {
+  const { currentBrandId, currentBranchId } = useBrandGuard();
+
+  // Get first branch if currentBranchId is not available
+  const { data: firstBranch } = useQuery({
+    queryKey: ["first-branch-for-demo", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return null;
+      const { data } = await supabase
+        .from("branches")
+        .select("id")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!currentBrandId && !currentBranchId,
+  });
+
+  const branchId = currentBranchId || firstBranch?.id;
+  if (!currentBrandId || !branchId) return null;
+
+  return <DemoStoresToggle brandId={currentBrandId} branchId={branchId} />;
+}
+
 function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   const { currentBrandId } = useBrandGuard();
   const isRoot = consoleScope === "ROOT";
