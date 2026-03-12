@@ -96,6 +96,17 @@ export default function StoresPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>{editId ? "Editar Parceiro" : "Novo Parceiro"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Logo do Parceiro</Label>
+                <ImageUploadField
+                  value={form.logo_url}
+                  onChange={url => setForm(f => ({ ...f, logo_url: url }))}
+                  folder="stores/logos"
+                  label="Logo"
+                  aspectRatio={1}
+                  previewClassName="h-16 w-16 rounded-xl object-cover"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Identificador</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} /></div>

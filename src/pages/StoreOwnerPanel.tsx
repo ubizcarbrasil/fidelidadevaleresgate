@@ -11,8 +11,9 @@ import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
   HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus,
   ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2,
-  Menu, ChevronLeft, Settings, Bell
+  Menu, ChevronLeft, Settings, Bell, Lock
 } from "lucide-react";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
 import StoreProfileTab from "@/components/store-owner/StoreProfileTab";
