@@ -12,6 +12,8 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -142,6 +144,7 @@ export function BrandSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
+  const badges = useSidebarBadges();
 
   // Dynamically resolve brand theme URL
   const resolvedGroups = groups.map(group => ({
@@ -186,6 +189,7 @@ export function BrandSidebar() {
                 <SidebarMenu>
                   {visibleItems.map((item) => {
                     const isExternal = item.url.startsWith("http");
+                    const badgeCount = badges[item.key];
                     return (
                       <SidebarMenuItem key={item.key}>
                         <SidebarMenuButton
@@ -206,7 +210,12 @@ export function BrandSidebar() {
                               className="hover:bg-sidebar-accent/50 flex items-center gap-2"
                             >
                               <item.icon className="h-4 w-4" />
-                              {!collapsed && <span>{getLabel(item.key)}</span>}
+                              {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
+                              {badgeCount && badgeCount > 0 && (
+                                <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
+                                  {badgeCount > 99 ? "99+" : badgeCount}
+                                </Badge>
+                              )}
                             </a>
                           ) : (
                             <NavLink
@@ -216,7 +225,12 @@ export function BrandSidebar() {
                               activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                             >
                               <item.icon className="h-4 w-4" />
-                              {!collapsed && <span>{getLabel(item.key)}</span>}
+                              {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
+                              {badgeCount && badgeCount > 0 && (
+                                <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
+                                  {badgeCount > 99 ? "99+" : badgeCount}
+                                </Badge>
+                              )}
                             </NavLink>
                           )}
                         </SidebarMenuButton>
