@@ -277,6 +277,8 @@ export default function CsvImportPage() {
         brand_id: brandId, branch_id: branchId, created_by: user.id, type: importType, status: "IMPORTING",
       }).select("id").single();
 
+      setImportProgress({ current: 0, total: rows.length });
+
       if (importType === "STORES") {
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
@@ -291,6 +293,7 @@ export default function CsvImportPage() {
             if (error) throw error;
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       } else if (importType === "OFFERS") {
         const { data: existingStores } = await supabase.from("stores").select("id, name, slug").eq("brand_id", brandId).eq("branch_id", branchId);
