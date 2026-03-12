@@ -126,9 +126,9 @@ export default function CrmContactsPage() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead>Origem</TableHead>
-                    <TableHead>Gênero</TableHead>
+                    <TableHead>Corridas</TableHead>
                     <TableHead>SO</TableHead>
-                    <TableHead>Cadastro</TableHead>
+                    <TableHead>Última Corrida</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
