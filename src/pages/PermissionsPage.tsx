@@ -184,8 +184,8 @@ export default function PermissionsPage() {
                   className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-colors ${r.id === selectedRole ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}
                 >
                   <div>
-                    <span className="font-medium text-sm">{r.name}</span>
-                    {r.is_system && <Badge variant="outline" className="ml-2 text-xs">System</Badge>}
+                    <span className="font-medium text-sm">{friendlyRole(r.name)}</span>
+                    {r.is_system && <Badge variant="outline" className="ml-2 text-xs">Sistema</Badge>}
                     {r.description && <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>}
                   </div>
                   <Badge variant="secondary" className="text-xs">{(r.role_permissions as any[])?.length || 0}</Badge>
