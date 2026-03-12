@@ -32,6 +32,8 @@ interface DealDraft {
   badge_label: string;
 }
 
+const BADGE_SUGGESTIONS = ["Baratinho", "Imperdível", "Oferta Relâmpago", "Mais Vendido", "Exclusivo"];
+
 const newDraft = (): DealDraft => ({
   id: crypto.randomUUID(),
   title: "",
@@ -43,6 +45,7 @@ const newDraft = (): DealDraft => ({
   price: "",
   original_price: "",
   category: "",
+  badge_label: "",
 });
 
 export default function AffiliateDealsPage() {
