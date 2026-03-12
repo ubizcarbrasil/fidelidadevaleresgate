@@ -42,7 +42,7 @@ interface Props {
   onOpenStore?: (store: any) => void;
 }
 
-export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }: Props) {
+export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, onOpenStore }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [showConfirm, setShowConfirm] = useState(false);
