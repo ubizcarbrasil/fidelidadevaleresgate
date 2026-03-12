@@ -7,7 +7,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
-  MapPin, Ban, Globe, MessageCircle, DollarSign, Tag,
+  MapPin, Ban, Globe, MessageCircle, DollarSign, Tag, ChevronRight,
 } from "lucide-react";
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDetailPage";
