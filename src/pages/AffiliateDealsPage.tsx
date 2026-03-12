@@ -285,7 +285,7 @@ export default function AffiliateDealsPage() {
         <p className="text-muted-foreground">Gerencie ofertas de afiliados do marketplace</p>
       </div>
 
-      <Tabs defaultValue="list" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="list">Listagem</TabsTrigger>
           <TabsTrigger value="manual">+ Adicionar em Massa</TabsTrigger>
