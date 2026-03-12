@@ -73,6 +73,22 @@ export default function AffiliateDealsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<DealDraft | null>(null);
 
+  // Categories for dropdown
+  const { data: brandCategories } = useQuery({
+    queryKey: ["affiliate-categories", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return [];
+      const { data } = await supabase
+        .from("affiliate_deal_categories")
+        .select("id, name, icon_name, color")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .order("order_index");
+      return data || [];
+    },
+    enabled: !!currentBrandId,
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
