@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { openExternalLink } from "@/lib/openLink";
+import { openLink } from "@/lib/openLink";
 import type { ProfileMenuItem } from "@/pages/ProfileLinksConfigPage";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
