@@ -53,6 +53,7 @@ export default function AffiliateDealsPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("list");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
