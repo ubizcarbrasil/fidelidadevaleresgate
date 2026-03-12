@@ -83,6 +83,16 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
     fetch();
   }, [offer.id, brand, selectedBranch]);
 
+  const handleOpenStore = async () => {
+    if (!onOpenStore) return;
+    const { data } = await supabase
+      .from("stores")
+      .select("*")
+      .eq("id", offer.store_id)
+      .maybeSingle();
+    if (data) onOpenStore(data);
+  };
+
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
     return digits
