@@ -404,3 +404,51 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
     </motion.div>
   );
 }
+
+// --- Profile Menu Item Button ---
+function ProfileMenuItemButton({
+  item,
+  isLast,
+  fg,
+  onOpenText,
+}: {
+  item: ProfileMenuItem;
+  isLast: boolean;
+  fg: string;
+  onOpenText: (title: string, content: string) => void;
+}) {
+  const LucideIcon = (icons as Record<string, any>)[item.icon_name];
+
+  const handleClick = () => {
+    if (item.type === "text") {
+      onOpenText(item.label, item.text_content);
+    } else if (item.type === "link_text") {
+      if (item.url) {
+        openLink({ url: item.url, mode: "REDIRECT" });
+      } else {
+        onOpenText(item.label, item.text_content);
+      }
+    } else if (item.type === "link" && item.url) {
+      openLink({ url: item.url, mode: "REDIRECT" });
+    }
+  };
+
+  return (
+    <>
+      <div style={{ borderBottom: isLast ? "none" : `1px solid ${fg}08` }} />
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={handleClick}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
+      >
+        {LucideIcon ? (
+          <LucideIcon className="h-4.5 w-4.5 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-4.5 w-4.5 text-muted-foreground" />
+        )}
+        <span className="flex-1">{item.label}</span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+      </motion.button>
+    </>
+  );
+}
