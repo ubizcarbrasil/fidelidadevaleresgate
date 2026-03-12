@@ -71,7 +71,7 @@ const groups = [
     items: [
       { title: "Pontuar", url: "/earn-points", icon: Coins },
       { title: "Regras de Pontos", url: "/points-rules", icon: Settings2 },
-      { title: "Regra de Pontos do Parceiro", url: "/store-points-rule", icon: Coins },
+      
       { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText },
     ],
   },

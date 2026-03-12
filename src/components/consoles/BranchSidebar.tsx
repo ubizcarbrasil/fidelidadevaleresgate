@@ -51,7 +51,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { title: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
       { title: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
-      { title: "Minha Regra de Pontos", url: "/store-points-rule", icon: Store, moduleKey: "earn_points_store" },
+      
       { title: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
     ],
   },
