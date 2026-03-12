@@ -148,6 +148,7 @@ export default function AffiliateDealsPage() {
             affiliate_url: cols[5] || "",
             store_name: "",
             category: "",
+            badge_label: "",
           });
         }
         setCsvRows(rows);
