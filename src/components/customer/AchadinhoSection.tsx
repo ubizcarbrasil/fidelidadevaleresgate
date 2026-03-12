@@ -132,6 +132,8 @@ export default function AchadinhoSection() {
             : 0;
           const priceStr = formatPrice(deal.price);
           const originalPriceStr = formatPrice(deal.original_price);
+          // Determine badge: custom label takes priority, then auto "-X%"
+          const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
           return (
             <motion.div
