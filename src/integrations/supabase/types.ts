@@ -2150,6 +2150,7 @@ export type Database = {
           brand_id: string
           created_at: string
           cta_button_text: string
+          cta_link_url: string | null
           cta_subtitle: string
           cta_title: string
           faq_json: Json
@@ -2161,6 +2162,10 @@ export type Database = {
           is_active: boolean
           logo_url: string | null
           numbers_json: Json
+          social_email: string | null
+          social_instagram: string | null
+          social_whatsapp: string | null
+          testimonials_json: Json | null
           updated_at: string
         }
         Insert: {
@@ -2168,6 +2173,7 @@ export type Database = {
           brand_id: string
           created_at?: string
           cta_button_text?: string
+          cta_link_url?: string | null
           cta_subtitle?: string
           cta_title?: string
           faq_json?: Json
@@ -2179,6 +2185,10 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           numbers_json?: Json
+          social_email?: string | null
+          social_instagram?: string | null
+          social_whatsapp?: string | null
+          testimonials_json?: Json | null
           updated_at?: string
         }
         Update: {
@@ -2186,6 +2196,7 @@ export type Database = {
           brand_id?: string
           created_at?: string
           cta_button_text?: string
+          cta_link_url?: string | null
           cta_subtitle?: string
           cta_title?: string
           faq_json?: Json
@@ -2197,6 +2208,10 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           numbers_json?: Json
+          social_email?: string | null
+          social_instagram?: string | null
+          social_whatsapp?: string | null
+          testimonials_json?: Json | null
           updated_at?: string
         }
         Relationships: [
