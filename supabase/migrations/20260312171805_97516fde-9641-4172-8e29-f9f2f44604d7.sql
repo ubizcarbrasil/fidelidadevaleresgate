@@ -1,0 +1,1 @@
+ALTER TABLE public.partner_landing_config ADD COLUMN logo_url text;

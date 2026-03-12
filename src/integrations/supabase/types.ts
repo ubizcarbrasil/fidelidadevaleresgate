@@ -2159,6 +2159,7 @@ export type Database = {
           how_it_works_json: Json
           id: string
           is_active: boolean
+          logo_url: string | null
           numbers_json: Json
           updated_at: string
         }
@@ -2176,6 +2177,7 @@ export type Database = {
           how_it_works_json?: Json
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           numbers_json?: Json
           updated_at?: string
         }
@@ -2193,6 +2195,7 @@ export type Database = {
           how_it_works_json?: Json
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           numbers_json?: Json
           updated_at?: string
         }
