@@ -57,6 +57,44 @@ export default function BannerManagerPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Selecione uma marca antes de criar um banner.");
+
+      // Auto-create BANNER_CAROUSEL section if none exists for this brand
+      const { data: existingSection } = await supabase
+        .from("brand_sections")
+        .select("id, template_id, section_templates!inner(type)")
+        .eq("brand_id", currentBrandId)
+        .eq("section_templates.type", "BANNER_CAROUSEL")
+        .limit(1);
+
+      let sectionId: string | null = null;
+
+      if (!existingSection || existingSection.length === 0) {
+        // Find the BANNER_CAROUSEL template
+        const { data: tpl } = await supabase
+          .from("section_templates")
+          .select("id")
+          .eq("type", "BANNER_CAROUSEL")
+          .limit(1)
+          .single();
+
+        if (tpl) {
+          const { data: newSection } = await supabase
+            .from("brand_sections")
+            .insert({
+              brand_id: currentBrandId,
+              template_id: tpl.id,
+              title: null,
+              is_enabled: true,
+              order_index: 0,
+            })
+            .select("id")
+            .single();
+          sectionId = newSection?.id || null;
+        }
+      } else {
+        sectionId = existingSection[0].id;
+      }
+
       const { error } = await supabase.from("banner_schedules").insert({
         brand_id: currentBrandId,
         image_url: form.image_url,
@@ -66,6 +104,7 @@ export default function BannerManagerPage() {
         start_at: form.start_at || new Date().toISOString(),
         end_at: form.end_at || null,
         is_active: form.is_active,
+        brand_section_id: sectionId,
       });
       if (error) throw error;
     },
