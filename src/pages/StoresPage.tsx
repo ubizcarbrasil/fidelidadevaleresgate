@@ -67,7 +67,7 @@ export default function StoresPage() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { name: form.name, slug: form.slug, category: form.category || null, address: form.address || null, whatsapp: form.whatsapp || null, brand_id: form.brand_id, branch_id: form.branch_id, is_active: form.is_active };
+      const payload = { name: form.name, slug: form.slug, category: form.category || null, address: form.address || null, whatsapp: form.whatsapp || null, brand_id: form.brand_id, branch_id: form.branch_id, is_active: form.is_active, logo_url: form.logo_url || null };
       if (editId) { const { error } = await supabase.from("stores").update(payload).eq("id", editId); if (error) throw error; }
       else { const { error } = await supabase.from("stores").insert(payload); if (error) throw error; }
     },
