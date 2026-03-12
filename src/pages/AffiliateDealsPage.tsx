@@ -46,16 +46,7 @@ export default function AffiliateDealsPage() {
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState<DealForm>(emptyForm);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebounce(search, 300);
-
-  useEffect(() => {
-    if (!isRootAdmin && currentBrandId && !form.brand_id) {
-      setForm(f => ({ ...f, brand_id: currentBrandId }));
-    }
-  }, [isRootAdmin, currentBrandId]);
+  const [form, setForm] = useState<DealForm>(emptyForm(currentBrandId || undefined));
 
   const { data: brands } = useQuery({
     queryKey: ["brands-select", currentBrandId],
