@@ -261,7 +261,15 @@ export default function StoreOwnerPanel() {
                   );
                 })}
               </div>
-              <div className="border-t p-3 mt-auto">
+              <div className="border-t p-3 space-y-1">
+                <ChangePasswordDialog
+                  trigger={
+                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted transition-colors">
+                      <Lock className="h-4 w-4" />
+                      Alterar Senha
+                    </button>
+                  }
+                />
                 <button
                   onClick={async () => { await signOut(); }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors"
