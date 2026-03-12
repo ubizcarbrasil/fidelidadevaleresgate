@@ -93,6 +93,7 @@ export default function PartnerLandingConfigPage() {
       hero_title: heroTitle,
       hero_subtitle: heroSubtitle,
       hero_image_url: heroImageUrl || null,
+      logo_url: logoUrl || null,
       numbers_json: numbers,
       benefits_json: benefits,
       how_it_works_json: howItWorks,
