@@ -54,6 +54,7 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 
 export default function StoreOwnerPanel() {
   const { user, signOut, isRootAdmin, roles } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
   const [store, setStore] = useState<any>(null);
@@ -181,6 +182,7 @@ export default function StoreOwnerPanel() {
     return <StoreEmptyState userId={user?.id} />;
   }
 
+  const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const filteredMoreItems = MORE_MENU_ITEMS.filter(item => {
     if (item.key === "catalogo" && !isEmitter) return false;
@@ -196,7 +198,16 @@ export default function StoreOwnerPanel() {
       {/* Top header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b pwa-safe-top">
         <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            {isAdminOverride && (
+              <button
+                onClick={() => navigate(-1)}
+                className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
+            <div className="flex items-center gap-3 min-w-0">
             <div className="h-9 w-9 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
               {store.logo_url ? (
                 <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />
@@ -210,6 +221,10 @@ export default function StoreOwnerPanel() {
                 {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
               </Badge>
             </div>
+            </div>
+            {isAdminOverride && (
+              <Badge variant="secondary" className="text-[9px] h-4 shrink-0">Admin</Badge>
+            )}
           </div>
 
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
