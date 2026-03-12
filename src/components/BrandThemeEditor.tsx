@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Palette, Type, Image, FileText, Smartphone } from "lucide-react";
+import { Palette, Type, Image, FileText, Smartphone, Sun, Moon } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
@@ -63,12 +63,40 @@ function hexToHsl(hex: string): string {
   return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+const DARK_DEFAULTS: NonNullable<BrandTheme["colors"]> = {
+  background: "222 47% 7%",
+  foreground: "0 0% 100%",
+  card: "222 47% 11%",
+  muted: "222 47% 15%",
+  accent: "45 100% 55%",
+};
+
 export default function BrandThemeEditor({ value, onChange, brandId, brandName }: BrandThemeEditorProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [colorMode, setColorMode] = useState<"light" | "dark">("light");
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
   const folder = brandId ? `brands/${brandId}` : `brands/new-${Date.now()}`;
+
+  const isEditingDark = colorMode === "dark";
+  const currentPalette = isEditingDark
+    ? { ...DARK_DEFAULTS, ...value.colors, ...value.dark_colors }
+    : (value.colors || {});
+
   const updateColor = (key: string, hex: string) => {
-    update({ colors: { ...value.colors, [key]: hexToHsl(hex) } });
+    const hsl = hexToHsl(hex);
+    if (isEditingDark) {
+      update({ dark_colors: { ...value.dark_colors, [key]: hsl } });
+    } else {
+      update({ colors: { ...value.colors, [key]: hsl } });
+    }
+  };
+
+  const updateColorHsl = (key: string, hsl: string) => {
+    if (isEditingDark) {
+      update({ dark_colors: { ...value.dark_colors, [key]: hsl } });
+    } else {
+      update({ colors: { ...value.colors, [key]: hsl } });
+    }
   };
 
   return (
@@ -98,11 +126,41 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
           <CardTitle className="text-sm flex items-center gap-2">
             <Palette className="h-4 w-4" /> Cores
           </CardTitle>
+          {/* Light / Dark toggle */}
+          <div className="flex gap-1 mt-2">
+            <button
+              onClick={() => setColorMode("light")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                !isEditingDark
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border hover:border-primary/50 text-muted-foreground"
+              }`}
+            >
+              <Sun className="h-3.5 w-3.5" />
+              Modo Claro
+            </button>
+            <button
+              onClick={() => setColorMode("dark")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                isEditingDark
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border hover:border-primary/50 text-muted-foreground"
+              }`}
+            >
+              <Moon className="h-3.5 w-3.5" />
+              Modo Escuro
+            </button>
+          </div>
+          {isEditingDark && (
+            <p className="text-[11px] text-muted-foreground mt-1.5">
+              Configure as cores do modo escuro. Textos devem ser claros (branco) e destaques em amarelo/laranja para boa visibilidade.
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {COLOR_FIELDS.map(({ key, label }) => {
-              const hslValue = value.colors?.[key] || "";
+              const hslValue = currentPalette[key] || "";
               const hexValue = hslValue ? hslToHex(hslValue) : "";
               return (
                 <div key={key} className="space-y-1.5">
@@ -116,9 +174,7 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
                     />
                     <Input
                       value={hslValue}
-                      onChange={(e) =>
-                        update({ colors: { ...value.colors, [key]: e.target.value } })
-                      }
+                      onChange={(e) => updateColorHsl(key, e.target.value)}
                       placeholder="220 70% 50%"
                       className="text-xs h-9 font-mono"
                     />
@@ -186,6 +242,7 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs">Logo</Label>
+              <p className="text-[10px] text-muted-foreground">Aparece no cabeçalho do app e ícone PWA</p>
               <ImageUploadField
                 value={value.logo_url || ""}
                 onChange={(url) => update({ logo_url: url || undefined })}
@@ -195,6 +252,7 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Favicon</Label>
+              <p className="text-[10px] text-muted-foreground">Ícone da aba do navegador</p>
               <ImageUploadField
                 value={value.favicon_url || ""}
                 onChange={(url) => update({ favicon_url: url || undefined })}
@@ -206,6 +264,7 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Imagem de fundo</Label>
+            <p className="text-[10px] text-muted-foreground">Fundo do banner de pontos e tela de login</p>
             <ImageUploadField
               value={value.background_image_url || ""}
               onChange={(url) => update({ background_image_url: url || undefined })}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Eye, MapPin, Bell, Search, Wallet, House, Tag, Ticket, CircleUser,
   Coins, Percent, Store, Gift, Sparkles, ChevronRight, Heart, Star,
-  Shield, CircleHelp, LogOut, Moon, ArrowUpRight, ArrowDownRight,
+  Shield, CircleHelp, LogOut, Moon, ArrowUpRight, ArrowDownRight, Sun,
 } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 
@@ -38,16 +38,43 @@ const QUICK_ACTIONS = [
   { label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#BAE6FD" },
 ];
 
+const DARK_DEFAULTS = {
+  background: "222 47% 7%",
+  foreground: "0 0% 100%",
+  card: "222 47% 11%",
+  muted: "222 47% 15%",
+  accent: "45 100% 55%",
+};
+
+function resolveColors(theme: BrandTheme, isDark: boolean) {
+  if (!isDark) {
+    const colors = theme.colors || {};
+    return {
+      accent: hslToCss(colors.secondary, "") || hslToCss(colors.primary, "hsl(220 70% 50%)"),
+      accentParsed: parseHsl(colors.secondary || colors.primary, "220 70% 50%"),
+      bg: hslToCss(colors.background, "hsl(0 0% 100%)"),
+      fg: hslToCss(colors.foreground, "hsl(222 47% 11%)"),
+      muted: hslToCss(colors.muted, "hsl(210 40% 96%)"),
+      cardBg: hslToCss(colors.card, "hsl(0 0% 100%)"),
+    };
+  }
+  // Dark: merge defaults + colors + dark_colors
+  const merged = { ...DARK_DEFAULTS, ...theme.colors, ...theme.dark_colors };
+  return {
+    accent: hslToCss(merged.secondary, "") || hslToCss(merged.primary, "hsl(220 70% 50%)"),
+    accentParsed: parseHsl(merged.secondary || merged.primary, "220 70% 50%"),
+    bg: hslToCss(merged.background, "hsl(222 47% 7%)"),
+    fg: hslToCss(merged.foreground, "hsl(0 0% 100%)"),
+    muted: hslToCss(merged.muted, "hsl(222 47% 15%)"),
+    cardBg: hslToCss(merged.card, "hsl(222 47% 11%)"),
+  };
+}
+
 export default function BrandThemePreview({ theme, brandName }: Props) {
   const [screen, setScreen] = useState<Screen>("home");
+  const [previewDark, setPreviewDark] = useState(false);
 
-  const primary = hslToCss(theme.colors?.primary, "hsl(220 70% 50%)");
-  const accent = hslToCss(theme.colors?.secondary, "") || primary;
-  const accentParsed = parseHsl(theme.colors?.secondary || theme.colors?.primary, "220 70% 50%");
-  const bg = hslToCss(theme.colors?.background, "hsl(0 0% 100%)");
-  const fg = hslToCss(theme.colors?.foreground, "hsl(222 47% 11%)");
-  const muted = hslToCss(theme.colors?.muted, "hsl(210 40% 96%)");
-  const cardBg = hslToCss(theme.colors?.card, "hsl(0 0% 100%)");
+  const { accent, accentParsed, bg, fg, muted, cardBg } = resolveColors(theme, previewDark);
   const fontHeading = theme.font_heading ? `"${theme.font_heading}", sans-serif` : "system-ui, sans-serif";
   const fontBody = theme.font_body ? `"${theme.font_body}", sans-serif` : "system-ui, sans-serif";
   const displayName = theme.display_name || brandName || "Minha Marca";
@@ -65,26 +92,41 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
         <CardTitle className="text-sm flex items-center gap-2">
           <Eye className="h-4 w-4" /> Preview Real do App
         </CardTitle>
-        {/* Screen selector tabs outside phone frame */}
-        <div className="flex gap-1 mt-2 flex-wrap">
-          {TABS.map((tab) => {
-            const isActive = screen === tab.key;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setScreen(tab.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                  isActive
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 text-muted-foreground"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
+        {/* Screen selector + dark mode toggle */}
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <div className="flex gap-1 flex-1 flex-wrap">
+            {TABS.map((tab) => {
+              const isActive = screen === tab.key;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setScreen(tab.key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                    isActive
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:border-primary/50 text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+          {/* Dark mode toggle */}
+          <button
+            onClick={() => setPreviewDark(!previewDark)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+              previewDark
+                ? "border-amber-500 bg-amber-500/10 text-amber-600"
+                : "border-border hover:border-primary/50 text-muted-foreground"
+            }`}
+            title={previewDark ? "Ver modo claro" : "Ver modo escuro"}
+          >
+            {previewDark ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+            {previewDark ? "Escuro" : "Claro"}
+          </button>
         </div>
       </CardHeader>
       <CardContent className="p-3">
@@ -138,12 +180,12 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
             </div>
           </div>
 
-          {/* Content area - scrollable */}
+          {/* Content area */}
           <div className="overflow-hidden" style={{ height: 380 }}>
-            {screen === "home" && <HomeScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} />}
+            {screen === "home" && <HomeScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} isDark={previewDark} />}
             {screen === "offers" && <OffersScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
             {screen === "wallet" && <WalletScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
-            {screen === "profile" && <ProfileScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} logoUrl={theme.logo_url} />}
+            {screen === "profile" && <ProfileScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} logoUrl={theme.logo_url} isDark={previewDark} />}
           </div>
 
           {/* Bottom tab bar */}
@@ -176,15 +218,15 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
 }
 
 /* ──────────────── Home Screen ──────────────── */
-function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName }: any) {
+function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName, isDark }: any) {
   return (
     <div className="px-4 py-3 space-y-3 overflow-y-auto" style={{ height: "100%" }}>
       {/* Greeting */}
       <div>
-        <p className="font-bold text-[13px]" style={{ fontFamily: fontHeading }}>
+        <p className="font-bold text-[13px]" style={{ fontFamily: fontHeading, color: fg }}>
           Boa tarde, <span style={{ color: accent }}>João</span>! 👋
         </p>
-        <p className="text-[9px] opacity-50">Confira suas ofertas e pontos</p>
+        <p className="text-[9px]" style={{ color: fg, opacity: 0.5 }}>Confira suas ofertas e pontos</p>
       </div>
 
       {/* Points banner */}
@@ -217,10 +259,10 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
           const Icon = a.icon;
           return (
             <div key={a.label} className="flex flex-col items-center gap-1">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: a.bg }}>
+              <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: isDark ? `${a.color}25` : a.bg }}>
                 <Icon className="h-4 w-4" style={{ color: a.color }} />
               </div>
-              <span className="text-[7px] font-semibold text-center opacity-60">{a.label}</span>
+              <span className="text-[7px] font-semibold text-center" style={{ color: fg, opacity: 0.6 }}>{a.label}</span>
             </div>
           );
         })}
@@ -230,7 +272,7 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
       <div>
         <div className="flex items-center gap-1 mb-2">
           <Sparkles className="h-3 w-3" style={{ color: accent }} />
-          <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading }}>Selecionados para você</span>
+          <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
         </div>
         <div className="flex gap-2 overflow-hidden">
           {["Pizzaria do João", "Burger House"].map((name, i) => (
@@ -240,8 +282,8 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
                 {name[0]}{name.split(" ").pop()?.[0]}
               </div>
               <div className="p-2">
-                <p className="text-[9px] font-bold truncate">{name}</p>
-                <p className="text-[7px] opacity-50">10% OFF • Resgate</p>
+                <p className="text-[9px] font-bold truncate" style={{ color: fg }}>{name}</p>
+                <p className="text-[7px]" style={{ color: fg, opacity: 0.5 }}>10% OFF • Resgate</p>
               </div>
             </div>
           ))}
@@ -261,7 +303,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
   ];
   return (
     <div className="px-4 py-3 space-y-2 overflow-y-auto" style={{ height: "100%" }}>
-      <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading }}>Ofertas Disponíveis</p>
+      <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Ofertas Disponíveis</p>
       {/* Filter chips */}
       <div className="flex gap-1">
         {["Todos", "Perto de mim", "Novos"].map((f, i) => (
@@ -279,8 +321,8 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
             {o.badge}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold truncate" style={{ fontFamily: fontHeading }}>{o.title}</p>
-            <p className="text-[8px] opacity-50">{o.store}</p>
+            <p className="text-[10px] font-bold truncate" style={{ fontFamily: fontHeading, color: fg }}>{o.title}</p>
+            <p className="text-[8px]" style={{ color: fg, opacity: 0.5 }}>{o.store}</p>
             <div className="flex items-center gap-1 mt-1">
               <Heart className="h-2.5 w-2.5" style={{ color: `${fg}30` }} />
               <span className="text-[7px] font-semibold" style={{ color: accent }}>Resgatar</span>
@@ -296,7 +338,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
 function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: any) {
   return (
     <div className="px-4 py-3 space-y-3 overflow-y-auto" style={{ height: "100%" }}>
-      <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading }}>Minha Carteira</p>
+      <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Minha Carteira</p>
 
       {/* Points card */}
       <div className="rounded-2xl p-4 text-center"
@@ -309,7 +351,7 @@ function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: 
       </div>
 
       {/* Transaction history */}
-      <p className="text-[10px] font-bold" style={{ fontFamily: fontHeading }}>Histórico</p>
+      <p className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Histórico</p>
       {[
         { label: "Pizzaria do João", pts: "+50 pts", icon: ArrowUpRight, color: "#059669" },
         { label: "Resgate cupom", pts: "-100 pts", icon: ArrowDownRight, color: "#E53935" },
@@ -322,8 +364,8 @@ function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: 
               <Icon className="h-3 w-3" style={{ color: t.color }} />
             </div>
             <div className="flex-1">
-              <p className="text-[9px] font-semibold">{t.label}</p>
-              <p className="text-[7px] opacity-40">Hoje, 14:30</p>
+              <p className="text-[9px] font-semibold" style={{ color: fg }}>{t.label}</p>
+              <p className="text-[7px]" style={{ color: fg, opacity: 0.4 }}>Hoje, 14:30</p>
             </div>
             <span className="text-[9px] font-bold" style={{ color: t.color }}>{t.pts}</span>
           </div>
@@ -334,7 +376,7 @@ function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: 
 }
 
 /* ──────────────── Profile Screen ──────────────── */
-function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, logoUrl }: any) {
+function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, logoUrl, isDark }: any) {
   const items = [
     { icon: CircleUser, label: "Meus dados" },
     { icon: MapPin, label: "Minha cidade" },
@@ -352,8 +394,8 @@ function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, lo
           JC
         </div>
         <div>
-          <p className="text-[11px] font-bold" style={{ fontFamily: fontHeading }}>João Carlos</p>
-          <p className="text-[8px] opacity-50">joao@email.com</p>
+          <p className="text-[11px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>João Carlos</p>
+          <p className="text-[8px]" style={{ color: fg, opacity: 0.5 }}>joao@email.com</p>
         </div>
       </div>
 
@@ -366,8 +408,8 @@ function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, lo
               <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${accent}12` }}>
                 <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
               </div>
-              <span className="text-[10px] font-medium flex-1">{item.label}</span>
-              <ChevronRight className="h-3 w-3 opacity-30" />
+              <span className="text-[10px] font-medium flex-1" style={{ color: fg }}>{item.label}</span>
+              <ChevronRight className="h-3 w-3" style={{ color: fg, opacity: 0.3 }} />
             </div>
           );
         })}
@@ -376,7 +418,7 @@ function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, lo
       {/* Footer */}
       <div className="text-center pt-2">
         {logoUrl && <img src={logoUrl} alt="" className="h-6 mx-auto mb-1 opacity-30" />}
-        <p className="text-[7px] opacity-30">{displayName} • Versão 1.0</p>
+        <p className="text-[7px]" style={{ color: fg, opacity: 0.3 }}>{displayName} • Versão 1.0</p>
       </div>
     </div>
   );

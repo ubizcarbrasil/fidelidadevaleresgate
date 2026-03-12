@@ -80,13 +80,21 @@ export function useBrandTheme(settings: Json | null | undefined) {
     const root = document.documentElement;
     const appliedVars: string[] = [];
 
-    const palette = isDark ? (theme.dark_colors ?? theme.colors) : theme.colors;
+    // Dark mode defaults when dark_colors not configured
+    const DARK_DEFAULTS: Record<string, string> = {
+      background: "222 47% 7%",
+      foreground: "0 0% 100%",
+      card: "222 47% 11%",
+      muted: "222 47% 15%",
+    };
 
-    if (palette) {
-      for (const [key, value] of Object.entries(palette)) {
+    const basePalette = isDark
+      ? { ...DARK_DEFAULTS, ...theme.colors, ...theme.dark_colors }
+      : theme.colors;
+
+    if (basePalette) {
+      for (const [key, value] of Object.entries(basePalette)) {
         if (!value) continue;
-        if (isDark && !theme.dark_colors && !DARK_FALLBACK_KEYS.has(key)) continue;
-
         const cssVar = CSS_VAR_MAP[key];
         if (cssVar) {
           root.style.setProperty(cssVar, value);
