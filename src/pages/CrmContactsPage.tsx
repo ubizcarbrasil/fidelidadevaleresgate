@@ -145,10 +145,10 @@ export default function CrmContactsPage() {
                           {SOURCE_LABELS[c.source] || c.source}
                         </Badge>
                       </TableCell>
-                      <TableCell>{c.gender || "—"}</TableCell>
+                      <TableCell>{c.ride_count || 0}</TableCell>
                       <TableCell>{c.os_platform || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                        {c.last_ride_at ? new Date(c.last_ride_at).toLocaleDateString("pt-BR") : "—"}
                       </TableCell>
                     </TableRow>
                   ))}
