@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Loader2, Wand2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,53 @@ export default function AffiliateDealsPage() {
   const removeDraft = (id: string) => setDrafts((d) => d.filter((x) => x.id !== id));
   const updateDraft = (id: string, field: keyof DealDraft, value: string) =>
     setDrafts((d) => d.map((x) => (x.id === id ? { ...x, [field]: value } : x)));
+
+  // --- Scrape product URL ---
+  const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
+
+  const scrapeProduct = async (draftId: string) => {
+    const draft = drafts.find((d) => d.id === draftId);
+    if (!draft?.affiliate_url.trim()) {
+      toast.error("Cole o link do produto antes de buscar.");
+      return;
+    }
+    setScrapingIds((s) => new Set(s).add(draftId));
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-product", {
+        body: { url: draft.affiliate_url.trim() },
+      });
+      if (error || !data?.success) {
+        toast.error(data?.error || error?.message || "Não foi possível buscar dados do produto.");
+        return;
+      }
+      const p = data.product;
+      setDrafts((prev) =>
+        prev.map((d) =>
+          d.id === draftId
+            ? {
+                ...d,
+                title: p.title || d.title,
+                description: p.description || d.description,
+                image_url: p.image_url || d.image_url,
+                price: p.price != null ? String(p.price) : d.price,
+                original_price: p.original_price != null ? String(p.original_price) : d.original_price,
+                store_name: p.store_name || d.store_name,
+                store_logo_url: p.store_logo_url || d.store_logo_url,
+              }
+            : d
+        )
+      );
+      toast.success("Dados do produto preenchidos! Revise e ajuste se necessário.");
+    } catch (err: any) {
+      toast.error("Erro ao buscar dados do produto.");
+    } finally {
+      setScrapingIds((s) => {
+        const n = new Set(s);
+        n.delete(draftId);
+        return n;
+      });
+    }
+  };
 
   // --- Save all drafts ---
   const saveDrafts = useMutation({
@@ -510,11 +558,29 @@ export default function AffiliateDealsPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Link Afiliado *</Label>
-                      <Input
-                        value={draft.affiliate_url}
-                        onChange={(e) => updateDraft(draft.id, "affiliate_url", e.target.value)}
-                        placeholder="https://..."
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          value={draft.affiliate_url}
+                          onChange={(e) => updateDraft(draft.id, "affiliate_url", e.target.value)}
+                          placeholder="https://..."
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          disabled={!draft.affiliate_url.trim() || scrapingIds.has(draft.id)}
+                          onClick={() => scrapeProduct(draft.id)}
+                          title="Buscar dados do produto"
+                        >
+                          {scrapingIds.has(draft.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Wand2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Imagem Produto</Label>
