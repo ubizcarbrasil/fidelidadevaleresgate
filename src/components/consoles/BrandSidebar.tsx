@@ -48,7 +48,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "📱 Vitrine do App",
     items: [
-      { key: "sidebar.secoes_home", defaultTitle: "Seções da Tela Inicial", url: "/templates", icon: Layout, moduleKey: "home_sections" },
+      
       { key: "sidebar.central_banners", defaultTitle: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
       { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder", icon: Layers },
