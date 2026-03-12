@@ -20,13 +20,13 @@ export function useSidebarBadges() {
           .from("stores")
           .select("id", { count: "exact", head: true })
           .eq("brand_id", currentBrandId)
-          .eq("approval_status", "PENDING"),
+          .eq("approval_status", "PENDING_APPROVAL"),
 
         // Pending store points rule approvals
         supabase
           .from("store_points_rules")
           .select("id", { count: "exact", head: true })
-          .eq("status", "PENDING"),
+          .eq("status", "PENDING_APPROVAL"),
 
         // Pending emitter (store_type) requests
         supabase
