@@ -209,6 +209,53 @@ const DEMO_STORES: DemoStore[] = [
       { title: "10% OFF no delivery", coupon_type: "STORE", discount_percent: 10, value_rescue: 10, image_url: "", description: "Desconto em pedidos para entrega" },
     ],
   },
+  { name: "Bar do Chico", slug: "bar-do-chico", segment: "Bar", description: "Petiscos, cervejas geladas e drinks autorais em ambiente descontraído.", store_type: "RECEPTORA", color: "4E342E",
+    offers: [
+      { title: "Happy Hour: 2 por 1 em chope", coupon_type: "PRODUCT", discount_percent: 50, value_rescue: 15, image_url: "https://images.unsplash.com/photo-1575037614876-c38a4c44f5b8?w=400&h=300&fit=crop", description: "Chope artesanal em dobro das 17h às 20h" },
+      { title: "10% OFF na conta", coupon_type: "STORE", discount_percent: 10, value_rescue: 20, image_url: "", description: "Desconto válido em toda a conta" },
+    ],
+  },
+  { name: "Depil Center", slug: "depil-center", segment: "Depilação", description: "Depilação a laser, cera e linha para rosto e corpo.", store_type: "RECEPTORA", color: "E91E63",
+    offers: [
+      { title: "Depilação a laser com 30% OFF", coupon_type: "PRODUCT", discount_percent: 30, value_rescue: 90, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop", description: "Sessão de depilação a laser em área à escolha" },
+      { title: "Pacote 5 sessões com desconto", coupon_type: "STORE", discount_percent: 20, value_rescue: 200, image_url: "", description: "Pacote fechado com 20% de desconto" },
+    ],
+  },
+  { name: "Make Art Studio", slug: "make-art-studio", segment: "Maquiagem", description: "Maquiagem profissional para eventos, noivas e produções especiais.", store_type: "RECEPTORA", color: "AD1457",
+    offers: [
+      { title: "Make completa por R$89", coupon_type: "PRODUCT", discount_percent: 25, value_rescue: 90, image_url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=300&fit=crop", description: "Maquiagem completa para qualquer ocasião" },
+    ],
+  },
+  { name: "SuperMarket Economia", slug: "supermarket-economia", segment: "Supermercado", description: "Tudo para sua casa com os melhores preços e ofertas semanais.", store_type: "EMISSORA", color: "1B5E20",
+    offers: [
+      { title: "5% OFF compras acima de R$200", coupon_type: "STORE", discount_percent: 5, value_rescue: 20, image_url: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop", description: "Desconto para compras do mês" },
+      { title: "Hortifruti com 15% OFF", coupon_type: "STORE", discount_percent: 15, value_rescue: 10, image_url: "", description: "Desconto em frutas, verduras e legumes" },
+    ],
+    catalog: [
+      { name: "Cesta Básica Premium", price: 249.90, description: "40 itens essenciais para o mês", image_url: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop", category: "Cestas" },
+    ],
+  },
+  { name: "Spa Zen Beleza", slug: "spa-zen-beleza", segment: "Beleza e Bem-Estar", description: "Massagens relaxantes, tratamentos faciais e terapias holísticas.", store_type: "RECEPTORA", color: "00695C",
+    offers: [
+      { title: "Day Spa por R$149", coupon_type: "PRODUCT", discount_percent: 25, value_rescue: 150, image_url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop", description: "Pacote completo com massagem + facial + escalda-pés" },
+      { title: "Massagem relaxante R$79", coupon_type: "PRODUCT", discount_percent: 20, value_rescue: 80, image_url: "", description: "Sessão de 60 minutos de massagem relaxante" },
+    ],
+  },
+  { name: "Loja Central", slug: "loja-central", segment: "Loja", description: "Variedades, utilidades domésticas, presentes e novidades para toda a família.", store_type: "RECEPTORA", color: "5D4037",
+    offers: [
+      { title: "10% OFF em toda a loja", coupon_type: "STORE", discount_percent: 10, value_rescue: 20, image_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop", description: "Desconto válido em todos os produtos" },
+    ],
+  },
+  { name: "Restaurante Sabor da Casa", slug: "restaurante-sabor-da-casa", segment: "Restaurante", description: "Comida caseira feita com carinho, buffet por quilo e pratos executivos.", store_type: "MISTA", color: "BF360C",
+    offers: [
+      { title: "Executivo completo R$24,90", coupon_type: "PRODUCT", discount_percent: 15, value_rescue: 25, image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop", description: "Prato + sobremesa + suco natural" },
+      { title: "10% OFF no buffet por quilo", coupon_type: "STORE", discount_percent: 10, value_rescue: 15, image_url: "", description: "Desconto válido no almoço" },
+    ],
+    catalog: [
+      { name: "Executivo Carne", price: 24.90, description: "Arroz, feijão, carne grelhada, salada e suco", image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop", category: "Executivos" },
+      { name: "Executivo Frango", price: 22.90, description: "Arroz, feijão, frango grelhado, salada e suco", image_url: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=300&fit=crop", category: "Executivos" },
+    ],
+  },
 ];
 
 Deno.serve(async (req) => {
