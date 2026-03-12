@@ -73,7 +73,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const hasCatalog = isEmitter;
 
-  const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
