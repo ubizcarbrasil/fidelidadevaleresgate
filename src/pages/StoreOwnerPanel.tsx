@@ -197,7 +197,16 @@ export default function StoreOwnerPanel() {
       {/* Top header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b pwa-safe-top">
         <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            {isAdminOverride && (
+              <button
+                onClick={() => navigate(-1)}
+                className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
+            <div className="flex items-center gap-3 min-w-0">
             <div className="h-9 w-9 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
               {store.logo_url ? (
                 <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />
