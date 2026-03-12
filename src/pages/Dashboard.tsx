@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn, Globe, AlertCircle, Eye, Smartphone, Search } from "lucide-react";
+import DemoStoresToggle from "@/components/DemoStoresToggle";
 import { Input } from "@/components/ui/input";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
@@ -257,6 +258,32 @@ function BrandQuickLinks() {
       )}
     </div>
   );
+}
+
+function DemoStoresSection() {
+  const { currentBrandId, currentBranchId } = useBrandGuard();
+
+  // Get first branch if currentBranchId is not available
+  const { data: firstBranch } = useQuery({
+    queryKey: ["first-branch-for-demo", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return null;
+      const { data } = await supabase
+        .from("branches")
+        .select("id")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!currentBrandId && !currentBranchId,
+  });
+
+  const branchId = currentBranchId || firstBranch?.id;
+  if (!currentBrandId || !branchId) return null;
+
+  return <DemoStoresToggle brandId={currentBrandId} branchId={branchId} />;
 }
 
 function AccessHubSection({ consoleScope }: { consoleScope: string }) {
@@ -606,6 +633,9 @@ export default function Dashboard() {
 
       {/* Quick Links & Test Accounts for Brand Admins */}
       {showBrand && !isRoot && <BrandQuickLinks />}
+
+      {/* Demo Stores Toggle for Brand Admins */}
+      {showBrand && !isRoot && <DemoStoresSection />}
 
       {/* CRM Card */}
       {showBrand && !isRoot && (

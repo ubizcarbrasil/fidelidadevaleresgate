@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import ImageUploadField from "@/components/ImageUploadField";
 import { motion } from "framer-motion";
 import PlatformLogo from "@/components/PlatformLogo";
+import DemoStoresToggle from "@/components/DemoStoresToggle";
 
 type Step = "guide" | "info" | "location" | "branding" | "creating" | "done";
 const STEPS: Step[] = ["guide", "info", "location", "branding", "creating", "done"];
@@ -634,6 +635,9 @@ export default function TrialSignupPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Demo Stores Toggle */}
+              <DemoStoresToggle brandId={result.brand_id} branchId={result.branch_id} compact />
 
               <Badge variant="outline" className="text-xs w-full justify-center py-1.5 border-primary/20 text-primary">
                 Domínio futuro: {result.domain}
