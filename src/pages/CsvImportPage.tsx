@@ -332,6 +332,7 @@ export default function CsvImportPage() {
             if (error) throw error;
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       } else if (importType === "CUSTOMERS") {
         for (let i = 0; i < rows.length; i++) {
