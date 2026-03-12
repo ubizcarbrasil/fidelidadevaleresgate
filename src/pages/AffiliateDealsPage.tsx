@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -35,27 +35,21 @@ interface DealForm {
   order_index: string;
 }
 
-const emptyForm: DealForm = {
-  title: "", description: "", brand_id: "", branch_id: "", price: "0",
+const emptyForm = (brandId?: string): DealForm => ({
+  title: "", description: "", brand_id: brandId || "", branch_id: "", price: "0",
   original_price: "", affiliate_url: "", image_url: "", category: "",
   store_name: "", is_active: true, order_index: "0",
-};
+});
 
 export default function AffiliateDealsPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState<DealForm>(emptyForm);
+  const [form, setForm] = useState<DealForm>(emptyForm(currentBrandId || undefined));
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
-
-  useEffect(() => {
-    if (!isRootAdmin && currentBrandId && !form.brand_id) {
-      setForm(f => ({ ...f, brand_id: currentBrandId }));
-    }
-  }, [isRootAdmin, currentBrandId]);
 
   const { data: brands } = useQuery({
     queryKey: ["brands-select", currentBrandId],
@@ -136,7 +130,7 @@ export default function AffiliateDealsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
+  const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm(currentBrandId || undefined)); };
 
   const openEdit = (d: any) => {
     setEditId(d.id);
