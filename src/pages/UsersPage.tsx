@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 import { ROLE_LABELS } from "@/hooks/usePermissions";
 type AppRole = Database["public"]["Enums"]["app_role"];
