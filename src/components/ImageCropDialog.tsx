@@ -95,8 +95,8 @@ export default function ImageCropDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
-      <DialogContent className="max-w-lg">
+    <Dialog open={open} onOpenChange={(v) => !v && onCancel()} modal={false}>
+      <DialogContent className="max-w-lg" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Recortar imagem</DialogTitle>
         </DialogHeader>

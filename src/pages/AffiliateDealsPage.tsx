@@ -341,7 +341,7 @@ export default function AffiliateDealsPage() {
         </TabsList>
 
         {/* ==================== LISTAGEM ==================== */}
-        <TabsContent value="list" className="space-y-4">
+        <TabsContent value="list" forceMount className={activeTab !== "list" ? "hidden" : "space-y-4"}>
           <DataTableControls
             search={search}
             onSearchChange={(v) => { setSearch(v); setPage(1); }}
@@ -514,7 +514,7 @@ export default function AffiliateDealsPage() {
         </TabsContent>
 
         {/* ==================== ADICIONAR EM MASSA ==================== */}
-        <TabsContent value="manual" className="space-y-4">
+        <TabsContent value="manual" forceMount className={activeTab !== "manual" ? "hidden" : "space-y-4"}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Adicione vários achadinhos de uma vez. Somente título e link são obrigatórios.
@@ -664,7 +664,7 @@ export default function AffiliateDealsPage() {
         </TabsContent>
 
         {/* ==================== IMPORTAR PLANILHA ==================== */}
-        <TabsContent value="csv" className="space-y-4">
+        <TabsContent value="csv" forceMount className={activeTab !== "csv" ? "hidden" : "space-y-4"}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
