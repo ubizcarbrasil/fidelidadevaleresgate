@@ -12,6 +12,67 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Trash2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
+const MODULE_LABELS: Record<string, string> = {
+  branches: "Cidades",
+  brands: "Marcas",
+  customers: "Clientes",
+  domains: "Domínios",
+  offers: "Ofertas",
+  redemptions: "Resgates",
+  stores: "Parceiros",
+  vouchers: "Cupons",
+  users: "Usuários",
+  reports: "Relatórios",
+  settings: "Configurações",
+  catalog: "Catálogo",
+  crm: "CRM",
+  campaigns: "Campanhas",
+  points: "Pontos",
+  notifications: "Notificações",
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  create: "Criar",
+  read: "Visualizar",
+  update: "Editar",
+  delete: "Excluir",
+  approve: "Aprovar",
+  manage: "Gerenciar",
+  export: "Exportar",
+  import: "Importar",
+  send: "Enviar",
+  redeem: "Resgatar",
+  config: "Configurar",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  root: "Administrador Geral",
+  tenant_admin: "Admin Tenant",
+  brand_admin: "Admin da Marca",
+  branch_admin: "Admin da Cidade",
+  operator: "Operador",
+  store_owner: "Dono de Loja",
+  customer: "Cliente",
+};
+
+function friendlyModule(mod: string): string {
+  return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1);
+}
+
+function friendlyPermission(key: string): string {
+  const parts = key.split(".");
+  if (parts.length >= 2) {
+    const mod = friendlyModule(parts[0]);
+    const action = ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1];
+    return `${action} ${mod}`;
+  }
+  return key.replace(/\./g, " › ").replace(/^\w/, c => c.toUpperCase());
+}
+
+function friendlyRole(name: string): string {
+  return ROLE_LABELS[name] || name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, " ");
+}
+
 interface PermForm { key: string; module: string; description: string }
 const emptyForm: PermForm = { key: "", module: "", description: "" };
 
