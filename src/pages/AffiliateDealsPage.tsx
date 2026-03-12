@@ -664,7 +664,7 @@ export default function AffiliateDealsPage() {
         </TabsContent>
 
         {/* ==================== IMPORTAR PLANILHA ==================== */}
-        <TabsContent value="csv" className="space-y-4">
+        <TabsContent value="csv" forceMount className={activeTab !== "csv" ? "hidden" : "space-y-4"}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
