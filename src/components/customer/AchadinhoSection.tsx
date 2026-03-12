@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -30,38 +30,78 @@ interface AffiliateDeal {
   store_logo_url: string | null;
   badge_label: string | null;
   category: string | null;
+  category_id: string | null;
+}
+
+interface DealCategory {
+  id: string;
+  name: string;
+  icon_name: string;
+  color: string;
+}
+
+function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
+  const Icon = (icons as any)[name];
+  return Icon ? <Icon className={className} style={style} /> : null;
 }
 
 export default function AchadinhoSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [deals, setDeals] = useState<AffiliateDeal[]>([]);
+  const [categories, setCategories] = useState<DealCategory[]>([]);
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const catScrollRef = useRef<HTMLDivElement>(null);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
     if (!brand) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      let query = supabase
+
+      // Fetch deals and categories in parallel
+      let dealsQuery = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .order("order_index")
-        .limit(20);
+        .limit(50);
       if (selectedBranch) {
-        query = query.or(`branch_id.eq.${selectedBranch.id},branch_id.is.null`);
+        dealsQuery = dealsQuery.or(`branch_id.eq.${selectedBranch.id},branch_id.is.null`);
       }
-      const { data } = await query;
-      setDeals((data as AffiliateDeal[]) || []);
+
+      const catsQuery = supabase
+        .from("affiliate_deal_categories")
+        .select("id, name, icon_name, color")
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .order("order_index");
+
+      const [dealsRes, catsRes] = await Promise.all([dealsQuery, catsQuery]);
+
+      const allDeals = (dealsRes.data as AffiliateDeal[]) || [];
+      const allCats = (catsRes.data as DealCategory[]) || [];
+
+      setDeals(allDeals);
+
+      // Only show categories that have at least one deal
+      const catIdsWithDeals = new Set(allDeals.map(d => d.category_id).filter(Boolean));
+      setCategories(allCats.filter(c => catIdsWithDeals.has(c.id)));
+
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [brand, selectedBranch]);
+
+  const filteredDeals = useMemo(() => {
+    if (!selectedCat) return deals;
+    return deals.filter(d => d.category_id === selectedCat);
+  }, [deals, selectedCat]);
 
   const handleClick = async (deal: AffiliateDeal) => {
     if (customer) {
@@ -82,6 +122,14 @@ export default function AchadinhoSection() {
     return (
       <section className="max-w-lg mx-auto px-5">
         <Skeleton className="h-6 w-36 rounded-lg mb-4" />
+        <div className="flex gap-4 overflow-hidden mb-4">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="flex flex-col items-center gap-1.5 min-w-[60px]">
+              <Skeleton className="h-14 w-14 rounded-full" />
+              <Skeleton className="h-3 w-12 rounded" />
+            </div>
+          ))}
+        </div>
         <div className="flex gap-3 overflow-hidden">
           {[1, 2, 3].map(i => (
             <div key={i} className="min-w-[160px] rounded-[18px] bg-card overflow-hidden" style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.04)" }}>
@@ -101,7 +149,7 @@ export default function AchadinhoSection() {
 
   return (
     <section className="max-w-lg mx-auto">
-      <div className="px-5 mb-4 flex items-end justify-between">
+      <div className="px-5 mb-3 flex items-end justify-between">
         <div className="flex items-center gap-2">
           <div
             className="h-7 w-7 rounded-lg flex items-center justify-center"
@@ -120,19 +168,84 @@ export default function AchadinhoSection() {
         </div>
       </div>
 
+      {/* Category pills - horizontal scroll */}
+      {categories.length > 0 && (
+        <div
+          ref={catScrollRef}
+          className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-3"
+        >
+          {/* "Todos" pill */}
+          <button
+            onClick={() => setSelectedCat(null)}
+            className="flex flex-col items-center gap-1.5 min-w-[60px] flex-shrink-0"
+          >
+            <div
+              className="h-14 w-14 rounded-full flex items-center justify-center transition-all"
+              style={{
+                backgroundColor: !selectedCat ? primary : withAlpha(primary, 0.08),
+                border: !selectedCat ? `2px solid ${primary}` : '2px solid transparent',
+              }}
+            >
+              <AppIcon
+                iconKey="section_deals"
+                className="h-6 w-6"
+                style={{ color: !selectedCat ? '#fff' : primary }}
+              />
+            </div>
+            <span
+              className="text-[10px] font-medium text-center leading-tight line-clamp-2"
+              style={{ color: !selectedCat ? primary : undefined }}
+            >
+              Todos
+            </span>
+          </button>
+
+          {categories.map(cat => {
+            const isActive = selectedCat === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCat(isActive ? null : cat.id)}
+                className="flex flex-col items-center gap-1.5 min-w-[60px] flex-shrink-0"
+              >
+                <div
+                  className="h-14 w-14 rounded-full flex items-center justify-center transition-all"
+                  style={{
+                    backgroundColor: isActive ? cat.color : `${cat.color}15`,
+                    border: isActive ? `2px solid ${cat.color}` : '2px solid transparent',
+                  }}
+                >
+                  <LucideIcon
+                    name={cat.icon_name}
+                    className="h-6 w-6"
+                    style={{ color: isActive ? '#fff' : cat.color }}
+                  />
+                </div>
+                <span
+                  className="text-[10px] font-medium text-center leading-tight line-clamp-2"
+                  style={{ color: isActive ? cat.color : undefined }}
+                >
+                  {cat.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Deals carousel */}
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
         style={{ scrollSnapType: "x mandatory" }}
       >
-        {deals.map((deal, idx) => {
+        {filteredDeals.map((deal, idx) => {
           const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
           const discountPercent = hasDiscount
             ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
             : 0;
           const priceStr = formatPrice(deal.price);
           const originalPriceStr = formatPrice(deal.original_price);
-          // Determine badge: custom label takes priority, then auto "-X%"
           const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
           return (
@@ -149,7 +262,6 @@ export default function AchadinhoSection() {
               }}
               onClick={() => handleClick(deal)}
             >
-              {/* Image */}
               <div className="relative bg-muted/30">
                 {deal.image_url ? (
                   <img
@@ -167,7 +279,6 @@ export default function AchadinhoSection() {
                   </div>
                 )}
 
-                {/* Badge */}
                 {badgeText && (
                   <div
                     className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm"
@@ -177,7 +288,6 @@ export default function AchadinhoSection() {
                   </div>
                 )}
 
-                {/* Store logo or external link icon */}
                 <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center overflow-hidden">
                   {deal.store_logo_url ? (
                     <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
@@ -187,7 +297,6 @@ export default function AchadinhoSection() {
                 </div>
               </div>
 
-              {/* Content */}
               <div className="p-3">
                 {deal.store_name && (
                   <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">
