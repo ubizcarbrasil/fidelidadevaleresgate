@@ -12,6 +12,67 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Trash2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
+const MODULE_LABELS: Record<string, string> = {
+  branches: "Cidades",
+  brands: "Marcas",
+  customers: "Clientes",
+  domains: "Domínios",
+  offers: "Ofertas",
+  redemptions: "Resgates",
+  stores: "Parceiros",
+  vouchers: "Cupons",
+  users: "Usuários",
+  reports: "Relatórios",
+  settings: "Configurações",
+  catalog: "Catálogo",
+  crm: "CRM",
+  campaigns: "Campanhas",
+  points: "Pontos",
+  notifications: "Notificações",
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  create: "Criar",
+  read: "Visualizar",
+  update: "Editar",
+  delete: "Excluir",
+  approve: "Aprovar",
+  manage: "Gerenciar",
+  export: "Exportar",
+  import: "Importar",
+  send: "Enviar",
+  redeem: "Resgatar",
+  config: "Configurar",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  root: "Administrador Geral",
+  tenant_admin: "Admin Tenant",
+  brand_admin: "Admin da Marca",
+  branch_admin: "Admin da Cidade",
+  operator: "Operador",
+  store_owner: "Dono de Loja",
+  customer: "Cliente",
+};
+
+function friendlyModule(mod: string): string {
+  return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1);
+}
+
+function friendlyPermission(key: string): string {
+  const parts = key.split(".");
+  if (parts.length >= 2) {
+    const mod = friendlyModule(parts[0]);
+    const action = ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1];
+    return `${action} ${mod}`;
+  }
+  return key.replace(/\./g, " › ").replace(/^\w/, c => c.toUpperCase());
+}
+
+function friendlyRole(name: string): string {
+  return ROLE_LABELS[name] || name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, " ");
+}
+
 interface PermForm { key: string; module: string; description: string }
 const emptyForm: PermForm = { key: "", module: "", description: "" };
 
@@ -123,8 +184,8 @@ export default function PermissionsPage() {
                   className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-colors ${r.id === selectedRole ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}
                 >
                   <div>
-                    <span className="font-medium text-sm">{r.name}</span>
-                    {r.is_system && <Badge variant="outline" className="ml-2 text-xs">System</Badge>}
+                    <span className="font-medium text-sm">{friendlyRole(r.name)}</span>
+                    {r.is_system && <Badge variant="outline" className="ml-2 text-xs">Sistema</Badge>}
                     {r.description && <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>}
                   </div>
                   <Badge variant="secondary" className="text-xs">{(r.role_permissions as any[])?.length || 0}</Badge>
@@ -152,8 +213,11 @@ export default function PermissionsPage() {
                 {Object.entries(modules).map(([mod, perms]) =>
                   perms!.map((p, i) => (
                     <TableRow key={p.id}>
-                      {i === 0 && <TableCell rowSpan={perms!.length} className="align-top font-medium"><Badge>{mod}</Badge></TableCell>}
-                      <TableCell className="font-mono text-xs">{p.key}</TableCell>
+                      {i === 0 && <TableCell rowSpan={perms!.length} className="align-top font-medium"><Badge>{friendlyModule(mod)}</Badge></TableCell>}
+                      <TableCell>
+                        <span className="text-sm">{friendlyPermission(p.key)}</span>
+                        <span className="block text-[10px] font-mono text-muted-foreground">{p.key}</span>
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.description || "—"}</TableCell>
                       {selectedRole && (
                         <TableCell className="text-center">

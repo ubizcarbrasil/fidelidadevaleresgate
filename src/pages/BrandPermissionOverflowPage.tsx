@@ -11,6 +11,24 @@ import { Shield, ShieldCheck, ArrowRight, Building2, Store, Save, Loader2 } from
 import { toast } from "sonner";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
+const MODULE_LABELS: Record<string, string> = {
+  branches: "Cidades", brands: "Marcas", customers: "Clientes", domains: "Domínios",
+  offers: "Ofertas", redemptions: "Resgates", stores: "Parceiros", vouchers: "Cupons",
+  users: "Usuários", reports: "Relatórios", settings: "Configurações", catalog: "Catálogo",
+  crm: "CRM", campaigns: "Campanhas", points: "Pontos", notifications: "Notificações",
+};
+const ACTION_LABELS: Record<string, string> = {
+  create: "Criar", read: "Visualizar", update: "Editar", delete: "Excluir",
+  approve: "Aprovar", manage: "Gerenciar", export: "Exportar", import: "Importar",
+  send: "Enviar", redeem: "Resgatar", config: "Configurar",
+};
+function friendlyModule(mod: string) { return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1); }
+function friendlyPermission(key: string) {
+  const parts = key.split(".");
+  if (parts.length >= 2) { return `${ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1]} ${friendlyModule(parts[0])}`; }
+  return key;
+}
+
 type Mode = "root-to-brand" | "brand-to-store";
 
 interface PermissionRow {
@@ -275,7 +293,7 @@ export default function BrandPermissionOverflowPage() {
             <Card key={mod}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Badge variant="outline">{mod}</Badge>
+                  <Badge variant="outline">{friendlyModule(mod)}</Badge>
                   <span className="text-muted-foreground font-normal">
                     {perms.length} permissão{perms.length > 1 ? "ões" : ""}
                   </span>
@@ -295,7 +313,7 @@ export default function BrandPermissionOverflowPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <code className="text-xs font-mono">{perm.key}</code>
+                            <code className="text-xs">{friendlyPermission(perm.key)}</code>
                             {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
                           </div>
                           {perm.description && (
