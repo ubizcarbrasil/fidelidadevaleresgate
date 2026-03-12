@@ -178,7 +178,7 @@ export default function WelcomeTourConfigPage() {
         })}
       </div>
 
-      <IconPickerDialog open={pickerOpen} onOpenChange={setPickerOpen} onSelect={handleIconSelect} />
+      <IconPickerDialog open={pickerOpen} onClose={() => { setPickerOpen(false); setEditingSlide(null); }} onSelect={handleIconSelect} />
 
       {/* Live preview modal */}
       {previewOpen && (
