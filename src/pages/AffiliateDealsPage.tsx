@@ -516,19 +516,21 @@ export default function AffiliateDealsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">URL Imagem Produto</Label>
-                      <Input
+                      <Label className="text-xs">Imagem Produto</Label>
+                      <ImageUploadField
                         value={draft.image_url}
-                        onChange={(e) => updateDraft(draft.id, "image_url", e.target.value)}
-                        placeholder="https://..."
+                        onChange={(url) => updateDraft(draft.id, "image_url", url)}
+                        folder="affiliate-deals"
+                        label="Imagem do Produto"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">URL Logo Loja Parceira</Label>
-                      <Input
+                      <Label className="text-xs">Logo Loja Parceira</Label>
+                      <ImageUploadField
                         value={draft.store_logo_url}
-                        onChange={(e) => updateDraft(draft.id, "store_logo_url", e.target.value)}
-                        placeholder="https://..."
+                        onChange={(url) => updateDraft(draft.id, "store_logo_url", url)}
+                        folder="affiliate-deals"
+                        label="Logo da Loja"
                       />
                     </div>
                     <div className="space-y-1">
