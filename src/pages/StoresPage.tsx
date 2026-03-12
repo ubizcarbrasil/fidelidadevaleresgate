@@ -82,7 +82,7 @@ export default function StoresPage() {
   });
 
   const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
-  const openEdit = (s: any) => { setEditId(s.id); setForm({ name: s.name, slug: s.slug, category: s.category || "", address: s.address || "", whatsapp: s.whatsapp || "", brand_id: s.brand_id, branch_id: s.branch_id, is_active: s.is_active }); setOpen(true); };
+  const openEdit = (s: any) => { setEditId(s.id); setForm({ name: s.name, slug: s.slug, category: s.category || "", address: s.address || "", whatsapp: s.whatsapp || "", brand_id: s.brand_id, branch_id: s.branch_id, is_active: s.is_active, logo_url: s.logo_url || "" }); setOpen(true); };
 
   return (
     <div className="space-y-6">
