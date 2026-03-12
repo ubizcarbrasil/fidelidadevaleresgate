@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Save, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, ExternalLink, Loader2, icons } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import ImageUploadField from "@/components/ImageUploadField";
 
@@ -16,8 +16,20 @@ interface NumberItem { value: string; label: string; }
 interface BenefitItem { title: string; description: string; icon: string; }
 interface HowItWorksItem { step: string; title: string; description: string; }
 interface FaqItem { question: string; answer: string; }
+interface TestimonialItem { name: string; role: string; text: string; initials: string; }
 
-const ICON_OPTIONS = ["Eye", "Heart", "Zap", "BarChart3", "Star", "Users", "Store", "Gift", "Shield", "TrendingUp", "Sparkles", "CheckCircle2"];
+const ICON_OPTIONS = [
+  "Eye", "Heart", "Zap", "BarChart3", "Star", "Users", "Store", "Gift",
+  "Shield", "TrendingUp", "Sparkles", "CheckCircle2", "Rocket", "Target",
+  "Award", "Smartphone", "PieChart", "MessageSquare", "Clock", "DollarSign",
+  "ShoppingCart", "Repeat", "QrCode", "BarChart", "Settings", "BadgeCheck", "Crown",
+];
+
+function IconPreview({ name }: { name: string }) {
+  const LucideIcon = (icons as any)[name];
+  if (!LucideIcon) return <span className="text-xs text-muted-foreground">{name}</span>;
+  return <LucideIcon className="h-4 w-4" />;
+}
 
 export default function PartnerLandingConfigPage() {
   const { currentBrandId } = useBrandGuard();
@@ -49,9 +61,14 @@ export default function PartnerLandingConfigPage() {
     { question: "Quanto custa para participar?", answer: "O cadastro é gratuito." },
     { question: "Preciso ter um site?", answer: "Não! Seu estabelecimento aparece no app." },
   ]);
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialWhatsapp, setSocialWhatsapp] = useState("");
+  const [socialEmail, setSocialEmail] = useState("");
   const [ctaTitle, setCtaTitle] = useState("Pronto para crescer?");
   const [ctaSubtitle, setCtaSubtitle] = useState("Cadastre-se agora e comece a receber clientes.");
   const [ctaButtonText, setCtaButtonText] = useState("Quero ser Parceiro");
+  const [ctaLinkUrl, setCtaLinkUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
@@ -74,9 +91,14 @@ export default function PartnerLandingConfigPage() {
         setBenefits(data.benefits_json as any);
         setHowItWorks(data.how_it_works_json as any);
         setFaq(data.faq_json as any);
+        setTestimonials(((data as any).testimonials_json as any) || []);
+        setSocialInstagram((data as any).social_instagram || "");
+        setSocialWhatsapp((data as any).social_whatsapp || "");
+        setSocialEmail((data as any).social_email || "");
         setCtaTitle(data.cta_title);
         setCtaSubtitle(data.cta_subtitle);
         setCtaButtonText(data.cta_button_text);
+        setCtaLinkUrl((data as any).cta_link_url || "");
         setIsActive(data.is_active);
       }
       setLoading(false);
@@ -98,9 +120,14 @@ export default function PartnerLandingConfigPage() {
       benefits_json: benefits,
       how_it_works_json: howItWorks,
       faq_json: faq,
+      testimonials_json: testimonials,
+      social_instagram: socialInstagram || null,
+      social_whatsapp: socialWhatsapp || null,
+      social_email: socialEmail || null,
       cta_title: ctaTitle,
       cta_subtitle: ctaSubtitle,
       cta_button_text: ctaButtonText,
+      cta_link_url: ctaLinkUrl || null,
       is_active: isActive,
     };
 
@@ -118,7 +145,6 @@ export default function PartnerLandingConfigPage() {
     setSaving(false);
   };
 
-  // Get slug for preview link
   const [brandSlug, setBrandSlug] = useState("");
   useEffect(() => {
     if (!currentBrandId) return;
@@ -241,15 +267,20 @@ export default function PartnerLandingConfigPage() {
                   <Label className="text-xs">Título</Label>
                   <Input value={b.title} onChange={e => { const u = [...benefits]; u[i].title = e.target.value; setBenefits(u); }} />
                 </div>
-                <div className="w-32 space-y-1">
+                <div className="w-44 space-y-1">
                   <Label className="text-xs">Ícone</Label>
-                  <select
-                    value={b.icon}
-                    onChange={e => { const u = [...benefits]; u[i].icon = e.target.value; setBenefits(u); }}
-                    className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    {ICON_OPTIONS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={b.icon}
+                      onChange={e => { const u = [...benefits]; u[i].icon = e.target.value; setBenefits(u); }}
+                      className="w-full h-10 rounded-md border border-input bg-background pl-9 pr-3 text-sm"
+                    >
+                      {ICON_OPTIONS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+                    </select>
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <IconPreview name={b.icon} />
+                    </div>
+                  </div>
                 </div>
                 <Button variant="ghost" size="icon" className="text-destructive self-end" onClick={() => setBenefits(benefits.filter((_, j) => j !== i))}>
                   <Trash2 className="h-4 w-4" />
@@ -295,6 +326,53 @@ export default function PartnerLandingConfigPage() {
         </CardContent>
       </Card>
 
+      {/* Testimonials */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">💬 Depoimentos</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setTestimonials([...testimonials, { name: "", role: "", text: "", initials: "" }])}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {testimonials.length === 0 && (
+            <p className="text-xs text-muted-foreground">Nenhum depoimento adicionado. Clique em + para adicionar.</p>
+          )}
+          {testimonials.map((t, i) => (
+            <div key={i} className="p-4 rounded-lg border space-y-3">
+              <div className="flex gap-2">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs">Nome</Label>
+                  <Input value={t.name} onChange={e => {
+                    const u = [...testimonials];
+                    u[i].name = e.target.value;
+                    // Auto-generate initials
+                    const words = e.target.value.trim().split(/\s+/);
+                    u[i].initials = words.map(w => w[0]?.toUpperCase() || "").slice(0, 2).join("");
+                    setTestimonials(u);
+                  }} />
+                </div>
+                <div className="w-20 space-y-1">
+                  <Label className="text-xs">Iniciais</Label>
+                  <Input value={t.initials} onChange={e => { const u = [...testimonials]; u[i].initials = e.target.value; setTestimonials(u); }} maxLength={3} />
+                </div>
+                <Button variant="ghost" size="icon" className="text-destructive self-end" onClick={() => setTestimonials(testimonials.filter((_, j) => j !== i))}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cargo / Descrição</Label>
+                <Input value={t.role} onChange={e => { const u = [...testimonials]; u[i].role = e.target.value; setTestimonials(u); }} placeholder="Ex: Dono de restaurante" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Depoimento</Label>
+                <Textarea value={t.text} onChange={e => { const u = [...testimonials]; u[i].text = e.target.value; setTestimonials(u); }} rows={2} placeholder="O que este parceiro disse..." />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* FAQ */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -324,9 +402,9 @@ export default function PartnerLandingConfigPage() {
         </CardContent>
       </Card>
 
-      {/* CTA Final */}
+      {/* Social & CTA */}
       <Card>
-        <CardHeader><CardTitle className="text-base">🚀 Chamada Final (CTA)</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">🚀 Chamada Final (CTA) & Redes Sociais</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Título</Label>
@@ -339,6 +417,27 @@ export default function PartnerLandingConfigPage() {
           <div className="space-y-2">
             <Label>Texto do Botão</Label>
             <Input value={ctaButtonText} onChange={e => setCtaButtonText(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Link de destino do CTA (URL)</Label>
+            <Input value={ctaLinkUrl} onChange={e => setCtaLinkUrl(e.target.value)} placeholder="https://... ou /register-store" />
+            <p className="text-xs text-muted-foreground">Se vazio, direciona para o cadastro de parceiro padrão.</p>
+          </div>
+
+          <div className="border-t pt-4 mt-4 space-y-3">
+            <p className="text-sm font-medium">Redes Sociais</p>
+            <div className="space-y-2">
+              <Label className="text-xs">Instagram (URL ou @usuario)</Label>
+              <Input value={socialInstagram} onChange={e => setSocialInstagram(e.target.value)} placeholder="https://instagram.com/seuperfil" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">WhatsApp (número com DDD)</Label>
+              <Input value={socialWhatsapp} onChange={e => setSocialWhatsapp(e.target.value)} placeholder="5511999999999" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">E-mail de contato</Label>
+              <Input value={socialEmail} onChange={e => setSocialEmail(e.target.value)} placeholder="contato@suamarca.com" />
+            </div>
           </div>
         </CardContent>
       </Card>
