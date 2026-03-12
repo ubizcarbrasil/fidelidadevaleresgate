@@ -608,6 +608,9 @@ export default function Dashboard() {
       {/* Quick Links & Test Accounts for Brand Admins */}
       {showBrand && !isRoot && <BrandQuickLinks />}
 
+      {/* Demo Stores Toggle for Brand Admins */}
+      {showBrand && !isRoot && <DemoStoresSection />}
+
       {/* CRM Card */}
       {showBrand && !isRoot && (
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">

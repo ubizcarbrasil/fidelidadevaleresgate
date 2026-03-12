@@ -636,6 +636,9 @@ export default function TrialSignupPage() {
                 </div>
               </div>
 
+              {/* Demo Stores Toggle */}
+              <DemoStoresToggle brandId={result.brand_id} branchId={result.branch_id} compact />
+
               <Badge variant="outline" className="text-xs w-full justify-center py-1.5 border-primary/20 text-primary">
                 Domínio futuro: {result.domain}
               </Badge>
