@@ -56,6 +56,7 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 
 export default function StoreOwnerPanel() {
   const { user, signOut, isRootAdmin, roles } = useAuth();
+  const { isModuleEnabled } = useBrandModules();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
@@ -67,6 +68,15 @@ export default function StoreOwnerPanel() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const notifPermissionRef = useRef<NotificationPermission>("default");
+
+  const filteredBottomTabs = useMemo(() =>
+    BOTTOM_TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
+    [isModuleEnabled]
+  );
+  const filteredMoreMenu = useMemo(() =>
+    MORE_MENU_ITEMS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
+    [isModuleEnabled]
+  );
 
   useEffect(() => {
     if (!user) return;
