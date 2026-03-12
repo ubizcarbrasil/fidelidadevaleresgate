@@ -44,7 +44,7 @@ const groups = [
       { title: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
       { title: "Construtor de Páginas", url: "/page-builder", icon: Layers },
       { title: "Tema da Plataforma", url: "/platform-theme", icon: Settings2 },
-      
+      { title: "Tour de Boas-Vindas", url: "/welcome-tour", icon: Rocket },
     ],
   },
   {

@@ -1,30 +1,40 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Coins, Tag, Ticket, ChevronRight, X } from "lucide-react";
+import { icons } from "lucide-react";
+
+interface SlideConfig {
+  icon: string;
+  color: string;
+  bg: string;
+  title: string;
+  description: string;
+}
 
 interface WelcomeTourProps {
   onComplete: () => void;
   primary?: string;
   brandName?: string;
+  customSlides?: SlideConfig[];
 }
 
-const SLIDES = [
+const DEFAULT_SLIDES: SlideConfig[] = [
   {
-    icon: Coins,
+    icon: "Coins",
     color: "#059669",
     bg: "#A7F3D0",
     title: "Acumule pontos",
     description: "Compre nos parceiros emissores e acumule pontos automaticamente a cada compra.",
   },
   {
-    icon: Tag,
+    icon: "Tag",
     color: "#7C3AED",
     bg: "#DDD6FE",
     title: "Descubra ofertas",
     description: "Encontre cupons exclusivos, descontos e promoções dos melhores parceiros da região.",
   },
   {
-    icon: Ticket,
+    icon: "Ticket",
     color: "#E91E63",
     bg: "#F8C8D8",
     title: "Resgate recompensas",
@@ -32,7 +42,8 @@ const SLIDES = [
   },
 ];
 
-export default function WelcomeTour({ onComplete, primary, brandName }: WelcomeTourProps) {
+export default function WelcomeTour({ onComplete, primary, brandName, customSlides }: WelcomeTourProps) {
+  const SLIDES = customSlides?.length ? customSlides : DEFAULT_SLIDES;
   const [step, setStep] = useState(0);
   const accent = primary || "hsl(var(--primary))";
 
@@ -80,14 +91,18 @@ export default function WelcomeTour({ onComplete, primary, brandName }: WelcomeT
           >
             {(() => {
               const slide = SLIDES[step];
-              const Icon = slide.icon;
+              const Icon = icons[slide.icon as keyof typeof icons];
               return (
                 <>
                   <div
                     className="h-20 w-20 rounded-3xl flex items-center justify-center mb-5"
                     style={{ backgroundColor: slide.bg }}
                   >
-                    <Icon className="h-10 w-10" strokeWidth={1.4} style={{ color: slide.color }} />
+                    {Icon ? (
+                      <Icon className="h-10 w-10" strokeWidth={1.4} style={{ color: slide.color }} />
+                    ) : (
+                      <span className="text-2xl">{slide.icon}</span>
+                    )}
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">{slide.title}</h3>
                   <p className="text-sm text-muted-foreground max-w-[280px] leading-relaxed">

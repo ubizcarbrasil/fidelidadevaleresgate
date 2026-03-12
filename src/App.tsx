@@ -74,6 +74,7 @@ const EmitterRequestsPage = lazy(() => import("@/pages/EmitterRequestsPage"));
 const EmitterJourneyGuidePage = lazy(() => import("@/pages/EmitterJourneyGuidePage"));
 const PlatformThemePage = lazy(() => import("@/pages/PlatformThemePage"));
 const AppIconsConfigPage = lazy(() => import("@/pages/AppIconsConfigPage"));
+const WelcomeTourConfigPage = lazy(() => import("@/pages/WelcomeTourConfigPage"));
 const GanhaGanhaConfigPage = lazy(() => import("@/pages/GanhaGanhaConfigPage"));
 const GanhaGanhaBillingPage = lazy(() => import("@/pages/GanhaGanhaBillingPage"));
 const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDashboardPage"));
@@ -197,6 +198,7 @@ function AppRoutes() {
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
           <Route path="platform-theme" element={<PlatformThemePage />} />
           <Route path="app-icons" element={<AppIconsConfigPage />} />
+          <Route path="welcome-tour" element={<WelcomeTourConfigPage />} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
