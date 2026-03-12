@@ -809,12 +809,16 @@ export default function PartnerLandingPage() {
                 >
                   <Quote className="h-8 w-8 absolute top-4 right-4" style={{ color: primaryAlpha(0.15) }} />
                   <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold"
-                      style={{ backgroundColor: primaryAlpha(0.1), color: primary }}
-                    >
-                      {t.initials}
-                    </div>
+                    {t.logo_url ? (
+                      <img src={t.logo_url} alt={t.name} className="h-11 w-11 rounded-full object-contain flex-shrink-0 bg-white/10" />
+                    ) : (
+                      <div
+                        className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                        style={{ backgroundColor: primaryAlpha(0.1), color: primary }}
+                      >
+                        {t.initials}
+                      </div>
+                    )}
                     <div>
                       <p className="font-semibold text-sm text-white">{t.name}</p>
                       <p className="text-xs text-white/40">{t.role}</p>
