@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PlatformLogo from "@/components/PlatformLogo";
 
 export default function LandingFooter() {
   return (
