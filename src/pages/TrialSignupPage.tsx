@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import ImageUploadField from "@/components/ImageUploadField";
 import { motion } from "framer-motion";
+import PlatformLogo from "@/components/PlatformLogo";
 
 type Step = "guide" | "info" | "location" | "branding" | "creating" | "done";
 const STEPS: Step[] = ["guide", "info", "location", "branding", "creating", "done"];
