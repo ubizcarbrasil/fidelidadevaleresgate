@@ -54,6 +54,7 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 
 export default function StoreOwnerPanel() {
   const { user, signOut, isRootAdmin, roles } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
   const [store, setStore] = useState<any>(null);
