@@ -220,6 +220,10 @@ export default function StoreOwnerPanel() {
                 {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
               </Badge>
             </div>
+            </div>
+            {isAdminOverride && (
+              <Badge variant="secondary" className="text-[9px] h-4 shrink-0">Admin</Badge>
+            )}
           </div>
 
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
