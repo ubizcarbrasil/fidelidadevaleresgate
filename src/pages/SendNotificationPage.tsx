@@ -9,8 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bell, Send, Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function SendNotificationPage() {
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [scope, setScope] = useState<"all" | "branch">("all");
