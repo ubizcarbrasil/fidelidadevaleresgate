@@ -365,35 +365,32 @@ export default function CsvImportPage() {
             .insert(customerPayloads)
             .select("id");
 
-          if (error) {
-            // Fallback: insert one-by-one for this batch to identify which rows failed
-            for (let j = 0; j < batch.length; j++) {
-              try {
-                const { data: single, error: sErr } = await supabase.from("customers").insert(customerPayloads[j]).select("id").single();
-                if (sErr) throw sErr;
-                // Mirror to crm_contacts
-                if (single) {
-                  await supabase.from("crm_contacts").insert({
-                    brand_id: brandId, branch_id: branchId, customer_id: single.id,
-                    name: batch[j].name.trim(), phone: batch[j].phone?.trim() || null,
-                    email: batch[j].email?.trim() || null, cpf: batch[j].cpf?.trim() || null, source: "STORE_UPLOAD",
-                  });
-                }
-                result.success++;
-              } catch (err: any) {
-                result.errors.push({ row: batchStart + j + 2, message: err.message });
-              }
-            }
-          } else if (inserted) {
-            result.success += inserted.length;
-            // Batch mirror to crm_contacts
-            const contactPayloads = inserted.map((c, j) => ({
-              brand_id: brandId, branch_id: branchId, customer_id: c.id,
-              name: batch[j].name.trim(), phone: batch[j].phone?.trim() || null,
-              email: batch[j].email?.trim() || null, cpf: batch[j].cpf?.trim() || null, source: "STORE_UPLOAD",
-            }));
-            await supabase.from("crm_contacts").insert(contactPayloads);
+          if (error || !inserted) {
+            batch.forEach((_, j) => {
+              result.errors.push({ row: batchStart + j + 2, message: error?.message || "Falha ao inserir lote de clientes" });
+            });
+            result.skipped += batch.length;
+            setImportProgress({ current: Math.min(batchStart + BATCH_SIZE, rows.length), total: rows.length });
+            continue;
           }
+
+          // Batch mirror to crm_contacts
+          const contactPayloads = inserted.map((c, j) => ({
+            brand_id: brandId, branch_id: branchId, customer_id: c.id,
+            name: batch[j].name.trim(), phone: batch[j].phone?.trim() || null,
+            email: batch[j].email?.trim() || null, cpf: batch[j].cpf?.trim() || null, source: "STORE_UPLOAD",
+          }));
+
+          const { error: contactError } = await supabase.from("crm_contacts").insert(contactPayloads);
+          if (contactError) {
+            batch.forEach((_, j) => {
+              result.errors.push({ row: batchStart + j + 2, message: contactError.message });
+            });
+            result.skipped += batch.length;
+          } else {
+            result.success += inserted.length;
+          }
+
           setImportProgress({ current: Math.min(batchStart + BATCH_SIZE, rows.length), total: rows.length });
         }
       } else {
