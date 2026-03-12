@@ -1,13 +1,21 @@
 
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+## Plano: Seed de Categorias e Vinculação Automática de Deals
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
+### Estado Atual
+- **Urbano Norte** (`8f76ce52`): já tem 16 categorias seedadas, mas 2 deals sem `category_id`:
+  - "iPhone 17 Pro Max 512gb" → match com keywords "smartphone" → **Eletrônicos**
+  - "Marcado livre" → sem match claro com nenhuma categoria
+- **Marca Teste** (`2750cec8`): sem categorias, 1 deal ("Achadinhos") sem categoria
 
-### Ação
+### Ações
 
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
+1. **Seed categorias para "Marca Teste"** — chamar a RPC `seed_affiliate_categories` existente via código ou executar INSERT direto
 
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
+2. **Vincular deals existentes às categorias**:
+   - `iPhone 17 Pro Max 512gb` → categoria **Eletrônicos** (`77d18a9c-80c7-41e2-8f80-77995a93fab2`)
+   - `Marcado livre` → sem match automático, será mantido sem categoria (ou posso vincular a "Cupons" se preferir)
+   - `Achadinhos` (Marca Teste) → sem match claro, será mantido sem categoria
+
+Todas as operações serão feitas via INSERT/UPDATE tool no banco.
 
