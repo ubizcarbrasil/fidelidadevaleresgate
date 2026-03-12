@@ -144,6 +144,7 @@ export function BrandSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
+  const badges = useSidebarBadges();
 
   // Dynamically resolve brand theme URL
   const resolvedGroups = groups.map(group => ({
