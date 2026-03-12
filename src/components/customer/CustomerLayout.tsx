@@ -61,11 +61,11 @@ type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
 
-const TABS: { key: Tab; label: string; iconKey: AppIconKey }[] = [
+const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string }[] = [
   { key: "home", label: "Início", iconKey: "nav_home" },
-  { key: "offers", label: "Ofertas", iconKey: "nav_offers" },
-  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions" },
-  { key: "wallet", label: "Carteira", iconKey: "nav_wallet" },
+  { key: "offers", label: "Ofertas", iconKey: "nav_offers", moduleKey: "offers" },
+  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
+  { key: "wallet", label: "Carteira", iconKey: "nav_wallet", moduleKey: "wallet" },
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
 ];
 
