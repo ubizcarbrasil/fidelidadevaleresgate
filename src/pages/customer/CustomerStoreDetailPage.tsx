@@ -30,6 +30,7 @@ import {
   Info,
   HelpCircle,
   FileText,
+  Share2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
