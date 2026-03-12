@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Check, X, Eye, Clock, Store, Search, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 interface StoreSubmission {
   id: string;
