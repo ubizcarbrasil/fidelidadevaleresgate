@@ -349,58 +349,102 @@ export default function CsvImportPage() {
           setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       } else if (importType === "CUSTOMERS") {
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-          try {
-            const { data: newCustomer, error } = await supabase.from("customers").insert({
-              name: row.name.trim(), phone: row.phone?.trim() || null, cpf: row.cpf?.trim() || null,
-              brand_id: brandId, branch_id: branchId,
-              points_balance: row.points_balance ? Number(row.points_balance) : 0,
-              money_balance: row.money_balance ? Number(row.money_balance) : 0,
-              is_active: row.is_active ? parseBool(row.is_active) : true,
-            }).select("id").single();
-            if (error) throw error;
-            if (newCustomer) {
-              await supabase.from("crm_contacts").insert({
-                brand_id: brandId, branch_id: branchId, customer_id: newCustomer.id,
-                name: row.name.trim(), phone: row.phone?.trim() || null,
-                email: row.email?.trim() || null, cpf: row.cpf?.trim() || null, source: "STORE_UPLOAD",
-              });
+        // Batch insert customers, then mirror to crm_contacts
+        for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
+          const batch = rows.slice(batchStart, batchStart + BATCH_SIZE);
+          const customerPayloads = batch.map(row => ({
+            name: row.name.trim(), phone: row.phone?.trim() || null, cpf: row.cpf?.trim() || null,
+            brand_id: brandId, branch_id: branchId,
+            points_balance: row.points_balance ? Number(row.points_balance) : 0,
+            money_balance: row.money_balance ? Number(row.money_balance) : 0,
+            is_active: row.is_active ? parseBool(row.is_active) : true,
+          }));
+
+          const { data: inserted, error } = await supabase
+            .from("customers")
+            .insert(customerPayloads)
+            .select("id");
+
+          if (error) {
+            // Fallback: insert one-by-one for this batch to identify which rows failed
+            for (let j = 0; j < batch.length; j++) {
+              try {
+                const { data: single, error: sErr } = await supabase.from("customers").insert(customerPayloads[j]).select("id").single();
+                if (sErr) throw sErr;
+                // Mirror to crm_contacts
+                if (single) {
+                  await supabase.from("crm_contacts").insert({
+                    brand_id: brandId, branch_id: branchId, customer_id: single.id,
+                    name: batch[j].name.trim(), phone: batch[j].phone?.trim() || null,
+                    email: batch[j].email?.trim() || null, cpf: batch[j].cpf?.trim() || null, source: "STORE_UPLOAD",
+                  });
+                }
+                result.success++;
+              } catch (err: any) {
+                result.errors.push({ row: batchStart + j + 2, message: err.message });
+              }
             }
-            result.success++;
-          } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
-          setImportProgress(prev => ({ ...prev, current: i + 1 }));
+          } else if (inserted) {
+            result.success += inserted.length;
+            // Batch mirror to crm_contacts
+            const contactPayloads = inserted.map((c, j) => ({
+              brand_id: brandId, branch_id: branchId, customer_id: c.id,
+              name: batch[j].name.trim(), phone: batch[j].phone?.trim() || null,
+              email: batch[j].email?.trim() || null, cpf: batch[j].cpf?.trim() || null, source: "STORE_UPLOAD",
+            }));
+            await supabase.from("crm_contacts").insert(contactPayloads);
+          }
+          setImportProgress({ current: Math.min(batchStart + BATCH_SIZE, rows.length), total: rows.length });
         }
       } else {
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-          try {
+        // CRM_CONTACTS — batch insert
+        for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
+          const batch = rows.slice(batchStart, batchStart + BATCH_SIZE);
+          const effectiveBranchId = branchId || null;
+
+          // If branch selected, batch-create customers first
+          let customerIds: (string | null)[] = batch.map(() => null);
+          if (effectiveBranchId) {
+            const custPayloads = batch.map(row => ({
+              name: row.name.trim(), phone: row.phone?.trim() || null, cpf: row.cpf?.trim() || null,
+              brand_id: brandId, branch_id: effectiveBranchId,
+              is_active: row.is_active ? parseBool(row.is_active) : true,
+            }));
+            const { data: custInserted } = await supabase.from("customers").insert(custPayloads).select("id");
+            if (custInserted) customerIds = custInserted.map(c => c.id);
+          }
+
+          const contactPayloads = batch.map((row, j) => {
             const tags = row.tags?.trim() ? row.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
-            const effectiveBranchId = branchId || null;
-            let customerId: string | null = null;
-            if (effectiveBranchId) {
-              const { data: newCustomer } = await supabase.from("customers").insert({
-                name: row.name.trim(), phone: row.phone?.trim() || null, cpf: row.cpf?.trim() || null,
-                brand_id: brandId, branch_id: effectiveBranchId,
-                is_active: row.is_active ? parseBool(row.is_active) : true,
-              }).select("id").single();
-              customerId = newCustomer?.id || null;
-            }
-            const { error } = await supabase.from("crm_contacts").insert({
-              brand_id: brandId, branch_id: effectiveBranchId, customer_id: customerId,
+            return {
+              brand_id: brandId, branch_id: effectiveBranchId, customer_id: customerIds[j],
               name: row.name.trim(), phone: row.phone?.trim() || null, email: row.email?.trim() || null,
               cpf: row.cpf?.trim() || null, gender: row.gender?.trim() || null,
               os_platform: row.os_platform?.trim() || null,
               ride_count: row.ride_count ? parseInt(row.ride_count, 10) || 0 : 0,
-              first_ride_at: row.first_ride_at?.trim() || null,
-              last_ride_at: row.last_ride_at?.trim() || null,
+              first_ride_at: parseBrDate(row.first_ride_at || ""),
+              last_ride_at: parseBrDate(row.last_ride_at || ""),
               source: row.source?.trim() || "CSV_IMPORT", tags_json: tags,
               is_active: row.is_active ? parseBool(row.is_active) : true,
-            });
-            if (error) throw error;
-            result.success++;
-          } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
-          setImportProgress(prev => ({ ...prev, current: i + 1 }));
+            };
+          });
+
+          const { error } = await supabase.from("crm_contacts").insert(contactPayloads);
+          if (error) {
+            // Fallback one-by-one
+            for (let j = 0; j < batch.length; j++) {
+              try {
+                const { error: sErr } = await supabase.from("crm_contacts").insert(contactPayloads[j]);
+                if (sErr) throw sErr;
+                result.success++;
+              } catch (err: any) {
+                result.errors.push({ row: batchStart + j + 2, message: err.message });
+              }
+            }
+          } else {
+            result.success += batch.length;
+          }
+          setImportProgress({ current: Math.min(batchStart + BATCH_SIZE, rows.length), total: rows.length });
         }
       }
 
