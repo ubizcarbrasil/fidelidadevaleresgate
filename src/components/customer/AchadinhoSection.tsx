@@ -28,6 +28,7 @@ interface AffiliateDeal {
   affiliate_url: string;
   store_name: string | null;
   store_logo_url: string | null;
+  badge_label: string | null;
   category: string | null;
 }
 
