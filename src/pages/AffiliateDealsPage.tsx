@@ -47,6 +47,9 @@ export default function AffiliateDealsPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<DealForm>(emptyForm(currentBrandId || undefined));
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
 
   const { data: brands } = useQuery({
     queryKey: ["brands-select", currentBrandId],
