@@ -11,8 +11,9 @@ import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
   HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus,
   ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2,
-  Menu, ChevronLeft, Settings, Bell
+  Menu, ChevronLeft, Settings, Bell, Lock
 } from "lucide-react";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
 import StoreProfileTab from "@/components/store-owner/StoreProfileTab";
@@ -260,7 +261,15 @@ export default function StoreOwnerPanel() {
                   );
                 })}
               </div>
-              <div className="border-t p-3 mt-auto">
+              <div className="border-t p-3 space-y-1">
+                <ChangePasswordDialog
+                  trigger={
+                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted transition-colors">
+                      <Lock className="h-4 w-4" />
+                      Alterar Senha
+                    </button>
+                  }
+                />
                 <button
                   onClick={async () => { await signOut(); }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors"

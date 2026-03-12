@@ -15,14 +15,15 @@ import { Plus, Pencil, Trash2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import ImageUploadField from "@/components/ImageUploadField";
 
 const PAGE_SIZE = 20;
 
 interface StoreForm {
   name: string; slug: string; category: string; address: string; whatsapp: string;
-  brand_id: string; branch_id: string; is_active: boolean;
+  brand_id: string; branch_id: string; is_active: boolean; logo_url: string;
 }
-const emptyForm: StoreForm = { name: "", slug: "", category: "", address: "", whatsapp: "", brand_id: "", branch_id: "", is_active: true };
+const emptyForm: StoreForm = { name: "", slug: "", category: "", address: "", whatsapp: "", brand_id: "", branch_id: "", is_active: true, logo_url: "" };
 
 export default function StoresPage() {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ export default function StoresPage() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { name: form.name, slug: form.slug, category: form.category || null, address: form.address || null, whatsapp: form.whatsapp || null, brand_id: form.brand_id, branch_id: form.branch_id, is_active: form.is_active };
+      const payload = { name: form.name, slug: form.slug, category: form.category || null, address: form.address || null, whatsapp: form.whatsapp || null, brand_id: form.brand_id, branch_id: form.branch_id, is_active: form.is_active, logo_url: form.logo_url || null };
       if (editId) { const { error } = await supabase.from("stores").update(payload).eq("id", editId); if (error) throw error; }
       else { const { error } = await supabase.from("stores").insert(payload); if (error) throw error; }
     },
@@ -81,7 +82,7 @@ export default function StoresPage() {
   });
 
   const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
-  const openEdit = (s: any) => { setEditId(s.id); setForm({ name: s.name, slug: s.slug, category: s.category || "", address: s.address || "", whatsapp: s.whatsapp || "", brand_id: s.brand_id, branch_id: s.branch_id, is_active: s.is_active }); setOpen(true); };
+  const openEdit = (s: any) => { setEditId(s.id); setForm({ name: s.name, slug: s.slug, category: s.category || "", address: s.address || "", whatsapp: s.whatsapp || "", brand_id: s.brand_id, branch_id: s.branch_id, is_active: s.is_active, logo_url: s.logo_url || "" }); setOpen(true); };
 
   return (
     <div className="space-y-6">
@@ -95,6 +96,17 @@ export default function StoresPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>{editId ? "Editar Parceiro" : "Novo Parceiro"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Logo do Parceiro</Label>
+                <ImageUploadField
+                  value={form.logo_url}
+                  onChange={url => setForm(f => ({ ...f, logo_url: url }))}
+                  folder="stores/logos"
+                  label="Logo"
+                  aspectRatio={1}
+                  previewClassName="h-16 w-16 rounded-xl object-cover"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Identificador</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} /></div>
