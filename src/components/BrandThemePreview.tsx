@@ -65,6 +65,27 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
         <CardTitle className="text-sm flex items-center gap-2">
           <Eye className="h-4 w-4" /> Preview Real do App
         </CardTitle>
+        {/* Screen selector tabs outside phone frame */}
+        <div className="flex gap-1 mt-2 flex-wrap">
+          {TABS.map((tab) => {
+            const isActive = screen === tab.key;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setScreen(tab.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/50 text-muted-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </CardHeader>
       <CardContent className="p-3">
         {/* Phone frame */}
