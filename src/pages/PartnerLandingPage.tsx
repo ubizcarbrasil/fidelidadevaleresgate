@@ -425,8 +425,10 @@ export default function PartnerLandingPage() {
       >
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            {logoUrl && <img src={logoUrl} alt="" className="h-9 w-auto max-w-[140px] rounded-xl object-contain" />}
-            {!logoUrl && <span className="font-bold text-lg text-white">{brand.name}</span>}
+             {logoUrl ? (
+              <img src={logoUrl} alt={brand.name} className="h-9 w-auto max-w-[140px] rounded-xl object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).removeAttribute('hidden'); }} />
+            ) : null}
+            <span className={logoUrl ? "font-bold text-lg text-white" : "font-bold text-lg text-white"} {...(logoUrl ? { hidden: true } : {})}>{brand.name}</span>
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/50">
