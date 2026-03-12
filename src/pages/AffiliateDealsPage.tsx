@@ -302,6 +302,7 @@ export default function AffiliateDealsPage() {
           price: editForm.price ? Number(editForm.price) : null,
           original_price: editForm.original_price ? Number(editForm.original_price) : null,
           category: editForm.category || null,
+          category_id: editForm.category_id || null,
           badge_label: editForm.badge_label?.trim() || null,
         })
         .eq("id", editId);
