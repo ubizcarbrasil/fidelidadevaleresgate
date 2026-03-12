@@ -167,6 +167,16 @@ export default function PartnerLandingConfigPage() {
         <CardHeader><CardTitle className="text-base">🎯 Hero</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label>Logomarca da Marca</Label>
+            <ImageUploadField
+              value={logoUrl}
+              onChange={setLogoUrl}
+              folder={`partner-landing/${currentBrandId}`}
+              label="Logomarca"
+              previewClassName="h-16 object-contain"
+            />
+          </div>
+          <div className="space-y-2">
             <Label>Título Principal</Label>
             <Input value={heroTitle} onChange={e => setHeroTitle(e.target.value)} />
           </div>
@@ -175,8 +185,15 @@ export default function PartnerLandingConfigPage() {
             <Textarea value={heroSubtitle} onChange={e => setHeroSubtitle(e.target.value)} rows={3} />
           </div>
           <div className="space-y-2">
-            <Label>URL da Imagem (opcional)</Label>
-            <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="https://..." />
+            <Label>Imagem do Hero (opcional)</Label>
+            <ImageUploadField
+              value={heroImageUrl}
+              onChange={setHeroImageUrl}
+              folder={`partner-landing/${currentBrandId}`}
+              label="Imagem do Hero"
+              previewClassName="h-32 w-full object-cover rounded-lg"
+              aspectRatio={16 / 9}
+            />
           </div>
         </CardContent>
       </Card>
