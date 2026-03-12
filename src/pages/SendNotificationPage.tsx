@@ -20,9 +20,11 @@ export default function SendNotificationPage() {
   const [sending, setSending] = useState(false);
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-notif"],
+    queryKey: ["branches-notif", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("branches").select("id, name").eq("is_active", true).order("name");
+      let q = supabase.from("branches").select("id, name").eq("is_active", true).order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
