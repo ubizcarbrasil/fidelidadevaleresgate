@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Palette, Type, Image, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Palette, Type, Image, FileText, Smartphone } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
@@ -61,6 +64,7 @@ function hexToHsl(hex: string): string {
 }
 
 export default function BrandThemeEditor({ value, onChange, brandId, brandName }: BrandThemeEditorProps) {
+  const [previewOpen, setPreviewOpen] = useState(false);
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
   const folder = brandId ? `brands/${brandId}` : `brands/new-${Date.now()}`;
   const updateColor = (key: string, hex: string) => {
@@ -69,6 +73,24 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      {/* Mobile preview FAB */}
+      <div className="fixed bottom-6 right-6 z-50 lg:hidden">
+        <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+          <SheetTrigger asChild>
+            <Button size="lg" className="rounded-full shadow-xl h-14 w-14 p-0">
+              <Smartphone className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Preview do App</SheetTitle>
+            </SheetHeader>
+            <div className="flex justify-center py-4">
+              <BrandThemePreview theme={value} brandName={brandName || ""} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
       <div className="space-y-6">
       {/* Colors */}
       <Card>
