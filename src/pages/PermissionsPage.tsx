@@ -213,8 +213,11 @@ export default function PermissionsPage() {
                 {Object.entries(modules).map(([mod, perms]) =>
                   perms!.map((p, i) => (
                     <TableRow key={p.id}>
-                      {i === 0 && <TableCell rowSpan={perms!.length} className="align-top font-medium"><Badge>{mod}</Badge></TableCell>}
-                      <TableCell className="font-mono text-xs">{p.key}</TableCell>
+                      {i === 0 && <TableCell rowSpan={perms!.length} className="align-top font-medium"><Badge>{friendlyModule(mod)}</Badge></TableCell>}
+                      <TableCell>
+                        <span className="text-sm">{friendlyPermission(p.key)}</span>
+                        <span className="block text-[10px] font-mono text-muted-foreground">{p.key}</span>
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.description || "—"}</TableCell>
                       {selectedRole && (
                         <TableCell className="text-center">
