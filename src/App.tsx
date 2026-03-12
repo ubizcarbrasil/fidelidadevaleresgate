@@ -214,6 +214,7 @@ function AppRoutes() {
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
+          <Route path="brand-settings" element={<BrandSettingsPage />} />
           <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
           <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
           <Route path="crm/opportunities" element={<ModuleGuard moduleKey="crm"><CrmOpportunitiesPage /></ModuleGuard>} />
