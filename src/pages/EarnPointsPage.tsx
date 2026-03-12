@@ -45,7 +45,7 @@ export default function EarnPointsPage() {
       if (!phoneSearch || phoneSearch.length < 3) return [];
       let q = supabase.from("customers").select("id, name, phone, points_balance, money_balance, branch_id");
       if (currentBrandId) q = q.eq("brand_id", currentBrandId);
-      q = q.or(`phone.ilike.%${phoneSearch}%,name.ilike.%${phoneSearch}%`).limit(10);
+      q = q.or(`phone.ilike.%${phoneSearch}%,name.ilike.%${phoneSearch}%,cpf.ilike.%${phoneSearch}%`).limit(10);
       const { data, error } = await q;
       if (error) throw error;
       return data;
