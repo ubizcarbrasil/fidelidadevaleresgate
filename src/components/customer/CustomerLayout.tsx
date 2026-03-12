@@ -175,7 +175,7 @@ export default function CustomerLayout() {
                 {theme?.logo_url && (
                   <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} />
                 )}
-                <span className="font-extrabold text-base tracking-tight" style={{ fontFamily: fontHeading, color: primary }}>
+                <span className="font-extrabold text-base tracking-tight" style={{ fontFamily: fontHeading, color: accent }}>
                   {displayName}
                 </span>
               </div>
