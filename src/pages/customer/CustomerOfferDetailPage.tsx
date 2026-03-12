@@ -7,7 +7,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
-  MapPin, Ban, Globe, MessageCircle, DollarSign, Tag,
+  MapPin, Ban, Globe, MessageCircle, DollarSign, Tag, ChevronRight,
 } from "lucide-react";
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDetailPage";
@@ -39,9 +39,10 @@ interface Props {
   offer: OfferWithStore;
   onBack: () => void;
   onOfferClick?: (offer: OfferWithStore) => void;
+  onOpenStore?: (store: any) => void;
 }
 
-export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }: Props) {
+export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, onOpenStore }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -81,6 +82,16 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
     };
     fetch();
   }, [offer.id, brand, selectedBranch]);
+
+  const handleOpenStore = async () => {
+    if (!onOpenStore) return;
+    const { data } = await supabase
+      .from("stores")
+      .select("*")
+      .eq("id", offer.store_id)
+      .maybeSingle();
+    if (data) onOpenStore(data);
+  };
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -366,10 +377,14 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
 
                 {/* Product info */}
                 <div className="mx-4 mt-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{offer.stores?.name}</span>
-                  </div>
+                  <button
+                    onClick={handleOpenStore}
+                    className="flex items-center gap-2 mb-1 active:opacity-70 transition-opacity"
+                  >
+                    <Tag className="h-3.5 w-3.5" style={{ color: primary }} />
+                    <span className="text-xs font-semibold" style={{ color: primary }}>{offer.stores?.name}</span>
+                    <ChevronRight className="h-3.5 w-3.5" style={{ color: primary }} />
+                  </button>
                   <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                   {offer.description && (
                     <p className="text-sm leading-relaxed mb-2 text-muted-foreground">{offer.description}</p>
@@ -552,7 +567,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
               {/* Content card */}
               <div className="relative -mt-6 mx-4 rounded-[24px] bg-card p-5" style={{ boxShadow: "0 4px 24px hsl(var(--foreground) / 0.06)" }}>
                 {offer.stores?.name && (
-                  <div className="flex items-center gap-2 mb-3">
+                  <button
+                    onClick={handleOpenStore}
+                    className="flex items-center gap-2 mb-3 active:opacity-70 transition-opacity"
+                  >
                     {offer.stores.logo_url ? (
                       <img src={offer.stores.logo_url} alt={offer.stores.name} className="h-8 w-8 rounded-lg object-cover" />
                     ) : (
@@ -560,8 +578,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick }:
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
-                    <span className="text-sm font-medium text-muted-foreground">{offer.stores.name}</span>
-                  </div>
+                    <span className="text-sm font-semibold" style={{ color: primary }}>{offer.stores.name}</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" style={{ color: primary }} />
+                  </button>
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                 {offer.description && (

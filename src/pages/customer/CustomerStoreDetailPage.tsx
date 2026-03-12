@@ -4,6 +4,8 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
 import StoreCatalogView from "@/components/customer/StoreCatalogView";
+import { useCustomerFavoriteStores } from "@/hooks/useCustomerFavoriteStores";
+import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   Store as StoreIcon,
@@ -28,6 +30,7 @@ import {
   Info,
   HelpCircle,
   FileText,
+  Share2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,6 +67,7 @@ function withAlpha(hslColor: string, alpha: number): string {
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { isFavoriteStore, toggleFavoriteStore } = useCustomerFavoriteStores();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
@@ -111,6 +115,18 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
     ? `https://wa.me/${store.whatsapp.replace(/\D/g, "")}`
     : null;
 
+  const handleShare = async () => {
+    const shareText = `${store.name}${store.description ? ` - ${store.description}` : ""}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: store.name, text: shareText }); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      toast({ title: "Copiado!", description: "Link da loja copiado." });
+    }
+  };
+
+  const isFav = isFavoriteStore(store.id);
+
   return (
     <motion.div
       initial={{ x: "100%" }}
@@ -120,13 +136,20 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
       className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       <div className="flex-1 overflow-y-auto pb-28">
-        {/* Hero header */}
-        <div
-          className="relative w-full pt-14 pb-8 px-5"
-          style={{
-            background: `linear-gradient(135deg, ${primary}18 0%, ${primary}06 100%)`,
-          }}
-        >
+        {/* Hero header with banner */}
+        <div className="relative w-full">
+          {/* Banner image or gradient */}
+          <div
+            className="w-full h-48"
+            style={store.banner_url ? {
+              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${store.banner_url})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            } : {
+              background: `linear-gradient(135deg, ${primary}30 0%, ${primary}08 100%)`,
+            }}
+          />
+
           {/* Back button */}
           <button
             onClick={onBack}
@@ -135,42 +158,68 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
           </button>
 
-          <div className="max-w-lg mx-auto flex flex-col items-center text-center">
+          {/* Share + Favorite buttons */}
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button
+              onClick={handleShare}
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
+            >
+              <Share2 className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <motion.button
+              whileTap={{ scale: 1.3 }}
+              onClick={() => toggleFavoriteStore(store.id)}
+              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
+            >
+              <Heart
+                className="h-5 w-5 transition-colors"
+                fill={isFav ? "#E5195F" : "none"}
+                stroke={isFav ? "#E5195F" : "hsl(var(--muted-foreground))"}
+                strokeWidth={2}
+              />
+            </motion.button>
+          </div>
+
+          {/* Logo overlapping banner */}
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
             <SafeImage
               src={store.logo_url}
               alt={store.name}
-              className="h-20 w-20 rounded-2xl object-cover mb-3 shadow-md"
+              className="h-20 w-20 rounded-2xl object-cover shadow-lg border-4 border-background"
               fallback={
                 <div
-                  className="h-20 w-20 rounded-2xl flex items-center justify-center mb-3 shadow-md"
+                  className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-lg border-4 border-background"
                   style={{ backgroundColor: `${primary}15` }}
                 >
                   <StoreIcon className="h-10 w-10" style={{ color: primary }} />
                 </div>
               }
             />
-
-            <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>
-              {store.name}
-            </h1>
-
-            {/* Points rule - prominent like Livelo */}
-            {store.points_per_real && (
-              <p className="text-2xl font-black mb-2" style={{ fontFamily: fontHeading }}>
-                {Number(store.points_per_real).toFixed(0)} {Number(store.points_per_real) === 1 ? "ponto" : "pontos"}{" "}
-                <span className="text-base font-medium" style={{ color: `${fg}60` }}>por R$ 1</span>
-              </p>
-            )}
-
-            {store.category && (
-              <span
-                className="text-xs font-medium px-3 py-1 rounded-full mb-2"
-                style={{ backgroundColor: `${primary}12`, color: primary }}
-              >
-                {store.category}
-              </span>
-            )}
           </div>
+        </div>
+
+        {/* Store name + info below logo */}
+        <div className="max-w-lg mx-auto flex flex-col items-center text-center pt-12 px-5 pb-2">
+          <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>
+            {store.name}
+          </h1>
+
+          {/* Points rule */}
+          {store.points_per_real && (
+            <p className="text-2xl font-black mb-2" style={{ fontFamily: fontHeading }}>
+              {Number(store.points_per_real).toFixed(0)} {Number(store.points_per_real) === 1 ? "ponto" : "pontos"}{" "}
+              <span className="text-base font-medium" style={{ color: `${fg}60` }}>por R$ 1</span>
+            </p>
+          )}
+
+          {store.category && (
+            <span
+              className="text-xs font-medium px-3 py-1 rounded-full mb-2"
+              style={{ backgroundColor: `${primary}12`, color: primary }}
+            >
+              {store.category}
+            </span>
+          )}
         </div>
 
         {/* Info card */}
