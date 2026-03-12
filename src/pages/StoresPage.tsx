@@ -27,6 +27,7 @@ const emptyForm: StoreForm = { name: "", slug: "", category: "", address: "", wh
 export default function StoresPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<StoreForm>(emptyForm);
@@ -39,10 +40,18 @@ export default function StoresPage() {
     return () => clearTimeout(t);
   }, [search]);
 
+  // Auto-set brand_id for non-root users
+  useEffect(() => {
+    if (!isRootAdmin && currentBrandId && !form.brand_id) {
+      setForm(f => ({ ...f, brand_id: currentBrandId }));
+    }
+  }, [isRootAdmin, currentBrandId]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["stores", debouncedSearch, page],
+    queryKey: ["stores", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
       let query = supabase.from("stores").select("*, brands(name), branches(name)", { count: "exact" });
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("name", `%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
@@ -51,8 +60,8 @@ export default function StoresPage() {
     },
   });
 
-  const { data: brands } = useQuery({ queryKey: ["brands-select"], queryFn: async () => { const { data } = await supabase.from("brands").select("id, name").order("name"); return data || []; } });
-  const { data: branches } = useQuery({ queryKey: ["branches-select"], queryFn: async () => { const { data } = await supabase.from("branches").select("id, name, brand_id").order("name"); return data || []; } });
+  const { data: brands } = useQuery({ queryKey: ["brands-select", currentBrandId], queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: branches } = useQuery({ queryKey: ["branches-select", currentBrandId], queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
 
   const save = useMutation({
