@@ -55,7 +55,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const { navigateToTab, navigateToOffersWithSegment } = useCustomerNav();
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const primaryParsed = parseHsl(theme?.colors?.primary, "250 65% 55%");
+  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
+  const accentParsed = parseHsl(theme?.colors?.secondary || theme?.colors?.primary, "250 65% 55%");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
