@@ -71,6 +71,67 @@ const DARK_DEFAULTS: NonNullable<BrandTheme["colors"]> = {
   accent: "45 100% 55%",
 };
 
+interface DarkPreset {
+  name: string;
+  description: string;
+  colors: NonNullable<BrandTheme["dark_colors"]>;
+}
+
+const DARK_PRESETS: DarkPreset[] = [
+  {
+    name: "Escuro Elegante",
+    description: "Fundo profundo com destaques suaves em dourado",
+    colors: {
+      background: "222 47% 7%",
+      foreground: "0 0% 98%",
+      card: "222 40% 10%",
+      muted: "222 30% 14%",
+      accent: "38 92% 55%",
+      secondary: "38 92% 55%",
+      primary: "222 50% 55%",
+    },
+  },
+  {
+    name: "Escuro Vibrante",
+    description: "Fundo escuro com destaques em laranja vivo",
+    colors: {
+      background: "240 10% 6%",
+      foreground: "0 0% 100%",
+      card: "240 10% 10%",
+      muted: "240 8% 15%",
+      accent: "25 95% 55%",
+      secondary: "25 95% 55%",
+      primary: "262 83% 58%",
+    },
+  },
+  {
+    name: "Meia-noite Azul",
+    description: "Tom azul marinho sofisticado com ciano",
+    colors: {
+      background: "220 40% 8%",
+      foreground: "210 40% 96%",
+      card: "220 35% 12%",
+      muted: "220 25% 16%",
+      accent: "190 90% 50%",
+      secondary: "190 90% 50%",
+      primary: "220 60% 55%",
+    },
+  },
+  {
+    name: "Escuro Rosé",
+    description: "Fundo quente com destaques em rosa e rosa-claro",
+    colors: {
+      background: "280 15% 7%",
+      foreground: "0 0% 97%",
+      card: "280 12% 11%",
+      muted: "280 10% 16%",
+      accent: "340 82% 60%",
+      secondary: "340 82% 60%",
+      primary: "280 60% 55%",
+    },
+  },
+];
+
 export default function BrandThemeEditor({ value, onChange, brandId, brandName }: BrandThemeEditorProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
