@@ -18,6 +18,7 @@ type AppRole = Database["public"]["Enums"]["app_role"];
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState<AppRole>("tenant_admin");
