@@ -20,6 +20,7 @@ import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
+import { useBrandModules } from "@/hooks/useBrandModules";
 
 // Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
 interface CustomerNavContextType {
