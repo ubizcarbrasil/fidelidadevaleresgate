@@ -15,14 +15,15 @@ import { Plus, Pencil, Trash2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import ImageUploadField from "@/components/ImageUploadField";
 
 const PAGE_SIZE = 20;
 
 interface StoreForm {
   name: string; slug: string; category: string; address: string; whatsapp: string;
-  brand_id: string; branch_id: string; is_active: boolean;
+  brand_id: string; branch_id: string; is_active: boolean; logo_url: string;
 }
-const emptyForm: StoreForm = { name: "", slug: "", category: "", address: "", whatsapp: "", brand_id: "", branch_id: "", is_active: true };
+const emptyForm: StoreForm = { name: "", slug: "", category: "", address: "", whatsapp: "", brand_id: "", branch_id: "", is_active: true, logo_url: "" };
 
 export default function StoresPage() {
   const navigate = useNavigate();
