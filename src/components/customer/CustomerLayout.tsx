@@ -266,7 +266,7 @@ export default function CustomerLayout() {
                   {isActive && (
                     <motion.div
                       layoutId="tab-indicator"
-                      className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+                      className="absolute top-0 inset-x-0 mx-auto w-10 h-[3px] rounded-full"
                       style={{ backgroundColor: accent }}
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
