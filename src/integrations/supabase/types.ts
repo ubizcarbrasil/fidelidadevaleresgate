@@ -53,6 +53,50 @@ export type Database = {
           },
         ]
       }
+      affiliate_deal_categories: {
+        Row: {
+          brand_id: string
+          color: string
+          created_at: string
+          icon_name: string
+          id: string
+          is_active: boolean
+          keywords: string[]
+          name: string
+          order_index: number
+        }
+        Insert: {
+          brand_id: string
+          color?: string
+          created_at?: string
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          name: string
+          order_index?: number
+        }
+        Update: {
+          brand_id?: string
+          color?: string
+          created_at?: string
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_deal_categories_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_deals: {
         Row: {
           affiliate_url: string
@@ -60,6 +104,7 @@ export type Database = {
           branch_id: string | null
           brand_id: string
           category: string | null
+          category_id: string | null
           click_count: number
           created_at: string
           description: string | null
@@ -80,6 +125,7 @@ export type Database = {
           branch_id?: string | null
           brand_id: string
           category?: string | null
+          category_id?: string | null
           click_count?: number
           created_at?: string
           description?: string | null
@@ -100,6 +146,7 @@ export type Database = {
           branch_id?: string | null
           brand_id?: string
           category?: string | null
+          category_id?: string | null
           click_count?: number
           created_at?: string
           description?: string | null
@@ -127,6 +174,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_deals_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deal_categories"
             referencedColumns: ["id"]
           },
         ]
