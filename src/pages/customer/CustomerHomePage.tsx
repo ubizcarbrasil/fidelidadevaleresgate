@@ -73,7 +73,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         className="max-w-lg mx-auto px-5 pt-3"
       >
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-          {greeting}, <span style={{ color: primary }}>{firstName}</span>! 👋
+          {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
         </h2>
         <p className="text-xs mt-0.5 text-muted-foreground">
           Confira suas ofertas e pontos
