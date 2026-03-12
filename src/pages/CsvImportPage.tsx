@@ -187,6 +187,7 @@ export default function CsvImportPage() {
   const [mappedRows, setMappedRows] = useState<Record<string, string>[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; errors: { row: number; message: string }[] } | null>(null);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: brands } = useQuery({
