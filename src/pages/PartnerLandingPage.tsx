@@ -19,7 +19,7 @@ const ICON_MAP: Record<string, any> = {
   ShoppingCart, Repeat, QrCode, BarChart, Settings, BadgeCheck, Crown,
 };
 
-interface TestimonialItem { name: string; role: string; text: string; initials: string; }
+interface TestimonialItem { name: string; role: string; text: string; initials: string; logo_url?: string; }
 
 interface LandingConfig {
   hero_title: string;
