@@ -111,6 +111,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { key: "sidebar.central_acessos", defaultTitle: "Central de Acessos", url: "/access-hub", icon: Eye },
+      { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
     ],
   },
   {
