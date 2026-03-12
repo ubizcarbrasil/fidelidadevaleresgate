@@ -682,7 +682,15 @@ export default function CsvImportPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-lg font-medium">Importando registros...</p>
+            <p className="text-lg font-medium">
+              Importando {importProgress.current} de {importProgress.total} registros...
+            </p>
+            <div className="w-full max-w-xs space-y-2">
+              <Progress value={importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0} className="h-3" />
+              <p className="text-sm text-muted-foreground text-center">
+                {importProgress.total > 0 ? Math.round((importProgress.current / importProgress.total) * 100) : 0}%
+              </p>
+            </div>
             <p className="text-sm text-muted-foreground">Não feche esta página.</p>
           </CardContent>
         </Card>
