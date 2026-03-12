@@ -172,7 +172,7 @@ function CollapsibleGroup({
           <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           {!collapsed && <span>{label}</span>}
         </CollapsibleTrigger>
-        <CollapsibleContent>
+        <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
