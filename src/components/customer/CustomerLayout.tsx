@@ -267,7 +267,7 @@ export default function CustomerLayout() {
                     <motion.div
                       layoutId="tab-indicator"
                       className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                      style={{ backgroundColor: primary }}
+                      style={{ backgroundColor: accent }}
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
