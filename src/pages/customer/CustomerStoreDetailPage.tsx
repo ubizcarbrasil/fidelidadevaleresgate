@@ -67,6 +67,7 @@ function withAlpha(hslColor: string, alpha: number): string {
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { isFavoriteStore, toggleFavoriteStore } = useCustomerFavoriteStores();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
