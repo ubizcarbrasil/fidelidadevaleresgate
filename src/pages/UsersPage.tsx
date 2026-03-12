@@ -27,9 +27,27 @@ export default function UsersPage() {
   const [selectedBranchId, setSelectedBranchId] = useState("");
 
   const { data: profiles } = useQuery({
-    queryKey: ["profiles"],
+    queryKey: ["profiles", currentBrandId, isRootAdmin],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      if (isRootAdmin) {
+        const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        return data;
+      }
+      // For brand admins, only show users that have a role in this brand
+      if (!currentBrandId) return [];
+      const { data: brandRoles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("brand_id", currentBrandId);
+      if (rolesErr) throw rolesErr;
+      const userIds = [...new Set((brandRoles || []).map(r => r.user_id))];
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", userIds)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
