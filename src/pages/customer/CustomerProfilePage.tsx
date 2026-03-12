@@ -200,22 +200,40 @@ export default function CustomerProfilePage() {
       >
         {/* Dark mode toggle */}
         <DarkModeToggle primary={primary} fg={fg} />
-        <div style={{ borderBottom: `1px solid ${fg}08` }} />
-        {[
-          { iconKey: "profile_privacy" as const, label: "Privacidade e Segurança" },
-          { iconKey: "profile_help" as const, label: "Ajuda e Suporte" },
-        ].map(({ iconKey, label }, idx) => (
-          <motion.button
-            key={label}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors ${idx === 0 ? "border-b border-border/50" : ""}`}
-          >
-            <AppIcon iconKey={iconKey} className="h-4.5 w-4.5 text-muted-foreground" />
-            <span className="flex-1">{label}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-          </motion.button>
+        {visibleLinks.map((link, idx) => (
+          <ProfileMenuItemButton
+            key={link.id}
+            item={link}
+            isLast={idx === visibleLinks.length - 1}
+            fg={fg}
+            onOpenText={(title, content) => setTextOverlay({ title, content })}
+          />
         ))}
       </motion.div>
+
+      {/* Text Content Overlay */}
+      <AnimatePresence>
+        {textOverlay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-background"
+          >
+            <div className="max-w-lg mx-auto px-5 py-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>{textOverlay.title}</h2>
+                <button onClick={() => setTextOverlay(null)} className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                {textOverlay.content}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Logout */}
       <motion.div custom={4} variants={sectionVariant} initial="hidden" animate="visible">
