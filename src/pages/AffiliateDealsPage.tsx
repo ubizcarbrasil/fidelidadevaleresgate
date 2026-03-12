@@ -555,6 +555,19 @@ export default function AffiliateDealsPage() {
                       />
                     </div>
                     <div className="space-y-1">
+                      <Label className="text-xs">Badge</Label>
+                      <Input
+                        value={draft.badge_label}
+                        onChange={(e) => updateDraft(draft.id, "badge_label", e.target.value)}
+                        placeholder="Ex: Baratinho"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {BADGE_SUGGESTIONS.map((b) => (
+                          <button key={b} type="button" onClick={() => updateDraft(draft.id, "badge_label", b)} className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-accent transition-colors">{b}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
                       <Label className="text-xs">Categoria</Label>
                       <Input
                         value={draft.category}
