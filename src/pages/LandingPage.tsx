@@ -25,7 +25,7 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 bg-[hsl(160,30%,6%)]/90 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            <img src="/logo-vale-resgate.jpeg" alt="Vale Resgate" className="h-9 w-9 rounded-lg object-contain flex-shrink-0" />
+            <PlatformLogo className="h-9 w-9 rounded-lg" />
             <span className="font-bold text-lg hidden sm:inline text-white">Vale Resgate</span>
           </div>
 

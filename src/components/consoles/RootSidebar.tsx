@@ -135,7 +135,7 @@ export function RootSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-2">
-          <img src="/logo-vale-resgate.jpeg" alt="Vale Resgate" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+          <PlatformLogo className="h-8 w-8 rounded-lg" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>

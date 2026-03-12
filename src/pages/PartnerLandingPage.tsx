@@ -883,8 +883,10 @@ export default function PartnerLandingPage() {
         <div className="max-w-6xl mx-auto px-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {logoUrl && <img src={logoUrl} alt="" className="h-8 w-auto max-w-[120px] rounded-xl object-contain" />}
-              {!logoUrl && <span className="font-bold text-white">{brand.name}</span>}
+              {logoUrl ? (
+                <img src={logoUrl} alt={brand.name} className="h-8 w-auto max-w-[120px] rounded-xl object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).removeAttribute('hidden'); }} />
+              ) : null}
+              <span className="font-bold text-white" {...(logoUrl ? { hidden: true } : {})}>{brand.name}</span>
             </div>
             <p className="text-xs text-white/25">
               © {new Date().getFullYear()} {brand.name} — Todos os direitos reservados.

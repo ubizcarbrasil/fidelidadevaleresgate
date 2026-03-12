@@ -257,10 +257,7 @@ export default function TrialSignupPage() {
       {step === "info" && (
         <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-16 px-4">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <img
-              src="/logo-vale-resgate.jpeg"
-              alt="Vale Resgate"
-              className="mx-auto h-20 w-auto rounded-2xl shadow-lg"
+            <PlatformLogo className="mx-auto h-20 w-20 rounded-2xl shadow-lg"
             />
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
               Crie sua plataforma de fidelidade
