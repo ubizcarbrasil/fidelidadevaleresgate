@@ -14,6 +14,7 @@ import LandingCRM from "@/components/landing/LandingCRM";
 import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingNextStep from "@/components/landing/LandingNextStep";
 import LandingFooter from "@/components/landing/LandingFooter";
+import PlatformLogo from "@/components/PlatformLogo";
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
