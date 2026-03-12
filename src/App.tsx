@@ -61,6 +61,7 @@ const StoreRegistrationWizard = lazy(() => import("@/pages/StoreRegistrationWiza
 const StoreApprovalsPage = lazy(() => import("@/pages/StoreApprovalsPage"));
 const StoreOwnerPanel = lazy(() => import("@/pages/StoreOwnerPanel"));
 const AffiliateDealsPage = lazy(() => import("@/pages/AffiliateDealsPage"));
+const AffiliateCategoriesPage = lazy(() => import("@/pages/AffiliateCategoriesPage"));
 const StoreCatalogPage = lazy(() => import("@/pages/StoreCatalogPage"));
 const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
 const SendNotificationPage = lazy(() => import("@/pages/SendNotificationPage"));
