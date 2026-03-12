@@ -104,7 +104,7 @@ export default function AffiliateDealsPage() {
     setScrapingIds((s) => new Set(s).add(draftId));
     try {
       const { data, error } = await supabase.functions.invoke("scrape-product", {
-        body: { url: draft.affiliate_url.trim() },
+        body: { url: draft.affiliate_url.trim(), brand_id: currentBrandId },
       });
       if (error || !data?.success) {
         toast.error(data?.error || error?.message || "Não foi possível buscar dados do produto.");
