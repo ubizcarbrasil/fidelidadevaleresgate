@@ -336,6 +336,7 @@ export default function PartnerLandingPage() {
           hero_title: configData.hero_title,
           hero_subtitle: configData.hero_subtitle,
           hero_image_url: configData.hero_image_url,
+          logo_url: (configData as any).logo_url || null,
           numbers_json: configData.numbers_json as any,
           benefits_json: configData.benefits_json as any,
           how_it_works_json: configData.how_it_works_json as any,
