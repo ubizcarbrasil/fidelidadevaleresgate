@@ -413,12 +413,22 @@ export default function AffiliateDealsPage() {
                     <Input value={editForm.affiliate_url} onChange={(e) => setEditForm({ ...editForm, affiliate_url: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">URL Imagem Produto</Label>
-                    <Input value={editForm.image_url} onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })} placeholder="https://..." />
+                    <Label className="text-xs">Imagem Produto</Label>
+                    <ImageUploadField
+                      value={editForm.image_url}
+                      onChange={(url) => setEditForm({ ...editForm, image_url: url })}
+                      folder="affiliate-deals"
+                      label="Imagem do Produto"
+                    />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">URL Logo Loja Parceira</Label>
-                    <Input value={editForm.store_logo_url} onChange={(e) => setEditForm({ ...editForm, store_logo_url: e.target.value })} placeholder="https://..." />
+                    <Label className="text-xs">Logo Loja Parceira</Label>
+                    <ImageUploadField
+                      value={editForm.store_logo_url}
+                      onChange={(url) => setEditForm({ ...editForm, store_logo_url: url })}
+                      folder="affiliate-deals"
+                      label="Logo da Loja"
+                    />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Nome da Loja</Label>
