@@ -1,26 +1,13 @@
 
 
-## Diagnóstico
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-O problema está no componente `Tabs` usando `defaultValue="list"` (não controlado). Quando o `ImageCropDialog` abre/fecha (ao fazer upload de imagem), ou quando ocorre qualquer re-render significativo do componente, o estado da aba reseta para "list", desmontando a aba "manual" e **perdendo todos os drafts preenchidos**.
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-Além disso, o `ImageCropDialog` abre um `Dialog` modal que pode causar eventos de foco que interferem com o `Tabs`.
+### Ação
 
-## Correção
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-**Arquivo: `src/pages/AffiliateDealsPage.tsx`**
-
-1. **Tornar o Tabs controlado** — trocar `defaultValue="list"` por estado controlado com `useState`:
-   ```tsx
-   const [activeTab, setActiveTab] = useState("list");
-   // ...
-   <Tabs value={activeTab} onValueChange={setActiveTab}>
-   ```
-
-2. **Não resetar drafts imediatamente no onSuccess** — após salvar em massa, manter na aba "manual" e só limpar os drafts salvos com sucesso, mostrando feedback antes de limpar.
-
-Isso resolve o problema de perda de dados e fechamento inesperado da aba.
-
-## Arquivos afetados
-- `src/pages/AffiliateDealsPage.tsx` — única mudança: Tabs controlado + preservação de estado
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 

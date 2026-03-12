@@ -53,6 +53,7 @@ export default function AffiliateDealsPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("list");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
@@ -284,7 +285,7 @@ export default function AffiliateDealsPage() {
         <p className="text-muted-foreground">Gerencie ofertas de afiliados do marketplace</p>
       </div>
 
-      <Tabs defaultValue="list" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="list">Listagem</TabsTrigger>
           <TabsTrigger value="manual">+ Adicionar em Massa</TabsTrigger>
