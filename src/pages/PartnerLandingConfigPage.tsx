@@ -16,7 +16,7 @@ interface NumberItem { value: string; label: string; }
 interface BenefitItem { title: string; description: string; icon: string; }
 interface HowItWorksItem { step: string; title: string; description: string; }
 interface FaqItem { question: string; answer: string; }
-interface TestimonialItem { name: string; role: string; text: string; initials: string; }
+interface TestimonialItem { name: string; role: string; text: string; initials: string; logo_url?: string; }
 
 const ICON_OPTIONS = [
   "Eye", "Heart", "Zap", "BarChart3", "Star", "Users", "Store", "Gift",
