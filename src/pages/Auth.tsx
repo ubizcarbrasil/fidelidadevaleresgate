@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Ticket, Store, Rocket } from "lucide-react";
+import PlatformLogo from "@/components/PlatformLogo";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -78,7 +79,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <img src="/logo-vale-resgate.jpeg" alt="Vale Resgate" className="mx-auto h-16 w-auto rounded-2xl shadow-md" />
+          <PlatformLogo className="mx-auto h-16 w-16 rounded-2xl shadow-md" />
           <CardTitle className="text-2xl font-bold">Vale Resgate</CardTitle>
           <CardDescription>
             {isForgot ? "Recuperar senha" : isLogin ? "Acesse sua conta" : "Crie sua conta"}

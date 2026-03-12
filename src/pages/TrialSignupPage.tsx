@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import ImageUploadField from "@/components/ImageUploadField";
 import { motion } from "framer-motion";
+import PlatformLogo from "@/components/PlatformLogo";
 
 type Step = "guide" | "info" | "location" | "branding" | "creating" | "done";
 const STEPS: Step[] = ["guide", "info", "location", "branding", "creating", "done"];
@@ -143,10 +144,7 @@ export default function TrialSignupPage() {
         <>
           <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 px-4">
             <div className="max-w-4xl mx-auto text-center space-y-4">
-              <img
-                src="/logo-vale-resgate.jpeg"
-                alt="Vale Resgate"
-                className="mx-auto h-16 w-auto rounded-2xl shadow-lg"
+              <PlatformLogo className="mx-auto h-16 w-16 rounded-2xl shadow-lg"
               />
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
                 Bem-vindo ao Vale Resgate!
@@ -259,10 +257,7 @@ export default function TrialSignupPage() {
       {step === "info" && (
         <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-16 px-4">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <img
-              src="/logo-vale-resgate.jpeg"
-              alt="Vale Resgate"
-              className="mx-auto h-20 w-auto rounded-2xl shadow-lg"
+            <PlatformLogo className="mx-auto h-20 w-20 rounded-2xl shadow-lg"
             />
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
               Crie sua plataforma de fidelidade
