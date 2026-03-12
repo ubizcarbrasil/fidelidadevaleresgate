@@ -256,7 +256,7 @@ export default function CustomerLayout() {
         {/* Bottom Tab Bar */}
         <nav className="fixed bottom-0 inset-x-0 z-50 bg-card" style={{ boxShadow: "0 -4px 20px hsl(var(--foreground) / 0.06)" }}>
           <div className="max-w-lg mx-auto flex">
-            {TABS.map((tab) => {
+            {filteredTabs.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
                 <button
