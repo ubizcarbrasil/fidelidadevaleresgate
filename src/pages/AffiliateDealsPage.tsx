@@ -434,6 +434,15 @@ export default function AffiliateDealsPage() {
                     <Label className="text-xs">Preço Original (R$)</Label>
                     <Input type="number" step="0.01" value={editForm.original_price} onChange={(e) => setEditForm({ ...editForm, original_price: e.target.value })} />
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Badge</Label>
+                    <Input value={editForm.badge_label} onChange={(e) => setEditForm({ ...editForm, badge_label: e.target.value })} placeholder="Ex: Baratinho, Imperdível" />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {BADGE_SUGGESTIONS.map((b) => (
+                        <button key={b} type="button" onClick={() => setEditForm({ ...editForm, badge_label: b })} className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-accent transition-colors">{b}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <Button onClick={() => saveEdit.mutate()} disabled={!editForm.title}>
                   <Save className="h-4 w-4 mr-2" />Salvar Edição
