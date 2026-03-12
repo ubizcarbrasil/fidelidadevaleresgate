@@ -48,7 +48,7 @@ export default function AchadinhoSection() {
       setLoading(true);
       let query = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, category")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .order("order_index")
