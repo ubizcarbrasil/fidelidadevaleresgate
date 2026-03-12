@@ -126,9 +126,9 @@ export default function CrmContactsPage() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead>Origem</TableHead>
-                    <TableHead>Gênero</TableHead>
+                    <TableHead>Corridas</TableHead>
                     <TableHead>SO</TableHead>
-                    <TableHead>Cadastro</TableHead>
+                    <TableHead>Última Corrida</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -145,10 +145,10 @@ export default function CrmContactsPage() {
                           {SOURCE_LABELS[c.source] || c.source}
                         </Badge>
                       </TableCell>
-                      <TableCell>{c.gender || "—"}</TableCell>
+                      <TableCell>{c.ride_count || 0}</TableCell>
                       <TableCell>{c.os_platform || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                        {c.last_ride_at ? new Date(c.last_ride_at).toLocaleDateString("pt-BR") : "—"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -210,6 +210,9 @@ const ContactDetail = memo(function ContactDetail({ contact, events }: { contact
           <div><span className="text-muted-foreground">CPF:</span> {contact.cpf || "—"}</div>
           <div><span className="text-muted-foreground">Gênero:</span> {contact.gender || "—"}</div>
           <div><span className="text-muted-foreground">SO:</span> {contact.os_platform || "—"}</div>
+          <div><span className="text-muted-foreground">Corridas:</span> {contact.ride_count || 0}</div>
+          <div><span className="text-muted-foreground">Ativo desde:</span> {contact.first_ride_at ? new Date(contact.first_ride_at).toLocaleDateString("pt-BR") : "—"}</div>
+          <div><span className="text-muted-foreground">Última corrida:</span> {contact.last_ride_at ? new Date(contact.last_ride_at).toLocaleDateString("pt-BR") : "—"}</div>
           <div>
             <span className="text-muted-foreground">Origem:</span>{" "}
             <Badge variant="secondary" className={SOURCE_COLORS[contact.source] || ""}>

@@ -20,6 +20,9 @@ export interface CrmContact {
   longitude: number | null;
   tags_json: unknown;
   metadata_json: unknown;
+  ride_count: number;
+  first_ride_at: string | null;
+  last_ride_at: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

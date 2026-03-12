@@ -1035,15 +1035,18 @@ export type Database = {
           customer_id: string | null
           email: string | null
           external_id: string | null
+          first_ride_at: string | null
           gender: string | null
           id: string
           is_active: boolean
+          last_ride_at: string | null
           latitude: number | null
           longitude: number | null
           metadata_json: Json
           name: string | null
           os_platform: string | null
           phone: string | null
+          ride_count: number
           source: string
           tags_json: Json
           updated_at: string
@@ -1056,15 +1059,18 @@ export type Database = {
           customer_id?: string | null
           email?: string | null
           external_id?: string | null
+          first_ride_at?: string | null
           gender?: string | null
           id?: string
           is_active?: boolean
+          last_ride_at?: string | null
           latitude?: number | null
           longitude?: number | null
           metadata_json?: Json
           name?: string | null
           os_platform?: string | null
           phone?: string | null
+          ride_count?: number
           source?: string
           tags_json?: Json
           updated_at?: string
@@ -1077,15 +1083,18 @@ export type Database = {
           customer_id?: string | null
           email?: string | null
           external_id?: string | null
+          first_ride_at?: string | null
           gender?: string | null
           id?: string
           is_active?: boolean
+          last_ride_at?: string | null
           latitude?: number | null
           longitude?: number | null
           metadata_json?: Json
           name?: string | null
           os_platform?: string | null
           phone?: string | null
+          ride_count?: number
           source?: string
           tags_json?: Json
           updated_at?: string
