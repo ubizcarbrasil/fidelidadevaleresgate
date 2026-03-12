@@ -674,11 +674,23 @@ export default function AffiliateDealsPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Categoria</Label>
-                      <Input
-                        value={draft.category}
-                        onChange={(e) => updateDraft(draft.id, "category", e.target.value)}
-                        placeholder="Ex: Eletrônicos"
-                      />
+                      <select
+                        value={draft.category_id}
+                        onChange={(e) => {
+                          const cat = (brandCategories || []).find(c => c.id === e.target.value);
+                          updateDraft(draft.id, "category_id", e.target.value);
+                          if (cat) updateDraft(draft.id, "category", cat.name);
+                        }}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Selecionar...</option>
+                        {(brandCategories || []).map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {draft.category_id && (
+                        <p className="text-[10px] text-muted-foreground">Auto-detectada ou selecionada</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
