@@ -12,21 +12,80 @@ import { toast } from "sonner";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const MODULE_LABELS: Record<string, string> = {
-  branches: "Cidades", brands: "Marcas", customers: "Clientes", domains: "Domínios",
-  offers: "Ofertas", redemptions: "Resgates", stores: "Parceiros", vouchers: "Cupons",
-  users: "Usuários", reports: "Relatórios", settings: "Configurações", catalog: "Catálogo",
-  crm: "CRM", campaigns: "Campanhas", points: "Pontos", notifications: "Notificações",
+  branches: "Cidades",
+  brands: "Marcas",
+  customers: "Clientes",
+  domains: "Domínios",
+  offers: "Ofertas",
+  redemptions: "Resgates",
+  stores: "Parceiros",
+  vouchers: "Cupons",
+  users: "Usuários",
+  reports: "Relatórios",
+  settings: "Configurações",
+  catalog: "Catálogo",
+  crm: "CRM",
+  campaigns: "Campanhas",
+  points: "Pontos",
+  notifications: "Notificações",
+  wallet: "Carteira",
+  banners: "Banners",
+  home_sections: "Seções da Home",
+  custom_pages: "Páginas",
+  page_builder: "Construtor de Páginas",
+  redemption_qr: "Resgate por QR",
+  points_rules: "Regras de Pontos",
+  earn_points_store: "Pontuação de Parceiros",
+  affiliate_deals: "Achadinhos",
 };
+
 const ACTION_LABELS: Record<string, string> = {
-  create: "Criar", read: "Visualizar", update: "Editar", delete: "Excluir",
-  approve: "Aprovar", manage: "Gerenciar", export: "Exportar", import: "Importar",
-  send: "Enviar", redeem: "Resgatar", config: "Configurar",
+  create: "Criar",
+  read: "Visualizar",
+  update: "Editar",
+  delete: "Excluir",
+  approve: "Aprovar",
+  manage: "Gerenciar",
+  export: "Exportar",
+  import: "Importar",
+  send: "Enviar",
+  redeem: "Resgatar",
+  config: "Configurar",
 };
-function friendlyModule(mod: string) { return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1); }
+
+function friendlyModule(mod: string) {
+  return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1);
+}
+
 function friendlyPermission(key: string) {
   const parts = key.split(".");
-  if (parts.length >= 2) { return `${ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1]} ${friendlyModule(parts[0])}`; }
+  if (parts.length >= 2) {
+    const action = ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1];
+    return `${action} ${friendlyModule(parts[0])}`;
+  }
   return key;
+}
+
+function getPermissionDisplay(permission: PermissionRow): { title: string; subtitle?: string } {
+  const fallbackTitle = friendlyPermission(permission.key);
+  const description = permission.description?.trim();
+
+  if (!description) return { title: fallbackTitle };
+
+  const technicalPattern = /\b[a-z_]+\.[a-z_]+\b/i;
+  const rawModulePattern = /\b(branches|brands|customers|domains|offers|redemptions|stores|vouchers|users|reports|settings|catalog|crm|campaigns|points|notifications)\b/i;
+
+  if (technicalPattern.test(description) || rawModulePattern.test(description)) {
+    return { title: fallbackTitle };
+  }
+
+  const normalizedDescription = description.charAt(0).toUpperCase() + description.slice(1);
+
+  if (normalizedDescription.toLowerCase() === fallbackTitle.toLowerCase()) {
+    return { title: fallbackTitle };
+  }
+
+  return { title: normalizedDescription, subtitle: fallbackTitle };
 }
 
 type Mode = "root-to-brand" | "brand-to-store";
@@ -295,7 +354,7 @@ export default function BrandPermissionOverflowPage() {
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Badge variant="outline">{friendlyModule(mod)}</Badge>
                   <span className="text-muted-foreground font-normal">
-                    {perms.length} permissão{perms.length > 1 ? "ões" : ""}
+                    {perms.length} {perms.length > 1 ? "permissões" : "permissão"}
                   </span>
                 </CardTitle>
               </CardHeader>
@@ -305,6 +364,7 @@ export default function BrandPermissionOverflowPage() {
                     const brandAllowed = getEffectiveValue(perm.key, "allowed_for_brand");
                     const storeAllowed = getEffectiveValue(perm.key, "allowed_for_store");
                     const hasLocalChange = localChanges[perm.key] !== undefined;
+                    const display = getPermissionDisplay(perm);
 
                     return (
                       <div
@@ -313,12 +373,13 @@ export default function BrandPermissionOverflowPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <code className="text-xs">{friendlyPermission(perm.key)}</code>
+                            <span className="text-sm font-medium">{display.title}</span>
                             {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
                           </div>
-                          {perm.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{perm.description}</p>
+                          {display.subtitle && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{display.subtitle}</p>
                           )}
+
                         </div>
                         <div className="flex items-center gap-6 ml-4">
                           {isRoot && (
