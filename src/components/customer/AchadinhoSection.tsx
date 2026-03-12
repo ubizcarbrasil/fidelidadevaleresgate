@@ -28,6 +28,7 @@ interface AffiliateDeal {
   affiliate_url: string;
   store_name: string | null;
   store_logo_url: string | null;
+  badge_label: string | null;
   category: string | null;
 }
 
@@ -47,7 +48,7 @@ export default function AchadinhoSection() {
       setLoading(true);
       let query = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, category")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .order("order_index")
@@ -131,6 +132,8 @@ export default function AchadinhoSection() {
             : 0;
           const priceStr = formatPrice(deal.price);
           const originalPriceStr = formatPrice(deal.original_price);
+          // Determine badge: custom label takes priority, then auto "-X%"
+          const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
           return (
             <motion.div
@@ -164,13 +167,13 @@ export default function AchadinhoSection() {
                   </div>
                 )}
 
-                {/* Discount badge */}
-                {hasDiscount && (
+                {/* Badge */}
+                {badgeText && (
                   <div
-                    className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
+                    className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm"
                     style={{ backgroundColor: primary }}
                   >
-                    -{discountPercent}%
+                    {badgeText}
                   </div>
                 )}
 

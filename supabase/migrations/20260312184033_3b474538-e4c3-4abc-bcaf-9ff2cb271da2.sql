@@ -1,0 +1,1 @@
+ALTER TABLE public.affiliate_deals ADD COLUMN IF NOT EXISTS badge_label text;

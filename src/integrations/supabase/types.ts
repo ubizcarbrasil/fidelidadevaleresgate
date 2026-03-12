@@ -56,6 +56,7 @@ export type Database = {
       affiliate_deals: {
         Row: {
           affiliate_url: string
+          badge_label: string | null
           branch_id: string | null
           brand_id: string
           category: string | null
@@ -75,6 +76,7 @@ export type Database = {
         }
         Insert: {
           affiliate_url: string
+          badge_label?: string | null
           branch_id?: string | null
           brand_id: string
           category?: string | null
@@ -94,6 +96,7 @@ export type Database = {
         }
         Update: {
           affiliate_url?: string
+          badge_label?: string | null
           branch_id?: string | null
           brand_id?: string
           category?: string | null

@@ -29,7 +29,10 @@ interface DealDraft {
   price: string;
   original_price: string;
   category: string;
+  badge_label: string;
 }
+
+const BADGE_SUGGESTIONS = ["Baratinho", "Imperdível", "Oferta Relâmpago", "Mais Vendido", "Exclusivo"];
 
 const newDraft = (): DealDraft => ({
   id: crypto.randomUUID(),
@@ -42,6 +45,7 @@ const newDraft = (): DealDraft => ({
   price: "",
   original_price: "",
   category: "",
+  badge_label: "",
 });
 
 export default function AffiliateDealsPage() {
@@ -101,6 +105,7 @@ export default function AffiliateDealsPage() {
         price: d.price ? Number(d.price) : null,
         original_price: d.original_price ? Number(d.original_price) : null,
         category: d.category.trim() || null,
+        badge_label: d.badge_label.trim() || null,
         is_active: true,
         order_index: idx,
       }));
@@ -143,6 +148,7 @@ export default function AffiliateDealsPage() {
             affiliate_url: cols[5] || "",
             store_name: "",
             category: "",
+            badge_label: "",
           });
         }
         setCsvRows(rows);
@@ -174,6 +180,7 @@ export default function AffiliateDealsPage() {
         price: d.price ? Number(d.price) : null,
         original_price: d.original_price ? Number(d.original_price) : null,
         category: d.category.trim() || null,
+        badge_label: d.badge_label?.trim() || null,
         is_active: true,
         order_index: i + idx,
       }));
@@ -219,6 +226,7 @@ export default function AffiliateDealsPage() {
       price: d.price != null ? String(d.price) : "",
       original_price: d.original_price != null ? String(d.original_price) : "",
       category: d.category || "",
+      badge_label: d.badge_label || "",
     });
   };
 
@@ -237,6 +245,7 @@ export default function AffiliateDealsPage() {
           price: editForm.price ? Number(editForm.price) : null,
           original_price: editForm.original_price ? Number(editForm.original_price) : null,
           category: editForm.category || null,
+          badge_label: editForm.badge_label?.trim() || null,
         })
         .eq("id", editId);
       if (error) throw error;
@@ -426,6 +435,15 @@ export default function AffiliateDealsPage() {
                     <Label className="text-xs">Preço Original (R$)</Label>
                     <Input type="number" step="0.01" value={editForm.original_price} onChange={(e) => setEditForm({ ...editForm, original_price: e.target.value })} />
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Badge</Label>
+                    <Input value={editForm.badge_label} onChange={(e) => setEditForm({ ...editForm, badge_label: e.target.value })} placeholder="Ex: Baratinho, Imperdível" />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {BADGE_SUGGESTIONS.map((b) => (
+                        <button key={b} type="button" onClick={() => setEditForm({ ...editForm, badge_label: b })} className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-accent transition-colors">{b}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <Button onClick={() => saveEdit.mutate()} disabled={!editForm.title}>
                   <Save className="h-4 w-4 mr-2" />Salvar Edição
@@ -536,6 +554,19 @@ export default function AffiliateDealsPage() {
                         onChange={(e) => updateDraft(draft.id, "original_price", e.target.value)}
                         placeholder="Opcional"
                       />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Badge</Label>
+                      <Input
+                        value={draft.badge_label}
+                        onChange={(e) => updateDraft(draft.id, "badge_label", e.target.value)}
+                        placeholder="Ex: Baratinho"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {BADGE_SUGGESTIONS.map((b) => (
+                          <button key={b} type="button" onClick={() => updateDraft(draft.id, "badge_label", b)} className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-accent transition-colors">{b}</button>
+                        ))}
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Categoria</Label>
