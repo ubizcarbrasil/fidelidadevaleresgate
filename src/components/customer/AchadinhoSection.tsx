@@ -150,12 +150,12 @@ export default function AchadinhoSection() {
               onClick={() => handleClick(deal)}
             >
               {/* Image */}
-              <div className="relative">
+              <div className="relative bg-muted/30">
                 {deal.image_url ? (
                   <img
                     src={deal.image_url}
                     alt={deal.title}
-                    className="w-full h-32 object-cover"
+                    className="w-full aspect-square object-contain"
                     loading="lazy"
                   />
                 ) : (
