@@ -90,6 +90,53 @@ export default function AffiliateDealsPage() {
   const updateDraft = (id: string, field: keyof DealDraft, value: string) =>
     setDrafts((d) => d.map((x) => (x.id === id ? { ...x, [field]: value } : x)));
 
+  // --- Scrape product URL ---
+  const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
+
+  const scrapeProduct = async (draftId: string) => {
+    const draft = drafts.find((d) => d.id === draftId);
+    if (!draft?.affiliate_url.trim()) {
+      toast.error("Cole o link do produto antes de buscar.");
+      return;
+    }
+    setScrapingIds((s) => new Set(s).add(draftId));
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-product", {
+        body: { url: draft.affiliate_url.trim() },
+      });
+      if (error || !data?.success) {
+        toast.error(data?.error || error?.message || "Não foi possível buscar dados do produto.");
+        return;
+      }
+      const p = data.product;
+      setDrafts((prev) =>
+        prev.map((d) =>
+          d.id === draftId
+            ? {
+                ...d,
+                title: p.title || d.title,
+                description: p.description || d.description,
+                image_url: p.image_url || d.image_url,
+                price: p.price != null ? String(p.price) : d.price,
+                original_price: p.original_price != null ? String(p.original_price) : d.original_price,
+                store_name: p.store_name || d.store_name,
+                store_logo_url: p.store_logo_url || d.store_logo_url,
+              }
+            : d
+        )
+      );
+      toast.success("Dados do produto preenchidos! Revise e ajuste se necessário.");
+    } catch (err: any) {
+      toast.error("Erro ao buscar dados do produto.");
+    } finally {
+      setScrapingIds((s) => {
+        const n = new Set(s);
+        n.delete(draftId);
+        return n;
+      });
+    }
+  };
+
   // --- Save all drafts ---
   const saveDrafts = useMutation({
     mutationFn: async () => {
