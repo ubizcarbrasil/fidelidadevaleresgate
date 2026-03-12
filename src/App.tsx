@@ -75,6 +75,7 @@ const EmitterJourneyGuidePage = lazy(() => import("@/pages/EmitterJourneyGuidePa
 const PlatformThemePage = lazy(() => import("@/pages/PlatformThemePage"));
 const AppIconsConfigPage = lazy(() => import("@/pages/AppIconsConfigPage"));
 const WelcomeTourConfigPage = lazy(() => import("@/pages/WelcomeTourConfigPage"));
+const ProfileLinksConfigPage = lazy(() => import("@/pages/ProfileLinksConfigPage"));
 const GanhaGanhaConfigPage = lazy(() => import("@/pages/GanhaGanhaConfigPage"));
 const GanhaGanhaBillingPage = lazy(() => import("@/pages/GanhaGanhaBillingPage"));
 const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDashboardPage"));
