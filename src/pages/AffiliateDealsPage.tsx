@@ -43,6 +43,7 @@ const emptyForm: DealForm = {
 
 export default function AffiliateDealsPage() {
   const qc = useQueryClient();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<DealForm>(emptyForm);
@@ -50,18 +51,28 @@ export default function AffiliateDealsPage() {
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
+  useEffect(() => {
+    if (!isRootAdmin && currentBrandId && !form.brand_id) {
+      setForm(f => ({ ...f, brand_id: currentBrandId }));
+    }
+  }, [isRootAdmin, currentBrandId]);
+
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: ["brands-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("brands").select("id, name").order("name");
+      let q = supabase.from("brands").select("id, name").order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select"],
+    queryKey: ["branches-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("branches").select("id, name, brand_id").order("name");
+      let q = supabase.from("branches").select("id, name, brand_id").order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
@@ -69,9 +80,10 @@ export default function AffiliateDealsPage() {
   const filteredBranches = branches?.filter((b) => b.brand_id === form.brand_id) || [];
 
   const { data, isLoading } = useQuery({
-    queryKey: ["affiliate-deals", debouncedSearch, page],
+    queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
       let query = supabase.from("affiliate_deals").select("*, brands(name)", { count: "exact" });
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("order_index").range(from, from + PAGE_SIZE - 1);
