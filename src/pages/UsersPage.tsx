@@ -36,12 +36,14 @@ export default function UsersPage() {
   });
 
   const { data: userRoles } = useQuery({
-    queryKey: ["user-roles-all"],
+    queryKey: ["user-roles-all", currentBrandId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("user_roles")
         .select("*, tenants(name), brands(name), branches(name)")
         .order("created_at", { ascending: false });
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
