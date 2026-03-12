@@ -180,13 +180,15 @@ export default function UsersPage() {
                 <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as AppRole)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([k, v]) => (
+                    {Object.entries(ROLE_LABELS)
+                      .filter(([k]) => allowedRoles.includes(k as AppRole))
+                      .map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              {needsScope(selectedRole) && selectedRole === "tenant_admin" && (
+              {isRootAdmin && selectedRole === "tenant_admin" && (
                 <div className="space-y-2">
                   <Label>Organização</Label>
                   <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
@@ -197,7 +199,7 @@ export default function UsersPage() {
                   </Select>
                 </div>
               )}
-              {selectedRole === "brand_admin" && (
+              {isRootAdmin && selectedRole === "brand_admin" && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
                   <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
