@@ -213,9 +213,45 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
             </button>
           </div>
           {isEditingDark && (
-            <p className="text-[11px] text-muted-foreground mt-1.5">
-              Configure as cores do modo escuro. Textos devem ser claros (branco) e destaques em amarelo/laranja para boa visibilidade.
-            </p>
+            <div className="space-y-2 mt-1.5">
+              <p className="text-[11px] text-muted-foreground">
+                Configure as cores do modo escuro. Use um preset como ponto de partida ou personalize manualmente.
+              </p>
+              {/* Dark presets */}
+              <div className="grid grid-cols-2 gap-2">
+                {DARK_PRESETS.map((preset) => {
+                  const presetBg = `hsl(${preset.colors.background})`;
+                  const presetAccent = `hsl(${preset.colors.accent || preset.colors.secondary || "45 100% 55%"})`;
+                  const presetFg = `hsl(${preset.colors.foreground || "0 0% 100%"})`;
+                  return (
+                    <button
+                      key={preset.name}
+                      onClick={() => update({ dark_colors: { ...preset.colors } })}
+                      className="flex items-center gap-2 p-2 rounded-lg border border-border hover:border-primary/50 transition-colors text-left group"
+                    >
+                      {/* Color preview dots */}
+                      <div className="flex flex-col gap-0.5 shrink-0">
+                        <div className="flex gap-0.5">
+                          <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: presetBg }} />
+                          <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: presetAccent }} />
+                        </div>
+                        <div className="flex gap-0.5">
+                          <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: `hsl(${preset.colors.card || "222 47% 11%"})` }} />
+                          <div className="h-4 w-4 rounded-sm border border-border/30" style={{ backgroundColor: presetFg }} />
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold truncate flex items-center gap-1">
+                          <Wand2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                          {preset.name}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground truncate">{preset.description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </CardHeader>
         <CardContent>
