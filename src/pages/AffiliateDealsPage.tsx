@@ -558,11 +558,29 @@ export default function AffiliateDealsPage() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Link Afiliado *</Label>
-                      <Input
-                        value={draft.affiliate_url}
-                        onChange={(e) => updateDraft(draft.id, "affiliate_url", e.target.value)}
-                        placeholder="https://..."
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          value={draft.affiliate_url}
+                          onChange={(e) => updateDraft(draft.id, "affiliate_url", e.target.value)}
+                          placeholder="https://..."
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          disabled={!draft.affiliate_url.trim() || scrapingIds.has(draft.id)}
+                          onClick={() => scrapeProduct(draft.id)}
+                          title="Buscar dados do produto"
+                        >
+                          {scrapingIds.has(draft.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Wand2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Imagem Produto</Label>
