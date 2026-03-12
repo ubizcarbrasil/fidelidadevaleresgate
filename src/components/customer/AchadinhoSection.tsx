@@ -75,7 +75,7 @@ export default function AchadinhoSection() {
 
   const formatPrice = (val: number | null | undefined) => {
     if (val == null || val === 0) return null;
-    return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
+    return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   };
 
   if (loading) {
