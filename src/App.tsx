@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBrand } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ModuleGuard from "@/components/ModuleGuard";
+import RootGuard from "@/components/RootGuard";
 import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
@@ -161,7 +162,7 @@ function AppRoutes() {
           <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />
           <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
           <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
-          <Route path="templates" element={<ModuleGuard moduleKey="home_sections"><SectionTemplatesPage /></ModuleGuard>} />
+          <Route path="templates" element={<RootGuard><SectionTemplatesPage /></RootGuard>} />
           <Route path="modules" element={<ModuleDefinitionsPage />} />
           <Route path="permissions" element={<PermissionsPage />} />
           <Route path="flags" element={<FeatureFlagsPage />} />
