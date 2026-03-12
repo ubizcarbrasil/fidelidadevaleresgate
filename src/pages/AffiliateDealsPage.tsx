@@ -29,6 +29,7 @@ interface DealDraft {
   price: string;
   original_price: string;
   category: string;
+  badge_label: string;
 }
 
 const newDraft = (): DealDraft => ({
