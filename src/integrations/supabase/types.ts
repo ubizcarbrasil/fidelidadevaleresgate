@@ -67,7 +67,8 @@ export type Database = {
           is_active: boolean
           order_index: number
           original_price: number | null
-          price: number
+          price: number | null
+          store_logo_url: string | null
           store_name: string | null
           title: string
           updated_at: string
@@ -85,7 +86,8 @@ export type Database = {
           is_active?: boolean
           order_index?: number
           original_price?: number | null
-          price?: number
+          price?: number | null
+          store_logo_url?: string | null
           store_name?: string | null
           title: string
           updated_at?: string
@@ -103,7 +105,8 @@ export type Database = {
           is_active?: boolean
           order_index?: number
           original_price?: number | null
-          price?: number
+          price?: number | null
+          store_logo_url?: string | null
           store_name?: string | null
           title?: string
           updated_at?: string
