@@ -1,39 +1,28 @@
 
 
-## Problema
+## Plano: Unificar "Galeria de Ícones" e "Ícones do App" em uma única página
 
-As **descriptions na tabela `permissions`** no banco de dados contêm termos em inglês:
+### Conceito
+Criar uma página única com Tabs que combine as duas funcionalidades:
+- **Aba "Galeria"** — CRUD de ícones personalizados (atual `IconLibraryPage`)
+- **Aba "Ícones do App"** — Configuração dos 25 slots do app (atual `AppIconsConfigPage`)
 
-| key | description (atual) |
-|---|---|
-| branches.create | "Criar **branches**" |
-| branches.delete | "Excluir **branches**" |
-| branches.read | "Visualizar **branches**" |
-| branches.update | "Editar **branches**" |
-| brands.create | "Criar **brands**" |
-| brands.delete | "Excluir **brands**" |
-| brands.read | "Visualizar **brands**" |
-| brands.update | "Editar **brands**" |
+### Alterações
 
-O código tem uma lógica de detecção (`rawModulePattern`) que deveria pegar esses termos e usar o fallback traduzido, mas a tela ainda exibe as chaves técnicas brutas.
+**1. `src/pages/IconLibraryPage.tsx`** — Reescrever como página unificada com `Tabs`:
+- Tab "Galeria" com todo o conteúdo atual (grid de ícones + dialog de criação)
+- Tab "Ícones do App" com todo o conteúdo do `AppIconsConfigPage` (slots por categoria)
+- Título: "Ícones" / Descrição unificada
+- O `IconPickerDialog` continua sendo usado na aba de slots
 
-## Solução
+**2. `src/pages/AppIconsConfigPage.tsx`** — Transformar em redirect para `/icon-library`
 
-Atualizar diretamente as `description` dessas 8 permissões no banco com os termos corretos em português:
+**3. `src/App.tsx`** — Manter ambas as rotas mas apontar `/app-icons` para um redirect ou para o mesmo componente
 
-```sql
-UPDATE permissions SET description = 'Criar cidades' WHERE key = 'branches.create';
-UPDATE permissions SET description = 'Excluir cidades' WHERE key = 'branches.delete';
-UPDATE permissions SET description = 'Visualizar cidades' WHERE key = 'branches.read';
-UPDATE permissions SET description = 'Editar cidades' WHERE key = 'branches.update';
-UPDATE permissions SET description = 'Criar marcas' WHERE key = 'brands.create';
-UPDATE permissions SET description = 'Excluir marcas' WHERE key = 'brands.delete';
-UPDATE permissions SET description = 'Visualizar marcas' WHERE key = 'brands.read';
-UPDATE permissions SET description = 'Editar marcas' WHERE key = 'brands.update';
-```
+**4. `src/components/consoles/BrandSidebar.tsx`** — Remover o item "Ícones do App" separado e manter apenas um item "Ícones" apontando para `/icon-library` com moduleKey combinado
 
-Isso corrige o problema na raiz (dados no banco) sem depender de lógica de fallback no frontend.
+**5. `src/hooks/useMenuLabels.ts`** — Atualizar o label padrão se necessário
 
-### Arquivo alterado
-- Migração SQL apenas (nenhum arquivo de código)
+### Resultado
+Um único item no sidebar ("Ícones") leva a uma página com duas abas, eliminando a confusão de ter dois menus separados para funcionalidades relacionadas.
 
