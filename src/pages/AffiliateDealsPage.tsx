@@ -127,7 +127,7 @@ export default function AffiliateDealsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
+  const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm(currentBrandId || undefined)); };
 
   const openEdit = (d: any) => {
     setEditId(d.id);
