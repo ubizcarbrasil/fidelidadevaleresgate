@@ -69,6 +69,7 @@ export default function PartnerLandingConfigPage() {
         setHeroTitle(data.hero_title);
         setHeroSubtitle(data.hero_subtitle);
         setHeroImageUrl(data.hero_image_url || "");
+        setLogoUrl((data as any).logo_url || "");
         setNumbers(data.numbers_json as any);
         setBenefits(data.benefits_json as any);
         setHowItWorks(data.how_it_works_json as any);
