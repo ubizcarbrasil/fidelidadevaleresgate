@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2, Download, ArrowRight, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -186,6 +187,7 @@ export default function CsvImportPage() {
   const [mappedRows, setMappedRows] = useState<Record<string, string>[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; errors: { row: number; message: string }[] } | null>(null);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: brands } = useQuery({
@@ -275,6 +277,8 @@ export default function CsvImportPage() {
         brand_id: brandId, branch_id: branchId, created_by: user.id, type: importType, status: "IMPORTING",
       }).select("id").single();
 
+      setImportProgress({ current: 0, total: rows.length });
+
       if (importType === "STORES") {
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
@@ -289,6 +293,7 @@ export default function CsvImportPage() {
             if (error) throw error;
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       } else if (importType === "OFFERS") {
         const { data: existingStores } = await supabase.from("stores").select("id, name, slug").eq("brand_id", brandId).eq("branch_id", branchId);
@@ -327,6 +332,7 @@ export default function CsvImportPage() {
             if (error) throw error;
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       } else if (importType === "CUSTOMERS") {
         for (let i = 0; i < rows.length; i++) {
@@ -349,6 +355,7 @@ export default function CsvImportPage() {
             }
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       } else {
         for (let i = 0; i < rows.length; i++) {
@@ -379,6 +386,7 @@ export default function CsvImportPage() {
             if (error) throw error;
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
       }
 
@@ -674,7 +682,15 @@ export default function CsvImportPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-lg font-medium">Importando registros...</p>
+            <p className="text-lg font-medium">
+              Importando {importProgress.current} de {importProgress.total} registros...
+            </p>
+            <div className="w-full max-w-xs space-y-2">
+              <Progress value={importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0} className="h-3" />
+              <p className="text-sm text-muted-foreground text-center">
+                {importProgress.total > 0 ? Math.round((importProgress.current / importProgress.total) * 100) : 0}%
+              </p>
+            </div>
             <p className="text-sm text-muted-foreground">Não feche esta página.</p>
           </CardContent>
         </Card>

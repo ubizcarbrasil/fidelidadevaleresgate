@@ -1,18 +1,13 @@
 
 
-## Plano: Contador de progresso durante importação CSV
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-### O que será feito
-Adicionar um estado `importProgress` com `{ current: number, total: number }` que é atualizado a cada registro processado no loop de importação. Na tela "Importando registros..." exibir o progresso em tempo real: **"42 de 150 registros"** com uma barra de progresso visual.
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-### Alterações em `src/pages/CsvImportPage.tsx`
+### Ação
 
-1. **Novo estado**: `const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });`
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-2. **Atualizar os 4 loops de importação** (STORES, OFFERS, CUSTOMERS, CRM_CONTACTS): no início de cada loop, setar `setImportProgress({ current: 0, total: rows.length })` e dentro do `for`, após cada iteração, chamar `setImportProgress(prev => ({ ...prev, current: i + 1 }))`.
-
-3. **Atualizar a UI do step "importing"**: substituir o texto estático por:
-   - Texto: **"Importando 42 de 150 registros..."**
-   - Componente `<Progress>` mostrando a porcentagem visual
-   - Percentual numérico (ex: "28%")
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 
