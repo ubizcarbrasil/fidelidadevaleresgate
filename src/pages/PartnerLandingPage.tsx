@@ -23,6 +23,7 @@ interface LandingConfig {
   hero_title: string;
   hero_subtitle: string;
   hero_image_url: string | null;
+  logo_url: string | null;
   numbers_json: { value: string; label: string }[];
   benefits_json: { title: string; description: string; icon: string }[];
   how_it_works_json: { step: string; title: string; description: string }[];
