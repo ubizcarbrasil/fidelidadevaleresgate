@@ -43,9 +43,9 @@ export default function EarnPointsPage() {
     queryKey: ["customers-search", phoneSearch, currentBrandId],
     queryFn: async () => {
       if (!phoneSearch || phoneSearch.length < 3) return [];
-      let q = supabase.from("customers").select("id, name, phone, points_balance, money_balance, branch_id");
+      let q = supabase.from("customers").select("id, name, phone, cpf, points_balance, money_balance, branch_id");
       if (currentBrandId) q = q.eq("brand_id", currentBrandId);
-      q = q.or(`phone.ilike.%${phoneSearch}%,name.ilike.%${phoneSearch}%`).limit(10);
+      q = q.or(`phone.ilike.%${phoneSearch}%,name.ilike.%${phoneSearch}%,cpf.ilike.%${phoneSearch}%`).limit(10);
       const { data, error } = await q;
       if (error) throw error;
       return data;
@@ -303,6 +303,7 @@ export default function EarnPointsPage() {
                     <div>
                       <span className="font-medium text-sm">{c.name}</span>
                       <span className="text-xs text-muted-foreground ml-2">{c.phone}</span>
+                      {c.cpf && <span className="text-xs text-muted-foreground ml-2">CPF: {c.cpf}</span>}
                     </div>
                     <Badge variant="secondary">{c.points_balance} pts</Badge>
                   </button>
