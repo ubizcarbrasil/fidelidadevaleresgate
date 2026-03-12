@@ -4,6 +4,8 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
 import StoreCatalogView from "@/components/customer/StoreCatalogView";
+import { useCustomerFavoriteStores } from "@/hooks/useCustomerFavoriteStores";
+import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   Store as StoreIcon,
