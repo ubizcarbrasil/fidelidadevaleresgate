@@ -403,7 +403,7 @@ export default function PartnerLandingPage() {
   const primaryLight = lighten(theme?.primary, 15);
   const bgDark = darken(theme?.primary, 38);
   const bgDarker = darken(theme?.primary, 42);
-  const logoUrl = (brand.brand_settings_json as any)?.theme?.logo_url;
+  const logoUrl = config?.logo_url || (brand.brand_settings_json as any)?.theme?.logo_url;
   const registerUrl = "/register-store";
 
   const fadeUp = {
