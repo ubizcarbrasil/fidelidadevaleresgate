@@ -48,6 +48,7 @@ const newDraft = (): DealDraft => ({
   price: "",
   original_price: "",
   category: "",
+  category_id: "",
   badge_label: "",
 });
 
