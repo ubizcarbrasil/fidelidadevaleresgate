@@ -39,15 +39,23 @@ const sectionVariant = {
 export default function CustomerProfilePage() {
   const { user, signOut } = useAuth();
   const { customer, refetch } = useCustomer();
-  const { theme, branches, selectedBranch, setSelectedBranch } = useBrand();
+  const { brand, theme, branches, selectedBranch, setSelectedBranch } = useBrand();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
+  const [textOverlay, setTextOverlay] = useState<{ title: string; content: string } | null>(null);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+
+  const settings = (brand?.brand_settings_json as any) || {};
+  const profileMenuLinks: ProfileMenuItem[] = settings.profile_menu_links || [
+    { id: "privacy", label: "Privacidade e Segurança", type: "link", url: "", text_content: "", icon_name: "Shield", is_visible: true },
+    { id: "help", label: "Ajuda e Suporte", type: "link", url: "", text_content: "", icon_name: "CircleHelp", is_visible: true },
+  ];
+  const visibleLinks = profileMenuLinks.filter((l) => l.is_visible);
 
   useEffect(() => {
     if (customer) {
