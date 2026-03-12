@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import ImageUploadField from "@/components/ImageUploadField";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
