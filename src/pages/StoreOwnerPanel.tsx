@@ -34,21 +34,21 @@ import {
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos" | "ganha-ganha" | "campanhas";
 
-const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard; moduleKey?: string }[] = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
-  { key: "cupons", label: "Cupons", icon: Tag },
-  { key: "resgate", label: "Resgate", icon: QrCode },
-  { key: "extrato", label: "Extrato", icon: FileText },
+  { key: "cupons", label: "Cupons", icon: Tag, moduleKey: "offers" },
+  { key: "resgate", label: "Resgate", icon: QrCode, moduleKey: "redemption_qr" },
+  { key: "extrato", label: "Extrato", icon: FileText, moduleKey: "earn_points_store" },
 ];
 
-const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard; moduleKey?: string }[] = [
   { key: "perfil", label: "Meu Perfil", icon: User },
-  { key: "pedidos", label: "Pedidos", icon: ClipboardList },
-  { key: "catalogo", label: "Catálogo", icon: ClipboardList },
-  { key: "ganha-ganha", label: "Consumo GG", icon: BarChart3 },
-  { key: "campanhas", label: "Campanhas", icon: Bell },
+  { key: "pedidos", label: "Pedidos", icon: ClipboardList, moduleKey: "catalog" },
+  { key: "catalogo", label: "Catálogo", icon: ClipboardList, moduleKey: "catalog" },
+  { key: "ganha-ganha", label: "Consumo GG", icon: BarChart3, moduleKey: "ganha_ganha" },
+  { key: "campanhas", label: "Campanhas", icon: Bell, moduleKey: "notifications" },
   { key: "funcionarios", label: "Funcionários", icon: Users },
-  { key: "filiais", label: "Cidades", icon: Building2 },
+  { key: "filiais", label: "Cidades", icon: Building2, moduleKey: "branches" },
   { key: "termos", label: "Termos e Uso", icon: BookOpen },
   { key: "tutorial", label: "Tutorial", icon: HelpCircle },
   { key: "suporte", label: "Suporte", icon: HelpCircle },
