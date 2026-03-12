@@ -1,13 +1,16 @@
 
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+## Plano: Remover "Regra de Pontos do Parceiro" dos sidebars administrativos
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
+Remover o item de menu `/store-points-rule` de três arquivos, mantendo a página acessível apenas pelo painel do lojista (StoreOwnerPanel).
 
-### Ação
+### Alterações
 
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
+1. **`src/components/consoles/RootSidebar.tsx`** (linha 74): Remover `{ title: "Regra de Pontos do Parceiro", url: "/store-points-rule", ... }`
 
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
+2. **`src/components/consoles/BrandSidebar.tsx`** (linha 87): Remover `{ key: "sidebar.regra_parceiro", defaultTitle: "Regra de Pontos do Parceiro", url: "/store-points-rule", ... }`
+
+3. **`src/components/consoles/BranchSidebar.tsx`** (linha 54): Remover `{ title: "Minha Regra de Pontos", url: "/store-points-rule", ... }`
+
+A rota e a página continuam existindo para acesso pelo StoreOwnerPanel.
 
