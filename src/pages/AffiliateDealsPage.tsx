@@ -123,6 +123,8 @@ export default function AffiliateDealsPage() {
                 original_price: p.original_price != null ? String(p.original_price) : d.original_price,
                 store_name: p.store_name || d.store_name,
                 store_logo_url: p.store_logo_url || d.store_logo_url,
+                category_id: p.category_id || d.category_id,
+                category: p.category_name || d.category,
               }
             : d
         )
