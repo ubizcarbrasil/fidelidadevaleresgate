@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import AppIcon from "@/components/customer/AppIcon";
@@ -20,6 +20,7 @@ import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
+import { useBrandModules } from "@/hooks/useBrandModules";
 
 // Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
 interface CustomerNavContextType {
@@ -61,11 +62,11 @@ type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
 
-const TABS: { key: Tab; label: string; iconKey: AppIconKey }[] = [
+const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string }[] = [
   { key: "home", label: "Início", iconKey: "nav_home" },
-  { key: "offers", label: "Ofertas", iconKey: "nav_offers" },
-  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions" },
-  { key: "wallet", label: "Carteira", iconKey: "nav_wallet" },
+  { key: "offers", label: "Ofertas", iconKey: "nav_offers", moduleKey: "offers" },
+  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
+  { key: "wallet", label: "Carteira", iconKey: "nav_wallet", moduleKey: "wallet" },
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
 ];
 
@@ -86,6 +87,7 @@ const tabVariants = {
 export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
@@ -98,6 +100,11 @@ export default function CustomerLayout() {
   const [showTour, setShowTour] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
+
+  const filteredTabs = useMemo(() =>
+    TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
+    [isModuleEnabled]
+  );
 
   // Auto-hide header on scroll down, show on scroll up
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -249,7 +256,7 @@ export default function CustomerLayout() {
         {/* Bottom Tab Bar */}
         <nav className="fixed bottom-0 inset-x-0 z-50 bg-card" style={{ boxShadow: "0 -4px 20px hsl(var(--foreground) / 0.06)" }}>
           <div className="max-w-lg mx-auto flex">
-            {TABS.map((tab) => {
+            {filteredTabs.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
                 <button

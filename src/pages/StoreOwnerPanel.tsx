@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandModules } from "@/hooks/useBrandModules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,21 +34,21 @@ import {
 
 type StoreOwnerTab = "dashboard" | "cupons" | "resgate" | "perfil" | "extrato" | "funcionarios" | "termos" | "filiais" | "tutorial" | "suporte" | "catalogo" | "pedidos" | "ganha-ganha" | "campanhas";
 
-const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const BOTTOM_TABS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard; moduleKey?: string }[] = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
-  { key: "cupons", label: "Cupons", icon: Tag },
-  { key: "resgate", label: "Resgate", icon: QrCode },
-  { key: "extrato", label: "Extrato", icon: FileText },
+  { key: "cupons", label: "Cupons", icon: Tag, moduleKey: "offers" },
+  { key: "resgate", label: "Resgate", icon: QrCode, moduleKey: "redemption_qr" },
+  { key: "extrato", label: "Extrato", icon: FileText, moduleKey: "earn_points_store" },
 ];
 
-const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutDashboard; moduleKey?: string }[] = [
   { key: "perfil", label: "Meu Perfil", icon: User },
-  { key: "pedidos", label: "Pedidos", icon: ClipboardList },
-  { key: "catalogo", label: "Catálogo", icon: ClipboardList },
-  { key: "ganha-ganha", label: "Consumo GG", icon: BarChart3 },
-  { key: "campanhas", label: "Campanhas", icon: Bell },
+  { key: "pedidos", label: "Pedidos", icon: ClipboardList, moduleKey: "catalog" },
+  { key: "catalogo", label: "Catálogo", icon: ClipboardList, moduleKey: "catalog" },
+  { key: "ganha-ganha", label: "Consumo GG", icon: BarChart3, moduleKey: "ganha_ganha" },
+  { key: "campanhas", label: "Campanhas", icon: Bell, moduleKey: "notifications" },
   { key: "funcionarios", label: "Funcionários", icon: Users },
-  { key: "filiais", label: "Cidades", icon: Building2 },
+  { key: "filiais", label: "Cidades", icon: Building2, moduleKey: "branches" },
   { key: "termos", label: "Termos e Uso", icon: BookOpen },
   { key: "tutorial", label: "Tutorial", icon: HelpCircle },
   { key: "suporte", label: "Suporte", icon: HelpCircle },
@@ -55,6 +56,7 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 
 export default function StoreOwnerPanel() {
   const { user, signOut, isRootAdmin, roles } = useAuth();
+  const { isModuleEnabled } = useBrandModules();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
@@ -66,6 +68,15 @@ export default function StoreOwnerPanel() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const notifPermissionRef = useRef<NotificationPermission>("default");
+
+  const filteredBottomTabs = useMemo(() =>
+    BOTTOM_TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
+    [isModuleEnabled]
+  );
+  const filteredMoreMenu = useMemo(() =>
+    MORE_MENU_ITEMS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
+    [isModuleEnabled]
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -185,14 +196,14 @@ export default function StoreOwnerPanel() {
 
   const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
-  const filteredMoreItems = MORE_MENU_ITEMS.filter(item => {
+  const filteredMoreItems = filteredMoreMenu.filter(item => {
     if (item.key === "catalogo" && !isEmitter) return false;
     if (item.key === "pedidos" && !isEmitter) return false;
     return true;
   });
 
-  const isInBottomTabs = BOTTOM_TABS.some(t => t.key === activeTab);
-  const activeLabel = [...BOTTOM_TABS, ...MORE_MENU_ITEMS].find(t => t.key === activeTab)?.label || "";
+  const isInBottomTabs = filteredBottomTabs.some(t => t.key === activeTab);
+  const activeLabel = [...filteredBottomTabs, ...filteredMoreMenu].find(t => t.key === activeTab)?.label || "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -320,7 +331,7 @@ export default function StoreOwnerPanel() {
       {/* Bottom tab bar - PWA style */}
       <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-md border-t pwa-safe-bottom">
         <div className="flex items-stretch h-16 max-w-lg mx-auto">
-          {BOTTOM_TABS.map(tab => {
+          {filteredBottomTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
             return (
