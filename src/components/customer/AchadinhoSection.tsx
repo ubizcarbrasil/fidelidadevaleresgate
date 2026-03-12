@@ -75,7 +75,7 @@ export default function AchadinhoSection() {
 
   const formatPrice = (val: number | null | undefined) => {
     if (val == null || val === 0) return null;
-    return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
+    return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   };
 
   if (loading) {
@@ -142,7 +142,7 @@ export default function AchadinhoSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.3 }}
               whileTap={{ scale: 0.97 }}
-              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer"
+              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
               style={{
                 boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
                 scrollSnapAlign: "start",
@@ -150,17 +150,17 @@ export default function AchadinhoSection() {
               onClick={() => handleClick(deal)}
             >
               {/* Image */}
-              <div className="relative">
+              <div className="relative bg-muted/30">
                 {deal.image_url ? (
                   <img
                     src={deal.image_url}
                     alt={deal.title}
-                    className="w-full h-32 object-cover"
+                    className="w-full aspect-square object-contain"
                     loading="lazy"
                   />
                 ) : (
                   <div
-                    className="w-full h-32 flex items-center justify-center"
+                    className="w-full aspect-square flex items-center justify-center"
                     style={{ backgroundColor: withAlpha(primary, 0.06) }}
                   >
                     <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
