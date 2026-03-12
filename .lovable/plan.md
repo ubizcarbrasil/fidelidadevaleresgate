@@ -1,13 +1,17 @@
 
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+## Plano: Restringir Section Templates ao ROOT_ADMIN
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
+### Problema
+A página "Seções da Home" (`/templates`) aparece no menu da marca (`BrandSidebar`), mas é uma ferramenta técnica que só deveria ser acessível ao ROOT_ADMIN.
 
-### Ação
+### Mudanças
 
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
+1. **`src/components/consoles/BrandSidebar.tsx`** — Remover o item `{ key: "sidebar.secoes_home", defaultTitle: "Seções da Tela Inicial", url: "/templates", ... }` da seção "Vitrine do App".
 
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
+2. **`src/App.tsx`** — Na rota `/templates`, trocar o `ModuleGuard` por uma verificação de role ROOT_ADMIN (usando `ProtectedRoute` com checagem de `isRootAdmin`, ou simplesmente mantendo a rota acessível apenas pelo menu ROOT que já está protegido). A rota já está dentro do layout protegido, e como só o `RootSidebar` terá o link, basta remover do `BrandSidebar`. Opcionalmente, adicionar um guard explícito na rota para segurança extra.
+
+### Arquivos
+- `src/components/consoles/BrandSidebar.tsx` — remover 1 linha
+- `src/App.tsx` — (opcional) adicionar guard de root na rota `/templates`
 
