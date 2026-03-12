@@ -181,6 +181,7 @@ export default function StoreOwnerPanel() {
     return <StoreEmptyState userId={user?.id} />;
   }
 
+  const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const filteredMoreItems = MORE_MENU_ITEMS.filter(item => {
     if (item.key === "catalogo" && !isEmitter) return false;
