@@ -12,6 +12,8 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
