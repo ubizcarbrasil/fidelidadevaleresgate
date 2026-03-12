@@ -143,6 +143,9 @@ export default function StoresPage() {
                   <TableCell>{s.category || "—"}</TableCell>
                   <TableCell><Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
+                    <Button variant="default" size="sm" className="gap-1 text-xs" onClick={() => navigate(`/store-panel?storeId=${s.id}`)}>
+                      <Settings className="h-3.5 w-3.5" /> Gerenciar
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => remove.mutate(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </TableCell>
