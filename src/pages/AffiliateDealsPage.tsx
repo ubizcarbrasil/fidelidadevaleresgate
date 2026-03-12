@@ -341,7 +341,7 @@ export default function AffiliateDealsPage() {
         </TabsList>
 
         {/* ==================== LISTAGEM ==================== */}
-        <TabsContent value="list" className="space-y-4">
+        <TabsContent value="list" forceMount className={activeTab !== "list" ? "hidden" : "space-y-4"}>
           <DataTableControls
             search={search}
             onSearchChange={(v) => { setSearch(v); setPage(1); }}
