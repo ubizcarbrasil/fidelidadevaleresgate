@@ -167,13 +167,13 @@ export default function AchadinhoSection() {
                   </div>
                 )}
 
-                {/* Discount badge */}
-                {hasDiscount && (
+                {/* Badge */}
+                {badgeText && (
                   <div
-                    className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
+                    className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm"
                     style={{ backgroundColor: primary }}
                   >
-                    -{discountPercent}%
+                    {badgeText}
                   </div>
                 )}
 
