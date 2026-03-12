@@ -16,7 +16,7 @@ interface NumberItem { value: string; label: string; }
 interface BenefitItem { title: string; description: string; icon: string; }
 interface HowItWorksItem { step: string; title: string; description: string; }
 interface FaqItem { question: string; answer: string; }
-interface TestimonialItem { name: string; role: string; text: string; initials: string; }
+interface TestimonialItem { name: string; role: string; text: string; initials: string; logo_url?: string; }
 
 const ICON_OPTIONS = [
   "Eye", "Heart", "Zap", "BarChart3", "Star", "Users", "Store", "Gift",
@@ -346,7 +346,6 @@ export default function PartnerLandingConfigPage() {
                   <Input value={t.name} onChange={e => {
                     const u = [...testimonials];
                     u[i].name = e.target.value;
-                    // Auto-generate initials
                     const words = e.target.value.trim().split(/\s+/);
                     u[i].initials = words.map(w => w[0]?.toUpperCase() || "").slice(0, 2).join("");
                     setTestimonials(u);
@@ -359,6 +358,16 @@ export default function PartnerLandingConfigPage() {
                 <Button variant="ghost" size="icon" className="text-destructive self-end" onClick={() => setTestimonials(testimonials.filter((_, j) => j !== i))}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Logo da Empresa</Label>
+                <ImageUploadField
+                  value={t.logo_url || ""}
+                  onChange={val => { const u = [...testimonials]; u[i].logo_url = val; setTestimonials(u); }}
+                  folder={`partner-landing/${currentBrandId}/testimonials`}
+                  label="Logo"
+                  previewClassName="h-12 w-12 object-contain rounded-md"
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Cargo / Descrição</Label>
