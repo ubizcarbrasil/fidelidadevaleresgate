@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Check, X, Eye, Clock, Store, Search, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 interface StoreSubmission {
   id: string;
@@ -31,6 +32,7 @@ interface StoreSubmission {
 
 export default function StoreApprovalsPage() {
   const { user } = useAuth();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [stores, setStores] = useState<StoreSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("PENDING_APPROVAL");
@@ -48,6 +50,9 @@ export default function StoreApprovalsPage() {
       .neq("approval_status", "DRAFT" as any)
       .order("submitted_at", { ascending: false });
 
+    if (!isRootAdmin && currentBrandId) {
+      query = query.eq("brand_id", currentBrandId);
+    }
     if (filter !== "ALL") {
       query = query.eq("approval_status", filter as any);
     }

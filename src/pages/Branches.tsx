@@ -10,19 +10,22 @@ import { Plus, Pencil, Power } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
 export default function Branches() {
   const queryClient = useQueryClient();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["branches", debouncedSearch, page],
+    queryKey: ["branches", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
       let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,slug.ilike.%${debouncedSearch}%,city.ilike.%${debouncedSearch}%`);
       query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       const { data, error, count } = await query;

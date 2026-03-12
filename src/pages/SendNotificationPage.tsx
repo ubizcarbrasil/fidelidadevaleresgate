@@ -9,8 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bell, Send, Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function SendNotificationPage() {
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [scope, setScope] = useState<"all" | "branch">("all");
@@ -18,9 +20,11 @@ export default function SendNotificationPage() {
   const [sending, setSending] = useState(false);
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-notif"],
+    queryKey: ["branches-notif", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("branches").select("id, name").eq("is_active", true).order("name");
+      let q = supabase.from("branches").select("id, name").eq("is_active", true).order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
@@ -31,6 +35,7 @@ export default function SendNotificationPage() {
     try {
       // Fetch target customers
       let query = supabase.from("customers").select("id").eq("is_active", true);
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (scope === "branch" && branchId) query = query.eq("branch_id", branchId);
       const { data: customers, error } = await query.limit(1000);
       if (error) throw error;

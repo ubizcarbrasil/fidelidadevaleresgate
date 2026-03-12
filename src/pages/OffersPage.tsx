@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import type { Database } from "@/integrations/supabase/types";
 
 type OfferStatus = Database["public"]["Enums"]["offer_status"];
@@ -29,6 +30,7 @@ const emptyForm: OfferForm = { title: "", description: "", brand_id: "", branch_
 
 export default function OffersPage() {
   const qc = useQueryClient();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
@@ -41,10 +43,17 @@ export default function OffersPage() {
     return () => clearTimeout(t);
   }, [search]);
 
+  useEffect(() => {
+    if (!isRootAdmin && currentBrandId && !form.brand_id) {
+      setForm(f => ({ ...f, brand_id: currentBrandId }));
+    }
+  }, [isRootAdmin, currentBrandId]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["offers", debouncedSearch, page],
+    queryKey: ["offers", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
       let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
@@ -53,9 +62,9 @@ export default function OffersPage() {
     },
   });
 
-  const { data: brands } = useQuery({ queryKey: ["brands-select"], queryFn: async () => { const { data } = await supabase.from("brands").select("id, name").order("name"); return data || []; } });
-  const { data: branches } = useQuery({ queryKey: ["branches-select"], queryFn: async () => { const { data } = await supabase.from("branches").select("id, name, brand_id").order("name"); return data || []; } });
-  const { data: stores } = useQuery({ queryKey: ["stores-select"], queryFn: async () => { const { data } = await supabase.from("stores").select("id, name, branch_id, brand_id").order("name"); return data || []; } });
+  const { data: brands } = useQuery({ queryKey: ["brands-select", currentBrandId], queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: branches } = useQuery({ queryKey: ["branches-select", currentBrandId], queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: stores } = useQuery({ queryKey: ["stores-select", currentBrandId], queryFn: async () => { let q = supabase.from("stores").select("id, name, branch_id, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
 
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
   const filteredStores = stores?.filter(s => s.branch_id === form.branch_id && s.brand_id === form.brand_id) || [];
@@ -102,6 +111,7 @@ export default function OffersPage() {
               <div className="space-y-2"><Label>Título</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="grid grid-cols-3 gap-3">
+                {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
                   <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "", store_id: "" }))}>
@@ -109,6 +119,7 @@ export default function OffersPage() {
                     <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                )}
                 <div className="space-y-2">
                   <Label>Cidade</Label>
                   <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v, store_id: "" }))}>

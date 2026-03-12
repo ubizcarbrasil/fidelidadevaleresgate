@@ -11,12 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 import { ROLE_LABELS } from "@/hooks/usePermissions";
 type AppRole = Database["public"]["Enums"]["app_role"];
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState<AppRole>("tenant_admin");
@@ -34,12 +36,14 @@ export default function UsersPage() {
   });
 
   const { data: userRoles } = useQuery({
-    queryKey: ["user-roles-all"],
+    queryKey: ["user-roles-all", currentBrandId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("user_roles")
         .select("*, tenants(name), brands(name), branches(name)")
         .order("created_at", { ascending: false });
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -54,17 +58,21 @@ export default function UsersPage() {
   });
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: ["brands-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("brands").select("id, name").order("name");
+      let q = supabase.from("brands").select("id, name").order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select"],
+    queryKey: ["branches-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("branches").select("id, name").order("name");
+      let q = supabase.from("branches").select("id, name").order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
