@@ -304,6 +304,10 @@ export default function CustomerLayout() {
                 setSelectedOffer(null);
                 setTimeout(() => setSelectedOffer(offer), 150);
               }}
+              onOpenStore={(store) => {
+                setSelectedOffer(null);
+                setTimeout(() => setSelectedStore(store), 150);
+              }}
             />
           )}
         </AnimatePresence>
