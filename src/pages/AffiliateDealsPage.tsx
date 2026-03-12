@@ -35,11 +35,11 @@ interface DealForm {
   order_index: string;
 }
 
-const emptyForm: DealForm = {
-  title: "", description: "", brand_id: "", branch_id: "", price: "0",
+const emptyForm = (brandId?: string): DealForm => ({
+  title: "", description: "", brand_id: brandId || "", branch_id: "", price: "0",
   original_price: "", affiliate_url: "", image_url: "", category: "",
   store_name: "", is_active: true, order_index: "0",
-};
+});
 
 export default function AffiliateDealsPage() {
   const qc = useQueryClient();
