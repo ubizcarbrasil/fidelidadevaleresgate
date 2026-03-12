@@ -166,7 +166,7 @@ export default function CustomerLayout() {
           <div
             className="pt-2 pb-0"
             style={{
-              background: `linear-gradient(180deg, ${primary}18 0%, ${primary}08 60%, hsl(var(--background)) 100%)`,
+              background: `linear-gradient(180deg, ${accent}18 0%, ${accent}08 60%, hsl(var(--background)) 100%)`,
               backgroundColor: "hsl(var(--background))",
             }}
           >
