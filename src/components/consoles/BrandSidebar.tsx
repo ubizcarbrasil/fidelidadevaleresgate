@@ -43,8 +43,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.tema_marca", defaultTitle: "Aparência da Marca", url: "/brands", icon: Palette },
       { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe, moduleKey: "domains" },
-      { key: "sidebar.galeria_icones", defaultTitle: "Galeria de Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
-      { key: "sidebar.app_icons", defaultTitle: "Ícones do App", url: "/app-icons", icon: Palette, moduleKey: "app_icons" },
+      { key: "sidebar.galeria_icones", defaultTitle: "Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
     ],
   },
   {
