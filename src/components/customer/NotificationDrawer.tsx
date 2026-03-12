@@ -27,7 +27,7 @@ export default function NotificationDrawer({ open, onClose }: NotificationDrawer
   const { openOffer } = useCustomerNav();
   const { theme } = useBrand();
 
-  const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
