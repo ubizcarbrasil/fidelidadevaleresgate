@@ -23,10 +23,11 @@ interface AffiliateDeal {
   title: string;
   description: string | null;
   image_url: string | null;
-  price: number;
+  price: number | null;
   original_price: number | null;
   affiliate_url: string;
   store_name: string | null;
+  store_logo_url: string | null;
   category: string | null;
 }
 
@@ -38,7 +39,6 @@ export default function AchadinhoSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function AchadinhoSection() {
       setLoading(true);
       let query = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, category")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, category")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .order("order_index")
@@ -63,14 +63,18 @@ export default function AchadinhoSection() {
   }, [brand, selectedBranch]);
 
   const handleClick = async (deal: AffiliateDeal) => {
-    // Track click
     if (customer) {
       supabase.from("affiliate_clicks").insert({
         deal_id: deal.id,
         customer_id: customer.id,
-      }).then(); // fire-and-forget
+      }).then();
     }
     window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+  };
+
+  const formatPrice = (val: number | null | undefined) => {
+    if (val == null || val === 0) return null;
+    return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
   };
 
   if (loading) {
@@ -121,10 +125,12 @@ export default function AchadinhoSection() {
         style={{ scrollSnapType: "x mandatory" }}
       >
         {deals.map((deal, idx) => {
-          const hasDiscount = deal.original_price && deal.original_price > deal.price;
+          const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
           const discountPercent = hasDiscount
-            ? Math.round(((deal.original_price! - deal.price) / deal.original_price!) * 100)
+            ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
             : 0;
+          const priceStr = formatPrice(deal.price);
+          const originalPriceStr = formatPrice(deal.original_price);
 
           return (
             <motion.div
@@ -164,16 +170,17 @@ export default function AchadinhoSection() {
                     className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
                     style={{ backgroundColor: primary }}
                   >
-                    <AppIcon iconKey="section_deals" className="h-2.5 w-2.5" />
-                    Pague {discountPercent}% com Pontos
+                    -{discountPercent}%
                   </div>
                 )}
 
-                {/* External link icon */}
-                <div
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center"
-                >
-                  <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                {/* Store logo or external link icon */}
+                <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center overflow-hidden">
+                  {deal.store_logo_url ? (
+                    <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
+                  ) : (
+                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                  )}
                 </div>
               </div>
 
@@ -187,16 +194,20 @@ export default function AchadinhoSection() {
                 <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>
                   {deal.title}
                 </h3>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                    R$ {Number(deal.price).toFixed(2).replace(".", ",")}
-                  </span>
-                  {hasDiscount && (
-                    <span className="text-[10px] line-through text-muted-foreground">
-                      R$ {Number(deal.original_price).toFixed(2).replace(".", ",")}
-                    </span>
-                  )}
-                </div>
+                {(priceStr || originalPriceStr) && (
+                  <div className="flex items-baseline gap-1.5">
+                    {priceStr && (
+                      <span className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                        {priceStr}
+                      </span>
+                    )}
+                    {hasDiscount && originalPriceStr && (
+                      <span className="text-[10px] line-through text-muted-foreground">
+                        {originalPriceStr}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           );
