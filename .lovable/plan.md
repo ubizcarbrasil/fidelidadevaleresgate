@@ -1,15 +1,13 @@
 
 
-## Plano: Restringir "Nomes e Rótulos" ao Root Admin
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-### Problema
-Atualmente, o empreendedor (brand_admin) tem acesso à página "Nomes e Rótulos" (`/menu-labels`), podendo alterar nomenclaturas de forma independente. Isso gera inconsistência entre marcas e retrabalho.
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-### Ações
+### Ação
 
-1. **Remover link do menu do empreendedor** — Excluir a entrada `sidebar.nomes_rotulos` do `BrandSidebar.tsx`
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-2. **Proteger a rota com RootGuard** — No `App.tsx`, envolver o `<MenuLabelsPage />` com `<RootGuard>` para impedir acesso direto via URL
-
-3. **Manter no RootSidebar** — A entrada já existe no menu raiz e permanece inalterada
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 

@@ -187,7 +187,7 @@ function AppRoutes() {
           <Route path="send-notification" element={<SendNotificationPage />} />
           <Route path="icon-library" element={<IconLibraryPage />} />
           <Route path="banner-manager" element={<BannerManagerPage />} />
-          <Route path="menu-labels" element={<MenuLabelsPage />} />
+          <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
           <Route path="page-builder" element={<PageBuilderPage />} />
           <Route path="page-builder-v2" element={<PageBuilderV2Page />} />
           <Route path="public-vouchers" element={<PublicVouchers />} />
