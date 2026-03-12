@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBrand } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ModuleGuard from "@/components/ModuleGuard";
+import RootGuard from "@/components/RootGuard";
 import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
