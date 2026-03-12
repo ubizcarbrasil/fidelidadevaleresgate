@@ -196,14 +196,14 @@ export default function StoreOwnerPanel() {
 
   const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
-  const filteredMoreItems = MORE_MENU_ITEMS.filter(item => {
+  const filteredMoreItems = filteredMoreMenu.filter(item => {
     if (item.key === "catalogo" && !isEmitter) return false;
     if (item.key === "pedidos" && !isEmitter) return false;
     return true;
   });
 
-  const isInBottomTabs = BOTTOM_TABS.some(t => t.key === activeTab);
-  const activeLabel = [...BOTTOM_TABS, ...MORE_MENU_ITEMS].find(t => t.key === activeTab)?.label || "";
+  const isInBottomTabs = filteredBottomTabs.some(t => t.key === activeTab);
+  const activeLabel = [...filteredBottomTabs, ...filteredMoreMenu].find(t => t.key === activeTab)?.label || "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
