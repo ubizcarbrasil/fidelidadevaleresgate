@@ -159,6 +159,7 @@ export default function AffiliateDealsPage() {
         price: d.price ? Number(d.price) : null,
         original_price: d.original_price ? Number(d.original_price) : null,
         category: d.category.trim() || null,
+        category_id: d.category_id.trim() || null,
         badge_label: d.badge_label.trim() || null,
         is_active: true,
         order_index: idx,
