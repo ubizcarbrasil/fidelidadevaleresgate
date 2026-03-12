@@ -58,17 +58,21 @@ export default function UsersPage() {
   });
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: ["brands-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("brands").select("id, name").order("name");
+      let q = supabase.from("brands").select("id, name").order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select"],
+    queryKey: ["branches-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("branches").select("id, name").order("name");
+      let q = supabase.from("branches").select("id, name").order("name");
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
       return data || [];
     },
   });

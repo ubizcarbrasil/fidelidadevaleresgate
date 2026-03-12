@@ -35,6 +35,7 @@ export default function SendNotificationPage() {
     try {
       // Fetch target customers
       let query = supabase.from("customers").select("id").eq("is_active", true);
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (scope === "branch" && branchId) query = query.eq("branch_id", branchId);
       const { data: customers, error } = await query.limit(1000);
       if (error) throw error;

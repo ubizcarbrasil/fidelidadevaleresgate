@@ -182,6 +182,7 @@ export default function AffiliateDealsPage() {
                 <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-3">
+                {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Brand *</Label>
                   <Select value={form.brand_id} onValueChange={(v) => setForm((f) => ({ ...f, brand_id: v, branch_id: "" }))}>
@@ -189,6 +190,7 @@ export default function AffiliateDealsPage() {
                     <SelectContent>{brands?.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                )}
                 <div className="space-y-2">
                   <Label>Filial (opcional)</Label>
                   <Select value={form.branch_id} onValueChange={(v) => setForm((f) => ({ ...f, branch_id: v }))}>

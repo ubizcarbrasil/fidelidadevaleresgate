@@ -50,6 +50,9 @@ export default function StoreApprovalsPage() {
       .neq("approval_status", "DRAFT" as any)
       .order("submitted_at", { ascending: false });
 
+    if (!isRootAdmin && currentBrandId) {
+      query = query.eq("brand_id", currentBrandId);
+    }
     if (filter !== "ALL") {
       query = query.eq("approval_status", filter as any);
     }

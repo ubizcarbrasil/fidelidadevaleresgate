@@ -87,6 +87,7 @@ export default function CustomersPage() {
               <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
               <div className="grid grid-cols-2 gap-4">
+                {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
                   <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "" }))}>
@@ -94,6 +95,7 @@ export default function CustomersPage() {
                     <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                )}
                 <div className="space-y-2">
                   <Label>Filial</Label>
                   <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v }))}>

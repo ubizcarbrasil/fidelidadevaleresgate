@@ -16,6 +16,7 @@ const STATUS_VARIANT: Record<RedemptionStatus, string> = { PENDING: "outline", U
 const PAGE_SIZE = 20;
 
 export default function RedemptionsPage() {
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -26,10 +27,11 @@ export default function RedemptionsPage() {
   }, [search]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["redemptions", debouncedSearch, page],
+    queryKey: ["redemptions", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
       let query = supabase.from("redemptions")
         .select("*, offers(title), customers(name), branches(name)", { count: "exact" });
+      if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("token", `%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);

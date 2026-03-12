@@ -100,6 +100,7 @@ export default function StoresPage() {
                 <div className="space-y-2"><Label>Identificador</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
+                {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
                   <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "" }))}>
@@ -107,6 +108,7 @@ export default function StoresPage() {
                     <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                )}
                 <div className="space-y-2">
                   <Label>Cidade</Label>
                   <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v }))}>
