@@ -1,22 +1,13 @@
 
 
-## Plano: Adicionar rótulos padrão faltantes no hook useMenuLabels
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-### Problema
-As chaves `sidebar.partner_landing`, `sidebar.welcome_tour`, `sidebar.profile_links` e `sidebar.categorias_achadinhos` não existem no dicionário `DEFAULT_LABELS` em `useMenuLabels.ts`. Quando não há override no banco, o sistema exibe a chave técnica bruta.
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-### Solução
-Adicionar essas 4 entradas ao objeto `DEFAULT_LABELS.admin` em `src/hooks/useMenuLabels.ts`:
+### Ação
 
-```typescript
-"sidebar.partner_landing": "LP de Parceiros",
-"sidebar.welcome_tour": "Tour de Boas-Vindas",
-"sidebar.profile_links": "Links do Perfil",
-"sidebar.categorias_achadinhos": "Categorias Achadinhos",
-```
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-Isso garante que todos os itens do sidebar exibam nomes amigáveis por padrão, sem depender de registros no banco. Funciona automaticamente para todas as marcas.
-
-### Arquivo alterado
-- `src/hooks/useMenuLabels.ts` — 4 linhas adicionadas ao `DEFAULT_LABELS.admin`
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 
