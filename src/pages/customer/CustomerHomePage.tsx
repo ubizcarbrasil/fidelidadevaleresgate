@@ -95,8 +95,8 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           <div
             className="w-full rounded-3xl p-0 relative overflow-hidden"
             style={{
-              background: `linear-gradient(145deg, ${hslAlpha(primaryParsed, 1)} 0%, ${hslAlpha(primaryParsed, 0.87)} 40%, ${hslAlpha(primaryParsed, 0.67)} 100%)`,
-              boxShadow: `0 8px 32px -8px ${hslAlpha(primaryParsed, 0.38)}`,
+              background: `linear-gradient(145deg, ${hslAlpha(accentParsed, 1)} 0%, ${hslAlpha(accentParsed, 0.87)} 40%, ${hslAlpha(accentParsed, 0.67)} 100%)`,
+              boxShadow: `0 8px 32px -8px ${hslAlpha(accentParsed, 0.38)}`,
             }}
           >
             {/* Decorative shapes */}
