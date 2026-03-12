@@ -32,6 +32,7 @@ interface StoreSubmission {
 
 export default function StoreApprovalsPage() {
   const { user } = useAuth();
+  const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [stores, setStores] = useState<StoreSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("PENDING_APPROVAL");
