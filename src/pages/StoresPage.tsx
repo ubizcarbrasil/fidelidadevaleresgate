@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
