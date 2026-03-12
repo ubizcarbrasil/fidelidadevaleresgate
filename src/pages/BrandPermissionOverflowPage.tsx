@@ -354,7 +354,7 @@ export default function BrandPermissionOverflowPage() {
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Badge variant="outline">{friendlyModule(mod)}</Badge>
                   <span className="text-muted-foreground font-normal">
-                    {perms.length} permissão{perms.length > 1 ? "ões" : ""}
+                    {perms.length} {perms.length > 1 ? "permissões" : "permissão"}
                   </span>
                 </CardTitle>
               </CardHeader>
@@ -364,6 +364,7 @@ export default function BrandPermissionOverflowPage() {
                     const brandAllowed = getEffectiveValue(perm.key, "allowed_for_brand");
                     const storeAllowed = getEffectiveValue(perm.key, "allowed_for_store");
                     const hasLocalChange = localChanges[perm.key] !== undefined;
+                    const display = getPermissionDisplay(perm);
 
                     return (
                       <div
@@ -372,12 +373,13 @@ export default function BrandPermissionOverflowPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <code className="text-xs">{friendlyPermission(perm.key)}</code>
+                            <span className="text-sm font-medium">{display.title}</span>
                             {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
                           </div>
-                          {perm.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{perm.description}</p>
+                          {display.subtitle && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{display.subtitle}</p>
                           )}
+
                         </div>
                         <div className="flex items-center gap-6 ml-4">
                           {isRoot && (
