@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Save, ExternalLink, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import ImageUploadField from "@/components/ImageUploadField";
 
 interface NumberItem { value: string; label: string; }
 interface BenefitItem { title: string; description: string; icon: string; }
