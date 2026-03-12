@@ -26,6 +26,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.solicitacoes_emissor": "Solicitações de Emissor",
     "sidebar.importar_csv": "Importar Planilha",
     "sidebar.achadinhos": "Achadinhos",
+    "sidebar.categorias_achadinhos": "Categorias Achadinhos",
     "sidebar.catalogo": "Catálogo",
     "sidebar.enviar_notificacao": "Enviar Notificação",
     "sidebar.operador_pdv": "Operador PDV",
