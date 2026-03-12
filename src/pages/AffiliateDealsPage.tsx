@@ -279,6 +279,7 @@ export default function AffiliateDealsPage() {
       price: d.price != null ? String(d.price) : "",
       original_price: d.original_price != null ? String(d.original_price) : "",
       category: d.category || "",
+      category_id: d.category_id || "",
       badge_label: d.badge_label || "",
     });
   };
