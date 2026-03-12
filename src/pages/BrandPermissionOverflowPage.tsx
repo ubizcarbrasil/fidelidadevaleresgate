@@ -313,7 +313,7 @@ export default function BrandPermissionOverflowPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <code className="text-xs font-mono">{perm.key}</code>
+                            <code className="text-xs">{friendlyPermission(perm.key)}</code>
                             {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
                           </div>
                           {perm.description && (
