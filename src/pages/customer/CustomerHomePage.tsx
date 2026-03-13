@@ -64,13 +64,13 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const greeting = getGreeting();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-5 pt-3"
+        className="max-w-lg mx-auto px-5 pt-2"
       >
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
           {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
@@ -114,7 +114,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
             />
 
             {/* Content */}
-            <div className="relative z-10 p-5 pb-4">
+            <div className="relative z-10 p-4 pb-3">
               <div className="flex flex-col items-center text-center">
                 {/* Pontos */}
                 <button
@@ -134,7 +134,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
               </div>
 
               {/* Bottom action hint */}
-              <div className="flex items-center justify-center mt-4 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+              <div className="flex items-center justify-center mt-3 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
                 <button
                   onClick={() => { haptic("light"); onOpenLedger?.(); }}
                   className="flex items-center gap-1.5 text-white/60 hover:text-white/80 transition-colors active:scale-95"
@@ -155,7 +155,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         transition={{ duration: 0.35, delay: 0.1 }}
         className="max-w-lg mx-auto px-5"
       >
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-6 gap-1.5">
           {QUICK_ACTIONS.map((action, idx) => (
               <motion.button
                 key={action.key}
@@ -163,11 +163,11 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.04 * idx, duration: 0.25 }}
                 whileTap={{ scale: 0.88 }}
-                className="flex flex-col items-center gap-1.5 py-1"
+                className="flex flex-col items-center gap-1 py-0.5"
                 onClick={() => { haptic("light"); action.tab && navigateToTab(action.tab); }}
               >
                 <div
-                  className="h-14 w-14 rounded-2xl flex items-center justify-center"
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
                   style={{ backgroundColor: action.bg }}
                 >
                   <AppIcon iconKey={action.iconKey} className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
