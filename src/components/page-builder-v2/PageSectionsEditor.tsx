@@ -71,10 +71,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const { brand } = useBrand();
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newSectionType, setNewSectionType] = useState("");
-  const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
   const [editingManualLinks, setEditingManualLinks] = useState<SectionRow | null>(null);
   const [pageSettings, setPageSettings] = useState({
