@@ -338,6 +338,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           });
         }
 
+        // Boost sponsored stores to top
+        results = boostSponsored(results, sponsoredStoreIds, "store_id");
         setItems(results);
       } else if (effectiveSource.source_type === "STORES") {
         let query = supabase
