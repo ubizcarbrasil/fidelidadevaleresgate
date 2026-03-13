@@ -46,7 +46,7 @@ const StoreDetailInfoCard = React.memo(function StoreDetailInfoCard({ store, pri
         </p>
       )}
 
-      {store.operating_hours_json && Array.isArray(store.operating_hours_json) && (store.operating_hours_json as any[]).length > 0 && (
+      {store.operating_hours_json != null && Array.isArray(store.operating_hours_json) && (store.operating_hours_json as any[]).length > 0 && (
         <OperatingHoursDisplay
           hours={store.operating_hours_json as any[]}
           primary={primary}
