@@ -11,9 +11,9 @@
 | Categoria | Score | Status |
 |-----------|-------|--------|
 | 🔐 Segurança & RLS | 85% | ✅ PASS (após correções) |
-| 📊 Arquitetura & Código | 68% | ⚠️ WARNING |
-| ⚡ Performance | 80% | ✅ PASS |
-| 🧪 Testes | 25% | ❌ FAIL |
+| 📊 Arquitetura & Código | 78% | ✅ PASS (após refatoração) |
+| ⚡ Performance | 82% | ✅ PASS |
+| 🧪 Testes | 35% | ⚠️ WARNING |
 | 🎨 UX | 88% | ✅ PASS |
 | 📡 Observabilidade | 55% | ⚠️ WARNING |
 | 🚀 Deploy & DevOps | 72% | ⚠️ WARNING |
