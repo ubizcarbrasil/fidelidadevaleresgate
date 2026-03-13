@@ -617,12 +617,21 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                     <ShoppingBag className="h-10 w-10 text-muted-foreground/20" />
                   </div>
                 )}
-                {o.discount_percent > 0 && (
-                  <div className="absolute top-2.5 left-2.5 vb-discount-badge">
-                    {o.discount_percent}% OFF
+                {(o.discount_percent > 0 || o.value_rescue > 0) && (
+                  <div className="absolute top-2.5 left-2.5">
+                    <OfferBadge
+                      discountPercent={o.discount_percent}
+                      offerBadgeConfig={o.badge_config_json}
+                      brandBadgeConfig={brandBadgeConfig}
+                      primaryColor={accent}
+                      size="sm"
+                      couponType={o.coupon_type}
+                      valueRescue={Number(o.value_rescue || 0)}
+                      minPurchase={Number(o.min_purchase || 0)}
+                    />
                   </div>
                 )}
-                {isNew && !o.discount_percent && (
+                {isNew && !o.discount_percent && !o.value_rescue && (
                   <div
                     className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white"
                     style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}
