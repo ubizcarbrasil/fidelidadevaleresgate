@@ -11,7 +11,7 @@ import {
   ShoppingBag, Store, Tag, Link2, Image as ImageIcon,
   Info, LayoutGrid, LayoutList, GalleryHorizontal,
   Columns2, Columns3, Columns4, RectangleHorizontal,
-  Square, CircleDot, Rows3
+  Square, CircleDot, Rows3, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -85,6 +85,13 @@ const CONTENT_TYPES: ContentType[] = [
     icon: <Info className="h-6 w-6" />,
     templateKeys: ["LIST_INFO", "GRID_INFO", "GRID_LOGOS"],
   },
+  {
+    id: "highlights",
+    label: "Destaques da Semana",
+    description: "Seleção especial com destaque visual",
+    icon: <Star className="h-6 w-6" />,
+    templateKeys: ["highlights_weekly"],
+  },
 ];
 
 const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
@@ -111,6 +118,10 @@ const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
     { id: "grid", label: "Grade", description: "Cards informativos", icon: <LayoutGrid className="h-5 w-5" /> },
     { id: "logos", label: "Logos/Atalhos", description: "Ícones circulares", icon: <CircleDot className="h-5 w-5" /> },
   ],
+  highlights: [
+    { id: "carousel", label: "Carrossel", description: "Cards grandes em destaque", icon: <GalleryHorizontal className="h-5 w-5" /> },
+    { id: "grid", label: "Grade", description: "Grade com destaque visual", icon: <LayoutGrid className="h-5 w-5" /> },
+  ],
 };
 
 const ICON_SIZES = [
@@ -130,6 +141,7 @@ const FILTER_MODES = [
   { id: "most_redeemed", label: "Mais resgatados" },
   { id: "newest", label: "Novos (14 dias)" },
   { id: "random", label: "Aleatório" },
+  { id: "featured", label: "Destaques" },
 ];
 
 /* ─── Wizard Steps ─── */
@@ -144,6 +156,7 @@ function resolveTemplateKey(contentId: string, layoutId: string): string {
     links: { carousel: "MANUAL_LINKS_CAROUSEL", grid: "MANUAL_LINKS_GRID" },
     banners: { carousel: "banner_hero" },
     info: { list: "LIST_INFO", grid: "GRID_INFO", logos: "GRID_LOGOS" },
+    highlights: { carousel: "highlights_weekly", grid: "highlights_weekly" },
   };
   return map[contentId]?.[layoutId] || "offers_carousel";
 }
@@ -509,7 +522,7 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
           </div>
 
           {/* Filters - only for offers/stores/vouchers */}
-          {["offers", "stores", "vouchers"].includes(contentType) && (
+          {["offers", "stores", "vouchers", "highlights"].includes(contentType) && (
             <div className="rounded-xl border p-4 space-y-4">
               <Label className="text-sm font-semibold">Filtros</Label>
               <div>

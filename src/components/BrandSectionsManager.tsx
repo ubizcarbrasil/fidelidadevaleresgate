@@ -24,6 +24,7 @@ const TEMPLATE_TYPE_LABELS: Record<string, string> = {
   STORES_GRID: "Grade de Parceiros",
   STORES_LIST: "Lista de Parceiros",
   VOUCHERS_CARDS: "Cards de Vouchers",
+  HIGHLIGHTS_WEEKLY: "Destaques da Semana",
 };
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
