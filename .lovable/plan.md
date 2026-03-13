@@ -1,30 +1,13 @@
 
 
-## Integrar CRM do Lince via iframe
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-### O que será feito
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-Substituir todo o conteúdo das rotas `/crm/*` por uma única página que carrega o CRM externo (`https://valeresgatacrm.lovable.app/`) dentro de um iframe fullscreen. O sidebar do CRM Estratégico será simplificado para um único item que abre essa página.
+### Ação
 
-### Detalhes técnicos
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-#### 1. Criar página `CrmEmbedPage.tsx`
-- Nova página em `src/pages/CrmEmbedPage.tsx`
-- Contém um `<iframe>` apontando para `https://valeresgatacrm.lovable.app/` com `width: 100%`, `height: 100%` (ocupando toda a área de conteúdo)
-- Sem borda, sem scroll duplo (`overflow: hidden` no container, `allow` adequados no iframe)
-
-#### 2. Atualizar rotas em `src/App.tsx`
-- Remover todas as 12 rotas individuais de `/crm/*` (linhas 224-235)
-- Substituir por uma única rota: `<Route path="crm/*" element={<CrmEmbedPage />} />`
-
-#### 3. Simplificar sidebar
-- **BrandSidebar.tsx**: Reduzir o grupo "CRM Estratégico" para um único item "CRM Estratégico" apontando para `/crm`
-- **RootSidebar.tsx**: Mesmo tratamento -- um único item "CRM Estratégico" apontando para `/crm`
-
-#### 4. Limpeza
-- Os imports lazy das 12 páginas CRM removidas serão eliminados do `App.tsx`
-- Os arquivos de página CRM antigos (`CrmDashboardPage`, `CrmCustomersPage`, etc.) continuam existindo mas não serão mais referenciados pelas rotas
-
-### Observação importante
-O iframe pode ser bloqueado pelo CRM externo se ele tiver header `X-Frame-Options: DENY` ou `Content-Security-Policy: frame-ancestors 'none'`. Se isso acontecer, será necessário ajustar as configurações do projeto externo para permitir embedding.
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 

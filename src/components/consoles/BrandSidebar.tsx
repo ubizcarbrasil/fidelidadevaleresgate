@@ -81,7 +81,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.jornada", defaultTitle: "Jornada do Empreendedor", url: "/brand-journey", icon: Rocket },
       { key: "sidebar.jornada_emissor", defaultTitle: "Jornada do Emissor", url: "/emitter-journey", icon: Zap },
-      { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm/journey", icon: Sparkles, moduleKey: "crm" },
+      { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm", icon: Sparkles, moduleKey: "crm" },
     ],
   },
   {
@@ -120,17 +120,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "CRM Estratégico",
     items: [
-      { key: "sidebar.crm", defaultTitle: "Dashboard CRM", url: "/crm", icon: TrendingUp, moduleKey: "crm" },
-      { key: "sidebar.crm_contacts", defaultTitle: "Contatos", url: "/crm/contacts", icon: Contact, moduleKey: "crm" },
-      { key: "sidebar.crm_customers", defaultTitle: "Clientes CRM", url: "/crm/customers", icon: Users2, moduleKey: "crm" },
-      { key: "sidebar.crm_tiers", defaultTitle: "Tiers", url: "/crm/tiers", icon: Layers3, moduleKey: "crm" },
-      { key: "sidebar.crm_opportunities", defaultTitle: "Oportunidades", url: "/crm/opportunities", icon: Target, moduleKey: "crm" },
-      { key: "sidebar.crm_pareto", defaultTitle: "Análise Pareto", url: "/crm/pareto", icon: Crown, moduleKey: "crm" },
-      { key: "sidebar.crm_audiences", defaultTitle: "Públicos", url: "/crm/audiences", icon: PieChart, moduleKey: "crm" },
-      { key: "sidebar.crm_campaigns", defaultTitle: "Campanhas", url: "/crm/campaigns", icon: Megaphone, moduleKey: "crm" },
-      { key: "sidebar.crm_analytics", defaultTitle: "Analytics", url: "/crm/analytics", icon: BarChart3, moduleKey: "crm" },
-      { key: "sidebar.crm_lost", defaultTitle: "Clientes Perdidos", url: "/crm/lost", icon: UserX, moduleKey: "crm" },
-      { key: "sidebar.crm_potential", defaultTitle: "Clientes Potenciais", url: "/crm/potential", icon: Target, moduleKey: "crm" },
+      { key: "sidebar.crm", defaultTitle: "CRM Estratégico", url: "/crm", icon: TrendingUp, moduleKey: "crm" },
       { key: "sidebar.importar_csv", defaultTitle: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
     ],
   },

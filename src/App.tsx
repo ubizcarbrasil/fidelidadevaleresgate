@@ -100,18 +100,7 @@ const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const PartnerLandingPage = lazy(() => import("@/pages/PartnerLandingPage"));
 const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfigPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
-const CrmDashboardPage = lazy(() => import("@/pages/CrmDashboardPage"));
-const CrmLostCustomersPage = lazy(() => import("@/pages/CrmLostCustomersPage"));
-const CrmPotentialCustomersPage = lazy(() => import("@/pages/CrmPotentialCustomersPage"));
-const CrmCustomersPage = lazy(() => import("@/pages/CrmCustomersPage"));
-const CrmParetoPage = lazy(() => import("@/pages/CrmParetoPage"));
-const CrmOpportunitiesPage = lazy(() => import("@/pages/CrmOpportunitiesPage"));
-const CrmJourneyPage = lazy(() => import("@/pages/CrmJourneyPage"));
-const CrmContactsPage = lazy(() => import("@/pages/CrmContactsPage"));
-const CrmTierPage = lazy(() => import("@/pages/CrmTierPage"));
-const CrmAudiencesPage = lazy(() => import("@/pages/CrmAudiencesPage"));
-const CrmCampaignsPage = lazy(() => import("@/pages/CrmCampaignsPage"));
-const CrmAnalyticsPage = lazy(() => import("@/pages/CrmAnalyticsPage"));
+const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
@@ -221,18 +210,7 @@ function AppRoutes() {
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
           <Route path="machine-integration" element={<MachineIntegrationPage />} />
           <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
-          <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
-          <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
-          <Route path="crm/opportunities" element={<ModuleGuard moduleKey="crm"><CrmOpportunitiesPage /></ModuleGuard>} />
-          <Route path="crm/pareto" element={<ModuleGuard moduleKey="crm"><CrmParetoPage /></ModuleGuard>} />
-          <Route path="crm/journey" element={<ModuleGuard moduleKey="crm"><CrmJourneyPage /></ModuleGuard>} />
-          <Route path="crm/lost" element={<ModuleGuard moduleKey="crm"><CrmLostCustomersPage /></ModuleGuard>} />
-          <Route path="crm/potential" element={<ModuleGuard moduleKey="crm"><CrmPotentialCustomersPage /></ModuleGuard>} />
-          <Route path="crm/contacts" element={<ModuleGuard moduleKey="crm"><CrmContactsPage /></ModuleGuard>} />
-          <Route path="crm/tiers" element={<ModuleGuard moduleKey="crm"><CrmTierPage /></ModuleGuard>} />
-          <Route path="crm/audiences" element={<ModuleGuard moduleKey="crm"><CrmAudiencesPage /></ModuleGuard>} />
-          <Route path="crm/campaigns" element={<ModuleGuard moduleKey="crm"><CrmCampaignsPage /></ModuleGuard>} />
-          <Route path="crm/analytics" element={<ModuleGuard moduleKey="crm"><CrmAnalyticsPage /></ModuleGuard>} />
+          <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
