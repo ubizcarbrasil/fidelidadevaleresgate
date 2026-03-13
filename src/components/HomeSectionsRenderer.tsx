@@ -382,6 +382,8 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} />
       ) : templateType === "BANNER_CAROUSEL" ? (
         <BannerCarousel items={items} primary={primary} bannerHeight={section.banner_height} />
+      ) : templateType === "HIGHLIGHTS_WEEKLY" ? (
+        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} />
       ) : null}
     </section>
   );

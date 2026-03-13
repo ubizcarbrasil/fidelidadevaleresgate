@@ -522,7 +522,7 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
           </div>
 
           {/* Filters - only for offers/stores/vouchers */}
-          {["offers", "stores", "vouchers"].includes(contentType) && (
+          {["offers", "stores", "vouchers", "highlights"].includes(contentType) && (
             <div className="rounded-xl border p-4 space-y-4">
               <Label className="text-sm font-semibold">Filtros</Label>
               <div>

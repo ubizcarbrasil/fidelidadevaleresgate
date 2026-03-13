@@ -97,4 +97,5 @@ export const SECTION_TYPES = [
   { value: "LIST_INFO", label: "Lista com Informações" },
   { value: "GRID_INFO", label: "Grade com Informações" },
   { value: "GRID_LOGOS", label: "Grade de Logos/Atalhos" },
+  { value: "HIGHLIGHTS_WEEKLY", label: "Destaques da Semana" },
 ];
