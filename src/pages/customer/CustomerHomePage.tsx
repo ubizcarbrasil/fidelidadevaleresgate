@@ -70,7 +70,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-5 pt-3"
+        className="max-w-lg mx-auto px-5 pt-2"
       >
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
           {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
