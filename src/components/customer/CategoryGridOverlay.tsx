@@ -47,6 +47,7 @@ export default function CategoryGridOverlay({ onBack, onCategoryClick }: Categor
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
+        .eq("approval_status", "APPROVED")
         .not("taxonomy_segment_id", "is", null);
 
       if (!data) { setLoading(false); return; }
