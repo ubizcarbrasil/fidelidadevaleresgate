@@ -57,25 +57,28 @@
     --vb-badge-new: 142 72% 40%;
     --vb-badge-hot: 0 72% 51%;
     --vb-badge-exclusive: 270 60% 50%;
+    --vb-card-dark: 240 12% 12%;
+    --vb-card-elevated: 240 10% 16%;
+    --vb-search-bg: 40 20% 92%;
   }
 
   .dark {
-    --background: 240 15% 5%;
+    --background: 240 20% 4%;
     --foreground: 220 16% 93%;
 
-    --card: 240 12% 9%;
+    --card: 240 14% 10%;
     --card-foreground: 220 16% 93%;
 
-    --popover: 240 12% 9%;
+    --popover: 240 14% 10%;
     --popover-foreground: 220 16% 93%;
 
     --primary: 217 90% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 10% 14%;
+    --secondary: 240 12% 15%;
     --secondary-foreground: 220 16% 93%;
 
-    --muted: 240 10% 14%;
+    --muted: 240 12% 15%;
     --muted-foreground: 240 5% 55%;
 
     --accent: 217 60% 20%;
@@ -90,8 +93,8 @@
     --warning: 38 80% 45%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 240 10% 14%;
-    --input: 240 10% 14%;
+    --border: 240 12% 14%;
+    --input: 240 12% 14%;
     --ring: 217 90% 55%;
 
     --sidebar-background: 217 90% 8%;
@@ -104,13 +107,16 @@
     --sidebar-ring: 217 90% 55%;
 
     /* Vale Bonus custom tokens — dark */
-    --vb-surface: 240 10% 12%;
-    --vb-surface-elevated: 240 12% 15%;
+    --vb-surface: 240 12% 10%;
+    --vb-surface-elevated: 240 14% 14%;
     --vb-gold: 46 95% 55%;
     --vb-gold-foreground: 30 20% 10%;
     --vb-badge-new: 142 60% 45%;
     --vb-badge-hot: 0 72% 55%;
     --vb-badge-exclusive: 270 60% 60%;
+    --vb-card-dark: 240 14% 12%;
+    --vb-card-elevated: 240 10% 18%;
+    --vb-search-bg: 40 15% 90%;
   }
 }
 
@@ -183,4 +189,14 @@ html, body {
 .vb-glass {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Vale Bonus discount badge */
+.vb-discount-badge {
+  background: hsl(0 0% 0% / 0.7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
 }

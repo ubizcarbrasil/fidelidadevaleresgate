@@ -2,19 +2,13 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ArrowLeft, Search, Store, MapPin } from "lucide-react";
+import { ArrowLeft, Search, Store, MapPin, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 
 interface CategoryStoresOverlayProps {
   category: { id: string; name: string; icon_name: string | null };
   onBack: () => void;
-}
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
 }
 
 export default function CategoryStoresOverlay({ category, onBack }: CategoryStoresOverlayProps) {
@@ -23,9 +17,8 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"produtos" | "bonus">("produtos");
 
-  const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
@@ -99,25 +92,52 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
               <h1 className="text-lg font-bold text-foreground truncate" style={{ fontFamily: fontHeading }}>
                 {category.name}
               </h1>
-              <p className="text-[11px] text-muted-foreground">
-                {filtered.length} {filtered.length === 1 ? "loja encontrada" : "lojas encontradas"}
+              <p className="text-xs text-muted-foreground">
+                {filtered.length} {filtered.length === 1 ? "oferta encontrada" : "ofertas encontradas"}
               </p>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="max-w-lg mx-auto px-4 pb-3">
-            <div className="flex items-center gap-2.5 rounded-xl px-4 py-2.5" style={{ backgroundColor: "hsl(var(--muted))" }}>
-              <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar lojas..."
-                className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/50"
-              />
-            </div>
+          {/* Tabs */}
+          <div className="max-w-lg mx-auto px-4 flex gap-0 mb-2">
+            {(["produtos", "bonus"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="flex-1 py-2.5 text-sm font-semibold text-center transition-colors relative"
+                style={{
+                  color: activeTab === tab ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                }}
+              >
+                {tab === "produtos" ? "Produtos" : "Bonus"}
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="category-tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-[2px]"
+                    style={{ backgroundColor: "hsl(var(--vb-gold))" }}
+                  />
+                )}
+              </button>
+            ))}
           </div>
+
+          {/* Filter pills */}
+          <div className="max-w-lg mx-auto px-4 pb-3 flex gap-2">
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{ backgroundColor: "hsl(var(--muted))", color: "hsl(var(--foreground))" }}
+            >
+              Ordenação padrão
+            </div>
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{ backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
+            >
+              <SlidersHorizontal className="h-3 w-3" />
+              Filtros
+            </button>
+          </div>
+
           <div className="h-px" style={{ backgroundColor: "hsl(var(--border))" }} />
         </div>
 
@@ -148,7 +168,7 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
                     onClick={() => openStore(store)}
                   >
                     {/* Banner / Image */}
-                    <div className="relative h-36 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+                    <div className="relative h-40 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
                       {store.banner_url || store.logo_url ? (
                         <img
                           src={store.banner_url || store.logo_url}
@@ -161,12 +181,9 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
                         </div>
                       )}
 
-                      {/* Discount badge */}
+                      {/* Discount badge - top left */}
                       {hasDiscount && (
-                        <div
-                          className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                          style={{ backgroundColor: accent, color: "hsl(var(--primary-foreground))" }}
-                        >
+                        <div className="absolute top-3 left-3 vb-discount-badge">
                           {store.discount_percent > 0
                             ? `${store.discount_percent}% OFF`
                             : `${store.points_per_real}x pts`}
@@ -179,18 +196,9 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
                       <h3 className="font-bold text-sm text-foreground" style={{ fontFamily: fontHeading }}>
                         {store.name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        {segmentName && (
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full">
-                            {segmentName}
-                          </Badge>
-                        )}
-                        {store.category && segmentName !== store.category && (
-                          <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-full">
-                            {store.category}
-                          </Badge>
-                        )}
-                      </div>
+                      {segmentName && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{segmentName}</p>
+                      )}
                       {store.address && (
                         <div className="flex items-center gap-1 mt-2 text-[11px] text-muted-foreground">
                           <MapPin className="h-3 w-3 flex-shrink-0" />

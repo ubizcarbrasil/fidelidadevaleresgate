@@ -17,21 +17,17 @@ interface CategoryGridOverlayProps {
   onCategoryClick: (category: CategoryItem) => void;
 }
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
 function kebabToPascal(name: string): string {
   return name.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
 }
 
-function CatIcon({ iconName, color }: { iconName: string | null; color: string }) {
-  if (!iconName) return <Store className="h-6 w-6" style={{ color }} />;
-  if (iconName.startsWith("http")) return <img src={iconName} alt="" className="h-6 w-6 object-contain" />;
+function CatIcon({ iconName }: { iconName: string | null }) {
+  const color = "hsl(var(--vb-gold))";
+  if (!iconName) return <Store className="h-7 w-7" style={{ color }} />;
+  if (iconName.startsWith("http")) return <img src={iconName} alt="" className="h-7 w-7 object-contain" />;
   const LucideIcon = (icons as Record<string, any>)[kebabToPascal(iconName)];
-  if (!LucideIcon) return <Store className="h-6 w-6" style={{ color }} />;
-  return <LucideIcon className="h-6 w-6" style={{ color }} />;
+  if (!LucideIcon) return <Store className="h-7 w-7" style={{ color }} />;
+  return <LucideIcon className="h-7 w-7" style={{ color }} />;
 }
 
 export default function CategoryGridOverlay({ onBack, onCategoryClick }: CategoryGridOverlayProps) {
@@ -39,7 +35,6 @@ export default function CategoryGridOverlay({ onBack, onCategoryClick }: Categor
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const accent = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
@@ -101,8 +96,8 @@ export default function CategoryGridOverlay({ onBack, onCategoryClick }: Categor
               <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: fontHeading }}>
                 Categorias
               </h1>
-              <p className="text-[11px] text-muted-foreground">
-                Todas as categorias disponíveis
+              <p className="text-xs font-semibold text-muted-foreground">
+                Todas as categorias
               </p>
             </div>
           </div>
@@ -115,7 +110,7 @@ export default function CategoryGridOverlay({ onBack, onCategoryClick }: Categor
             {loading ? (
               <div className="grid grid-cols-2 gap-3">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-20 rounded-2xl" />
+                  <Skeleton key={i} className="h-28 rounded-2xl" />
                 ))}
               </div>
             ) : (
@@ -127,24 +122,14 @@ export default function CategoryGridOverlay({ onBack, onCategoryClick }: Categor
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.03, duration: 0.25 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-3 rounded-2xl p-4 text-left transition-colors"
-                    style={{ backgroundColor: "hsl(var(--card))" }}
+                    className="relative flex flex-col justify-between rounded-2xl p-4 text-left transition-colors h-28"
+                    style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
                     onClick={() => onCategoryClick(cat)}
                   >
-                    <div
-                      className="h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: "hsl(var(--muted))" }}
-                    >
-                      <CatIcon iconName={cat.icon_name} color={accent} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-foreground truncate" style={{ fontFamily: fontHeading }}>
-                        {cat.name}
-                      </h3>
-                      <p className="text-[10px] text-muted-foreground">
-                        {cat.store_count} {cat.store_count === 1 ? "loja" : "lojas"}
-                      </p>
-                    </div>
+                    <CatIcon iconName={cat.icon_name} />
+                    <h3 className="text-sm font-bold text-foreground mt-auto" style={{ fontFamily: fontHeading }}>
+                      {cat.name}
+                    </h3>
                   </motion.button>
                 ))}
               </div>

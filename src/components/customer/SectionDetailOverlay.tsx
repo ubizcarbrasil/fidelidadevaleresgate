@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Search, Store, ShoppingBag, MapPin } from "lucide-react";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { Badge } from "@/components/ui/badge";
 
 interface SectionDetailOverlayProps {
   section: {
@@ -74,16 +73,10 @@ export default function SectionDetailOverlay({
               <h1 className="text-lg font-bold text-foreground truncate" style={{ fontFamily: fontHeading }}>
                 {section.title || "Todos"}
               </h1>
-              {section.subtitle && (
-                <p className="text-[11px] text-muted-foreground truncate">{section.subtitle}</p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                {filtered.length} {filtered.length === 1 ? "oferta encontrada" : "ofertas encontradas"}
+              </p>
             </div>
-            <span
-              className="text-xs font-medium px-2.5 py-1 rounded-full"
-              style={{ backgroundColor: "hsl(var(--muted))", color: primary }}
-            >
-              {filtered.length}
-            </span>
           </div>
 
           {/* Search */}
@@ -125,7 +118,7 @@ export default function SectionDetailOverlay({
                   onClick={() => isStore ? openStore(item) : openOffer(item)}
                 >
                   {/* Banner Image */}
-                  <div className="relative h-36 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+                  <div className="relative h-40 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
                     {imgSrc ? (
                       <img
                         src={imgSrc}
@@ -142,21 +135,15 @@ export default function SectionDetailOverlay({
                       </div>
                     )}
 
-                    {/* Discount badge */}
+                    {/* Discount badge - top left */}
                     {hasDiscount && (
-                      <div
-                        className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                        style={{ backgroundColor: primary, color: "#fff" }}
-                      >
+                      <div className="absolute top-3 left-3 vb-discount-badge">
                         {item.discount_percent}% OFF
                       </div>
                     )}
 
                     {item.points_per_real > 0 && !hasDiscount && (
-                      <div
-                        className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white"
-                        style={{ backgroundColor: "hsl(var(--success))" }}
-                      >
+                      <div className="absolute top-3 left-3 vb-discount-badge">
                         {item.points_per_real}x pts
                       </div>
                     )}
@@ -172,18 +159,16 @@ export default function SectionDetailOverlay({
                         {storeName}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {segmentTag && (
-                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full">
-                          {segmentTag}
-                        </Badge>
-                      )}
-                      {item.value_rescue > 0 && (
-                        <span className="text-xs font-bold" style={{ color: primary }}>
-                          R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
-                        </span>
-                      )}
-                    </div>
+                    {segmentTag && (
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                        {segmentTag}
+                      </p>
+                    )}
+                    {item.value_rescue > 0 && (
+                      <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                        R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
+                      </span>
+                    )}
                     {item.address && (
                       <div className="flex items-center gap-1 mt-2 text-[11px] text-muted-foreground">
                         <MapPin className="h-3 w-3 flex-shrink-0" />

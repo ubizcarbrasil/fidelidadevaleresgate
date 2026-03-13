@@ -509,7 +509,6 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
     <div className="max-w-lg mx-auto">
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((o: any, idx: number) => {
-          // Determine smart badge
           const isNew = o.created_at && (Date.now() - new Date(o.created_at).getTime()) < 14 * 86400000;
 
           return (
@@ -518,34 +517,31 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: idx * 0.04 }}
-              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+              className="min-w-[170px] max-w-[190px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
               style={{
                 backgroundColor: "hsl(var(--card))",
                 scrollSnapAlign: "start",
               }}
               onClick={() => onOfferClick?.(o)}
             >
-              <div className="relative h-28 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="relative h-32 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
                 {o.image_url || o.stores?.logo_url ? (
-                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-28 w-full" />
+                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-32 w-full" />
                 ) : (
-                  <div className="h-28 w-full flex items-center justify-center">
+                  <div className="h-32 w-full flex items-center justify-center">
                     <ShoppingBag className="h-10 w-10 text-muted-foreground/20" />
                   </div>
                 )}
-                {/* Discount badge */}
+                {/* Discount badge - top left */}
                 {o.discount_percent > 0 && (
-                  <div
-                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: accent, color: "hsl(var(--primary-foreground))" }}
-                  >
+                  <div className="absolute top-2.5 left-2.5 vb-discount-badge">
                     {o.discount_percent}% OFF
                   </div>
                 )}
-                {/* "Novo" badge */}
+                {/* "Novo" badge - top left */}
                 {isNew && !o.discount_percent && (
                   <div
-                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                    className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white"
                     style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}
                   >
                     Novo
@@ -553,12 +549,17 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 )}
               </div>
               <div className="px-3 py-2.5">
-                <h3 className="font-semibold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+                <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
                 {o.stores?.name && (
                   <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
                 )}
-                {o.value_rescue > 0 && (
-                  <span className="font-bold text-xs mt-1 block" style={{ color: accent, fontFamily: fontHeading }}>
+                {o.discount_percent > 0 && (
+                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                    {o.discount_percent}% OFF
+                  </span>
+                )}
+                {!o.discount_percent && o.value_rescue > 0 && (
+                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}
@@ -620,7 +621,6 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 // --- STORES_GRID ---
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const accent = primary;
 
   return (
     <div className="max-w-lg mx-auto">
@@ -631,27 +631,29 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="min-w-[140px] max-w-[160px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
             style={{ backgroundColor: "hsl(var(--card))", scrollSnapAlign: "start" }}
             onClick={() => onStoreClick?.(b)}
           >
-            <div className="relative h-24 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+            <div className="relative h-28 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
               {b.logo_url ? (
-                <LazyImage src={b.logo_url} alt={b.name} className="h-24 w-full" />
+                <LazyImage src={b.logo_url} alt={b.name} className="h-28 w-full" />
               ) : (
                 <Store className="h-10 w-10 text-muted-foreground/20" />
               )}
-              {b.points_per_real > 0 && (
-                <div
-                  className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-white text-[9px] font-bold"
-                  style={{ backgroundColor: "hsl(var(--success))" }}
-                >
+              {b.discount_percent > 0 && (
+                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
+                  {b.discount_percent}% OFF
+                </div>
+              )}
+              {b.points_per_real > 0 && !b.discount_percent && (
+                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
                   {b.points_per_real}x pts
                 </div>
               )}
             </div>
-            <div className="px-3 py-2">
-              <h3 className="font-semibold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+            <div className="px-3 py-2.5">
+              <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
               {b.category && (
                 <p className="text-[10px] text-muted-foreground truncate mt-0.5">{b.category}</p>
               )}
@@ -798,10 +800,10 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
             }}
             onClick={() => onOfferClick?.(o)}
           >
-            {/* Featured badge */}
+            {/* Featured badge - top left */}
             <div
-              className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
-              style={{ backgroundColor: accent, color: "hsl(var(--primary-foreground))" }}
+              className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide"
+              style={{ backgroundColor: "hsl(var(--vb-gold))", color: "hsl(var(--vb-gold-foreground))" }}
             >
               <Star className="h-3 w-3" fill="currentColor" />
               Destaque
@@ -822,12 +824,12 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
               )}
               <div className="flex items-center justify-between mt-2">
                 {o.discount_percent > 0 && (
-                  <span className="font-black text-base" style={{ color: accent, fontFamily: fontHeading }}>
+                  <span className="font-black text-base" style={{ color: "hsl(var(--vb-gold))", fontFamily: fontHeading }}>
                     {o.discount_percent}% OFF
                   </span>
                 )}
                 {o.value_rescue > 0 && (
-                  <span className="font-bold text-sm" style={{ color: accent }}>
+                  <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-gold))" }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}
