@@ -692,7 +692,7 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
             Próximo <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         ) : (
-          <Button className="flex-1" onClick={handleCreate} disabled={saving || !title.trim()}>
+          <Button className="flex-1" onClick={handleCreate} disabled={saving || !title.trim() || (contentType === "by_category" && selectedSegmentIds.length === 0)}>
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             <Check className="h-4 w-4 mr-1" /> Criar Sessão
           </Button>

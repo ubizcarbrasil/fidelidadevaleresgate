@@ -321,7 +321,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       setLoading(false);
     };
     fetchItems();
-  }, [section, branchId, templateType, filterMode, couponTypeFilter, cityFilterJson.length, minStoresVisible]);
+  }, [section, branchId, templateType, filterMode, couponTypeFilter, cityFilterJson.length, minStoresVisible, segmentFilterIds.join()]);
 
   const handleCtaClick = useCallback(() => {
     if (items.length > 0) {
