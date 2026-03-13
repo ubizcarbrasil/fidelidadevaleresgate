@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { Navigation, ChevronRight, Coins, Loader2 } from "lucide-react";
+import { Navigation, ChevronRight, Coins, Loader2, Search, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
@@ -37,10 +37,9 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [geoDetected, setGeoDetected] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
-  const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
+  const accent = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   const firstName = customer?.name?.split(" ")[0] || "Visitante";
@@ -84,62 +83,85 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
 
   return (
     <div className="pb-4">
-      {/* Compact hero: Greeting + Balance + Location */}
+      {/* Hero Section: Greeting + Balance */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-4 pt-3 pb-2"
+        className="max-w-lg mx-auto px-4 pt-4 pb-1"
       >
-        {/* Greeting + Points row */}
-        <div className="flex items-center justify-between mb-1">
-          <h2
-            className="text-base font-bold"
-            style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
-          >
-            {greeting}, <span style={{ color: accent }}>{firstName}</span>
-          </h2>
+        {/* Top row: Greeting + Balance badge */}
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h2
+              className="text-lg font-bold"
+              style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
+            >
+              {greeting},{" "}
+              <span style={{ color: "hsl(var(--vb-gold))" }}>{firstName}</span>
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Confira as melhores ofertas para você
+            </p>
+          </div>
           {loading ? (
-            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-10 w-28 rounded-2xl" />
           ) : (
             <button
               onClick={() => { haptic("light"); onOpenLedger?.(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+              className="flex items-center gap-2 px-4 py-2 rounded-2xl active:scale-95 transition-transform"
               style={{
-                backgroundColor: "hsl(var(--vb-gold) / 0.15)",
-                border: "1px solid hsl(var(--vb-gold) / 0.3)",
+                background: "linear-gradient(135deg, hsl(var(--vb-gold)) 0%, hsl(var(--vb-gold) / 0.8) 100%)",
               }}
             >
-              <Coins className="h-3.5 w-3.5" style={{ color: "hsl(var(--vb-gold))" }} />
-              <span className="text-sm font-bold" style={{ color: "hsl(var(--vb-gold))" }}>
-                {customer ? Number(customer.points_balance).toLocaleString("pt-BR") : "0"}
-              </span>
-              <span className="text-[10px] font-medium" style={{ color: "hsl(var(--vb-gold) / 0.7)" }}>pts</span>
+              <Coins className="h-4 w-4" style={{ color: "hsl(var(--vb-gold-foreground))" }} />
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] font-medium leading-none" style={{ color: "hsl(var(--vb-gold-foreground) / 0.7)" }}>Saldo</span>
+                <span className="text-sm font-bold leading-tight" style={{ color: "hsl(var(--vb-gold-foreground))" }}>
+                  {customer ? `R$ ${Number(customer.points_balance).toLocaleString("pt-BR")}` : "R$ 0"}
+                </span>
+              </div>
             </button>
           )}
+        </div>
+
+        {/* Search bar */}
+        <div
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-3"
+          style={{ backgroundColor: "hsl(var(--vb-search-bg))" }}
+        >
+          <Search className="h-4.5 w-4.5 flex-shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="O que está procurando?"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+            style={{ color: "hsl(var(--foreground))" }}
+          />
         </div>
 
         {/* Location line */}
         <button
           onClick={handleRedetect}
           disabled={detecting}
-          className="flex items-center gap-1.5 active:scale-[0.97] transition-transform group"
+          className="flex items-center gap-2 active:scale-[0.97] transition-transform group mb-1"
         >
           {detecting ? (
-            <Loader2 className="h-3 w-3 animate-spin" style={{ color: accent }} />
+            <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "hsl(var(--vb-gold))" }} />
           ) : (
-            <Navigation className="h-3 w-3" style={{ color: geoDetected ? accent : "hsl(var(--muted-foreground))" }} />
+            <MapPin className="h-3.5 w-3.5" style={{ color: geoDetected ? "hsl(var(--vb-gold))" : "hsl(var(--muted-foreground))" }} />
           )}
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {detecting
               ? "Detectando sua cidade..."
               : cityName
-                ? <>Ofertas em: <strong style={{ color: geoDetected ? accent : "hsl(var(--foreground))" }}>{cityName}</strong></>
+                ? <>Visualizando ofertas em: <strong className="text-foreground">{cityName}</strong></>
                 : "Toque para detectar sua cidade"
             }
           </span>
           {!detecting && hasMultipleBranches && (
-            <ChevronRight className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-opacity" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
           )}
         </button>
       </motion.div>
@@ -149,6 +171,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.05 }}
+        className="mt-2"
       >
         <HomeSectionsRenderer renderBannersOnly />
       </motion.div>
@@ -158,7 +181,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.1 }}
-        className="mt-3"
+        className="mt-4"
       >
         <SegmentNavSection
           onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
@@ -171,7 +194,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
-        className="mt-2"
+        className="mt-3"
       >
         <HomeSectionsRenderer skipBanners />
       </motion.div>
