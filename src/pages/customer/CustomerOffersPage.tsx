@@ -271,7 +271,7 @@ export default function CustomerOffersPage() {
                     {hasDiscount && (
                       <span
                         className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                        style={{ backgroundColor: withAlpha(primary, 0.12), color: primary }}
+                        style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)", color: "hsl(var(--vb-highlight))" }}
                       >
                         {offer.discount_percent}% OFF
                       </span>

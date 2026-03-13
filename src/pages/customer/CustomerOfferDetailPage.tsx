@@ -593,7 +593,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
                       <div>
                         <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Crédito</p>
-                        <p className="text-2xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                        <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </p>
                         <p className="text-[11px] mt-0.5 text-muted-foreground">crédito condicionado à compra mínima</p>
