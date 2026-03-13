@@ -114,6 +114,14 @@ interface HomeSectionsRendererProps {
   skipBanners?: boolean;
 }
 
+/** Boost sponsored items to the top of the list */
+function boostSponsored(items: any[], sponsoredIds: Set<string>, idKey: string): any[] {
+  if (sponsoredIds.size === 0) return items;
+  const sponsored = items.filter((i) => sponsoredIds.has(i[idKey]));
+  const rest = items.filter((i) => !sponsoredIds.has(i[idKey]));
+  return [...sponsored, ...rest];
+}
+
 /** Renders all enabled brand sections in order */
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
