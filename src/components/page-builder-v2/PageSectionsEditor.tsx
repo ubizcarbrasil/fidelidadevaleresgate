@@ -74,6 +74,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const isHomeMode = page === null;
   const { currentBrandId } = useBrandGuard();
   const [sections, setSections] = useState<SectionRow[]>([]);
+  const [nativeSections, setNativeSections] = useState<NativeSectionConfig[]>(DEFAULT_NATIVE_SECTIONS);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
