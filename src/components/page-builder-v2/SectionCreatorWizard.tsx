@@ -735,6 +735,31 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
           </Button>
         )}
       </div>
+      </div>
+
+      {/* Desktop preview - sticky sidebar */}
+      {!isMobile && (
+        <div className="hidden lg:flex flex-col items-center sticky top-6 self-start pt-6 pr-6">
+          <SectionWizardPreview {...previewProps} />
+        </div>
+      )}
+
+      {/* Mobile preview - floating button with sheet */}
+      {isMobile && (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              size="icon"
+              className="fixed bottom-20 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
+            >
+              <Smartphone className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] flex items-center justify-center">
+            <SectionWizardPreview {...previewProps} />
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
