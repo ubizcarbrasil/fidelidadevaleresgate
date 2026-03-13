@@ -172,7 +172,7 @@ export default function SponsoredPlacementsPage() {
 
   return (
     <div>
-      <PageHeader title="Campanhas Patrocinadas" subtitle="Destaque parceiros pagantes na home do app" />
+      <PageHeader title="Campanhas Patrocinadas" description="Destaque parceiros pagantes na home do app" />
 
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div className="flex gap-2">
