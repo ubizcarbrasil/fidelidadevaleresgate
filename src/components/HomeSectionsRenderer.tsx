@@ -747,3 +747,66 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
     </div>
   );
 }
+
+// --- HIGHLIGHTS_WEEKLY (featured offers with larger cards and star badge) ---
+function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((o: any, idx: number) => (
+          <motion.div
+            key={o.id}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, delay: idx * 0.06 }}
+            className="min-w-[220px] max-w-[260px] flex-shrink-0 rounded-[20px] overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform relative"
+            style={{
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              scrollSnapAlign: "start",
+            }}
+            onClick={() => onOfferClick?.(o)}
+          >
+            {/* Featured badge */}
+            <div
+              className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+              style={{ backgroundColor: primary, color: "#fff" }}
+            >
+              <Star className="h-3 w-3" fill="currentColor" />
+              Destaque
+            </div>
+
+            {o.image_url ? (
+              <LazyImage src={o.image_url} alt={o.title} className="h-36 w-full" />
+            ) : (
+              <div className="h-36 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                <Star className="h-10 w-10" style={{ color: `${primary}25` }} />
+              </div>
+            )}
+
+            <div className="px-4 py-3">
+              <h3 className="font-bold text-sm line-clamp-2" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+              {o.stores?.name && (
+                <p className="text-[11px] mt-1 truncate" style={{ color: `${fg}50` }}>{o.stores.name}</p>
+              )}
+              <div className="flex items-center justify-between mt-2">
+                {o.discount_percent > 0 && (
+                  <span className="font-black text-base" style={{ color: primary, fontFamily: fontHeading }}>
+                    {o.discount_percent}% OFF
+                  </span>
+                )}
+                {o.value_rescue > 0 && (
+                  <span className="font-bold text-sm" style={{ color: primary }}>
+                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+        <div className="min-w-[16px] flex-shrink-0" />
+      </div>
+    </div>
+  );
+}
