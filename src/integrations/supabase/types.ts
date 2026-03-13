@@ -611,6 +611,7 @@ export type Database = {
           order_index: number
           page_id: string | null
           rows_count: number
+          segment_filter_ids: string[] | null
           subtitle: string | null
           template_id: string
           title: string | null
@@ -637,6 +638,7 @@ export type Database = {
           order_index?: number
           page_id?: string | null
           rows_count?: number
+          segment_filter_ids?: string[] | null
           subtitle?: string | null
           template_id: string
           title?: string | null
@@ -663,6 +665,7 @@ export type Database = {
           order_index?: number
           page_id?: string | null
           rows_count?: number
+          segment_filter_ids?: string[] | null
           subtitle?: string | null
           template_id?: string
           title?: string | null

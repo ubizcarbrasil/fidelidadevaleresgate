@@ -23,6 +23,7 @@ interface BrandSection {
   banner_image_url?: string | null;
   banner_height?: string;
   display_mode?: string;
+  segment_filter_ids?: string[] | null;
   section_templates: {
     key: string;
     name: string;
@@ -202,6 +203,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   const minStoresVisible = (section as any).min_stores_visible || 0;
   const couponTypeFilter = (section as any).coupon_type_filter || null;
   const cityFilterJson: string[] = (section as any).city_filter_json || [];
+  const segmentFilterIds: string[] = section.segment_filter_ids || [];
 
   useEffect(() => {
     const source = section.brand_section_sources?.[0];
@@ -253,6 +255,11 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
+        // Apply segment filter via store's taxonomy_segment_id
+        if (segmentFilterIds.length > 0) {
+          query = query.in("stores.taxonomy_segment_id", segmentFilterIds);
+        }
+
         // Apply coupon_type_filter
         if (couponTypeFilter && couponTypeFilter !== "all") {
           query = query.eq("coupon_type", couponTypeFilter);
@@ -289,6 +296,11 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
+        // Apply segment filter
+        if (segmentFilterIds.length > 0) {
+          query = query.in("taxonomy_segment_id", segmentFilterIds);
+        }
+
         // Apply city filter
         if (cityFilterJson.length > 0) {
           query = (query as any).in("city", cityFilterJson);
@@ -309,7 +321,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
       setLoading(false);
     };
     fetchItems();
-  }, [section, branchId, templateType, filterMode, couponTypeFilter, cityFilterJson.length, minStoresVisible]);
+  }, [section, branchId, templateType, filterMode, couponTypeFilter, cityFilterJson.length, minStoresVisible, segmentFilterIds.join()]);
 
   const handleCtaClick = useCallback(() => {
     if (items.length > 0) {

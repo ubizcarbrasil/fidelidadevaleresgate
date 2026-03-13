@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +13,7 @@ import {
   ShoppingBag, Store, Tag, Link2, Image as ImageIcon,
   Info, LayoutGrid, LayoutList, GalleryHorizontal,
   Columns2, Columns3, Columns4, RectangleHorizontal,
-  Square, CircleDot, Rows3, Star
+  Square, CircleDot, Rows3, Star, FolderTree
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +94,13 @@ const CONTENT_TYPES: ContentType[] = [
     icon: <Star className="h-6 w-6" />,
     templateKeys: ["highlights_weekly"],
   },
+  {
+    id: "by_category",
+    label: "Por Categoria",
+    description: "Filtre lojas ou ofertas por segmento",
+    icon: <FolderTree className="h-6 w-6" />,
+    templateKeys: ["stores_grid", "offers_carousel"],
+  },
 ];
 
 const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
@@ -121,6 +130,11 @@ const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
   highlights: [
     { id: "carousel", label: "Carrossel", description: "Cards grandes em destaque", icon: <GalleryHorizontal className="h-5 w-5" /> },
     { id: "grid", label: "Grade", description: "Grade com destaque visual", icon: <LayoutGrid className="h-5 w-5" /> },
+  ],
+  by_category: [
+    { id: "grid_stores", label: "Grade de Parceiros", description: "Lojas do segmento em grade", icon: <LayoutGrid className="h-5 w-5" /> },
+    { id: "carousel_offers", label: "Carrossel de Ofertas", description: "Ofertas do segmento em carrossel", icon: <GalleryHorizontal className="h-5 w-5" /> },
+    { id: "grid_offers", label: "Grade de Ofertas", description: "Ofertas do segmento em grade", icon: <LayoutGrid className="h-5 w-5" /> },
   ],
 };
 
@@ -157,6 +171,7 @@ function resolveTemplateKey(contentId: string, layoutId: string): string {
     banners: { carousel: "banner_hero" },
     info: { list: "LIST_INFO", grid: "GRID_INFO", logos: "GRID_LOGOS" },
     highlights: { carousel: "highlights_weekly", grid: "highlights_weekly" },
+    by_category: { grid_stores: "stores_grid", carousel_offers: "offers_carousel", grid_offers: "offers_grid" },
   };
   return map[contentId]?.[layoutId] || "offers_carousel";
 }
@@ -189,6 +204,38 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
   const [hasCta, setHasCta] = useState(false);
   const [filterMode, setFilterMode] = useState("recent");
   const [couponFilter, setCouponFilter] = useState("all");
+  const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
+
+  // Fetch taxonomy segments for by_category
+  const { data: taxonomyData } = useQuery({
+    queryKey: ["taxonomy-segments-wizard", brandId],
+    enabled: contentType === "by_category",
+    queryFn: async () => {
+      const [catRes, segRes] = await Promise.all([
+        supabase.from("taxonomy_categories").select("*").order("name"),
+        supabase.from("taxonomy_segments").select("*").eq("is_active", true).order("name"),
+      ]);
+      return {
+        categories: catRes.data || [],
+        segments: segRes.data || [],
+      };
+    },
+  });
+
+  // Auto-fill title from selected segments
+  useEffect(() => {
+    if (contentType !== "by_category" || !taxonomyData) return;
+    if (selectedSegmentIds.length === 0) { setTitle(""); return; }
+    if (selectedSegmentIds.length === 1) {
+      const seg = taxonomyData.segments.find((s: any) => s.id === selectedSegmentIds[0]);
+      if (seg) setTitle(seg.name);
+    } else {
+      const names = selectedSegmentIds
+        .map(id => taxonomyData.segments.find((s: any) => s.id === id)?.name)
+        .filter(Boolean);
+      setTitle(names.slice(0, 3).join(", ") + (names.length > 3 ? "..." : ""));
+    }
+  }, [selectedSegmentIds, taxonomyData, contentType]);
 
   const canNext = () => {
     if (step === 0) return !!contentType;
@@ -263,6 +310,9 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
     };
     if (pageId) {
       insertData.page_id = pageId;
+    }
+    if (contentType === "by_category" && selectedSegmentIds.length > 0) {
+      insertData.segment_filter_ids = selectedSegmentIds;
     }
 
     const { error } = await supabase.from("brand_sections").insert(insertData);
@@ -521,8 +571,51 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
             )}
           </div>
 
+          {/* Segment picker for by_category */}
+          {contentType === "by_category" && taxonomyData && (
+            <div className="rounded-xl border p-4 space-y-4">
+              <Label className="text-sm font-semibold">Selecione os segmentos</Label>
+              {taxonomyData.categories.map((cat: any) => {
+                const segs = taxonomyData.segments.filter((s: any) => s.category_id === cat.id);
+                if (!segs.length) return null;
+                return (
+                  <div key={cat.id} className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground">{cat.name}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {segs.map((seg: any) => {
+                        const checked = selectedSegmentIds.includes(seg.id);
+                        return (
+                          <label
+                            key={seg.id}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm",
+                              checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                            )}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                setSelectedSegmentIds(prev =>
+                                  v ? [...prev, seg.id] : prev.filter(id => id !== seg.id)
+                                );
+                              }}
+                            />
+                            <span className="truncate">{seg.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              {selectedSegmentIds.length === 0 && (
+                <p className="text-xs text-destructive">Selecione ao menos um segmento</p>
+              )}
+            </div>
+          )}
+
           {/* Filters - only for offers/stores/vouchers */}
-          {["offers", "stores", "vouchers", "highlights"].includes(contentType) && (
+          {["offers", "stores", "vouchers", "highlights", "by_category"].includes(contentType) && (
             <div className="rounded-xl border p-4 space-y-4">
               <Label className="text-sm font-semibold">Filtros</Label>
               <div>
@@ -599,7 +692,7 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
             Próximo <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         ) : (
-          <Button className="flex-1" onClick={handleCreate} disabled={saving || !title.trim()}>
+          <Button className="flex-1" onClick={handleCreate} disabled={saving || !title.trim() || (contentType === "by_category" && selectedSegmentIds.length === 0)}>
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             <Check className="h-4 w-4 mr-1" /> Criar Sessão
           </Button>

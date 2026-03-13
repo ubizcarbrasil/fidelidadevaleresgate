@@ -1,0 +1,1 @@
+ALTER TABLE public.brand_sections ADD COLUMN segment_filter_ids uuid[] DEFAULT NULL;
