@@ -1,13 +1,15 @@
 
+## Auditoria Enterprise — Vale Resgate (Concluída)
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
-
-### Ação
-
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
-
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
-
+### Documentos Gerados ✅
+- `AUDIT_REPORT.md` — Score geral: 68/100
+- `TECH_DEBT.md` — 11 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases de correção
+- `ARCHITECTURE_DECISION_RECORD.md` — 7 ADRs documentadas
