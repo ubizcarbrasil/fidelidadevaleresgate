@@ -346,7 +346,7 @@ export default function EarnPointsPage() {
               <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 space-y-1">
                 <p className="text-sm font-medium text-primary">Preview do ganho:</p>
                 <p className="text-2xl font-bold">+{preview.points} pontos</p>
-                <p className="text-sm text-muted-foreground">Equivalente a R$ {preview.money.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Equivalente a R$ {(preview.money ?? 0).toFixed(2)}</p>
                 {usingCustomRule && (
                   <Badge variant="outline" className="mt-1">
                     Regra personalizada do parceiro ({effectivePointsPerReal} pts/R$)

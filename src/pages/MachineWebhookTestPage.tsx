@@ -228,7 +228,7 @@ export default function MachineWebhookTestPage() {
                         </div>
                       </div>
                     )}
-                    {result.body.machine_ride_id && (
+                    {result.body.machine_ride_id != null && (
                       <div className="flex items-center gap-2 rounded-lg border p-3">
                         <Car className="h-4 w-4 text-muted-foreground" />
                         <div>

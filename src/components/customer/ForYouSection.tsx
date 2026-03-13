@@ -36,7 +36,7 @@ export default function ForYouSection() {
       const { data: scored, error } = await supabase.rpc("get_recommended_offers", {
         p_brand_id: brand.id,
         p_branch_id: selectedBranch.id,
-        p_customer_id: customer?.id || null,
+        p_customer_id: customer?.id ?? undefined,
         p_limit: 12,
       });
 

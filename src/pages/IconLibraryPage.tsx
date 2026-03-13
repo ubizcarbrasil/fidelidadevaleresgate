@@ -288,7 +288,7 @@ export default function IconLibraryPage() {
         </TabsContent>
       </Tabs>
 
-      <IconPickerDialog open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={handleSelect} brandId={currentBrandId} />
+      <IconPickerDialog open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={handleSelect} brandId={currentBrandId!} />
     </div>
   );
 }

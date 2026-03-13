@@ -158,7 +158,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     setNativeSections(sorted);
     await supabase.from("brands").update({
       home_layout_json: { native_sections: sorted } as any
-    } as any).eq("id", currentBrandId);
+    } as any).eq("id", currentBrandId!);
   };
 
   // handleAddSection is now handled by SectionCreatorWizard
