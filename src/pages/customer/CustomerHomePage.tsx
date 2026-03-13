@@ -218,7 +218,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
 
       {/* Footer text */}
       {theme?.footer_text && (
-        <div className="text-center py-8 text-xs text-muted-foreground/30 px-4">{theme.footer_text}</div>
+        <div className="text-center py-8 text-xs text-foreground/30 px-4">{theme.footer_text}</div>
       )}
 
     </div>
