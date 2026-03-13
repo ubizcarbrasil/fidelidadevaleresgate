@@ -235,7 +235,7 @@ export default function CustomerLayout() {
                   style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
                   onClick={() => setActiveTab("wallet")}
                 >
-                  <AppIcon iconKey="header_wallet" className="h-5 w-5" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_wallet" className="h-5 w-5" strokeWidth={1.8} style={{ color: "hsl(var(--vb-highlight))" }} />
                 </button>
               </div>
             </div>
