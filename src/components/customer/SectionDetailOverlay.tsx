@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Search, Store, ShoppingBag, MapPin } from "lucide-react";
+import OfferBadge from "@/components/customer/OfferBadge";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 
 interface SectionDetailOverlayProps {

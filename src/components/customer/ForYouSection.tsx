@@ -6,6 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { ChevronRight, ShoppingBag } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { motion } from "framer-motion";
+import OfferBadge from "@/components/customer/OfferBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
 
