@@ -657,13 +657,15 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 }
 
 // --- STORES_GRID ---
-function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
+function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="max-w-lg mx-auto">
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((b: any, idx: number) => (
+        {items.map((b: any, idx: number) => {
+          const isSponsored = sponsoredStoreIds?.has(b.id);
+          return (
           <motion.div
             key={b.id}
             initial={{ opacity: 0, x: 16 }}
