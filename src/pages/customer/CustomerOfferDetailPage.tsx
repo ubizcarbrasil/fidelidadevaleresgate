@@ -63,6 +63,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const isDark = document.documentElement.classList.contains("dark");
+  const accentOrWhite = isDark ? "hsl(var(--foreground))" : primary;
 
   // Fetch similar offers
   useEffect(() => {
@@ -381,9 +383,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     onClick={handleOpenStore}
                     className="flex items-center gap-2 mb-1 active:opacity-70 transition-opacity"
                   >
-                    <Tag className="h-3.5 w-3.5" style={{ color: primary }} />
-                    <span className="text-xs font-semibold" style={{ color: primary }}>{offer.stores?.name}</span>
-                    <ChevronRight className="h-3.5 w-3.5" style={{ color: primary }} />
+                    <Tag className="h-3.5 w-3.5" style={{ color: accentOrWhite }} />
+                    <span className="text-xs font-semibold" style={{ color: accentOrWhite }}>{offer.stores?.name}</span>
+                    <ChevronRight className="h-3.5 w-3.5" style={{ color: accentOrWhite }} />
                   </button>
                   <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                   {offer.description && (
@@ -1107,10 +1109,12 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 }
 
 function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: any; primary: string; fg: string; label: string; value: string }) {
+  const dark = document.documentElement.classList.contains("dark");
+  const iconColor = dark ? "hsl(var(--foreground))" : primary;
   return (
     <div className="flex items-start gap-3">
-      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
-        <Icon className="h-4 w-4" style={{ color: primary }} />
+      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: dark ? "hsl(var(--foreground) / 0.1)" : `${primary}10` }}>
+        <Icon className="h-4 w-4" style={{ color: iconColor }} />
       </div>
       <div>
         <p className="text-xs font-semibold">{label}</p>
