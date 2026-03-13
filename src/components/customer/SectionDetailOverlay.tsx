@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Store, ShoppingBag, Heart, MapPin, Clock, Sparkles, Percent, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Search, Store, ShoppingBag, MapPin } from "lucide-react";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
+import { Badge } from "@/components/ui/badge";
 
 interface SectionDetailOverlayProps {
   section: {
@@ -27,7 +28,7 @@ export default function SectionDetailOverlay({
   fontHeading,
 }: SectionDetailOverlayProps) {
   const [query, setQuery] = useState("");
-  const { openOffer, openStore, isFavorite, toggleFavorite } = useCustomerNav();
+  const { openOffer, openStore } = useCustomerNav();
 
   const filtered = useMemo(() => {
     if (!query.trim()) return items;
@@ -43,10 +44,6 @@ export default function SectionDetailOverlay({
   }, [items, query]);
 
   const isStore = section.templateType === "STORES_GRID" || section.templateType === "STORES_LIST";
-
-  const bannerH =
-    section.banner_height === "small" ? 100 :
-    section.banner_height === "large" ? 200 : 140;
 
   return (
     <motion.div
@@ -78,11 +75,9 @@ export default function SectionDetailOverlay({
           </span>
         </div>
 
-        {/* Search bar */}
+        {/* Search */}
         <div className="max-w-lg mx-auto px-4 pb-3">
-          <div
-             className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted"
-           >
+          <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted">
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
             <input
               type="text"
@@ -97,120 +92,92 @@ export default function SectionDetailOverlay({
         <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
       </div>
 
-      {/* Banner */}
-      {section.banner_image_url && (
-        <div className="max-w-lg mx-auto w-full px-4 pt-3">
-          <img
-            src={section.banner_image_url}
-            alt={section.title || "Banner"}
-            className="w-full object-cover rounded-[18px]"
-            style={{ height: bannerH }}
-          />
-        </div>
-      )}
-
-      {/* Items list */}
+      {/* Items list — large cards with banner */}
       <div className="flex-1 overflow-y-auto pb-8">
-        <div className="max-w-lg mx-auto px-4 pt-3 space-y-2">
+        <div className="max-w-lg mx-auto px-4 pt-3 space-y-3">
           {filtered.length === 0 ? (
             <div className="text-center py-12 opacity-40 text-sm">Nenhum resultado encontrado</div>
           ) : filtered.map((item: any, idx: number) => {
-            const isOffer = !isStore;
-            const daysLeft = item.end_at
-              ? Math.max(0, Math.ceil((new Date(item.end_at).getTime() - Date.now()) / 86400000))
-              : null;
-            const isUrgent = daysLeft !== null && daysLeft <= 3;
-            const isNew = idx < 3;
+            const imgSrc = item.banner_url || item.logo_url || item.image_url;
+            const storeName = item.stores?.name || item.store_name || item.name;
+            const title = item.name || item.title;
             const hasDiscount = Number(item.discount_percent) > 0;
+            const segmentTag = item.category || item.taxonomy_segments?.name;
 
             return (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03, duration: 0.25 }}
-                className="flex items-center gap-3 rounded-[16px] p-3 bg-card cursor-pointer active:scale-[0.98] transition-transform relative"
-                style={{ boxShadow: "0 1px 5px hsl(var(--foreground) / 0.04)" }}
+                className="rounded-2xl overflow-hidden bg-card cursor-pointer active:scale-[0.98] transition-transform"
+                style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)" }}
                 onClick={() => isStore ? openStore(item) : openOffer(item)}
               >
-                {/* Image/Logo */}
-                <div className="relative flex-shrink-0">
-                  {(item.logo_url || item.image_url) ? (
+                {/* Banner Image */}
+                <div className="relative h-36 w-full bg-muted">
+                  {imgSrc ? (
                     <img
-                      src={item.logo_url || item.image_url}
-                      alt={item.name || item.title}
-                      className="h-14 w-14 rounded-xl object-cover"
+                      src={imgSrc}
+                      alt={title}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div
-                      className="h-14 w-14 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${primary}10` }}
-                    >
+                    <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
                       {isStore ? (
-                        <Store className="h-6 w-6" style={{ color: primary }} />
+                        <Store className="h-12 w-12" style={{ color: `${primary}25` }} />
                       ) : (
-                        <ShoppingBag className="h-6 w-6" style={{ color: primary }} />
+                        <ShoppingBag className="h-12 w-12" style={{ color: `${primary}25` }} />
                       )}
                     </div>
                   )}
-                  {/* Badges */}
-                  {isUrgent && (
-                    <span className="absolute -top-1 -left-1 flex items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-md text-white" style={{ backgroundColor: "hsl(0 72% 51%)" }}>
-                      <Clock className="h-2 w-2" />
-                      {daysLeft === 0 ? "HOJE" : `${daysLeft}d`}
-                    </span>
+
+                  {/* Discount badge overlay */}
+                  {hasDiscount && (
+                    <div
+                      className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white"
+                      style={{ backgroundColor: primary }}
+                    >
+                      {item.discount_percent}% OFF
+                    </div>
                   )}
-                  {!isUrgent && isNew && (
-                    <span className="absolute -top-1 -left-1 flex items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-md text-white" style={{ backgroundColor: primary }}>
-                      <Sparkles className="h-2 w-2" />
-                    </span>
+
+                  {item.points_per_real > 0 && !hasDiscount && (
+                    <div
+                      className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold text-white"
+                      style={{ backgroundColor: "#059669" }}
+                    >
+                      {item.points_per_real}x pts
+                    </div>
                   )}
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
-                  {(item.stores?.name || item.store_name) && (
-                    <p className="text-[10px] font-medium truncate mb-0.5" style={{ color: `${fg}45` }}>
-                      {item.stores?.name || item.store_name}
-                    </p>
-                  )}
-                  <h3 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>
-                    {item.name || item.title}
+                <div className="px-4 py-3">
+                  <h3 className="font-bold text-sm" style={{ fontFamily: fontHeading }}>
+                    {title}
                   </h3>
-                  {item.category && (
-                    <p className="text-[10px] truncate" style={{ color: `${fg}40` }}>
-                      {item.category}
+                  {!isStore && storeName && storeName !== title && (
+                    <p className="text-[11px] mt-0.5" style={{ color: `${fg}50` }}>
+                      {storeName}
                     </p>
                   )}
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    {segmentTag && (
+                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full">
+                        {segmentTag}
+                      </Badge>
+                    )}
+                    {item.value_rescue > 0 && (
+                      <span className="text-xs font-bold" style={{ color: primary }}>
+                        R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
+                      </span>
+                    )}
+                  </div>
                   {item.address && (
-                    <div className="flex items-center gap-1 text-[10px] mt-0.5" style={{ color: `${fg}40` }}>
-                      <MapPin className="h-2.5 w-2.5" />
+                    <div className="flex items-center gap-1 mt-2 text-[11px]" style={{ color: `${fg}45` }}>
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
                       <span className="truncate">{item.address}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right side */}
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  {hasDiscount && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${primary}12`, color: primary }}>
-                      Pague {item.discount_percent}% com Pontos
-                    </span>
-                  )}
-                  {item.value_rescue > 0 && (
-                    <span className="font-bold text-sm" style={{ color: primary }}>
-                      R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
-                    </span>
-                  )}
-                  {item.points_per_real > 0 && (
-                    <span className="text-[10px]" style={{ color: `${fg}50` }}>
-                      {item.points_per_real}x pts/R$
-                    </span>
-                  )}
-                  {isOffer && item.likes_count > 0 && (
-                    <div className="flex items-center gap-0.5 text-[10px]" style={{ color: `${fg}40` }}>
-                      <ThumbsUp className="h-2.5 w-2.5" />
-                      {item.likes_count}
                     </div>
                   )}
                 </div>
