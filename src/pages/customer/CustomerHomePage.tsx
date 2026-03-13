@@ -8,7 +8,7 @@ import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
 import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
-import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
+
 import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
