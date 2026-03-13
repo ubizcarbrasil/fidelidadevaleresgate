@@ -63,6 +63,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const isDark = document.documentElement.classList.contains("dark");
+  const accentOrWhite = isDark ? "hsl(var(--foreground))" : primary;
 
   // Fetch similar offers
   useEffect(() => {
