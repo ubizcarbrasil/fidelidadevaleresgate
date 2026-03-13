@@ -702,7 +702,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           )}
                           <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
                           {Number(sim.value_rescue) > 0 && (
-                            <span className="text-xs font-bold" style={{ color: primary }}>
+                            <span className="text-xs font-bold" style={{ color: isDark ? "hsl(var(--vb-highlight))" : primary }}>
                               {Number(sim.value_rescue).toLocaleString("pt-BR")} pts
                             </span>
                           )}
