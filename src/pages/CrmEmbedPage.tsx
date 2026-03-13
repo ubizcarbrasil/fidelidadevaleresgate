@@ -17,10 +17,8 @@ export default function CrmEmbedPage() {
     if (currentBrandId) url.searchParams.set("brandId", currentBrandId);
     if (currentBranchId) url.searchParams.set("branchId", currentBranchId);
     if (user?.email) url.searchParams.set("email", user.email);
-    // Pass access token for auto-login on the CRM side
-    if (session?.access_token) url.searchParams.set("token", session.access_token);
     return url.toString();
-  }, [currentBrandId, currentBranchId, user?.email, session?.access_token]);
+  }, [currentBrandId, currentBranchId, user?.email]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
