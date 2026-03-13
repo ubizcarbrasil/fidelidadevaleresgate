@@ -14,13 +14,6 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function getClientIp(req: Request): string | null {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    null
-  );
-}
 
 function logAudit(
   sb: ReturnType<typeof createClient>,
@@ -53,14 +46,15 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const ip = getClientIp(req) || "unknown";
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") || "unknown";
 
   // Rate limiting
-  const rlKey = rateLimitKey("machine-webhook", ip);
-  const rlOk = await checkRateLimit(sb, rlKey, 30, 60);
-  if (!rlOk) {
+  const rlKey = rateLimitKey("machine-webhook", req);
+  const rlResult = await checkRateLimit(sb, rlKey, { maxRequests: 30, windowSeconds: 60 });
+  if (!rlResult.allowed) {
     logAudit(sb, "MACHINE_RATE_LIMITED", { ip, details: { reason: "rate_limit" } });
-    return rateLimitResponse(corsHeaders);
+    return rateLimitResponse(rlResult, corsHeaders);
   }
 
   try {
