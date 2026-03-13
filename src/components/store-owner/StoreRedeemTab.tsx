@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -300,7 +300,7 @@ export default function StoreRedeemTab({ store }: { store: any }) {
 }
 
 /* ─── Pending Redemption Card ─── */
-function PendingRedemptionCard({ redemption, storeId, onConfirmed }: { redemption: any; storeId: string; onConfirmed: () => void }) {
+const PendingRedemptionCard = React.memo(function PendingRedemptionCard({ redemption, storeId, onConfirmed }: { redemption: any; storeId: string; onConfirmed: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [purchaseValue, setPurchaseValue] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -413,7 +413,7 @@ function PendingRedemptionCard({ redemption, storeId, onConfirmed }: { redemptio
       )}
     </div>
   );
-}
+});
 
 /* ─── Confirm Panel for manual lookup ─── */
 function ConfirmRedemptionPanel({
