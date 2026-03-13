@@ -22,6 +22,27 @@ function getClientIp(req: Request): string | null {
   );
 }
 
+function logAudit(
+  sb: ReturnType<typeof createClient>,
+  action: string,
+  opts: { brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
+) {
+  sb.from("audit_logs")
+    .insert({
+      action,
+      entity_type: "MACHINE_WEBHOOK",
+      entity_id: opts.entityId || null,
+      scope_type: opts.brandId ? "BRAND" : null,
+      scope_id: opts.brandId || null,
+      ip_address: opts.ip || null,
+      details_json: opts.details || {},
+      changes_json: opts.changes || {},
+    })
+    .then(({ error }) => {
+      if (error) console.error("audit_log insert error:", error);
+    });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -32,26 +53,32 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Rate limiting
   const ip = getClientIp(req) || "unknown";
+
+  // Rate limiting
   const rlKey = rateLimitKey("machine-webhook", ip);
   const rlOk = await checkRateLimit(sb, rlKey, 30, 60);
-  if (!rlOk) return rateLimitResponse(corsHeaders);
+  if (!rlOk) {
+    logAudit(sb, "MACHINE_RATE_LIMITED", { ip, details: { reason: "rate_limit" } });
+    return rateLimitResponse(corsHeaders);
+  }
 
   try {
     const body = await req.json();
     const { request_id, status_code, brand_id: bodyBrandId } = body;
 
     if (!request_id || !status_code) {
+      logAudit(sb, "MACHINE_WEBHOOK_REJECTED", { ip, details: { reason: "missing_fields", request_id, status_code } });
       return json({ error: "Missing request_id or status_code" }, 400);
     }
 
     // Only process finalized rides
     if (status_code !== "F") {
+      logAudit(sb, "MACHINE_WEBHOOK_IGNORED", { ip, details: { request_id, status_code, reason: "not_finalized" } });
       return json({ message: "Ignored non-finalized event", status_code });
     }
 
-    // Find the integration config — use brand_id from body or x-api-secret header
+    // Find the integration config
     const apiSecret = req.headers.get("x-api-secret");
     let integration: any = null;
 
@@ -76,6 +103,7 @@ Deno.serve(async (req) => {
     }
 
     if (!integration) {
+      logAudit(sb, "MACHINE_WEBHOOK_AUTH_FAILED", { ip, details: { request_id, reason: "integration_not_found" } });
       return json({ error: "Integration not found or inactive" }, 401);
     }
 
@@ -97,8 +125,11 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
+      logAudit(sb, "MACHINE_RIDE_DUPLICATE", { brandId, entityId: machineRideId, ip, details: { reason: "already_processed" } });
       return json({ message: "Ride already processed", machine_ride_id: machineRideId });
     }
+
+    logAudit(sb, "MACHINE_WEBHOOK_RECEIVED", { brandId, entityId: machineRideId, ip, details: { status_code } });
 
     // Call TaxiMachine API to get ride details
     const basicAuth = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
@@ -112,6 +143,7 @@ Deno.serve(async (req) => {
     if (!statusRes.ok) {
       const errText = await statusRes.text();
       console.error("TaxiMachine solicitacaoStatus error:", errText);
+      logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
       return json({ error: "Failed to fetch ride status from TaxiMachine" }, 502);
     }
     const statusData = await statusRes.json();
@@ -124,6 +156,7 @@ Deno.serve(async (req) => {
     if (!receiptRes.ok) {
       const errText = await receiptRes.text();
       console.error("TaxiMachine recibo error:", errText);
+      logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
       return json({ error: "Failed to fetch receipt from TaxiMachine" }, 502);
     }
     const receiptData = await receiptRes.json();
@@ -137,7 +170,6 @@ Deno.serve(async (req) => {
     );
 
     if (rideValue <= 0) {
-      // Store ride but no points
       await sb.from("machine_rides").insert({
         brand_id: brandId,
         machine_ride_id: machineRideId,
@@ -146,6 +178,7 @@ Deno.serve(async (req) => {
         points_credited: 0,
         finalized_at: new Date().toISOString(),
       });
+      logAudit(sb, "MACHINE_RIDE_NO_VALUE", { brandId, entityId: machineRideId, ip, details: { ride_value: 0 } });
       return json({ message: "Ride has no value", machine_ride_id: machineRideId });
     }
 
@@ -173,8 +206,8 @@ Deno.serve(async (req) => {
 
     // If we have a CPF, try to credit points to the customer
     let pointsCredited = false;
+    let customerId: string | null = null;
     if (passengerCpf && points > 0) {
-      // Find customer by CPF in this brand
       const { data: customer } = await sb
         .from("customers")
         .select("id, branch_id, points_balance")
@@ -185,7 +218,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (customer) {
-        // Credit points via points_ledger
+        customerId = customer.id;
         await sb.from("points_ledger").insert({
           brand_id: brandId,
           branch_id: customer.branch_id,
@@ -197,7 +230,6 @@ Deno.serve(async (req) => {
           reference_id: machineRideId,
         });
 
-        // Update customer balance
         await sb
           .from("customers")
           .update({ points_balance: (customer.points_balance || 0) + points })
@@ -208,7 +240,6 @@ Deno.serve(async (req) => {
     }
 
     // Update integration counters
-    await sb.rpc("", {}).catch(() => {}); // fallback: direct update
     const { error: updateErr } = await sb
       .from("machine_integrations")
       .update({
@@ -220,6 +251,20 @@ Deno.serve(async (req) => {
 
     if (updateErr) console.error("Update integration counters error:", updateErr);
 
+    // Audit: ride processed successfully
+    logAudit(sb, "MACHINE_RIDE_PROCESSED", {
+      brandId,
+      entityId: machineRideId,
+      ip,
+      details: {
+        ride_value: rideValue,
+        points,
+        points_credited: pointsCredited,
+        customer_id: customerId,
+        passenger_cpf: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
+      },
+    });
+
     return json({
       success: true,
       machine_ride_id: machineRideId,
@@ -229,6 +274,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("machine-webhook error:", err);
+    logAudit(sb, "MACHINE_WEBHOOK_ERROR", { ip, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }
 });

@@ -12,6 +12,31 @@ function json(body: Record<string, unknown>, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+function getClientIp(req: Request): string | null {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
+}
+
+function logAudit(
+  sb: ReturnType<typeof createClient>,
+  action: string,
+  opts: { userId?: string; brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
+) {
+  sb.from("audit_logs")
+    .insert({
+      action,
+      entity_type: "MACHINE_INTEGRATION",
+      entity_id: opts.entityId || null,
+      actor_user_id: opts.userId || null,
+      scope_type: opts.brandId ? "BRAND" : null,
+      scope_id: opts.brandId || null,
+      ip_address: opts.ip || null,
+      details_json: opts.details || {},
+      changes_json: opts.changes || {},
+    })
+    .then(({ error }) => {
+      if (error) console.error("audit_log insert error:", error);
+    });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
