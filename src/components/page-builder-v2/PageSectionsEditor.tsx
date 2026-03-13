@@ -49,12 +49,13 @@ interface SectionRow {
 }
 
 interface Props {
-  page: PageRow;
+  page: PageRow | null; // null = Home mode
   onBack: () => void;
 }
 
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
+  const isHomeMode = page === null;
   const { currentBrandId } = useBrandGuard();
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,10 +63,10 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
   const [editingManualLinks, setEditingManualLinks] = useState<SectionRow | null>(null);
   const [pageSettings, setPageSettings] = useState({
-    title: page.title,
-    subtitle: page.subtitle || "",
-    search_enabled: page.search_enabled,
-    visibility_type: page.visibility_type,
+    title: page?.title || "Tela Inicial",
+    subtitle: page?.subtitle || "",
+    search_enabled: page?.search_enabled ?? false,
+    visibility_type: page?.visibility_type || "public",
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -73,14 +74,18 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
 
   const fetchSections = useCallback(async () => {
     setLoading(true);
-    const { data } = await (supabase
+    let query = (supabase
       .from("brand_sections")
-      .select("*, section_templates(key, name, type)") as any)
-      .eq("page_id", page.id)
-      .order("order_index");
+      .select("*, section_templates(key, name, type)") as any);
+    if (isHomeMode) {
+      query = query.eq("brand_id", currentBrandId).is("page_id", null);
+    } else {
+      query = query.eq("page_id", page!.id);
+    }
+    const { data } = await query.order("order_index");
     setSections((data as any[]) || []);
     setLoading(false);
-  }, [page.id]);
+  }, [isHomeMode, page?.id, currentBrandId]);
 
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
@@ -129,13 +134,14 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   };
 
   const handleSavePageSettings = async () => {
+    if (isHomeMode) { setShowSettings(false); return; }
     setSavingSettings(true);
     await supabase.from("custom_pages").update({
       title: pageSettings.title,
       subtitle: pageSettings.subtitle || null,
       search_enabled: pageSettings.search_enabled,
       visibility_type: pageSettings.visibility_type,
-    } as any).eq("id", page.id);
+    } as any).eq("id", page!.id);
     toast({ title: "Configurações salvas!" });
     setSavingSettings(false);
     setShowSettings(false);
@@ -171,7 +177,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     return (
       <SectionCreatorWizard
         brandId={currentBrandId}
-        pageId={page.id}
+        pageId={isHomeMode ? null : page!.id}
         currentSectionCount={sections.length}
         onCreated={() => { setShowWizard(false); fetchSections(); }}
         onCancel={() => setShowWizard(false)}
@@ -186,12 +192,14 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold">{page.title}</h1>
-          <p className="text-sm text-muted-foreground">/p/{page.slug} · {sections.length} sessões</p>
+          <h1 className="text-xl font-bold">{isHomeMode ? "Tela Inicial (Home)" : page!.title}</h1>
+          <p className="text-sm text-muted-foreground">{isHomeMode ? "Sessões exibidas na home do app" : `/p/${page!.slug}`} · {sections.length} sessões</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-          <Settings2 className="h-4 w-4 mr-1" /> Configurações
-        </Button>
+        {!isHomeMode && (
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+            <Settings2 className="h-4 w-4 mr-1" /> Configurações
+          </Button>
+        )}
         <Button size="sm" onClick={() => setShowWizard(true)}>
           <Plus className="h-4 w-4 mr-1" /> Sessão
         </Button>

@@ -123,6 +123,7 @@ export default function HomeSectionsRenderer() {
         .from("brand_sections")
         .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
         .eq("brand_id", brand.id)
+        .is("page_id", null)
         .eq("is_enabled", true)
         .order("order_index");
       setSections((data as any) || []);
