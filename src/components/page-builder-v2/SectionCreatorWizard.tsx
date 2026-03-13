@@ -7,15 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, ArrowRight, Check, Loader2,
   ShoppingBag, Store, Tag, Link2, Image as ImageIcon,
   Info, LayoutGrid, LayoutList, GalleryHorizontal,
   Columns2, Columns3, Columns4, RectangleHorizontal,
-  Square, CircleDot, Rows3, Star, FolderTree
+  Square, CircleDot, Rows3, Star, FolderTree, Smartphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import SectionWizardPreview from "./SectionWizardPreview";
 
 /* ─── Types ─── */
 
@@ -179,6 +182,7 @@ function resolveTemplateKey(contentId: string, layoutId: string): string {
 /* ─── Component ─── */
 
 export default function SectionCreatorWizard({ brandId, pageId, currentSectionCount, onCreated, onCancel }: Props) {
+  const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -350,8 +354,16 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
     setSaving(false);
   };
 
+  const previewProps = {
+    contentType, layoutType, columnsCount, rowsCount, maxItems,
+    cardRadius, cardShadow, iconSize, title, subtitle, hasSubtitle,
+    ctaText, hasCta,
+  };
+
   return (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+    <div className="flex gap-6">
+      {/* Wizard form */}
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto flex-1 min-w-0">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={handleBack} className="shrink-0">
@@ -723,6 +735,31 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
           </Button>
         )}
       </div>
+      </div>
+
+      {/* Desktop preview - sticky sidebar */}
+      {!isMobile && (
+        <div className="hidden lg:flex flex-col items-center sticky top-6 self-start pt-6 pr-6">
+          <SectionWizardPreview {...previewProps} />
+        </div>
+      )}
+
+      {/* Mobile preview - floating button with sheet */}
+      {isMobile && (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              size="icon"
+              className="fixed bottom-20 right-4 z-50 h-12 w-12 rounded-full shadow-lg"
+            >
+              <Smartphone className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] flex items-center justify-center">
+            <SectionWizardPreview {...previewProps} />
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
