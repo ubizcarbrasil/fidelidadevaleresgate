@@ -691,6 +691,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
                   {b.points_per_real}x pts
                 </div>
               )}
+              {isSponsored && <SponsoredBadge />}
             </div>
             <div className="px-3 py-2.5">
               <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
@@ -699,7 +700,8 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
               )}
             </div>
           </motion.div>
-        ))}
+        );
+        })}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
