@@ -229,7 +229,15 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         return;
       }
 
-      if (!source) { setLoading(false); return; }
+      // If no source but has segment filters, infer source_type from template
+      const effectiveSource = source || (segmentFilterIds.length > 0 ? {
+        source_type: (templateType === "STORES_GRID" || templateType === "STORES_LIST") ? "STORES" : "OFFERS",
+        limit: 10,
+        filters_json: {},
+        id: "inferred",
+      } : null);
+
+      if (!effectiveSource) { setLoading(false); return; }
 
       if (templateType === "VOUCHERS_CARDS") {
         let query = supabase
