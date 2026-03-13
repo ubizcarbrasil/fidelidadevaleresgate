@@ -76,6 +76,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [activeTab, setActiveTab] = useState<"ofertas" | "catalogo">("ofertas");
 
+  const isDark = document.documentElement.classList.contains("dark");
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const hasCatalog = isEmitter;
 
