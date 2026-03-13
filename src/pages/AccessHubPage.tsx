@@ -73,7 +73,7 @@ function RootBrandsTab() {
                     variant="outline"
                     className="gap-1.5"
                     onClick={() => {
-                      window.location.href = `/?brandId=${brand.id}`;
+                      window.location.href = `/dashboard?brandId=${brand.id}`;
                     }}
                   >
                     <Building2 className="h-3.5 w-3.5" />
