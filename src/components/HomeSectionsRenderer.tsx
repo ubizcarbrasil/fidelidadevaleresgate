@@ -155,9 +155,19 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const brandBadgeConfig = theme?.badge_config || null;
 
+  // Filter sections based on props
+  const filteredSections = sections.filter((s) => {
+    const isBanner = s.section_templates?.type === "BANNER_CAROUSEL";
+    if (renderBannersOnly) return isBanner;
+    if (skipBanners) return !isBanner;
+    return true;
+  });
+
+  if (!filteredSections.length) return null;
+
   return (
     <div className="space-y-1">
-      {sections.map((section, idx) => (
+      {filteredSections.map((section, idx) => (
         <motion.div
           key={section.id}
           initial={{ opacity: 0, y: 16 }}
