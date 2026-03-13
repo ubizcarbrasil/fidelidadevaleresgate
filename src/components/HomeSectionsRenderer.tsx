@@ -202,7 +202,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   if (!sections.length) return null;
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
+  const accent = "hsl(var(--vb-highlight))";
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const cardBg = "hsl(var(--card))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
@@ -614,12 +614,12 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
                 )}
                 {o.discount_percent > 0 && (
-                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
                     {o.discount_percent}% OFF
                   </span>
                 )}
                 {!o.discount_percent && o.value_rescue > 0 && (
-                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}
@@ -900,7 +900,7 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
                   </span>
                 )}
                 {o.value_rescue > 0 && (
-                  <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-gold))" }}>
+                  <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-highlight))" }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}

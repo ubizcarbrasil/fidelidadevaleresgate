@@ -90,7 +90,7 @@ export default function ForYouSection() {
     <section className="max-w-lg mx-auto py-1">
       <div className="px-5 mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <AppIcon iconKey="section_foryou" className="h-4 w-4" style={{ color: primary }} />
+          <AppIcon iconKey="section_foryou" className="h-4 w-4" style={{ color: "hsl(var(--vb-highlight))" }} />
           <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
             Selecionados para você
           </h2>
@@ -98,7 +98,7 @@ export default function ForYouSection() {
         {offers.length > 0 && (
           <button
             className="text-xs font-bold flex items-center gap-0.5"
-            style={{ color: primary }}
+            style={{ color: "hsl(var(--vb-highlight))" }}
             onClick={() => openSectionDetail?.({
               title: "Selecionados para você",
               subtitle: null,
@@ -152,12 +152,12 @@ export default function ForYouSection() {
                 <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
               )}
               {o.discount_percent > 0 && (
-                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
                   {o.discount_percent}% OFF
                 </span>
               )}
               {!o.discount_percent && o.value_rescue > 0 && (
-                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
                   R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                 </span>
               )}

@@ -220,7 +220,7 @@ export default function CustomerLayout() {
                   className="relative h-9 w-9 flex items-center justify-center rounded-xl transition-colors"
                   style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
                 >
-                  <AppIcon iconKey="header_bell" className="h-5 w-5" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_bell" className="h-5 w-5" strokeWidth={1.8} style={{ color: "hsl(var(--vb-highlight))" }} />
                   {unreadCount > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
@@ -235,7 +235,7 @@ export default function CustomerLayout() {
                   style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
                   onClick={() => setActiveTab("wallet")}
                 >
-                  <AppIcon iconKey="header_wallet" className="h-5 w-5" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_wallet" className="h-5 w-5" strokeWidth={1.8} style={{ color: "hsl(var(--vb-highlight))" }} />
                 </button>
               </div>
             </div>

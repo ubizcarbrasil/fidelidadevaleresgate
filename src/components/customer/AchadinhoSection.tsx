@@ -56,6 +56,7 @@ export default function AchadinhoSection() {
   const catScrollRef = useRef<HTMLDivElement>(null);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const highlight = "hsl(var(--vb-highlight))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
@@ -153,9 +154,9 @@ export default function AchadinhoSection() {
         <div className="flex items-center gap-2">
           <div
             className="h-7 w-7 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: withAlpha(primary, 0.12) }}
+            style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)" }}
           >
-            <AppIcon iconKey="section_deals" className="h-4 w-4" style={{ color: primary }} />
+            <AppIcon iconKey="section_deals" className="h-4 w-4" style={{ color: highlight }} />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
@@ -189,12 +190,12 @@ export default function AchadinhoSection() {
               <AppIcon
                 iconKey="section_deals"
                 className="h-6 w-6"
-                style={{ color: !selectedCat ? '#fff' : primary }}
+                style={{ color: !selectedCat ? '#fff' : highlight }}
               />
             </div>
             <span
               className="text-[10px] font-medium text-center leading-tight line-clamp-2"
-              style={{ color: !selectedCat ? primary : undefined }}
+              style={{ color: !selectedCat ? highlight : undefined }}
             >
               Todos
             </span>
@@ -282,7 +283,7 @@ export default function AchadinhoSection() {
                 {badgeText && (
                   <div
                     className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm"
-                    style={{ backgroundColor: primary }}
+                    style={{ backgroundColor: highlight }}
                   >
                     {badgeText}
                   </div>
@@ -309,7 +310,7 @@ export default function AchadinhoSection() {
                 {(priceStr || originalPriceStr) && (
                   <div className="flex items-baseline gap-1.5">
                     {priceStr && (
-                      <span className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                      <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>
                         {priceStr}
                       </span>
                     )}
