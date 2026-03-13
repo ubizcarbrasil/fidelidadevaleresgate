@@ -594,11 +594,11 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
                       <div>
-                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Crédito</p>
+                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Pontos</p>
                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                          R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                          {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                         </p>
-                        <p className="text-[11px] mt-0.5 text-muted-foreground">crédito condicionado à compra mínima</p>
+                        <p className="text-[11px] mt-0.5 text-muted-foreground">pontos condicionados à compra mínima</p>
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
