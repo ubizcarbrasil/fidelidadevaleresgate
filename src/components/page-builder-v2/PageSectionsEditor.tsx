@@ -53,19 +53,6 @@ interface Props {
   onBack: () => void;
 }
 
-const SECTION_TYPES = [
-  { value: "OFFERS_CAROUSEL", label: "Carrossel de Ofertas" },
-  { value: "OFFERS_GRID", label: "Grade de Ofertas" },
-  { value: "STORES_GRID", label: "Grade de Parceiros" },
-  { value: "STORES_LIST", label: "Lista de Parceiros" },
-  { value: "BANNER_CAROUSEL", label: "Carrossel de Banners" },
-  { value: "VOUCHERS_CARDS", label: "Cupons em Cartão" },
-  { value: "MANUAL_LINKS_CAROUSEL", label: "Carrossel de Links Manuais" },
-  { value: "MANUAL_LINKS_GRID", label: "Grade de Links Manuais" },
-  { value: "LIST_INFO", label: "Lista com Informações" },
-  { value: "GRID_INFO", label: "Grade com Informações" },
-  { value: "GRID_LOGOS", label: "Grade de Logos/Atalhos" },
-];
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
   const { brand } = useBrand();
