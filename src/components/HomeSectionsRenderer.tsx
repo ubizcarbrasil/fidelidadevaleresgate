@@ -310,13 +310,13 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         }
 
         setItems(results);
-      } else if (source.source_type === "STORES") {
+      } else if (effectiveSource.source_type === "STORES") {
         let query = supabase
           .from("stores")
           .select("*")
           .eq("is_active", true)
           .order("name")
-          .limit(source.limit || 10);
+          .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
         // Apply segment filter
