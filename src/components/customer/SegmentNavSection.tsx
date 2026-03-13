@@ -151,7 +151,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
             </motion.button>
           ))}
         </div>
-        <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="horizontal" className="h-1" />
       </ScrollArea>
     </section>
   );
