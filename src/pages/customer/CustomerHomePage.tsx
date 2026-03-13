@@ -186,6 +186,9 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.15 }}
       >
+        <div className="max-w-lg mx-auto">
+          <div className="h-px mx-5 bg-border/60 mb-4" />
+        </div>
         <SegmentNavSection onSegmentClick={(segId) => navigateToOffersWithSegment(segId)} />
       </motion.div>
 
@@ -227,7 +230,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
 
       {/* Footer text */}
       {theme?.footer_text && (
-        <div className="text-center py-6 text-xs opacity-30 px-4">{theme.footer_text}</div>
+        <div className="text-center py-8 text-xs text-muted-foreground/30 px-4">{theme.footer_text}</div>
       )}
     </div>
   );
