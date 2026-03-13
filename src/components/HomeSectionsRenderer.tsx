@@ -574,6 +574,8 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   </div>
                 )}
               </div>
+              {/* Sponsored badge - bottom right */}
+              {isSponsored && <SponsoredBadge />}
               <div className="px-3 py-2.5">
                 <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
                 {o.stores?.name && (
