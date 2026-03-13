@@ -1049,7 +1049,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       <div className="rounded-2xl p-3 flex justify-between items-center bg-muted" style={{ border: "1px solid hsl(var(--foreground) / 0.08)" }}>
                         <span className="text-sm text-muted-foreground">Valor do produto</span>
                         <span className="text-sm font-bold" style={{ color: fg }}>
-                          {productPriceOffer.toLocaleString("pt-BR")} pts
+                          R$ {productPriceOffer.toFixed(2)}
                         </span>
                       </div>
                       {/* Credit applied */}
