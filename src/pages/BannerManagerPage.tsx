@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Calendar, ExternalLink, Eye } from "lucide-react";
+import { Plus, Trash2, Calendar, ExternalLink, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import ImageUploadField from "@/components/ImageUploadField";
@@ -26,18 +26,37 @@ function getBannerStatus(banner: any): { label: string; variant: "default" | "se
   return { label: "ATIVO", variant: "default" };
 }
 
+const INITIAL_FORM = {
+  image_url: "",
+  title: "",
+  link_url: "",
+  link_type: "external",
+  start_at: "",
+  end_at: "",
+  is_active: true,
+  brand_section_id: "__none__",
+};
+
 export default function BannerManagerPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    image_url: "",
-    title: "",
-    link_url: "",
-    link_type: "external",
-    start_at: "",
-    end_at: "",
-    is_active: true,
+  const [form, setForm] = useState(INITIAL_FORM);
+
+  // Fetch active brand_sections with template info
+  const { data: sections } = useQuery({
+    queryKey: ["brand-sections-active", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return [];
+      const { data } = await supabase
+        .from("brand_sections")
+        .select("id, title, order_index, is_enabled, template_id, section_templates(type, label)")
+        .eq("brand_id", currentBrandId)
+        .eq("is_enabled", true)
+        .order("order_index");
+      return (data || []) as any[];
+    },
+    enabled: !!currentBrandId,
   });
 
   const { data: banners } = useQuery({
@@ -57,43 +76,7 @@ export default function BannerManagerPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Selecione uma marca antes de criar um banner.");
-
-      // Auto-create BANNER_CAROUSEL section if none exists for this brand
-      const { data: existingSection } = await supabase
-        .from("brand_sections")
-        .select("id, template_id, section_templates!inner(type)")
-        .eq("brand_id", currentBrandId)
-        .eq("section_templates.type", "BANNER_CAROUSEL")
-        .limit(1);
-
-      let sectionId: string | null = null;
-
-      if (!existingSection || existingSection.length === 0) {
-        // Find the BANNER_CAROUSEL template
-        const { data: tpl } = await supabase
-          .from("section_templates")
-          .select("id")
-          .eq("type", "BANNER_CAROUSEL")
-          .limit(1)
-          .single();
-
-        if (tpl) {
-          const { data: newSection } = await supabase
-            .from("brand_sections")
-            .insert({
-              brand_id: currentBrandId,
-              template_id: tpl.id,
-              title: null,
-              is_enabled: true,
-              order_index: 0,
-            })
-            .select("id")
-            .single();
-          sectionId = newSection?.id || null;
-        }
-      } else {
-        sectionId = existingSection[0].id;
-      }
+      const sectionId = form.brand_section_id === "__none__" ? null : form.brand_section_id;
 
       const { error } = await supabase.from("banner_schedules").insert({
         brand_id: currentBrandId,
@@ -111,7 +94,7 @@ export default function BannerManagerPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banner-schedules"] });
       setDialogOpen(false);
-      resetForm();
+      setForm(INITIAL_FORM);
       toast.success("Banner criado!");
     },
     onError: (e: any) => toast.error(e.message),
@@ -136,18 +119,35 @@ export default function BannerManagerPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["banner-schedules"] }),
   });
 
-  const resetForm = () =>
-    setForm({ image_url: "", title: "", link_url: "", link_type: "external", start_at: "", end_at: "", is_active: true });
+  const updateSectionMutation = useMutation({
+    mutationFn: async ({ id, sectionId }: { id: string; sectionId: string | null }) => {
+      const { error } = await supabase.from("banner_schedules").update({ brand_section_id: sectionId }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banner-schedules"] });
+      toast.success("Seção atualizada.");
+    },
+  });
+
+  const getSectionLabel = (sectionId: string | null) => {
+    if (!sectionId || !sections) return "Global";
+    const s = sections.find((sec: any) => sec.id === sectionId);
+    if (!s) return "Global";
+    const tpl = s.section_templates as any;
+    const name = s.title || tpl?.label || tpl?.type || "Seção";
+    return `${name} — pos. ${s.order_index + 1}`;
+  };
 
   return (
     <div className="p-6 space-y-4">
       <PageHeader
         title="Central de Banners"
-        description="Gerencie banners com agendamento de exibição. Defina datas de início e fim, vincule a seções ou ofertas, e acompanhe o status (Agendado, Ativo, Expirado)."
+        description="Gerencie banners com agendamento de exibição. Defina datas de início e fim, vincule a seções ou ofertas, e acompanhe o status."
       />
 
       <div className="flex justify-end">
-        <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="gap-1.5">
+        <Button onClick={() => { setForm(INITIAL_FORM); setDialogOpen(true); }} className="gap-1.5">
           <Plus className="h-4 w-4" /> Novo Banner
         </Button>
       </div>
@@ -178,6 +178,34 @@ export default function BannerManagerPage() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Section selector inline */}
+                <div className="flex items-center gap-1.5 text-xs">
+                  <LayoutGrid className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <Select
+                    value={banner.brand_section_id || "__none__"}
+                    onValueChange={(v) =>
+                      updateSectionMutation.mutate({ id: banner.id, sectionId: v === "__none__" ? null : v })
+                    }
+                  >
+                    <SelectTrigger className="h-7 text-xs border-dashed">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Global (todas)</SelectItem>
+                      {sections?.map((sec: any) => {
+                        const tpl = sec.section_templates as any;
+                        const name = sec.title || tpl?.label || tpl?.type || "Seção";
+                        return (
+                          <SelectItem key={sec.id} value={sec.id}>
+                            {name} — pos. {sec.order_index + 1}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3" />
                   <span>
@@ -216,6 +244,32 @@ export default function BannerManagerPage() {
               <Label>Título (opcional)</Label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
+
+            {/* Section positioning */}
+            <div>
+              <Label>Posicionar na Seção</Label>
+              <Select value={form.brand_section_id} onValueChange={(v) => setForm({ ...form, brand_section_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Escolha a seção" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Global (todas as seções)</SelectItem>
+                  {sections?.map((sec: any) => {
+                    const tpl = sec.section_templates as any;
+                    const name = sec.title || tpl?.label || tpl?.type || "Seção";
+                    return (
+                      <SelectItem key={sec.id} value={sec.id}>
+                        {name} — posição {sec.order_index + 1}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {sections && sections.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nenhuma seção ativa encontrada. Crie seções no Construtor de Páginas.
+                </p>
+              )}
+            </div>
+
             <div>
               <Label>Tipo de Link</Label>
               <Select value={form.link_type} onValueChange={(v) => setForm({ ...form, link_type: v })}>
