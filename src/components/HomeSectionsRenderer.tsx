@@ -527,7 +527,7 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_CAROUSEL ---
-function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, sponsoredStoreIds }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
