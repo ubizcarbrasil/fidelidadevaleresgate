@@ -389,6 +389,15 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             </div>
           </div>
         )}
+        {/* Reviews */}
+        <StoreReviewsSection
+          storeId={store.id}
+          customerId={customer?.id}
+          primary={primary}
+          fontHeading={fontHeading}
+          fg={fg}
+        />
+
         {/* Video embed */}
         {store.video_url && (
           <div className="mx-4 mt-4">
