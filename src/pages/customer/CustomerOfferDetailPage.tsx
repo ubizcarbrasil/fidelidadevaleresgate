@@ -424,8 +424,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     </div>
                      <p className="text-xs text-muted-foreground">
                        Ao resgatar, você receberá um cupom de desconto de{" "}
-                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
-                       para usar na compra deste produto.
+                        <strong className="text-[#E65100] dark:text-foreground">{creditAmount.toLocaleString("pt-BR")} pts</strong>{" "}
+                        para usar na compra deste produto.
                     </p>
                   </div>
                 )}
