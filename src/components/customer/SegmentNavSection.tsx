@@ -124,35 +124,31 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
       </div>
 
       {/* Horizontal scroll */}
-      <ScrollArea className="w-full">
-        <div className="flex gap-1.5 pb-2">
-          {categories.map((cat, idx) => (
-            <motion.button
-              key={cat.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.03, duration: 0.25 }}
-              whileTap={{ scale: 0.92 }}
-              className="flex flex-col items-center gap-1 flex-shrink-0"
-              style={{ minWidth: 60 }}
-              onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
+      <div className="grid grid-cols-5 gap-y-3 gap-x-0">
+        {categories.slice(0, 10).map((cat, idx) => (
+          <motion.button
+            key={cat.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.03, duration: 0.25 }}
+            whileTap={{ scale: 0.92 }}
+            className="flex flex-col items-center gap-1"
+            onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
+          >
+            <div
+              className="h-11 w-11 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
             >
-              <div
-                className="h-12 w-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
-              >
-                <CategoryIcon iconName={cat.icon_name} />
-              </div>
-              <span
-                className="text-[9px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
-              >
-                {cat.name}
-              </span>
-            </motion.button>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+              <CategoryIcon iconName={cat.icon_name} />
+            </div>
+            <span
+              className="text-[9px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+            >
+              {cat.name}
+            </span>
+          </motion.button>
+        ))}
+      </div>
     </section>
   );
 }
