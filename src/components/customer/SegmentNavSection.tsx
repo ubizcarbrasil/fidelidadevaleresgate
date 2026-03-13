@@ -115,7 +115,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
           <button
             onClick={onSeeMore}
             className="text-xs font-bold flex items-center gap-0.5"
-            style={{ color: "hsl(var(--vb-gold))" }}
+            style={{ color: "hsl(var(--vb-highlight))" }}
           >
             Ver mais
             <ChevronRight className="h-3.5 w-3.5" />
