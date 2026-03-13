@@ -208,7 +208,7 @@ export default function CustomerLayout() {
                 )}
                 <span
                   className="font-extrabold text-[15px] tracking-tight"
-                  style={{ fontFamily: fontHeading, color: accent }}
+                  style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
                 >
                   {displayName}
                 </span>
