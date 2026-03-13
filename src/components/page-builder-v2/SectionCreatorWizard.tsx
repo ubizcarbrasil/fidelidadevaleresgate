@@ -141,6 +141,7 @@ const FILTER_MODES = [
   { id: "most_redeemed", label: "Mais resgatados" },
   { id: "newest", label: "Novos (14 dias)" },
   { id: "random", label: "Aleatório" },
+  { id: "featured", label: "Destaques" },
 ];
 
 /* ─── Wizard Steps ─── */
