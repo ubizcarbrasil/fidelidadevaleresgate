@@ -245,9 +245,14 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         return;
       }
 
-      // If no source but has segment filters, infer source_type from template
-      const effectiveSource = source || (segmentFilterIds.length > 0 ? {
-        source_type: (templateType === "STORES_GRID" || templateType === "STORES_LIST") ? "STORES" : "OFFERS",
+      // If no source, infer source_type from template type
+      const inferredSourceType =
+        (templateType === "STORES_GRID" || templateType === "STORES_LIST" || templateType === "GRID_LOGOS") ? "STORES"
+        : (templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") ? "OFFERS"
+        : null;
+
+      const effectiveSource = source || (inferredSourceType ? {
+        source_type: inferredSourceType,
         limit: 10,
         filters_json: {},
         id: "inferred",
