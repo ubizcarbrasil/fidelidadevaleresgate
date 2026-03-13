@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Save, Image as ImageIcon, Video, Globe, Instagram, MapPin, MessageCircle, Tag, HelpCircle, Coins, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import SegmentAutocomplete from "@/components/SegmentAutocomplete";
+import OperatingHoursEditor, { type DayHours } from "./OperatingHoursEditor";
 
 interface FaqItem {
   question: string;
@@ -29,6 +30,7 @@ export default function StoreProfileTab({ store }: { store: any }) {
     points_rule_text: store.points_rule_text || "",
     points_deadline_text: store.points_deadline_text || "",
     faq_json: (store.faq_json || []) as FaqItem[],
+    operating_hours_json: (store.operating_hours_json || []) as DayHours[],
   });
   const [saving, setSaving] = useState(false);
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
@@ -51,6 +53,7 @@ export default function StoreProfileTab({ store }: { store: any }) {
         points_rule_text: form.points_rule_text || null,
         points_deadline_text: form.points_deadline_text || null,
         faq_json: form.faq_json as any,
+        operating_hours_json: form.operating_hours_json.length ? form.operating_hours_json as any : null,
       })
       .eq("id", store.id);
 
@@ -313,6 +316,12 @@ export default function StoreProfileTab({ store }: { store: any }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Horário de Funcionamento */}
+      <OperatingHoursEditor
+        value={form.operating_hours_json}
+        onChange={(hours) => setForm(prev => ({ ...prev, operating_hours_json: hours }))}
+      />
 
       <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
         {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}

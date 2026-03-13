@@ -42,6 +42,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import OperatingHoursDisplay from "@/components/customer/OperatingHoursDisplay";
+import StoreReviewsSection from "@/components/customer/StoreReviewsSection";
 
 type StoreRow = Tables<"stores">;
 type Offer = Tables<"offers">;
@@ -244,11 +246,20 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             </div>
           )}
 
-          {store.description && (
-            <p className="text-xs leading-relaxed mt-3" style={{ color: `${fg}65` }}>
-              {store.description}
-            </p>
-          )}
+           {store.description && (
+             <p className="text-xs leading-relaxed mt-3" style={{ color: `${fg}65` }}>
+               {store.description}
+             </p>
+           )}
+
+           {/* Operating Hours */}
+           {store.operating_hours_json && Array.isArray(store.operating_hours_json) && (store.operating_hours_json as any[]).length > 0 && (
+             <OperatingHoursDisplay
+               hours={store.operating_hours_json as any[]}
+               primary={primary}
+               fg={fg}
+             />
+           )}
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2 mt-4">
@@ -378,6 +389,15 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             </div>
           </div>
         )}
+        {/* Reviews */}
+        <StoreReviewsSection
+          storeId={store.id}
+          customerId={customer?.id}
+          primary={primary}
+          fontHeading={fontHeading}
+          fg={fg}
+        />
+
         {/* Video embed */}
         {store.video_url && (
           <div className="mx-4 mt-4">

@@ -3210,6 +3210,51 @@ export type Database = {
           },
         ]
       }
+      store_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_approved: boolean
+          rating: number
+          store_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_approved?: boolean
+          rating: number
+          store_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_approved?: boolean
+          rating?: number
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_reviews_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_type_requests: {
         Row: {
           brand_id: string
@@ -3287,6 +3332,7 @@ export type Database = {
           is_active: boolean
           logo_url: string | null
           name: string
+          operating_hours_json: Json | null
           owner_user_id: string | null
           phone: string | null
           points_deadline_text: string | null
@@ -3326,6 +3372,7 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           name: string
+          operating_hours_json?: Json | null
           owner_user_id?: string | null
           phone?: string | null
           points_deadline_text?: string | null
@@ -3365,6 +3412,7 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           name?: string
+          operating_hours_json?: Json | null
           owner_user_id?: string | null
           phone?: string | null
           points_deadline_text?: string | null
