@@ -123,6 +123,7 @@ const groups = [
       { title: "Relatórios", url: "/reports", icon: BarChart3 },
       { title: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { title: "Kit Inicial", url: "/starter-kit", icon: PackageSearch },
+      { title: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical },
     ],
   },
 ];
