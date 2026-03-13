@@ -53,6 +53,7 @@ export default function StoreProfileTab({ store }: { store: any }) {
         points_rule_text: form.points_rule_text || null,
         points_deadline_text: form.points_deadline_text || null,
         faq_json: form.faq_json as any,
+        operating_hours_json: form.operating_hours_json.length ? form.operating_hours_json as any : null,
       })
       .eq("id", store.id);
 
