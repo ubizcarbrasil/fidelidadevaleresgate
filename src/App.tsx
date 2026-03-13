@@ -88,6 +88,7 @@ const TrialSignupPage = lazy(() => import("@/pages/TrialSignupPage"));
 const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
 const BrandSettingsPage = lazy(() => import("@/pages/BrandSettingsPage"));
 const SponsoredPlacementsPage = lazy(() => import("@/pages/SponsoredPlacementsPage"));
+const MachineIntegrationPage = lazy(() => import("@/pages/MachineIntegrationPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -217,6 +218,7 @@ function AppRoutes() {
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="brand-settings" element={<BrandSettingsPage />} />
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
+          <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
           <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
           <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
           <Route path="crm/opportunities" element={<ModuleGuard moduleKey="crm"><CrmOpportunitiesPage /></ModuleGuard>} />
