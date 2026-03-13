@@ -2,18 +2,16 @@ import { useState, useEffect } from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { Navigation, ChevronRight, Coins, Loader2, MapPin } from "lucide-react";
+import { ChevronRight, Coins, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
-import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
-import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 
 import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { haptic } from "@/lib/haptics";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
@@ -30,15 +28,15 @@ function getGreeting(): string {
 
 interface CustomerHomePageProps {
   onOpenLedger?: () => void;
+  onOpenCategoryGrid?: () => void;
+  onOpenCategoryStores?: (category: { id: string; name: string; icon_name: string | null }) => void;
 }
 
-export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
+export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const { navigateToOffersWithSegment } = useCustomerNav();
 
-  const [categoryGridOpen, setCategoryGridOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [geoDetected, setGeoDetected] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,7 +80,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   };
 
   const handleCategoryClick = (categoryId: string, categoryName: string, iconName: string | null) => {
-    setSelectedCategory({ id: categoryId, name: categoryName, icon_name: iconName });
+    onOpenCategoryStores?.({ id: categoryId, name: categoryName, icon_name: iconName });
   };
 
   return (
@@ -174,7 +172,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
       >
         <SegmentNavSection
           onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
-          onSeeMore={() => setCategoryGridOpen(true)}
+          onSeeMore={() => onOpenCategoryGrid?.()}
         />
       </motion.div>
 
@@ -222,29 +220,6 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
       {theme?.footer_text && (
         <div className="text-center py-8 text-xs text-muted-foreground/30 px-4">{theme.footer_text}</div>
       )}
-
-      {/* Category Grid Overlay */}
-      <AnimatePresence>
-        {categoryGridOpen && (
-          <CategoryGridOverlay
-            onBack={() => setCategoryGridOpen(false)}
-            onCategoryClick={(cat) => {
-              setCategoryGridOpen(false);
-              handleCategoryClick(cat.id, cat.name, cat.icon_name);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Category Stores Overlay */}
-      <AnimatePresence>
-        {selectedCategory && (
-          <CategoryStoresOverlay
-            category={selectedCategory}
-            onBack={() => setSelectedCategory(null)}
-          />
-        )}
-      </AnimatePresence>
 
     </div>
   );

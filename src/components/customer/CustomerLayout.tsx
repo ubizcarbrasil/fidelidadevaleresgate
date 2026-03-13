@@ -5,6 +5,8 @@ import { useCustomer } from "@/contexts/CustomerContext";
 import AppIcon from "@/components/customer/AppIcon";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
+import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
+import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
@@ -98,6 +100,8 @@ export default function CustomerLayout() {
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [emissorasOpen, setEmissorasOpen] = useState(false);
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
+  const [categoryGridOpen, setCategoryGridOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [showTour, setShowTour] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
@@ -268,7 +272,11 @@ export default function CustomerLayout() {
               exit="exit"
             >
               {activeTab === "home" ? (
-                <CustomerHomePage onOpenLedger={() => setLedgerOpen(true)} />
+                <CustomerHomePage
+                  onOpenLedger={() => setLedgerOpen(true)}
+                  onOpenCategoryGrid={() => setCategoryGridOpen(true)}
+                  onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
+                />
               ) : (
                 <ActivePage />
               )}
@@ -390,6 +398,29 @@ export default function CustomerLayout() {
         <AnimatePresence>
           {emissorasOpen && (
             <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* Category Grid Overlay */}
+        <AnimatePresence>
+          {categoryGridOpen && (
+            <CategoryGridOverlay
+              onBack={() => setCategoryGridOpen(false)}
+              onCategoryClick={(cat) => {
+                setCategoryGridOpen(false);
+                setSelectedCategory(cat);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Category Stores Overlay */}
+        <AnimatePresence>
+          {selectedCategory && (
+            <CategoryStoresOverlay
+              category={selectedCategory}
+              onBack={() => setSelectedCategory(null)}
+            />
           )}
         </AnimatePresence>
 
