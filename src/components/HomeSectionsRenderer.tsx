@@ -271,6 +271,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
   const filterMode = (section as any).filter_mode || "recent";
   const columnsCount = (section as any).columns_count || 4;
   const rowsCount = (section as any).rows_count || 1;
+  const iconSize: string = (section as any).icon_size || "medium";
   const minStoresVisible = (section as any).min_stores_visible || 0;
   const couponTypeFilter = (section as any).coupon_type_filter || null;
   const cityFilterJson: string[] = (section as any).city_filter_json || [];
@@ -475,20 +476,29 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
       {loading ? renderSkeleton() : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
-        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
+        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
-        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
+        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_GRID" ? (
-        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_LIST" ? (
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "BANNER_CAROUSEL" ? (
         <BannerCarousel items={items} primary={primary} bannerHeight={section.banner_height} />
       ) : templateType === "HIGHLIGHTS_WEEKLY" ? (
-        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
+        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : null}
     </section>
   );
+}
+
+// --- Size mapping helper ---
+function getCardSizes(iconSize: string) {
+  switch (iconSize) {
+    case "small": return { minW: 140, maxW: 160, imgH: 96, imgClass: "h-24" };
+    case "large": return { minW: 200, maxW: 220, imgH: 160, imgClass: "h-40" };
+    default: return { minW: 170, maxW: 190, imgH: 128, imgClass: "h-32" };
+  }
 }
 
 // --- VOUCHERS_CARDS ---
@@ -559,12 +569,25 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_CAROUSEL ---
-function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, sponsoredStoreIds }: any) {
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, sponsoredStoreIds, iconSize = "medium", rowsCount = 1 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizes = getCardSizes(iconSize);
+  const useMultiRow = rowsCount > 1;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div
+        ref={scrollRef}
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-2" : "flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${sizes.minW}px`,
+          gap: "12px",
+          scrollSnapType: "x mandatory",
+        } : { scrollSnapType: "x mandatory" }}
+      >
         {items.map((o: any, idx: number) => {
           const isNew = o.created_at && (Date.now() - new Date(o.created_at).getTime()) < 14 * 86400000;
           const isSponsored = sponsoredStoreIds?.has(o.store_id);
@@ -575,28 +598,28 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: idx * 0.04 }}
-              className="min-w-[170px] max-w-[190px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
               style={{
                 backgroundColor: "hsl(var(--card))",
                 scrollSnapAlign: "start",
+                minWidth: useMultiRow ? undefined : `${sizes.minW}px`,
+                maxWidth: useMultiRow ? undefined : `${sizes.maxW}px`,
               }}
               onClick={() => onOfferClick?.(o)}
             >
-              <div className="relative h-32 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="relative w-full" style={{ height: sizes.imgH, backgroundColor: "hsl(var(--muted))" }}>
                 {o.image_url || o.stores?.logo_url ? (
-                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-32 w-full" />
+                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="w-full" style={{ height: sizes.imgH }} />
                 ) : (
-                  <div className="h-32 w-full flex items-center justify-center">
+                  <div className="w-full flex items-center justify-center" style={{ height: sizes.imgH }}>
                     <ShoppingBag className="h-10 w-10 text-muted-foreground/20" />
                   </div>
                 )}
-                {/* Discount badge - top left */}
                 {o.discount_percent > 0 && (
                   <div className="absolute top-2.5 left-2.5 vb-discount-badge">
                     {o.discount_percent}% OFF
                   </div>
                 )}
-                {/* "Novo" badge - top left */}
                 {isNew && !o.discount_percent && (
                   <div
                     className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white"
@@ -606,7 +629,6 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   </div>
                 )}
               </div>
-              {/* Sponsored badge - bottom right */}
               {isSponsored && <SponsoredBadge />}
               <div className="px-3 py-2.5">
                 <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
@@ -620,43 +642,59 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 )}
                 {!o.discount_percent && o.value_rescue > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                    {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                   </span>
                 )}
               </div>
             </motion.div>
           );
         })}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
 }
 
 // --- OFFERS_GRID (horizontal scroll) ---
-function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, iconSize = "medium", rowsCount = 1 }: any) {
+  const sizes = getCardSizes(iconSize);
+  const useMultiRow = rowsCount > 1;
+
   return (
     <div className="max-w-lg mx-auto">
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+      <div
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-1" : "flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${sizes.minW}px`,
+          gap: "12px",
+          WebkitOverflowScrolling: "touch",
+        } : { WebkitOverflowScrolling: "touch" }}
+      >
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="flex-shrink-0 w-[160px] rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: "hsl(var(--card))" }}
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            style={{
+              backgroundColor: "hsl(var(--card))",
+              width: useMultiRow ? undefined : `${sizes.minW}px`,
+            }}
             onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
               <div className="relative">
-                <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+                <LazyImage src={o.image_url} alt={o.title} className="w-full" style={{ height: sizes.imgH }} />
                 <div className="absolute top-1.5 left-1.5">
                   <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={accent} size="sm" />
                 </div>
               </div>
             ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="w-full flex items-center justify-center" style={{ height: sizes.imgH, backgroundColor: "hsl(var(--muted))" }}>
                 <ShoppingBag className="h-6 w-6 text-muted-foreground/30" />
               </div>
             )}
@@ -667,25 +705,39 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               )}
               {o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                  {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                 </span>
               )}
             </div>
           </motion.div>
         ))}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
 }
 
 // --- STORES_GRID ---
-function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds }: any) {
+function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds, iconSize = "medium", rowsCount = 1 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizes = getCardSizes(iconSize);
+  const useMultiRow = rowsCount > 1;
+  const imgH = iconSize === "small" ? 96 : iconSize === "large" ? 144 : 112;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div
+        ref={scrollRef}
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-2" : "flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${sizes.minW}px`,
+          gap: "12px",
+          scrollSnapType: "x mandatory",
+        } : { scrollSnapType: "x mandatory" }}
+      >
         {items.map((b: any, idx: number) => {
           const isSponsored = sponsoredStoreIds?.has(b.id);
           return (
@@ -694,13 +746,18 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: "hsl(var(--card))", scrollSnapAlign: "start" }}
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            style={{
+              backgroundColor: "hsl(var(--card))",
+              scrollSnapAlign: "start",
+              minWidth: useMultiRow ? undefined : `${sizes.minW}px`,
+              maxWidth: useMultiRow ? undefined : `${sizes.maxW}px`,
+            }}
             onClick={() => onStoreClick?.(b)}
           >
-            <div className="relative h-28 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+            <div className="relative w-full flex items-center justify-center" style={{ height: imgH, backgroundColor: "hsl(var(--muted))" }}>
               {b.logo_url ? (
-                <LazyImage src={b.logo_url} alt={b.name} className="h-28 w-full" />
+                <LazyImage src={b.logo_url} alt={b.name} className="w-full" style={{ height: imgH }} />
               ) : (
                 <Store className="h-10 w-10 text-muted-foreground/20" />
               )}
@@ -725,7 +782,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
           </motion.div>
         );
         })}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
@@ -852,26 +909,43 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
 }
 
 // --- HIGHLIGHTS_WEEKLY ---
-function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, iconSize = "medium", rowsCount = 1 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizes = getCardSizes(iconSize);
+  const cardMinW = Math.max(sizes.minW, 200);
+  const cardMaxW = Math.max(sizes.maxW, 240);
+  const imgH = iconSize === "small" ? 112 : iconSize === "large" ? 176 : 144;
+  const useMultiRow = rowsCount > 1;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div
+        ref={scrollRef}
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-2" : "flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-2"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${cardMinW}px`,
+          gap: "16px",
+          scrollSnapType: "x mandatory",
+        } : { scrollSnapType: "x mandatory" }}
+      >
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, delay: idx * 0.06 }}
-            className="min-w-[220px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
             style={{
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
+              minWidth: useMultiRow ? undefined : `${cardMinW}px`,
+              maxWidth: useMultiRow ? undefined : `${cardMaxW}px`,
             }}
             onClick={() => onOfferClick?.(o)}
           >
-            {/* Featured badge - top left */}
             <div
               className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide"
               style={{ backgroundColor: "hsl(var(--vb-gold))", color: "hsl(var(--vb-gold-foreground))" }}
@@ -881,9 +955,9 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
             </div>
 
             {o.image_url ? (
-              <LazyImage src={o.image_url} alt={o.title} className="h-36 w-full" />
+              <LazyImage src={o.image_url} alt={o.title} className="w-full" style={{ height: imgH }} />
             ) : (
-              <div className="h-36 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="w-full flex items-center justify-center" style={{ height: imgH, backgroundColor: "hsl(var(--muted))" }}>
                 <Star className="h-10 w-10 text-muted-foreground/20" />
               </div>
             )}
@@ -901,14 +975,14 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
                 )}
                 {o.value_rescue > 0 && (
                   <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                    {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                   </span>
                 )}
               </div>
             </div>
           </motion.div>
         ))}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
