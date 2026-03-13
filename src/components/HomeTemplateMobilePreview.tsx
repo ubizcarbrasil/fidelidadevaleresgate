@@ -59,7 +59,7 @@ function OffersCarouselPlaceholder() {
           <Skeleton className="h-2 w-16" />
           <Skeleton className="h-2 w-10" />
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-primary">R$ 9,90</span>
+            <span className="text-[9px] font-bold text-primary">90 pts</span>
             <Heart className="h-2.5 w-2.5 text-muted-foreground/40" />
           </div>
         </div>
