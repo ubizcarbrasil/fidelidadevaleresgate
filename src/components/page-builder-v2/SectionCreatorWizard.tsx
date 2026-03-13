@@ -118,6 +118,10 @@ const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
     { id: "grid", label: "Grade", description: "Cards informativos", icon: <LayoutGrid className="h-5 w-5" /> },
     { id: "logos", label: "Logos/Atalhos", description: "Ícones circulares", icon: <CircleDot className="h-5 w-5" /> },
   ],
+  highlights: [
+    { id: "carousel", label: "Carrossel", description: "Cards grandes em destaque", icon: <GalleryHorizontal className="h-5 w-5" /> },
+    { id: "grid", label: "Grade", description: "Grade com destaque visual", icon: <LayoutGrid className="h-5 w-5" /> },
+  ],
 };
 
 const ICON_SIZES = [
