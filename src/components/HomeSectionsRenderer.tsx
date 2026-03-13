@@ -382,7 +382,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           });
         }
 
-        // Boost sponsored stores to top
+        // Apply ranking boost then sponsored boost
+        results = applyRankingBoost(results, rankedOfferIds);
         results = boostSponsored(results, sponsoredStoreIds, "store_id");
         setItems(results);
       } else if (effectiveSource.source_type === "STORES") {
