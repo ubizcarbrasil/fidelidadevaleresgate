@@ -800,10 +800,10 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
             }}
             onClick={() => onOfferClick?.(o)}
           >
-            {/* Featured badge */}
+            {/* Featured badge - top left */}
             <div
-              className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
-              style={{ backgroundColor: accent, color: "hsl(var(--primary-foreground))" }}
+              className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide"
+              style={{ backgroundColor: "hsl(var(--vb-gold))", color: "hsl(var(--vb-gold-foreground))" }}
             >
               <Star className="h-3 w-3" fill="currentColor" />
               Destaque
@@ -824,12 +824,12 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
               )}
               <div className="flex items-center justify-between mt-2">
                 {o.discount_percent > 0 && (
-                  <span className="font-black text-base" style={{ color: accent, fontFamily: fontHeading }}>
+                  <span className="font-black text-base" style={{ color: "hsl(var(--vb-gold))", fontFamily: fontHeading }}>
                     {o.discount_percent}% OFF
                   </span>
                 )}
                 {o.value_rescue > 0 && (
-                  <span className="font-bold text-sm" style={{ color: accent }}>
+                  <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-gold))" }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}
