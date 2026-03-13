@@ -251,8 +251,8 @@ export default function CustomerLayout() {
               className="w-full flex items-center gap-3 rounded-xl px-4 py-2.5 text-left transition-shadow mb-3"
               style={{ backgroundColor: "hsl(var(--muted))" }}
             >
-              <AppIcon iconKey="header_search" className="h-4.5 w-4.5 flex-shrink-0 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground/60">
+              <AppIcon iconKey="header_search" className="h-4.5 w-4.5 flex-shrink-0 text-foreground/50" />
+              <span className="text-sm text-foreground/50">
                 O que está procurando?
               </span>
             </button>
