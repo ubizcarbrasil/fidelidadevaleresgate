@@ -327,7 +327,7 @@ export default function CustomerLayout() {
                       iconKey={tab.iconKey}
                       className="h-5 w-5"
                       strokeWidth={isActive ? 2.2 : 1.6}
-                      style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
+                      style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                     />
                   </motion.div>
                   <span
