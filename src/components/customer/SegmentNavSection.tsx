@@ -125,7 +125,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
       {/* Horizontal scroll */}
       <ScrollArea className="w-full">
-        <div className="flex gap-3 pb-2">
+        <div className="flex gap-2 pb-2">
           {categories.map((cat, idx) => (
             <motion.button
               key={cat.id}
