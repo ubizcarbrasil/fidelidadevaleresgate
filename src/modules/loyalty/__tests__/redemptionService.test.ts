@@ -59,6 +59,6 @@ describe("redemptionService", () => {
   it("throws on error", async () => {
     mockRange.mockResolvedValueOnce({ data: null, error: { message: "fail" }, count: 0 });
 
-    await expect(fetchRedemptions()).rejects.toBeDefined();
+    await expect(fetchRedemptions({})).rejects.toBeDefined();
   });
 });
