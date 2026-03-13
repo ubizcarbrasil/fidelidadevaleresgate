@@ -99,7 +99,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   };
 
   const handleDuplicateSection = async (section: SectionRow) => {
-    if (!brand) return;
+    if (!currentBrandId) return;
     const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
     const { id, section_templates, ...rest } = section as any;
     await supabase.from("brand_sections").insert({
