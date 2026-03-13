@@ -6,8 +6,6 @@ import { Navigation, ChevronRight, Coins, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
-import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
-import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 
 import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
