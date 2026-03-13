@@ -131,6 +131,11 @@ const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
     { id: "carousel", label: "Carrossel", description: "Cards grandes em destaque", icon: <GalleryHorizontal className="h-5 w-5" /> },
     { id: "grid", label: "Grade", description: "Grade com destaque visual", icon: <LayoutGrid className="h-5 w-5" /> },
   ],
+  by_category: [
+    { id: "grid_stores", label: "Grade de Parceiros", description: "Lojas do segmento em grade", icon: <LayoutGrid className="h-5 w-5" /> },
+    { id: "carousel_offers", label: "Carrossel de Ofertas", description: "Ofertas do segmento em carrossel", icon: <GalleryHorizontal className="h-5 w-5" /> },
+    { id: "grid_offers", label: "Grade de Ofertas", description: "Ofertas do segmento em grade", icon: <LayoutGrid className="h-5 w-5" /> },
+  ],
 };
 
 const ICON_SIZES = [
