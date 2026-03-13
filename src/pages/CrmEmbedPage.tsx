@@ -1,12 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AlertTriangle, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useAuth } from "@/contexts/AuthContext";
 
-const CRM_URL = "https://valeresgatacrm.lovable.app/";
+const CRM_BASE_URL = "https://valeresgatacrm.lovable.app/";
 
 export default function CrmEmbedPage() {
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
+  const { currentBrandId, currentBranchId } = useBrandGuard();
+  const { user } = useAuth();
+
+  const iframeSrc = useMemo(() => {
+    const url = new URL(CRM_BASE_URL);
+    if (currentBrandId) url.searchParams.set("brandId", currentBrandId);
+    if (currentBranchId) url.searchParams.set("branchId", currentBranchId);
+    if (user?.email) url.searchParams.set("email", user.email);
+    return url.toString();
+  }, [currentBrandId, currentBranchId, user?.email]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -27,7 +39,7 @@ export default function CrmEmbedPage() {
           <p className="text-sm text-muted-foreground max-w-xs">
             O site bloqueia a exibição dentro de iframes. Abra diretamente no navegador.
           </p>
-          <Button onClick={() => window.open(CRM_URL, "_blank", "noopener")} className="gap-2">
+          <Button onClick={() => window.open(iframeSrc, "_blank", "noopener")} className="gap-2">
             <ExternalLink className="h-4 w-4" />
             Abrir CRM no navegador
           </Button>
@@ -40,7 +52,7 @@ export default function CrmEmbedPage() {
             </div>
           )}
           <iframe
-            src={CRM_URL}
+            src={iframeSrc}
             title="CRM Estratégico"
             className="h-full w-full border-0"
             onLoad={() => { setLoading(false); setBlocked(false); }}
