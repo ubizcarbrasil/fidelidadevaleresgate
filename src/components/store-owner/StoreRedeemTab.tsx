@@ -413,7 +413,7 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({ redemp
       )}
     </div>
   );
-}
+});
 
 /* ─── Confirm Panel for manual lookup ─── */
 function ConfirmRedemptionPanel({
