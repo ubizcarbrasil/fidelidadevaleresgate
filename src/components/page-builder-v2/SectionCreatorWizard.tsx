@@ -171,6 +171,7 @@ function resolveTemplateKey(contentId: string, layoutId: string): string {
     banners: { carousel: "banner_hero" },
     info: { list: "LIST_INFO", grid: "GRID_INFO", logos: "GRID_LOGOS" },
     highlights: { carousel: "highlights_weekly", grid: "highlights_weekly" },
+    by_category: { grid_stores: "stores_grid", carousel_offers: "offers_carousel", grid_offers: "offers_grid" },
   };
   return map[contentId]?.[layoutId] || "offers_carousel";
 }
