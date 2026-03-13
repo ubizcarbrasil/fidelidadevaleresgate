@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -13,6 +13,15 @@ import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { haptic } from "@/lib/haptics";
+import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
+
+const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
+  { key: "BANNERS", label: "Banners", enabled: true, order: 0 },
+  { key: "CATEGORIES", label: "Categorias", enabled: true, order: 1 },
+  { key: "FOR_YOU", label: "Selecionado para Você", enabled: true, order: 2 },
+  { key: "EMISSORAS", label: "Compre e Pontue", enabled: true, order: 3 },
+  { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
+];
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -81,6 +90,63 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
 
   const handleCategoryClick = (categoryId: string, categoryName: string, iconName: string | null) => {
     onOpenCategoryStores?.({ id: categoryId, name: categoryName, icon_name: iconName });
+  };
+
+  // Resolve native sections from brand settings
+  const nativeSections = useMemo(() => {
+    const layout = brand?.home_layout_json as any;
+    if (layout?.native_sections && Array.isArray(layout.native_sections)) {
+      return [...layout.native_sections].sort((a: NativeSectionConfig, b: NativeSectionConfig) => a.order - b.order);
+    }
+    return DEFAULT_NATIVE_SECTIONS;
+  }, [brand?.home_layout_json]);
+
+  const isNativeEnabled = (key: string) => {
+    const section = nativeSections.find((s: NativeSectionConfig) => s.key === key);
+    return section ? section.enabled : true;
+  };
+
+  const renderNativeSection = (key: string, delayBase: number) => {
+    if (!isNativeEnabled(key)) return null;
+    const delay = delayBase * 0.02 + 0.05;
+
+    switch (key) {
+      case "BANNERS":
+        return (
+          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-2">
+            <HomeSectionsRenderer renderBannersOnly />
+          </motion.div>
+        );
+      case "CATEGORIES":
+        return (
+          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+            <SegmentNavSection
+              onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
+              onSeeMore={() => onOpenCategoryGrid?.()}
+            />
+          </motion.div>
+        );
+      case "FOR_YOU":
+        return (
+          <motion.div key="foryou" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+            <ForYouSection />
+          </motion.div>
+        );
+      case "EMISSORAS":
+        return (
+          <motion.div key="emissoras" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+            <EmissorasSection />
+          </motion.div>
+        );
+      case "ACHADINHOS":
+        return (
+          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+            <AchadinhoSection />
+          </motion.div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -153,60 +219,10 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         </button>
       </motion.div>
 
-      {/* Banner Carousel */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.05 }}
-        className="mt-2"
-      >
-        <HomeSectionsRenderer renderBannersOnly />
-      </motion.div>
+      {/* Render native sections in configured order */}
+      {nativeSections.map((ns: NativeSectionConfig, idx: number) => renderNativeSection(ns.key, idx))}
 
-      {/* Categories */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-        className="mt-4"
-      >
-        <SegmentNavSection
-          onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
-          onSeeMore={() => onOpenCategoryGrid?.()}
-        />
-      </motion.div>
-
-      {/* For You Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.12 }}
-        className="mt-4"
-      >
-        <ForYouSection />
-      </motion.div>
-
-      {/* Emissoras Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.14 }}
-        className="mt-4"
-      >
-        <EmissorasSection />
-      </motion.div>
-
-      {/* Achadinhos Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.16 }}
-        className="mt-4"
-      >
-        <AchadinhoSection />
-      </motion.div>
-
-      {/* Dynamic Sections */}
+      {/* Dynamic CMS Sections */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

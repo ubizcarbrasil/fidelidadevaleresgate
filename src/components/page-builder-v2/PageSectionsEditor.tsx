@@ -7,11 +7,27 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon, Lock } from "lucide-react";
 import SectionEditor from "./SectionEditor";
 import ManualLinksEditor from "./ManualLinksEditor";
 import SectionCreatorWizard from "./SectionCreatorWizard";
+
+export interface NativeSectionConfig {
+  key: string;
+  label: string;
+  enabled: boolean;
+  order: number;
+}
+
+const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
+  { key: "BANNERS", label: "Banners", enabled: true, order: 0 },
+  { key: "CATEGORIES", label: "Categorias", enabled: true, order: 1 },
+  { key: "FOR_YOU", label: "Selecionado para Você", enabled: true, order: 2 },
+  { key: "EMISSORAS", label: "Compre e Pontue", enabled: true, order: 3 },
+  { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
+];
 
 interface PageRow {
   id: string;
@@ -58,6 +74,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const isHomeMode = page === null;
   const { currentBrandId } = useBrandGuard();
   const [sections, setSections] = useState<SectionRow[]>([]);
+  const [nativeSections, setNativeSections] = useState<NativeSectionConfig[]>(DEFAULT_NATIVE_SECTIONS);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
@@ -89,6 +106,22 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     fetchSections();
   };
 
+  // Fetch native sections config from brand
+  const fetchNativeSections = useCallback(async () => {
+    if (!isHomeMode || !currentBrandId) return;
+    const { data } = await supabase
+      .from("brands")
+      .select("home_layout_json")
+      .eq("id", currentBrandId)
+      .single();
+    if (data?.home_layout_json) {
+      const layout = data.home_layout_json as any;
+      if (Array.isArray(layout?.native_sections)) {
+        setNativeSections(layout.native_sections);
+      }
+    }
+  }, [isHomeMode, currentBrandId]);
+
   const fetchSections = useCallback(async () => {
     setLoading(true);
     let query = (supabase
@@ -104,7 +137,29 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     setLoading(false);
   }, [isHomeMode, page?.id, currentBrandId]);
 
-  useEffect(() => { fetchSections(); }, [fetchSections]);
+  useEffect(() => { fetchSections(); fetchNativeSections(); }, [fetchSections, fetchNativeSections]);
+
+  const handleToggleNativeSection = async (key: string) => {
+    const updated = nativeSections.map(s => s.key === key ? { ...s, enabled: !s.enabled } : s);
+    setNativeSections(updated);
+    await supabase.from("brands").update({
+      home_layout_json: { native_sections: updated } as any
+    } as any).eq("id", currentBrandId);
+    toast({ title: "Seção atualizada" });
+  };
+
+  const handleMoveNativeSection = async (idx: number, direction: "up" | "down") => {
+    const sorted = [...nativeSections].sort((a, b) => a.order - b.order);
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+    const tempOrder = sorted[idx].order;
+    sorted[idx].order = sorted[targetIdx].order;
+    sorted[targetIdx].order = tempOrder;
+    setNativeSections(sorted);
+    await supabase.from("brands").update({
+      home_layout_json: { native_sections: sorted } as any
+    } as any).eq("id", currentBrandId);
+  };
 
   // handleAddSection is now handled by SectionCreatorWizard
 
@@ -226,17 +281,62 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : sections.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-xl">
-          <Layers className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Nenhuma sessão ainda</p>
-          <p className="text-sm mb-4">Adicione sessões para construir o conteúdo desta página.</p>
-          <Button onClick={() => setShowWizard(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Adicionar Sessão
-          </Button>
-        </div>
       ) : (
         <div className="space-y-2">
+          {/* Native sections (Home mode only) */}
+          {isHomeMode && (() => {
+            const sorted = [...nativeSections].sort((a, b) => a.order - b.order);
+            return sorted.map((ns, idx) => (
+              <div
+                key={ns.key}
+                className={`flex items-center gap-3 p-4 rounded-xl border bg-card transition-all ${!ns.enabled ? "opacity-50" : ""}`}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMoveNativeSection(idx, "up")} disabled={idx === 0}>
+                    <span className="text-xs">▲</span>
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMoveNativeSection(idx, "down")} disabled={idx === sorted.length - 1}>
+                    <span className="text-xs">▼</span>
+                  </Button>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm truncate">{ns.label}</h3>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary">
+                      <Lock className="h-2.5 w-2.5 mr-0.5" /> Nativa
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Seção fixa do sistema</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => handleToggleNativeSection(ns.key)} title={ns.enabled ? "Desativar" : "Ativar"}>
+                    {ns.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            ));
+          })()}
+
+          {/* Divider between native and CMS sections */}
+          {isHomeMode && sections.length > 0 && (
+            <div className="flex items-center gap-2 py-2">
+              <div className="flex-1 border-t border-border" />
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Sessões CMS</span>
+              <div className="flex-1 border-t border-border" />
+            </div>
+          )}
+
+          {sections.length === 0 && !isHomeMode ? (
+            <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-xl">
+              <Layers className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">Nenhuma sessão ainda</p>
+              <p className="text-sm mb-4">Adicione sessões para construir o conteúdo desta página.</p>
+              <Button onClick={() => setShowWizard(true)}>
+                <Plus className="h-4 w-4 mr-2" /> Adicionar Sessão
+              </Button>
+            </div>
+          ) : null}
+
           {sections.map((section, idx) => (
             <div
               key={section.id}
