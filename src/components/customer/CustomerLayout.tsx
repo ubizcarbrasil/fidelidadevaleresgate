@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import AppIcon from "@/components/customer/AppIcon";
@@ -156,8 +157,31 @@ export default function CustomerLayout() {
 
   const ActivePage = TAB_CONTENT[activeTab];
 
+  // Click tracking: log offer/store views for recommendation engine
+  const trackClick = useCallback((entityType: "offer" | "store", entityId: string, storeId?: string) => {
+    if (!customer || !brand || !selectedBranch) return;
+    supabase.from("customer_click_events").insert({
+      customer_id: customer.id,
+      brand_id: brand.id,
+      branch_id: selectedBranch.id,
+      entity_type: entityType,
+      entity_id: entityId,
+      store_id: storeId || null,
+    }).then(() => {});
+  }, [customer, brand, selectedBranch]);
+
+  const handleOpenOffer = useCallback((offer: any) => {
+    trackClick("offer", offer.id, offer.store_id);
+    setSelectedOffer(offer);
+  }, [trackClick]);
+
+  const handleOpenStore = useCallback((store: any) => {
+    trackClick("store", store.id, store.id);
+    setSelectedStore(store);
+  }, [trackClick]);
+
   return (
-    <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
+    <CustomerNavContext.Provider value={{ openOffer: handleOpenOffer, openStore: handleOpenStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
       <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
         {/* Dark Premium Header */}
         <header

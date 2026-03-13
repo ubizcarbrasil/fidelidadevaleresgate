@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
+import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
 import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign, Zap, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -132,18 +133,31 @@ function boostSponsored(items: any[], sponsoredIds: Set<string>, idKey: string):
   return [...sponsored, ...rest];
 }
 
+/** Apply ranking boost: sort offers by their position in rankedOfferIds */
+function applyRankingBoost(items: any[], rankedIds: string[]): any[] {
+  if (rankedIds.length === 0) return items;
+  const rankMap = new Map(rankedIds.map((id, idx) => [id, idx]));
+  return [...items].sort((a, b) => {
+    const ra = rankMap.get(a.id) ?? 999;
+    const rb = rankMap.get(b.id) ?? 999;
+    return ra - rb;
+  });
+}
+
 /** Renders all enabled brand sections in order */
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
+  const { customer } = useCustomer();
   const [sections, setSections] = useState<BrandSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [sponsoredStoreIds, setSponsoredStoreIds] = useState<Set<string>>(new Set());
+  const [rankedOfferIds, setRankedOfferIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!brand) return;
     const fetchAll = async () => {
       setLoading(true);
-      const [sectionsRes, sponsoredRes] = await Promise.all([
+      const [sectionsRes, sponsoredRes, rankedRes] = await Promise.all([
         supabase
           .from("brand_sections")
           .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
@@ -158,9 +172,19 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
           .eq("is_active", true)
           .gte("ends_at", new Date().toISOString())
           .lte("starts_at", new Date().toISOString()),
+        // Fetch ranked offer IDs for boost ordering
+        selectedBranch
+          ? supabase.rpc("get_recommended_offers", {
+              p_brand_id: brand.id,
+              p_branch_id: selectedBranch.id,
+              p_customer_id: customer?.id || null,
+              p_limit: 30,
+            })
+          : Promise.resolve({ data: [] }),
       ]);
       setSections((sectionsRes.data as any) || []);
       setSponsoredStoreIds(new Set((sponsoredRes.data || []).map((s: any) => s.store_id)));
+      setRankedOfferIds(((rankedRes as any).data || []).map((r: any) => r.offer_id));
       setLoading(false);
     };
     fetchAll();
@@ -221,6 +245,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
             fontHeading={fontHeading}
             brandBadgeConfig={brandBadgeConfig}
             sponsoredStoreIds={sponsoredStoreIds}
+            rankedOfferIds={rankedOfferIds}
           />
         </motion.div>
       ))}
@@ -238,9 +263,10 @@ interface SectionBlockProps {
   fontHeading: string;
   brandBadgeConfig: BadgeConfig | null;
   sponsoredStoreIds: Set<string>;
+  rankedOfferIds: string[];
 }
 
-function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig, sponsoredStoreIds }: SectionBlockProps) {
+function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig, sponsoredStoreIds, rankedOfferIds }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { openOffer, openStore, openSectionDetail } = useCustomerNav();
@@ -356,7 +382,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           });
         }
 
-        // Boost sponsored stores to top
+        // Apply ranking boost then sponsored boost
+        results = applyRankingBoost(results, rankedOfferIds);
         results = boostSponsored(results, sponsoredStoreIds, "store_id");
         setItems(results);
       } else if (effectiveSource.source_type === "STORES") {
