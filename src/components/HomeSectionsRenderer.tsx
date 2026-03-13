@@ -360,7 +360,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
 
       {/* Section Banner */}
       {section.banner_image_url && !loading && (
-        <div className="max-w-lg mx-auto px-5 mb-3">
+        <div className="max-w-lg mx-auto px-5 mb-1.5">
           <img
             src={section.banner_image_url}
             alt={section.title || "Banner"}

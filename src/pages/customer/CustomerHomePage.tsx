@@ -64,13 +64,13 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const greeting = getGreeting();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1">
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-5 pt-2"
+        className="max-w-lg mx-auto px-5 pt-1"
       >
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
           {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
