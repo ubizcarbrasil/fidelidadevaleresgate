@@ -221,29 +221,6 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         <div className="text-center py-8 text-xs text-muted-foreground/30 px-4">{theme.footer_text}</div>
       )}
 
-      {/* Category Grid Overlay */}
-      <AnimatePresence>
-        {categoryGridOpen && (
-          <CategoryGridOverlay
-            onBack={() => setCategoryGridOpen(false)}
-            onCategoryClick={(cat) => {
-              setCategoryGridOpen(false);
-              handleCategoryClick(cat.id, cat.name, cat.icon_name);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Category Stores Overlay */}
-      <AnimatePresence>
-        {selectedCategory && (
-          <CategoryStoresOverlay
-            category={selectedCategory}
-            onBack={() => setSelectedCategory(null)}
-          />
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }
