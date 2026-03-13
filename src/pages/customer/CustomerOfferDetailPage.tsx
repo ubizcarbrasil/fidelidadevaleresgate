@@ -782,7 +782,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
                 style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
                 {Number(offer.value_rescue) > 0
-                  ? `Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
+                  ? `Resgatar ${Number(offer.value_rescue).toLocaleString("pt-BR")} pts`
                   : "Resgatar agora"}
               </motion.button>
             )}
