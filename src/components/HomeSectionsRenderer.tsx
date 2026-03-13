@@ -569,12 +569,25 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_CAROUSEL ---
-function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, sponsoredStoreIds }: any) {
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, sponsoredStoreIds, iconSize = "medium", rowsCount = 1 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizes = getCardSizes(iconSize);
+  const useMultiRow = rowsCount > 1;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div
+        ref={scrollRef}
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-2" : "flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${sizes.minW}px`,
+          gap: "12px",
+          scrollSnapType: "x mandatory",
+        } : { scrollSnapType: "x mandatory" }}
+      >
         {items.map((o: any, idx: number) => {
           const isNew = o.created_at && (Date.now() - new Date(o.created_at).getTime()) < 14 * 86400000;
           const isSponsored = sponsoredStoreIds?.has(o.store_id);
@@ -585,28 +598,28 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: idx * 0.04 }}
-              className="min-w-[170px] max-w-[190px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
               style={{
                 backgroundColor: "hsl(var(--card))",
                 scrollSnapAlign: "start",
+                minWidth: useMultiRow ? undefined : `${sizes.minW}px`,
+                maxWidth: useMultiRow ? undefined : `${sizes.maxW}px`,
               }}
               onClick={() => onOfferClick?.(o)}
             >
-              <div className="relative h-32 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="relative w-full" style={{ height: sizes.imgH, backgroundColor: "hsl(var(--muted))" }}>
                 {o.image_url || o.stores?.logo_url ? (
-                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-32 w-full" />
+                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="w-full" style={{ height: sizes.imgH }} />
                 ) : (
-                  <div className="h-32 w-full flex items-center justify-center">
+                  <div className="w-full flex items-center justify-center" style={{ height: sizes.imgH }}>
                     <ShoppingBag className="h-10 w-10 text-muted-foreground/20" />
                   </div>
                 )}
-                {/* Discount badge - top left */}
                 {o.discount_percent > 0 && (
                   <div className="absolute top-2.5 left-2.5 vb-discount-badge">
                     {o.discount_percent}% OFF
                   </div>
                 )}
-                {/* "Novo" badge - top left */}
                 {isNew && !o.discount_percent && (
                   <div
                     className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white"
@@ -616,7 +629,6 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   </div>
                 )}
               </div>
-              {/* Sponsored badge - bottom right */}
               {isSponsored && <SponsoredBadge />}
               <div className="px-3 py-2.5">
                 <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
@@ -630,14 +642,14 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 )}
                 {!o.discount_percent && o.value_rescue > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                    {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                   </span>
                 )}
               </div>
             </motion.div>
           );
         })}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
