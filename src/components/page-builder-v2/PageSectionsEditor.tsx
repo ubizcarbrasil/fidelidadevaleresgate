@@ -167,10 +167,10 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   };
 
   // Show wizard full-screen
-  if (showWizard && brand) {
+  if (showWizard && currentBrandId) {
     return (
       <SectionCreatorWizard
-        brandId={brand.id}
+        brandId={currentBrandId}
         pageId={page.id}
         currentSectionCount={sections.length}
         onCreated={() => { setShowWizard(false); fetchSections(); }}
