@@ -32,6 +32,7 @@ interface PageRow {
 export default function PageBuilderV2Page() {
   const { currentBrandId } = useBrandGuard();
   const brandId = currentBrandId;
+  const [pages, setPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<PageRow | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -41,16 +42,16 @@ export default function PageBuilderV2Page() {
   const [saving, setSaving] = useState(false);
 
   const fetchPages = useCallback(async () => {
-    if (!brand) return;
+    if (!brandId) return;
     setLoading(true);
     const { data } = await supabase
       .from("custom_pages")
       .select("*")
-      .eq("brand_id", brand.id)
+      .eq("brand_id", brandId)
       .order("created_at", { ascending: false });
     setPages((data as any[]) || []);
     setLoading(false);
-  }, [brand]);
+  }, [brandId]);
 
   useEffect(() => { fetchPages(); }, [fetchPages]);
 
