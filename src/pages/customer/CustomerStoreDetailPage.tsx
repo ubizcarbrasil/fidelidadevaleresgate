@@ -157,7 +157,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             onClick={onBack}
             className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
           >
-            <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
+            <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
 
           {/* Share + Favorite buttons */}
