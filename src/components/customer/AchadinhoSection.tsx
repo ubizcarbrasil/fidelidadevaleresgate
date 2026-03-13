@@ -310,7 +310,7 @@ export default function AchadinhoSection() {
                 {(priceStr || originalPriceStr) && (
                   <div className="flex items-baseline gap-1.5">
                     {priceStr && (
-                      <span className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                      <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>
                         {priceStr}
                       </span>
                     )}

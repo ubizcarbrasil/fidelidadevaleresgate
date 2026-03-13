@@ -98,7 +98,7 @@ export default function ForYouSection() {
         {offers.length > 0 && (
           <button
             className="text-xs font-bold flex items-center gap-0.5"
-            style={{ color: primary }}
+            style={{ color: "hsl(var(--vb-highlight))" }}
             onClick={() => openSectionDetail?.({
               title: "Selecionados para você",
               subtitle: null,
