@@ -255,6 +255,11 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
+        // Apply segment filter via store's taxonomy_segment_id
+        if (segmentFilterIds.length > 0) {
+          query = query.in("stores.taxonomy_segment_id", segmentFilterIds);
+        }
+
         // Apply coupon_type_filter
         if (couponTypeFilter && couponTypeFilter !== "all") {
           query = query.eq("coupon_type", couponTypeFilter);
