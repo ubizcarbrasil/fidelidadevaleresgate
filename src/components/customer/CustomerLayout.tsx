@@ -65,7 +65,7 @@ import type { AppIconKey } from "@/hooks/useAppIcons";
 const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string }[] = [
   { key: "home", label: "Início", iconKey: "nav_home" },
   { key: "offers", label: "Ofertas", iconKey: "nav_offers", moduleKey: "offers" },
-  { key: "redemptions", label: "Meus resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
+  { key: "redemptions", label: "Resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
   { key: "wallet", label: "Carteira", iconKey: "nav_wallet", moduleKey: "wallet" },
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
 ];
@@ -161,28 +161,29 @@ export default function CustomerLayout() {
   return (
     <CustomerNavContext.Provider value={{ openOffer: setSelectedOffer, openStore: setSelectedStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
       <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
-        {/* Modern Header — auto-hides on scroll */}
+        {/* Dark Premium Header */}
         <header
-          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform bg-background"
+          className="sticky top-0 z-50 transition-transform duration-300 will-change-transform"
           style={{
             transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
-            boxShadow: headerVisible ? "0 1px 8px hsl(var(--foreground) / 0.06)" : "none",
+            backgroundColor: "hsl(var(--background))",
           }}
         >
-          {/* Top bar with solid background + subtle brand tint */}
-          <div
-            className="pt-2 pb-0"
-            style={{
-              background: `linear-gradient(180deg, ${accent}18 0%, ${accent}08 60%, hsl(var(--background)) 100%)`,
-              backgroundColor: "hsl(var(--background))",
-            }}
-          >
-            <div className="max-w-lg mx-auto flex items-center justify-between px-5 pt-2 pb-2">
-              <div className="flex items-center gap-3">
+          <div className="max-w-lg mx-auto px-4 pt-3 pb-0">
+            {/* Top row: Logo/Name + actions */}
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2.5">
                 {theme?.logo_url && (
-                  <img src={theme.logo_url} alt={displayName} className="h-9 w-9 object-contain rounded-xl" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} />
+                  <img
+                    src={theme.logo_url}
+                    alt={displayName}
+                    className="h-8 w-8 object-contain rounded-lg"
+                  />
                 )}
-                <span className="font-extrabold text-base tracking-tight" style={{ fontFamily: fontHeading, color: accent }}>
+                <span
+                  className="font-extrabold text-[15px] tracking-tight"
+                  style={{ fontFamily: fontHeading, color: accent }}
+                >
                   {displayName}
                 </span>
               </div>
@@ -190,43 +191,43 @@ export default function CustomerLayout() {
                 <BranchPickerSheet />
                 <button
                   onClick={() => setNotifOpen(true)}
-                  className="relative h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
+                  className="relative h-9 w-9 flex items-center justify-center rounded-xl transition-colors"
+                  style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
                 >
-                  <AppIcon iconKey="header_bell" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_bell" className="h-5 w-5" strokeWidth={1.8} style={{ color: fg }} />
                   {unreadCount > 0 && (
                     <span
-                      className="absolute top-1 right-1 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                      style={{ backgroundColor: "hsl(0 72% 51%)" }}
+                      className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                      style={{ backgroundColor: "hsl(var(--destructive))" }}
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </button>
                 <button
-                  className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-colors"
+                  className="h-9 w-9 flex items-center justify-center rounded-xl transition-colors"
+                  style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
                   onClick={() => setActiveTab("wallet")}
                 >
-                  <AppIcon iconKey="header_wallet" className="h-[22px] w-[22px]" strokeWidth={1.8} style={{ color: fg }} />
+                  <AppIcon iconKey="header_wallet" className="h-5 w-5" strokeWidth={1.8} style={{ color: fg }} />
                 </button>
               </div>
             </div>
 
             {/* Search Bar */}
-            <div className="max-w-lg mx-auto px-5 pb-3">
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-shadow bg-muted"
-                style={{
-                  boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
-                }}
-              >
-                <AppIcon iconKey="header_search" className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground/70">
-                  Busque por parceiros e ofertas
-                </span>
-              </button>
-            </div>
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-2.5 text-left transition-shadow mb-3"
+              style={{ backgroundColor: "hsl(var(--muted))" }}
+            >
+              <AppIcon iconKey="header_search" className="h-4.5 w-4.5 flex-shrink-0 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground/60">
+                O que está procurando?
+              </span>
+            </button>
           </div>
+          {/* Bottom divider */}
+          <div className="h-px" style={{ backgroundColor: "hsl(var(--border))" }} />
         </header>
 
         {/* Content with tab transition */}
@@ -253,8 +254,14 @@ export default function CustomerLayout() {
           </AnimatePresence>
         </main>
 
-        {/* Bottom Tab Bar */}
-        <nav className="fixed bottom-0 inset-x-0 z-50 bg-card" style={{ boxShadow: "0 -4px 20px hsl(var(--foreground) / 0.06)" }}>
+        {/* Bottom Tab Bar — Dark premium */}
+        <nav
+          className="fixed bottom-0 inset-x-0 z-50"
+          style={{
+            backgroundColor: "hsl(var(--card))",
+            borderTop: "1px solid hsl(var(--border))",
+          }}
+        >
           <div className="max-w-lg mx-auto flex">
             {filteredTabs.map((tab) => {
               const isActive = activeTab === tab.key;
@@ -280,12 +287,23 @@ export default function CustomerLayout() {
                   )}
                   <motion.div
                     className="h-8 w-8 rounded-xl flex items-center justify-center"
-                    animate={{ backgroundColor: isActive ? `${accent}12` : "transparent", scale: isActive ? 1.05 : 1 }}
+                    animate={{
+                      backgroundColor: isActive ? withAlpha(accent, 0.12) : "transparent",
+                      scale: isActive ? 1.05 : 1,
+                    }}
                     transition={{ duration: 0.2 }}
                   >
-                    <AppIcon iconKey={tab.iconKey} className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.6} style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }} />
+                    <AppIcon
+                      iconKey={tab.iconKey}
+                      className="h-5 w-5"
+                      strokeWidth={isActive ? 2.2 : 1.6}
+                      style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
+                    />
                   </motion.div>
-                  <span className="text-[10px] font-semibold transition-colors" style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}>
+                  <span
+                    className="text-[10px] font-semibold transition-colors"
+                    style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
+                  >
                     {tab.label}
                   </span>
                 </button>

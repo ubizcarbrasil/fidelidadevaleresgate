@@ -47,14 +47,13 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
   const [loading, setLoading] = useState(true);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
+  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
     if (!brand || !selectedBranch) return;
     const fetchCategories = async () => {
       setLoading(true);
-      // Get stores with their segments, then group by category
       const { data } = await supabase
         .from("stores")
         .select("taxonomy_segment_id, taxonomy_segments(id, name, icon_name, category_id, taxonomy_categories(id, name, icon_name))")
@@ -95,11 +94,11 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
   if (loading) {
     return (
-      <section className="max-w-lg mx-auto px-5">
+      <section className="max-w-lg mx-auto px-4">
         <Skeleton className="h-5 w-28 rounded-lg mb-3" />
-        <div className="flex gap-3">
+        <div className="flex gap-2.5">
           {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-16 w-16 rounded-2xl flex-shrink-0" />
+            <Skeleton key={i} className="h-[72px] w-[72px] rounded-2xl flex-shrink-0" />
           ))}
         </div>
       </section>
@@ -109,17 +108,20 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
   if (categories.length < 2) return null;
 
   return (
-    <section className="max-w-lg mx-auto px-5 py-1">
+    <section className="max-w-lg mx-auto px-4 py-1">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold" style={{ fontFamily: fontHeading }}>
+      <div className="flex items-center justify-between mb-2.5">
+        <h3
+          className="text-sm font-bold"
+          style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
+        >
           Categorias
         </h3>
         {onSeeMore && categories.length > 4 && (
           <button
             onClick={onSeeMore}
             className="text-xs font-bold flex items-center gap-0.5"
-            style={{ color: primary }}
+            style={{ color: accent }}
           >
             Ver mais
             <ChevronRight className="h-3.5 w-3.5" />
@@ -127,7 +129,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
         )}
       </div>
 
-      {/* Horizontal scroll of dark rounded cards */}
+      {/* Horizontal scroll */}
       <ScrollArea className="w-full">
         <div className="flex gap-2.5 pb-2">
           {categories.map((cat, idx) => (
@@ -138,18 +140,17 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               transition={{ delay: idx * 0.03, duration: 0.25 }}
               whileTap={{ scale: 0.92 }}
               className="flex flex-col items-center gap-1.5 flex-shrink-0"
-              style={{ minWidth: 68 }}
+              style={{ minWidth: 72 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
               <div
                 className="h-14 w-14 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: "hsl(var(--muted))" }}
+                style={{ backgroundColor: "hsl(var(--card))" }}
               >
-                <CategoryIcon iconName={cat.icon_name} color={primary} />
+                <CategoryIcon iconName={cat.icon_name} color={accent} />
               </div>
               <span
-                className="text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full"
-                style={{ color: `${fg}80` }}
+                className="text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
               >
                 {cat.name}
               </span>

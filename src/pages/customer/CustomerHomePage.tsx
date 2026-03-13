@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { MapPin, ChevronRight, Coins, Navigation, Loader2 } from "lucide-react";
+import { Navigation, ChevronRight, Coins, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
@@ -83,64 +83,68 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   };
 
   return (
-    <div className="space-y-4 pb-4">
-      {/* Compact Header: Greeting + Points Badge */}
+    <div className="pb-4">
+      {/* Compact hero: Greeting + Balance + Location */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-5 pt-3"
+        className="max-w-lg mx-auto px-4 pt-3 pb-2"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-              {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
-            </h2>
-          </div>
-          {/* Points Badge */}
+        {/* Greeting + Points row */}
+        <div className="flex items-center justify-between mb-1">
+          <h2
+            className="text-base font-bold"
+            style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
+          >
+            {greeting}, <span style={{ color: accent }}>{firstName}</span>
+          </h2>
           {loading ? (
-            <Skeleton className="h-9 w-24 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
           ) : (
             <button
               onClick={() => { haptic("light"); onOpenLedger?.(); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
-              style={{ backgroundColor: `${accent}15`, border: `1px solid ${accent}25` }}
+              style={{
+                backgroundColor: "hsl(var(--vb-gold) / 0.15)",
+                border: "1px solid hsl(var(--vb-gold) / 0.3)",
+              }}
             >
-              <Coins className="h-4 w-4" style={{ color: accent }} />
-              <span className="text-sm font-bold" style={{ color: accent }}>
+              <Coins className="h-3.5 w-3.5" style={{ color: "hsl(var(--vb-gold))" }} />
+              <span className="text-sm font-bold" style={{ color: "hsl(var(--vb-gold))" }}>
                 {customer ? Number(customer.points_balance).toLocaleString("pt-BR") : "0"}
               </span>
-              <span className="text-[10px] font-medium" style={{ color: `${accent}90` }}>pts</span>
+              <span className="text-[10px] font-medium" style={{ color: "hsl(var(--vb-gold) / 0.7)" }}>pts</span>
             </button>
           )}
         </div>
 
-        {/* City Line — clickable to re-detect or change */}
+        {/* Location line */}
         <button
           onClick={handleRedetect}
           disabled={detecting}
-          className="flex items-center gap-1.5 mt-1.5 active:scale-[0.97] transition-transform group"
+          className="flex items-center gap-1.5 active:scale-[0.97] transition-transform group"
         >
           {detecting ? (
-            <Loader2 className="h-3 w-3 animate-spin" style={{ color: primary }} />
+            <Loader2 className="h-3 w-3 animate-spin" style={{ color: accent }} />
           ) : (
-            <Navigation className="h-3 w-3" style={{ color: geoDetected ? primary : `${fg}50` }} />
+            <Navigation className="h-3 w-3" style={{ color: geoDetected ? accent : "hsl(var(--muted-foreground))" }} />
           )}
-          <span className="text-[11px]" style={{ color: `${fg}60` }}>
+          <span className="text-[11px] text-muted-foreground">
             {detecting
               ? "Detectando sua cidade..."
               : cityName
-                ? <>Ofertas em: <strong style={{ color: geoDetected ? primary : undefined }}>{cityName}</strong></>
+                ? <>Ofertas em: <strong style={{ color: geoDetected ? accent : "hsl(var(--foreground))" }}>{cityName}</strong></>
                 : "Toque para detectar sua cidade"
             }
           </span>
           {!detecting && hasMultipleBranches && (
-            <ChevronRight className="h-3 w-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-opacity" />
           )}
         </button>
       </motion.div>
 
-      {/* Dynamic Sections - Banners come first from HomeSectionsRenderer */}
+      {/* Banner Carousel */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -154,6 +158,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.1 }}
+        className="mt-3"
       >
         <SegmentNavSection
           onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
@@ -161,11 +166,12 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         />
       </motion.div>
 
-      {/* Dynamic Sections - Content (non-banners) */}
+      {/* Dynamic Sections */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
+        className="mt-2"
       >
         <HomeSectionsRenderer skipBanners />
       </motion.div>
