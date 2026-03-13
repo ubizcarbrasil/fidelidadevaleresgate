@@ -881,9 +881,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           <span className="text-lg font-bold" style={{ color: primary }}>$</span>
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">VALOR A SER RESGATADO</p>
+                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">PONTOS A RESGATAR</p>
                           <p className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                            R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                            {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                           </p>
                         </div>
                       </div>
