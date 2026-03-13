@@ -114,6 +114,16 @@ interface HomeSectionsRendererProps {
   skipBanners?: boolean;
 }
 
+/** Small "Patrocinado" badge for sponsored cards */
+function SponsoredBadge() {
+  return (
+    <div className="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold" style={{ backgroundColor: "hsl(var(--vb-gold) / 0.2)", color: "hsl(var(--vb-gold))" }}>
+      <Zap className="h-2.5 w-2.5" />
+      Patrocinado
+    </div>
+  );
+}
+
 /** Boost sponsored items to the top of the list */
 function boostSponsored(items: any[], sponsoredIds: Set<string>, idKey: string): any[] {
   if (sponsoredIds.size === 0) return items;
