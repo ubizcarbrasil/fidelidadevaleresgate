@@ -130,15 +130,6 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           )}
         </div>
 
-        {/* Search bar — tapping opens search overlay */}
-        <button
-          onClick={() => { haptic("light"); setSearchOpen(true); }}
-          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 w-full text-left"
-          style={{ backgroundColor: "hsl(var(--vb-search-bg))" }}
-        >
-          <Search className="h-4.5 w-4.5 flex-shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
-          <span className="flex-1 text-sm text-muted-foreground/60">O que está procurando?</span>
-        </button>
 
         {/* Location line */}
         <button
