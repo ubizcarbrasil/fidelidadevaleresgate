@@ -111,31 +111,9 @@ Deno.serve(async (req) => {
       return json({ error: "api_key, basic_auth_user, basic_auth_password are required" }, 400);
     }
 
-    // Validate credentials by calling TaxiMachine API
+    // Store credentials and attempt webhook registration
     const basicAuth = btoa(`${basic_auth_user}:${basic_auth_password}`);
     const machineBaseUrl = "https://api.taximachine.com.br";
-
-    // Try a test call
-    let credentialsValid = true;
-    try {
-      const testRes = await fetch(
-        `${machineBaseUrl}/api/integracao/solicitacaoStatus?id_mch=test`,
-        { headers: { Authorization: `Basic ${basicAuth}` } }
-      );
-      // 401/403 = invalid credentials. Other errors (404, etc.) are OK — means credentials work
-      if (testRes.status === 401 || testRes.status === 403) {
-        credentialsValid = false;
-      }
-      await testRes.text(); // consume body
-    } catch (e) {
-      console.error("TaxiMachine credential test error:", e);
-      // Network errors are not credential failures
-    }
-
-    if (!credentialsValid) {
-      logAudit(sb, "MACHINE_INTEGRATION_INVALID_CREDENTIALS", { userId, brandId: brand_id, ip: clientIp });
-      return json({ error: "Invalid TaxiMachine credentials" }, 400);
-    }
 
     // Register webhook at TaxiMachine
     const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook`;
