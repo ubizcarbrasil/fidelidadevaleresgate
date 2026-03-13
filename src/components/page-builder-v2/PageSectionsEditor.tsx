@@ -49,12 +49,13 @@ interface SectionRow {
 }
 
 interface Props {
-  page: PageRow;
+  page: PageRow | null; // null = Home mode
   onBack: () => void;
 }
 
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
+  const isHomeMode = page === null;
   const { currentBrandId } = useBrandGuard();
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
