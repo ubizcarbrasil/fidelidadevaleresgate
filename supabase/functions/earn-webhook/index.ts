@@ -350,8 +350,9 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "Store not found or inactive for this brand", code: "STORE_NOT_FOUND" }, 404);
   }
 
-  // 4. Find customer
-  const { data: customer, error: custErr } = await sb
+  // 4. Find or create customer
+  let customer: any = null;
+  const { data: existingCustomer, error: custErr } = await sb
     .from("customers")
     .select("id, name, points_balance, money_balance, branch_id")
     .eq("brand_id", brandId)
@@ -359,12 +360,46 @@ Deno.serve(async (req) => {
     .eq("is_active", true)
     .maybeSingle();
 
-  if (custErr || !customer) {
+  if (custErr && !existingCustomer) {
     logAudit("EARN_WEBHOOK_REJECTED", {
       brandId,
-      details: { reason: "Customer not found", cpf_masked: `***${cleanCpf.slice(-4)}`, store_id, api_key_id: keyRow.id },
+      details: { reason: "Error finding customer", cpf_masked: `***${cleanCpf.slice(-4)}`, store_id, api_key_id: keyRow.id },
     });
-    return json({ ok: false, error: "Customer not found for this CPF", code: "CUSTOMER_NOT_FOUND" }, 404);
+    return json({ ok: false, error: "Error finding customer", code: "CUSTOMER_LOOKUP_ERROR" }, 500);
+  }
+
+  if (existingCustomer) {
+    customer = existingCustomer;
+  } else {
+    // Auto-create customer
+    const customerName = `Cliente •••${cleanCpf.slice(-4)}`;
+    const { data: created, error: createErr } = await sb
+      .from("customers")
+      .insert({
+        brand_id: brandId,
+        branch_id: store.branch_id,
+        cpf: cleanCpf,
+        name: customerName,
+        points_balance: 0,
+        money_balance: 0,
+      })
+      .select("id, name, points_balance, money_balance, branch_id")
+      .single();
+
+    if (createErr || !created) {
+      logAudit("EARN_WEBHOOK_REJECTED", {
+        brandId,
+        details: { reason: "Failed to auto-create customer", cpf_masked: `***${cleanCpf.slice(-4)}`, error: String(createErr) },
+      });
+      return json({ ok: false, error: "Failed to create customer", code: "CUSTOMER_CREATE_ERROR" }, 500);
+    }
+
+    customer = created;
+    logAudit("EARN_WEBHOOK_CUSTOMER_CREATED", {
+      brandId,
+      entityId: created.id,
+      details: { cpf_masked: `***${cleanCpf.slice(-4)}`, branch_id: store.branch_id, store_id },
+    });
   }
 
   // 5. Get active points rule

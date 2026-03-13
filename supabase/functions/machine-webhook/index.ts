@@ -204,11 +204,13 @@ Deno.serve(async (req) => {
       finalized_at: new Date().toISOString(),
     });
 
-    // If we have a CPF, try to credit points to the customer
+    // If we have a CPF, find or create customer and credit points
     let pointsCredited = false;
     let customerId: string | null = null;
     if (passengerCpf && points > 0) {
-      const { data: customer } = await sb
+      let customer: any = null;
+
+      const { data: existing } = await sb
         .from("customers")
         .select("id, branch_id, points_balance")
         .eq("brand_id", brandId)
@@ -216,6 +218,46 @@ Deno.serve(async (req) => {
         .eq("is_active", true)
         .limit(1)
         .maybeSingle();
+
+      if (existing) {
+        customer = existing;
+      } else {
+        // Auto-create: find first branch of brand
+        const { data: branch } = await sb
+          .from("branches")
+          .select("id")
+          .eq("brand_id", brandId)
+          .eq("is_active", true)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (branch) {
+          const customerName = `Passageiro •••${passengerCpf.slice(-4)}`;
+          const { data: created } = await sb
+            .from("customers")
+            .insert({
+              brand_id: brandId,
+              branch_id: branch.id,
+              cpf: passengerCpf,
+              name: customerName,
+              points_balance: 0,
+              money_balance: 0,
+            })
+            .select("id, branch_id, points_balance")
+            .single();
+
+          if (created) {
+            customer = created;
+            logAudit(sb, "MACHINE_CUSTOMER_CREATED", {
+              brandId,
+              entityId: created.id,
+              ip,
+              details: { cpf_masked: `***${passengerCpf.slice(-4)}`, branch_id: branch.id },
+            });
+          }
+        }
+      }
 
       if (customer) {
         customerId = customer.id;
