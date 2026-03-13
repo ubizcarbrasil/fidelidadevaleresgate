@@ -481,6 +481,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
         <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_GRID" ? (
         <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
+      ) : templateType === "GRID_LOGOS" ? (
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_LIST" ? (
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "BANNER_CAROUSEL" ? (
@@ -841,7 +843,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
                 <div className="flex items-center gap-1 mt-0.5">
                   <Zap className="h-3 w-3" style={{ color: "hsl(var(--success))" }} />
                   <span className="text-[11px] font-bold" style={{ color: "hsl(var(--success))" }}>
-                    Até {b.points_per_real}x pontos/R$
+                    Até {b.points_per_real}x pontos
                   </span>
                 </div>
               )}

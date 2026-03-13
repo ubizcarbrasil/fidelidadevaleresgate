@@ -388,7 +388,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
               </div>
               {Number(offer.value_rescue) > 0 && (
                 <span className="text-xs font-bold shrink-0" style={{ color: primary }}>
-                  R$ {Number(offer.value_rescue).toFixed(2)}
+                  {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                 </span>
               )}
               <button

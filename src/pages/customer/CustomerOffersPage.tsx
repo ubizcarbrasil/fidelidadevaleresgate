@@ -263,7 +263,7 @@ export default function CustomerOffersPage() {
                         </span>
                         {Number(offer.min_purchase) > 0 && (
                           <span className="text-[10px] line-through text-muted-foreground">
-                            R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                            {Number(offer.min_purchase).toLocaleString("pt-BR")} pts
                           </span>
                         )}
                       </div>

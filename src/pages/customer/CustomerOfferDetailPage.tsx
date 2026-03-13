@@ -395,7 +395,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     <div className="mb-4">
                       <p className="text-xs text-muted-foreground">Preço</p>
                       <p className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-                        R$ {Number(productPrice).toFixed(2).replace(".", ",")}
+                        {Number(productPrice).toLocaleString("pt-BR")} pts
                       </p>
                     </div>
                   )}
@@ -424,8 +424,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     </div>
                      <p className="text-xs text-muted-foreground">
                        Ao resgatar, você receberá um cupom de desconto de{" "}
-                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
-                       para usar na compra deste produto.
+                        <strong className="text-[#E65100] dark:text-foreground">{creditAmount.toLocaleString("pt-BR")} pts</strong>{" "}
+                        para usar na compra deste produto.
                     </p>
                   </div>
                 )}
@@ -604,7 +604,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <div className="text-right">
                           <p className="text-[10px] font-medium text-muted-foreground">Compra mínima</p>
                           <p className="text-sm font-bold text-muted-foreground">
-                            R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                            {Number(offer.min_purchase).toLocaleString("pt-BR")} pts
                           </p>
                         </div>
                       )}
@@ -656,7 +656,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   )}
                   {Number(offer.min_purchase) > 0 && (
                     <RuleRow icon={ShoppingBag} primary={primary} fg={fg} label="Compra mínima"
-                      value={`R$ ${Number(offer.min_purchase).toFixed(2).replace(".", ",")}`} />
+                      value={`${Number(offer.min_purchase).toLocaleString("pt-BR")} pts`} />
                   )}
                   {offer.max_daily_redemptions && (
                     <RuleRow icon={AlertTriangle} primary={primary} fg={fg} label="Limite diário"
@@ -894,7 +894,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       <p className="text-[11px] font-bold tracking-wider text-muted-foreground">REGRAS DE USO</p>
                       {Number(offer.min_purchase) > 0 && (
                         <TermsRuleItem icon={<ShoppingBag className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
-                          Compra mínima de R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                          Compra mínima de {Number(offer.min_purchase).toLocaleString("pt-BR")} pts
                         </TermsRuleItem>
                       )}
                       {offer.is_cumulative === false && (
@@ -1022,7 +1022,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <>
                           Você está resgatando{" "}
                           {Number(offer.value_rescue) > 0 ? (
-                            <><strong style={{ color: primary }}>R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}</strong> em crédito</>
+                            <><strong style={{ color: primary }}>{Number(offer.value_rescue).toLocaleString("pt-BR")} pts</strong></>
                           ) : (
                             <>a oferta <strong>{offer.title}</strong></>
                           )}
@@ -1031,7 +1031,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     </p>
                     {offer.coupon_type !== "PRODUCT" && Number(offer.min_purchase) > 0 && (
                       <p className="text-xs mt-2 px-3 py-1.5 rounded-full inline-block bg-muted text-muted-foreground">
-                        Compra mínima: R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                        Compra mínima: {Number(offer.min_purchase).toLocaleString("pt-BR")} pts
                       </p>
                     )}
                   </div>
@@ -1043,21 +1043,21 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       <div className="rounded-2xl p-3 flex justify-between items-center bg-muted" style={{ border: "1px solid hsl(var(--foreground) / 0.08)" }}>
                         <span className="text-sm text-muted-foreground">Valor do produto</span>
                         <span className="text-sm font-bold" style={{ color: fg }}>
-                          R$ {productPriceOffer.toFixed(2).replace(".", ",")}
+                          {productPriceOffer.toLocaleString("pt-BR")} pts
                         </span>
                       </div>
                       {/* Credit applied */}
                       <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
                         <span className="text-sm text-muted-foreground">Desconto ({discountPctOffer}% em pontos)</span>
                         <span className="text-sm font-bold" style={{ color: primary }}>
-                          - R$ {creditAmountOffer.toFixed(2).replace(".", ",")}
+                          - {creditAmountOffer.toLocaleString("pt-BR")} pts
                         </span>
                       </div>
                       {/* Remaining to pay */}
                       <div className="rounded-2xl p-3 flex justify-between items-center bg-amber-50 dark:bg-amber-950/30" style={{ border: "1.5px solid hsl(var(--chart-4, 45 93% 58%))" }}>
                         <span className="text-sm font-semibold" style={{ color: "#5D4037" }}>Você paga</span>
                         <span className="text-lg font-bold" style={{ color: "#E65100" }}>
-                          R$ {remainingAfterCredit.toFixed(2).replace(".", ",")}
+                          {remainingAfterCredit.toLocaleString("pt-BR")} pts
                         </span>
                       </div>
                       {/* Points cost */}
