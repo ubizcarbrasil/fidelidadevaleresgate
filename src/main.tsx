@@ -7,23 +7,46 @@ async function clearPreviewPwaCache() {
   if (typeof window === "undefined") return;
 
   const hostname = window.location.hostname;
-  const isPreviewHost = hostname.includes("lovableproject.com") || hostname.includes("preview--");
-  if (!isPreviewHost || !("serviceWorker" in navigator)) return;
+  const isPreviewHost =
+    hostname.includes("lovableproject.com") ||
+    hostname.includes("lovable.app") ||
+    hostname.includes("preview--");
+  if (!("serviceWorker" in navigator)) return;
 
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
-    if (registrations.length === 0) return;
 
-    await Promise.all(registrations.map((registration) => registration.unregister()));
+    // On preview hosts, always unregister all SWs and clear caches
+    if (isPreviewHost && registrations.length > 0) {
+      await Promise.all(registrations.map((r) => r.unregister()));
 
-    if ("caches" in window) {
-      const cacheKeys = await caches.keys();
-      await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey)));
+      if ("caches" in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((k) => caches.delete(k)));
+      }
+
+      if (!sessionStorage.getItem("__preview_sw_reset__")) {
+        sessionStorage.setItem("__preview_sw_reset__", "1");
+        window.location.reload();
+        return;
+      }
     }
 
-    if (!sessionStorage.getItem("__preview_sw_reset__")) {
-      sessionStorage.setItem("__preview_sw_reset__", "1");
-      window.location.reload();
+    // For all hosts: tell any active SW to skipWaiting so new version activates immediately
+    for (const reg of registrations) {
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              newWorker.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        }
+      });
     }
   } catch (error) {
     console.warn("Falha ao limpar cache PWA no preview", error);
