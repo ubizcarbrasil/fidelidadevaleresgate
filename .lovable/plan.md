@@ -1,13 +1,31 @@
 
 
-## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
+## Criar Página Customizada de Exemplo com Sessões
 
-A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
+### O que será feito
 
-### Ação
+Criar uma página customizada chamada **"Vitrine de Teste"** (slug: `vitrine-teste`) com 3 sessões para validar o fluxo completo do motor:
 
-Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
+1. **Carrossel de Ofertas** — tamanho P, 1 linha
+2. **Grade de Lojas** — tamanho G, 2 linhas
+3. **Destaques da Semana** — tamanho M, 1 linha
 
-- Nenhuma alteração de código necessária
-- Apenas um INSERT no banco de dados
+### Execução
+
+Tudo via SQL direto no banco (sem mudanças em código):
+
+1. **Inserir a página** na tabela `custom_pages` com `brand_id`, título, slug e `is_published = true`
+2. **Inserir 3 registros** em `brand_sections` vinculados ao `page_id` da página criada, cada um com:
+   - `template_id` correspondente ao template desejado
+   - `icon_size` variando entre "small", "large" e "medium"
+   - `rows_count` de 1 ou 2
+   - `order_index` sequencial (0, 1, 2)
+   - `is_enabled = true`
+
+### Validação
+
+Após criação, navegar até `/p/vitrine-teste` no preview para confirmar que:
+- As 3 sessões renderizam
+- Os tamanhos de card estão diferenciados (P vs M vs G)
+- A grade de lojas exibe 2 linhas com scroll horizontal
 
