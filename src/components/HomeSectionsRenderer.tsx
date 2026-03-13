@@ -203,6 +203,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   const minStoresVisible = (section as any).min_stores_visible || 0;
   const couponTypeFilter = (section as any).coupon_type_filter || null;
   const cityFilterJson: string[] = (section as any).city_filter_json || [];
+  const segmentFilterIds: string[] = section.segment_filter_ids || [];
 
   useEffect(() => {
     const source = section.brand_section_sources?.[0];
