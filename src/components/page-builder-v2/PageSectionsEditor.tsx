@@ -236,7 +236,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-sm truncate">{section.title || "Sem título"}</h3>
+                  <h3 className="font-semibold text-sm truncate">{section.title || section.section_templates?.name || section.section_templates?.key || "Sem título"}</h3>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
                     {section.section_templates?.key || "—"}
                   </span>
