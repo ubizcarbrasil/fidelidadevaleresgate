@@ -111,3 +111,39 @@
 - **Motivo**: Alinha incentivos (mais uso = mais receita); escalável; transparente para lojistas
 - **Trade-offs aceitos**: Complexidade de billing; necessidade de relatórios de fechamento
 - **Revisitar quando**: Churn alto por custo variável ou necessidade de pricing mais simples
+
+---
+
+## ADR-010: React.memo para Componentes de Lista
+
+- **Status**: Aceita (implementada)
+- **Contexto**: Listas com 40+ itens (stores, offers, redemptions) causam re-renders desnecessários
+- **Decisão**: `React.memo` em card components renderizados dentro de listas (StoreOfferCard, PendingRedemptionCard, StoreDetailHero, StoreDetailInfoCard)
+- **Alternativas consideradas**: useMemo em arrays; virtualization (react-window); nenhuma otimização
+- **Motivo**: Menor invasividade; previne re-render de cards cujas props não mudaram; combinável com virtualização futura
+- **Trade-offs aceitos**: Custo de shallow comparison em cada render; não resolve listas >500 itens (precisa virtualization)
+- **Revisitar quando**: Listas >200 itens ou necessidade de scroll infinito com 1000+ registros
+
+---
+
+## ADR-011: Decomposição de Componentes >300 Linhas
+
+- **Status**: Aceita (em progresso)
+- **Contexto**: `CustomerStoreDetailPage` (754 linhas) e `StoreRedeemTab` (490 linhas) dificultavam manutenção
+- **Decisão**: Extrair seções visuais em sub-componentes (StoreDetailHero, StoreDetailInfoCard, StoreOffersList) com interfaces claras via Props
+- **Alternativas consideradas**: Custom hooks para lógica; render props; manter monolítico
+- **Motivo**: Componentes <200 linhas são mais fáceis de revisar; sub-componentes reutilizáveis; memoizáveis individualmente
+- **Trade-offs aceitos**: Mais arquivos no projeto; prop drilling entre pai e filhos
+- **Revisitar quando**: Necessidade de state management compartilhado entre sub-componentes (considerar context local)
+
+---
+
+## ADR-012: TypeScript strictNullChecks Habilitado
+
+- **Status**: Aceita (permanente)
+- **Contexto**: `strict: false` permitia bugs de null/undefined silenciosos em produção
+- **Decisão**: Fase 1 — habilitar `strictNullChecks: true` e `noFallthroughCasesInSwitch: true` no tsconfig.app.json
+- **Alternativas consideradas**: strict: true completo de uma vez; manter desabilitado
+- **Motivo**: Incremental — corrigir null-safety sem quebrar 1450+ usos de `any`; 15+ bugs reais encontrados e corrigidos
+- **Trade-offs aceitos**: `noImplicitAny` ainda desabilitado (Fase 2); algumas asserções `!` usadas temporariamente
+- **Revisitar quando**: Fase 2 — habilitar `noImplicitAny` após resolver maioria dos `: any`
