@@ -219,9 +219,10 @@ interface SectionBlockProps {
   cardBg: string;
   fontHeading: string;
   brandBadgeConfig: BadgeConfig | null;
+  sponsoredStoreIds: Set<string>;
 }
 
-function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig }: SectionBlockProps) {
+function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig, sponsoredStoreIds }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { openOffer, openStore, openSectionDetail } = useCustomerNav();
