@@ -81,7 +81,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.jornada", defaultTitle: "Jornada do Empreendedor", url: "/brand-journey", icon: Rocket },
       { key: "sidebar.jornada_emissor", defaultTitle: "Jornada do Emissor", url: "/emitter-journey", icon: Zap },
-      { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm/journey", icon: Sparkles, moduleKey: "crm" },
+      { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm", icon: Sparkles, moduleKey: "crm" },
     ],
   },
   {
