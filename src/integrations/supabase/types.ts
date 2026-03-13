@@ -1349,6 +1349,61 @@ export type Database = {
           },
         ]
       }
+      customer_click_events: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          customer_id: string
+          entity_id: string
+          entity_type: string
+          id: string
+          store_id: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          customer_id: string
+          entity_id: string
+          entity_type?: string
+          id?: string
+          store_id?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          customer_id?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_click_events_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_click_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_click_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_favorite_stores: {
         Row: {
           created_at: string
@@ -3853,6 +3908,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_recommended_offers: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_customer_id?: string
+          p_limit?: number
+        }
+        Returns: {
+          offer_id: string
+          score: number
+        }[]
+      }
       get_user_branch_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_brand_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
