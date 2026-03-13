@@ -10,7 +10,7 @@ export default function CrmEmbedPage() {
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
   const { currentBrandId, currentBranchId } = useBrandGuard();
-  const { session, user } = useAuth();
+  const { user } = useAuth();
 
   const iframeSrc = useMemo(() => {
     const url = new URL(CRM_BASE_URL);
