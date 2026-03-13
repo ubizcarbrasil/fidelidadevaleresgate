@@ -64,13 +64,13 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const greeting = getGreeting();
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-4 pb-4">
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-5 pt-1"
+        className="max-w-lg mx-auto px-5 pt-2"
       >
         <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading, color: fg }}>
           {greeting}, <span style={{ color: accent }}>{firstName}</span>! 👋
@@ -153,7 +153,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.1 }}
-        className="max-w-lg mx-auto px-5"
+        className="max-w-lg mx-auto px-5 -mt-1"
       >
         <div className="grid grid-cols-6 gap-1.5">
           {QUICK_ACTIONS.map((action, idx) => (
@@ -186,6 +186,9 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.15 }}
       >
+        <div className="max-w-lg mx-auto">
+          <div className="h-px mx-5 bg-border/60 mb-4" />
+        </div>
         <SegmentNavSection onSegmentClick={(segId) => navigateToOffersWithSegment(segId)} />
       </motion.div>
 
@@ -227,7 +230,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
 
       {/* Footer text */}
       {theme?.footer_text && (
-        <div className="text-center py-6 text-xs opacity-30 px-4">{theme.footer_text}</div>
+        <div className="text-center py-8 text-xs text-muted-foreground/30 px-4">{theme.footer_text}</div>
       )}
     </div>
   );
