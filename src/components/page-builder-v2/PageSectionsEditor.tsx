@@ -71,6 +71,23 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleStartRename = (section: SectionRow) => {
+    setRenamingId(section.id);
+    setRenameValue(section.title || section.section_templates?.name || "");
+    setTimeout(() => renameInputRef.current?.select(), 50);
+  };
+
+  const handleConfirmRename = async () => {
+    if (!renamingId) return;
+    const trimmed = renameValue.trim();
+    await supabase.from("brand_sections").update({ title: trimmed || null }).eq("id", renamingId);
+    setRenamingId(null);
+    fetchSections();
+  };
 
   const fetchSections = useCallback(async () => {
     setLoading(true);
