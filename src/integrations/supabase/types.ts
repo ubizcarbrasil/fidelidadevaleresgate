@@ -2082,7 +2082,7 @@ export type Database = {
           {
             foreignKeyName: "machine_integrations_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
