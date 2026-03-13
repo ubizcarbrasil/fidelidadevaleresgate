@@ -158,14 +158,14 @@ export default function ForYouSection() {
               {o.stores?.name && (
                 <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
               )}
-              {o.discount_percent > 0 && (
+              {o.coupon_type === "PRODUCT" && o.discount_percent > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {o.discount_percent}% OFF
+                  {Math.floor(Number(o.value_rescue || 0))} pts = R$ {Number(o.value_rescue || 0).toFixed(2)}
                 </span>
               )}
-              {!o.discount_percent && o.value_rescue > 0 && (
+              {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {Number(o.value_rescue).toLocaleString("pt-BR")} pts
+                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
                 </span>
               )}
             </div>

@@ -22,6 +22,12 @@ interface OfferBadgeProps {
   primaryColor: string;
   className?: string;
   size?: "sm" | "md";
+  /** Offer type: PRODUCT or STORE */
+  couponType?: string;
+  /** Credit value (value_rescue) */
+  valueRescue?: number;
+  /** Minimum purchase amount */
+  minPurchase?: number;
 }
 
 export default function OfferBadge({
@@ -31,18 +37,32 @@ export default function OfferBadge({
   primaryColor,
   className = "",
   size = "md",
+  couponType,
+  valueRescue = 0,
+  minPurchase = 0,
 }: OfferBadgeProps) {
-  if (discountPercent <= 0) return null;
+  if (discountPercent <= 0 && valueRescue <= 0) return null;
 
   // Merge: offer override > brand default > hardcoded defaults
+  const defaultTemplate = couponType === "PRODUCT"
+    ? "Pague {percent}% com Pontos"
+    : "Troque {points} pts por R$ {credit}";
+
   const config: BadgeConfig = {
-    ...{ bg_color: primaryColor, text_color: "#FFFFFF", text_template: "Pague {percent}% com Pontos", icon: "sparkles" },
+    ...{ bg_color: primaryColor, text_color: "#FFFFFF", text_template: defaultTemplate, icon: "sparkles" },
     ...(brandBadgeConfig || {}),
     ...(offerBadgeConfig || {}),
   };
 
   const IconComponent = ICON_MAP[config.icon || "sparkles"] || Sparkles;
-  const text = (config.text_template || "Pague {percent}% com Pontos").replace("{percent}", String(discountPercent));
+
+  // Build text based on coupon type
+  const points = Math.floor(valueRescue);
+  const credit = valueRescue.toFixed(2).replace(".", ",");
+  const text = (config.text_template || defaultTemplate)
+    .replace("{percent}", String(discountPercent))
+    .replace("{points}", String(points))
+    .replace("{credit}", credit);
 
   const sizeClasses = size === "sm"
     ? "text-[9px] px-1.5 py-0.5 gap-0.5"
