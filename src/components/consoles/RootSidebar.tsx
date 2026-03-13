@@ -1,7 +1,7 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
   ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
-  TrendingUp, Contact, Users2, Layers3, Target, Crown, UserX, PieChart, Megaphone,
+  TrendingUp, Contact, Users2, Layers3, Target, Crown, UserX, PieChart, Megaphone, FlaskConical,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -123,6 +123,7 @@ const groups = [
       { title: "Relatórios", url: "/reports", icon: BarChart3 },
       { title: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { title: "Kit Inicial", url: "/starter-kit", icon: PackageSearch },
+      { title: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical },
     ],
   },
 ];

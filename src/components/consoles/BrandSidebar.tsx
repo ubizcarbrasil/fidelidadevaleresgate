@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
   Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Target, Crown, UserX, Users2,
-  Contact, Layers3, Megaphone, PieChart, FileUp, ChevronRight, Car,
+  Contact, Layers3, Megaphone, PieChart, FileUp, ChevronRight, Car, FlaskConical,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -140,6 +140,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key, moduleKey: "api_keys" },
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
       { key: "sidebar.machine", defaultTitle: "TaxiMachine", url: "/machine-integration", icon: Car, moduleKey: "machine_integration" },
+      { key: "sidebar.machine_test", defaultTitle: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical, moduleKey: "machine_integration" },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree, moduleKey: "taxonomy" },
     ],
   },

@@ -89,6 +89,7 @@ const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
 const BrandSettingsPage = lazy(() => import("@/pages/BrandSettingsPage"));
 const SponsoredPlacementsPage = lazy(() => import("@/pages/SponsoredPlacementsPage"));
 const MachineIntegrationPage = lazy(() => import("@/pages/MachineIntegrationPage"));
+const MachineWebhookTestPage = lazy(() => import("@/pages/MachineWebhookTestPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -219,6 +220,7 @@ function AppRoutes() {
           <Route path="brand-settings" element={<BrandSettingsPage />} />
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
           <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
+          <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
           <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
           <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
           <Route path="crm/opportunities" element={<ModuleGuard moduleKey="crm"><CrmOpportunitiesPage /></ModuleGuard>} />
