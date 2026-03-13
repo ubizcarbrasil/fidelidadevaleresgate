@@ -894,7 +894,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       <p className="text-[11px] font-bold tracking-wider text-muted-foreground">REGRAS DE USO</p>
                       {Number(offer.min_purchase) > 0 && (
                         <TermsRuleItem icon={<ShoppingBag className="h-4 w-4" style={{ color: primary }} />} primary={primary}>
-                          Compra mínima de R$ {Number(offer.min_purchase).toFixed(2).replace(".", ",")}
+                          Compra mínima de {Number(offer.min_purchase).toLocaleString("pt-BR")} pts
                         </TermsRuleItem>
                       )}
                       {offer.is_cumulative === false && (
