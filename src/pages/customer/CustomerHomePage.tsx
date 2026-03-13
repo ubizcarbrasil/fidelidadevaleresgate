@@ -167,7 +167,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 onClick={() => { haptic("light"); action.tab && navigateToTab(action.tab); }}
               >
                 <div
-                  className="h-14 w-14 rounded-2xl flex items-center justify-center"
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
                   style={{ backgroundColor: action.bg }}
                 >
                   <AppIcon iconKey={action.iconKey} className="h-6 w-6" strokeWidth={1.8} style={{ color: action.color }} />
