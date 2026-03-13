@@ -261,7 +261,7 @@ export default function HomeTemplateMobilePreview({ sections, templateName }: Pr
             <div className="mx-4 rounded-xl bg-gradient-to-r from-primary to-primary/70 p-3 text-primary-foreground">
               <p className="text-[9px] opacity-80">Seu saldo</p>
               <p className="text-lg font-bold">1.250 pts</p>
-              <p className="text-[8px] opacity-70 mt-0.5">≈ R$ 12,50</p>
+              <p className="text-[8px] opacity-70 mt-0.5">Nível Ouro ★</p>
             </div>
 
             {/* Template sections */}

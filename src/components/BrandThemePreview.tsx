@@ -298,7 +298,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
   const offers = [
     { title: "10% de desconto em pizzas", store: "Pizzaria do João", badge: "10% OFF", badgeColor: "#E53935" },
     { title: "Combo família completo", store: "Burger House", badge: "Combo", badgeColor: "#FF8F00" },
-    { title: "Corte + Barba por R$35", store: "Barbearia Premium", badge: "Novo", badgeColor: "#7C3AED" },
+    { title: "Corte + Barba especial", store: "Barbearia Premium", badge: "Novo", badgeColor: "#7C3AED" },
     { title: "Manicure + Pedicure", store: "Salão Beleza Total", badge: "20% OFF", badgeColor: "#E91E63" },
   ];
   return (
