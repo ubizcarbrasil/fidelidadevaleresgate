@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
+import { ContextBadge } from "@/components/ContextBadge";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -172,15 +173,22 @@ export default function CustomerPreviewPage() {
   return (
     <BrandProviderOverride brand={brand} branches={branches}>
       <div className="relative">
-        {isImpersonating && (
-          <button
-            onClick={() => { window.location.href = "/"; }}
-            className="fixed top-3 right-3 z-[100] flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg bg-card border border-border text-foreground backdrop-blur-sm active:scale-95 transition-transform"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Voltar ao Painel
-          </button>
-        )}
+        <div className="fixed top-3 right-3 z-[100] flex items-center gap-2">
+          <ContextBadge mode="preview" brandName={brand.name} impersonating={isImpersonating} />
+          {isImpersonating && (
+            <button
+              onClick={() => {
+                const brandId = forcedBrandId;
+                window.location.href = brandId ? `/?brandId=${brandId}` : "/";
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg bg-card border border-border text-foreground backdrop-blur-sm active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Voltar ao Painel</span>
+              <span className="sm:hidden">Painel</span>
+            </button>
+          )}
+        </div>
         <WhiteLabelLayout />
       </div>
     </BrandProviderOverride>

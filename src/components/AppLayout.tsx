@@ -17,6 +17,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { ContextBadge } from "@/components/ContextBadge";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Painel Raiz",
@@ -85,6 +86,9 @@ export default function AppLayout() {
               <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2" />
             )}
             <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
+            <div className="ml-auto shrink-0">
+              <ContextBadge mode="admin" brandName={brandName || undefined} impersonating={isImpersonating} />
+            </div>
           </header>
           <main className="flex-1 p-3 sm:p-6 overflow-auto">
             <TrialBanner />
