@@ -80,8 +80,8 @@ export default function StepReview({ data }: Props) {
           </div>
         )}
         <div className="flex justify-between border-b pb-2">
-          <span className="text-muted-foreground">{isProduct ? "Valor em pontos" : "Crédito base"}</span>
-          <span>R$ {creditBase.toFixed(2)}{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
+          <span className="text-muted-foreground">{isProduct ? "Pontos necessários" : "Pontos de troca"}</span>
+          <span>{Math.floor(creditBase)} pts{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
         </div>
         {data.scaled_values.length > 0 && (
           <div className="border-b pb-2">
