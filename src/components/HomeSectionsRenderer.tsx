@@ -136,15 +136,17 @@ function boostSponsored(items: any[], sponsoredIds: Set<string>, idKey: string):
 /** Renders all enabled brand sections in order */
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
+  const { customer } = useCustomer();
   const [sections, setSections] = useState<BrandSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [sponsoredStoreIds, setSponsoredStoreIds] = useState<Set<string>>(new Set());
+  const [rankedOfferIds, setRankedOfferIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!brand) return;
     const fetchAll = async () => {
       setLoading(true);
-      const [sectionsRes, sponsoredRes] = await Promise.all([
+      const [sectionsRes, sponsoredRes, rankedRes] = await Promise.all([
         supabase
           .from("brand_sections")
           .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
@@ -159,9 +161,19 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
           .eq("is_active", true)
           .gte("ends_at", new Date().toISOString())
           .lte("starts_at", new Date().toISOString()),
+        // Fetch ranked offer IDs for boost ordering
+        selectedBranch
+          ? supabase.rpc("get_recommended_offers", {
+              p_brand_id: brand.id,
+              p_branch_id: selectedBranch.id,
+              p_customer_id: customer?.id || null,
+              p_limit: 30,
+            })
+          : Promise.resolve({ data: [] }),
       ]);
       setSections((sectionsRes.data as any) || []);
       setSponsoredStoreIds(new Set((sponsoredRes.data || []).map((s: any) => s.store_id)));
+      setRankedOfferIds(((rankedRes as any).data || []).map((r: any) => r.offer_id));
       setLoading(false);
     };
     fetchAll();
