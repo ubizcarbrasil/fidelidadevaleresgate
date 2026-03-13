@@ -909,26 +909,43 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
 }
 
 // --- HIGHLIGHTS_WEEKLY ---
-function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, iconSize = "medium", rowsCount = 1 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizes = getCardSizes(iconSize);
+  const cardMinW = Math.max(sizes.minW, 200);
+  const cardMaxW = Math.max(sizes.maxW, 240);
+  const imgH = iconSize === "small" ? 112 : iconSize === "large" ? 176 : 144;
+  const useMultiRow = rowsCount > 1;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div
+        ref={scrollRef}
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-2" : "flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-2"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${cardMinW}px`,
+          gap: "16px",
+          scrollSnapType: "x mandatory",
+        } : { scrollSnapType: "x mandatory" }}
+      >
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, delay: idx * 0.06 }}
-            className="min-w-[220px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
             style={{
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
+              minWidth: useMultiRow ? undefined : `${cardMinW}px`,
+              maxWidth: useMultiRow ? undefined : `${cardMaxW}px`,
             }}
             onClick={() => onOfferClick?.(o)}
           >
-            {/* Featured badge - top left */}
             <div
               className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide"
               style={{ backgroundColor: "hsl(var(--vb-gold))", color: "hsl(var(--vb-gold-foreground))" }}
@@ -938,9 +955,9 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
             </div>
 
             {o.image_url ? (
-              <LazyImage src={o.image_url} alt={o.title} className="h-36 w-full" />
+              <LazyImage src={o.image_url} alt={o.title} className="w-full" style={{ height: imgH }} />
             ) : (
-              <div className="h-36 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="w-full flex items-center justify-center" style={{ height: imgH, backgroundColor: "hsl(var(--muted))" }}>
                 <Star className="h-10 w-10 text-muted-foreground/20" />
               </div>
             )}
@@ -958,14 +975,14 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
                 )}
                 {o.value_rescue > 0 && (
                   <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                    {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                   </span>
                 )}
               </div>
             </div>
           </motion.div>
         ))}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
