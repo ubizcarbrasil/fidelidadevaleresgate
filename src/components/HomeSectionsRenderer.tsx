@@ -155,12 +155,16 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const brandBadgeConfig = theme?.badge_config || null;
 
-  // Filter sections based on props
+  // Filter sections based on props and deduplicate by title
   const filteredSections = sections.filter((s) => {
     const isBanner = s.section_templates?.type === "BANNER_CAROUSEL";
     if (renderBannersOnly) return isBanner;
     if (skipBanners) return !isBanner;
     return true;
+  }).filter((s, idx, arr) => {
+    // Deduplicate sections with the same title (keep the first occurrence)
+    if (!s.title) return true;
+    return arr.findIndex((x) => x.title === s.title) === idx;
   });
 
   if (!filteredSections.length) return null;
