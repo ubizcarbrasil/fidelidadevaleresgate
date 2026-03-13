@@ -30,11 +30,13 @@ interface CustomerHomePageProps {
 
 export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
-  const { brand, selectedBranch, theme } = useBrand();
+  const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const { navigateToOffersWithSegment } = useCustomerNav();
 
   const [categoryGridOpen, setCategoryGridOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
+  const [detecting, setDetecting] = useState(false);
+  const [geoDetected, setGeoDetected] = useState(false);
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const accent = hslToCss(theme?.colors?.secondary, "") || primary;
@@ -44,6 +46,37 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const firstName = customer?.name?.split(" ")[0] || "Visitante";
   const greeting = getGreeting();
   const cityName = selectedBranch?.city || selectedBranch?.name || "";
+  const hasMultipleBranches = branches.length > 1;
+
+  // Auto-detect on mount if no branch selected and multiple branches
+  useEffect(() => {
+    if (!hasMultipleBranches || selectedBranch) return;
+    const autoDetect = async () => {
+      setDetecting(true);
+      const nearest = await detectBranchByLocation();
+      if (nearest) {
+        await setSelectedBranch(nearest);
+        setGeoDetected(true);
+        toast.success(`📍 Localização detectada: ${nearest.city || nearest.name}`);
+      }
+      setDetecting(false);
+    };
+    autoDetect();
+  }, [hasMultipleBranches, selectedBranch]);
+
+  const handleRedetect = async () => {
+    haptic("light");
+    setDetecting(true);
+    const nearest = await detectBranchByLocation();
+    if (nearest) {
+      await setSelectedBranch(nearest);
+      setGeoDetected(true);
+      toast.success(`📍 Cidade atualizada: ${nearest.city || nearest.name}`);
+    } else {
+      toast.error("Não foi possível detectar sua localização");
+    }
+    setDetecting(false);
+  };
 
   const handleCategoryClick = (categoryId: string, categoryName: string, iconName: string | null) => {
     setSelectedCategory({ id: categoryId, name: categoryName, icon_name: iconName });
@@ -82,15 +115,29 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           )}
         </div>
 
-        {/* City Line */}
-        {cityName && (
-          <div className="flex items-center gap-1 mt-1.5">
-            <MapPin className="h-3 w-3" style={{ color: `${fg}50` }} />
-            <span className="text-[11px]" style={{ color: `${fg}60` }}>
-              Visualizando ofertas em: <strong>{cityName}</strong>
-            </span>
-          </div>
-        )}
+        {/* City Line — clickable to re-detect or change */}
+        <button
+          onClick={handleRedetect}
+          disabled={detecting}
+          className="flex items-center gap-1.5 mt-1.5 active:scale-[0.97] transition-transform group"
+        >
+          {detecting ? (
+            <Loader2 className="h-3 w-3 animate-spin" style={{ color: primary }} />
+          ) : (
+            <Navigation className="h-3 w-3" style={{ color: geoDetected ? primary : `${fg}50` }} />
+          )}
+          <span className="text-[11px]" style={{ color: `${fg}60` }}>
+            {detecting
+              ? "Detectando sua cidade..."
+              : cityName
+                ? <>Ofertas em: <strong style={{ color: geoDetected ? primary : undefined }}>{cityName}</strong></>
+                : "Toque para detectar sua cidade"
+            }
+          </span>
+          {!detecting && hasMultipleBranches && (
+            <ChevronRight className="h-3 w-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+          )}
+        </button>
       </motion.div>
 
       {/* Dynamic Sections - Banners come first from HomeSectionsRenderer */}
