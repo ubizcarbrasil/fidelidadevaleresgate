@@ -163,7 +163,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.04 * idx, duration: 0.25 }}
                 whileTap={{ scale: 0.88 }}
-                className="flex flex-col items-center gap-1.5 py-1"
+                className="flex flex-col items-center gap-1 py-0.5"
                 onClick={() => { haptic("light"); action.tab && navigateToTab(action.tab); }}
               >
                 <div
