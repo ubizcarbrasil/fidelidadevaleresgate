@@ -137,7 +137,7 @@ export default function EmissorasSection() {
 
             {/* Info */}
             <div className="px-3 pb-3 text-center">
-              <p className="text-[11px] font-semibold truncate mb-1.5" style={{ color: fg }}>
+              <p className="text-[11px] font-semibold truncate mb-1.5 text-foreground">
                 {store.name}
               </p>
 
