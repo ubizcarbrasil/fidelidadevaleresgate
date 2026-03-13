@@ -226,7 +226,14 @@ export default function PageBuilderPage() {
           )}
 
           {pages.map((page) => (
-            <div key={page.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+            <div
+              key={page.id}
+              onClick={() => setEditing(page)}
+              className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:shadow-sm hover:bg-accent/5 cursor-pointer transition-all"
+            >
+              <div className="h-12 w-12 rounded-xl bg-muted/60 flex items-center justify-center shrink-0">
+                <Layers className="h-6 w-6 text-muted-foreground" />
+              </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">{page.title}</h3>
                 {(page as any).subtitle && <p className="text-xs text-muted-foreground truncate">{(page as any).subtitle}</p>}
@@ -238,13 +245,13 @@ export default function PageBuilderPage() {
                 </span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button size="icon" variant="ghost" onClick={() => handleTogglePublish(page)} title={page.is_published ? "Despublicar" : "Publicar"}>
+                <Button size="sm" variant="outline" className="text-xs hidden sm:flex" onClick={(e) => { e.stopPropagation(); setEditing(page); }}>
+                  <Layers className="h-3.5 w-3.5 mr-1" /> Editar Sessões
+                </Button>
+                <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleTogglePublish(page); }} title={page.is_published ? "Despublicar" : "Publicar"}>
                   {page.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => setEditing(page)} title="Editar">
-                  <Layers className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => handleDelete(page.id)} title="Excluir">
+                <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(page.id); }} title="Excluir">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
