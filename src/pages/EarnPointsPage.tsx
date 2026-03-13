@@ -232,7 +232,7 @@ export default function EarnPointsPage() {
         brandId: currentBrandId,
         storeId,
         eventType: "EARN",
-        pointsAmount: preview.points,
+        pointsAmount: preview!.points ?? 0,
         referenceId: event.id,
         referenceType: "EARNING_EVENT",
       });
