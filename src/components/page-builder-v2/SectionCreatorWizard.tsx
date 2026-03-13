@@ -94,6 +94,13 @@ const CONTENT_TYPES: ContentType[] = [
     icon: <Star className="h-6 w-6" />,
     templateKeys: ["highlights_weekly"],
   },
+  {
+    id: "by_category",
+    label: "Por Categoria",
+    description: "Filtre lojas ou ofertas por segmento",
+    icon: <FolderTree className="h-6 w-6" />,
+    templateKeys: ["stores_grid", "offers_carousel"],
+  },
 ];
 
 const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
