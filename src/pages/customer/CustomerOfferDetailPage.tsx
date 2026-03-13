@@ -580,8 +580,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
-                    <span className="text-sm font-semibold" style={{ color: primary }}>{offer.stores.name}</span>
-                    <ChevronRight className="h-4 w-4 ml-auto" style={{ color: primary }} />
+                    <span className="text-sm font-semibold" style={{ color: accentOrWhite }}>{offer.stores.name}</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" style={{ color: accentOrWhite }} />
                   </button>
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
