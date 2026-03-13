@@ -452,13 +452,13 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           <h2 className="text-[15px] font-bold text-foreground" style={{ fontFamily: fontHeading }}>
             {section.title}
           </h2>
-          {section.cta_text && items.length > 0 && (
+          {items.length > 0 && (
             <button
               className="text-xs font-bold flex items-center gap-0.5"
               style={{ color: accent }}
               onClick={handleCtaClick}
             >
-              {section.cta_text}
+              {section.cta_text || "Ver todos"}
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           )}
