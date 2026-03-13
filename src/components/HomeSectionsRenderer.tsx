@@ -177,7 +177,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
           ? supabase.rpc("get_recommended_offers", {
               p_brand_id: brand.id,
               p_branch_id: selectedBranch.id,
-              p_customer_id: customer?.id ?? null,
+              p_customer_id: (customer?.id as string | undefined) ?? undefined,
               p_limit: 30,
             })
           : Promise.resolve({ data: [] }),
