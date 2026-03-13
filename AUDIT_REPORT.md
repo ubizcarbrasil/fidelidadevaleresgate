@@ -1,8 +1,8 @@
 # 🔍 Relatório de Auditoria Enterprise — Vale Resgate
 
 **Data**: 2026-03-13  
-**Score Geral**: **71/100** ⚠️  
-**Veredicto**: Projeto **CONDICIONALMENTE APROVADO** — itens P0 de segurança corrigidos, débitos P1/P2 documentados.
+**Score Geral**: **76/100** ⚠️  
+**Veredicto**: Projeto **CONDICIONALMENTE APROVADO** — P0 corrigidos, arquitetura refatorada, P2 documentados.
 
 ---
 
