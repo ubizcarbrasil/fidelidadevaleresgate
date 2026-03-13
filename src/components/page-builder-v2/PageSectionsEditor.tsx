@@ -55,7 +55,7 @@ interface Props {
 
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
-  const { brand } = useBrand();
+  const { currentBrandId } = useBrandGuard();
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
