@@ -420,10 +420,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <p className="text-[11px]" style={{ color: "#5D4037" }}>pontos</p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Ao resgatar, você receberá um cupom de desconto de{" "}
-                      <strong style={{ color: "#E65100" }}>R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
-                      para usar na compra deste produto.
+                     <p className="text-xs text-muted-foreground">
+                       Ao resgatar, você receberá um cupom de desconto de{" "}
+                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
+                       para usar na compra deste produto.
                     </p>
                   </div>
                 )}
