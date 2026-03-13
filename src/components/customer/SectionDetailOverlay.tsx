@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Search, Store, ShoppingBag, MapPin } from "lucide-react";
+import OfferBadge from "@/components/customer/OfferBadge";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 
 interface SectionDetailOverlayProps {
@@ -135,14 +136,21 @@ export default function SectionDetailOverlay({
                       </div>
                     )}
 
-                    {/* Discount badge - top left */}
-                    {hasDiscount && (
-                      <div className="absolute top-3 left-3 vb-discount-badge">
-                        {item.discount_percent}% OFF
+                    {/* Offer badge - top left */}
+                    {(hasDiscount || item.value_rescue > 0) && (
+                      <div className="absolute top-3 left-3">
+                        <OfferBadge
+                          discountPercent={item.discount_percent || 0}
+                          primaryColor="hsl(var(--vb-highlight))"
+                          size="sm"
+                          couponType={item.coupon_type}
+                          valueRescue={Number(item.value_rescue || 0)}
+                          minPurchase={Number(item.min_purchase || 0)}
+                        />
                       </div>
                     )}
 
-                    {item.points_per_real > 0 && !hasDiscount && (
+                    {item.points_per_real > 0 && !hasDiscount && !item.value_rescue && (
                       <div className="absolute top-3 left-3 vb-discount-badge">
                         {item.points_per_real}x pts
                       </div>
@@ -164,9 +172,14 @@ export default function SectionDetailOverlay({
                         {segmentTag}
                       </p>
                     )}
-                    {item.value_rescue > 0 && (
+                    {item.coupon_type === "PRODUCT" && item.value_rescue > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        {Number(item.value_rescue).toLocaleString("pt-BR")} pts
+                        {Math.floor(Number(item.value_rescue))} pts = R$ {Number(item.value_rescue).toFixed(2)}
+                      </span>
+                    )}
+                    {item.coupon_type !== "PRODUCT" && item.value_rescue > 0 && (
+                      <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                        Troque {Math.floor(Number(item.value_rescue))} pts · Mín. R$ {Number(item.min_purchase || 0).toFixed(2)}
                       </span>
                     )}
                     {item.address && (

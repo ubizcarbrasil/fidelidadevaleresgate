@@ -617,12 +617,21 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                     <ShoppingBag className="h-10 w-10 text-muted-foreground/20" />
                   </div>
                 )}
-                {o.discount_percent > 0 && (
-                  <div className="absolute top-2.5 left-2.5 vb-discount-badge">
-                    {o.discount_percent}% OFF
+                {(o.discount_percent > 0 || o.value_rescue > 0) && (
+                  <div className="absolute top-2.5 left-2.5">
+                    <OfferBadge
+                      discountPercent={o.discount_percent}
+                      offerBadgeConfig={o.badge_config_json}
+                      brandBadgeConfig={brandBadgeConfig}
+                      primaryColor={accent}
+                      size="sm"
+                      couponType={o.coupon_type}
+                      valueRescue={Number(o.value_rescue || 0)}
+                      minPurchase={Number(o.min_purchase || 0)}
+                    />
                   </div>
                 )}
-                {isNew && !o.discount_percent && (
+                {isNew && !o.discount_percent && !o.value_rescue && (
                   <div
                     className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white"
                     style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}
@@ -637,14 +646,14 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 {o.stores?.name && (
                   <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
                 )}
-                {o.discount_percent > 0 && (
+                {o.coupon_type === "PRODUCT" && o.discount_percent > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    {o.discount_percent}% OFF
+                    {Math.floor(Number(o.value_rescue || 0))} pts = R$ {Number(o.value_rescue || 0).toFixed(2)}
                   </span>
                 )}
-                {!o.discount_percent && o.value_rescue > 0 && (
+                {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    {Number(o.value_rescue).toLocaleString("pt-BR")} pts
+                    Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
                   </span>
                 )}
               </div>
@@ -705,9 +714,14 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               {o.stores?.name && (
                 <p className="text-[9px] text-muted-foreground truncate">{o.stores.name}</p>
               )}
-              {o.value_rescue > 0 && (
+              {o.coupon_type === "PRODUCT" && o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  {Number(o.value_rescue).toLocaleString("pt-BR")} pts
+                  {Math.floor(Number(o.value_rescue))} pts = R$ {Number(o.value_rescue).toFixed(2)}
+                </span>
+              )}
+              {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
+                <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
+                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
                 </span>
               )}
             </div>

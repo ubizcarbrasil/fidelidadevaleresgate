@@ -51,17 +51,17 @@ export default function StepReview({ data }: Props) {
                 PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Produto: R$ {data.product_price.toFixed(2)}
+                Produto: R$ {data.product_price.toFixed(2)} → {Math.floor(creditBase)} pts (= R$ {creditBase.toFixed(2)})
               </p>
             </div>
           ) : (
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
               <p className="text-lg font-bold text-primary">
-                VALE RESGATE R$ {creditBase.toFixed(2)}
+                Troque {Math.floor(creditBase)} pts por R$ {creditBase.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Condicionado à compra mínima de R$ {data.min_purchase.toFixed(2)}
+                Sobre compra mínima de R$ {data.min_purchase.toFixed(2)}
               </p>
             </div>
           )}
@@ -80,15 +80,15 @@ export default function StepReview({ data }: Props) {
           </div>
         )}
         <div className="flex justify-between border-b pb-2">
-          <span className="text-muted-foreground">{isProduct ? "Valor em pontos" : "Crédito base"}</span>
-          <span>R$ {creditBase.toFixed(2)}{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
+          <span className="text-muted-foreground">{isProduct ? "Pontos necessários" : "Pontos de troca"}</span>
+          <span>{Math.floor(creditBase)} pts{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
         </div>
         {data.scaled_values.length > 0 && (
           <div className="border-b pb-2">
             <span className="text-muted-foreground">Faixas escalonadas:</span>
             {data.scaled_values.map((sv, i) => (
               <div key={i} className="ml-4 text-xs">
-                R$ {sv.credit_value.toFixed(2)} para R$ {sv.min_purchase.toFixed(2)}
+                {Math.floor(sv.credit_value)} pts para compra mín. R$ {sv.min_purchase.toFixed(2)}
               </div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { ChevronRight, ShoppingBag } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { motion } from "framer-motion";
+import OfferBadge from "@/components/customer/OfferBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
 
@@ -138,9 +139,16 @@ export default function ForYouSection() {
                   <ShoppingBag className="h-8 w-8 text-muted-foreground/20" />
                 </div>
               )}
-              {o.discount_percent > 0 && (
-                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
-                  {o.discount_percent}% OFF
+              {(o.discount_percent > 0 || o.value_rescue > 0) && (
+                <div className="absolute top-2.5 left-2.5">
+                  <OfferBadge
+                    discountPercent={o.discount_percent}
+                    primaryColor="hsl(var(--vb-highlight))"
+                    size="sm"
+                    couponType={o.coupon_type}
+                    valueRescue={Number(o.value_rescue || 0)}
+                    minPurchase={Number(o.min_purchase || 0)}
+                  />
                 </div>
               )}
             </div>
@@ -151,14 +159,14 @@ export default function ForYouSection() {
               {o.stores?.name && (
                 <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
               )}
-              {o.discount_percent > 0 && (
+              {o.coupon_type === "PRODUCT" && o.discount_percent > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {o.discount_percent}% OFF
+                  {Math.floor(Number(o.value_rescue || 0))} pts = R$ {Number(o.value_rescue || 0).toFixed(2)}
                 </span>
               )}
-              {!o.discount_percent && o.value_rescue > 0 && (
+              {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {Number(o.value_rescue).toLocaleString("pt-BR")} pts
+                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
                 </span>
               )}
             </div>
