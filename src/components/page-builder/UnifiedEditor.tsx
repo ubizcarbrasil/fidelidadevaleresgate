@@ -442,9 +442,18 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
           </div>
         )}
         {!loading && blocks.length === 0 && (
-          <p className="text-xs text-center text-muted-foreground py-8">
-            {isHomePage ? "Adicione sessões acima" : "Adicione elementos ou sessões acima"}
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <Layers className="h-8 w-8 text-primary" />
+            </div>
+            <p className="font-semibold text-sm mb-1">Nenhuma sessão ainda</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              {isHomePage ? "Adicione sessões para montar a home do app" : "Adicione elementos ou sessões para montar a página"}
+            </p>
+            <Button size="lg" onClick={() => setShowAddDynamic(true)} className="gap-2">
+              <Plus className="h-5 w-5" /> Adicionar primeira sessão
+            </Button>
+          </div>
         )}
         {!loading && deferredBlocks.map((block, blockIdx) => {
           const isSelected = selectedBlockId === block.id;
