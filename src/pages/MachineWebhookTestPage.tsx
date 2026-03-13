@@ -176,7 +176,7 @@ export default function MachineWebhookTestPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               {result ? (
-                statusOk ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-destructive" />
+                statusOk ? <CheckCircle className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 text-destructive" />
               ) : (
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               )}
