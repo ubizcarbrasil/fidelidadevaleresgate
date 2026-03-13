@@ -29,7 +29,7 @@ function CategoryIcon({ iconName }: { iconName: string | null }) {
   const color = "hsl(var(--vb-gold))";
   if (!iconName) return <Store className="h-5 w-5" style={{ color }} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className="h-6 w-6 object-contain" />;
+    return <img src={iconName} alt="" className="h-5 w-5 object-contain" />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
