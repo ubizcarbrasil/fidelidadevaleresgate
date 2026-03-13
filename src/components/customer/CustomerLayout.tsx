@@ -5,6 +5,8 @@ import { useCustomer } from "@/contexts/CustomerContext";
 import AppIcon from "@/components/customer/AppIcon";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
+import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
+import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
