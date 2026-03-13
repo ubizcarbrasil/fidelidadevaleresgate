@@ -481,6 +481,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
         <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_GRID" ? (
         <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
+      ) : templateType === "GRID_LOGOS" ? (
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_LIST" ? (
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "BANNER_CAROUSEL" ? (
