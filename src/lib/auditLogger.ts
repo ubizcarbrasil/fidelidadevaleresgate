@@ -40,7 +40,7 @@ export function logAudit(userId: string | null, entry: AuditEntry): void {
 
   supabase
     .from("audit_logs")
-    .insert({
+    .insert([{
       actor_user_id: userId,
       action: entry.action,
       entity_type: entry.entity_type,
@@ -48,7 +48,7 @@ export function logAudit(userId: string | null, entry: AuditEntry): void {
       details_json: entry.details || {},
       scope_type: entry.scope_type || null,
       scope_id: entry.scope_id || null,
-    })
+    }])
     .then(({ error }) => {
       if (error) log.error("Failed to write audit log", error);
     });
