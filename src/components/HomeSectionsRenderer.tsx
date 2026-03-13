@@ -365,6 +365,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           results = [];
         }
 
+        // Boost sponsored stores to top
+        results = boostSponsored(results, sponsoredStoreIds, "id");
         setItems(results);
       } else {
         setItems([]);
