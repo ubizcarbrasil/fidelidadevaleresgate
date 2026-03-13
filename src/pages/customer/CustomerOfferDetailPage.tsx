@@ -383,9 +383,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     onClick={handleOpenStore}
                     className="flex items-center gap-2 mb-1 active:opacity-70 transition-opacity"
                   >
-                    <Tag className="h-3.5 w-3.5 dark:text-foreground" style={{ color: primary }} />
-                    <span className="text-xs font-semibold dark:text-foreground" style={{ color: primary }}>{offer.stores?.name}</span>
-                    <ChevronRight className="h-3.5 w-3.5 dark:text-foreground" style={{ color: primary }} />
+                    <Tag className="h-3.5 w-3.5" style={{ color: accentOrWhite }} />
+                    <span className="text-xs font-semibold" style={{ color: accentOrWhite }}>{offer.stores?.name}</span>
+                    <ChevronRight className="h-3.5 w-3.5" style={{ color: accentOrWhite }} />
                   </button>
                   <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
                   {offer.description && (
