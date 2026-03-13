@@ -95,6 +95,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "affiliate_deal_categories_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       affiliate_deals: {
@@ -174,6 +181,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_deals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
@@ -291,6 +305,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "banner_schedules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "banner_schedules_brand_section_id_fkey"
             columns: ["brand_section_id"]
             isOneToOne: false
@@ -350,6 +371,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "branches_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       brand_api_keys: {
@@ -394,6 +422,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "brand_api_keys_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       brand_domains: {
@@ -430,6 +465,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_domains_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -471,6 +513,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_modules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
@@ -516,6 +565,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_permission_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -681,6 +737,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "brand_sections_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "brand_sections_page_id_fkey"
             columns: ["page_id"]
             isOneToOne: false
@@ -820,10 +883,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "catalog_cart_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "catalog_cart_orders_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_cart_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -894,10 +971,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "coupons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "coupons_offer_id_fkey"
             columns: ["offer_id"]
             isOneToOne: false
             referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -949,6 +1040,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_audiences_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1084,6 +1182,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "crm_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "crm_campaigns_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -1181,6 +1293,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "crm_contacts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "crm_contacts_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -1232,6 +1351,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "crm_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "crm_events_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
@@ -1280,6 +1406,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tiers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1350,6 +1483,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "custom_pages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customer_click_events: {
@@ -1399,6 +1539,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "customer_click_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "customer_click_events_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -1432,6 +1579,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_favorite_stores_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1581,6 +1735,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       earning_events: {
@@ -1648,10 +1809,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "earning_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "earning_events_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earning_events_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1751,6 +1926,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ganha_ganha_billing_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ganha_ganha_billing_events_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ganha_ganha_billing_events_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -1798,6 +1987,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ganha_ganha_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ganha_ganha_store_fees: {
@@ -1834,6 +2030,20 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ganha_ganha_store_fees_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ganha_ganha_store_fees_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1976,6 +2186,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "icon_library_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       import_jobs: {
@@ -2033,6 +2250,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "import_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       machine_integrations: {
@@ -2086,6 +2310,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "machine_integrations_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       machine_rides: {
@@ -2130,6 +2361,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "machine_rides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       menu_labels: {
@@ -2166,6 +2404,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_labels_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2349,6 +2594,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "offers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "offers_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -2360,6 +2612,13 @@ export type Database = {
             columns: ["redemption_branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -2447,6 +2706,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: true
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_landing_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -2555,6 +2821,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "points_ledger_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "points_ledger_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -2639,6 +2912,13 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -2694,6 +2974,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
@@ -2830,6 +3117,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3061,6 +3355,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sponsored_placements_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sponsored_placements_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -3116,6 +3424,20 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_catalog_categories_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_catalog_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3195,6 +3517,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "store_catalog_items_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_catalog_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "store_catalog_items_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -3229,6 +3565,13 @@ export type Database = {
           uploaded_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "store_documents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "store_documents_store_id_fkey"
             columns: ["store_id"]
@@ -3282,6 +3625,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "store_employees_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "store_employees_store_id_fkey"
             columns: ["store_id"]
@@ -3353,6 +3703,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "store_points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_points_rules_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "store_points_rules_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -3417,6 +3781,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "store_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "store_products_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -3459,6 +3837,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_reviews_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3516,6 +3901,20 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_type_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_type_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "public_stores_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3661,6 +4060,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3862,6 +4268,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_roles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_roles_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -4005,7 +4418,141 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_brands_safe: {
+        Row: {
+          created_at: string | null
+          default_theme_id: string | null
+          home_layout_json: Json | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          slug: string | null
+          subscription_status: string | null
+          tenant_id: string | null
+          trial_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_theme_id?: string | null
+          home_layout_json?: Json | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          slug?: string | null
+          subscription_status?: string | null
+          tenant_id?: string | null
+          trial_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_theme_id?: string | null
+          home_layout_json?: Json | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          slug?: string | null
+          subscription_status?: string | null
+          tenant_id?: string | null
+          trial_expires_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_stores_safe: {
+        Row: {
+          address: string | null
+          approval_status:
+            | Database["public"]["Enums"]["store_approval_status"]
+            | null
+          banner_url: string | null
+          branch_id: string | null
+          brand_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          name: string | null
+          phone: string | null
+          segment: string | null
+          slug: string | null
+          store_type: Database["public"]["Enums"]["store_type"] | null
+          tags: string[] | null
+        }
+        Insert: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["store_approval_status"]
+            | null
+          banner_url?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          phone?: string | null
+          segment?: string | null
+          slug?: string | null
+          store_type?: Database["public"]["Enums"]["store_type"] | null
+          tags?: string[] | null
+        }
+        Update: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["store_approval_status"]
+            | null
+          banner_url?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          phone?: string | null
+          segment?: string | null
+          slug?: string | null
+          store_type?: Database["public"]["Enums"]["store_type"] | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_recommended_offers: {
