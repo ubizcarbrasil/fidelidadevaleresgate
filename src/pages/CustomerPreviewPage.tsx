@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
+import { ContextBadge } from "@/components/ContextBadge";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
