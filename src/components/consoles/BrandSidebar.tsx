@@ -140,7 +140,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key, moduleKey: "api_keys" },
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
       { key: "sidebar.machine", defaultTitle: "TaxiMachine", url: "/machine-integration", icon: Car, moduleKey: "machine_integration" },
-      { key: "sidebar.machine_test", defaultTitle: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical, moduleKey: "machine_integration" },
+      { key: "sidebar.machine_test", defaultTitle: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree, moduleKey: "taxonomy" },
     ],
   },
