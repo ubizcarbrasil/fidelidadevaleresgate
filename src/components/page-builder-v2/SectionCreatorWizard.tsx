@@ -11,7 +11,7 @@ import {
   ShoppingBag, Store, Tag, Link2, Image as ImageIcon,
   Info, LayoutGrid, LayoutList, GalleryHorizontal,
   Columns2, Columns3, Columns4, RectangleHorizontal,
-  Square, CircleDot, Rows3
+  Square, CircleDot, Rows3, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
