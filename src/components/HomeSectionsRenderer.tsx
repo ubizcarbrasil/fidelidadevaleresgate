@@ -476,17 +476,17 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
       {loading ? renderSkeleton() : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
-        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
+        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
-        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
+        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_GRID" ? (
-        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : templateType === "STORES_LIST" ? (
         <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "BANNER_CAROUSEL" ? (
         <BannerCarousel items={items} primary={primary} bannerHeight={section.banner_height} />
       ) : templateType === "HIGHLIGHTS_WEEKLY" ? (
-        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
+        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} iconSize={iconSize} rowsCount={rowsCount} />
       ) : null}
     </section>
   );
