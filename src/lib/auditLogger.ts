@@ -45,7 +45,7 @@ export function logAudit(userId: string | null, entry: AuditEntry): void {
       action: entry.action,
       entity_type: entry.entity_type,
       entity_id: entry.entity_id || null,
-      details_json: entry.details || {},
+      details_json: (entry.details || {}) as any,
       scope_type: entry.scope_type || null,
       scope_id: entry.scope_id || null,
     }])
