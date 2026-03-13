@@ -133,6 +133,17 @@ function boostSponsored(items: any[], sponsoredIds: Set<string>, idKey: string):
   return [...sponsored, ...rest];
 }
 
+/** Apply ranking boost: sort offers by their position in rankedOfferIds */
+function applyRankingBoost(items: any[], rankedIds: string[]): any[] {
+  if (rankedIds.length === 0) return items;
+  const rankMap = new Map(rankedIds.map((id, idx) => [id, idx]));
+  return [...items].sort((a, b) => {
+    const ra = rankMap.get(a.id) ?? 999;
+    const rb = rankMap.get(b.id) ?? 999;
+    return ra - rb;
+  });
+}
+
 /** Renders all enabled brand sections in order */
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
