@@ -10,7 +10,7 @@ import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { haptic } from "@/lib/haptics";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
