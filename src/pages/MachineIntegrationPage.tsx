@@ -24,13 +24,27 @@ export default function MachineIntegrationPage() {
   const { data: integration, isLoading } = useQuery({
     queryKey: ["machine-integration", currentBrandId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("machine_integrations")
         .select("*")
         .eq("brand_id", currentBrandId!)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as {
+        id: string;
+        brand_id: string;
+        api_key: string;
+        basic_auth_user: string;
+        basic_auth_password: string;
+        webhook_registered: boolean;
+        is_active: boolean;
+        last_webhook_at: string | null;
+        last_ride_processed_at: string | null;
+        total_rides: number;
+        total_points: number;
+        created_at: string;
+        updated_at: string;
+      } | null;
     },
     enabled: !!currentBrandId,
   });
