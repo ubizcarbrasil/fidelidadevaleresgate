@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -13,6 +13,15 @@ import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { haptic } from "@/lib/haptics";
+import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
+
+const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
+  { key: "BANNERS", label: "Banners", enabled: true, order: 0 },
+  { key: "CATEGORIES", label: "Categorias", enabled: true, order: 1 },
+  { key: "FOR_YOU", label: "Selecionado para Você", enabled: true, order: 2 },
+  { key: "EMISSORAS", label: "Compre e Pontue", enabled: true, order: 3 },
+  { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
+];
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
