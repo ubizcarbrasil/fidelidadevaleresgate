@@ -35,6 +35,7 @@ export default function PageBuilderV2Page() {
   const [pages, setPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<PageRow | null>(null);
+  const [editingHome, setEditingHome] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSlug, setNewSlug] = useState("");
