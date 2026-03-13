@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
   const userId = claimsData.claims.sub as string;
 
   const sb = createClient(supabaseUrl, serviceRoleKey);
+  const clientIp = getClientIp(req);
 
   try {
     const body = await req.json();
