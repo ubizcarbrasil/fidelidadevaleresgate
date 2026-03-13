@@ -28,6 +28,8 @@ function getGreeting(): string {
 
 interface CustomerHomePageProps {
   onOpenLedger?: () => void;
+  onOpenCategoryGrid?: () => void;
+  onOpenCategoryStores?: (category: { id: string; name: string; icon_name: string | null }) => void;
 }
 
 export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
