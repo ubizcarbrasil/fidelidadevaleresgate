@@ -1,0 +1,175 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+function json(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authenticate via JWT
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
+  if (claimsErr || !claimsData?.claims) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+  const userId = claimsData.claims.sub as string;
+
+  const sb = createClient(supabaseUrl, serviceRoleKey);
+
+  try {
+    const body = await req.json();
+    const { brand_id, api_key, basic_auth_user, basic_auth_password, action } = body;
+
+    if (!brand_id) {
+      return json({ error: "brand_id is required" }, 400);
+    }
+
+    // Verify user has access to this brand
+    const { data: roles } = await sb
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("brand_id", brand_id)
+      .limit(1);
+
+    // Also check root_admin
+    const { data: rootRole } = await sb
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "root_admin")
+      .limit(1);
+
+    if ((!roles || roles.length === 0) && (!rootRole || rootRole.length === 0)) {
+      return json({ error: "No access to this brand" }, 403);
+    }
+
+    // DEACTIVATE action
+    if (action === "deactivate") {
+      await sb
+        .from("machine_integrations")
+        .update({ is_active: false })
+        .eq("brand_id", brand_id);
+      return json({ success: true, message: "Integration deactivated" });
+    }
+
+    // ACTIVATE action
+    if (!api_key || !basic_auth_user || !basic_auth_password) {
+      return json({ error: "api_key, basic_auth_user, basic_auth_password are required" }, 400);
+    }
+
+    // Validate credentials by calling TaxiMachine API
+    const basicAuth = btoa(`${basic_auth_user}:${basic_auth_password}`);
+    const machineBaseUrl = "https://api.taximachine.com.br";
+
+    // Try a test call
+    let credentialsValid = true;
+    try {
+      const testRes = await fetch(
+        `${machineBaseUrl}/api/integracao/solicitacaoStatus?id_mch=test`,
+        { headers: { Authorization: `Basic ${basicAuth}` } }
+      );
+      // 401/403 = invalid credentials. Other errors (404, etc.) are OK — means credentials work
+      if (testRes.status === 401 || testRes.status === 403) {
+        credentialsValid = false;
+      }
+      await testRes.text(); // consume body
+    } catch (e) {
+      console.error("TaxiMachine credential test error:", e);
+      // Network errors are not credential failures
+    }
+
+    if (!credentialsValid) {
+      return json({ error: "Invalid TaxiMachine credentials" }, 400);
+    }
+
+    // Register webhook at TaxiMachine
+    const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook`;
+    let webhookRegistered = false;
+
+    try {
+      const webhookRes = await fetch(
+        `${machineBaseUrl}/api/integracao/cadastrarWebhook`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${basicAuth}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tipo: "status",
+            responsabilidade: "empresa",
+            url: webhookUrl,
+          }),
+        }
+      );
+
+      if (webhookRes.ok) {
+        webhookRegistered = true;
+      } else {
+        const errText = await webhookRes.text();
+        console.error("Webhook registration response:", webhookRes.status, errText);
+        // Continue even if webhook registration fails — admin can retry
+      }
+      if (!webhookRegistered) await webhookRes.text().catch(() => {});
+    } catch (e) {
+      console.error("Webhook registration error:", e);
+    }
+
+    // Upsert integration record
+    const { error: upsertErr } = await sb
+      .from("machine_integrations")
+      .upsert(
+        {
+          brand_id,
+          api_key,
+          basic_auth_user,
+          basic_auth_password,
+          webhook_registered: webhookRegistered,
+          is_active: true,
+        },
+        { onConflict: "brand_id" }
+      );
+
+    if (upsertErr) {
+      console.error("Upsert error:", upsertErr);
+      return json({ error: "Failed to save integration" }, 500);
+    }
+
+    return json({
+      success: true,
+      webhook_registered: webhookRegistered,
+      message: webhookRegistered
+        ? "Integration activated and webhook registered"
+        : "Integration activated, but webhook registration failed. You may need to register the webhook manually.",
+    });
+  } catch (err) {
+    console.error("register-machine-webhook error:", err);
+    return json({ error: "Internal server error" }, 500);
+  }
+});
