@@ -271,6 +271,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
   const filterMode = (section as any).filter_mode || "recent";
   const columnsCount = (section as any).columns_count || 4;
   const rowsCount = (section as any).rows_count || 1;
+  const iconSize: string = (section as any).icon_size || "medium";
   const minStoresVisible = (section as any).min_stores_visible || 0;
   const couponTypeFilter = (section as any).coupon_type_filter || null;
   const cityFilterJson: string[] = (section as any).city_filter_json || [];
