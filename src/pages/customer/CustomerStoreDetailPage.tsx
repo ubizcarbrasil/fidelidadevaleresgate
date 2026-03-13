@@ -42,6 +42,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import OperatingHoursDisplay from "@/components/customer/OperatingHoursDisplay";
+import StoreReviewsSection from "@/components/customer/StoreReviewsSection";
 
 type StoreRow = Tables<"stores">;
 type Offer = Tables<"offers">;
