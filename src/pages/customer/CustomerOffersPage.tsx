@@ -258,7 +258,7 @@ export default function CustomerOffersPage() {
                   <div className="flex items-center gap-2 mt-auto">
                     {hasCashback && (
                       <div className="flex items-center gap-1">
-                        <span className="text-base font-bold" style={{ color: primary, fontFamily: fontHeading }}>
+                        <span className="text-base font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
                           R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                         </span>
                         {Number(offer.min_purchase) > 0 && (
@@ -271,7 +271,7 @@ export default function CustomerOffersPage() {
                     {hasDiscount && (
                       <span
                         className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                        style={{ backgroundColor: withAlpha(primary, 0.12), color: primary }}
+                        style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)", color: "hsl(var(--vb-highlight))" }}
                       >
                         {offer.discount_percent}% OFF
                       </span>
