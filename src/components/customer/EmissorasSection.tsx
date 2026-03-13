@@ -77,7 +77,7 @@ export default function EmissorasSection() {
     <section className="max-w-lg mx-auto">
       {/* Header */}
       <div className="px-5 mb-3 flex items-center justify-between">
-        <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
+        <h2 className="text-[15px] font-bold text-foreground" style={{ fontFamily: fontHeading }}>
           Compre e pontue
         </h2>
         <button
@@ -137,7 +137,7 @@ export default function EmissorasSection() {
 
             {/* Info */}
             <div className="px-3 pb-3 text-center">
-              <p className="text-[11px] font-semibold truncate mb-1.5" style={{ color: fg }}>
+              <p className="text-[11px] font-semibold truncate mb-1.5 text-foreground">
                 {store.name}
               </p>
 
