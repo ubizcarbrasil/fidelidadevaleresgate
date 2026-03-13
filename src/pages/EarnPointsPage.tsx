@@ -237,7 +237,7 @@ export default function EarnPointsPage() {
         referenceType: "EARNING_EVENT",
       });
 
-      return { points: preview.points, money: preview.money, newBalance: newPoints };
+      return { points: preview!.points ?? 0, money: preview!.money ?? 0, newBalance: newPoints };
     },
     onSuccess: (data) => {
       setSuccess(data);
