@@ -179,6 +179,19 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     return key.includes("MANUAL_LINKS");
   };
 
+  // Show wizard full-screen
+  if (showWizard && brand) {
+    return (
+      <SectionCreatorWizard
+        brandId={brand.id}
+        pageId={page.id}
+        currentSectionCount={sections.length}
+        onCreated={() => { setShowWizard(false); fetchSections(); }}
+        onCancel={() => setShowWizard(false)}
+      />
+    );
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -192,7 +205,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
         <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
           <Settings2 className="h-4 w-4 mr-1" /> Configurações
         </Button>
-        <Button size="sm" onClick={() => setShowAdd(true)}>
+        <Button size="sm" onClick={() => setShowWizard(true)}>
           <Plus className="h-4 w-4 mr-1" /> Sessão
         </Button>
       </div>
@@ -206,7 +219,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           <Layers className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="font-medium">Nenhuma sessão ainda</p>
           <p className="text-sm mb-4">Adicione sessões para construir o conteúdo desta página.</p>
-          <Button onClick={() => setShowAdd(true)}>
+          <Button onClick={() => setShowWizard(true)}>
             <Plus className="h-4 w-4 mr-2" /> Adicionar Sessão
           </Button>
         </div>
@@ -259,39 +272,6 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           ))}
         </div>
       )}
-
-      {/* Add Section Dialog */}
-      <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Adicionar Sessão</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Tipo da Sessão</Label>
-              <Select value={newSectionType} onValueChange={setNewSectionType}>
-                <SelectTrigger><SelectValue placeholder="Escolha o tipo..." /></SelectTrigger>
-                <SelectContent>
-                  {SECTION_TYPES.map(st => (
-                    <SelectItem key={st.value} value={st.value}>{st.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Título (opcional)</Label>
-              <Input value={newSectionTitle} onChange={e => setNewSectionTitle(e.target.value)} placeholder="Ex: Ofertas Imperdíveis" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAdd(false)}>Cancelar</Button>
-            <Button onClick={handleAddSection} disabled={adding || !newSectionType}>
-              {adding && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Adicionar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Page Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
