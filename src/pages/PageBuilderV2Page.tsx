@@ -102,6 +102,16 @@ export default function PageBuilderV2Page() {
     fetchPages();
   };
 
+  // If editing Home sections
+  if (editingHome) {
+    return (
+      <PageSectionsEditor
+        page={null}
+        onBack={() => { setEditingHome(false); }}
+      />
+    );
+  }
+
   // If editing a page, show the section editor
   if (editingPage) {
     return (
