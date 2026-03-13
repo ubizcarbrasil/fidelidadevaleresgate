@@ -202,7 +202,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   if (!sections.length) return null;
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
+  const accent = "hsl(var(--vb-highlight))";
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const cardBg = "hsl(var(--card))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
