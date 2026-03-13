@@ -716,6 +716,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
     <div className="max-w-lg mx-auto px-4 space-y-2">
       {items.map((b: any, idx: number) => {
         const isNew = b.created_at && (Date.now() - new Date(b.created_at).getTime()) < 14 * 86400000;
+        const isSponsored = sponsoredStoreIds?.has(b.id);
 
         return (
           <motion.div
@@ -739,7 +740,12 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-sm text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-                {isNew && (
+                {isSponsored && (
+                  <span className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "hsl(var(--vb-gold) / 0.2)", color: "hsl(var(--vb-gold))" }}>
+                    <Zap className="h-2 w-2" />AD
+                  </span>
+                )}
+                {isNew && !isSponsored && (
                   <span
                     className="text-[8px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
                     style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}
