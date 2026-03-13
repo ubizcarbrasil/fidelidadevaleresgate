@@ -153,7 +153,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.1 }}
-        className="max-w-lg mx-auto px-5"
+        className="max-w-lg mx-auto px-5 -mt-1"
       >
         <div className="grid grid-cols-6 gap-1.5">
           {QUICK_ACTIONS.map((action, idx) => (
