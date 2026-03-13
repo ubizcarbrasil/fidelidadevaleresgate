@@ -85,6 +85,13 @@ const CONTENT_TYPES: ContentType[] = [
     icon: <Info className="h-6 w-6" />,
     templateKeys: ["LIST_INFO", "GRID_INFO", "GRID_LOGOS"],
   },
+  {
+    id: "highlights",
+    label: "Destaques da Semana",
+    description: "Seleção especial com destaque visual",
+    icon: <Star className="h-6 w-6" />,
+    templateKeys: ["highlights_weekly"],
+  },
 ];
 
 const LAYOUT_OPTIONS: Record<string, LayoutOption[]> = {
