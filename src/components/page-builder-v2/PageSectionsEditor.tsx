@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon } from "lucide-react";
 import SectionEditor from "./SectionEditor";
 import ManualLinksEditor from "./ManualLinksEditor";
+import SectionCreatorWizard from "./SectionCreatorWizard";
 
 interface PageRow {
   id: string;
@@ -52,28 +53,12 @@ interface Props {
   onBack: () => void;
 }
 
-const SECTION_TYPES = [
-  { value: "OFFERS_CAROUSEL", label: "Carrossel de Ofertas" },
-  { value: "OFFERS_GRID", label: "Grade de Ofertas" },
-  { value: "STORES_GRID", label: "Grade de Parceiros" },
-  { value: "STORES_LIST", label: "Lista de Parceiros" },
-  { value: "BANNER_CAROUSEL", label: "Carrossel de Banners" },
-  { value: "VOUCHERS_CARDS", label: "Cupons em Cartão" },
-  { value: "MANUAL_LINKS_CAROUSEL", label: "Carrossel de Links Manuais" },
-  { value: "MANUAL_LINKS_GRID", label: "Grade de Links Manuais" },
-  { value: "LIST_INFO", label: "Lista com Informações" },
-  { value: "GRID_INFO", label: "Grade com Informações" },
-  { value: "GRID_LOGOS", label: "Grade de Logos/Atalhos" },
-];
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
   const { brand } = useBrand();
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newSectionType, setNewSectionType] = useState("");
-  const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
   const [editingManualLinks, setEditingManualLinks] = useState<SectionRow | null>(null);
   const [pageSettings, setPageSettings] = useState({
@@ -99,62 +84,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
 
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
-  const handleAddSection = async () => {
-    if (!brand || !newSectionType) return;
-    setAdding(true);
-
-    // Find template_id for this type
-    // Find template_id: try by key first, then by type
-    let { data: templates } = await supabase
-      .from("section_templates")
-      .select("id, key")
-      .eq("key", newSectionType)
-      .limit(1);
-    if (!templates?.length) {
-      const res = await supabase
-        .from("section_templates")
-        .select("id, key")
-        .eq("type", newSectionType as any)
-        .limit(1);
-      templates = res.data;
-    }
-
-    if (!templates?.length) {
-      toast({ title: "Template não encontrado", variant: "destructive" });
-      setAdding(false);
-      return;
-    }
-
-    const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
-
-    const insertData: any = {
-      brand_id: brand.id,
-      page_id: page.id,
-      template_id: templates[0].id,
-      title: newSectionTitle.trim() || null,
-      order_index: maxOrder,
-      is_enabled: true,
-      display_mode: "carousel",
-      filter_mode: "recent",
-      columns_count: 2,
-      rows_count: 1,
-      min_stores_visible: 1,
-      icon_size: "medium",
-      banner_height: "medium",
-    };
-    const { error } = await supabase.from("brand_sections").insert(insertData);
-
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Sessão adicionada!" });
-      setShowAdd(false);
-      setNewSectionType("");
-      setNewSectionTitle("");
-      fetchSections();
-    }
-    setAdding(false);
-  };
+  // handleAddSection is now handled by SectionCreatorWizard
 
   const handleDeleteSection = async (id: string) => {
     if (!confirm("Excluir esta sessão?")) return;
@@ -236,6 +166,19 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     return key.includes("MANUAL_LINKS");
   };
 
+  // Show wizard full-screen
+  if (showWizard && brand) {
+    return (
+      <SectionCreatorWizard
+        brandId={brand.id}
+        pageId={page.id}
+        currentSectionCount={sections.length}
+        onCreated={() => { setShowWizard(false); fetchSections(); }}
+        onCancel={() => setShowWizard(false)}
+      />
+    );
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -249,7 +192,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
         <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
           <Settings2 className="h-4 w-4 mr-1" /> Configurações
         </Button>
-        <Button size="sm" onClick={() => setShowAdd(true)}>
+        <Button size="sm" onClick={() => setShowWizard(true)}>
           <Plus className="h-4 w-4 mr-1" /> Sessão
         </Button>
       </div>
@@ -263,7 +206,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           <Layers className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="font-medium">Nenhuma sessão ainda</p>
           <p className="text-sm mb-4">Adicione sessões para construir o conteúdo desta página.</p>
-          <Button onClick={() => setShowAdd(true)}>
+          <Button onClick={() => setShowWizard(true)}>
             <Plus className="h-4 w-4 mr-2" /> Adicionar Sessão
           </Button>
         </div>
@@ -316,39 +259,6 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           ))}
         </div>
       )}
-
-      {/* Add Section Dialog */}
-      <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Adicionar Sessão</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Tipo da Sessão</Label>
-              <Select value={newSectionType} onValueChange={setNewSectionType}>
-                <SelectTrigger><SelectValue placeholder="Escolha o tipo..." /></SelectTrigger>
-                <SelectContent>
-                  {SECTION_TYPES.map(st => (
-                    <SelectItem key={st.value} value={st.value}>{st.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Título (opcional)</Label>
-              <Input value={newSectionTitle} onChange={e => setNewSectionTitle(e.target.value)} placeholder="Ex: Ofertas Imperdíveis" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAdd(false)}>Cancelar</Button>
-            <Button onClick={handleAddSection} disabled={adding || !newSectionType}>
-              {adding && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Adicionar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Page Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
