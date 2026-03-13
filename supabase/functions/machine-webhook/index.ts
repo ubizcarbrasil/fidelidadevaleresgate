@@ -14,13 +14,6 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function getClientIp(req: Request): string | null {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    null
-  );
-}
 
 function logAudit(
   sb: ReturnType<typeof createClient>,
