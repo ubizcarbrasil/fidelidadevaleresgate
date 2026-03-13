@@ -108,7 +108,7 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
   if (loading) {
     return (
       <section className="max-w-lg mx-auto px-5">
-        <Skeleton className="h-5 w-28 rounded-lg mb-3" />
+        <Skeleton className="h-5 w-28 rounded-lg mb-1.5" />
         <div className="grid grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex flex-col items-center gap-1.5">
