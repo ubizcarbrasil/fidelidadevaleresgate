@@ -410,6 +410,11 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           <StoreGallery urls={store.gallery_urls as string[]} fontHeading={fontHeading} />
         )}
 
+        {/* Location Map */}
+        {store.address && (
+          <StoreLocationSection address={store.address} primary={primary} fontHeading={fontHeading} fg={fg} />
+        )}
+
         {/* Tab switcher for Ofertas / Catálogo */}
         {hasCatalog && (() => {
           const catalogConfig = (store as any).store_catalog_config_json as any;
