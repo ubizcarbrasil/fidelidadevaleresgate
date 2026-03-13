@@ -296,6 +296,11 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .limit(source.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
+        // Apply segment filter
+        if (segmentFilterIds.length > 0) {
+          query = query.in("taxonomy_segment_id", segmentFilterIds);
+        }
+
         // Apply city filter
         if (cityFilterJson.length > 0) {
           query = (query as any).in("city", cityFilterJson);
