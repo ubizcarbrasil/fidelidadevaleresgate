@@ -129,6 +129,23 @@ export default function PageBuilderV2Page() {
         description="Crie páginas internas do app com sessões, banners e filtros. Cada página pode conter múltiplas sessões de conteúdo."
       />
 
+      {/* Home card */}
+      <div
+        className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/30 bg-primary/5 hover:shadow-md transition-shadow cursor-pointer mb-6"
+        onClick={() => setEditingHome(true)}
+      >
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Smartphone className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold">Tela Inicial (Home)</h3>
+          <p className="text-xs text-muted-foreground">Gerencie as sessões exibidas na home do app do cliente</p>
+        </div>
+        <Button size="sm" variant="outline">
+          <Layers className="h-4 w-4 mr-1" /> Editar Sessões
+        </Button>
+      </div>
+
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" /> Nova Página

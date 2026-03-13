@@ -177,7 +177,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     return (
       <SectionCreatorWizard
         brandId={currentBrandId}
-        pageId={page.id}
+        pageId={isHomeMode ? null : page!.id}
         currentSectionCount={sections.length}
         onCreated={() => { setShowWizard(false); fetchSections(); }}
         onCancel={() => setShowWizard(false)}
