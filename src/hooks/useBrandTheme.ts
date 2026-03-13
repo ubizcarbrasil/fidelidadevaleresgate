@@ -103,6 +103,15 @@ export function useBrandTheme(settings: Json | null | undefined) {
       }
     }
 
+    // Set --vb-highlight: brand accent in light, vb-gold in dark
+    if (!isDark) {
+      const highlight = theme.colors?.secondary || theme.colors?.primary;
+      if (highlight) {
+        root.style.setProperty("--vb-highlight", highlight);
+        appliedVars.push("--vb-highlight");
+      }
+    }
+
     if (theme.font_heading) {
       loadGoogleFont(theme.font_heading);
       root.style.setProperty("--font-heading", `"${theme.font_heading}", sans-serif`);

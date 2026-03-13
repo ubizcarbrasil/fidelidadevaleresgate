@@ -112,6 +112,7 @@
     --vb-surface-elevated: 240 14% 14%;
     --vb-gold: 46 95% 55%;
     --vb-gold-foreground: 30 20% 10%;
+    --vb-highlight: var(--vb-gold);
     --vb-badge-new: 142 60% 45%;
     --vb-badge-hot: 0 72% 55%;
     --vb-badge-exclusive: 270 60% 60%;
