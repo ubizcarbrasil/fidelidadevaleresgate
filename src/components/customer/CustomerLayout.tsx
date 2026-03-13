@@ -318,7 +318,7 @@ export default function CustomerLayout() {
                   <motion.div
                     className="h-8 w-8 rounded-xl flex items-center justify-center"
                     animate={{
-                      backgroundColor: isActive ? withAlpha(accent, 0.12) : "transparent",
+                      backgroundColor: isActive ? "hsl(var(--foreground) / 0.12)" : "transparent",
                       scale: isActive ? 1.05 : 1,
                     }}
                     transition={{ duration: 0.2 }}
