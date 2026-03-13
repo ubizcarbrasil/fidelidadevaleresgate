@@ -73,6 +73,20 @@ export default function ForYouSection() {
             Selecionados para você
           </h2>
         </div>
+        {offers.length > 0 && (
+          <button
+            className="text-xs font-bold flex items-center gap-0.5"
+            style={{ color: primary }}
+            onClick={() => openSectionDetail?.({
+              title: "Selecionados para você",
+              subtitle: null,
+              templateType: "OFFERS_CAROUSEL",
+            }, offers)}
+          >
+            Ver todos
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
         {offers.map((o, idx) => (
