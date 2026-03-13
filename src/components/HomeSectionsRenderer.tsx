@@ -399,9 +399,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
         const { data } = await query;
         let results = data || [];
 
-        if (results.length < minStoresVisible) {
-          results = [];
-        }
+        // min_stores_visible check removed — always show active sections
 
         // Boost sponsored stores to top
         results = boostSponsored(results, sponsoredStoreIds, "id");
