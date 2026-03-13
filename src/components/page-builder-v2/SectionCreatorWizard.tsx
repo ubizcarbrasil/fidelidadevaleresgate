@@ -182,6 +182,7 @@ function resolveTemplateKey(contentId: string, layoutId: string): string {
 /* ─── Component ─── */
 
 export default function SectionCreatorWizard({ brandId, pageId, currentSectionCount, onCreated, onCancel }: Props) {
+  const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
