@@ -23,6 +23,7 @@ interface BrandSection {
   banner_image_url?: string | null;
   banner_height?: string;
   display_mode?: string;
+  segment_filter_ids?: string[] | null;
   section_templates: {
     key: string;
     name: string;
