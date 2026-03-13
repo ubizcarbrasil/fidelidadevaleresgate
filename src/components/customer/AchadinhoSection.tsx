@@ -154,9 +154,9 @@ export default function AchadinhoSection() {
         <div className="flex items-center gap-2">
           <div
             className="h-7 w-7 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: withAlpha(primary, 0.12) }}
+            style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)" }}
           >
-            <AppIcon iconKey="section_deals" className="h-4 w-4" style={{ color: primary }} />
+            <AppIcon iconKey="section_deals" className="h-4 w-4" style={{ color: highlight }} />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
