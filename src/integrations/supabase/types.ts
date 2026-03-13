@@ -701,6 +701,7 @@ export type Database = {
           brand_settings_json: Json | null
           created_at: string
           default_theme_id: string | null
+          home_layout_json: Json | null
           id: string
           is_active: boolean
           name: string
@@ -714,6 +715,7 @@ export type Database = {
           brand_settings_json?: Json | null
           created_at?: string
           default_theme_id?: string | null
+          home_layout_json?: Json | null
           id?: string
           is_active?: boolean
           name: string
@@ -727,6 +729,7 @@ export type Database = {
           brand_settings_json?: Json | null
           created_at?: string
           default_theme_id?: string | null
+          home_layout_json?: Json | null
           id?: string
           is_active?: boolean
           name?: string
