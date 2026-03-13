@@ -134,7 +134,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
               </div>
 
               {/* Bottom action hint */}
-              <div className="flex items-center justify-center mt-4 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+              <div className="flex items-center justify-center mt-3 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
                 <button
                   onClick={() => { haptic("light"); onOpenLedger?.(); }}
                   className="flex items-center gap-1.5 text-white/60 hover:text-white/80 transition-colors active:scale-95"
