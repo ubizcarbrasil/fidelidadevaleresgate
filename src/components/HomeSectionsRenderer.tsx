@@ -339,7 +339,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     <section>
       {/* Section Header - Méliuz style */}
       {(section.title || section.subtitle) && (
-        <div className="max-w-lg mx-auto px-5 mb-3 flex items-center justify-between">
+        <div className="max-w-lg mx-auto px-5 mb-1.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
               {section.title}
