@@ -854,7 +854,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           {offer.coupon_type === "PRODUCT"
                             ? `Pague ${offer.discount_percent}% com Pontos`
                             : Number(offer.value_rescue) > 0
-                              ? `Vale Resgate de R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
+                              ? `Vale Resgate de ${Number(offer.value_rescue).toLocaleString("pt-BR")} pts`
                               : offer.title}
                         </p>
                       </div>
