@@ -114,7 +114,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
             />
 
             {/* Content */}
-            <div className="relative z-10 p-5 pb-4">
+            <div className="relative z-10 p-4 pb-3">
               <div className="flex flex-col items-center text-center">
                 {/* Pontos */}
                 <button
