@@ -190,12 +190,12 @@ export default function AchadinhoSection() {
               <AppIcon
                 iconKey="section_deals"
                 className="h-6 w-6"
-                style={{ color: !selectedCat ? '#fff' : primary }}
+                style={{ color: !selectedCat ? '#fff' : highlight }}
               />
             </div>
             <span
               className="text-[10px] font-medium text-center leading-tight line-clamp-2"
-              style={{ color: !selectedCat ? primary : undefined }}
+              style={{ color: !selectedCat ? highlight : undefined }}
             >
               Todos
             </span>
