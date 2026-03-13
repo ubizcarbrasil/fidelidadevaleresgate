@@ -77,7 +77,7 @@ function OffersGridPlaceholder() {
             <Tag className="h-4 w-4 text-muted-foreground/50" />
           </div>
           <Skeleton className="h-2 w-full" />
-          <span className="text-[8px] font-bold text-primary">R$ 14,90</span>
+          <span className="text-[8px] font-bold text-primary">150 pts</span>
         </div>
       ))}
     </div>
