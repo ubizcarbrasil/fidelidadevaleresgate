@@ -161,6 +161,7 @@ export default function CategoryGridOverlay({ onBack, onCategoryClick }: Categor
           )}
         </div>
       </div>
+      </motion.div>
     </motion.div>
   );
 }

@@ -203,6 +203,7 @@ export default function SectionDetailOverlay({
           })}
         </div>
       </div>
+      </motion.div>
     </motion.div>
   );
 }

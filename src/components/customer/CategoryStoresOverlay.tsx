@@ -217,6 +217,7 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
           )}
         </div>
       </div>
+      </motion.div>
     </motion.div>
   );
 }
