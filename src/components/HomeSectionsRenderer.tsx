@@ -718,12 +718,26 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 }
 
 // --- STORES_GRID ---
-function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds }: any) {
+function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds, iconSize = "medium", rowsCount = 1 }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizes = getCardSizes(iconSize);
+  const useMultiRow = rowsCount > 1;
+  const imgH = iconSize === "small" ? 96 : iconSize === "large" ? 144 : 112;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div
+        ref={scrollRef}
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-2" : "flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${sizes.minW}px`,
+          gap: "12px",
+          scrollSnapType: "x mandatory",
+        } : { scrollSnapType: "x mandatory" }}
+      >
         {items.map((b: any, idx: number) => {
           const isSponsored = sponsoredStoreIds?.has(b.id);
           return (
@@ -732,13 +746,18 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: "hsl(var(--card))", scrollSnapAlign: "start" }}
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            style={{
+              backgroundColor: "hsl(var(--card))",
+              scrollSnapAlign: "start",
+              minWidth: useMultiRow ? undefined : `${sizes.minW}px`,
+              maxWidth: useMultiRow ? undefined : `${sizes.maxW}px`,
+            }}
             onClick={() => onStoreClick?.(b)}
           >
-            <div className="relative h-28 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+            <div className="relative w-full flex items-center justify-center" style={{ height: imgH, backgroundColor: "hsl(var(--muted))" }}>
               {b.logo_url ? (
-                <LazyImage src={b.logo_url} alt={b.name} className="h-28 w-full" />
+                <LazyImage src={b.logo_url} alt={b.name} className="w-full" style={{ height: imgH }} />
               ) : (
                 <Store className="h-10 w-10 text-muted-foreground/20" />
               )}
@@ -763,7 +782,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
           </motion.div>
         );
         })}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
