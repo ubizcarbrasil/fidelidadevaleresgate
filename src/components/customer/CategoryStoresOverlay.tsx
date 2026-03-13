@@ -75,12 +75,29 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
 
   return (
     <motion.div
-      className="fixed inset-0 z-[65] flex flex-col bg-background"
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ type: "spring", damping: 30, stiffness: 300 }}
+      className="fixed inset-0 z-[65] flex flex-col"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
     >
+      {/* Backdrop */}
+      <motion.div
+        className="absolute inset-0 bg-background"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25 }}
+      />
+
+      {/* Sliding content */}
+      <motion.div
+        className="relative z-10 flex flex-col h-full"
+        initial={{ x: "100%", opacity: 0.5 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 280, mass: 0.9 }}
+      >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
@@ -200,6 +217,7 @@ export default function CategoryStoresOverlay({ category, onBack }: CategoryStor
           )}
         </div>
       </div>
+      </motion.div>
     </motion.div>
   );
 }
