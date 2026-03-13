@@ -80,7 +80,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
   };
 
   const handleCategoryClick = (categoryId: string, categoryName: string, iconName: string | null) => {
-    setSelectedCategory({ id: categoryId, name: categoryName, icon_name: iconName });
+    onOpenCategoryStores?.({ id: categoryId, name: categoryName, icon_name: iconName });
   };
 
   return (
