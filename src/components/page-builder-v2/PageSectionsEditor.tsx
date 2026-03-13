@@ -192,12 +192,14 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold">{page.title}</h1>
-          <p className="text-sm text-muted-foreground">/p/{page.slug} · {sections.length} sessões</p>
+          <h1 className="text-xl font-bold">{isHomeMode ? "Tela Inicial (Home)" : page!.title}</h1>
+          <p className="text-sm text-muted-foreground">{isHomeMode ? "Sessões exibidas na home do app" : `/p/${page!.slug}`} · {sections.length} sessões</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-          <Settings2 className="h-4 w-4 mr-1" /> Configurações
-        </Button>
+        {!isHomeMode && (
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+            <Settings2 className="h-4 w-4 mr-1" /> Configurações
+          </Button>
+        )}
         <Button size="sm" onClick={() => setShowWizard(true)}>
           <Plus className="h-4 w-4 mr-1" /> Sessão
         </Button>
