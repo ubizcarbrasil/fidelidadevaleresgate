@@ -246,12 +246,6 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         )}
       </AnimatePresence>
 
-      {/* Search Overlay */}
-      <AnimatePresence>
-        {searchOpen && (
-          <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
