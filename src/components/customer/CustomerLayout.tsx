@@ -401,6 +401,29 @@ export default function CustomerLayout() {
           )}
         </AnimatePresence>
 
+        {/* Category Grid Overlay */}
+        <AnimatePresence>
+          {categoryGridOpen && (
+            <CategoryGridOverlay
+              onBack={() => setCategoryGridOpen(false)}
+              onCategoryClick={(cat) => {
+                setCategoryGridOpen(false);
+                setSelectedCategory(cat);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Category Stores Overlay */}
+        <AnimatePresence>
+          {selectedCategory && (
+            <CategoryStoresOverlay
+              category={selectedCategory}
+              onBack={() => setSelectedCategory(null)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
 
