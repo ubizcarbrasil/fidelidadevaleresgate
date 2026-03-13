@@ -614,7 +614,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
                 )}
                 {o.discount_percent > 0 && (
-                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
                     {o.discount_percent}% OFF
                   </span>
                 )}
