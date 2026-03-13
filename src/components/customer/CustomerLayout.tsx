@@ -332,7 +332,7 @@ export default function CustomerLayout() {
                   </motion.div>
                   <span
                     className="text-[10px] font-semibold transition-colors"
-                    style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
+                    style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                   >
                     {tab.label}
                   </span>
