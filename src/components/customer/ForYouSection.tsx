@@ -19,7 +19,7 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
-  const { openOffer } = useCustomerNav();
+  const { openOffer, openSectionDetail } = useCustomerNav();
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
