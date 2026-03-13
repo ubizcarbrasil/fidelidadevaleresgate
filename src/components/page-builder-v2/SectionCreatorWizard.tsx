@@ -315,13 +315,38 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
       insertData.segment_filter_ids = selectedSegmentIds;
     }
 
-    const { error } = await supabase.from("brand_sections").insert(insertData);
-    if (error) {
-      toast({ title: "Erro ao criar sessão", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Sessão criada com sucesso!" });
-      onCreated();
+    const { data: inserted, error } = await supabase.from("brand_sections").insert(insertData).select("id").single();
+    if (error || !inserted) {
+      toast({ title: "Erro ao criar sessão", description: error?.message || "Erro desconhecido", variant: "destructive" });
+      setSaving(false);
+      return;
     }
+
+    // Determine source_type from layout/content
+    let sourceType: string = "STORES";
+    if (contentType === "by_category") {
+      sourceType = layoutType === "grid_stores" ? "STORES" : "OFFERS";
+    } else if (contentType === "offers" || contentType === "highlights") {
+      sourceType = "OFFERS";
+    } else if (contentType === "vouchers") {
+      sourceType = "VOUCHERS";
+    } else if (contentType === "stores") {
+      sourceType = "STORES";
+    }
+
+    // Insert brand_section_sources
+    const { error: srcError } = await supabase.from("brand_section_sources").insert({
+      brand_section_id: inserted.id,
+      source_type: sourceType as any,
+      filters_json: {},
+      limit: maxItems,
+    });
+    if (srcError) {
+      console.warn("Failed to insert section source:", srcError.message);
+    }
+
+    toast({ title: "Sessão criada com sucesso!" });
+    onCreated();
     setSaving(false);
   };
 

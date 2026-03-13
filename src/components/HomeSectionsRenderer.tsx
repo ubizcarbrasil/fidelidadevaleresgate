@@ -229,7 +229,15 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         return;
       }
 
-      if (!source) { setLoading(false); return; }
+      // If no source but has segment filters, infer source_type from template
+      const effectiveSource = source || (segmentFilterIds.length > 0 ? {
+        source_type: (templateType === "STORES_GRID" || templateType === "STORES_LIST") ? "STORES" : "OFFERS",
+        limit: 10,
+        filters_json: {},
+        id: "inferred",
+      } : null);
+
+      if (!effectiveSource) { setLoading(false); return; }
 
       if (templateType === "VOUCHERS_CARDS") {
         let query = supabase
@@ -237,14 +245,29 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .select("*")
           .eq("status", "active")
           .order("created_at", { ascending: false })
-          .limit(source.limit || 10);
+          .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
         const { data } = await query;
         setItems(data || []);
-      } else if (source.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") {
+      } else if (effectiveSource.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") {
         // Build ordering based on filter_mode
         const orderCol = filterMode === "most_redeemed" ? "likes_count" : "created_at";
         const orderAsc = false;
+
+        // If segment filter, first fetch matching store IDs
+        let segmentStoreIds: string[] | null = null;
+        if (segmentFilterIds.length > 0) {
+          const { data: segStores } = await supabase
+            .from("stores")
+            .select("id")
+            .in("taxonomy_segment_id", segmentFilterIds);
+          segmentStoreIds = segStores?.map(s => s.id) || [];
+          if (segmentStoreIds.length === 0) {
+            setItems([]);
+            setLoading(false);
+            return;
+          }
+        }
 
         let query = supabase
           .from("offers")
@@ -252,12 +275,12 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .eq("is_active", true)
           .eq("status", "ACTIVE")
           .order(orderCol, { ascending: orderAsc })
-          .limit(source.limit || 10);
+          .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
-        // Apply segment filter via store's taxonomy_segment_id
-        if (segmentFilterIds.length > 0) {
-          query = query.in("stores.taxonomy_segment_id", segmentFilterIds);
+        // Apply segment filter via pre-fetched store IDs
+        if (segmentStoreIds) {
+          query = query.in("store_id", segmentStoreIds);
         }
 
         // Apply coupon_type_filter
@@ -287,13 +310,13 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         }
 
         setItems(results);
-      } else if (source.source_type === "STORES") {
+      } else if (effectiveSource.source_type === "STORES") {
         let query = supabase
           .from("stores")
           .select("*")
           .eq("is_active", true)
           .order("name")
-          .limit(source.limit || 10);
+          .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
         // Apply segment filter
