@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Save, Image as ImageIcon, Video, Globe, Instagram, MapPin, MessageCircle, Tag, HelpCircle, Coins, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import SegmentAutocomplete from "@/components/SegmentAutocomplete";
+import OperatingHoursEditor, { type DayHours } from "./OperatingHoursEditor";
 
 interface FaqItem {
   question: string;
