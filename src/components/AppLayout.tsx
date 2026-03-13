@@ -17,6 +17,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { ContextBadge } from "@/components/ContextBadge";
 
 const CONSOLE_TITLES: Record<string, string> = {
   ROOT: "Painel Raiz",
