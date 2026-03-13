@@ -65,7 +65,7 @@ function LazyImage({ src, alt, className, style }: { src: string; alt: string; c
     <div ref={imgRef} className={`relative overflow-hidden ${className || ""}`} style={style}>
       {!loaded && !errored && <div className="absolute inset-0 shimmer-skeleton rounded-none" />}
       {errored ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
           <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
         </div>
       ) : inView ? (
@@ -85,14 +85,14 @@ function LazyImage({ src, alt, className, style }: { src: string; alt: string; c
 // --- Skeleton Components ---
 function SectionSkeleton() {
   return (
-    <section className="max-w-lg mx-auto px-5">
+    <section className="max-w-lg mx-auto px-4">
       <div className="mb-3 flex justify-between items-center">
         <div className="h-5 w-32 rounded-lg shimmer-skeleton" />
         <div className="h-4 w-20 rounded-lg shimmer-skeleton" />
       </div>
       <div className="flex gap-3 overflow-hidden">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="min-w-[140px] rounded-[16px] bg-card overflow-hidden" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+          <div key={i} className="min-w-[140px] rounded-2xl overflow-hidden" style={{ backgroundColor: "hsl(var(--card))" }}>
             <div className="h-24 w-full shimmer-skeleton" />
             <div className="p-3 space-y-2">
               <div className="h-3 w-3/4 rounded-lg shimmer-skeleton" />
@@ -106,7 +106,7 @@ function SectionSkeleton() {
 }
 
 function BannerSkeleton() {
-  return <div className="rounded-[20px] h-40 w-full shimmer-skeleton" />;
+  return <div className="rounded-2xl h-40 w-full shimmer-skeleton" />;
 }
 
 interface HomeSectionsRendererProps {
@@ -149,9 +149,9 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   if (!sections.length) return null;
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const accent = hslToCss(theme?.colors?.secondary, "") || primary;
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const cardBg = "hsl(var(--card))";
-  const accent = hslToCss(theme?.colors?.accent, "hsl(var(--accent))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const brandBadgeConfig = theme?.badge_config || null;
 
@@ -162,7 +162,6 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
     if (skipBanners) return !isBanner;
     return true;
   }).filter((s, idx, arr) => {
-    // Deduplicate sections with the same title (keep the first occurrence)
     if (!s.title) return true;
     return arr.findIndex((x) => x.title === s.title) === idx;
   });
@@ -179,17 +178,17 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
           transition={{ duration: 0.35, delay: idx * 0.06, ease: "easeOut" }}
         >
           {idx > 0 && (
-            <div className="max-w-lg mx-auto px-5 py-0.5">
-              <div className="h-[0.5px]" style={{ backgroundColor: `${fg}0A` }} />
+            <div className="max-w-lg mx-auto px-4 py-0.5">
+              <div className="h-px" style={{ backgroundColor: "hsl(var(--border) / 0.5)" }} />
             </div>
           )}
           <SectionBlock
             section={section}
             branchId={selectedBranch?.id}
             primary={primary}
+            accent={accent}
             fg={fg}
             cardBg={cardBg}
-            accent={accent}
             fontHeading={fontHeading}
             brandBadgeConfig={brandBadgeConfig}
           />
@@ -203,14 +202,14 @@ interface SectionBlockProps {
   section: BrandSection;
   branchId?: string;
   primary: string;
+  accent: string;
   fg: string;
   cardBg: string;
-  accent: string;
   fontHeading: string;
   brandBadgeConfig: BadgeConfig | null;
 }
 
-function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHeading, brandBadgeConfig }: SectionBlockProps) {
+function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { openOffer, openStore, openSectionDetail } = useCustomerNav();
@@ -231,7 +230,6 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     const fetchItems = async () => {
       setLoading(true);
 
-      // Banner carousel: fetch from banner_schedules with date filtering
       if (templateType === "BANNER_CAROUSEL") {
         const now = new Date().toISOString();
         let query = supabase
@@ -249,7 +247,6 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         return;
       }
 
-      // If no source, infer source_type from template type
       const inferredSourceType =
         (templateType === "STORES_GRID" || templateType === "STORES_LIST" || templateType === "GRID_LOGOS") ? "STORES"
         : (templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") ? "OFFERS"
@@ -275,11 +272,9 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         const { data } = await query;
         setItems(data || []);
       } else if (effectiveSource.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") {
-        // Build ordering based on filter_mode
         const orderCol = filterMode === "most_redeemed" ? "likes_count" : "created_at";
         const orderAsc = false;
 
-        // If segment filter, first fetch matching store IDs
         let segmentStoreIds: string[] | null = null;
         if (segmentFilterIds.length > 0) {
           const { data: segStores } = await supabase
@@ -303,17 +298,14 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
-        // Apply segment filter via pre-fetched store IDs
         if (segmentStoreIds) {
           query = query.in("store_id", segmentStoreIds);
         }
 
-        // Apply coupon_type_filter
         if (couponTypeFilter && couponTypeFilter !== "all") {
           query = query.eq("coupon_type", couponTypeFilter);
         }
 
-        // Apply "newest" filter — only offers from last 14 days
         if (filterMode === "newest") {
           const since = new Date();
           since.setDate(since.getDate() - 14);
@@ -323,7 +315,6 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         const { data } = await query;
         let results = data || [];
 
-        // Apply random shuffle if filter_mode is "random" (daily seed)
         if (filterMode === "random" && results.length > 1) {
           const daySeed = new Date().toISOString().slice(0, 10);
           const hash = daySeed.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -344,12 +335,10 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
 
-        // Apply segment filter
         if (segmentFilterIds.length > 0) {
           query = query.in("taxonomy_segment_id", segmentFilterIds);
         }
 
-        // Apply city filter
         if (cityFilterJson.length > 0) {
           query = (query as any).in("city", cityFilterJson);
         }
@@ -357,7 +346,6 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         const { data } = await query;
         let results = data || [];
 
-        // Hide section if below min_stores_visible
         if (results.length < minStoresVisible) {
           results = [];
         }
@@ -384,7 +372,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   }, [items, section, templateType, openSectionDetail]);
 
   const renderSkeleton = () => {
-    if (templateType === "BANNER_CAROUSEL") return <div className="max-w-lg mx-auto px-5"><BannerSkeleton /></div>;
+    if (templateType === "BANNER_CAROUSEL") return <div className="max-w-lg mx-auto px-4"><BannerSkeleton /></div>;
     return <SectionSkeleton />;
   };
 
@@ -392,23 +380,20 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     section.banner_height === "small" ? 80 :
     section.banner_height === "large" ? 160 : 120;
 
-  // Hide entire section when no items and not loading
   if (!loading && items.length === 0) return null;
 
   return (
     <section>
-      {/* Section Header - Méliuz style */}
+      {/* Section Header */}
       {(section.title || section.subtitle) && (
-        <div className="max-w-lg mx-auto px-5 mb-1.5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
-              {section.title}
-            </h2>
-          </div>
+        <div className="max-w-lg mx-auto px-4 mb-2 flex items-center justify-between">
+          <h2 className="text-[15px] font-bold text-foreground" style={{ fontFamily: fontHeading }}>
+            {section.title}
+          </h2>
           {section.cta_text && items.length > 0 && (
             <button
               className="text-xs font-bold flex items-center gap-0.5"
-              style={{ color: primary }}
+              style={{ color: accent }}
               onClick={handleCtaClick}
             >
               {section.cta_text}
@@ -420,11 +405,11 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
 
       {/* Section Banner */}
       {section.banner_image_url && !loading && (
-        <div className="max-w-lg mx-auto px-5 mb-1.5">
+        <div className="max-w-lg mx-auto px-4 mb-1.5">
           <img
             src={section.banner_image_url}
             alt={section.title || "Banner"}
-            className="w-full object-cover rounded-[16px]"
+            className="w-full object-cover rounded-2xl"
             style={{ height: bannerH }}
           />
         </div>
@@ -449,7 +434,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
   );
 }
 
-// --- VOUCHERS_CARDS (Méliuz coupon style - pink/magenta accent) ---
+// --- VOUCHERS_CARDS ---
 function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const handleCouponClick = useCallback((v: any) => {
@@ -460,11 +445,11 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((v: any, idx: number) => {
           const bgGradient = v.bg_color
             ? `linear-gradient(135deg, ${v.bg_color} 0%, ${v.bg_color}cc 100%)`
-            : "linear-gradient(135deg, #E91E63 0%, #AD1457 100%)";
+            : `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`;
           const txtColor = v.text_color || "#FFFFFF";
 
           return (
@@ -473,13 +458,9 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-[16px] overflow-hidden relative"
-              style={{
-                scrollSnapAlign: "start",
-                background: bgGradient,
-              }}
+              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden relative"
+              style={{ scrollSnapAlign: "start", background: bgGradient }}
             >
-              {/* Ticket notch */}
               <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-background" />
               <div className="absolute right-0 top-[55%] -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-background" />
 
@@ -494,7 +475,6 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
                 <h3 className="font-medium text-xs mt-1.5 line-clamp-2" style={{ opacity: 0.9 }}>{v.title}</h3>
               </div>
 
-              {/* Dashed divider */}
               <div className="mx-4 border-t border-dashed" style={{ borderColor: `${txtColor}40` }} />
 
               <div className="px-5 py-3 flex items-center justify-between">
@@ -521,98 +501,111 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
   );
 }
 
-// --- OFFERS_CAROUSEL (Large cards with banner + name + discount) ---
+// --- OFFERS_CAROUSEL ---
 function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((o: any, idx: number) => (
-          <motion.div
-            key={o.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
-            style={{
-              boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
-              scrollSnapAlign: "start",
-            }}
-            onClick={() => onOfferClick?.(o)}
-          >
-            {/* Image area */}
-            <div className="relative h-28 w-full bg-muted">
-              {o.image_url || o.stores?.logo_url ? (
-                <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-28 w-full" />
-              ) : (
-                <div className="h-28 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                  <ShoppingBag className="h-10 w-10" style={{ color: `${primary}20` }} />
-                </div>
-              )}
-              {/* Discount badge */}
-              {o.discount_percent > 0 && (
-                <div
-                  className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-                  style={{ backgroundColor: primary }}
-                >
-                  {o.discount_percent}% OFF
-                </div>
-              )}
-            </div>
-            <div className="px-3 py-2.5">
-              <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
-              {o.stores?.name && (
-                <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}45` }}>{o.stores.name}</p>
-              )}
-              {o.value_rescue > 0 && (
-                <span className="font-bold text-xs mt-1 block" style={{ color: primary, fontFamily: fontHeading }}>
-                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
-                </span>
-              )}
-            </div>
-          </motion.div>
-        ))}
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((o: any, idx: number) => {
+          // Determine smart badge
+          const isNew = o.created_at && (Date.now() - new Date(o.created_at).getTime()) < 14 * 86400000;
+
+          return (
+            <motion.div
+              key={o.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.04 }}
+              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+              style={{
+                backgroundColor: "hsl(var(--card))",
+                scrollSnapAlign: "start",
+              }}
+              onClick={() => onOfferClick?.(o)}
+            >
+              <div className="relative h-28 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+                {o.image_url || o.stores?.logo_url ? (
+                  <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-28 w-full" />
+                ) : (
+                  <div className="h-28 w-full flex items-center justify-center">
+                    <ShoppingBag className="h-10 w-10 text-muted-foreground/20" />
+                  </div>
+                )}
+                {/* Discount badge */}
+                {o.discount_percent > 0 && (
+                  <div
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    style={{ backgroundColor: accent, color: "hsl(var(--primary-foreground))" }}
+                  >
+                    {o.discount_percent}% OFF
+                  </div>
+                )}
+                {/* "Novo" badge */}
+                {isNew && !o.discount_percent && (
+                  <div
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                    style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}
+                  >
+                    Novo
+                  </div>
+                )}
+              </div>
+              <div className="px-3 py-2.5">
+                <h3 className="font-semibold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+                {o.stores?.name && (
+                  <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
+                )}
+                {o.value_rescue > 0 && (
+                  <span className="font-bold text-xs mt-1 block" style={{ color: accent, fontFamily: fontHeading }}>
+                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
   );
 }
 
-// --- OFFERS_GRID (2-col Méliuz style) ---
+// --- OFFERS_GRID ---
 function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   return (
-    <div className="max-w-lg mx-auto px-5">
-      <div className={`grid gap-2.5`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+    <div className="max-w-lg mx-auto px-4">
+      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="rounded-[16px] overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
+            className="rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            style={{ backgroundColor: "hsl(var(--card))" }}
             onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
               <div className="relative">
                 <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
                 <div className="absolute top-1.5 left-1.5">
-                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={primary} size="sm" />
+                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={accent} size="sm" />
                 </div>
               </div>
             ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+                <ShoppingBag className="h-6 w-6 text-muted-foreground/30" />
               </div>
             )}
             <div className="px-2.5 py-2">
-              <h3 className="font-semibold text-[11px] truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+              <h3 className="font-semibold text-[11px] text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
               {o.stores?.name && (
-                <p className="text-[9px] truncate" style={{ color: `${fg}40` }}>{o.stores.name}</p>
+                <p className="text-[9px] text-muted-foreground truncate">{o.stores.name}</p>
               )}
               {o.value_rescue > 0 && (
-                <span className="font-bold text-xs mt-1 block" style={{ color: primary }}>
+                <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
                   R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                 </span>
               )}
@@ -624,43 +617,43 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
   );
 }
 
-// --- STORES_GRID (Horizontal scroll with larger cards + logo + name) ---
+// --- STORES_GRID ---
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const accent = primary;
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((b: any, idx: number) => (
           <motion.div
             key={b.id}
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="min-w-[140px] max-w-[160px] flex-shrink-0 rounded-2xl overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
+            className="min-w-[140px] max-w-[160px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            style={{ backgroundColor: "hsl(var(--card))", scrollSnapAlign: "start" }}
             onClick={() => onStoreClick?.(b)}
           >
-            {/* Logo/Banner */}
-            <div className="relative h-24 w-full bg-muted flex items-center justify-center">
+            <div className="relative h-24 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
               {b.logo_url ? (
                 <LazyImage src={b.logo_url} alt={b.name} className="h-24 w-full" />
               ) : (
-                <Store className="h-10 w-10" style={{ color: `${primary}20` }} />
+                <Store className="h-10 w-10 text-muted-foreground/20" />
               )}
               {b.points_per_real > 0 && (
                 <div
                   className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-white text-[9px] font-bold"
-                  style={{ backgroundColor: "#059669" }}
+                  style={{ backgroundColor: "hsl(var(--success))" }}
                 >
                   {b.points_per_real}x pts
                 </div>
               )}
             </div>
             <div className="px-3 py-2">
-              <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+              <h3 className="font-semibold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
               {b.category && (
-                <p className="text-[10px] truncate mt-0.5" style={{ color: `${fg}40` }}>{b.category}</p>
+                <p className="text-[10px] text-muted-foreground truncate mt-0.5">{b.category}</p>
               )}
             </div>
           </motion.div>
@@ -671,16 +664,14 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
   );
 }
 
-// --- STORES_LIST (Méliuz list with cashback + badges) ---
+// --- STORES_LIST ---
 function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
-  const BADGES = ["IMPERDÍVEL", "EXCLUSIVO", "ÚLTIMAS HORAS", "NOVO"];
-  const badgeColors = ["#E91E63", "#7C3AED", "#FF6B35", "#059669"];
+  const accent = primary;
 
   return (
-    <div className="max-w-lg mx-auto px-5 space-y-2">
+    <div className="max-w-lg mx-auto px-4 space-y-2">
       {items.map((b: any, idx: number) => {
-        const badgeIdx = idx % BADGES.length;
-        const showBadge = b.points_per_real && b.points_per_real > 1;
+        const isNew = b.created_at && (Date.now() - new Date(b.created_at).getTime()) < 14 * 86400000;
 
         return (
           <motion.div
@@ -688,8 +679,8 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="rounded-[14px] p-3 flex items-center gap-3 bg-card cursor-pointer active:scale-[0.98] transition-transform"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+            className="rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+            style={{ backgroundColor: "hsl(var(--card))" }}
             onClick={() => onStoreClick?.(b)}
           >
             {b.logo_url ? (
@@ -697,35 +688,35 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
                 <LazyImage src={b.logo_url} alt={b.name} className="h-12 w-12" />
               </div>
             ) : (
-              <div className="h-12 w-12 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                <Store className="h-5 w-5" style={{ color: `${primary}60` }} />
+              <div className="h-12 w-12 shrink-0 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+                <Store className="h-5 w-5 text-muted-foreground/40" />
               </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <h3 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-                {showBadge && (
+                <h3 className="font-semibold text-sm text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+                {isNew && (
                   <span
                     className="text-[8px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
-                    style={{ backgroundColor: badgeColors[badgeIdx] }}
+                    style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}
                   >
-                    {BADGES[badgeIdx]}
+                    NOVO
                   </span>
                 )}
               </div>
               {b.category && (
-                <p className="text-[11px]" style={{ color: `${fg}45` }}>{b.category}</p>
+                <p className="text-[11px] text-muted-foreground">{b.category}</p>
               )}
               {b.points_per_real > 0 && (
                 <div className="flex items-center gap-1 mt-0.5">
-                  <Zap className="h-3 w-3" style={{ color: "#059669" }} />
-                  <span className="text-[11px] font-bold" style={{ color: "#059669" }}>
+                  <Zap className="h-3 w-3" style={{ color: "hsl(var(--success))" }} />
+                  <span className="text-[11px] font-bold" style={{ color: "hsl(var(--success))" }}>
                     Até {b.points_per_real}x pontos/R$
                   </span>
                 </div>
               )}
             </div>
-            <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}20` }} />
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/30" />
           </motion.div>
         );
       })}
@@ -752,19 +743,19 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
 
   if (!banners.length) {
     return (
-      <div className="max-w-lg mx-auto px-5">
-        <div className={`rounded-[20px] bg-gradient-to-br from-black/5 to-black/[0.02] ${h} flex items-center justify-center`}>
-          <p className="text-xs text-muted-foreground opacity-50">Configure banners no painel admin</p>
+      <div className="max-w-lg mx-auto px-4">
+        <div className={`rounded-2xl ${h} flex items-center justify-center`} style={{ backgroundColor: "hsl(var(--muted))" }}>
+          <p className="text-xs text-muted-foreground/50">Configure banners no painel admin</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto px-5">
-      <div className={`relative rounded-[20px] overflow-hidden ${h}`} style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
+    <div className="max-w-lg mx-auto px-4">
+      <div className={`relative rounded-2xl overflow-hidden ${h}`}>
         <LazyImage src={banners[current]?.image_url} alt="Banner" className={`${h} w-full`} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         {banners.length > 1 && (
           <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
             {banners.map((_, i) => (
@@ -787,22 +778,22 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
   );
 }
 
-// --- HIGHLIGHTS_WEEKLY (featured offers with larger cards and star badge) ---
+// --- HIGHLIGHTS_WEEKLY ---
 function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, delay: idx * 0.06 }}
-            className="min-w-[220px] max-w-[260px] flex-shrink-0 rounded-[20px] overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform relative"
+            className="min-w-[220px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
             style={{
-              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
             }}
             onClick={() => onOfferClick?.(o)}
@@ -810,7 +801,7 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
             {/* Featured badge */}
             <div
               className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
-              style={{ backgroundColor: primary, color: "#fff" }}
+              style={{ backgroundColor: accent, color: "hsl(var(--primary-foreground))" }}
             >
               <Star className="h-3 w-3" fill="currentColor" />
               Destaque
@@ -819,24 +810,24 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
             {o.image_url ? (
               <LazyImage src={o.image_url} alt={o.title} className="h-36 w-full" />
             ) : (
-              <div className="h-36 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                <Star className="h-10 w-10" style={{ color: `${primary}25` }} />
+              <div className="h-36 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+                <Star className="h-10 w-10 text-muted-foreground/20" />
               </div>
             )}
 
             <div className="px-4 py-3">
-              <h3 className="font-bold text-sm line-clamp-2" style={{ fontFamily: fontHeading }}>{o.title}</h3>
+              <h3 className="font-bold text-sm text-foreground line-clamp-2" style={{ fontFamily: fontHeading }}>{o.title}</h3>
               {o.stores?.name && (
-                <p className="text-[11px] mt-1 truncate" style={{ color: `${fg}50` }}>{o.stores.name}</p>
+                <p className="text-[11px] mt-1 text-muted-foreground truncate">{o.stores.name}</p>
               )}
               <div className="flex items-center justify-between mt-2">
                 {o.discount_percent > 0 && (
-                  <span className="font-black text-base" style={{ color: primary, fontFamily: fontHeading }}>
+                  <span className="font-black text-base" style={{ color: accent, fontFamily: fontHeading }}>
                     {o.discount_percent}% OFF
                   </span>
                 )}
                 {o.value_rescue > 0 && (
-                  <span className="font-bold text-sm" style={{ color: primary }}>
+                  <span className="font-bold text-sm" style={{ color: accent }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}
