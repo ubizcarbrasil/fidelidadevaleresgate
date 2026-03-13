@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon } from "lucide-react";
 import SectionEditor from "./SectionEditor";
 import ManualLinksEditor from "./ManualLinksEditor";
+import SectionCreatorWizard from "./SectionCreatorWizard";
 
 interface PageRow {
   id: string;
