@@ -253,7 +253,25 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-sm truncate">{section.title || section.section_templates?.name || section.section_templates?.key || "Sem título"}</h3>
+                  {renamingId === section.id ? (
+                    <Input
+                      ref={renameInputRef}
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onBlur={handleConfirmRename}
+                      onKeyDown={e => { if (e.key === "Enter") handleConfirmRename(); if (e.key === "Escape") setRenamingId(null); }}
+                      className="h-7 text-sm font-semibold w-48"
+                      autoFocus
+                    />
+                  ) : (
+                    <h3
+                      className="font-semibold text-sm truncate cursor-pointer hover:underline"
+                      onClick={() => handleStartRename(section)}
+                      title="Clique para renomear"
+                    >
+                      {section.title || section.section_templates?.name || section.section_templates?.key || "Sem título"}
+                    </h3>
+                  )}
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
                     {section.section_templates?.key || "—"}
                   </span>
