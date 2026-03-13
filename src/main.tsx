@@ -3,6 +3,34 @@ import App from "./App.tsx";
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 
+async function clearPreviewPwaCache() {
+  if (typeof window === "undefined") return;
+
+  const hostname = window.location.hostname;
+  const isPreviewHost = hostname.includes("lovableproject.com") || hostname.includes("preview--");
+  if (!isPreviewHost || !("serviceWorker" in navigator)) return;
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    if (registrations.length === 0) return;
+
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    if ("caches" in window) {
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey)));
+    }
+
+    if (!sessionStorage.getItem("__preview_sw_reset__")) {
+      sessionStorage.setItem("__preview_sw_reset__", "1");
+      window.location.reload();
+    }
+  } catch (error) {
+    console.warn("Falha ao limpar cache PWA no preview", error);
+  }
+}
+
+void clearPreviewPwaCache();
 initWebVitals();
 
 // Fix React 18 "removeChild" error caused by third-party DOM manipulation
