@@ -172,7 +172,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       >
         <SegmentNavSection
           onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
-          onSeeMore={() => setCategoryGridOpen(true)}
+          onSeeMore={() => onOpenCategoryGrid?.()}
         />
       </motion.div>
 
