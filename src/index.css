@@ -119,6 +119,7 @@
     --vb-badge-exclusive: 270 60% 60%;
     --vb-card-dark: 240 14% 12%;
     --vb-card-elevated: 240 10% 18%;
+    --vb-cat-icon: var(--vb-highlight);
     --vb-search-bg: 40 15% 90%;
   }
 }
