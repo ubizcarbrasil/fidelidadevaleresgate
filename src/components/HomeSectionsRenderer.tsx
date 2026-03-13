@@ -621,7 +621,6 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 // --- STORES_GRID ---
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const accent = primary;
 
   return (
     <div className="max-w-lg mx-auto">
@@ -632,27 +631,29 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="min-w-[140px] max-w-[160px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
             style={{ backgroundColor: "hsl(var(--card))", scrollSnapAlign: "start" }}
             onClick={() => onStoreClick?.(b)}
           >
-            <div className="relative h-24 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+            <div className="relative h-28 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
               {b.logo_url ? (
-                <LazyImage src={b.logo_url} alt={b.name} className="h-24 w-full" />
+                <LazyImage src={b.logo_url} alt={b.name} className="h-28 w-full" />
               ) : (
                 <Store className="h-10 w-10 text-muted-foreground/20" />
               )}
-              {b.points_per_real > 0 && (
-                <div
-                  className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-white text-[9px] font-bold"
-                  style={{ backgroundColor: "hsl(var(--success))" }}
-                >
+              {b.discount_percent > 0 && (
+                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
+                  {b.discount_percent}% OFF
+                </div>
+              )}
+              {b.points_per_real > 0 && !b.discount_percent && (
+                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
                   {b.points_per_real}x pts
                 </div>
               )}
             </div>
-            <div className="px-3 py-2">
-              <h3 className="font-semibold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+            <div className="px-3 py-2.5">
+              <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
               {b.category && (
                 <p className="text-[10px] text-muted-foreground truncate mt-0.5">{b.category}</p>
               )}
