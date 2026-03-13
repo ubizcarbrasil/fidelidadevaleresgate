@@ -6,48 +6,21 @@ import type { Tables } from "@/integrations/supabase/types";
 import StoreCatalogView from "@/components/customer/StoreCatalogView";
 import { useCustomerFavoriteStores } from "@/hooks/useCustomerFavoriteStores";
 import { toast } from "@/hooks/use-toast";
-import {
-  ArrowLeft,
-  Store as StoreIcon,
-  MapPin,
-  Clock,
-  ShoppingBag,
-  Heart,
-  MessageCircle,
-  Phone,
-  Tag,
-  Sparkles,
-  Instagram,
-  Globe,
-  Navigation,
-  Play,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Coins,
-  Calendar,
-  ChevronDown,
-  Info,
-  HelpCircle,
-  FileText,
-  Share2,
-} from "lucide-react";
+import { Tag, ShoppingBag, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import SafeImage from "@/components/customer/SafeImage";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import OperatingHoursDisplay from "@/components/customer/OperatingHoursDisplay";
 import StoreReviewsSection from "@/components/customer/StoreReviewsSection";
+import StoreDetailHero from "@/components/customer/StoreDetailHero";
+import StoreDetailInfoCard from "@/components/customer/StoreDetailInfoCard";
+import { StoreOffersList } from "@/components/customer/StoreOffersList";
 
 type StoreRow = Tables<"stores">;
 type Offer = Tables<"offers">;
-type CatalogItem = Tables<"store_catalog_items">;
 
 interface Props {
   store: StoreRow;
@@ -60,20 +33,12 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
   return `hsl(${hsl})`;
 }
 
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
-}
-
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { isFavoriteStore, toggleFavoriteStore } = useCustomerFavoriteStores();
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(true);
-  const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [activeTab, setActiveTab] = useState<"ofertas" | "catalogo">("ofertas");
 
   const isDark = document.documentElement.classList.contains("dark");
@@ -98,25 +63,8 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
       setOffers(data || []);
       setLoadingOffers(false);
     };
-    const fetchCatalog = async () => {
-      setLoadingCatalog(true);
-      const { data } = await supabase
-        .from("store_catalog_items")
-        .select("*")
-        .eq("store_id", store.id)
-        .eq("is_active", true)
-        .order("order_index")
-        .limit(50);
-      setCatalogItems(data || []);
-      setLoadingCatalog(false);
-    };
     fetchOffers();
-    fetchCatalog();
   }, [store.id]);
-
-  const whatsappUrl = store.whatsapp
-    ? `https://wa.me/${store.whatsapp.replace(/\D/g, "")}`
-    : null;
 
   const handleShare = async () => {
     const shareText = `${store.name}${store.description ? ` - ${store.description}` : ""}`;
@@ -139,82 +87,29 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
       className="fixed inset-0 z-[60] flex flex-col bg-background"
     >
       <div className="flex-1 overflow-y-auto pb-28">
-        {/* Hero header with banner */}
-        <div className="relative w-full">
-          {/* Banner image or gradient */}
-          <div
-            className="w-full h-48"
-            style={store.banner_url ? {
-              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${store.banner_url})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            } : {
-              background: `linear-gradient(135deg, ${primary}30 0%, ${primary}08 100%)`,
-            }}
-          />
+        {/* Hero */}
+        <StoreDetailHero
+          storeName={store.name}
+          bannerUrl={store.banner_url}
+          logoUrl={store.logo_url}
+          primary={primary}
+          isFav={isFav}
+          onBack={onBack}
+          onShare={handleShare}
+          onToggleFav={() => toggleFavoriteStore(store.id)}
+        />
 
-          {/* Back button */}
-          <button
-            onClick={onBack}
-            className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
-          >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-
-          {/* Share + Favorite buttons */}
-          <div className="absolute top-4 right-4 flex gap-2">
-            <button
-              onClick={handleShare}
-              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
-            >
-              <Share2 className="h-5 w-5 text-muted-foreground" />
-            </button>
-            <motion.button
-              whileTap={{ scale: 1.3 }}
-              onClick={() => toggleFavoriteStore(store.id)}
-              className="h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md"
-            >
-              <Heart
-                className="h-5 w-5 transition-colors"
-                fill={isFav ? "#E5195F" : "none"}
-                stroke={isFav ? "#E5195F" : "hsl(var(--muted-foreground))"}
-                strokeWidth={2}
-              />
-            </motion.button>
-          </div>
-
-          {/* Logo overlapping banner */}
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-            <SafeImage
-              src={store.logo_url}
-              alt={store.name}
-              className="h-20 w-20 rounded-2xl object-cover shadow-lg border-4 border-background"
-              fallback={
-                <div
-                  className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-lg border-4 border-background"
-                  style={{ backgroundColor: `${primary}15` }}
-                >
-                  <StoreIcon className="h-10 w-10" style={{ color: primary }} />
-                </div>
-              }
-            />
-          </div>
-        </div>
-
-        {/* Store name + info below logo */}
+        {/* Store name + points */}
         <div className="max-w-lg mx-auto flex flex-col items-center text-center pt-12 px-5 pb-2">
           <h1 className="text-xl font-bold mb-1" style={{ fontFamily: fontHeading }}>
             {store.name}
           </h1>
-
-          {/* Points rule */}
           {store.points_per_real && (
             <p className="text-2xl font-black mb-2" style={{ fontFamily: fontHeading }}>
               {Number(store.points_per_real).toFixed(0)} {Number(store.points_per_real) === 1 ? "ponto" : "pontos"}{" "}
               <span className="text-base font-medium" style={{ color: `${fg}60` }}>por R$ 1</span>
             </p>
           )}
-
           {store.category && (
             <span
               className="text-xs font-medium px-3 py-1 rounded-full mb-2"
@@ -225,171 +120,15 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           )}
         </div>
 
-        {/* Info card */}
-        <div
-           className="relative -mt-4 mx-4 rounded-[20px] bg-card p-5"
-           style={{ boxShadow: "0 4px 20px hsl(var(--foreground) / 0.05)" }}
-        >
-          {store.address && (
-            <div className="flex items-start gap-3 mb-3">
-              <div
-                className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: `${primary}10` }}
-              >
-                <MapPin className="h-4 w-4" style={{ color: primary }} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold">Endereço</p>
-                <p className="text-xs" style={{ color: `${fg}55` }}>
-                  {store.address}
-                </p>
-              </div>
-            </div>
-          )}
+        {/* Info Card */}
+        <StoreDetailInfoCard store={store} primary={primary} fg={fg} />
 
-           {store.description && (
-             <p className="text-xs leading-relaxed mt-3" style={{ color: `${fg}65` }}>
-               {store.description}
-             </p>
-           )}
+        {/* Orientações */}
+        <StoreOrientations store={store} primary={primary} fg={fg} fontHeading={fontHeading} />
 
-           {/* Operating Hours */}
-           {store.operating_hours_json && Array.isArray(store.operating_hours_json) && (store.operating_hours_json as any[]).length > 0 && (
-             <OperatingHoursDisplay
-               hours={store.operating_hours_json as any[]}
-               primary={primary}
-               fg={fg}
-             />
-           )}
+        {/* FAQ */}
+        <StoreFAQ faqJson={store.faq_json} primary={primary} fg={fg} fontHeading={fontHeading} />
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            {whatsappUrl && (
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white min-w-[120px]"
-                style={{ backgroundColor: "#25D366" }}
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
-              </a>
-            )}
-            {store.whatsapp && (
-              <a
-                href={`tel:${store.whatsapp}`}
-                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
-                style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}
-              >
-                <Phone className="h-4 w-4" />
-                Ligar
-              </a>
-            )}
-            {store.instagram && (
-              <a
-                href={store.instagram.startsWith("http") ? store.instagram : `https://instagram.com/${store.instagram.replace("@", "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm text-white"
-                style={{ background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)" }}
-              >
-                <Instagram className="h-4 w-4" />
-                Instagram
-              </a>
-            )}
-            {store.site_url && (
-              <a
-                href={store.site_url.startsWith("http") ? store.site_url : `https://${store.site_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
-                style={{ backgroundColor: `${primary}12`, color: primary }}
-              >
-                <Globe className="h-4 w-4" />
-                Site
-              </a>
-            )}
-            {store.address && (
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
-                style={{ backgroundColor: "#4285F412", color: "#4285F4" }}
-              >
-                <Navigation className="h-4 w-4" />
-                Ir até lá
-              </a>
-            )}
-          </div>
-        </div>
-
-        {/* Orientações importantes - Livelo style */}
-        {(store.points_rule_text || store.points_deadline_text) && (
-          <div className="mx-4 mt-5">
-            <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fontHeading }}>
-              Orientações importantes
-            </h2>
-
-            {store.points_rule_text && (
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${primary}10` }}
-                >
-                  <Tag className="h-5 w-5" style={{ color: primary }} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold">Regra</p>
-                  <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>
-                    {store.points_rule_text}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {store.points_deadline_text && (
-              <div className="flex items-start gap-3">
-                <div
-                  className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${primary}10` }}
-                >
-                  <Calendar className="h-5 w-5" style={{ color: primary }} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold">Prazo</p>
-                  <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>
-                    {store.points_deadline_text}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* FAQ Accordion - Livelo style */}
-        {store.faq_json && Array.isArray(store.faq_json) && (store.faq_json as any[]).length > 0 && (
-          <div className="mx-4 mt-5">
-            <h2 className="text-lg font-bold mb-3" style={{ fontFamily: fontHeading }}>
-              Dúvidas frequentes
-            </h2>
-            <div className="rounded-2xl bg-card overflow-hidden" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
-              <Accordion type="single" collapsible>
-                {(store.faq_json as any[]).map((faq: any, idx: number) => (
-                  <AccordionItem key={idx} value={`faq-${idx}`} className="border-b last:border-b-0">
-                    <AccordionTrigger className="px-4 py-3.5 text-sm font-semibold text-left hover:no-underline">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4 text-sm" style={{ color: `${fg}65` }}>
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          </div>
-        )}
         {/* Reviews */}
         <StoreReviewsSection
           storeId={store.id}
@@ -399,10 +138,10 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           fg={fg}
         />
 
-        {/* Video embed */}
+        {/* Video */}
         {store.video_url && (
           <div className="mx-4 mt-4">
-            <VideoEmbed url={store.video_url} primary={primary} fontHeading={fontHeading} />
+            <VideoEmbed url={store.video_url} fontHeading={fontHeading} />
           </div>
         )}
 
@@ -411,12 +150,12 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           <StoreGallery urls={store.gallery_urls as string[]} fontHeading={fontHeading} />
         )}
 
-        {/* Location Map */}
+        {/* Location */}
         {store.address && (
           <StoreLocationSection address={store.address} primary={primary} fontHeading={fontHeading} fg={fg} />
         )}
 
-        {/* Tab switcher for Ofertas / Catálogo */}
+        {/* Tab switcher */}
         {hasCatalog && (() => {
           const catalogConfig = (store as any).store_catalog_config_json as any;
           const tabLabel = catalogConfig?.tab_label || "Catálogo";
@@ -424,18 +163,14 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             <div className="flex gap-1.5 mx-4 mt-5 bg-card/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.04)" }}>
               <button
                 onClick={() => setActiveTab("ofertas")}
-                className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "ofertas" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
+                className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "ofertas" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
               >
                 <Tag className="h-3.5 w-3.5 inline mr-1.5" />
                 Ofertas
               </button>
               <button
                 onClick={() => setActiveTab("catalogo")}
-                className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "catalogo" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
+                className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "catalogo" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
               >
                 <ShoppingBag className="h-3.5 w-3.5 inline mr-1.5" />
                 {tabLabel}
@@ -444,132 +179,22 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           );
         })()}
 
-        {/* Offers section */}
+        {/* Offers */}
         {(activeTab === "ofertas" || !hasCatalog) && (
-          <div className="mx-4 mt-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-bold" style={{ fontFamily: fontHeading }}>
-                Ofertas deste parceiro
-              </h3>
-              {!loadingOffers && (
-                <span className="text-xs" style={{ color: `${fg}40` }}>
-                  {offers.length} {offers.length === 1 ? "oferta" : "ofertas"}
-                </span>
-              )}
-            </div>
-
-            {loadingOffers ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="rounded-[18px] overflow-hidden bg-card"
-                    style={{ boxShadow: "0 2px 10px hsl(var(--foreground) / 0.03)" }}
-                  >
-                    <Skeleton className="h-32 w-full" />
-                    <div className="p-3 space-y-2">
-                      <Skeleton className="h-4 w-3/4 rounded-lg" />
-                      <Skeleton className="h-3 w-1/2 rounded-lg" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : offers.length === 0 ? (
-              <div className="text-center py-12 opacity-40">
-                <div
-                  className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center"
-                  style={{ backgroundColor: `${primary}10` }}
-                >
-                  <Tag className="h-6 w-6" style={{ color: primary }} />
-                </div>
-                <p className="text-sm font-medium">Nenhuma oferta disponível</p>
-                <p className="text-xs mt-1" style={{ color: `${fg}40` }}>
-                  Fique de olho, novas ofertas podem surgir!
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {offers.map((offer, idx) => (
-                  <motion.div
-                    key={offer.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05, duration: 0.3 }}
-                    className="rounded-[18px] overflow-hidden bg-card cursor-pointer"
-                    style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
-                    onClick={() => onOfferClick?.({ ...offer, stores: { name: store.name, logo_url: store.logo_url } })}
-                  >
-                    <div className="flex">
-                      <SafeImage
-                        src={offer.image_url}
-                        fallbackSrc={store.logo_url}
-                        alt={offer.title}
-                        className="w-28 h-28 object-cover flex-shrink-0"
-                        fallback={
-                          <div
-                            className="w-28 h-28 flex-shrink-0 flex items-center justify-center"
-                            style={{ backgroundColor: `${primary}06` }}
-                          >
-                            <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                          </div>
-                        }
-                      />
-
-                      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <h4
-                              className="font-semibold text-sm line-clamp-2"
-                              style={{ fontFamily: fontHeading }}
-                            >
-                              {offer.title}
-                            </h4>
-                            {idx < 2 && (
-                              <span
-                                className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
-                                style={{ backgroundColor: primary }}
-                              >
-                                Novo
-                              </span>
-                            )}
-                          </div>
-                          {offer.description && (
-                            <p
-                              className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground"
-                            >
-                              {offer.description}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between mt-2">
-                          {Number(offer.value_rescue) > 0 && (
-                            <span
-                              className="font-bold text-sm"
-                              style={{ color: isDark ? "hsl(var(--vb-highlight))" : primary, fontFamily: fontHeading }}
-                            >
-                              {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
-                            </span>
-                          )}
-                          {offer.end_at && (
-                            <div
-                              className="flex items-center gap-0.5 text-[10px] text-muted-foreground"
-                            >
-                              <Clock className="h-2.5 w-2.5" />
-                              {new Date(offer.end_at).toLocaleDateString("pt-BR")}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
+          <StoreOffersList
+            offers={offers}
+            loading={loadingOffers}
+            storeName={store.name}
+            storeLogoUrl={store.logo_url}
+            primary={primary}
+            fontHeading={fontHeading}
+            fg={fg}
+            isDark={isDark}
+            onOfferClick={onOfferClick}
+          />
         )}
 
-        {/* Catalog tab content */}
+        {/* Catalog */}
         {activeTab === "catalogo" && hasCatalog && (
           <StoreCatalogView
             storeId={store.id}
@@ -591,104 +216,106 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
   );
 }
 
-// --- Video Embed ---
-function VideoEmbed({ url, primary, fontHeading }: { url: string; primary: string; fontHeading: string }) {
+/* ─── Orientations Section ─── */
+function StoreOrientations({ store, primary, fg, fontHeading }: {
+  store: StoreRow; primary: string; fg: string; fontHeading: string;
+}) {
+  if (!store.points_rule_text && !store.points_deadline_text) return null;
+  return (
+    <div className="mx-4 mt-5">
+      <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fontHeading }}>Orientações importantes</h2>
+      {store.points_rule_text && (
+        <div className="flex items-start gap-3 mb-4">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+            <Tag className="h-5 w-5" style={{ color: primary }} />
+          </div>
+          <div>
+            <p className="text-sm font-bold">Regra</p>
+            <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>{store.points_rule_text}</p>
+          </div>
+        </div>
+      )}
+      {store.points_deadline_text && (
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+            <Calendar className="h-5 w-5" style={{ color: primary }} />
+          </div>
+          <div>
+            <p className="text-sm font-bold">Prazo</p>
+            <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>{store.points_deadline_text}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── FAQ Section ─── */
+function StoreFAQ({ faqJson, primary, fg, fontHeading }: {
+  faqJson: unknown; primary: string; fg: string; fontHeading: string;
+}) {
+  if (!faqJson || !Array.isArray(faqJson) || faqJson.length === 0) return null;
+  return (
+    <div className="mx-4 mt-5">
+      <h2 className="text-lg font-bold mb-3" style={{ fontFamily: fontHeading }}>Dúvidas frequentes</h2>
+      <div className="rounded-2xl bg-card overflow-hidden" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
+        <Accordion type="single" collapsible>
+          {(faqJson as any[]).map((faq: any, idx: number) => (
+            <AccordionItem key={idx} value={`faq-${idx}`} className="border-b last:border-b-0">
+              <AccordionTrigger className="px-4 py-3.5 text-sm font-semibold text-left hover:no-underline">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4 text-sm" style={{ color: `${fg}65` }}>
+                {faq.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Video Embed ─── */
+function VideoEmbed({ url, fontHeading }: { url: string; fontHeading: string }) {
   const getEmbedUrl = (rawUrl: string): string | null => {
-    // YouTube
     const ytMatch = rawUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
     if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-    // Vimeo
     const vimeoMatch = rawUrl.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
     return null;
   };
-
   const embedUrl = getEmbedUrl(url);
   if (!embedUrl) return null;
-
   return (
     <div>
-      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
-        Vídeo
-      </h3>
+      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>Vídeo</h3>
       <div className="rounded-[16px] overflow-hidden" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
         <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-          <iframe
-            src={embedUrl}
-            title="Video"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-          />
+          <iframe src={embedUrl} title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute inset-0 w-full h-full" />
         </div>
       </div>
     </div>
   );
 }
 
-// --- Store Gallery ---
+/* ─── Store Gallery ─── */
 function StoreGallery({ urls, fontHeading }: { urls: string[]; fontHeading: string }) {
   const [selected, setSelected] = useState<number | null>(null);
-
   return (
     <div className="mx-4 mt-4">
-      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
-        Fotos
-      </h3>
+      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>Fotos</h3>
       <div className="grid grid-cols-3 gap-2">
         {urls.map((url, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05 }}
-            className="aspect-square rounded-[12px] overflow-hidden cursor-pointer active:scale-95 transition-transform"
-            style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
-            onClick={() => setSelected(i)}
-          >
+          <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="aspect-square rounded-[12px] overflow-hidden cursor-pointer active:scale-95 transition-transform" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }} onClick={() => setSelected(i)}>
             <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
           </motion.div>
         ))}
       </div>
-
-      {/* Lightbox */}
       <AnimatePresence>
         {selected !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
-            onClick={() => setSelected(null)}
-          >
-            <button
-              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/20 flex items-center justify-center"
-              onClick={() => setSelected(null)}
-            >
-              <X className="h-5 w-5 text-white" />
-            </button>
-            {selected > 0 && (
-              <button
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 flex items-center justify-center"
-                onClick={(e) => { e.stopPropagation(); setSelected(selected - 1); }}
-              >
-                <ChevronLeft className="h-5 w-5 text-white" />
-              </button>
-            )}
-            {selected < urls.length - 1 && (
-              <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/20 flex items-center justify-center"
-                onClick={(e) => { e.stopPropagation(); setSelected(selected + 1); }}
-              >
-                <ChevronRight className="h-5 w-5 text-white" />
-              </button>
-            )}
-            <img
-              src={urls[selected]}
-              alt=""
-              className="max-w-full max-h-[85vh] rounded-xl object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
+            <img src={urls[selected]} alt="" className="max-w-full max-h-[85vh] rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -696,55 +323,21 @@ function StoreGallery({ urls, fontHeading }: { urls: string[]; fontHeading: stri
   );
 }
 
-// --- Store Location Section ---
+/* ─── Store Location ─── */
 function StoreLocationSection({ address, primary, fontHeading, fg }: { address: string; primary: string; fontHeading: string; fg: string }) {
   const mapQuery = encodeURIComponent(address);
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
-  const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=&layer=mapnik&marker=&query=${mapQuery}`;
-
   return (
     <div className="mx-4 mt-5">
-      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
-        Localização
-      </h3>
-      <div
-        className="rounded-[16px] overflow-hidden bg-card"
-        style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
-      >
-        {/* Map embed */}
+      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>Localização</h3>
+      <div className="rounded-[16px] overflow-hidden bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
         <div className="relative w-full h-44">
-          <iframe
-            title="Mapa"
-            src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-            className="absolute inset-0 w-full h-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+          <iframe title="Mapa" src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`} className="absolute inset-0 w-full h-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
         </div>
-
-        {/* Address + CTA */}
         <div className="p-4">
-          <div className="flex items-start gap-3">
-            <div
-              className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: `${primary}10` }}
-            >
-              <MapPin className="h-4 w-4" style={{ color: primary }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">Endereço</p>
-              <p className="text-xs mt-0.5" style={{ color: `${fg}55` }}>{address}</p>
-            </div>
-          </div>
-
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-colors"
-            style={{ backgroundColor: `${primary}12`, color: primary }}
-          >
-            <Navigation className="h-4 w-4" />
+          <p className="text-sm font-semibold">Endereço</p>
+          <p className="text-xs mt-0.5" style={{ color: `${fg}55` }}>{address}</p>
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm" style={{ backgroundColor: `${primary}12`, color: primary }}>
             Como chegar
           </a>
         </div>
