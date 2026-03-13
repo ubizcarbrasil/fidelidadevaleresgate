@@ -580,8 +580,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
-                    <span className="text-sm font-semibold" style={{ color: primary }}>{offer.stores.name}</span>
-                    <ChevronRight className="h-4 w-4 ml-auto" style={{ color: primary }} />
+                    <span className="text-sm font-semibold" style={{ color: accentOrWhite }}>{offer.stores.name}</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" style={{ color: accentOrWhite }} />
                   </button>
                 )}
                 <h1 className="text-xl font-bold mb-2" style={{ fontFamily: fontHeading }}>{offer.title}</h1>
@@ -591,8 +591,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                 {/* Vale Resgate value highlight */}
                 {Number(offer.value_rescue) > 0 && (
-                  <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: `${primary}30` }}>
-                    <div className="p-4 flex items-center justify-between" style={{ backgroundColor: `${primary}06` }}>
+                  <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
+                    <div className="p-4 flex items-center justify-between" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
                       <div>
                         <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Crédito</p>
                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
@@ -610,7 +610,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       )}
                     </div>
                     {Number(offer.discount_percent) > 0 && (
-                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : `${primary}12`, color: isDark ? "hsl(var(--foreground))" : primary }}>
                         {offer.discount_percent}% de desconto aplicado
                       </div>
                     )}
