@@ -1,22 +1,13 @@
 
 
-## Atualizar Previews do Painel Admin com o Novo Padrão
+## Plano: Inserir configuração de landing de parceiros para Ubiz Resgata
 
-### Problema
-Os componentes de preview/simulador mobile no painel administrativo ainda mostram o padrão antigo (ex: "R$ 9,90", "R$ 14,90", "≈ R$ 12,50") em vez do novo padrão com pontos ("pts"). Isso afeta tanto o Root Admin quanto os Empreendedores (Brand Admins), que compartilham as mesmas telas de preview.
+A tabela `partner_landing_config` está vazia. A marca **Ubiz Resgata** existe (id: `effc4685-375e-40c8-8a44-d71bd550f422`, slug: `ubiz-resgata`) mas não tem configuração de landing de parceiros.
 
-### Arquivos a Alterar
+### Ação
 
-**1. `src/components/HomeTemplateMobilePreview.tsx`**
-- Linha 62: `R$ 9,90` → `90 pts`
-- Linha 80: `R$ 14,90` → `150 pts`
-- Linha 264: Remover `≈ R$ 12,50`
-- Linha 263: `1.250 pts` (já está correto, manter)
+Inserir um registro na tabela `partner_landing_config` com `brand_id` da Ubiz Resgata, usando os valores default da tabela (hero, números, benefícios, FAQ, CTA). Isso ativará a página em `/ubiz-resgata/parceiro`.
 
-**2. `src/components/BrandThemePreview.tsx`**
-- Já usa "pts" no histórico da carteira — sem alterações de texto necessárias
-- Confirmar que o preview da tela de Ofertas (linha 301) com "R$35" no título da oferta seja atualizado para não mencionar R$: `"Corte + Barba por R$35"` → `"Corte + Barba especial"`
-
-### Escopo
-Apenas alterações de apresentação nos simuladores mobile — sem mudança em lógica de negócio, rotas ou banco de dados.
+- Nenhuma alteração de código necessária
+- Apenas um INSERT no banco de dados
 

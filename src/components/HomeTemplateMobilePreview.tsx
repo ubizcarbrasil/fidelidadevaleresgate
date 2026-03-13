@@ -59,7 +59,7 @@ function OffersCarouselPlaceholder() {
           <Skeleton className="h-2 w-16" />
           <Skeleton className="h-2 w-10" />
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold text-primary">R$ 9,90</span>
+            <span className="text-[9px] font-bold text-primary">90 pts</span>
             <Heart className="h-2.5 w-2.5 text-muted-foreground/40" />
           </div>
         </div>
@@ -77,7 +77,7 @@ function OffersGridPlaceholder() {
             <Tag className="h-4 w-4 text-muted-foreground/50" />
           </div>
           <Skeleton className="h-2 w-full" />
-          <span className="text-[8px] font-bold text-primary">R$ 14,90</span>
+          <span className="text-[8px] font-bold text-primary">150 pts</span>
         </div>
       ))}
     </div>
@@ -261,7 +261,7 @@ export default function HomeTemplateMobilePreview({ sections, templateName }: Pr
             <div className="mx-4 rounded-xl bg-gradient-to-r from-primary to-primary/70 p-3 text-primary-foreground">
               <p className="text-[9px] opacity-80">Seu saldo</p>
               <p className="text-lg font-bold">1.250 pts</p>
-              <p className="text-[8px] opacity-70 mt-0.5">≈ R$ 12,50</p>
+              <p className="text-[8px] opacity-70 mt-0.5">Nível Ouro ★</p>
             </div>
 
             {/* Template sections */}
