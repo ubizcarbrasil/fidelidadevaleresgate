@@ -30,8 +30,8 @@ interface PageRow {
 }
 
 export default function PageBuilderV2Page() {
-  const { brand } = useBrand();
-  const [pages, setPages] = useState<PageRow[]>([]);
+  const { currentBrandId } = useBrandGuard();
+  const brandId = currentBrandId;
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<PageRow | null>(null);
   const [showCreate, setShowCreate] = useState(false);
