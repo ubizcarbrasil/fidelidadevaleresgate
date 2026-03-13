@@ -109,8 +109,13 @@ function BannerSkeleton() {
   return <div className="rounded-[20px] h-40 w-full shimmer-skeleton" />;
 }
 
+interface HomeSectionsRendererProps {
+  renderBannersOnly?: boolean;
+  skipBanners?: boolean;
+}
+
 /** Renders all enabled brand sections in order */
-export default function HomeSectionsRenderer() {
+export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
   const [sections, setSections] = useState<BrandSection[]>([]);
   const [loading, setLoading] = useState(true);
