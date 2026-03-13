@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { MapPin, ChevronRight, Coins } from "lucide-react";
+import { MapPin, ChevronRight, Coins, Navigation, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
