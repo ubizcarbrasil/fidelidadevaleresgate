@@ -37,8 +37,6 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
   const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const { navigateToOffersWithSegment } = useCustomerNav();
 
-  const [categoryGridOpen, setCategoryGridOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [geoDetected, setGeoDetected] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
