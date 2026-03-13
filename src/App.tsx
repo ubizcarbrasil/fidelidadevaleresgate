@@ -219,7 +219,7 @@ function AppRoutes() {
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="brand-settings" element={<BrandSettingsPage />} />
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
-          <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
+          <Route path="machine-integration" element={<MachineIntegrationPage />} />
           <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
           <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
           <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
