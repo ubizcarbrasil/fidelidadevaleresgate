@@ -56,11 +56,11 @@ export default function PageBuilderV2Page() {
   useEffect(() => { fetchPages(); }, [fetchPages]);
 
   const handleCreate = async () => {
-    if (!brand || !newTitle.trim() || !newSlug.trim()) return;
+    if (!brandId || !newTitle.trim() || !newSlug.trim()) return;
     setSaving(true);
     const slug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
     const { error } = await supabase.from("custom_pages").insert({
-      brand_id: brand.id,
+      brand_id: brandId,
       title: newTitle.trim(),
       subtitle: newSubtitle.trim() || null,
       slug,
