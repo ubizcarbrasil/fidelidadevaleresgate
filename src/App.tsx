@@ -88,6 +88,7 @@ const TrialSignupPage = lazy(() => import("@/pages/TrialSignupPage"));
 const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
 const BrandSettingsPage = lazy(() => import("@/pages/BrandSettingsPage"));
 const SponsoredPlacementsPage = lazy(() => import("@/pages/SponsoredPlacementsPage"));
+const MachineIntegrationPage = lazy(() => import("@/pages/MachineIntegrationPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
