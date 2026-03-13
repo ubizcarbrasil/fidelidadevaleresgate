@@ -132,7 +132,7 @@ export default function HomeSectionsRenderer() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-2">
         <SectionSkeleton />
         <SectionSkeleton />
       </div>
