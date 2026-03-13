@@ -204,6 +204,38 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
   const [hasCta, setHasCta] = useState(false);
   const [filterMode, setFilterMode] = useState("recent");
   const [couponFilter, setCouponFilter] = useState("all");
+  const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
+
+  // Fetch taxonomy segments for by_category
+  const { data: taxonomyData } = useQuery({
+    queryKey: ["taxonomy-segments-wizard", brandId],
+    enabled: contentType === "by_category",
+    queryFn: async () => {
+      const [catRes, segRes] = await Promise.all([
+        supabase.from("taxonomy_categories").select("*").order("name"),
+        supabase.from("taxonomy_segments").select("*").eq("is_active", true).order("name"),
+      ]);
+      return {
+        categories: catRes.data || [],
+        segments: segRes.data || [],
+      };
+    },
+  });
+
+  // Auto-fill title from selected segments
+  useEffect(() => {
+    if (contentType !== "by_category" || !taxonomyData) return;
+    if (selectedSegmentIds.length === 0) { setTitle(""); return; }
+    if (selectedSegmentIds.length === 1) {
+      const seg = taxonomyData.segments.find((s: any) => s.id === selectedSegmentIds[0]);
+      if (seg) setTitle(seg.name);
+    } else {
+      const names = selectedSegmentIds
+        .map(id => taxonomyData.segments.find((s: any) => s.id === id)?.name)
+        .filter(Boolean);
+      setTitle(names.slice(0, 3).join(", ") + (names.length > 3 ? "..." : ""));
+    }
+  }, [selectedSegmentIds, taxonomyData, contentType]);
 
   const canNext = () => {
     if (step === 0) return !!contentType;
