@@ -492,7 +492,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
-  const { consoleScope } = useBrandGuard();
+  const { consoleScope, currentBrandId } = useBrandGuard();
 
   // Enable realtime refresh
   useRealtimeRefresh();
