@@ -100,18 +100,7 @@ const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const PartnerLandingPage = lazy(() => import("@/pages/PartnerLandingPage"));
 const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfigPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
-const CrmDashboardPage = lazy(() => import("@/pages/CrmDashboardPage"));
-const CrmLostCustomersPage = lazy(() => import("@/pages/CrmLostCustomersPage"));
-const CrmPotentialCustomersPage = lazy(() => import("@/pages/CrmPotentialCustomersPage"));
-const CrmCustomersPage = lazy(() => import("@/pages/CrmCustomersPage"));
-const CrmParetoPage = lazy(() => import("@/pages/CrmParetoPage"));
-const CrmOpportunitiesPage = lazy(() => import("@/pages/CrmOpportunitiesPage"));
-const CrmJourneyPage = lazy(() => import("@/pages/CrmJourneyPage"));
-const CrmContactsPage = lazy(() => import("@/pages/CrmContactsPage"));
-const CrmTierPage = lazy(() => import("@/pages/CrmTierPage"));
-const CrmAudiencesPage = lazy(() => import("@/pages/CrmAudiencesPage"));
-const CrmCampaignsPage = lazy(() => import("@/pages/CrmCampaignsPage"));
-const CrmAnalyticsPage = lazy(() => import("@/pages/CrmAnalyticsPage"));
+const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
