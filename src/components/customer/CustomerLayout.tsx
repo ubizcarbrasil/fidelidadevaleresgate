@@ -129,9 +129,14 @@ export default function CustomerLayout() {
     lastScrollY.current = currentY;
   }, []);
 
-  // Force dark mode for customer app
+  // Default to dark mode for customer app (respect user preference if saved)
   useEffect(() => {
-    document.documentElement.classList.add("dark");
+    const saved = localStorage.getItem("customer_dark_mode");
+    if (saved === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+    }
     return () => {
       document.documentElement.classList.remove("dark");
     };
