@@ -410,6 +410,11 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           <StoreGallery urls={store.gallery_urls as string[]} fontHeading={fontHeading} />
         )}
 
+        {/* Location Map */}
+        {store.address && (
+          <StoreLocationSection address={store.address} primary={primary} fontHeading={fontHeading} fg={fg} />
+        )}
+
         {/* Tab switcher for Ofertas / Catálogo */}
         {hasCatalog && (() => {
           const catalogConfig = (store as any).store_catalog_config_json as any;
@@ -686,6 +691,63 @@ function StoreGallery({ urls, fontHeading }: { urls: string[]; fontHeading: stri
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// --- Store Location Section ---
+function StoreLocationSection({ address, primary, fontHeading, fg }: { address: string; primary: string; fontHeading: string; fg: string }) {
+  const mapQuery = encodeURIComponent(address);
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+  const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=&layer=mapnik&marker=&query=${mapQuery}`;
+
+  return (
+    <div className="mx-4 mt-5">
+      <h3 className="text-base font-bold mb-3" style={{ fontFamily: fontHeading }}>
+        Localização
+      </h3>
+      <div
+        className="rounded-[16px] overflow-hidden bg-card"
+        style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
+      >
+        {/* Map embed */}
+        <div className="relative w-full h-44">
+          <iframe
+            title="Mapa"
+            src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+            className="absolute inset-0 w-full h-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+
+        {/* Address + CTA */}
+        <div className="p-4">
+          <div className="flex items-start gap-3">
+            <div
+              className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `${primary}10` }}
+            >
+              <MapPin className="h-4 w-4" style={{ color: primary }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">Endereço</p>
+              <p className="text-xs mt-0.5" style={{ color: `${fg}55` }}>{address}</p>
+            </div>
+          </div>
+
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-colors"
+            style={{ backgroundColor: `${primary}12`, color: primary }}
+          >
+            <Navigation className="h-4 w-4" />
+            Como chegar
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
