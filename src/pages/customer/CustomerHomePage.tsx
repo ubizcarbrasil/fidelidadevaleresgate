@@ -8,6 +8,10 @@ import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
 import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
+import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
+import ForYouSection from "@/components/customer/ForYouSection";
+import EmissorasSection from "@/components/customer/EmissorasSection";
+import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { haptic } from "@/lib/haptics";
@@ -37,6 +41,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [geoDetected, setGeoDetected] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const accent = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
@@ -125,21 +130,15 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
           )}
         </div>
 
-        {/* Search bar */}
-        <div
-          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-3"
+        {/* Search bar — tapping opens search overlay */}
+        <button
+          onClick={() => { haptic("light"); setSearchOpen(true); }}
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 w-full text-left"
           style={{ backgroundColor: "hsl(var(--vb-search-bg))" }}
         >
           <Search className="h-4.5 w-4.5 flex-shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="O que está procurando?"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
-            style={{ color: "hsl(var(--foreground))" }}
-          />
-        </div>
+          <span className="flex-1 text-sm text-muted-foreground/60">O que está procurando?</span>
+        </button>
 
         {/* Location line */}
         <button
@@ -189,11 +188,41 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         />
       </motion.div>
 
+      {/* For You Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.12 }}
+        className="mt-4"
+      >
+        <ForYouSection />
+      </motion.div>
+
+      {/* Emissoras Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.14 }}
+        className="mt-4"
+      >
+        <EmissorasSection />
+      </motion.div>
+
+      {/* Achadinhos Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.16 }}
+        className="mt-4"
+      >
+        <AchadinhoSection />
+      </motion.div>
+
       {/* Dynamic Sections */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
+        transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
         className="mt-3"
       >
         <HomeSectionsRenderer skipBanners />
@@ -224,6 +253,13 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
             category={selectedCategory}
             onBack={() => setSelectedCategory(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Search Overlay */}
+      <AnimatePresence>
+        {searchOpen && (
+          <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
         )}
       </AnimatePresence>
     </div>
