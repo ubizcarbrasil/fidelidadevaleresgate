@@ -135,14 +135,21 @@ export default function SectionDetailOverlay({
                       </div>
                     )}
 
-                    {/* Discount badge - top left */}
-                    {hasDiscount && (
-                      <div className="absolute top-3 left-3 vb-discount-badge">
-                        {item.discount_percent}% OFF
+                    {/* Offer badge - top left */}
+                    {(hasDiscount || item.value_rescue > 0) && (
+                      <div className="absolute top-3 left-3">
+                        <OfferBadge
+                          discountPercent={item.discount_percent || 0}
+                          primaryColor="hsl(var(--vb-highlight))"
+                          size="sm"
+                          couponType={item.coupon_type}
+                          valueRescue={Number(item.value_rescue || 0)}
+                          minPurchase={Number(item.min_purchase || 0)}
+                        />
                       </div>
                     )}
 
-                    {item.points_per_real > 0 && !hasDiscount && (
+                    {item.points_per_real > 0 && !hasDiscount && !item.value_rescue && (
                       <div className="absolute top-3 left-3 vb-discount-badge">
                         {item.points_per_real}x pts
                       </div>
