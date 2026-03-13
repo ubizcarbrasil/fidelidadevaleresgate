@@ -208,7 +208,7 @@ export default function CustomerLayout() {
                 )}
                 <span
                   className="font-extrabold text-[15px] tracking-tight"
-                  style={{ fontFamily: fontHeading, color: accent }}
+                  style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
                 >
                   {displayName}
                 </span>
@@ -311,14 +311,14 @@ export default function CustomerLayout() {
                     <motion.div
                       layoutId="tab-indicator"
                       className="absolute top-0 inset-x-0 mx-auto w-10 h-[3px] rounded-full"
-                      style={{ backgroundColor: accent }}
+                      style={{ backgroundColor: "hsl(var(--foreground))" }}
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
                   <motion.div
                     className="h-8 w-8 rounded-xl flex items-center justify-center"
                     animate={{
-                      backgroundColor: isActive ? withAlpha(accent, 0.12) : "transparent",
+                      backgroundColor: isActive ? "hsl(var(--foreground) / 0.12)" : "transparent",
                       scale: isActive ? 1.05 : 1,
                     }}
                     transition={{ duration: 0.2 }}
@@ -327,12 +327,12 @@ export default function CustomerLayout() {
                       iconKey={tab.iconKey}
                       className="h-5 w-5"
                       strokeWidth={isActive ? 2.2 : 1.6}
-                      style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
+                      style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                     />
                   </motion.div>
                   <span
                     className="text-[10px] font-semibold transition-colors"
-                    style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
+                    style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                   >
                     {tab.label}
                   </span>
