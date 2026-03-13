@@ -311,6 +311,9 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
     if (pageId) {
       insertData.page_id = pageId;
     }
+    if (contentType === "by_category" && selectedSegmentIds.length > 0) {
+      insertData.segment_filter_ids = selectedSegmentIds;
+    }
 
     const { error } = await supabase.from("brand_sections").insert(insertData);
     if (error) {
