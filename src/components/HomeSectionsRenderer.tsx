@@ -656,29 +656,45 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
 }
 
 // --- OFFERS_GRID (horizontal scroll) ---
-function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, iconSize = "medium", rowsCount = 1 }: any) {
+  const sizes = getCardSizes(iconSize);
+  const useMultiRow = rowsCount > 1;
+
   return (
     <div className="max-w-lg mx-auto">
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+      <div
+        className={useMultiRow ? "overflow-x-auto scrollbar-hide px-4 pb-1" : "flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1"}
+        style={useMultiRow ? {
+          display: "grid",
+          gridTemplateRows: `repeat(${rowsCount}, 1fr)`,
+          gridAutoFlow: "column",
+          gridAutoColumns: `${sizes.minW}px`,
+          gap: "12px",
+          WebkitOverflowScrolling: "touch",
+        } : { WebkitOverflowScrolling: "touch" }}
+      >
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="flex-shrink-0 w-[160px] rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: "hsl(var(--card))" }}
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            style={{
+              backgroundColor: "hsl(var(--card))",
+              width: useMultiRow ? undefined : `${sizes.minW}px`,
+            }}
             onClick={() => onOfferClick?.(o)}
           >
             {o.image_url ? (
               <div className="relative">
-                <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
+                <LazyImage src={o.image_url} alt={o.title} className="w-full" style={{ height: sizes.imgH }} />
                 <div className="absolute top-1.5 left-1.5">
                   <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={accent} size="sm" />
                 </div>
               </div>
             ) : (
-              <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              <div className="w-full flex items-center justify-center" style={{ height: sizes.imgH, backgroundColor: "hsl(var(--muted))" }}>
                 <ShoppingBag className="h-6 w-6 text-muted-foreground/30" />
               </div>
             )}
@@ -689,13 +705,13 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               )}
               {o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                  {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                 </span>
               )}
             </div>
           </motion.div>
         ))}
-        <div className="min-w-[16px] flex-shrink-0" />
+        {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
     </div>
   );
