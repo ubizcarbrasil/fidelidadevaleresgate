@@ -97,62 +97,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
 
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
-  const handleAddSection = async () => {
-    if (!brand || !newSectionType) return;
-    setAdding(true);
-
-    // Find template_id for this type
-    // Find template_id: try by key first, then by type
-    let { data: templates } = await supabase
-      .from("section_templates")
-      .select("id, key")
-      .eq("key", newSectionType)
-      .limit(1);
-    if (!templates?.length) {
-      const res = await supabase
-        .from("section_templates")
-        .select("id, key")
-        .eq("type", newSectionType as any)
-        .limit(1);
-      templates = res.data;
-    }
-
-    if (!templates?.length) {
-      toast({ title: "Template não encontrado", variant: "destructive" });
-      setAdding(false);
-      return;
-    }
-
-    const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
-
-    const insertData: any = {
-      brand_id: brand.id,
-      page_id: page.id,
-      template_id: templates[0].id,
-      title: newSectionTitle.trim() || null,
-      order_index: maxOrder,
-      is_enabled: true,
-      display_mode: "carousel",
-      filter_mode: "recent",
-      columns_count: 2,
-      rows_count: 1,
-      min_stores_visible: 1,
-      icon_size: "medium",
-      banner_height: "medium",
-    };
-    const { error } = await supabase.from("brand_sections").insert(insertData);
-
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Sessão adicionada!" });
-      setShowAdd(false);
-      setNewSectionType("");
-      setNewSectionTitle("");
-      fetchSections();
-    }
-    setAdding(false);
-  };
+  // handleAddSection is now handled by SectionCreatorWizard
 
   const handleDeleteSection = async (id: string) => {
     if (!confirm("Excluir esta sessão?")) return;
