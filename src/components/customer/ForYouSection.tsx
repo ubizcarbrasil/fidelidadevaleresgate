@@ -66,7 +66,7 @@ export default function ForYouSection() {
 
   return (
     <section className="max-w-lg mx-auto">
-      <div className="px-5 mb-3 flex items-center justify-between">
+      <div className="px-5 mb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AppIcon iconKey="section_foryou" className="h-4 w-4" style={{ color: primary }} />
           <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>

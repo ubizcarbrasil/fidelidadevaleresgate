@@ -132,7 +132,7 @@ export default function HomeSectionsRenderer() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-2">
         <SectionSkeleton />
         <SectionSkeleton />
       </div>
@@ -158,7 +158,7 @@ export default function HomeSectionsRenderer() {
           transition={{ duration: 0.35, delay: idx * 0.06, ease: "easeOut" }}
         >
           {idx > 0 && (
-            <div className="max-w-lg mx-auto px-5 py-2">
+            <div className="max-w-lg mx-auto px-5 py-0.5">
               <div className="h-[0.5px]" style={{ backgroundColor: `${fg}0A` }} />
             </div>
           )}
@@ -339,7 +339,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
     <section>
       {/* Section Header - Méliuz style */}
       {(section.title || section.subtitle) && (
-        <div className="max-w-lg mx-auto px-5 mb-3 flex items-center justify-between">
+        <div className="max-w-lg mx-auto px-5 mb-1.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>
               {section.title}
@@ -360,7 +360,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
 
       {/* Section Banner */}
       {section.banner_image_url && !loading && (
-        <div className="max-w-lg mx-auto px-5 mb-3">
+        <div className="max-w-lg mx-auto px-5 mb-1.5">
           <img
             src={section.banner_image_url}
             alt={section.title || "Banner"}

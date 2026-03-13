@@ -108,7 +108,7 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
   if (loading) {
     return (
       <section className="max-w-lg mx-auto px-5">
-        <Skeleton className="h-5 w-28 rounded-lg mb-3" />
+        <Skeleton className="h-5 w-28 rounded-lg mb-1.5" />
         <div className="grid grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex flex-col items-center gap-1.5">
@@ -164,7 +164,7 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
 
   return (
     <section className="max-w-lg mx-auto px-5">
-      <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>
+      <h3 className="text-sm font-bold mb-1.5" style={{ fontFamily: fontHeading }}>
         Categorias
       </h3>
       {useScroll ? (
