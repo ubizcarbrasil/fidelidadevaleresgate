@@ -234,6 +234,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
             fontHeading={fontHeading}
             brandBadgeConfig={brandBadgeConfig}
             sponsoredStoreIds={sponsoredStoreIds}
+            rankedOfferIds={rankedOfferIds}
           />
         </motion.div>
       ))}
