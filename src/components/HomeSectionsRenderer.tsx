@@ -239,7 +239,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
         if (branchId) query = query.eq("branch_id", branchId);
         const { data } = await query;
         setItems(data || []);
-      } else if (source.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID") {
+      } else if (source.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") {
         // Build ordering based on filter_mode
         const orderCol = filterMode === "most_redeemed" ? "likes_count" : "created_at";
         const orderAsc = false;
