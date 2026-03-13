@@ -89,7 +89,7 @@ export function useBrandTheme(settings: Json | null | undefined) {
     };
 
     const basePalette = isDark
-      ? { ...DARK_DEFAULTS, ...theme.colors, ...theme.dark_colors }
+      ? { ...theme.colors, ...DARK_DEFAULTS, ...theme.dark_colors }
       : theme.colors;
 
     if (basePalette) {
