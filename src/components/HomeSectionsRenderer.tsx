@@ -158,7 +158,7 @@ export default function HomeSectionsRenderer() {
           transition={{ duration: 0.35, delay: idx * 0.06, ease: "easeOut" }}
         >
           {idx > 0 && (
-            <div className="max-w-lg mx-auto px-5 py-2">
+            <div className="max-w-lg mx-auto px-5 py-0.5">
               <div className="h-[0.5px]" style={{ backgroundColor: `${fg}0A` }} />
             </div>
           )}
