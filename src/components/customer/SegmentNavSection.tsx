@@ -125,7 +125,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
       {/* Horizontal scroll */}
       <ScrollArea className="w-full">
-        <div className="flex gap-3 pb-2">
+        <div className="flex gap-2 pb-2">
           {categories.map((cat, idx) => (
             <motion.button
               key={cat.id}
@@ -134,7 +134,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               transition={{ delay: idx * 0.03, duration: 0.25 }}
               whileTap={{ scale: 0.92 }}
               className="flex flex-col items-center gap-2 flex-shrink-0"
-              style={{ minWidth: 80 }}
+              style={{ minWidth: 72 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
               <div
