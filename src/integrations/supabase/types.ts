@@ -2035,6 +2035,103 @@ export type Database = {
           },
         ]
       }
+      machine_integrations: {
+        Row: {
+          api_key: string
+          basic_auth_password: string
+          basic_auth_user: string
+          brand_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_ride_processed_at: string | null
+          last_webhook_at: string | null
+          total_points: number
+          total_rides: number
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          basic_auth_password?: string
+          basic_auth_user?: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_ride_processed_at?: string | null
+          last_webhook_at?: string | null
+          total_points?: number
+          total_rides?: number
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          basic_auth_password?: string
+          basic_auth_user?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_ride_processed_at?: string | null
+          last_webhook_at?: string | null
+          total_points?: number
+          total_rides?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_integrations_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      machine_rides: {
+        Row: {
+          brand_id: string
+          created_at: string
+          finalized_at: string | null
+          id: string
+          machine_ride_id: string
+          passenger_cpf: string | null
+          points_credited: number
+          ride_status: string
+          ride_value: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          finalized_at?: string | null
+          id?: string
+          machine_ride_id: string
+          passenger_cpf?: string | null
+          points_credited?: number
+          ride_status?: string
+          ride_value?: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          finalized_at?: string | null
+          id?: string
+          machine_ride_id?: string
+          passenger_cpf?: string | null
+          points_credited?: number
+          ride_status?: string
+          ride_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_rides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_labels: {
         Row: {
           brand_id: string
