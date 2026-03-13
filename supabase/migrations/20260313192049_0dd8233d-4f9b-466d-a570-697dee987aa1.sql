@@ -1,0 +1,1 @@
+DELETE FROM brand_sections WHERE id = '1f331df9-c855-43b0-92de-e3a08c375e72';
