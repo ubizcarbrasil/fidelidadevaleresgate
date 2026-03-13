@@ -114,27 +114,56 @@ interface HomeSectionsRendererProps {
   skipBanners?: boolean;
 }
 
+/** Small "Patrocinado" badge for sponsored cards */
+function SponsoredBadge() {
+  return (
+    <div className="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold" style={{ backgroundColor: "hsl(var(--vb-gold) / 0.2)", color: "hsl(var(--vb-gold))" }}>
+      <Zap className="h-2.5 w-2.5" />
+      Patrocinado
+    </div>
+  );
+}
+
+/** Boost sponsored items to the top of the list */
+function boostSponsored(items: any[], sponsoredIds: Set<string>, idKey: string): any[] {
+  if (sponsoredIds.size === 0) return items;
+  const sponsored = items.filter((i) => sponsoredIds.has(i[idKey]));
+  const rest = items.filter((i) => !sponsoredIds.has(i[idKey]));
+  return [...sponsored, ...rest];
+}
+
 /** Renders all enabled brand sections in order */
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
   const [sections, setSections] = useState<BrandSection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sponsoredStoreIds, setSponsoredStoreIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!brand) return;
-    const fetch = async () => {
+    const fetchAll = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("brand_sections")
-        .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
-        .eq("brand_id", brand.id)
-        .is("page_id", null)
-        .eq("is_enabled", true)
-        .order("order_index");
-      setSections((data as any) || []);
+      const [sectionsRes, sponsoredRes] = await Promise.all([
+        supabase
+          .from("brand_sections")
+          .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
+          .eq("brand_id", brand.id)
+          .is("page_id", null)
+          .eq("is_enabled", true)
+          .order("order_index"),
+        supabase
+          .from("sponsored_placements")
+          .select("store_id, priority")
+          .eq("brand_id", brand.id)
+          .eq("is_active", true)
+          .gte("ends_at", new Date().toISOString())
+          .lte("starts_at", new Date().toISOString()),
+      ]);
+      setSections((sectionsRes.data as any) || []);
+      setSponsoredStoreIds(new Set((sponsoredRes.data || []).map((s: any) => s.store_id)));
       setLoading(false);
     };
-    fetch();
+    fetchAll();
   }, [brand]);
 
   if (loading) {
@@ -191,6 +220,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
             cardBg={cardBg}
             fontHeading={fontHeading}
             brandBadgeConfig={brandBadgeConfig}
+            sponsoredStoreIds={sponsoredStoreIds}
           />
         </motion.div>
       ))}
@@ -207,9 +237,10 @@ interface SectionBlockProps {
   cardBg: string;
   fontHeading: string;
   brandBadgeConfig: BadgeConfig | null;
+  sponsoredStoreIds: Set<string>;
 }
 
-function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig }: SectionBlockProps) {
+function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig, sponsoredStoreIds }: SectionBlockProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { openOffer, openStore, openSectionDetail } = useCustomerNav();
@@ -325,6 +356,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           });
         }
 
+        // Boost sponsored stores to top
+        results = boostSponsored(results, sponsoredStoreIds, "store_id");
         setItems(results);
       } else if (effectiveSource.source_type === "STORES") {
         let query = supabase
@@ -350,6 +383,8 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           results = [];
         }
 
+        // Boost sponsored stores to top
+        results = boostSponsored(results, sponsoredStoreIds, "id");
         setItems(results);
       } else {
         setItems([]);
@@ -418,17 +453,17 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
       {loading ? renderSkeleton() : templateType === "VOUCHERS_CARDS" ? (
         <VoucherTickets items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} />
       ) : templateType === "OFFERS_GRID" ? (
-        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} />
+        <OffersGrid items={items} columns={columnsCount || schema.columns || 2} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "OFFERS_CAROUSEL" ? (
-        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} />
+        <OffersCarousel items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "STORES_GRID" ? (
-        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} />
+        <StoresGrid items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "STORES_LIST" ? (
-        <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} />
+        <StoresList items={items} primary={primary} cardBg={cardBg} fontHeading={fontHeading} fg={fg} onStoreClick={openStore} sponsoredStoreIds={sponsoredStoreIds} />
       ) : templateType === "BANNER_CAROUSEL" ? (
         <BannerCarousel items={items} primary={primary} bannerHeight={section.banner_height} />
       ) : templateType === "HIGHLIGHTS_WEEKLY" ? (
-        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} />
+        <HighlightsWeekly items={items} primary={primary} cardBg={cardBg} accent={accent} fontHeading={fontHeading} fg={fg} onOfferClick={openOffer} brandBadgeConfig={brandBadgeConfig} sponsoredStoreIds={sponsoredStoreIds} />
       ) : null}
     </section>
   );
@@ -502,7 +537,7 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
 }
 
 // --- OFFERS_CAROUSEL ---
-function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
+function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig, sponsoredStoreIds }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -510,6 +545,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((o: any, idx: number) => {
           const isNew = o.created_at && (Date.now() - new Date(o.created_at).getTime()) < 14 * 86400000;
+          const isSponsored = sponsoredStoreIds?.has(o.store_id);
 
           return (
             <motion.div
@@ -548,6 +584,8 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   </div>
                 )}
               </div>
+              {/* Sponsored badge - bottom right */}
+              {isSponsored && <SponsoredBadge />}
               <div className="px-3 py-2.5">
                 <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
                 {o.stores?.name && (
@@ -619,13 +657,15 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
 }
 
 // --- STORES_GRID ---
-function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
+function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="max-w-lg mx-auto">
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((b: any, idx: number) => (
+        {items.map((b: any, idx: number) => {
+          const isSponsored = sponsoredStoreIds?.has(b.id);
+          return (
           <motion.div
             key={b.id}
             initial={{ opacity: 0, x: 16 }}
@@ -651,6 +691,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
                   {b.points_per_real}x pts
                 </div>
               )}
+              {isSponsored && <SponsoredBadge />}
             </div>
             <div className="px-3 py-2.5">
               <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
@@ -659,7 +700,8 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
               )}
             </div>
           </motion.div>
-        ))}
+        );
+        })}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
@@ -667,13 +709,14 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
 }
 
 // --- STORES_LIST ---
-function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
+function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds }: any) {
   const accent = primary;
 
   return (
     <div className="max-w-lg mx-auto px-4 space-y-2">
       {items.map((b: any, idx: number) => {
         const isNew = b.created_at && (Date.now() - new Date(b.created_at).getTime()) < 14 * 86400000;
+        const isSponsored = sponsoredStoreIds?.has(b.id);
 
         return (
           <motion.div
@@ -697,7 +740,12 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: a
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-sm text-foreground truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
-                {isNew && (
+                {isSponsored && (
+                  <span className="flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "hsl(var(--vb-gold) / 0.2)", color: "hsl(var(--vb-gold))" }}>
+                    <Zap className="h-2 w-2" />AD
+                  </span>
+                )}
+                {isNew && !isSponsored && (
                   <span
                     className="text-[8px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
                     style={{ backgroundColor: "hsl(var(--vb-badge-new))" }}

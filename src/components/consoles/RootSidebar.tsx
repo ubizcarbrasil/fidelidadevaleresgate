@@ -64,6 +64,7 @@ const groups = [
       { title: "Catálogo", url: "/store-catalog", icon: PackageSearch },
       { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { title: "Operador PDV", url: "/pdv", icon: ScanLine },
+      { title: "Patrocinados", url: "/sponsored-placements", icon: Zap },
     ],
   },
   {

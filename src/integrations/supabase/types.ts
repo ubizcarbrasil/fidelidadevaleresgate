@@ -2857,6 +2857,63 @@ export type Database = {
           },
         ]
       }
+      sponsored_placements: {
+        Row: {
+          brand_id: string
+          created_at: string | null
+          created_by: string | null
+          ends_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          placement_type: string
+          priority: number
+          starts_at: string
+          store_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string | null
+          created_by?: string | null
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          placement_type?: string
+          priority?: number
+          starts_at?: string
+          store_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          placement_type?: string
+          priority?: number
+          starts_at?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_placements_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_catalog_categories: {
         Row: {
           branch_id: string
