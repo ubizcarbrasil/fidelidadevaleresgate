@@ -1022,7 +1022,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <>
                           Você está resgatando{" "}
                           {Number(offer.value_rescue) > 0 ? (
-                            <><strong style={{ color: primary }}>R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}</strong> em crédito</>
+                            <><strong style={{ color: primary }}>{Number(offer.value_rescue).toLocaleString("pt-BR")} pts</strong></>
                           ) : (
                             <>a oferta <strong>{offer.title}</strong></>
                           )}
