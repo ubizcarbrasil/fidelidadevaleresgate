@@ -3856,6 +3856,7 @@ export type Database = {
         | "LIST_INFO"
         | "GRID_INFO"
         | "GRID_LOGOS"
+        | "HIGHLIGHTS_WEEKLY"
       store_approval_status:
         | "DRAFT"
         | "PENDING_APPROVAL"
@@ -4031,6 +4032,7 @@ export const Constants = {
         "LIST_INFO",
         "GRID_INFO",
         "GRID_LOGOS",
+        "HIGHLIGHTS_WEEKLY",
       ],
       store_approval_status: [
         "DRAFT",
