@@ -88,7 +88,7 @@ export default function StepReview({ data }: Props) {
             <span className="text-muted-foreground">Faixas escalonadas:</span>
             {data.scaled_values.map((sv, i) => (
               <div key={i} className="ml-4 text-xs">
-                R$ {sv.credit_value.toFixed(2)} para R$ {sv.min_purchase.toFixed(2)}
+                {Math.floor(sv.credit_value)} pts para compra mín. R$ {sv.min_purchase.toFixed(2)}
               </div>
             ))}
           </div>
