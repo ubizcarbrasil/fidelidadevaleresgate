@@ -873,6 +873,19 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
     return () => clearInterval(interval);
   }, [banners.length]);
 
+  const handleBannerClick = () => {
+    const banner = banners[current];
+    if (!banner) return;
+    const url = banner.link_url;
+    if (!url) return;
+    if (banner.link_type === "external" || url.startsWith("http")) {
+      window.open(url, "_blank", "noopener");
+    } else {
+      // Internal route — use window.location for /p/ pages
+      window.location.href = url;
+    }
+  };
+
   if (!banners.length) {
     return (
       <div className="max-w-lg mx-auto px-4">
@@ -883,17 +896,23 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
     );
   }
 
+  const currentBanner = banners[current];
+  const isClickable = !!currentBanner?.link_url;
+
   return (
     <div className="max-w-lg mx-auto px-4">
-      <div className={`relative rounded-2xl overflow-hidden ${h}`}>
-        <LazyImage src={banners[current]?.image_url} alt="Banner" className={`${h} w-full`} />
+      <div
+        className={`relative rounded-2xl overflow-hidden ${h} ${isClickable ? "cursor-pointer active:scale-[0.98] transition-transform" : ""}`}
+        onClick={isClickable ? handleBannerClick : undefined}
+      >
+        <LazyImage src={currentBanner?.image_url} alt={currentBanner?.title || "Banner"} className={`${h} w-full`} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         {banners.length > 1 && (
           <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
             {banners.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrent(i)}
+                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
                 className="transition-all"
                 style={{
                   height: 5,
