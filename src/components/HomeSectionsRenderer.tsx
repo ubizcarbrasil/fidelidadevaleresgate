@@ -900,7 +900,7 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
                   </span>
                 )}
                 {o.value_rescue > 0 && (
-                  <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-gold))" }}>
+                  <span className="font-bold text-sm" style={{ color: "hsl(var(--vb-highlight))" }}>
                     R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
                   </span>
                 )}
