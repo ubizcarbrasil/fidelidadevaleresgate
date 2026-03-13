@@ -300,7 +300,7 @@ export default function StoreRedeemTab({ store }: { store: any }) {
 }
 
 /* ─── Pending Redemption Card ─── */
-function PendingRedemptionCard({ redemption, storeId, onConfirmed }: { redemption: any; storeId: string; onConfirmed: () => void }) {
+const PendingRedemptionCard = React.memo(function PendingRedemptionCard({ redemption, storeId, onConfirmed }: { redemption: any; storeId: string; onConfirmed: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [purchaseValue, setPurchaseValue] = useState("");
   const [confirming, setConfirming] = useState(false);
