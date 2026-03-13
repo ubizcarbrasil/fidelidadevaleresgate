@@ -395,7 +395,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     <div className="mb-4">
                       <p className="text-xs text-muted-foreground">Preço</p>
                       <p className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-                        {Number(productPrice).toLocaleString("pt-BR")} pts
+                        R$ {Number(productPrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                   )}
