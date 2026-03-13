@@ -32,7 +32,7 @@ interface CustomerHomePageProps {
   onOpenCategoryStores?: (category: { id: string; name: string; icon_name: string | null }) => void;
 }
 
-export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps) {
+export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const { navigateToOffersWithSegment } = useCustomerNav();
