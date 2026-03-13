@@ -106,6 +106,22 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     fetchSections();
   };
 
+  // Fetch native sections config from brand
+  const fetchNativeSections = useCallback(async () => {
+    if (!isHomeMode || !currentBrandId) return;
+    const { data } = await supabase
+      .from("brands")
+      .select("home_layout_json")
+      .eq("id", currentBrandId)
+      .single();
+    if (data?.home_layout_json) {
+      const layout = data.home_layout_json as any;
+      if (Array.isArray(layout?.native_sections)) {
+        setNativeSections(layout.native_sections);
+      }
+    }
+  }, [isHomeMode, currentBrandId]);
+
   const fetchSections = useCallback(async () => {
     setLoading(true);
     let query = (supabase
@@ -121,7 +137,29 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
     setLoading(false);
   }, [isHomeMode, page?.id, currentBrandId]);
 
-  useEffect(() => { fetchSections(); }, [fetchSections]);
+  useEffect(() => { fetchSections(); fetchNativeSections(); }, [fetchSections, fetchNativeSections]);
+
+  const handleToggleNativeSection = async (key: string) => {
+    const updated = nativeSections.map(s => s.key === key ? { ...s, enabled: !s.enabled } : s);
+    setNativeSections(updated);
+    await supabase.from("brands").update({
+      home_layout_json: { native_sections: updated } as any
+    } as any).eq("id", currentBrandId);
+    toast({ title: "Seção atualizada" });
+  };
+
+  const handleMoveNativeSection = async (idx: number, direction: "up" | "down") => {
+    const sorted = [...nativeSections].sort((a, b) => a.order - b.order);
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+    const tempOrder = sorted[idx].order;
+    sorted[idx].order = sorted[targetIdx].order;
+    sorted[targetIdx].order = tempOrder;
+    setNativeSections(sorted);
+    await supabase.from("brands").update({
+      home_layout_json: { native_sections: sorted } as any
+    } as any).eq("id", currentBrandId);
+  };
 
   // handleAddSection is now handled by SectionCreatorWizard
 
