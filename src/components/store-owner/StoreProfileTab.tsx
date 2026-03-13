@@ -317,6 +317,12 @@ export default function StoreProfileTab({ store }: { store: any }) {
         </CardContent>
       </Card>
 
+      {/* Horário de Funcionamento */}
+      <OperatingHoursEditor
+        value={form.operating_hours_json}
+        onChange={(hours) => setForm(prev => ({ ...prev, operating_hours_json: hours }))}
+      />
+
       <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
         {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
         Salvar Perfil
