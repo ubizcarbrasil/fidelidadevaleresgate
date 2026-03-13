@@ -210,18 +210,7 @@ function AppRoutes() {
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
           <Route path="machine-integration" element={<MachineIntegrationPage />} />
           <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
-          <Route path="crm" element={<ModuleGuard moduleKey="crm"><CrmDashboardPage /></ModuleGuard>} />
-          <Route path="crm/customers" element={<ModuleGuard moduleKey="crm"><CrmCustomersPage /></ModuleGuard>} />
-          <Route path="crm/opportunities" element={<ModuleGuard moduleKey="crm"><CrmOpportunitiesPage /></ModuleGuard>} />
-          <Route path="crm/pareto" element={<ModuleGuard moduleKey="crm"><CrmParetoPage /></ModuleGuard>} />
-          <Route path="crm/journey" element={<ModuleGuard moduleKey="crm"><CrmJourneyPage /></ModuleGuard>} />
-          <Route path="crm/lost" element={<ModuleGuard moduleKey="crm"><CrmLostCustomersPage /></ModuleGuard>} />
-          <Route path="crm/potential" element={<ModuleGuard moduleKey="crm"><CrmPotentialCustomersPage /></ModuleGuard>} />
-          <Route path="crm/contacts" element={<ModuleGuard moduleKey="crm"><CrmContactsPage /></ModuleGuard>} />
-          <Route path="crm/tiers" element={<ModuleGuard moduleKey="crm"><CrmTierPage /></ModuleGuard>} />
-          <Route path="crm/audiences" element={<ModuleGuard moduleKey="crm"><CrmAudiencesPage /></ModuleGuard>} />
-          <Route path="crm/campaigns" element={<ModuleGuard moduleKey="crm"><CrmCampaignsPage /></ModuleGuard>} />
-          <Route path="crm/analytics" element={<ModuleGuard moduleKey="crm"><CrmAnalyticsPage /></ModuleGuard>} />
+          <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
