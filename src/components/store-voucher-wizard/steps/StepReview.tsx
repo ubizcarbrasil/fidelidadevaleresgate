@@ -51,17 +51,17 @@ export default function StepReview({ data }: Props) {
                 PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Produto: R$ {data.product_price.toFixed(2)}
+                Produto: R$ {data.product_price.toFixed(2)} → {Math.floor(creditBase)} pts (= R$ {creditBase.toFixed(2)})
               </p>
             </div>
           ) : (
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
               <p className="text-lg font-bold text-primary">
-                VALE RESGATE R$ {creditBase.toFixed(2)}
+                Troque {Math.floor(creditBase)} pts por R$ {creditBase.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Condicionado à compra mínima de R$ {data.min_purchase.toFixed(2)}
+                Sobre compra mínima de R$ {data.min_purchase.toFixed(2)}
               </p>
             </div>
           )}
