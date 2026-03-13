@@ -446,7 +446,7 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
             {isHomePage ? "Adicione sessões acima" : "Adicione elementos ou sessões acima"}
           </p>
         )}
-        {!loading && blocks.map((block, blockIdx) => {
+        {!loading && deferredBlocks.map((block, blockIdx) => {
           const isSelected = selectedBlockId === block.id;
           if (block.blockType === "static") {
             return (
