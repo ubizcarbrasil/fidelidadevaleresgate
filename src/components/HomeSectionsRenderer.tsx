@@ -214,9 +214,6 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
     if (renderBannersOnly) return isBanner;
     if (skipBanners) return !isBanner;
     return true;
-  }).filter((s, idx, arr) => {
-    if (!s.title) return true;
-    return arr.findIndex((x) => x.title === s.title) === idx;
   });
 
   if (!filteredSections.length) return null;
