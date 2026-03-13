@@ -311,7 +311,7 @@ export default function CustomerLayout() {
                     <motion.div
                       layoutId="tab-indicator"
                       className="absolute top-0 inset-x-0 mx-auto w-10 h-[3px] rounded-full"
-                      style={{ backgroundColor: accent }}
+                      style={{ backgroundColor: "hsl(var(--foreground))" }}
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
