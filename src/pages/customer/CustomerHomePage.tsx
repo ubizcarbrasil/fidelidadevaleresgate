@@ -188,11 +188,41 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         />
       </motion.div>
 
+      {/* For You Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.12 }}
+        className="mt-4"
+      >
+        <ForYouSection />
+      </motion.div>
+
+      {/* Emissoras Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.14 }}
+        className="mt-4"
+      >
+        <EmissorasSection />
+      </motion.div>
+
+      {/* Achadinhos Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.16 }}
+        className="mt-4"
+      >
+        <AchadinhoSection />
+      </motion.div>
+
       {/* Dynamic Sections */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" as const }}
+        transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
         className="mt-3"
       >
         <HomeSectionsRenderer skipBanners />
