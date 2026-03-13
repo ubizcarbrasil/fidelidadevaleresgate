@@ -7,11 +7,27 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon, Lock } from "lucide-react";
 import SectionEditor from "./SectionEditor";
 import ManualLinksEditor from "./ManualLinksEditor";
 import SectionCreatorWizard from "./SectionCreatorWizard";
+
+export interface NativeSectionConfig {
+  key: string;
+  label: string;
+  enabled: boolean;
+  order: number;
+}
+
+const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
+  { key: "BANNERS", label: "Banners", enabled: true, order: 0 },
+  { key: "CATEGORIES", label: "Categorias", enabled: true, order: 1 },
+  { key: "FOR_YOU", label: "Selecionado para Você", enabled: true, order: 2 },
+  { key: "EMISSORAS", label: "Compre e Pontue", enabled: true, order: 3 },
+  { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
+];
 
 interface PageRow {
   id: string;
