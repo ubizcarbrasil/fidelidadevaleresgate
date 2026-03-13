@@ -707,7 +707,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
 }
 
 // --- STORES_LIST ---
-function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
+function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, sponsoredStoreIds }: any) {
   const accent = primary;
 
   return (
