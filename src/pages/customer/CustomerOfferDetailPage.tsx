@@ -256,7 +256,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   };
 
   const handleShare = async () => {
-    const text = `${offer.title}${Number(offer.value_rescue) > 0 ? ` - R$ ${Number(offer.value_rescue).toFixed(2)}` : ""}`;
+    const text = `${offer.title}${Number(offer.value_rescue) > 0 ? ` - ${Number(offer.value_rescue).toFixed(0)} pts` : ""}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: offer.title, text });
