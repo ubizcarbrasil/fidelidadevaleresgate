@@ -155,7 +155,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
         transition={{ duration: 0.35, delay: 0.1 }}
         className="max-w-lg mx-auto px-5"
       >
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-6 gap-1.5">
           {QUICK_ACTIONS.map((action, idx) => (
               <motion.button
                 key={action.key}
