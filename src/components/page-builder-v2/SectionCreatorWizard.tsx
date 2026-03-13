@@ -354,8 +354,16 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
     setSaving(false);
   };
 
+  const previewProps = {
+    contentType, layoutType, columnsCount, rowsCount, maxItems,
+    cardRadius, cardShadow, iconSize, title, subtitle, hasSubtitle,
+    ctaText, hasCta,
+  };
+
   return (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+    <div className="flex gap-6">
+      {/* Wizard form */}
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto flex-1 min-w-0">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={handleBack} className="shrink-0">
