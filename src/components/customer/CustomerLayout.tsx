@@ -100,6 +100,8 @@ export default function CustomerLayout() {
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [emissorasOpen, setEmissorasOpen] = useState(false);
   const [segmentFilter, setSegmentFilter] = useState<string | null>(null);
+  const [categoryGridOpen, setCategoryGridOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [showTour, setShowTour] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
