@@ -134,13 +134,14 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   };
 
   const handleSavePageSettings = async () => {
+    if (isHomeMode) { setShowSettings(false); return; }
     setSavingSettings(true);
     await supabase.from("custom_pages").update({
       title: pageSettings.title,
       subtitle: pageSettings.subtitle || null,
       search_enabled: pageSettings.search_enabled,
       visibility_type: pageSettings.visibility_type,
-    } as any).eq("id", page.id);
+    } as any).eq("id", page!.id);
     toast({ title: "Configurações salvas!" });
     setSavingSettings(false);
     setShowSettings(false);
