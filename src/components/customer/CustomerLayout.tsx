@@ -124,14 +124,12 @@ export default function CustomerLayout() {
     lastScrollY.current = currentY;
   }, []);
 
-  // Initialize dark mode from localStorage
+  // Force dark mode for customer app
   useEffect(() => {
-    const saved = localStorage.getItem("customer_dark_mode");
-    if (saved === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (saved === "light") {
+    document.documentElement.classList.add("dark");
+    return () => {
       document.documentElement.classList.remove("dark");
-    }
+    };
   }, []);
 
   // Show welcome tour on first visit
