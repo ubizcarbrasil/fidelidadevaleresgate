@@ -1109,8 +1109,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: any; primary: string; fg: string; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
-        <Icon className="h-4 w-4" style={{ color: primary }} />
+      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 dark:bg-foreground/10" style={{ backgroundColor: `${primary}10` }}>
+        <Icon className="h-4 w-4 dark:text-foreground" style={{ color: primary }} />
       </div>
       <div>
         <p className="text-xs font-semibold">{label}</p>
