@@ -1,57 +1,113 @@
-# 📐 Decisões Arquiteturais — Vale Resgate
+# 📐 Registro de Decisões Arquiteturais (ADR) — Vale Resgate
 
-## ADR-001: React + Vite + Tailwind (Frontend)
+**Última atualização**: 2026-03-13
 
-- **Decisão**: SPA com React, Vite, Tailwind CSS, TypeScript
-- **Alternativas**: Next.js (SSR), Angular, Vue
-- **Motivo**: Lovable platform constraint; Vite oferece HMR rápido; Tailwind acelera UI
-- **Trade-off**: Sem SSR/SSG (impacto em SEO para páginas públicas)
-- **Revisitar quando**: Necessidade de SEO para landing pages públicas
+---
 
-## ADR-002: Supabase como Backend (Lovable Cloud)
+## ADR-001: React + Vite + Tailwind CSS (Frontend Stack)
 
-- **Decisão**: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
-- **Alternativas**: Firebase, AWS Amplify, backend custom
-- **Motivo**: Integração nativa com Lovable; RLS poderoso; Edge Functions em Deno
-- **Trade-off**: Limitado a PostgreSQL; sem backend Node.js customizado
-- **Revisitar quando**: Necessidade de processamento complexo server-side
+- **Status**: Aceita (permanente)
+- **Contexto**: Plataforma SaaS multi-tenant com ~90 páginas e ~200 componentes
+- **Decisão**: SPA com React 18, Vite (bundler), Tailwind CSS (design system), TypeScript
+- **Alternativas consideradas**: Next.js (SSR), Angular, Vue, Svelte
+- **Motivo**: Constraint da plataforma Lovable; Vite oferece HMR <100ms; Tailwind acelera iteração de UI
+- **Trade-offs aceitos**: Sem SSR/SSG (impacto em SEO de landing pages); sem server components
+- **Revisitar quando**: Necessidade de SEO para landing pages públicas ou streaming SSR
+
+---
+
+## ADR-002: Supabase/Lovable Cloud como Backend
+
+- **Status**: Aceita (permanente)
+- **Contexto**: Necessidade de auth, database, storage, e serverless functions
+- **Decisão**: Supabase (PostgreSQL + Auth + Storage + Edge Functions em Deno)
+- **Alternativas consideradas**: Firebase, AWS Amplify, backend Node.js customizado
+- **Motivo**: Integração nativa com Lovable; RLS poderoso para multi-tenancy; Edge Functions sem infra
+- **Trade-offs aceitos**: Limitado a PostgreSQL; sem backend Node.js; Edge Functions em Deno (não Node)
+- **Revisitar quando**: Necessidade de processamento complexo server-side (ML, filas longas)
+
+---
 
 ## ADR-003: RBAC com Security Definer Functions
 
-- **Decisão**: Papéis em `user_roles` + funções `has_role()`, `user_has_permission()` como security definer
-- **Alternativas**: RLS recursivo direto; middleware de aplicação
-- **Motivo**: Evita recursão infinita em RLS; testável isoladamente; performance
-- **Trade-off**: Funções precisam ser mantidas manualmente
-- **Revisitar quando**: Supabase adicionar suporte nativo a RBAC
+- **Status**: Aceita (madura)
+- **Contexto**: 8 roles (root_admin → customer) com isolamento por tenant/brand/branch
+- **Decisão**: Papéis em tabela `user_roles` + funções `has_role()`, `user_has_permission()`, `get_user_*_ids()` como `SECURITY DEFINER`
+- **Alternativas consideradas**: RLS recursivo direto na tabela; middleware de aplicação; Supabase custom claims
+- **Motivo**: Evita recursão infinita em RLS; testável isoladamente; performance previsível
+- **Trade-offs aceitos**: Funções DB precisam ser mantidas manualmente; não suporta claims dinâmicos no JWT
+- **Revisitar quando**: Supabase adicionar suporte nativo a RBAC no JWT ou custom claims
 
-## ADR-004: Multi-tenant com brand_id/branch_id
+---
 
-- **Decisão**: Isolamento por `brand_id` em todas as tabelas; escopo via RLS
-- **Alternativas**: Schema por tenant; banco separado
-- **Motivo**: Simplicidade operacional; escala horizontal via índices
-- **Trade-off**: Queries sempre precisam filtrar por brand_id; risco de vazamento se RLS falhar
-- **Revisitar quando**: >1000 brands ou necessidade de compliance LGPD separada
+## ADR-004: Multi-tenancy com brand_id/branch_id
 
-## ADR-005: CRM via iframe externo (Lince CRM)
+- **Status**: Aceita (core)
+- **Contexto**: Múltiplas marcas (brands) com múltiplas filiais (branches) por marca
+- **Decisão**: Todas as tabelas de dados incluem `brand_id` (e `branch_id` quando aplicável); isolamento via RLS
+- **Alternativas consideradas**: Schema por tenant; banco separado por marca; row-level com tenant_id
+- **Motivo**: Simplicidade operacional; escala via índices; deploy único para todos os tenants
+- **Trade-offs aceitos**: Queries sempre filtram por brand_id; risco de vazamento se RLS falhar; uma falha de infra afeta todos
+- **Revisitar quando**: >1000 brands, necessidade de compliance LGPD separada, ou SLA diferenciado por marca
 
-- **Decisão**: Integrar CRM externo via iframe com passagem de contexto por query params
-- **Alternativas**: CRM embutido nativo; API-only integration
-- **Motivo**: Velocidade de entrega; CRM é produto separado com equipe própria
-- **Trade-off**: UX de iframe (loading, fallback quando bloqueado); token removido da URL por segurança
-- **Revisitar quando**: CRM nativo for viável ou necessidade de deep integration
+---
 
-## ADR-006: Rate Limiting via banco de dados
+## ADR-005: CRM Externo via Iframe (Lince CRM)
 
-- **Decisão**: Tabela `rate_limit_entries` com janela deslizante
-- **Alternativas**: Redis; Cloudflare rate limiting; Deno KV
-- **Motivo**: Sem dependência externa; funciona com Supabase Edge Functions
-- **Trade-off**: Mais lento que Redis; requer cleanup periódico
-- **Revisitar quando**: Volume >10k req/min ou necessidade de latência <5ms
+- **Status**: Aceita (transitória)
+- **Contexto**: Necessidade de CRM estratégico sem equipe para construir nativamente
+- **Decisão**: Integrar Lince CRM via iframe com passagem de contexto (brandId, branchId, email) por query params
+- **Alternativas consideradas**: CRM nativo embutido; API-only integration; comprar SaaS CRM (HubSpot)
+- **Motivo**: Velocidade de entrega; CRM é produto separado com equipe dedicada; funciona como MVP
+- **Trade-offs aceitos**: UX de iframe (loading, fallback quando bloqueado); sem deep integration; login potencialmente separado
+- **Decisão de segurança**: Token de sessão (`access_token`) **removido** da URL após auditoria — risco de vazamento em logs/referrer
+- **Revisitar quando**: CRM nativo for viável ou necessidade de deep integration (dashboards unificados)
 
-## ADR-007: Lazy Loading de todas as rotas
+---
 
-- **Decisão**: `React.lazy()` + `Suspense` para todas as ~90 páginas
-- **Alternativas**: Eager loading de rotas críticas
-- **Motivo**: Bundle inicial menor; ~90 páginas tornam eager loading inviável
-- **Trade-off**: Flash de loading na primeira navegação
-- **Revisitar quando**: Nunca (decisão permanente para esta escala)
+## ADR-006: Rate Limiting via Banco de Dados
+
+- **Status**: Aceita (pragmática)
+- **Contexto**: Proteger edge functions contra abuso sem dependência externa
+- **Decisão**: Tabela `rate_limit_entries` com sliding window; cleanup probabilístico (1% chance por request)
+- **Alternativas consideradas**: Redis (Upstash); Cloudflare rate limiting; Deno KV
+- **Motivo**: Zero dependência externa; funciona com Supabase Edge Functions; implementação simples
+- **Trade-offs aceitos**: Mais lento que Redis (~5ms vs <1ms); requer cleanup; window truncada (não sliding real)
+- **Limites atuais**: agent-api: 100/60s, earn-webhook: 30/60s, mobility-webhook: 30/60s
+- **Revisitar quando**: Volume >10k req/min ou latência do rate limiter >50ms
+
+---
+
+## ADR-007: Lazy Loading Universal de Rotas
+
+- **Status**: Aceita (permanente)
+- **Contexto**: ~90 páginas; bundle total estimado >2MB sem splitting
+- **Decisão**: `React.lazy()` + `Suspense` para todas as páginas; eager load apenas `App.tsx`, `AuthContext`, `ErrorBoundary`
+- **Alternativas consideradas**: Eager load de rotas "quentes" (dashboard, auth); route-based prefetching
+- **Motivo**: Bundle inicial <200KB; ~90 páginas tornam eager loading inviável; UX aceitável com spinner
+- **Trade-offs aceitos**: Flash de loading na primeira navegação; waterfall se nested lazy
+- **Revisitar quando**: Nunca — decisão permanente para esta escala
+
+---
+
+## ADR-008: Event Bus para Comunicação Cross-Module
+
+- **Status**: Aceita (experimental)
+- **Contexto**: Módulos precisam reagir a eventos de outros módulos (ex: CUSTOMER_CREATED → invalidar queries CRM)
+- **Decisão**: Event bus tipado (`src/lib/eventBus.ts`) com bridge para React Query (`eventBusQueryBridge.ts`)
+- **Alternativas consideradas**: Props drilling; Context API; Zustand/Redux global store
+- **Motivo**: Desacoplamento entre módulos; extensível; testável isoladamente
+- **Trade-offs aceitos**: Debugging mais difícil (eventos assíncronos); sem garantia de ordem
+- **Revisitar quando**: Complexidade de eventos exceder 20 tipos ou necessidade de persistência
+
+---
+
+## ADR-009: Ganha-Ganha como Modelo de Monetização
+
+- **Status**: Aceita (business core)
+- **Contexto**: Plataforma precisa de modelo de receita recorrente baseado em uso
+- **Decisão**: Sistema de billing onde emissoras pagam taxas por pontos/moeda distribuídos; configuração por brand via `ganha_ganha_config`
+- **Alternativas consideradas**: SaaS puro (mensalidade fixa); freemium; marketplace commission
+- **Motivo**: Alinha incentivos (mais uso = mais receita); escalável; transparente para lojistas
+- **Trade-offs aceitos**: Complexidade de billing; necessidade de relatórios de fechamento
+- **Revisitar quando**: Churn alto por custo variável ou necessidade de pricing mais simples
