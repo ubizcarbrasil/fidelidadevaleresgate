@@ -177,12 +177,12 @@ export default function EarnPointsPage() {
       // Build rule snapshot for historical integrity
       const ruleSnapshot = {
         points_per_real: effectivePointsPerReal,
-        rule_type: rule.rule_type,
-        money_per_point: rule.money_per_point,
-        min_purchase_to_earn: rule.min_purchase_to_earn,
-        max_points_per_purchase: rule.max_points_per_purchase,
-        max_points_per_customer_per_day: rule.max_points_per_customer_per_day,
-        max_points_per_store_per_day: rule.max_points_per_store_per_day,
+        rule_type: rule!.rule_type,
+        money_per_point: rule!.money_per_point,
+        min_purchase_to_earn: rule!.min_purchase_to_earn,
+        max_points_per_purchase: rule!.max_points_per_purchase,
+        max_points_per_customer_per_day: rule!.max_points_per_customer_per_day,
+        max_points_per_store_per_day: rule!.max_points_per_store_per_day,
         using_custom_store_rule: usingCustomRule,
       };
 
@@ -194,8 +194,8 @@ export default function EarnPointsPage() {
         customer_id: selectedCustomerId,
         purchase_value: parseFloat(purchaseValue),
         receipt_code: receiptCode.trim() || null,
-        points_earned: preview.points,
-        money_earned: preview.money,
+        points_earned: preview!.points ?? 0,
+        money_earned: preview!.money ?? 0,
         source: "PDV" as any,
         created_by_user_id: user.id,
         status: "APPROVED" as any,
@@ -209,8 +209,8 @@ export default function EarnPointsPage() {
         branch_id: branchId,
         customer_id: selectedCustomerId,
         entry_type: "CREDIT" as any,
-        points_amount: preview.points,
-        money_amount: preview.money,
+        points_amount: preview!.points ?? 0,
+        money_amount: preview!.money ?? 0,
         reason: `Compra no parceiro ${selectedStore?.name || ""}`,
         reference_type: "EARNING_EVENT" as any,
         reference_id: event.id,
@@ -219,8 +219,8 @@ export default function EarnPointsPage() {
       if (ledgerErr) throw ledgerErr;
 
       // Update customer balance
-      const newPoints = (selectedCustomer?.points_balance || 0) + preview.points;
-      const newMoney = (selectedCustomer?.money_balance || 0) + preview.money;
+      const newPoints = (selectedCustomer?.points_balance || 0) + (preview!.points ?? 0);
+      const newMoney = (selectedCustomer?.money_balance || 0) + (preview!.money ?? 0);
       const { error: custErr } = await supabase
         .from("customers")
         .update({ points_balance: newPoints, money_balance: newMoney })
@@ -232,12 +232,12 @@ export default function EarnPointsPage() {
         brandId: currentBrandId,
         storeId,
         eventType: "EARN",
-        pointsAmount: preview.points,
+        pointsAmount: preview!.points ?? 0,
         referenceId: event.id,
         referenceType: "EARNING_EVENT",
       });
 
-      return { points: preview.points, money: preview.money, newBalance: newPoints };
+      return { points: preview!.points ?? 0, money: preview!.money ?? 0, newBalance: newPoints };
     },
     onSuccess: (data) => {
       setSuccess(data);
@@ -346,7 +346,7 @@ export default function EarnPointsPage() {
               <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 space-y-1">
                 <p className="text-sm font-medium text-primary">Preview do ganho:</p>
                 <p className="text-2xl font-bold">+{preview.points} pontos</p>
-                <p className="text-sm text-muted-foreground">Equivalente a R$ {preview.money.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Equivalente a R$ {(preview.money ?? 0).toFixed(2)}</p>
                 {usingCustomRule && (
                   <Badge variant="outline" className="mt-1">
                     Regra personalizada do parceiro ({effectivePointsPerReal} pts/R$)

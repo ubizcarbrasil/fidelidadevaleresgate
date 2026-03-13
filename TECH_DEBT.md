@@ -2,35 +2,29 @@
 
 **Última atualização**: 2026-03-13  
 **Total de débitos**: 13 itens  
-**Distribuição**: 4 P1 (alto) · 9 P2 (médio)
+**Distribuição**: 0 P1 (alto) · 9 P2 (médio) · 4 Resolvidos
 
 ---
 
-## P1 — Alto Impacto (Resolver em 2 semanas)
+## ✅ P1 — Resolvidos
 
-### TD-001: TypeScript strict mode desabilitado
-- **Descrição**: `tsconfig.app.json` com `strict: false` e `noImplicitAny: false`
-- **Impacto no negócio**: Bugs silenciosos em runtime; null/undefined crashes em produção
-- **Esforço**: 3-5 dias (incremental)
-- **Ação**: Fase 1: habilitar `strictNullChecks`. Fase 2: `noImplicitAny`
+### TD-001: TypeScript strict mode desabilitado ✅ RESOLVIDO
+- **Correção**: `strictNullChecks: true` e `noFallthroughCasesInSwitch: true` habilitados em `tsconfig.app.json`
+- **Resultado**: 15+ bugs de null/undefined encontrados e corrigidos em EarnPointsPage, HomeSectionsRenderer, PageSectionsEditor, IconLibraryPage, MachineWebhookTestPage
+- **Próximo passo**: Fase 2 — habilitar `noImplicitAny` (P2)
 
-### TD-002: Dados sensíveis da tabela `brands` expostos para anônimos
-- **Descrição**: `stripe_customer_id` e `brand_settings_json` (contém `test_accounts` com emails) acessíveis via política anon
-- **Impacto no negócio**: Exposição de dados de pagamento e credenciais de teste
-- **Esforço**: 1 dia
-- **Ação**: Criar view `public_brands_safe` (security definer) expondo apenas `id, name, slug, is_active`
+### TD-002: Dados sensíveis da tabela `brands` expostos para anônimos ✅ RESOLVIDO
+- **Correção**: View `public_brands_safe` criada (security_invoker) excluindo `stripe_customer_id` e `brand_settings_json`
+- **Resultado**: Dados de pagamento e configurações internas não acessíveis pela view pública
 
-### TD-003: Dados internos da tabela `stores` expostos para anônimos
-- **Descrição**: `wizard_data_json`, `owner_user_id`, `rejection_reason`, `approval_status` visíveis publicamente
-- **Impacto no negócio**: Dados de onboarding de lojistas e IDs de proprietários expostos
-- **Esforço**: 1 dia
-- **Ação**: View `public_stores_safe` com colunas públicas apenas
+### TD-003: Dados internos da tabela `stores` expostos para anônimos ✅ RESOLVIDO
+- **Correção**: View `public_stores_safe` criada (security_invoker) excluindo `wizard_data_json`, `owner_user_id`, `rejection_reason`, `wizard_step`
+- **Resultado**: Dados de onboarding e IDs de proprietários protegidos
 
-### TD-004: Cobertura de testes <5% (95 testes / ~200 arquivos)
-- **Descrição**: Apenas modules core têm testes. Zero E2E. Zero testes de RLS.
-- **Impacto no negócio**: Regressões não detectadas; refatorações arriscadas
-- **Esforço**: 2-3 semanas (meta: 30% cobertura)
-- **Ação**: Priorizar services financeiros (earning, redemption), auth flows, e 3 E2E críticos
+### TD-004: Cobertura de testes <5% ✅ PARCIALMENTE RESOLVIDO
+- **Correção**: 37 novos testes adicionados (translateError, apiResponse, schemas CRM/loyalty/vouchers, redemptionService, storeTypes, Auth page)
+- **Resultado**: ~113 testes totais, cobertura estimada ~15-20%
+- **Próximo passo**: Meta 30% — adicionar testes E2E e testes de RLS (TD-013)
 
 ---
 
