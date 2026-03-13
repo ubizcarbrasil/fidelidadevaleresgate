@@ -1,8 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import * as rtl from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-
-const { render, screen, fireEvent } = rtl;
 import Auth from "../Auth";
 
 // Mock supabase
@@ -20,7 +18,6 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-// Mock sonner
 vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
@@ -35,24 +32,23 @@ function renderAuth() {
 
 describe("Auth Page", () => {
   it("renders login form by default", () => {
-    renderAuth();
-    expect(screen.getByLabelText("E-mail")).toBeInTheDocument();
-    expect(screen.getByLabelText("Senha")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
+    const { getByLabelText, getByRole } = renderAuth();
+    expect(getByLabelText("E-mail")).toBeInTheDocument();
+    expect(getByLabelText("Senha")).toBeInTheDocument();
+    expect(getByRole("button", { name: /entrar/i })).toBeInTheDocument();
   });
 
   it("switches to signup mode", () => {
-    renderAuth();
-    fireEvent.click(screen.getByText(/não tem conta/i));
-    expect(screen.getByLabelText("Nome completo")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /criar conta/i })).toBeInTheDocument();
+    const { getByText, getByLabelText, getByRole } = renderAuth();
+    getByText(/não tem conta/i).click();
+    expect(getByLabelText("Nome completo")).toBeInTheDocument();
+    expect(getByRole("button", { name: /criar conta/i })).toBeInTheDocument();
   });
 
   it("shows forgot password form", () => {
-    renderAuth();
-    fireEvent.click(screen.getByText(/esqueceu a senha/i));
-    expect(screen.getByRole("button", { name: /enviar email/i })).toBeInTheDocument();
-    // Password field should be hidden
-    expect(screen.queryByLabelText("Senha")).not.toBeInTheDocument();
+    const { getByText, getByRole, queryByLabelText } = renderAuth();
+    getByText(/esqueceu a senha/i).click();
+    expect(getByRole("button", { name: /enviar email/i })).toBeInTheDocument();
+    expect(queryByLabelText("Senha")).not.toBeInTheDocument();
   });
 });
