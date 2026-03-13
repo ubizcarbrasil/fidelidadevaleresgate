@@ -228,8 +228,8 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
 
                   {/* Info */}
                   <div className="px-3 pb-3 text-center">
-                    <p className="text-xs font-semibold truncate mb-1.5" style={{ color: fg }}>
-                      {store.name}
+                     <p className="text-xs font-semibold truncate mb-1.5 text-foreground">
+                       {store.name}
                     </p>
 
                     {/* Points badge */}
