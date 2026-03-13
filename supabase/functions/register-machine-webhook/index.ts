@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
         .from("machine_integrations")
         .update({ is_active: false })
         .eq("brand_id", brand_id);
+      logAudit(sb, "MACHINE_INTEGRATION_DEACTIVATED", { userId, brandId: brand_id, ip: clientIp });
       return json({ success: true, message: "Integration deactivated" });
     }
 
