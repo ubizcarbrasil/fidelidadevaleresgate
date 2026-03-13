@@ -610,7 +610,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       )}
                     </div>
                     {Number(offer.discount_percent) > 0 && (
-                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : `${primary}12`, color: isDark ? "hsl(var(--foreground))" : primary }}>
                         {offer.discount_percent}% de desconto aplicado
                       </div>
                     )}

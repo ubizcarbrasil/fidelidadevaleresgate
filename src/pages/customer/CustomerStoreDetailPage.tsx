@@ -545,7 +545,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                           {Number(offer.value_rescue) > 0 && (
                             <span
                               className="font-bold text-sm"
-                              style={{ color: primary, fontFamily: fontHeading }}
+                              style={{ color: isDark ? "hsl(var(--vb-highlight))" : primary, fontFamily: fontHeading }}
                             >
                               R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
                             </span>
