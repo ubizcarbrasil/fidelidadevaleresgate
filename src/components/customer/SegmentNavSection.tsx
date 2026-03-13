@@ -1,38 +1,26 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
-import { icons, Store } from "lucide-react";
+import { icons, Store, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-interface SegmentItem {
+interface CategoryItem {
   id: string;
   name: string;
-  category_name: string;
   icon_name: string | null;
-  category_icon_name: string | null;
   store_count: number;
 }
 
 interface SegmentNavSectionProps {
-  onSegmentClick: (segmentId: string, segmentName: string) => void;
+  onSegmentClick: (categoryId: string, categoryName: string, iconName: string | null) => void;
+  onSeeMore?: () => void;
 }
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
-}
-
-function segmentColor(name: string): string {
-  const colors = [
-    "#FF6B35", "#E91E63", "#7C3AED", "#059669",
-    "#D97706", "#0EA5E9", "#6366F1", "#EC4899",
-    "#14B8A6", "#F59E0B", "#8B5CF6", "#EF4444",
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
 }
 
 function kebabToPascal(name: string): string {
@@ -42,33 +30,34 @@ function kebabToPascal(name: string): string {
     .join("");
 }
 
-function SegmentIcon({ iconName, color }: { iconName: string | null; color: string }) {
-  if (!iconName) return <Store className="h-6 w-6" style={{ color }} />;
-  // Support custom image URLs from icon gallery
+function CategoryIcon({ iconName, color }: { iconName: string | null; color: string }) {
+  if (!iconName) return <Store className="h-5 w-5" style={{ color }} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className="h-6 w-6 object-contain" />;
+    return <img src={iconName} alt="" className="h-5 w-5 object-contain" />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-  if (!LucideIcon) return <Store className="h-6 w-6" style={{ color }} />;
-  return <LucideIcon className="h-6 w-6" style={{ color }} />;
+  if (!LucideIcon) return <Store className="h-5 w-5" style={{ color }} />;
+  return <LucideIcon className="h-5 w-5" style={{ color }} />;
 }
 
-export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionProps) {
+export default function SegmentNavSection({ onSegmentClick, onSeeMore }: SegmentNavSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
-  const [segments, setSegments] = useState<SegmentItem[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
     if (!brand || !selectedBranch) return;
-    const fetch = async () => {
+    const fetchCategories = async () => {
       setLoading(true);
+      // Get stores with their segments, then group by category
       const { data } = await supabase
         .from("stores")
-        .select("taxonomy_segment_id, taxonomy_segments(id, name, icon_name, taxonomy_categories(name, icon_name))")
+        .select("taxonomy_segment_id, taxonomy_segments(id, name, icon_name, category_id, taxonomy_categories(id, name, icon_name))")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("is_active", true)
@@ -76,109 +65,99 @@ export default function SegmentNavSection({ onSegmentClick }: SegmentNavSectionP
 
       if (!data) { setLoading(false); return; }
 
-      const map = new Map<string, SegmentItem>();
+      const map = new Map<string, CategoryItem>();
       for (const s of data) {
         const seg = s.taxonomy_segments as any;
-        if (!seg) continue;
-        const existing = map.get(seg.id);
+        if (!seg?.taxonomy_categories) continue;
+        const cat = seg.taxonomy_categories;
+        const existing = map.get(cat.id);
         if (existing) {
           existing.store_count++;
         } else {
-          map.set(seg.id, {
-            id: seg.id,
-            name: seg.name,
-            category_name: seg.taxonomy_categories?.name || "",
-            icon_name: seg.icon_name || null,
-            category_icon_name: seg.taxonomy_categories?.icon_name || null,
+          map.set(cat.id, {
+            id: cat.id,
+            name: cat.name,
+            icon_name: cat.icon_name || null,
             store_count: 1,
           });
         }
       }
 
-      setSegments(
+      setCategories(
         Array.from(map.values())
           .sort((a, b) => b.store_count - a.store_count)
-          .slice(0, 16)
+          .slice(0, 12)
       );
       setLoading(false);
     };
-    fetch();
+    fetchCategories();
   }, [brand, selectedBranch]);
 
   if (loading) {
     return (
       <section className="max-w-lg mx-auto px-5">
-        <Skeleton className="h-5 w-28 rounded-lg mb-1.5" />
-        <div className="grid grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5">
-              <Skeleton className="h-14 w-14 rounded-2xl" />
-              <Skeleton className="h-3 w-12 rounded" />
-            </div>
+        <Skeleton className="h-5 w-28 rounded-lg mb-3" />
+        <div className="flex gap-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-16 w-16 rounded-2xl flex-shrink-0" />
           ))}
         </div>
       </section>
     );
   }
 
-  if (segments.length < 2) return null;
-
-  const useScroll = segments.length > 8;
-
-  const segmentItems = segments.map((seg, idx) => {
-    const color = segmentColor(seg.name);
-    const iconName = seg.icon_name || seg.category_icon_name;
-    return (
-      <motion.button
-        key={seg.id}
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: idx * 0.03, duration: 0.25 }}
-        whileTap={{ scale: 0.9 }}
-        className="flex flex-col items-center gap-1.5"
-        style={{ minWidth: useScroll ? 72 : undefined }}
-        onClick={() => onSegmentClick(seg.id, seg.name)}
-      >
-        <div
-          className="h-14 w-14 rounded-2xl flex items-center justify-center relative"
-          style={{ backgroundColor: `${color}20` }}
-        >
-          <SegmentIcon iconName={iconName} color={color} />
-          {/* Store count badge */}
-          <span
-            className="absolute -top-1 -right-1 h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-            style={{ backgroundColor: color, fontSize: 9 }}
-          >
-            {seg.store_count}
-          </span>
-        </div>
-        <span
-          className="text-[11px] font-semibold text-center leading-tight line-clamp-2"
-          style={{ color: `${fg}70` }}
-        >
-          {seg.name}
-        </span>
-      </motion.button>
-    );
-  });
+  if (categories.length < 2) return null;
 
   return (
     <section className="max-w-lg mx-auto px-5 py-1">
-      <h3 className="text-sm font-bold mb-3" style={{ fontFamily: fontHeading }}>
-        Categorias
-      </h3>
-      {useScroll ? (
-        <ScrollArea className="w-full">
-          <div className="flex gap-3 pb-2">
-            {segmentItems}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      ) : (
-        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
-          {segmentItems}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold" style={{ fontFamily: fontHeading }}>
+          Categorias
+        </h3>
+        {onSeeMore && categories.length > 4 && (
+          <button
+            onClick={onSeeMore}
+            className="text-xs font-bold flex items-center gap-0.5"
+            style={{ color: primary }}
+          >
+            Ver mais
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Horizontal scroll of dark rounded cards */}
+      <ScrollArea className="w-full">
+        <div className="flex gap-2.5 pb-2">
+          {categories.map((cat, idx) => (
+            <motion.button
+              key={cat.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.03, duration: 0.25 }}
+              whileTap={{ scale: 0.92 }}
+              className="flex flex-col items-center gap-1.5 flex-shrink-0"
+              style={{ minWidth: 68 }}
+              onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
+            >
+              <div
+                className="h-14 w-14 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: "hsl(var(--muted))" }}
+              >
+                <CategoryIcon iconName={cat.icon_name} color={primary} />
+              </div>
+              <span
+                className="text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full"
+                style={{ color: `${fg}80` }}
+              >
+                {cat.name}
+              </span>
+            </motion.button>
+          ))}
         </div>
-      )}
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </section>
   );
 }
