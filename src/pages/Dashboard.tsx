@@ -492,7 +492,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
-  const { consoleScope } = useBrandGuard();
+  const { consoleScope, currentBrandId } = useBrandGuard();
 
   // Enable realtime refresh
   useRealtimeRefresh();
@@ -806,6 +806,16 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
+      )}
+      {/* FAB – App do Cliente */}
+      {currentBrandId && (
+        <button
+          onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
+          className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 shadow-lg hover:bg-primary/90 transition-colors"
+        >
+          <Smartphone className="h-5 w-5 animate-pulse" />
+          <span className="hidden sm:inline text-sm font-semibold">App do Cliente</span>
+        </button>
       )}
     </div>
   );
