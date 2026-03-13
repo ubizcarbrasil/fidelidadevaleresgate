@@ -138,9 +138,16 @@ export default function ForYouSection() {
                   <ShoppingBag className="h-8 w-8 text-muted-foreground/20" />
                 </div>
               )}
-              {o.discount_percent > 0 && (
-                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
-                  {o.discount_percent}% OFF
+              {(o.discount_percent > 0 || o.value_rescue > 0) && (
+                <div className="absolute top-2.5 left-2.5">
+                  <OfferBadge
+                    discountPercent={o.discount_percent}
+                    primaryColor="hsl(var(--vb-highlight))"
+                    size="sm"
+                    couponType={o.coupon_type}
+                    valueRescue={Number(o.value_rescue || 0)}
+                    minPurchase={Number(o.min_purchase || 0)}
+                  />
                 </div>
               )}
             </div>
