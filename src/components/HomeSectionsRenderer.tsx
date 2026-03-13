@@ -492,6 +492,15 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
   );
 }
 
+// --- Size mapping helper ---
+function getCardSizes(iconSize: string) {
+  switch (iconSize) {
+    case "small": return { minW: 140, maxW: 160, imgH: 96, imgClass: "h-24" };
+    case "large": return { minW: 200, maxW: 220, imgH: 160, imgClass: "h-40" };
+    default: return { minW: 170, maxW: 190, imgH: 128, imgClass: "h-32" };
+  }
+}
+
 // --- VOUCHERS_CARDS ---
 function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
