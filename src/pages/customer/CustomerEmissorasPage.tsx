@@ -97,11 +97,11 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
-          <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50">
-            <ArrowLeft className="h-5 w-5" style={{ color: fg }} />
-          </button>
-          <h1 className="text-lg font-bold flex-1" style={{ fontFamily: fontHeading, color: fg }}>
-            Compre e pontue
+           <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50">
+             <ArrowLeft className="h-5 w-5 text-foreground" />
+           </button>
+           <h1 className="text-lg font-bold flex-1 text-foreground" style={{ fontFamily: fontHeading }}>
+             Compre e pontue
           </h1>
         </div>
 
@@ -228,8 +228,8 @@ export default function CustomerEmissorasPage({ onBack }: Props) {
 
                   {/* Info */}
                   <div className="px-3 pb-3 text-center">
-                    <p className="text-xs font-semibold truncate mb-1.5" style={{ color: fg }}>
-                      {store.name}
+                     <p className="text-xs font-semibold truncate mb-1.5 text-foreground">
+                       {store.name}
                     </p>
 
                     {/* Points badge */}

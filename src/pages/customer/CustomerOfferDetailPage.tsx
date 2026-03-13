@@ -404,15 +404,15 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                    <div className="mx-4 mt-2 rounded-2xl p-4 bg-amber-50 dark:bg-amber-950/30" style={{
                      border: "2px solid hsl(var(--chart-4, 45 93% 58%))",
                    }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <DollarSign className="h-5 w-5" style={{ color: "#E65100" }} />
-                      <span className="text-base font-bold" style={{ color: "#E65100" }}>Pague com Pontos</span>
-                    </div>
-                    <div className="flex gap-3 mb-3">
-                      <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
-                        <p className="text-[11px] font-medium text-muted-foreground">Você pode usar</p>
-                        <p className="text-3xl font-bold" style={{ color: "#E65100" }}>{discountPct}%</p>
-                        <p className="text-[11px] text-muted-foreground">do valor em pontos</p>
+                     <div className="flex items-center gap-2 mb-3">
+                       <DollarSign className="h-5 w-5 text-[#E65100] dark:text-foreground" />
+                       <span className="text-base font-bold text-[#E65100] dark:text-foreground">Pague com Pontos</span>
+                     </div>
+                     <div className="flex gap-3 mb-3">
+                       <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
+                         <p className="text-[11px] font-medium text-muted-foreground">Você pode usar</p>
+                         <p className="text-3xl font-bold text-[#E65100] dark:text-foreground">{discountPct}%</p>
+                         <p className="text-[11px] text-muted-foreground">do valor em pontos</p>
                       </div>
                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
                         <p className="text-[11px] font-medium" style={{ color: "#5D4037" }}>Equivale a</p>
@@ -420,10 +420,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <p className="text-[11px]" style={{ color: "#5D4037" }}>pontos</p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Ao resgatar, você receberá um cupom de desconto de{" "}
-                      <strong style={{ color: "#E65100" }}>R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
-                      para usar na compra deste produto.
+                     <p className="text-xs text-muted-foreground">
+                       Ao resgatar, você receberá um cupom de desconto de{" "}
+                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toFixed(2).replace(".", ",")}</strong>{" "}
+                       para usar na compra deste produto.
                     </p>
                   </div>
                 )}
