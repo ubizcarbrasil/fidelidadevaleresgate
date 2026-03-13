@@ -30,6 +30,7 @@ export default function StoreProfileTab({ store }: { store: any }) {
     points_rule_text: store.points_rule_text || "",
     points_deadline_text: store.points_deadline_text || "",
     faq_json: (store.faq_json || []) as FaqItem[],
+    operating_hours_json: (store.operating_hours_json || []) as DayHours[],
   });
   const [saving, setSaving] = useState(false);
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
