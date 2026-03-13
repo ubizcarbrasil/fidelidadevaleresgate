@@ -64,7 +64,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const greeting = getGreeting();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
