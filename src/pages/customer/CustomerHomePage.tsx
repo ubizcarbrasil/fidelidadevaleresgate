@@ -41,6 +41,7 @@ export default function CustomerHomePage({ onOpenLedger }: CustomerHomePageProps
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [geoDetected, setGeoDetected] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const accent = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
