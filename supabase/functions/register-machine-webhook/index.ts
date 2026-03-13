@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
       .limit(1);
 
     if ((!roles || roles.length === 0) && (!rootRole || rootRole.length === 0)) {
+      logAudit(sb, "MACHINE_INTEGRATION_ACCESS_DENIED", { userId, brandId: brand_id, ip: clientIp, details: { reason: "no_access" } });
       return json({ error: "No access to this brand" }, 403);
     }
 
