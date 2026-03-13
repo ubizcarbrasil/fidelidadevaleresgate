@@ -12,6 +12,31 @@ function json(body: Record<string, unknown>, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+function getClientIp(req: Request): string | null {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
+}
+
+function logAudit(
+  sb: ReturnType<typeof createClient>,
+  action: string,
+  opts: { userId?: string; brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
+) {
+  sb.from("audit_logs")
+    .insert({
+      action,
+      entity_type: "MACHINE_INTEGRATION",
+      entity_id: opts.entityId || null,
+      actor_user_id: opts.userId || null,
+      scope_type: opts.brandId ? "BRAND" : null,
+      scope_id: opts.brandId || null,
+      ip_address: opts.ip || null,
+      details_json: opts.details || {},
+      changes_json: opts.changes || {},
+    })
+    .then(({ error }) => {
+      if (error) console.error("audit_log insert error:", error);
+    });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -40,6 +65,7 @@ Deno.serve(async (req) => {
   const userId = claimsData.claims.sub as string;
 
   const sb = createClient(supabaseUrl, serviceRoleKey);
+  const clientIp = getClientIp(req);
 
   try {
     const body = await req.json();
@@ -66,6 +92,7 @@ Deno.serve(async (req) => {
       .limit(1);
 
     if ((!roles || roles.length === 0) && (!rootRole || rootRole.length === 0)) {
+      logAudit(sb, "MACHINE_INTEGRATION_ACCESS_DENIED", { userId, brandId: brand_id, ip: clientIp, details: { reason: "no_access" } });
       return json({ error: "No access to this brand" }, 403);
     }
 
@@ -75,6 +102,7 @@ Deno.serve(async (req) => {
         .from("machine_integrations")
         .update({ is_active: false })
         .eq("brand_id", brand_id);
+      logAudit(sb, "MACHINE_INTEGRATION_DEACTIVATED", { userId, brandId: brand_id, ip: clientIp });
       return json({ success: true, message: "Integration deactivated" });
     }
 
@@ -105,6 +133,7 @@ Deno.serve(async (req) => {
     }
 
     if (!credentialsValid) {
+      logAudit(sb, "MACHINE_INTEGRATION_INVALID_CREDENTIALS", { userId, brandId: brand_id, ip: clientIp });
       return json({ error: "Invalid TaxiMachine credentials" }, 400);
     }
 
@@ -161,6 +190,13 @@ Deno.serve(async (req) => {
       return json({ error: "Failed to save integration" }, 500);
     }
 
+    logAudit(sb, "MACHINE_INTEGRATION_ACTIVATED", {
+      userId,
+      brandId: brand_id,
+      ip: clientIp,
+      details: { webhook_registered: webhookRegistered },
+    });
+
     return json({
       success: true,
       webhook_registered: webhookRegistered,
@@ -170,6 +206,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("register-machine-webhook error:", err);
+    logAudit(sb, "MACHINE_INTEGRATION_ERROR", { userId, ip: clientIp, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }
 });
