@@ -3,12 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ShoppingBag } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import OfferBadge from "@/components/customer/OfferBadge";
-import SafeImage from "@/components/customer/SafeImage";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
@@ -27,27 +25,51 @@ export default function ForYouSection() {
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
-  const brandBadgeConfig: BadgeConfig | null = theme?.badge_config || null;
 
   useEffect(() => {
     if (!brand || !selectedBranch) return;
     const fetchRecommendations = async () => {
       setLoading(true);
-      // Fetch top offers by likes/redemptions as "recommendations"
-      const { data } = await supabase
+
+      // Use the scoring function for personalized recommendations
+      const { data: scored, error } = await supabase.rpc("get_recommended_offers", {
+        p_brand_id: brand.id,
+        p_branch_id: selectedBranch.id,
+        p_customer_id: customer?.id || null,
+        p_limit: 12,
+      });
+
+      if (error || !scored?.length) {
+        // Fallback: fetch top offers by likes
+        const { data } = await supabase
+          .from("offers")
+          .select("*, stores(name, logo_url)")
+          .eq("branch_id", selectedBranch.id)
+          .eq("brand_id", brand.id)
+          .eq("is_active", true)
+          .eq("status", "ACTIVE")
+          .order("likes_count", { ascending: false })
+          .limit(8);
+        setOffers(data || []);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch full offer data for the scored IDs (preserving score order)
+      const offerIds = scored.map((s: any) => s.offer_id);
+      const { data: fullOffers } = await supabase
         .from("offers")
         .select("*, stores(name, logo_url)")
-        .eq("branch_id", selectedBranch.id)
-        .eq("brand_id", brand.id)
-        .eq("is_active", true)
-        .eq("status", "ACTIVE")
-        .order("likes_count", { ascending: false })
-        .limit(8);
-      setOffers(data || []);
+        .in("id", offerIds);
+
+      // Re-order by score
+      const offerMap = new Map((fullOffers || []).map((o: any) => [o.id, o]));
+      const ordered = offerIds.map((id: string) => offerMap.get(id)).filter(Boolean);
+      setOffers(ordered);
       setLoading(false);
     };
     fetchRecommendations();
-  }, [brand, selectedBranch]);
+  }, [brand, selectedBranch, customer?.id]);
 
   if (loading) {
     return (
@@ -96,48 +118,48 @@ export default function ForYouSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
             whileTap={{ scale: 0.97 }}
-            className="min-w-[150px] max-w-[170px] flex-shrink-0 rounded-2xl overflow-hidden bg-card cursor-pointer"
+            className="min-w-[170px] max-w-[190px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer"
             style={{
-              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+              backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
             }}
             onClick={() => openOffer?.(o)}
           >
-            <SafeImage
-              src={o.image_url}
-              fallbackSrc={o.stores?.logo_url}
-              alt={o.title}
-              className="h-24 w-full object-cover"
-              loading="lazy"
-              fallback={
-                <div className="h-24 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                  <AppIcon iconKey="section_foryou" className="h-8 w-8" style={{ color: `${primary}30` }} />
-                </div>
-              }
-            />
-            {o.image_url && (
-              <div className="absolute top-2 left-2">
-                <OfferBadge
-                  discountPercent={o.discount_percent}
-                  offerBadgeConfig={o.badge_config_json}
-                  brandBadgeConfig={brandBadgeConfig}
-                  primaryColor={primary}
+            <div className="relative h-28 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
+              {o.image_url || o.stores?.logo_url ? (
+                <img
+                  src={o.image_url || o.stores?.logo_url}
+                  alt={o.title}
+                  className="h-28 w-full object-cover"
+                  loading="lazy"
                 />
-              </div>
-            )}
-            <div className="p-3">
-              {o.stores?.name && (
-                <p className="text-[10px] font-medium truncate mb-0.5" style={{ color: `${fg}50` }}>
-                  {o.stores.name}
-                </p>
+              ) : (
+                <div className="h-28 w-full flex items-center justify-center">
+                  <ShoppingBag className="h-8 w-8 text-muted-foreground/20" />
+                </div>
               )}
-              <h3 className="text-xs font-bold line-clamp-2 leading-tight" style={{ color: fg }}>
+              {o.discount_percent > 0 && (
+                <div className="absolute top-2.5 left-2.5 vb-discount-badge">
+                  {o.discount_percent}% OFF
+                </div>
+              )}
+            </div>
+            <div className="px-3 py-2.5">
+              <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>
                 {o.title}
               </h3>
-              {Number(o.value_rescue) > 0 && (
-                <p className="text-sm font-bold mt-1" style={{ color: primary, fontFamily: fontHeading }}>
+              {o.stores?.name && (
+                <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
+              )}
+              {o.discount_percent > 0 && (
+                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
+                  {o.discount_percent}% OFF
+                </span>
+              )}
+              {!o.discount_percent && o.value_rescue > 0 && (
+                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
                   R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
-                </p>
+                </span>
               )}
             </div>
           </motion.div>
