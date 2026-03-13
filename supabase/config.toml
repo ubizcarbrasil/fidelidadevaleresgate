@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.provision-trial]
 verify_jwt = false
+
+[functions.machine-webhook]
+verify_jwt = false
+
+[functions.register-machine-webhook]
+verify_jwt = false
