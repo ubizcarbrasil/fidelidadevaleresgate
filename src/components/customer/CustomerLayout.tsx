@@ -272,7 +272,11 @@ export default function CustomerLayout() {
               exit="exit"
             >
               {activeTab === "home" ? (
-                <CustomerHomePage onOpenLedger={() => setLedgerOpen(true)} />
+                <CustomerHomePage
+                  onOpenLedger={() => setLedgerOpen(true)}
+                  onOpenCategoryGrid={() => setCategoryGridOpen(true)}
+                  onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
+                />
               ) : (
                 <ActivePage />
               )}
