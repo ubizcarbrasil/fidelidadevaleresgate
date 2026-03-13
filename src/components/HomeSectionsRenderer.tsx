@@ -119,22 +119,33 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   const { brand, selectedBranch, theme } = useBrand();
   const [sections, setSections] = useState<BrandSection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sponsoredStoreIds, setSponsoredStoreIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!brand) return;
-    const fetch = async () => {
+    const fetchAll = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("brand_sections")
-        .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
-        .eq("brand_id", brand.id)
-        .is("page_id", null)
-        .eq("is_enabled", true)
-        .order("order_index");
-      setSections((data as any) || []);
+      const [sectionsRes, sponsoredRes] = await Promise.all([
+        supabase
+          .from("brand_sections")
+          .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
+          .eq("brand_id", brand.id)
+          .is("page_id", null)
+          .eq("is_enabled", true)
+          .order("order_index"),
+        supabase
+          .from("sponsored_placements")
+          .select("store_id, priority")
+          .eq("brand_id", brand.id)
+          .eq("is_active", true)
+          .gte("ends_at", new Date().toISOString())
+          .lte("starts_at", new Date().toISOString()),
+      ]);
+      setSections((sectionsRes.data as any) || []);
+      setSponsoredStoreIds(new Set((sponsoredRes.data || []).map((s: any) => s.store_id)));
       setLoading(false);
     };
-    fetch();
+    fetchAll();
   }, [brand]);
 
   if (loading) {
