@@ -219,8 +219,8 @@ export default function EarnPointsPage() {
       if (ledgerErr) throw ledgerErr;
 
       // Update customer balance
-      const newPoints = (selectedCustomer?.points_balance || 0) + preview.points;
-      const newMoney = (selectedCustomer?.money_balance || 0) + preview.money;
+      const newPoints = (selectedCustomer?.points_balance || 0) + (preview!.points ?? 0);
+      const newMoney = (selectedCustomer?.money_balance || 0) + (preview!.money ?? 0);
       const { error: custErr } = await supabase
         .from("customers")
         .update({ points_balance: newPoints, money_balance: newMoney })
