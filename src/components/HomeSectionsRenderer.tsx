@@ -452,13 +452,13 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           <h2 className="text-[15px] font-bold text-foreground" style={{ fontFamily: fontHeading }}>
             {section.title}
           </h2>
-          {section.cta_text && items.length > 0 && (
+          {items.length > 0 && (
             <button
               className="text-xs font-bold flex items-center gap-0.5"
               style={{ color: accent }}
               onClick={handleCtaClick}
             >
-              {section.cta_text}
+              {section.cta_text || "Ver todos"}
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           )}
@@ -638,18 +638,18 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
   );
 }
 
-// --- OFFERS_GRID ---
+// --- OFFERS_GRID (horizontal scroll) ---
 function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   return (
-    <div className="max-w-lg mx-auto px-4">
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+    <div className="max-w-lg mx-auto">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: idx * 0.03 }}
+            className="flex-shrink-0 w-[160px] rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
             style={{ backgroundColor: "hsl(var(--card))" }}
             onClick={() => onOfferClick?.(o)}
           >
@@ -678,6 +678,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
             </div>
           </motion.div>
         ))}
+        <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
   );
