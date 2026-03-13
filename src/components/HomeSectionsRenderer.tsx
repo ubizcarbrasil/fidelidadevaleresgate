@@ -230,11 +230,6 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: idx * 0.06, ease: "easeOut" }}
         >
-          {idx > 0 && (
-            <div className="max-w-lg mx-auto px-4 py-0.5">
-              <div className="h-px" style={{ backgroundColor: "hsl(var(--border) / 0.5)" }} />
-            </div>
-          )}
           <SectionBlock
             section={section}
             branchId={selectedBranch?.id}
