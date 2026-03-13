@@ -155,6 +155,7 @@ function resolveTemplateKey(contentId: string, layoutId: string): string {
     links: { carousel: "MANUAL_LINKS_CAROUSEL", grid: "MANUAL_LINKS_GRID" },
     banners: { carousel: "banner_hero" },
     info: { list: "LIST_INFO", grid: "GRID_INFO", logos: "GRID_LOGOS" },
+    highlights: { carousel: "highlights_weekly", grid: "highlights_weekly" },
   };
   return map[contentId]?.[layoutId] || "offers_carousel";
 }
