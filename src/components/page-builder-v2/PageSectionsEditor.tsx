@@ -63,10 +63,10 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
   const [editingManualLinks, setEditingManualLinks] = useState<SectionRow | null>(null);
   const [pageSettings, setPageSettings] = useState({
-    title: page.title,
-    subtitle: page.subtitle || "",
-    search_enabled: page.search_enabled,
-    visibility_type: page.visibility_type,
+    title: page?.title || "Tela Inicial",
+    subtitle: page?.subtitle || "",
+    search_enabled: page?.search_enabled ?? false,
+    visibility_type: page?.visibility_type || "public",
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
