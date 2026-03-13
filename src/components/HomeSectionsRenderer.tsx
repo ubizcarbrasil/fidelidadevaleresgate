@@ -535,6 +535,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
       <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((o: any, idx: number) => {
           const isNew = o.created_at && (Date.now() - new Date(o.created_at).getTime()) < 14 * 86400000;
+          const isSponsored = sponsoredStoreIds?.has(o.store_id);
 
           return (
             <motion.div
