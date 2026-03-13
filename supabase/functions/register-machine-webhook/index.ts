@@ -190,6 +190,13 @@ Deno.serve(async (req) => {
       return json({ error: "Failed to save integration" }, 500);
     }
 
+    logAudit(sb, "MACHINE_INTEGRATION_ACTIVATED", {
+      userId,
+      brandId: brand_id,
+      ip: clientIp,
+      details: { webhook_registered: webhookRegistered },
+    });
+
     return json({
       success: true,
       webhook_registered: webhookRegistered,
@@ -199,6 +206,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("register-machine-webhook error:", err);
+    logAudit(sb, "MACHINE_INTEGRATION_ERROR", { userId, ip: clientIp, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }
 });
