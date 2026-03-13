@@ -662,7 +662,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   )}
                   {Number(offer.min_purchase) > 0 && (
                     <RuleRow icon={ShoppingBag} primary={primary} fg={fg} label="Compra mínima"
-                      value={`${Number(offer.min_purchase).toLocaleString("pt-BR")} pts`} />
+                      value={`R$ ${Number(offer.min_purchase).toFixed(2)}`} />
                   )}
                   {offer.max_daily_redemptions && (
                     <RuleRow icon={AlertTriangle} primary={primary} fg={fg} label="Limite diário"
