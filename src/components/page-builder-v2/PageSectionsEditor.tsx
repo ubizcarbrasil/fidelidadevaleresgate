@@ -74,14 +74,18 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
 
   const fetchSections = useCallback(async () => {
     setLoading(true);
-    const { data } = await (supabase
+    let query = (supabase
       .from("brand_sections")
-      .select("*, section_templates(key, name, type)") as any)
-      .eq("page_id", page.id)
-      .order("order_index");
+      .select("*, section_templates(key, name, type)") as any);
+    if (isHomeMode) {
+      query = query.eq("brand_id", currentBrandId).is("page_id", null);
+    } else {
+      query = query.eq("page_id", page!.id);
+    }
+    const { data } = await query.order("order_index");
     setSections((data as any[]) || []);
     setLoading(false);
-  }, [page.id]);
+  }, [isHomeMode, page?.id, currentBrandId]);
 
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
