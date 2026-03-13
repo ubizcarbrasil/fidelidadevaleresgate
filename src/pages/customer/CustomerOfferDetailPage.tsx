@@ -608,9 +608,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
-                          <p className="text-[10px] font-medium text-muted-foreground">Compra mínima</p>
+                         <p className="text-[10px] font-medium text-muted-foreground">Compra mínima</p>
                           <p className="text-sm font-bold text-muted-foreground">
-                            {Number(offer.min_purchase).toLocaleString("pt-BR")} pts
+                             R$ {Number(offer.min_purchase).toFixed(2)}
                           </p>
                         </div>
                       )}
