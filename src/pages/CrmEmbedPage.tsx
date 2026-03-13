@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertTriangle, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -7,6 +7,16 @@ const CRM_URL = "https://valeresgatacrm.lovable.app/";
 export default function CrmEmbedPage() {
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        setBlocked(true);
+        setLoading(false);
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   return (
     <div className="relative -m-3 sm:-m-6" style={{ height: "calc(100vh - 3.5rem)" }}>
