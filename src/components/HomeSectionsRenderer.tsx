@@ -615,65 +615,48 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
   );
 }
 
-// --- STORES_GRID (Méliuz 4-col cashback grid) ---
+// --- STORES_GRID (Horizontal scroll with larger cards + logo + name) ---
 function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Use dynamic columns from section config
-  const gridCols = items[0]?._gridCols || 4;
-  const rows = [];
-  for (let i = 0; i < items.length; i += gridCols) {
-    rows.push(items.slice(i, i + gridCols));
-  }
-
   return (
-    <div className="max-w-lg mx-auto px-5">
-      <div className="space-y-3">
-        {rows.map((row: any[], rIdx: number) => (
-          <div key={rIdx} className="grid grid-cols-4 gap-2">
-            {row.map((b: any, idx: number) => (
-              <motion.div
-                key={b.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.25, delay: (rIdx * 4 + idx) * 0.03 }}
-                className="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform"
-                onClick={() => onStoreClick?.(b)}
-              >
-                <div className="relative mb-1.5">
-                  {b.logo_url ? (
-                    <div className="h-14 w-14 rounded-2xl overflow-hidden bg-card" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                      <LazyImage src={b.logo_url} alt={b.name} className="h-14 w-14" />
-                    </div>
-                  ) : (
-                    <div className="h-14 w-14 rounded-2xl flex items-center justify-center bg-card" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                      <Store className="h-6 w-6" style={{ color: `${primary}60` }} />
-                    </div>
-                  )}
-                  {/* Cashback badge */}
-                  {b.points_per_real > 0 && (
-                    <div
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-white text-[8px] font-bold whitespace-nowrap"
-                      style={{ backgroundColor: "#059669", minWidth: 36, textAlign: "center" }}
-                    >
-                      {b.points_per_real}x pts
-                    </div>
-                  )}
+    <div className="max-w-lg mx-auto">
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((b: any, idx: number) => (
+          <motion.div
+            key={b.id}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: idx * 0.03 }}
+            className="min-w-[140px] max-w-[160px] flex-shrink-0 rounded-2xl overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
+            style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
+            onClick={() => onStoreClick?.(b)}
+          >
+            {/* Logo/Banner */}
+            <div className="relative h-24 w-full bg-muted flex items-center justify-center">
+              {b.logo_url ? (
+                <LazyImage src={b.logo_url} alt={b.name} className="h-24 w-full" />
+              ) : (
+                <Store className="h-10 w-10" style={{ color: `${primary}20` }} />
+              )}
+              {b.points_per_real > 0 && (
+                <div
+                  className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-white text-[9px] font-bold"
+                  style={{ backgroundColor: "#059669" }}
+                >
+                  {b.points_per_real}x pts
                 </div>
-                <span className="text-[10px] font-medium leading-tight truncate w-full mt-0.5" style={{ color: `${fg}80` }}>
-                  {b.name}
-                </span>
-                {b.category && (
-                  <span className="text-[8px] truncate w-full" style={{ color: `${fg}35` }}>{b.category}</span>
-                )}
-              </motion.div>
-            ))}
-            {/* Fill empty slots */}
-            {row.length < 4 && Array.from({ length: 4 - row.length }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-          </div>
+              )}
+            </div>
+            <div className="px-3 py-2">
+              <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{b.name}</h3>
+              {b.category && (
+                <p className="text-[10px] truncate mt-0.5" style={{ color: `${fg}40` }}>{b.category}</p>
+              )}
+            </div>
+          </motion.div>
         ))}
+        <div className="min-w-[16px] flex-shrink-0" />
       </div>
     </div>
   );
