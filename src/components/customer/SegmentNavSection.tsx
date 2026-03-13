@@ -33,8 +33,8 @@ function CategoryIcon({ iconName }: { iconName: string | null }) {
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-  if (!LucideIcon) return <Store className="h-6 w-6" style={{ color }} />;
-  return <LucideIcon className="h-6 w-6" style={{ color }} />;
+  if (!LucideIcon) return <Store className="h-5 w-5" style={{ color }} />;
+  return <LucideIcon className="h-5 w-5" style={{ color }} />;
 }
 
 export default function SegmentNavSection({ onSegmentClick, onSeeMore }: SegmentNavSectionProps) {
