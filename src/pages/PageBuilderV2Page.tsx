@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useBrand } from "@/contexts/BrandContext";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,8 @@ interface PageRow {
 }
 
 export default function PageBuilderV2Page() {
-  const { brand } = useBrand();
+  const { currentBrandId } = useBrandGuard();
+  const brandId = currentBrandId;
   const [pages, setPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<PageRow | null>(null);
@@ -41,25 +42,25 @@ export default function PageBuilderV2Page() {
   const [saving, setSaving] = useState(false);
 
   const fetchPages = useCallback(async () => {
-    if (!brand) return;
+    if (!brandId) return;
     setLoading(true);
     const { data } = await supabase
       .from("custom_pages")
       .select("*")
-      .eq("brand_id", brand.id)
+      .eq("brand_id", brandId)
       .order("created_at", { ascending: false });
     setPages((data as any[]) || []);
     setLoading(false);
-  }, [brand]);
+  }, [brandId]);
 
   useEffect(() => { fetchPages(); }, [fetchPages]);
 
   const handleCreate = async () => {
-    if (!brand || !newTitle.trim() || !newSlug.trim()) return;
+    if (!brandId || !newTitle.trim() || !newSlug.trim()) return;
     setSaving(true);
     const slug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
     const { error } = await supabase.from("custom_pages").insert({
-      brand_id: brand.id,
+      brand_id: brandId,
       title: newTitle.trim(),
       subtitle: newSubtitle.trim() || null,
       slug,

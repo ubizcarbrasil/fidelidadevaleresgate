@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useBrand } from "@/contexts/BrandContext";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,7 +55,7 @@ interface Props {
 
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
-  const { brand } = useBrand();
+  const { currentBrandId } = useBrandGuard();
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
@@ -99,7 +99,7 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   };
 
   const handleDuplicateSection = async (section: SectionRow) => {
-    if (!brand) return;
+    if (!currentBrandId) return;
     const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) + 1 : 0;
     const { id, section_templates, ...rest } = section as any;
     await supabase.from("brand_sections").insert({
@@ -167,10 +167,10 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   };
 
   // Show wizard full-screen
-  if (showWizard && brand) {
+  if (showWizard && currentBrandId) {
     return (
       <SectionCreatorWizard
-        brandId={brand.id}
+        brandId={currentBrandId}
         pageId={page.id}
         currentSectionCount={sections.length}
         onCreated={() => { setShowWizard(false); fetchSections(); }}
