@@ -245,7 +245,7 @@ function SectionBlock({ section, branchId, primary, fg, cardBg, accent, fontHead
           .select("*")
           .eq("status", "active")
           .order("created_at", { ascending: false })
-          .limit(source.limit || 10);
+          .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
         const { data } = await query;
         setItems(data || []);
