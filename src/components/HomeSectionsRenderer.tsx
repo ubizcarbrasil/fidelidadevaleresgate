@@ -843,7 +843,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
                 <div className="flex items-center gap-1 mt-0.5">
                   <Zap className="h-3 w-3" style={{ color: "hsl(var(--success))" }} />
                   <span className="text-[11px] font-bold" style={{ color: "hsl(var(--success))" }}>
-                    Até {b.points_per_real}x pontos/R$
+                    Até {b.points_per_real}x pontos
                   </span>
                 </div>
               )}

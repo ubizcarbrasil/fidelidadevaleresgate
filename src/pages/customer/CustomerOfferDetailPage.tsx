@@ -1057,7 +1057,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       <div className="rounded-2xl p-3 flex justify-between items-center bg-amber-50 dark:bg-amber-950/30" style={{ border: "1.5px solid hsl(var(--chart-4, 45 93% 58%))" }}>
                         <span className="text-sm font-semibold" style={{ color: "#5D4037" }}>Você paga</span>
                         <span className="text-lg font-bold" style={{ color: "#E65100" }}>
-                          R$ {remainingAfterCredit.toFixed(2).replace(".", ",")}
+                          {remainingAfterCredit.toLocaleString("pt-BR")} pts
                         </span>
                       </div>
                       {/* Points cost */}
