@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
     }
 
     if (!credentialsValid) {
+      logAudit(sb, "MACHINE_INTEGRATION_INVALID_CREDENTIALS", { userId, brandId: brand_id, ip: clientIp });
       return json({ error: "Invalid TaxiMachine credentials" }, 400);
     }
 
