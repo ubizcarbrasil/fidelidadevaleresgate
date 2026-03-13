@@ -594,11 +594,17 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
                       <div>
-                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Pontos</p>
-                        <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                          {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
-                        </p>
-                        <p className="text-[11px] mt-0.5 text-muted-foreground">pontos condicionados à compra mínima</p>
+                         <p className="text-xs font-medium mb-0.5 text-muted-foreground">
+                           {offer.coupon_type === "PRODUCT" ? "Pague com Pontos" : "Troque Pontos por Crédito"}
+                         </p>
+                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
+                           {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
+                         </p>
+                         <p className="text-[11px] mt-0.5 text-muted-foreground">
+                           {offer.coupon_type === "PRODUCT"
+                             ? `${Math.floor(Number(offer.value_rescue))} pts = R$ ${Number(offer.value_rescue).toFixed(2)} de crédito`
+                             : `sobre compra mínima de R$ ${Number(offer.min_purchase || 0).toFixed(2)}`}
+                         </p>
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
