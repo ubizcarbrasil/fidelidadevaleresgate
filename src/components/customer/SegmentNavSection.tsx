@@ -27,14 +27,14 @@ function kebabToPascal(name: string): string {
 
 function CategoryIcon({ iconName }: { iconName: string | null }) {
   const color = "hsl(var(--vb-gold))";
-  if (!iconName) return <Store className="h-6 w-6" style={{ color }} />;
+  if (!iconName) return <Store className="h-5 w-5" style={{ color }} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className="h-6 w-6 object-contain" />;
+    return <img src={iconName} alt="" className="h-5 w-5 object-contain" />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-  if (!LucideIcon) return <Store className="h-6 w-6" style={{ color }} />;
-  return <LucideIcon className="h-6 w-6" style={{ color }} />;
+  if (!LucideIcon) return <Store className="h-5 w-5" style={{ color }} />;
+  return <LucideIcon className="h-5 w-5" style={{ color }} />;
 }
 
 export default function SegmentNavSection({ onSegmentClick, onSeeMore }: SegmentNavSectionProps) {
@@ -125,7 +125,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
       {/* Horizontal scroll */}
       <ScrollArea className="w-full">
-        <div className="flex gap-2 pb-2">
+        <div className="flex gap-1.5 pb-2">
           {categories.map((cat, idx) => (
             <motion.button
               key={cat.id}
@@ -133,18 +133,18 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.03, duration: 0.25 }}
               whileTap={{ scale: 0.92 }}
-              className="flex flex-col items-center gap-2 flex-shrink-0"
-              style={{ minWidth: 72 }}
+              className="flex flex-col items-center gap-1 flex-shrink-0"
+              style={{ minWidth: 60 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
               <div
-                className="h-16 w-16 rounded-2xl flex items-center justify-center"
+                className="h-12 w-12 rounded-xl flex items-center justify-center"
                 style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
               >
                 <CategoryIcon iconName={cat.icon_name} />
               </div>
               <span
-                className="text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+                className="text-[9px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
               >
                 {cat.name}
               </span>
