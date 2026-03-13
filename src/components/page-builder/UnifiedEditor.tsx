@@ -106,16 +106,20 @@ export default function UnifiedEditor({ page, onBack, isHomePage }: Props) {
   useEffect(() => { fetchSections(); }, [fetchSections]);
 
   // Build unified block list
-  const blocks: UnifiedBlock[] = [];
-  if (!isHomePage) {
-    elements.forEach((el, idx) => {
-      blocks.push({ blockType: "static", id: el.id, orderIndex: idx, element: el });
+  const blocks: UnifiedBlock[] = useMemo(() => {
+    const result: UnifiedBlock[] = [];
+    if (!isHomePage) {
+      elements.forEach((el, idx) => {
+        result.push({ blockType: "static", id: el.id, orderIndex: idx, element: el });
+      });
+    }
+    sections.forEach((sec) => {
+      result.push({ blockType: "dynamic", id: sec.id, orderIndex: (isHomePage ? 0 : elements.length) + sec.order_index, section: sec });
     });
-  }
-  sections.forEach((sec) => {
-    blocks.push({ blockType: "dynamic", id: sec.id, orderIndex: (isHomePage ? 0 : elements.length) + sec.order_index, section: sec });
-  });
-  blocks.sort((a, b) => a.orderIndex - b.orderIndex);
+    result.sort((a, b) => a.orderIndex - b.orderIndex);
+    return result;
+  }, [elements, sections, isHomePage]);
+  const deferredBlocks = useDeferredValue(blocks);
 
   // When selecting a section, populate inline editing fields
   useEffect(() => {
