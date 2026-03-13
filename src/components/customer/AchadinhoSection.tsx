@@ -56,6 +56,7 @@ export default function AchadinhoSection() {
   const catScrollRef = useRef<HTMLDivElement>(null);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
+  const highlight = "hsl(var(--vb-highlight))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   useEffect(() => {
