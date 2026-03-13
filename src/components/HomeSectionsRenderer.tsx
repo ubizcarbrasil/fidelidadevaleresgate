@@ -512,59 +512,55 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
   );
 }
 
-// --- OFFERS_CAROUSEL ---
+// --- OFFERS_CAROUSEL (Large cards with banner + name + discount) ---
 function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOfferClick, brandBadgeConfig }: any) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="max-w-lg mx-auto">
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2" style={{ scrollSnapType: "x mandatory" }}>
         {items.map((o: any, idx: number) => (
           <motion.div
             key={o.id}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.04 }}
-            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[16px] overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
+            className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-2xl overflow-hidden bg-card cursor-pointer active:scale-[0.97] transition-transform"
             style={{
-              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+              boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
               scrollSnapAlign: "start",
             }}
             onClick={() => onOfferClick?.(o)}
           >
-            {o.image_url ? (
-              <div className="relative">
-                <LazyImage src={o.image_url} alt={o.title} className="h-24 w-full" />
-                <div className="absolute top-2 left-2">
-                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={primary} />
+            {/* Image area */}
+            <div className="relative h-28 w-full bg-muted">
+              {o.image_url || o.stores?.logo_url ? (
+                <LazyImage src={o.image_url || o.stores?.logo_url} alt={o.title} className="h-28 w-full" />
+              ) : (
+                <div className="h-28 w-full flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
+                  <ShoppingBag className="h-10 w-10" style={{ color: `${primary}20` }} />
                 </div>
-              </div>
-            ) : (
-              <div className="h-24 w-full flex items-center justify-center relative" style={{ backgroundColor: `${primary}06` }}>
-                <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                <div className="absolute top-2 left-2">
-                  <OfferBadge discountPercent={o.discount_percent} offerBadgeConfig={o.badge_config_json} brandBadgeConfig={brandBadgeConfig} primaryColor={primary} />
+              )}
+              {/* Discount badge */}
+              {o.discount_percent > 0 && (
+                <div
+                  className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                  style={{ backgroundColor: primary }}
+                >
+                  {o.discount_percent}% OFF
                 </div>
-              </div>
-            )}
+              )}
+            </div>
             <div className="px-3 py-2.5">
               <h3 className="font-semibold text-xs truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
               {o.stores?.name && (
                 <p className="text-[10px] mt-0.5 truncate" style={{ color: `${fg}45` }}>{o.stores.name}</p>
               )}
-              <div className="flex items-center justify-between mt-1.5">
-                {o.value_rescue > 0 && (
-                  <span className="font-bold text-sm" style={{ color: primary, fontFamily: fontHeading }}>
-                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
-                  </span>
-                )}
-                {o.likes_count > 0 && (
-                  <div className="flex items-center gap-0.5 text-[10px]" style={{ color: `${fg}35` }}>
-                    <Heart className="h-2.5 w-2.5" />
-                    {o.likes_count}
-                  </div>
-                )}
-              </div>
+              {o.value_rescue > 0 && (
+                <span className="font-bold text-xs mt-1 block" style={{ color: primary, fontFamily: fontHeading }}>
+                  R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                </span>
+              )}
             </div>
           </motion.div>
         ))}
