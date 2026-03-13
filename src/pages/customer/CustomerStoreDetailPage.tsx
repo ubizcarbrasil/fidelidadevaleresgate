@@ -548,7 +548,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
                               className="font-bold text-sm"
                               style={{ color: isDark ? "hsl(var(--vb-highlight))" : primary, fontFamily: fontHeading }}
                             >
-                              R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                              {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                             </span>
                           )}
                           {offer.end_at && (

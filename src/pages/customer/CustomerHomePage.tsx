@@ -120,7 +120,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
               <div className="flex flex-col items-start">
                 <span className="text-[10px] font-medium leading-none" style={{ color: "hsl(var(--vb-gold-foreground) / 0.7)" }}>Saldo</span>
                 <span className="text-sm font-bold leading-tight" style={{ color: "hsl(var(--vb-gold-foreground))" }}>
-                  {customer ? `R$ ${Number(customer.points_balance).toLocaleString("pt-BR")}` : "R$ 0"}
+                  {customer ? `${Number(customer.points_balance).toLocaleString("pt-BR")} pts` : "0 pts"}
                 </span>
               </div>
             </button>

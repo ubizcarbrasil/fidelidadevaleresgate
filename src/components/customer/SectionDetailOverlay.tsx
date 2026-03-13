@@ -166,7 +166,7 @@ export default function SectionDetailOverlay({
                     )}
                     {item.value_rescue > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        R$ {Number(item.value_rescue).toFixed(2).replace(".", ",")}
+                        {Number(item.value_rescue).toLocaleString("pt-BR")} pts
                       </span>
                     )}
                     {item.address && (

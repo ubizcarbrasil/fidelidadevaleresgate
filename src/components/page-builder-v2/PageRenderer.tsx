@@ -300,7 +300,7 @@ function PageSectionBlock({ section, branchId, brandId, primary, fg, fontHeading
                 <p className="text-xs font-semibold truncate" style={{ color: fg }}>{o.title}</p>
                 {o.value_rescue > 0 && (
                   <span className="text-[10px] font-bold mt-1 inline-block" style={{ color: primary }}>
-                    R$ {Number(o.value_rescue).toFixed(2).replace(".", ",")}
+                    {Number(o.value_rescue).toLocaleString("pt-BR")} pts
                   </span>
                 )}
               </div>

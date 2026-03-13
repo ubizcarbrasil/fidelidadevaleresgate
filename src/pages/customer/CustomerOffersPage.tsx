@@ -259,7 +259,7 @@ export default function CustomerOffersPage() {
                     {hasCashback && (
                       <div className="flex items-center gap-1">
                         <span className="text-base font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                          R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                          {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                         </span>
                         {Number(offer.min_purchase) > 0 && (
                           <span className="text-[10px] line-through text-muted-foreground">

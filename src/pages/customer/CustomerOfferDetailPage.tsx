@@ -256,7 +256,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   };
 
   const handleShare = async () => {
-    const text = `${offer.title}${Number(offer.value_rescue) > 0 ? ` - R$ ${Number(offer.value_rescue).toFixed(2)}` : ""}`;
+    const text = `${offer.title}${Number(offer.value_rescue) > 0 ? ` - ${Number(offer.value_rescue).toFixed(0)} pts` : ""}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: offer.title, text });
@@ -594,11 +594,11 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
                     <div className="p-4 flex items-center justify-between" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
                       <div>
-                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Crédito</p>
+                        <p className="text-xs font-medium mb-0.5 text-muted-foreground">Vale Resgate em Pontos</p>
                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                          R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                          {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                         </p>
-                        <p className="text-[11px] mt-0.5 text-muted-foreground">crédito condicionado à compra mínima</p>
+                        <p className="text-[11px] mt-0.5 text-muted-foreground">pontos condicionados à compra mínima</p>
                       </div>
                       {Number(offer.min_purchase) > 0 && (
                         <div className="text-right">
@@ -703,7 +703,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           <h4 className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{sim.title}</h4>
                           {Number(sim.value_rescue) > 0 && (
                             <span className="text-xs font-bold" style={{ color: primary }}>
-                              R$ {Number(sim.value_rescue).toFixed(2).replace(".", ",")}
+                              {Number(sim.value_rescue).toLocaleString("pt-BR")} pts
                             </span>
                           )}
                         </div>
@@ -782,7 +782,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
                 style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
                 {Number(offer.value_rescue) > 0
-                  ? `Resgate R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
+                  ? `Resgatar ${Number(offer.value_rescue).toLocaleString("pt-BR")} pts`
                   : "Resgatar agora"}
               </motion.button>
             )}
@@ -854,7 +854,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           {offer.coupon_type === "PRODUCT"
                             ? `Pague ${offer.discount_percent}% com Pontos`
                             : Number(offer.value_rescue) > 0
-                              ? `Vale Resgate de R$ ${Number(offer.value_rescue).toFixed(2).replace(".", ",")} em crédito`
+                              ? `Vale Resgate de ${Number(offer.value_rescue).toLocaleString("pt-BR")} pts`
                               : offer.title}
                         </p>
                       </div>
@@ -881,9 +881,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           <span className="text-lg font-bold" style={{ color: primary }}>$</span>
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">VALOR A SER RESGATADO</p>
+                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">PONTOS A RESGATAR</p>
                           <p className="text-xl font-bold" style={{ color: primary, fontFamily: fontHeading }}>
-                            R$ {Number(offer.value_rescue).toFixed(2).replace(".", ",")}
+                            {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                           </p>
                         </div>
                       </div>
