@@ -119,7 +119,7 @@ export default function MachineIntegrationPage() {
               <Activity className="h-5 w-5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Status</span>
               {isActive ? (
-                <Badge className="bg-green-600 text-white">Ativo</Badge>
+                <Badge className="bg-primary text-primary-foreground">Ativo</Badge>
               ) : (
                 <Badge variant="secondary">Inativo</Badge>
               )}
