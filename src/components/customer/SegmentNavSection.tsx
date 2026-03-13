@@ -26,7 +26,7 @@ function kebabToPascal(name: string): string {
 }
 
 function CategoryIcon({ iconName }: { iconName: string | null }) {
-  const color = "hsl(var(--vb-gold))";
+  const color = "hsl(var(--vb-highlight))";
   if (!iconName) return <Store className="h-5 w-5" style={{ color }} />;
   if (iconName.startsWith("http")) {
     return <img src={iconName} alt="" className="h-5 w-5 object-contain" />;
