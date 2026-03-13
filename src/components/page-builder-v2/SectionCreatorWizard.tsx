@@ -571,8 +571,51 @@ export default function SectionCreatorWizard({ brandId, pageId, currentSectionCo
             )}
           </div>
 
+          {/* Segment picker for by_category */}
+          {contentType === "by_category" && taxonomyData && (
+            <div className="rounded-xl border p-4 space-y-4">
+              <Label className="text-sm font-semibold">Selecione os segmentos</Label>
+              {taxonomyData.categories.map((cat: any) => {
+                const segs = taxonomyData.segments.filter((s: any) => s.category_id === cat.id);
+                if (!segs.length) return null;
+                return (
+                  <div key={cat.id} className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground">{cat.name}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {segs.map((seg: any) => {
+                        const checked = selectedSegmentIds.includes(seg.id);
+                        return (
+                          <label
+                            key={seg.id}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm",
+                              checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                            )}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                setSelectedSegmentIds(prev =>
+                                  v ? [...prev, seg.id] : prev.filter(id => id !== seg.id)
+                                );
+                              }}
+                            />
+                            <span className="truncate">{seg.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              {selectedSegmentIds.length === 0 && (
+                <p className="text-xs text-destructive">Selecione ao menos um segmento</p>
+              )}
+            </div>
+          )}
+
           {/* Filters - only for offers/stores/vouchers */}
-          {["offers", "stores", "vouchers", "highlights"].includes(contentType) && (
+          {["offers", "stores", "vouchers", "highlights", "by_category"].includes(contentType) && (
             <div className="rounded-xl border p-4 space-y-4">
               <Label className="text-sm font-semibold">Filtros</Label>
               <div>
