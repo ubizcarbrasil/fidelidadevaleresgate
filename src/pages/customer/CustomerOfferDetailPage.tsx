@@ -4,6 +4,11 @@ import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
+import type { RedemptionWithOffer } from "@/types/customer";
+import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
+import { useBrand } from "@/contexts/BrandContext";
+import { useCustomer } from "@/contexts/CustomerContext";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,

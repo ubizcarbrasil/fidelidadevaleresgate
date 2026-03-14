@@ -270,7 +270,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
               )}
               {store?.instagram && (
                 <ActionButton icon={<Instagram className="h-5 w-5" />} label="Ver Instagram" bg="linear-gradient(135deg, #833AB4, #E1306C, #F77737)" color="#fff"
-                  onClick={() => window.open(`https://instagram.com/${store.instagram.replace("@", "")}`, "_blank")} />
+                  onClick={() => window.open(`https://instagram.com/${(store.instagram || "").replace("@", "")}`, "_blank")} />
               )}
             </div>
           </div>
