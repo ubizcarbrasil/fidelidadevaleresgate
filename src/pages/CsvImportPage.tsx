@@ -578,6 +578,7 @@ export default function CsvImportPage() {
       qc.invalidateQueries({ queryKey: ["offers"] });
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["crm-contacts"] });
+      qc.invalidateQueries({ queryKey: ["coupons"] });
       if (result.errors.length === 0) toast.success(`${result.success} registros importados com sucesso!`);
       else toast.warning(`${result.success} importados, ${result.errors.length} erros.`);
     },
