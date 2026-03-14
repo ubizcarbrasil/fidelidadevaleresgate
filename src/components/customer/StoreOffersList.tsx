@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import SafeImage from "@/components/customer/SafeImage";
 import type { Tables } from "@/integrations/supabase/types";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 type Offer = Tables<"offers">;
 
@@ -22,6 +23,12 @@ interface OfferCardProps {
 export const StoreOfferCard = React.memo(function StoreOfferCard({
   offer, storeName, storeLogoUrl, primary, fontHeading, isDark, isNew, index, onClick,
 }: OfferCardProps) {
+  const { formatSubtitle } = useOfferCardConfig();
+  const offerType = offer.coupon_type === "PRODUCT" ? "product" as const : "store" as const;
+  const subtitleText = Number(offer.value_rescue) > 0
+    ? formatSubtitle(offerType, { points: Math.floor(Number(offer.value_rescue)), credit: Number(offer.value_rescue) })
+    : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -61,15 +68,11 @@ export const StoreOfferCard = React.memo(function StoreOfferCard({
                 </span>
               )}
             </div>
-            {offer.coupon_type !== "PRODUCT" && Number(offer.value_rescue) > 0 ? (
+            {subtitleText && (
               <p className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground">
-                {Math.floor(Number(offer.value_rescue))} pontos por R$ {Number(offer.value_rescue).toFixed(2)}
+                {subtitleText}
               </p>
-            ) : offer.coupon_type === "PRODUCT" && Number(offer.value_rescue) > 0 ? (
-              <p className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground">
-                {Math.floor(Number(offer.value_rescue))} pts = R$ {Number(offer.value_rescue).toFixed(2)}
-              </p>
-            ) : null}
+            )}
           </div>
           <div className="flex items-center justify-between mt-2">
             {offer.coupon_type === "PRODUCT" && Number(offer.value_rescue) > 0 && (

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 interface EmissoraStore {
   id: string;
@@ -32,6 +33,7 @@ export default function EmissorasSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { openStore, openEmissorasList } = useCustomerNav();
   const { isFavoriteStore, toggleFavoriteStore } = useCustomerFavoriteStores();
+  const { formatSubtitle } = useOfferCardConfig();
 
   const primary = "hsl(var(--vb-highlight))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
@@ -154,7 +156,7 @@ export default function EmissorasSection() {
                   }}
                 >
                   <Star className="h-2.5 w-2.5" fill={primary} stroke={primary} />
-                  {Number(store.points_per_real).toFixed(0)} pt{Number(store.points_per_real) !== 1 ? "s" : ""}
+                  {formatSubtitle("emitter", { points_per_real: Number(store.points_per_real) })}
                 </div>
               )}
             </div>

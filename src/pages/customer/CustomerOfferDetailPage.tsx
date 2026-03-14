@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 type Offer = Tables<"offers">;
 
@@ -66,6 +67,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const isDark = document.documentElement.classList.contains("dark");
   const accentOrWhite = isDark ? "hsl(var(--foreground))" : primary;
+  const { formatDetail, formatSubtitle } = useOfferCardConfig();
 
   // Fetch similar offers
   useEffect(() => {
@@ -600,7 +602,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <div>
                           <p className="text-xs font-medium mb-0.5 text-muted-foreground">Pague com Pontos</p>
                           <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                            {Math.floor(Number(offer.value_rescue))} pts = R$ {Number(offer.value_rescue).toFixed(2)}
+                            {formatSubtitle("product", { points: Math.floor(Number(offer.value_rescue)), credit: Number(offer.value_rescue) })}
                           </p>
                           {Number(offer.min_purchase || 0) > 0 && (
                             <p className="text-[11px] mt-0.5 text-muted-foreground">
@@ -616,7 +618,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       ) : (
                         <div>
                           <p className="text-sm font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                            {Math.floor(Number(offer.value_rescue))} pontos por R$ {Number(offer.value_rescue).toFixed(2)} em créditos na compra mínima de R$ {Number(offer.min_purchase || 0).toFixed(2)}
+                            {formatDetail("store", { points: Math.floor(Number(offer.value_rescue)), credit: Number(offer.value_rescue), min: Number(offer.min_purchase || 0) })}
                           </p>
                           {offer.redemption_type && (
                             <p className="text-[11px] mt-1.5 text-muted-foreground">

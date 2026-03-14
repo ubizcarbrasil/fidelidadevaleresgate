@@ -1,6 +1,7 @@
 import React from "react";
 import { Sparkles, Tag, Star, Percent, Zap, Gift, Heart, Award, type LucideIcon } from "lucide-react";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   sparkles: Sparkles,
@@ -36,23 +37,32 @@ const OfferBadge = React.memo(function OfferBadge({
   valueRescue = 0,
   minPurchase = 0,
 }: OfferBadgeProps) {
+  const { getBadgeConfig } = useOfferCardConfig();
+
   if (discountPercent <= 0 && valueRescue <= 0) return null;
 
-  const defaultTemplate = couponType === "PRODUCT"
-    ? "Pague {percent}% com Pontos"
-    : "Troque {points} pts por R$ {credit}";
+  const offerType = couponType === "PRODUCT" ? "product" as const : "store" as const;
+  const configBadge = getBadgeConfig(offerType);
 
   const config: BadgeConfig = {
-    ...{ bg_color: primaryColor, text_color: "#FFFFFF", text_template: defaultTemplate, icon: "sparkles" },
+    ...{ bg_color: primaryColor, text_color: "#FFFFFF", icon: "sparkles" },
+    ...(configBadge.bg_color ? configBadge : {}),
     ...(brandBadgeConfig || {}),
     ...(offerBadgeConfig || {}),
   };
+
+  // Use the text_template from config if available
+  const defaultTemplate = configBadge.text_template || (couponType === "PRODUCT"
+    ? "Pague {percent}% com Pontos"
+    : "Troque {points} pts por R$ {credit}");
+
+  const template = config.text_template || defaultTemplate;
 
   const IconComponent = ICON_MAP[config.icon || "sparkles"] || Sparkles;
 
   const points = Math.floor(valueRescue);
   const credit = valueRescue.toFixed(2).replace(".", ",");
-  const text = (config.text_template || defaultTemplate)
+  const text = template
     .replace("{percent}", String(discountPercent))
     .replace("{points}", String(points))
     .replace("{credit}", credit);
@@ -66,7 +76,7 @@ const OfferBadge = React.memo(function OfferBadge({
   return (
     <div
       className={`inline-flex items-center rounded-full font-bold ${sizeClasses} ${className}`}
-      style={{ backgroundColor: config.bg_color, color: config.text_color }}
+      style={{ backgroundColor: config.bg_color || primaryColor, color: config.text_color }}
     >
       <IconComponent className={iconSize} />
       {text}

@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
 import SafeImage from "@/components/customer/SafeImage";
 import type { OfferWithStore } from "@/types/customer";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -25,6 +26,7 @@ export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
+  const { formatSubtitle } = useOfferCardConfig();
   const [offers, setOffers] = useState<OfferWithStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
@@ -260,9 +262,10 @@ export default function CustomerOffersPage() {
                     {hasCashback && (
                       <div className="flex items-center gap-1">
                         <span className="text-base font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                           {offer.coupon_type !== "PRODUCT"
-                            ? `${Math.floor(Number(offer.value_rescue))} pontos por R$ ${Number(offer.value_rescue).toFixed(2)}`
-                            : `${Math.floor(Number(offer.value_rescue))} pts = R$ ${Number(offer.value_rescue).toFixed(2)}`}
+                           {formatSubtitle(
+                             offer.coupon_type === "PRODUCT" ? "product" : "store",
+                             { points: Math.floor(Number(offer.value_rescue)), credit: Number(offer.value_rescue) }
+                           )}
                         </span>
                       </div>
                     )}

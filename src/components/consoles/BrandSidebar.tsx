@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
   Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Target, Crown, UserX, Users2,
-  Contact, Layers3, Megaphone, PieChart, FileUp, ChevronRight, Car, FlaskConical,
+  Contact, Layers3, Megaphone, PieChart, FileUp, ChevronRight, Car, FlaskConical, LayoutTemplate,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -44,6 +44,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.partner_landing", defaultTitle: "LP de Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing" },
       { key: "sidebar.welcome_tour", defaultTitle: "Tour de Boas-Vindas", url: "/welcome-tour", icon: Rocket, moduleKey: "welcome_tour" },
       { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText, moduleKey: "profile_links" },
+      { key: "sidebar.offer_card_config", defaultTitle: "Cards de Oferta", url: "/offer-card-config", icon: LayoutTemplate },
     ],
   },
   {

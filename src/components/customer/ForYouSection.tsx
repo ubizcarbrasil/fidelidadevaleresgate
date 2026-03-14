@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss } from "@/lib/utils";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 interface ScoredOffer { offer_id: string; score: number }
 type OfferWithStore = Tables<"offers"> & {
@@ -30,6 +31,7 @@ export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
+  const { formatSubtitle } = useOfferCardConfig();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
@@ -167,12 +169,12 @@ export default function ForYouSection() {
               )}
               {o.coupon_type === "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {Math.floor(Number(o.value_rescue))} pts = R$ {Number(o.value_rescue).toFixed(2)}
+                  {formatSubtitle("product", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
                 </span>
               )}
               {o.coupon_type !== "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {Math.floor(Number(o.value_rescue))} pontos por R$ {Number(o.value_rescue).toFixed(2)}
+                  {formatSubtitle("store", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
                 </span>
               )}
             </div>
