@@ -65,9 +65,9 @@ export const StoreOfferCard = React.memo(function StoreOfferCard({
               <p className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground">
                 {Math.floor(Number(offer.value_rescue))} pontos por R$ {Number(offer.value_rescue).toFixed(2)}
               </p>
-            ) : offer.description ? (
+            ) : offer.coupon_type === "PRODUCT" && Number(offer.value_rescue) > 0 ? (
               <p className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground">
-                {offer.description}
+                {Math.floor(Number(offer.value_rescue))} pts = R$ {Number(offer.value_rescue).toFixed(2)}
               </p>
             ) : null}
           </div>

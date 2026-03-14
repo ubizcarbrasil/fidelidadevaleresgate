@@ -46,12 +46,15 @@ export default function StepReview({ data }: Props) {
         <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
         {isProduct ? (
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
+              <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom (automática)</p>
               <p className="text-lg font-bold text-primary">
                 PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Produto: R$ {data.product_price.toFixed(2)} → {Math.floor(creditBase)} pts (= R$ {creditBase.toFixed(2)})
+                {Math.floor(creditBase)} pts = R$ {creditBase.toFixed(2)} | Produto: R$ {data.product_price.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "SITE" ? "Online" : "WhatsApp"}
               </p>
             </div>
           ) : (
