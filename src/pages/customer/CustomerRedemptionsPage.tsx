@@ -371,9 +371,9 @@ function RedemptionCard({
           )}
 
           {/* Store address */}
-          {(store?.address as string) && (
+          {store?.address && (
             <DetailInfoRow icon={<MapPin className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
-              Resgate via: {store?.address as string}
+              Resgate via: {store.address}
             </DetailInfoRow>
           )}
 
