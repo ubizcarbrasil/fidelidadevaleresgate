@@ -32,13 +32,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
           setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
           setRoles([]);
+        }
+        // Audit critical auth events
+        if (event === "SIGNED_IN" && session?.user) {
+          logAudit(session.user.id, { action: "LOGIN", entity_type: "auth" });
+        } else if (event === "SIGNED_OUT") {
+          logAudit(user?.id ?? null, { action: "LOGOUT", entity_type: "auth" });
+        } else if (event === "PASSWORD_RECOVERY") {
+          logAudit(session?.user?.id ?? null, { action: "PASSWORD_RESET", entity_type: "auth" });
         }
         setLoading(false);
       }
