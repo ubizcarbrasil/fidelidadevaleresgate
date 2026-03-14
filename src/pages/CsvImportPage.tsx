@@ -374,6 +374,79 @@ export default function CsvImportPage() {
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
           setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
+      } else if (importType === "COUPONS") {
+        // Pre-load stores for resolution
+        const { data: existingStores } = await supabase.from("stores").select("id, name, slug").eq("brand_id", brandId).eq("branch_id", branchId);
+        const storeByName = new Map((existingStores || []).map(s => [s.name.toLowerCase(), s.id]));
+        const storeBySlug = new Map((existingStores || []).map(s => [s.slug.toLowerCase(), s.id]));
+
+        // Pre-load offers for campaign linking (case-insensitive title match)
+        const { data: existingOffers } = await supabase.from("offers").select("id, title").eq("brand_id", brandId).eq("branch_id", branchId).eq("is_active", true);
+        const offerByTitle = new Map((existingOffers || []).map(o => [o.title.toLowerCase(), o.id]));
+
+        // Pre-load existing coupon codes for uniqueness validation
+        const { data: existingCoupons } = await supabase.from("coupons").select("code").eq("brand_id", brandId).eq("branch_id", branchId);
+        const existingCodes = new Set((existingCoupons || []).map(c => c.code.toUpperCase()));
+
+        // Track intra-CSV duplicates
+        const csvCodes = new Set<string>();
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          try {
+            const code = row.code.trim().toUpperCase();
+
+            // Uniqueness: check DB
+            if (existingCodes.has(code)) {
+              result.errors.push({ row: i + 2, message: `Código "${code}" já existe no banco` });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+            // Uniqueness: check intra-CSV
+            if (csvCodes.has(code)) {
+              result.errors.push({ row: i + 2, message: `Código "${code}" duplicado no CSV` });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+            csvCodes.add(code);
+
+            // Resolve store
+            const storeName = row.store_name?.trim() || "";
+            const storeSlug = row.store_slug?.trim() || "";
+            const storeId = storeByName.get(storeName.toLowerCase()) || storeBySlug.get(storeSlug.toLowerCase());
+            if (!storeId) {
+              result.errors.push({ row: i + 2, message: `Loja "${storeName || storeSlug}" não encontrada` });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+
+            // Resolve campaign → offer_id
+            const campaignTitle = row.campaign?.trim() || "";
+            const offerId = campaignTitle ? (offerByTitle.get(campaignTitle.toLowerCase()) || null) : null;
+
+            const expiresAt = parseBrDate(row.expires_at);
+            if (!expiresAt) throw new Error("Data de expiração inválida");
+
+            const { error } = await supabase.from("coupons").insert({
+              code,
+              brand_id: brandId,
+              branch_id: branchId,
+              store_id: storeId,
+              type: row.type.trim().toUpperCase(),
+              value: Number(row.value),
+              expires_at: expiresAt,
+              offer_id: offerId,
+              status: row.status?.trim().toUpperCase() || "ACTIVE",
+            });
+            if (error) throw error;
+            existingCodes.add(code);
+            result.success++;
+          } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
+        }
       } else if (importType === "CUSTOMERS") {
         // Batch insert customers, then mirror to crm_contacts
         for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
