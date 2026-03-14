@@ -119,7 +119,7 @@ export default function OfferCardConfigPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Cards de Oferta" subtitle="Configure os textos e badges exibidos nos cards de oferta do app" />
+      <PageHeader title="Cards de Oferta" description="Configure os textos e badges exibidos nos cards de oferta do app" />
 
       <Tabs defaultValue="store" className="w-full">
         <TabsList className="w-full grid grid-cols-3">
