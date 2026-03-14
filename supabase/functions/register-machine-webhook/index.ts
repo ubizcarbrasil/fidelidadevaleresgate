@@ -171,7 +171,6 @@ Deno.serve(async (req) => {
       brand_id,
       branch_id,
       api_key: effectiveApiKey,
-      receipt_api_key: receipt_api_key || null,
       basic_auth_user,
       basic_auth_password,
       webhook_registered: webhookRegistered,

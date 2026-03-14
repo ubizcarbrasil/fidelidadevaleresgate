@@ -1177,7 +1177,7 @@ export default function MachineIntegrationPage() {
                     </button>
                   </div>
                 </div>
-                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlReceiptApiKey || !urlBasicUser || !urlBasicPass || !urlBranchId}>
+                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlBasicUser || !urlBasicPass || !urlBranchId}>
                   {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Power className="h-4 w-4 mr-1" />
                   Ativar cidade

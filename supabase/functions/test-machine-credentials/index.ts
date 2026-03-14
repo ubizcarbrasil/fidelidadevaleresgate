@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       integrationId: integration_id,
       hasBasicAuth: !!(basicUser && basicPass),
       hasMatrixCredentials: !!matrixApiKey,
-      receiptApiKeyPrefix: receiptApiKey.slice(0, 6) + "***",
+      cityApiKeyPrefix: cityApiKey.slice(0, 6) + "***",
     });
 
     const results = await testBothEndpoints(cityHeaders, "100003661", matrixHeaders);

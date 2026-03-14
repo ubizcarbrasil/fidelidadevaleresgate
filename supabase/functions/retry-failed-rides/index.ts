@@ -70,15 +70,15 @@ async function retryRide(
   const branchId = ride.branch_id || integration.branch_id || null;
   const machineRideId = ride.machine_ride_id;
 
-  const receiptApiKey = (integration.receipt_api_key || integration.api_key || "").trim();
+  const cityApiKey = (integration.api_key || "").trim();
   const basicUser = (integration.basic_auth_user || "").trim();
   const basicPass = (integration.basic_auth_password || "").trim();
 
-  if (!receiptApiKey || receiptApiKey.startsWith("url-only-")) {
-    return { machineRideId, status: "SKIP", reason: "no_receipt_api_key" };
+  if (!cityApiKey || cityApiKey.startsWith("url-only-")) {
+    return { machineRideId, status: "SKIP", reason: "no_api_key" };
   }
 
-  const cityHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+  const cityHeaders = buildApiHeaders(cityApiKey, basicUser, basicPass);
 
   // Matrix credentials for Recibo endpoint
   const matrixApiKey = (integration.matrix_api_key || "").trim();

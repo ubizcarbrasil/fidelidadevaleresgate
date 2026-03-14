@@ -206,9 +206,9 @@ async function processFinalized(
     brandId,
     machineRideId,
     hasBasicAuth: !!(basicUser && basicPass),
-    hasReceiptApiKey: true,
+    hasCityApiKey: true,
     hasMatrixCredentials: !!matrixApiKey,
-    receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
+    cityApiKeyPrefix: cityApiKey ? `${cityApiKey.slice(0, 6)}***` : null,
   });
 
   // Dual-endpoint fetch with configurable primary endpoint
