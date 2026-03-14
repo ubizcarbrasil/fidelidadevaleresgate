@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -10,22 +10,28 @@ import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
-import CustomerOffersPage from "@/pages/customer/CustomerOffersPage";
-import CustomerRedemptionsPage from "@/pages/customer/CustomerRedemptionsPage";
-import CustomerWalletPage from "@/pages/customer/CustomerWalletPage";
-import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
-import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
-import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
 import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
-import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
+import { hslToCss } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
 import type { OfferWithStore, NavOffer, NavStore } from "@/types/customer";
+
+// Lazy-loaded tab pages (not needed on initial render)
+const CustomerOffersPage = lazy(() => import("@/pages/customer/CustomerOffersPage"));
+const CustomerRedemptionsPage = lazy(() => import("@/pages/customer/CustomerRedemptionsPage"));
+const CustomerWalletPage = lazy(() => import("@/pages/customer/CustomerWalletPage"));
+const CustomerProfilePage = lazy(() => import("@/pages/customer/CustomerProfilePage"));
+const CustomerEmissorasPage = lazy(() => import("@/pages/customer/CustomerEmissorasPage"));
+
+// Lazy-loaded overlays (rendered on demand)
+const CustomerOfferDetailPage = lazy(() => import("@/pages/customer/CustomerOfferDetailPage"));
+const CustomerStoreDetailPage = lazy(() => import("@/pages/customer/CustomerStoreDetailPage"));
 
 interface SectionDetail {
   title: string | null;
@@ -66,15 +72,15 @@ const CustomerNavContext = createContext<CustomerNavContextType>({
 export const useOfferNav = () => useContext(CustomerNavContext);
 export const useCustomerNav = () => useContext(CustomerNavContext);
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
+// Tab loading fallback
+function TabSkeleton() {
+  return (
+    <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
+      <Skeleton className="h-6 w-48 rounded-lg" />
+      <Skeleton className="h-32 w-full rounded-2xl" />
+      <Skeleton className="h-32 w-full rounded-2xl" />
+    </div>
+  );
 }
 
 type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
@@ -132,17 +138,23 @@ export default function CustomerLayout() {
   const lastScrollY = useRef(0);
   const mainRef = useRef<HTMLDivElement>(null);
 
+  const rafRef = useRef(0);
   const handleScroll = useCallback(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const currentY = el.scrollTop;
-    const delta = currentY - lastScrollY.current;
-    if (delta > 8 && currentY > 60) {
-      setHeaderVisible(false);
-    } else if (delta < -5) {
-      setHeaderVisible(true);
-    }
-    lastScrollY.current = currentY;
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      const el = mainRef.current;
+      if (el) {
+        const currentY = el.scrollTop;
+        const delta = currentY - lastScrollY.current;
+        if (delta > 8 && currentY > 60) {
+          setHeaderVisible(false);
+        } else if (delta < -5) {
+          setHeaderVisible(true);
+        }
+        lastScrollY.current = currentY;
+      }
+      rafRef.current = 0;
+    });
   }, []);
 
   // Default to dark mode for customer app (respect user preference if saved)
@@ -299,7 +311,9 @@ export default function CustomerLayout() {
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
                 />
               ) : (
-                <ActivePage />
+                <Suspense fallback={<TabSkeleton />}>
+                  <ActivePage />
+                </Suspense>
               )}
             </motion.div>
           </AnimatePresence>
@@ -366,32 +380,36 @@ export default function CustomerLayout() {
         {/* Offer Detail Overlay */}
         <AnimatePresence>
           {selectedOffer && (
-            <CustomerOfferDetailPage
-              offer={selectedOffer as OfferWithStore}
-              onBack={() => setSelectedOffer(null)}
-              onOfferClick={(offer) => {
-                setSelectedOffer(null);
-                setTimeout(() => setSelectedOffer(offer), 150);
-              }}
-              onOpenStore={(store) => {
-                setSelectedOffer(null);
-                setTimeout(() => setSelectedStore(store), 150);
-              }}
-            />
+            <Suspense fallback={<TabSkeleton />}>
+              <CustomerOfferDetailPage
+                offer={selectedOffer as OfferWithStore}
+                onBack={() => setSelectedOffer(null)}
+                onOfferClick={(offer) => {
+                  setSelectedOffer(null);
+                  setTimeout(() => setSelectedOffer(offer), 150);
+                }}
+                onOpenStore={(store) => {
+                  setSelectedOffer(null);
+                  setTimeout(() => setSelectedStore(store), 150);
+                }}
+              />
+            </Suspense>
           )}
         </AnimatePresence>
 
         {/* Store Detail Overlay */}
         <AnimatePresence>
           {selectedStore && (
-            <CustomerStoreDetailPage
-              store={selectedStore as Tables<"stores">}
-              onBack={() => setSelectedStore(null)}
-              onOfferClick={(offer) => {
-                setSelectedStore(null);
-                setTimeout(() => setSelectedOffer(offer), 100);
-              }}
-            />
+            <Suspense fallback={<TabSkeleton />}>
+              <CustomerStoreDetailPage
+                store={selectedStore as Tables<"stores">}
+                onBack={() => setSelectedStore(null)}
+                onOfferClick={(offer) => {
+                  setSelectedStore(null);
+                  setTimeout(() => setSelectedOffer(offer), 100);
+                }}
+              />
+            </Suspense>
           )}
         </AnimatePresence>
 
@@ -418,7 +436,9 @@ export default function CustomerLayout() {
         {/* Emissoras List Overlay */}
         <AnimatePresence>
           {emissorasOpen && (
-            <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+            <Suspense fallback={<TabSkeleton />}>
+              <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+            </Suspense>
           )}
         </AnimatePresence>
 

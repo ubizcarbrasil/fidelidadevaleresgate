@@ -1,66 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Análise de Performance do App do Cliente
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problemas Identificados
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-**1. Ausência de lazy loading nas páginas de tab (Alto impacto)**
-`CustomerLayout.tsx` importa **todas** as 7 páginas de tab + overlays estaticamente no topo do arquivo. Isso significa que o bundle inicial inclui todo o código de Ofertas, Resgates, Carteira, Perfil, Emissoras, etc. — mesmo que o usuário só veja a Home.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**2. Queries Supabase sem React Query em seções da Home (Médio impacto)**
-`ForYouSection`, `EmissorasSection`, `AchadinhoSection` e `SegmentNavSection` usam `useEffect` + `useState` com chamadas diretas ao Supabase. Isso significa:
-- Sem cache entre navegações de tab (re-fetch toda vez que volta à Home)
-- Sem deduplicação de requests simultâneos
-- Sem stale-while-revalidate
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**3. Animações framer-motion em cada card do carrossel (Baixo-Médio impacto)**
-`ForYouSection` aplica `motion.div` com `initial/animate` individual e delay staggered em cada card. Isso cria múltiplas animações simultâneas no mount, que em dispositivos low-end pode causar jank.
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**4. `HomeSectionsRenderer` renderizado duas vezes (Médio impacto)**
-Na `CustomerHomePage`, `HomeSectionsRenderer` é chamado duas vezes: uma com `renderBannersOnly` e outra com `skipBanners`. Cada instância faz sua própria query ao Supabase, duplicando o fetch de seções.
-
-**5. Scroll handler sem throttle (Baixo impacto)**
-`handleScroll` no `CustomerLayout` é chamado a cada pixel de scroll sem throttle/requestAnimationFrame.
-
-**6. `hslToCss` duplicada em 4+ arquivos**
-Função utilitária copiada em `ForYouSection`, `AchadinhoSection`, `EmissorasSection`, `CustomerHomePage`, `CustomerLayout`. Não é performance, mas é manutenção.
-
----
-
-### Plano de Otimização
-
-#### Tarefa 1 — Lazy load das páginas de tab e overlays
-- Usar `React.lazy()` + `Suspense` para `CustomerOffersPage`, `CustomerRedemptionsPage`, `CustomerWalletPage`, `CustomerProfilePage`, `CustomerEmissorasPage`, `CustomerOfferDetailPage`, `CustomerStoreDetailPage`
-- Manter `CustomerHomePage` como import estático (é a tab default)
-- Fallback com skeleton durante carregamento
-
-#### Tarefa 2 — Migrar seções da Home para `useQuery`
-- Converter `ForYouSection`, `EmissorasSection`, `AchadinhoSection`, `SegmentNavSection` para usar `useQuery` do TanStack React Query
-- Aproveitar o `queryClient` já configurado (staleTime 30s, gcTime 10min)
-- Cache keys baseados em `[brand.id, branch.id]`
-
-#### Tarefa 3 — Unificar fetch do `HomeSectionsRenderer`
-- Criar um hook `useHomeSections` que faz o fetch uma única vez e filtra banners/non-banners no render
-- Eliminar a duplicação de queries
-
-#### Tarefa 4 — Throttle no scroll handler
-- Adicionar `requestAnimationFrame` no `handleScroll` para limitar execução a ~60fps
-
-#### Tarefa 5 — Simplificar animações de carrossel
-- Trocar `motion.div` individual por CSS `animation-delay` ou usar `variants` com `staggerChildren` no container (single animation frame)
-
-#### Tarefa 6 — Extrair `hslToCss` para `src/lib/utils.ts`
-- Centralizar a função e remover duplicatas
-
----
-
-### Impacto Estimado
-
-| Otimização | Bundle | Network | Runtime |
-|---|---|---|---|
-| Lazy loading tabs | -30-40% bundle inicial | — | Faster TTI |
-| React Query nas seções | — | -50% requests (cache) | Smoother tab switching |
-| Unificar HomeSections | — | -1 request duplicado | — |
-| Throttle scroll | — | — | Menos jank no scroll |
-| Simplificar animações | — | — | Menos jank no mount |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

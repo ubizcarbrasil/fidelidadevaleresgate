@@ -6,6 +6,7 @@ import { ChevronRight, Coins, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
+import { hslToCss } from "@/lib/utils";
 
 import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
@@ -23,10 +24,7 @@ const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
   { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
 ];
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+// hslToCss imported from @/lib/utils
 
 function getGreeting(): string {
   const h = new Date().getHours();

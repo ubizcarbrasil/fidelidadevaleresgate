@@ -9,6 +9,9 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { motion } from "framer-motion";
 import OfferBadge from "@/components/customer/OfferBadge";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { hslToCss } from "@/lib/utils";
 
 type Voucher = Tables<"vouchers">;
 
@@ -39,10 +42,7 @@ interface BrandSection {
   }[];
 }
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+// hslToCss imported from @/lib/utils
 
 // --- Lazy Image Component ---
 function LazyImage({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
@@ -148,47 +148,46 @@ function applyRankingBoost(items: any[], rankedIds: string[]): any[] {
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
-  const [sections, setSections] = useState<BrandSection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sponsoredStoreIds, setSponsoredStoreIds] = useState<Set<string>>(new Set());
-  const [rankedOfferIds, setRankedOfferIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!brand) return;
-    const fetchAll = async () => {
-      setLoading(true);
+  const { data: fetchResult, isLoading: loading } = useQuery({
+    queryKey: ["home-sections", brand?.id, selectedBranch?.id, customer?.id],
+    enabled: !!brand,
+    queryFn: async () => {
       const [sectionsRes, sponsoredRes, rankedRes] = await Promise.all([
         supabase
           .from("brand_sections")
           .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
-          .eq("brand_id", brand.id)
+          .eq("brand_id", brand!.id)
           .is("page_id", null)
           .eq("is_enabled", true)
           .order("order_index"),
         supabase
           .from("sponsored_placements")
           .select("store_id, priority")
-          .eq("brand_id", brand.id)
+          .eq("brand_id", brand!.id)
           .eq("is_active", true)
           .gte("ends_at", new Date().toISOString())
           .lte("starts_at", new Date().toISOString()),
-        // Fetch ranked offer IDs for boost ordering
         selectedBranch
           ? supabase.rpc("get_recommended_offers", {
-              p_brand_id: brand.id,
+              p_brand_id: brand!.id,
               p_branch_id: selectedBranch.id,
               p_customer_id: (customer?.id as string | undefined) ?? undefined,
               p_limit: 30,
             })
           : Promise.resolve({ data: [] }),
       ]);
-      setSections((sectionsRes.data as any) || []);
-      setSponsoredStoreIds(new Set((sponsoredRes.data || []).map((s: any) => s.store_id)));
-      setRankedOfferIds(((rankedRes as any).data || []).map((r: any) => r.offer_id));
-      setLoading(false);
-    };
-    fetchAll();
-  }, [brand]);
+      return {
+        sections: (sectionsRes.data as any) || [],
+        sponsoredStoreIds: new Set((sponsoredRes.data || []).map((s: any) => s.store_id)) as Set<string>,
+        rankedOfferIds: ((rankedRes as any).data || []).map((r: any) => r.offer_id) as string[],
+      };
+    },
+  });
+
+  const sections: BrandSection[] = fetchResult?.sections || [];
+  const sponsoredStoreIds = fetchResult?.sponsoredStoreIds || new Set<string>();
+  const rankedOfferIds = fetchResult?.rankedOfferIds || [];
 
   if (loading) {
     return (

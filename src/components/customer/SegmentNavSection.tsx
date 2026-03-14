@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { icons, Store, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface CategoryItem {
   id: string;
@@ -38,27 +39,33 @@ function CategoryIcon({ iconName }: { iconName: string | null }) {
   return <LucideIcon className="h-5 w-5" style={{ color }} />;
 }
 
+const containerVariants = {
+  animate: { transition: { staggerChildren: 0.03 } },
+};
+const itemVariants = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.25 } },
+};
+
 export default function SegmentNavSection({ onSegmentClick, onSeeMore }: SegmentNavSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  useEffect(() => {
-    if (!brand || !selectedBranch) return;
-    const fetchCategories = async () => {
-      setLoading(true);
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.stores.list(brand?.id, selectedBranch?.id, "categories"),
+    enabled: !!brand && !!selectedBranch,
+    queryFn: async () => {
       const { data } = await supabase
         .from("stores")
         .select("taxonomy_segment_id, taxonomy_segments(id, name, icon_name, category_id, taxonomy_categories(id, name, icon_name))")
-        .eq("branch_id", selectedBranch.id)
-        .eq("brand_id", brand.id)
+        .eq("branch_id", selectedBranch!.id)
+        .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .eq("approval_status", "APPROVED")
         .not("taxonomy_segment_id", "is", null);
 
-      if (!data) { setLoading(false); return; }
+      if (!data) return [];
 
       const map = new Map<string, CategoryItem>();
       for (const s of data) {
@@ -78,15 +85,11 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
         }
       }
 
-      setCategories(
-        Array.from(map.values())
-          .sort((a, b) => b.store_count - a.store_count)
-          .slice(0, 12)
-      );
-      setLoading(false);
-    };
-    fetchCategories();
-  }, [brand, selectedBranch]);
+      return Array.from(map.values())
+        .sort((a, b) => b.store_count - a.store_count)
+        .slice(0, 12);
+    },
+  });
 
   if (loading) {
     return (
@@ -127,13 +130,16 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
       {/* Horizontal scroll */}
       <ScrollArea className="w-full">
-        <div className="flex gap-0 pb-2">
-          {categories.map((cat, idx) => (
+        <motion.div
+          className="flex gap-0 pb-2"
+          variants={containerVariants}
+          initial="initial"
+          animate="animate"
+        >
+          {categories.map((cat) => (
             <motion.button
               key={cat.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.03, duration: 0.25 }}
+              variants={itemVariants}
               whileTap={{ scale: 0.92 }}
               className="flex flex-col items-center gap-1 flex-shrink-0"
               style={{ width: 68 }}
@@ -152,7 +158,7 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               </span>
             </motion.button>
           ))}
-        </div>
+        </motion.div>
         <ScrollBar orientation="horizontal" className="h-1" />
       </ScrollArea>
     </section>

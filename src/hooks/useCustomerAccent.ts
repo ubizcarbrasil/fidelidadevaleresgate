@@ -1,9 +1,5 @@
 import { useBrand } from "@/contexts/BrandContext";
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+import { hslToCss } from "@/lib/utils";
 
 /**
  * Returns the customer app accent color.

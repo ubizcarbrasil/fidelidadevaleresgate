@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useRef, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -6,17 +6,9 @@ import { ExternalLink, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
-}
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { hslToCss, withAlpha } from "@/lib/utils";
 
 interface AffiliateDeal {
   id: string;
@@ -45,13 +37,18 @@ function LucideIcon({ name, className, style }: { name: string; className?: stri
   return Icon ? <Icon className={className} style={style} /> : null;
 }
 
+const containerVariants = {
+  animate: { transition: { staggerChildren: 0.05 } },
+};
+const cardVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+};
+
 export default function AchadinhoSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
-  const [deals, setDeals] = useState<AffiliateDeal[]>([]);
-  const [categories, setCategories] = useState<DealCategory[]>([]);
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const catScrollRef = useRef<HTMLDivElement>(null);
 
@@ -59,16 +56,14 @@ export default function AchadinhoSection() {
   const highlight = "hsl(var(--vb-highlight))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  useEffect(() => {
-    if (!brand) return;
-    const fetchData = async () => {
-      setLoading(true);
-
-      // Fetch deals and categories in parallel
+  const { data, isLoading: loading } = useQuery({
+    queryKey: queryKeys.offers.list(brand?.id, selectedBranch?.id, "achadinhos"),
+    enabled: !!brand,
+    queryFn: async () => {
       let dealsQuery = supabase
         .from("affiliate_deals")
         .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id")
-        .eq("brand_id", brand.id)
+        .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
         .limit(50);
@@ -79,7 +74,7 @@ export default function AchadinhoSection() {
       const catsQuery = supabase
         .from("affiliate_deal_categories")
         .select("id, name, icon_name, color")
-        .eq("brand_id", brand.id)
+        .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index");
 
@@ -88,16 +83,16 @@ export default function AchadinhoSection() {
       const allDeals = (dealsRes.data as AffiliateDeal[]) || [];
       const allCats = (catsRes.data as DealCategory[]) || [];
 
-      setDeals(allDeals);
-
-      // Only show categories that have at least one deal
       const catIdsWithDeals = new Set(allDeals.map(d => d.category_id).filter(Boolean));
-      setCategories(allCats.filter(c => catIdsWithDeals.has(c.id)));
+      return {
+        deals: allDeals,
+        categories: allCats.filter(c => catIdsWithDeals.has(c.id)),
+      };
+    },
+  });
 
-      setLoading(false);
-    };
-    fetchData();
-  }, [brand, selectedBranch]);
+  const deals = data?.deals || [];
+  const categories = data?.categories || [];
 
   const filteredDeals = useMemo(() => {
     if (!selectedCat) return deals;
@@ -169,13 +164,9 @@ export default function AchadinhoSection() {
         </div>
       </div>
 
-      {/* Category pills - horizontal scroll */}
+      {/* Category pills */}
       {categories.length > 0 && (
-        <div
-          ref={catScrollRef}
-          className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-3"
-        >
-          {/* "Todos" pill */}
+        <div ref={catScrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-3">
           <button
             onClick={() => setSelectedCat(null)}
             className="flex flex-col items-center gap-1.5 min-w-[60px] flex-shrink-0"
@@ -187,16 +178,9 @@ export default function AchadinhoSection() {
                 border: !selectedCat ? `2px solid ${primary}` : '2px solid transparent',
               }}
             >
-              <AppIcon
-                iconKey="section_deals"
-                className="h-6 w-6"
-                style={{ color: !selectedCat ? '#fff' : highlight }}
-              />
+              <AppIcon iconKey="section_deals" className="h-6 w-6" style={{ color: !selectedCat ? '#fff' : highlight }} />
             </div>
-            <span
-              className="text-[10px] font-medium text-center leading-tight line-clamp-2"
-              style={{ color: !selectedCat ? highlight : undefined }}
-            >
+            <span className="text-[10px] font-medium text-center leading-tight line-clamp-2" style={{ color: !selectedCat ? highlight : undefined }}>
               Todos
             </span>
           </button>
@@ -216,16 +200,9 @@ export default function AchadinhoSection() {
                     border: isActive ? `2px solid ${cat.color}` : '2px solid transparent',
                   }}
                 >
-                  <LucideIcon
-                    name={cat.icon_name}
-                    className="h-6 w-6"
-                    style={{ color: isActive ? '#fff' : cat.color }}
-                  />
+                  <LucideIcon name={cat.icon_name} className="h-6 w-6" style={{ color: isActive ? '#fff' : cat.color }} />
                 </div>
-                <span
-                  className="text-[10px] font-medium text-center leading-tight line-clamp-2"
-                  style={{ color: isActive ? cat.color : undefined }}
-                >
+                <span className="text-[10px] font-medium text-center leading-tight line-clamp-2" style={{ color: isActive ? cat.color : undefined }}>
                   {cat.name}
                 </span>
               </button>
@@ -235,12 +212,15 @@ export default function AchadinhoSection() {
       )}
 
       {/* Deals carousel */}
-      <div
+      <motion.div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
         style={{ scrollSnapType: "x mandatory" }}
+        variants={containerVariants}
+        initial="initial"
+        animate="animate"
       >
-        {filteredDeals.map((deal, idx) => {
+        {filteredDeals.map((deal) => {
           const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
           const discountPercent = hasDiscount
             ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
@@ -252,9 +232,7 @@ export default function AchadinhoSection() {
           return (
             <motion.div
               key={deal.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05, duration: 0.3 }}
+              variants={cardVariants}
               whileTap={{ scale: 0.97 }}
               className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
               style={{
@@ -272,19 +250,13 @@ export default function AchadinhoSection() {
                     loading="lazy"
                   />
                 ) : (
-                  <div
-                    className="w-full aspect-square flex items-center justify-center"
-                    style={{ backgroundColor: withAlpha(primary, 0.06) }}
-                  >
+                  <div className="w-full aspect-square flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
                     <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
                   </div>
                 )}
 
                 {badgeText && (
-                  <div
-                    className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm"
-                    style={{ backgroundColor: highlight }}
-                  >
+                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm" style={{ backgroundColor: highlight }}>
                     {badgeText}
                   </div>
                 )}
@@ -300,24 +272,16 @@ export default function AchadinhoSection() {
 
               <div className="p-3">
                 {deal.store_name && (
-                  <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">
-                    {deal.store_name}
-                  </p>
+                  <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
                 )}
-                <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>
-                  {deal.title}
-                </h3>
+                <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
                 {(priceStr || originalPriceStr) && (
                   <div className="flex items-baseline gap-1.5">
                     {priceStr && (
-                      <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>
-                        {priceStr}
-                      </span>
+                      <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>
                     )}
                     {hasDiscount && originalPriceStr && (
-                      <span className="text-[10px] line-through text-muted-foreground">
-                        {originalPriceStr}
-                      </span>
+                      <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>
                     )}
                   </div>
                 )}
@@ -326,7 +290,7 @@ export default function AchadinhoSection() {
           );
         })}
         <div className="min-w-[16px] flex-shrink-0" />
-      </div>
+      </motion.div>
     </section>
   );
 }
