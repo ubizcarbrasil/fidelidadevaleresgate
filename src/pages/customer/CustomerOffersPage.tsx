@@ -69,7 +69,7 @@ export default function CustomerOffersPage() {
   const filtered = useMemo(() => {
     let result = offers;
     if (selectedSegmentId) {
-      result = result.filter((o: any) => o.stores?.taxonomy_segment_id === selectedSegmentId);
+      result = result.filter((o) => (o.stores as Record<string, unknown> | null)?.taxonomy_segment_id === selectedSegmentId);
     }
     if (query.trim()) {
       const q = query.toLowerCase();
