@@ -661,6 +661,11 @@ export default function CsvImportPage() {
                 <Label htmlFor="auto-create">Criar lojas automaticamente se não existirem</Label>
               </div>
             )}
+            {importType === "COUPONS" && (
+              <Alert>
+                <AlertDescription>Códigos duplicados (no CSV ou já existentes) serão rejeitados. O campo "Campanha" vincula automaticamente à oferta pelo título.</AlertDescription>
+              </Alert>
+            )}
 
             {(importType === "CUSTOMERS" || importType === "CRM_CONTACTS") && (
               <Alert>
