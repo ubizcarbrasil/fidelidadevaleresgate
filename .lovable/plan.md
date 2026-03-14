@@ -1,30 +1,37 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Problema identificado
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+A edge function `test-machine-credentials` **não está registrada** no `supabase/config.toml`, por isso não é deployada e retorna 404 quando chamada.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Também faltam no config.toml outras funções que existem no projeto: `retry-failed-rides`, `mobility-webhook`, `scrape-product`, `test-machine-credentials`.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+## Plano
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+1. **Adicionar `test-machine-credentials` ao `supabase/config.toml`** com `verify_jwt = false` (a autenticação é feita manualmente via header `authorization` no código).
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+2. **Adicionar `retry-failed-rides` ao `supabase/config.toml`** — também usa a shared `fetchRideData.ts` e precisa estar registrada.
+
+3. Verificar se `mobility-webhook` e `scrape-product` também precisam ser adicionados (existem como diretórios mas não no config).
+
+Após o deploy, testar a função diretamente para confirmar que responde corretamente.
+
+### Alteração
+
+**Arquivo:** `supabase/config.toml`  
+Adicionar ao final:
+
+```toml
+[functions.test-machine-credentials]
+verify_jwt = false
+
+[functions.retry-failed-rides]
+verify_jwt = false
+
+[functions.mobility-webhook]
+verify_jwt = false
+
+[functions.scrape-product]
+verify_jwt = false
+```
+
