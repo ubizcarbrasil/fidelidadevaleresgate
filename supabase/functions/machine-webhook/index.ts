@@ -172,9 +172,10 @@ async function processFinalized(
 ) {
   // Use api-key header against api-vendas endpoint
   const apiKey = (integration.api_key || "").trim();
-  if (!apiKey) {
+  const isPlaceholder = apiKey.startsWith("url-only-") || !apiKey;
+  if (isPlaceholder) {
     logger.error("Missing api_key on integration", { brandId });
-    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "api_key_empty" } });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "api_key_placeholder_or_empty", api_key_prefix: apiKey.slice(0, 12) } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
@@ -184,7 +185,7 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "API key not configured. Please set the api-key in integration settings.", status: 400 };
+    return { error: "A chave da API TaxiMachine não foi configurada. Acesse a configuração da integração e cole a chave real fornecida pela TaxiMachine.", status: 400 };
   }
 
   const machineBaseUrl = "https://api-vendas.taximachine.com.br";
