@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -8,11 +7,8 @@ import AppIcon from "@/components/customer/AppIcon";
 import SafeImage from "@/components/customer/SafeImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface EmissoraStore {
   id: string;
@@ -24,37 +20,40 @@ interface EmissoraStore {
   store_type: string;
 }
 
+const containerVariants = {
+  animate: { transition: { staggerChildren: 0.04 } },
+};
+const cardVariants = {
+  initial: { opacity: 0, scale: 0.92 },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.25 } },
+};
+
 export default function EmissorasSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { openStore, openEmissorasList } = useCustomerNav();
   const { isFavoriteStore, toggleFavoriteStore } = useCustomerFavoriteStores();
-  const [stores, setStores] = useState<EmissoraStore[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const primary = "hsl(var(--vb-highlight))";
-  const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  useEffect(() => {
-    if (!brand || !selectedBranch) return;
-    const fetchStores = async () => {
-      setLoading(true);
+  const { data: stores = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.stores.list(brand?.id, selectedBranch?.id, "emissoras"),
+    enabled: !!brand && !!selectedBranch,
+    queryFn: async () => {
       const { data } = await supabase
         .from("stores")
         .select("id, name, logo_url, category, points_per_real, description, store_type")
-        .eq("brand_id", brand.id)
-        .eq("branch_id", selectedBranch.id)
+        .eq("brand_id", brand!.id)
+        .eq("branch_id", selectedBranch!.id)
         .eq("is_active", true)
         .eq("approval_status", "APPROVED")
         .in("store_type", ["EMISSORA", "MISTA"])
         .not("points_per_real", "is", null)
         .order("name")
         .limit(8);
-      setStores((data as EmissoraStore[]) || []);
-      setLoading(false);
-    };
-    fetchStores();
-  }, [brand, selectedBranch]);
+      return (data as EmissoraStore[]) || [];
+    },
+  });
 
   if (loading) {
     return (
@@ -90,14 +89,18 @@ export default function EmissorasSection() {
         </button>
       </div>
 
-      {/* Horizontal scroll of Livelo-style cards */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
-        {stores.map((store, idx) => (
+      {/* Horizontal scroll of cards */}
+      <motion.div
+        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+        style={{ WebkitOverflowScrolling: "touch" }}
+        variants={containerVariants}
+        initial="initial"
+        animate="animate"
+      >
+        {stores.map((store) => (
           <motion.div
             key={store.id}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.04, duration: 0.25 }}
+            variants={cardVariants}
             className="flex-shrink-0 w-[140px] rounded-2xl overflow-hidden cursor-pointer relative group bg-card"
             style={{
               boxShadow: "0 1px 6px hsl(var(--foreground) / 0.08), 0 0 0 1px hsl(var(--foreground) / 0.03)",
@@ -141,7 +144,7 @@ export default function EmissorasSection() {
                 {store.name}
               </p>
 
-              {/* Points badge - Livelo style */}
+              {/* Points badge */}
               {store.points_per_real && (
                 <div
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
@@ -160,9 +163,7 @@ export default function EmissorasSection() {
 
         {/* "Ver todos" trailing card */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          variants={cardVariants}
           className="flex-shrink-0 w-[100px] rounded-2xl flex flex-col items-center justify-center cursor-pointer active:opacity-70 bg-muted border border-dashed border-border"
           onClick={() => openEmissorasList?.()}
         >
@@ -176,7 +177,7 @@ export default function EmissorasSection() {
             Ver todos
           </span>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }
