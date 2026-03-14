@@ -711,7 +711,8 @@ export default function MachineIntegrationPage() {
                 <h3 className="font-semibold text-sm">Como funciona</h3>
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                   <li>Selecione a <strong>cidade</strong> que deseja conectar.</li>
-                  <li>Preencha <strong>usuário</strong> e <strong>senha</strong> da TaxiMachine (necessário para consultar recibos).</li>
+                  <li>Informe a <strong>chave de acesso</strong> (API Key) fornecida pela TaxiMachine para consulta de recibos.</li>
+                  <li>Preencha <strong>usuário</strong> e <strong>senha</strong> da TaxiMachine.</li>
                   <li>Clique em "Ativar cidade".</li>
                   <li>Copie a URL gerada e cole no <strong>roteador de status</strong> da TaxiMachine.</li>
                 </ol>
