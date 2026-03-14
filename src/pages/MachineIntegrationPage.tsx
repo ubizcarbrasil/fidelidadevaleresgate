@@ -47,6 +47,7 @@ type Integration = {
   last_webhook_at: string | null; last_ride_processed_at: string | null;
   total_rides: number; total_points: number;
   callback_url: string | null; created_at: string; updated_at: string;
+  preferred_endpoint?: string;
 };
 
 type Branch = { id: string; name: string; city: string | null; state: string | null };
