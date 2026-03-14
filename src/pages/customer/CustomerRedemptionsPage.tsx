@@ -229,10 +229,10 @@ function RedemptionCard({
   const offer = r.offers;
   const store = offer?.stores;
   const snapshot = r.offer_snapshot_json || {};
-  const badge = STATUS_BADGE[r.status as string] || STATUS_BADGE.PENDING;
-  const isProduct = (offer?.coupon_type as string) === "PRODUCT" || (snapshot?.coupon_type as string) === "PRODUCT";
-  const creditValue = (r.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0) as number;
-  const purchaseValue = (r.purchase_value || 0) as number;
+  const badge = STATUS_BADGE[r.status] || STATUS_BADGE.PENDING;
+  const isProduct = offer?.coupon_type === "PRODUCT" || snapshot?.coupon_type === "PRODUCT";
+  const creditValue = r.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0;
+  const purchaseValue = r.purchase_value || 0;
   const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
   const minPurchase = Number(offer?.min_purchase || snapshot?.min_purchase) || 0;
 
