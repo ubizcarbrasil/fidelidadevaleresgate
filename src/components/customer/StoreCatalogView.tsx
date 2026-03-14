@@ -6,6 +6,33 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import CatalogCartDrawer, { type CartItem } from "./CatalogCartDrawer";
 
+interface CatalogItem {
+  id: string;
+  name: string;
+  price: number;
+  half_price?: number | null;
+  description?: string | null;
+  image_url?: string | null;
+  category?: string | null;
+  allow_half?: boolean;
+  order_index?: number;
+}
+
+interface CatalogCategory {
+  id: string;
+  name: string;
+  order_index?: number;
+}
+
+interface CatalogOffer {
+  id: string;
+  title: string;
+  image_url?: string | null;
+  discount_percent?: number;
+  stores?: { name: string; logo_url: string | null } | null;
+  [key: string]: unknown;
+}
+
 interface Props {
   storeId: string;
   storeName: string;
@@ -18,7 +45,7 @@ interface Props {
   customerId?: string;
   primary: string;
   fontHeading: string;
-  onOfferClick?: (offer: any) => void;
+  onOfferClick?: (offer: CatalogOffer) => void;
 }
 
 export default function StoreCatalogView({
@@ -26,9 +53,9 @@ export default function StoreCatalogView({
   pointsPerReal, whatsapp, customerName, customerCpf, customerId,
   primary, fontHeading, onOfferClick,
 }: Props) {
-  const [items, setItems] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [offers, setOffers] = useState<any[]>([]);
+  const [items, setItems] = useState<CatalogItem[]>([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [offers, setOffers] = useState<CatalogOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -46,7 +73,7 @@ export default function StoreCatalogView({
           .eq("is_active", true)
           .order("order_index"),
         supabase
-          .from("store_catalog_categories" as any)
+          .from("store_catalog_categories" as "stores")
           .select("*")
           .eq("store_id", storeId)
           .eq("is_active", true)
@@ -60,16 +87,16 @@ export default function StoreCatalogView({
           .order("created_at", { ascending: false })
           .limit(10),
       ]);
-      setItems(itemsRes.data || []);
-      setCategories(catsRes.data || []);
-      setOffers(offersRes.data || []);
+      setItems((itemsRes.data || []) as unknown as CatalogItem[]);
+      setCategories((catsRes.data || []) as unknown as CatalogCategory[]);
+      setOffers((offersRes.data || []) as unknown as CatalogOffer[]);
       setLoading(false);
     };
     fetchData();
   }, [storeId]);
 
   const uniqueCategories = useMemo(() => {
-    if (categories.length > 0) return categories.map((c: any) => c.name);
+    if (categories.length > 0) return categories.map((c) => c.name);
     return [...new Set(items.map(i => i.category).filter(Boolean))];
   }, [items, categories]);
 
@@ -85,7 +112,7 @@ export default function StoreCatalogView({
 
   const cartTotal = cart.reduce((s, i) => s + i.qty, 0);
 
-  const addToCart = (item: any, isHalf = false) => {
+  const addToCart = (item: CatalogItem, isHalf = false) => {
     const price = isHalf ? (item.half_price ? Number(item.half_price) : Number(item.price) / 2) : Number(item.price);
     const cartKey = `${item.id}-${isHalf}`;
     setCart(prev => {
@@ -144,7 +171,7 @@ export default function StoreCatalogView({
             {offers.map(offer => (
               <button
                 key={offer.id}
-                onClick={() => onOfferClick?.({ ...offer, stores: offer.stores || { name: storeName } })}
+                onClick={() => onOfferClick?.({ ...offer, stores: offer.stores || { name: storeName, logo_url: null } })}
                 className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-card text-left"
                 style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)" }}
               >
@@ -158,7 +185,7 @@ export default function StoreCatalogView({
                 <div className="p-2.5">
                   <p className="text-xs font-semibold line-clamp-2" style={{ fontFamily: fontHeading }}>{offer.title}</p>
                   <div className="flex items-center justify-between mt-1.5">
-                    {offer.discount_percent > 0 && (
+                    {(offer.discount_percent ?? 0) > 0 && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: primary }}>
                         -{offer.discount_percent}%
                       </span>
@@ -221,7 +248,7 @@ export default function StoreCatalogView({
           {uniqueCategories.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              onClick={() => setActiveCategory(activeCategory === cat ? null : cat || null)}
               className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors"
               style={{
                 backgroundColor: activeCategory === cat ? primary : `${primary}10`,

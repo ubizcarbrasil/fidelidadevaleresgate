@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +33,7 @@ function logAudit(
       changes_json: opts.changes || {},
     })
     .then(({ error }) => {
-      if (error) console.error("audit_log insert error:", error);
+      if (error) createEdgeLogger("machine-webhook").error("audit_log insert error", { error });
     });
 }
 
@@ -136,7 +137,7 @@ Deno.serve(async (req) => {
     );
     if (!statusRes.ok) {
       const errText = await statusRes.text();
-      console.error("TaxiMachine solicitacaoStatus error:", errText);
+      createEdgeLogger("machine-webhook").error("TaxiMachine solicitacaoStatus error", { body: errText });
       logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
       return json({ error: "Failed to fetch ride status from TaxiMachine" }, 502);
     }
@@ -149,7 +150,7 @@ Deno.serve(async (req) => {
     );
     if (!receiptRes.ok) {
       const errText = await receiptRes.text();
-      console.error("TaxiMachine recibo error:", errText);
+      createEdgeLogger("machine-webhook").error("TaxiMachine recibo error", { body: errText });
       logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
       return json({ error: "Failed to fetch receipt from TaxiMachine" }, 502);
     }
@@ -285,7 +286,7 @@ Deno.serve(async (req) => {
       })
       .eq("id", integration.id);
 
-    if (updateErr) console.error("Update integration counters error:", updateErr);
+    if (updateErr) createEdgeLogger("machine-webhook").error("Update integration counters error", { error: updateErr });
 
     // Audit: ride processed successfully
     logAudit(sb, "MACHINE_RIDE_PROCESSED", {
@@ -309,7 +310,7 @@ Deno.serve(async (req) => {
       customer_found: pointsCredited,
     });
   } catch (err) {
-    console.error("machine-webhook error:", err);
+    createEdgeLogger("machine-webhook").error("machine-webhook error", { error: String(err) });
     logAudit(sb, "MACHINE_WEBHOOK_ERROR", { ip, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }

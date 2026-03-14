@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +35,7 @@ function logAudit(
       changes_json: opts.changes || {},
     })
     .then(({ error }) => {
-      if (error) console.error("audit_log insert error:", error);
+      if (error) createEdgeLogger("register-machine-webhook").error("audit_log insert error", { error });
     });
 }
 
@@ -140,12 +141,12 @@ Deno.serve(async (req) => {
         webhookRegistered = true;
       } else {
         const errText = await webhookRes.text();
-        console.error("Webhook registration response:", webhookRes.status, errText);
+        createEdgeLogger("register-machine-webhook").error("Webhook registration response", { status: webhookRes.status, body: errText });
         // Continue even if webhook registration fails — admin can retry
       }
       if (!webhookRegistered) await webhookRes.text().catch(() => {});
     } catch (e) {
-      console.error("Webhook registration error:", e);
+      createEdgeLogger("register-machine-webhook").error("Webhook registration error", { error: String(e) });
     }
 
     // Upsert integration record
@@ -164,7 +165,7 @@ Deno.serve(async (req) => {
       );
 
     if (upsertErr) {
-      console.error("Upsert error:", upsertErr);
+      createEdgeLogger("register-machine-webhook").error("Upsert error", { error: upsertErr });
       return json({ error: "Failed to save integration" }, 500);
     }
 
@@ -183,7 +184,7 @@ Deno.serve(async (req) => {
         : "Integration activated, but webhook registration failed. You may need to register the webhook manually.",
     });
   } catch (err) {
-    console.error("register-machine-webhook error:", err);
+    createEdgeLogger("register-machine-webhook").error("register-machine-webhook error", { error: String(err) });
     logAudit(sb, "MACHINE_INTEGRATION_ERROR", { userId, ip: clientIp, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }

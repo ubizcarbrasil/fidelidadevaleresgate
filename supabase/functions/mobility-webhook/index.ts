@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +19,7 @@ Deno.serve(async (req) => {
     const rl = await checkRateLimit(rlSb, rlKey, { maxRequests: 30, windowSeconds: 60 });
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
   } catch (e) {
-    console.error("Rate limit check failed (allowing):", e);
+    createEdgeLogger("mobility-webhook").error("Rate limit check failed (allowing)", { error: String(e) });
   }
 
   try {
@@ -91,7 +92,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (contactErr) {
-        console.error("Contact upsert error:", contactErr);
+        createEdgeLogger("mobility-webhook").error("Contact upsert error", { error: contactErr.message });
         continue;
       }
 
@@ -109,7 +110,7 @@ Deno.serve(async (req) => {
       });
 
       if (eventErr) {
-        console.error("Event insert error:", eventErr);
+        createEdgeLogger("mobility-webhook").error("Event insert error", { error: eventErr.message });
         continue;
       }
 
@@ -127,7 +128,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("Webhook error:", err);
+    createEdgeLogger("mobility-webhook").error("Webhook error", { error: String(err) });
     return new Response(JSON.stringify({ ok: false, error: "Internal server error", code: "INTERNAL_ERROR" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

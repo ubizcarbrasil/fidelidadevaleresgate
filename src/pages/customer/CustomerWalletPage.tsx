@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -8,8 +8,11 @@ import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
+import { Button } from "@/components/ui/button";
 
 type LedgerEntry = Tables<"points_ledger">;
+
+const PAGE_SIZE = 30;
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -36,26 +39,52 @@ export default function CustomerWalletPage() {
   const { theme } = useBrand();
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
+    if (!customer) return;
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, count } = await supabase
+      .from("points_ledger")
+      .select("*", { count: "exact" })
+      .eq("customer_id", customer.id)
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    const results = (data || []) as LedgerEntry[];
+    const total = count || 0;
+    setHasMore(from + results.length < total);
+
+    if (append) {
+      setEntries((prev) => [...prev, ...results]);
+    } else {
+      setEntries(results);
+    }
+  }, [customer]);
+
   useEffect(() => {
     if (!customer) { setLoading(false); return; }
-    const fetch = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("points_ledger")
-        .select("*")
-        .eq("customer_id", customer.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      setEntries(data || []);
-      setLoading(false);
-    };
-    fetch();
-  }, [customer]);
+    setLoading(true);
+    setPage(0);
+    fetchPage(0, false).then(() => setLoading(false));
+  }, [customer, fetchPage]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await fetchPage(nextPage, true);
+    setLoadingMore(false);
+  };
 
   if (customerLoading) {
     return (
@@ -99,7 +128,6 @@ export default function CustomerWalletPage() {
       {/* Transaction History */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-muted-foreground">Histórico de pontos</h3>
-        <span className="text-xs font-medium" style={{ color: primary }}>Ver todos</span>
       </div>
 
       {loading ? (
@@ -156,6 +184,22 @@ export default function CustomerWalletPage() {
               </motion.div>
             );
           })}
+
+          {/* Load more button */}
+          {hasMore && (
+            <div className="pt-3 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="rounded-full"
+              >
+                {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Carregar mais
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

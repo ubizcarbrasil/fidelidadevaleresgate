@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
       .insert(notifications);
 
     if (insertError) {
-      console.error("Insert error:", insertError);
+      createEdgeLogger("send-push-notification").error("Insert error", { error: insertError.message });
       return new Response(JSON.stringify({ error: insertError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (err) {
-    console.error("Error:", err);
+    createEdgeLogger("send-push-notification").error("Unexpected error", { error: String(err) });
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

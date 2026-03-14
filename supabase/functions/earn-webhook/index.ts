@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ function createAuditLogger(
         changes_json: opts.changes || {},
       })
       .then(({ error }) => {
-        if (error) console.error("audit_log insert error:", error);
+        if (error) createEdgeLogger("earn-webhook").error("audit_log insert error", { error });
       });
   };
 }
@@ -264,7 +265,7 @@ async function processGanhaGanhaBilling(
       reference_type: "EARNING_EVENT",
     });
   } catch (e) {
-    console.error("GG billing error (non-fatal):", e);
+    createEdgeLogger("earn-webhook").error("GG billing error (non-fatal)", { error: String(e) });
   }
 }
 
@@ -483,7 +484,7 @@ Deno.serve(async (req) => {
     .single();
 
   if (eventErr) {
-    console.error("earning_events insert error:", eventErr);
+    createEdgeLogger("earn-webhook").error("earning_events insert error", { error: eventErr });
     logAudit("EARN_WEBHOOK_ERROR", {
       brandId,
       details: { reason: "earning_events insert failed", error: eventErr.message, store_id, customer_id: customer.id, api_key_id: keyRow.id },
@@ -506,7 +507,7 @@ Deno.serve(async (req) => {
   });
 
   if (ledgerErr) {
-    console.error("points_ledger insert error:", ledgerErr);
+    createEdgeLogger("earn-webhook").error("points_ledger insert error", { error: ledgerErr });
   }
 
   // 11. Update customer balance

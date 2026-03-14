@@ -4,6 +4,25 @@ import { ArrowLeft, Search, Store, ShoppingBag, MapPin } from "lucide-react";
 import OfferBadge from "@/components/customer/OfferBadge";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 
+interface SectionItem {
+  id: string;
+  name?: string;
+  title?: string;
+  banner_url?: string | null;
+  logo_url?: string | null;
+  image_url?: string | null;
+  discount_percent?: number;
+  value_rescue?: number;
+  min_purchase?: number;
+  coupon_type?: string;
+  points_per_real?: number;
+  category?: string;
+  store_name?: string;
+  address?: string;
+  stores?: { name: string } | null;
+  taxonomy_segments?: { name: string } | null;
+}
+
 interface SectionDetailOverlayProps {
   section: {
     title: string | null;
@@ -12,7 +31,7 @@ interface SectionDetailOverlayProps {
     banner_height?: string;
     templateType?: string;
   };
-  items: any[];
+  items: SectionItem[];
   onBack: () => void;
   primary: string;
   fg: string;
@@ -34,7 +53,7 @@ export default function SectionDetailOverlay({
     if (!query.trim()) return items;
     const q = query.toLowerCase();
     return items.filter(
-      (i: any) =>
+      (i) =>
         i.name?.toLowerCase().includes(q) ||
         i.title?.toLowerCase().includes(q) ||
         i.stores?.name?.toLowerCase().includes(q) ||
@@ -101,7 +120,7 @@ export default function SectionDetailOverlay({
           <div className="max-w-lg mx-auto px-4 pt-3 space-y-3">
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground/40 text-sm">Nenhum resultado encontrado</div>
-            ) : filtered.map((item: any, idx: number) => {
+            ) : filtered.map((item, idx) => {
               const imgSrc = item.banner_url || item.logo_url || item.image_url;
               const storeName = item.stores?.name || item.store_name || item.name;
               const title = item.name || item.title;
@@ -137,7 +156,7 @@ export default function SectionDetailOverlay({
                     )}
 
                     {/* Offer badge - top left */}
-                    {(hasDiscount || item.value_rescue > 0) && (
+                    {((item.discount_percent ?? 0) > 0 || (item.value_rescue ?? 0) > 0) && (
                       <div className="absolute top-3 left-3">
                         <OfferBadge
                           discountPercent={item.discount_percent || 0}
@@ -150,7 +169,7 @@ export default function SectionDetailOverlay({
                       </div>
                     )}
 
-                    {item.points_per_real > 0 && !hasDiscount && !item.value_rescue && (
+                    {(item.points_per_real ?? 0) > 0 && !hasDiscount && !(item.value_rescue ?? 0) && (
                       <div className="absolute top-3 left-3 vb-discount-badge">
                         {item.points_per_real}x pts
                       </div>
@@ -172,14 +191,14 @@ export default function SectionDetailOverlay({
                         {segmentTag}
                       </p>
                     )}
-                    {item.coupon_type === "PRODUCT" && item.value_rescue > 0 && (
+                    {item.coupon_type === "PRODUCT" && (item.value_rescue ?? 0) > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        {Math.floor(Number(item.value_rescue))} pts = R$ {Number(item.value_rescue).toFixed(2)}
+                        {Math.floor(Number(item.value_rescue ?? 0))} pts = R$ {Number(item.value_rescue ?? 0).toFixed(2)}
                       </span>
                     )}
-                    {item.coupon_type !== "PRODUCT" && item.value_rescue > 0 && (
+                    {item.coupon_type !== "PRODUCT" && (item.value_rescue ?? 0) > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        Troque {Math.floor(Number(item.value_rescue))} pts · Mín. R$ {Number(item.min_purchase || 0).toFixed(2)}
+                        Troque {Math.floor(Number(item.value_rescue ?? 0))} pts · Mín. R$ {Number(item.min_purchase || 0).toFixed(2)}
                       </span>
                     )}
                     {item.address && (
