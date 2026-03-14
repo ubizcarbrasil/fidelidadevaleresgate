@@ -343,6 +343,7 @@ async function processFinalized(
     ride_status: "FINALIZED",
     points_credited: pointsCredited ? points : 0,
     finalized_at: new Date().toISOString(),
+    driver_name: driverName || null,
   }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
 
   // Update integration counters
@@ -403,6 +404,7 @@ async function processFinalized(
       points_credited: points,
       ride_value: rideValue,
       finalized_at: new Date().toISOString(),
+      driver_name: driverName || null,
     });
 
     // Send Telegram notification if chat_id configured (fire-and-forget)
@@ -425,6 +427,7 @@ async function processFinalized(
             points_credited: points,
             finalized_at: new Date().toISOString(),
             machine_ride_id: machineRideId,
+            driver_name: driverName || null,
           }),
         }).catch((e) => logger.error("Telegram notification error", { error: String(e) }));
       } catch (e) {

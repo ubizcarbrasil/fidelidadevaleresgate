@@ -46,7 +46,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
       // Get customers with ride points
       let q = (supabase as any)
         .from("customers")
-        .select("id, name, cpf, phone, points_balance, user_id")
+        .select("id, name, cpf, phone, points_balance, user_id, email")
         .eq("brand_id", brandId)
         .order("updated_at", { ascending: false })
         .limit(50);
@@ -95,7 +95,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
           phone: c.phone,
           points_balance: Number(c.points_balance || 0),
           user_id: c.user_id,
-          email: c.user_id ? emailMap[c.user_id] || null : null,
+          email: c.email || (c.user_id ? emailMap[c.user_id] || null : null),
           total_ride_points: c.cpf ? ridePointsByCpf[c.cpf] || 0 : 0,
         }))
         .filter((c: ScoredCustomer) => c.total_ride_points > 0 || debouncedSearch.trim()) as ScoredCustomer[];

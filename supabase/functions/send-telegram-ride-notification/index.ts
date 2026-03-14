@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
       points_credited,
       finalized_at,
       machine_ride_id,
+      driver_name,
     } = body;
 
     if (!chat_id) {
@@ -61,6 +62,7 @@ Deno.serve(async (req) => {
       "",
       `👤 Nome: ${customer_name || "Não identificado"}`,
       customer_phone ? `📱 Telefone: ${customer_phone}` : null,
+      driver_name ? `🚗 Motorista: ${driver_name}` : null,
       city_name ? `🏙️ Cidade: ${city_name}` : null,
       `💰 Valor da corrida: R$ ${Number(ride_value || 0).toFixed(2)}`,
       `🪙 Pontos creditados: ${points_credited || 0}`,

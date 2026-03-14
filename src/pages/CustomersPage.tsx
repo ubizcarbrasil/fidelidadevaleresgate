@@ -17,8 +17,8 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
-interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; }
-const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "" };
+interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; cpf: string; email: string; }
+const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "", cpf: "", email: "" };
 
 export default function CustomersPage() {
   const qc = useQueryClient();
@@ -45,7 +45,7 @@ export default function CustomersPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["customers", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
-      let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" });
+      let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
@@ -61,16 +61,16 @@ export default function CustomersPage() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { name: form.name, phone: form.phone || null, brand_id: form.brand_id, branch_id: form.branch_id };
-      if (editId) { const { error } = await supabase.from("customers").update(payload).eq("id", editId); if (error) throw error; }
-      else { const { error } = await supabase.from("customers").insert(payload); if (error) throw error; }
+      const payload: any = { name: form.name, phone: form.phone || null, brand_id: form.brand_id, branch_id: form.branch_id, cpf: form.cpf || null, email: form.email || null };
+      if (editId) { const { error } = await (supabase as any).from("customers").update(payload).eq("id", editId); if (error) throw error; }
+      else { const { error } = await (supabase as any).from("customers").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
-  const openEdit = (c: any) => { setEditId(c.id); setForm({ name: c.name, phone: c.phone || "", brand_id: c.brand_id, branch_id: c.branch_id }); setOpen(true); };
+  const openEdit = (c: any) => { setEditId(c.id); setForm({ name: c.name, phone: c.phone || "", brand_id: c.brand_id, branch_id: c.branch_id, cpf: c.cpf || "", email: c.email || "" }); setOpen(true); };
 
   return (
     <div className="space-y-6">
@@ -85,7 +85,11 @@ export default function CustomersPage() {
             <DialogHeader><DialogTitle>{editId ? "Editar Cliente" : "Novo Cliente"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-              <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>CPF</Label><Input value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              </div>
+              <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@exemplo.com" /></div>
               <div className="grid grid-cols-2 gap-4">
                 {isRootAdmin && (
                 <div className="space-y-2">
@@ -119,6 +123,8 @@ export default function CustomersPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
+                <TableHead>CPF</TableHead>
+                <TableHead>E-mail</TableHead>
                 <TableHead>Marca</TableHead>
                 <TableHead>Filial</TableHead>
                 <TableHead>Pontos</TableHead>
@@ -128,12 +134,14 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
-              {data?.items?.map(c => (
+              {isLoading && <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
+              {data?.items?.map((c: any) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>{c.phone || "—"}</TableCell>
+                  <TableCell>{c.cpf || "—"}</TableCell>
+                  <TableCell>{c.email || "—"}</TableCell>
                   <TableCell>{(c.brands as any)?.name}</TableCell>
                   <TableCell>{(c.branches as any)?.name}</TableCell>
                   <TableCell>{c.points_balance}</TableCell>

@@ -90,7 +90,7 @@ async function retryRide(
     return { machineRideId, status: "FAILED", reason: rideResult.error };
   }
 
-  const { rideValue, passengerName, passengerCpf, passengerPhone, source } = rideResult.data;
+  const { rideValue, passengerName, passengerCpf, passengerPhone, driverName, source } = rideResult.data;
 
   // --- BACKFILL MODE: ride already finalized, just enrich customer data ---
   if (isBackfill) {
@@ -99,9 +99,10 @@ async function retryRide(
       return { machineRideId, status: "SKIP", reason: "no_new_data_from_api", source };
     }
 
-    // Update ride with passenger data
+    // Update ride with passenger data + driver name
     await sb.from("machine_rides").update({
       passenger_cpf: passengerCpf || ride.passenger_cpf || null,
+      driver_name: driverName || ride.driver_name || null,
     }).eq("id", ride.id);
 
     // Find the customer linked to this ride via points_ledger
@@ -131,6 +132,7 @@ async function retryRide(
     if (passengerName) notifUpdates.customer_name = passengerName;
     if (passengerPhone) notifUpdates.customer_phone = passengerPhone;
     if (passengerCpf) notifUpdates.customer_cpf_masked = `•••${passengerCpf.slice(-4)}`;
+    if (driverName) notifUpdates.driver_name = driverName;
 
     if (Object.keys(notifUpdates).length > 0) {
       await sb.from("machine_ride_notifications")
@@ -227,6 +229,7 @@ async function retryRide(
     ride_value: rideValue,
     points_credited: pointsCredited ? points : 0,
     passenger_cpf: passengerCpf || null,
+    driver_name: driverName || null,
     finalized_at: new Date().toISOString(),
   }).eq("id", ride.id);
 
@@ -265,6 +268,7 @@ async function retryRide(
       points_credited: points,
       ride_value: rideValue,
       finalized_at: new Date().toISOString(),
+      driver_name: driverName || null,
     });
   }
 
