@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
       category_name: matched_category_name,
     };
 
-    console.log('Extracted product:', JSON.stringify(product));
+    log.info("Extracted product", { product });
 
     return new Response(
       JSON.stringify({ success: true, product }),
