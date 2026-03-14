@@ -262,7 +262,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
               )}
               {store?.whatsapp && (
                 <ActionButton icon={<MessageCircle className="h-5 w-5" />} label="Resgatar no WhatsApp" bg="#25D366" color="#fff"
-                  onClick={() => window.open(`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`, "_blank")} />
+                  onClick={() => window.open(`https://wa.me/${(store.whatsapp || "").replace(/\D/g, "")}`, "_blank")} />
               )}
               {store?.site_url && (
                 <ActionButton icon={<Globe className="h-5 w-5" />} label="Resgatar no Site" bg="#1F2937" color="#fff"
