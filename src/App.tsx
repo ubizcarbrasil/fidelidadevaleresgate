@@ -177,7 +177,7 @@ function AppRoutes() {
           <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
           <Route path="affiliate-deals/import-mobile" element={<AchadinhosMobileImportPage />} />
           <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
-          <Route path="store-catalog" element={<ModuleGuard moduleKey="stores"><StoreCatalogPage /></ModuleGuard>} />
+          <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="send-notification" element={<SendNotificationPage />} />
           <Route path="icon-library" element={<IconLibraryPage />} />

@@ -1,30 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-# Correção: moduleKey do Catálogo + Filtro brand_id
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-## Inconsistências encontradas
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-| Local | moduleKey atual |
-|-------|----------------|
-| `App.tsx` (rota) | `"stores"` |
-| `BrandSidebar.tsx` | `"catalog"` |
-| `BranchSidebar.tsx` | `"stores"` |
-| `StoreOwnerPanel.tsx` | `"catalog"` |
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-O correto é `"catalog"` em todos os lugares, pois o módulo de catálogo tem sua própria definição separada de "stores".
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-## Alterações
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### 1. `src/App.tsx` (linha 180)
-Trocar `moduleKey="stores"` por `moduleKey="catalog"` na rota `/store-catalog`.
-
-### 2. `src/components/consoles/BranchSidebar.tsx` (linha 44)
-Trocar `moduleKey: "stores"` por `moduleKey: "catalog"` no item "Catálogo".
-
-### 3. `src/pages/StoreCatalogPage.tsx`
-- Importar `useBrandGuard` e extrair `currentBrandId`, `applyBrandFilter`, `isRootAdmin`.
-- Na query de `stores`, aplicar `applyBrandFilter` para que só traga lojas da marca atual (non-root).
-- Na query de `catalog-items`, aplicar `applyBrandFilter` via join ou filtro direto (se a tabela tem `store_id`, filtrar lojas da brand via subquery ou adicionar o brand filter na query de stores e usar os IDs).
-- Na mutation `save`, usar `enforceBrandId` se a tabela possuir `brand_id`, ou garantir que o `store_id` selecionado pertença à marca.
-- Adicionar `currentBrandId` nas queryKeys para invalidação correta.
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
