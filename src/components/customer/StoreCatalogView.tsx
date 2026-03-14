@@ -52,9 +52,9 @@ export default function StoreCatalogView({
   pointsPerReal, whatsapp, customerName, customerCpf, customerId,
   primary, fontHeading, onOfferClick,
 }: Props) {
-  const [items, setItems] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [offers, setOffers] = useState<any[]>([]);
+  const [items, setItems] = useState<CatalogItem[]>([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [offers, setOffers] = useState<CatalogOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
