@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       }
       if (!webhookRegistered) await webhookRes.text().catch(() => {});
     } catch (e) {
-      console.error("Webhook registration error:", e);
+      createEdgeLogger("register-machine-webhook").error("Webhook registration error", { error: String(e) });
     }
 
     // Upsert integration record
