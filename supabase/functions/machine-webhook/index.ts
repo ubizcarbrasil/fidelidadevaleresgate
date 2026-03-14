@@ -173,9 +173,12 @@ async function processFinalized(
   // Use Basic Auth (base64 of user:password) against api-vendas endpoint
   const basicUser = (integration.basic_auth_user || "").trim();
   const basicPass = (integration.basic_auth_password || "").trim();
-  if (!basicUser || !basicPass) {
-    logger.error("Missing basic_auth credentials on integration", { brandId });
-    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "basic_auth_missing" } });
+  const apiKey = (integration.api_key || "").trim();
+  const hasValidApiKey = apiKey && !apiKey.startsWith("url-only-");
+  if (!basicUser || !basicPass || !hasValidApiKey) {
+    const missing = [!basicUser || !basicPass ? "basic_auth" : null, !hasValidApiKey ? "api_key" : null].filter(Boolean);
+    logger.error("Missing credentials on integration", { brandId, missing });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
@@ -185,7 +188,7 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "As credenciais Basic Auth (usuário/senha) da TaxiMachine não foram configuradas. Acesse a configuração da integração e preencha os campos de usuário e senha.", status: 400 };
+    return { error: "As credenciais da TaxiMachine (usuário/senha e/ou chave de acesso) não foram configuradas. Acesse a configuração da integração e preencha todos os campos.", status: 400 };
   }
 
   const basicAuth = btoa(`${basicUser}:${basicPass}`);
@@ -193,7 +196,7 @@ async function processFinalized(
 
   const receiptRes = await fetch(
     `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`,
-    { headers: { "Authorization": `Basic ${basicAuth}` } }
+    { headers: { "Authorization": `Basic ${basicAuth}`, "api-key": apiKey } }
   );
 
   if (!receiptRes.ok) {
