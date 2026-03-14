@@ -1683,6 +1683,7 @@ export type Database = {
           brand_id: string
           cpf: string | null
           created_at: string
+          email: string | null
           id: string
           is_active: boolean
           money_balance: number
@@ -1697,6 +1698,7 @@ export type Database = {
           brand_id: string
           cpf?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           is_active?: boolean
           money_balance?: number
@@ -1711,6 +1713,7 @@ export type Database = {
           brand_id?: string
           cpf?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           is_active?: boolean
           money_balance?: number
@@ -2437,6 +2440,7 @@ export type Database = {
           customer_cpf_masked: string | null
           customer_name: string | null
           customer_phone: string | null
+          driver_name: string | null
           finalized_at: string
           id: string
           machine_ride_id: string
@@ -2451,6 +2455,7 @@ export type Database = {
           customer_cpf_masked?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          driver_name?: string | null
           finalized_at?: string
           id?: string
           machine_ride_id: string
@@ -2465,6 +2470,7 @@ export type Database = {
           customer_cpf_masked?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          driver_name?: string | null
           finalized_at?: string
           id?: string
           machine_ride_id?: string
@@ -2500,6 +2506,7 @@ export type Database = {
           branch_id: string | null
           brand_id: string
           created_at: string
+          driver_name: string | null
           finalized_at: string | null
           id: string
           machine_ride_id: string
@@ -2512,6 +2519,7 @@ export type Database = {
           branch_id?: string | null
           brand_id: string
           created_at?: string
+          driver_name?: string | null
           finalized_at?: string | null
           id?: string
           machine_ride_id: string
@@ -2524,6 +2532,7 @@ export type Database = {
           branch_id?: string | null
           brand_id?: string
           created_at?: string
+          driver_name?: string | null
           finalized_at?: string | null
           id?: string
           machine_ride_id?: string
