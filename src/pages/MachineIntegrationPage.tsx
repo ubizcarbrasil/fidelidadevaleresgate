@@ -126,7 +126,8 @@ export default function MachineIntegrationPage() {
 
   useEffect(() => {
     if (selectedIntegration?.callback_url !== undefined) setCallbackUrl(selectedIntegration?.callback_url || "");
-  }, [selectedIntegration?.callback_url]);
+    setTelegramChatId((selectedIntegration as any)?.telegram_chat_id || "");
+  }, [selectedIntegration?.callback_url, (selectedIntegration as any)?.telegram_chat_id]);
 
   /* ── Initial events ── */
   useEffect(() => {
