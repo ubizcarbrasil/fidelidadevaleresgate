@@ -173,10 +173,11 @@ async function processFinalized(
   // Use Basic Auth (base64 of user:password) against api-vendas endpoint
   const basicUser = (integration.basic_auth_user || "").trim();
   const basicPass = (integration.basic_auth_password || "").trim();
-  const apiKey = (integration.api_key || "").trim();
-  const hasValidApiKey = apiKey && !apiKey.startsWith("url-only-");
-  if (!basicUser || !basicPass || !hasValidApiKey) {
-    const missing = [!basicUser || !basicPass ? "basic_auth" : null, !hasValidApiKey ? "api_key" : null].filter(Boolean);
+  // Use receipt_api_key (dedicated key for Sales API) with fallback to api_key for backward compat
+  const receiptApiKey = (integration.receipt_api_key || integration.api_key || "").trim();
+  const hasValidReceiptKey = receiptApiKey && !receiptApiKey.startsWith("url-only-");
+  if (!basicUser || !basicPass || !hasValidReceiptKey) {
+    const missing = [!basicUser || !basicPass ? "basic_auth" : null, !hasValidReceiptKey ? "receipt_api_key" : null].filter(Boolean);
     logger.error("Missing credentials on integration", { brandId, missing });
     logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing } });
     await sb.from("machine_rides").upsert({
