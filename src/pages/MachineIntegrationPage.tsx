@@ -17,7 +17,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
   Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound, AlertTriangle,
-  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User,
+  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User, RefreshCw,
 } from "lucide-react";
 
 /* ── Status labels ── */
@@ -65,6 +65,7 @@ const RIDE_STATUS_MAP: Record<string, { label: string; className: string }> = {
 };
 
 function WebhookDiagnosticsCard({ brandId }: { brandId: string }) {
+  const queryClient = useQueryClient();
   const { data: rides = [], isLoading } = useQuery({
     queryKey: ["machine-rides-diag", brandId],
     queryFn: async () => {
@@ -80,17 +81,58 @@ function WebhookDiagnosticsCard({ brandId }: { brandId: string }) {
     refetchInterval: 30_000,
   });
 
-  const hasErrors = rides.some((r: any) => ["API_ERROR", "CREDENTIAL_ERROR"].includes(r.ride_status));
+  const failedCount = rides.filter((r: any) => ["API_ERROR", "CREDENTIAL_ERROR"].includes(r.ride_status)).length;
+  const hasErrors = failedCount > 0;
+
+  const retryMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("retry-failed-rides", {
+        body: { brand_id: brandId },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["machine-rides-diag", brandId] });
+      toast({
+        title: "Retry concluído",
+        description: `${data.finalized || 0} corrigida(s), ${data.failed || 0} ainda com erro.`,
+      });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao reprocessar", description: String(err.message || err), variant: "destructive" });
+    },
+  });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Activity className="h-4 w-4 text-primary" />
-          Diagnóstico do Webhook
-          {hasErrors && <AlertTriangle className="h-4 w-4 text-destructive" />}
-        </CardTitle>
-        <CardDescription>Últimas 10 corridas processadas — resultado final de cada uma.</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Activity className="h-4 w-4 text-primary" />
+              Diagnóstico do Webhook
+              {hasErrors && <AlertTriangle className="h-4 w-4 text-destructive" />}
+            </CardTitle>
+            <CardDescription>Últimas 10 corridas processadas — resultado final de cada uma.</CardDescription>
+          </div>
+          {hasErrors && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => retryMutation.mutate()}
+              disabled={retryMutation.isPending}
+              className="shrink-0"
+            >
+              {retryMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
+              Reprocessar falhas ({failedCount})
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-80">
