@@ -41,3 +41,15 @@ verify_jwt = false
 
 [functions.send-telegram-ride-notification]
 verify_jwt = false
+
+[functions.test-machine-credentials]
+verify_jwt = false
+
+[functions.retry-failed-rides]
+verify_jwt = false
+
+[functions.mobility-webhook]
+verify_jwt = false
+
+[functions.scrape-product]
+verify_jwt = false
