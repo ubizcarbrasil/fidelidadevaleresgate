@@ -219,7 +219,7 @@ export default function MachineIntegrationPage() {
             ? "Webhook registrado com sucesso."
             : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
         });
-        setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
+        setApiKey(""); setReceiptApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
       }
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
