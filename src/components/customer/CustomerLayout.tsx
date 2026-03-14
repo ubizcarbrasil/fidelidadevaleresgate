@@ -380,32 +380,36 @@ export default function CustomerLayout() {
         {/* Offer Detail Overlay */}
         <AnimatePresence>
           {selectedOffer && (
-            <CustomerOfferDetailPage
-              offer={selectedOffer as OfferWithStore}
-              onBack={() => setSelectedOffer(null)}
-              onOfferClick={(offer) => {
-                setSelectedOffer(null);
-                setTimeout(() => setSelectedOffer(offer), 150);
-              }}
-              onOpenStore={(store) => {
-                setSelectedOffer(null);
-                setTimeout(() => setSelectedStore(store), 150);
-              }}
-            />
+            <Suspense fallback={<TabSkeleton />}>
+              <CustomerOfferDetailPage
+                offer={selectedOffer as OfferWithStore}
+                onBack={() => setSelectedOffer(null)}
+                onOfferClick={(offer) => {
+                  setSelectedOffer(null);
+                  setTimeout(() => setSelectedOffer(offer), 150);
+                }}
+                onOpenStore={(store) => {
+                  setSelectedOffer(null);
+                  setTimeout(() => setSelectedStore(store), 150);
+                }}
+              />
+            </Suspense>
           )}
         </AnimatePresence>
 
         {/* Store Detail Overlay */}
         <AnimatePresence>
           {selectedStore && (
-            <CustomerStoreDetailPage
-              store={selectedStore as Tables<"stores">}
-              onBack={() => setSelectedStore(null)}
-              onOfferClick={(offer) => {
-                setSelectedStore(null);
-                setTimeout(() => setSelectedOffer(offer), 100);
-              }}
-            />
+            <Suspense fallback={<TabSkeleton />}>
+              <CustomerStoreDetailPage
+                store={selectedStore as Tables<"stores">}
+                onBack={() => setSelectedStore(null)}
+                onOfferClick={(offer) => {
+                  setSelectedStore(null);
+                  setTimeout(() => setSelectedOffer(offer), 100);
+                }}
+              />
+            </Suspense>
           )}
         </AnimatePresence>
 
