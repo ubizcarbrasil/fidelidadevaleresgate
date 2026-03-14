@@ -278,6 +278,34 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const testTelegramMutation = useMutation({
+    mutationFn: async () => {
+      if (!telegramChatId.trim()) throw new Error("Chat ID vazio");
+      const branchName = getBranchName(selectedIntegration?.branch_id || null);
+      const { data, error } = await supabase.functions.invoke("send-telegram-ride-notification", {
+        body: {
+          chat_id: telegramChatId.trim(),
+          customer_name: "Teste de Conexão",
+          customer_phone: "(00) 00000-0000",
+          city_name: branchName,
+          ride_value: 25.50,
+          points_credited: 25,
+          finalized_at: new Date().toISOString(),
+          machine_ride_id: "TESTE-000",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "✅ Mensagem de teste enviada!", description: "Verifique o chat do Telegram." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro no envio de teste", description: err.message || "Verifique o Chat ID e tente novamente.", variant: "destructive" });
+    },
+  });
+
   // Branches not yet integrated
   const integratedBranchIds = new Set(activeIntegrations.map((i) => i.branch_id));
   const availableBranches = branches.filter((b) => !integratedBranchIds.has(b.id));
