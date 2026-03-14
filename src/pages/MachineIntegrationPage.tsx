@@ -564,6 +564,11 @@ export default function MachineIntegrationPage() {
         </Card>
       )}
 
+      {/* ─── DIAGNÓSTICO DO WEBHOOK ─── */}
+      {activeIntegrations.length > 0 && (
+        <WebhookDiagnosticsCard brandId={currentBrandId!} />
+      )}
+
       {/* ─── REALTIME FEED (always visible if any integration active) ─── */}
       {activeIntegrations.length > 0 && (
         <Card>
