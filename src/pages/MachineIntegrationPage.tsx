@@ -746,26 +746,37 @@ export default function MachineIntegrationPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {liveNotifications.map((notif: any) => (
+                  {liveNotifications.map((notif: any) => {
+                    const isUnidentified = !notif.customer_name || notif.customer_name?.startsWith("Passageiro corrida");
+                    return (
                     <div key={notif.id} className="flex flex-col gap-1 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <User className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="font-medium text-xs">
-                            {notif.customer_name || "Não identificado"}
+                          <span className={`font-medium text-xs ${isUnidentified ? "italic text-muted-foreground" : ""}`}>
+                            {isUnidentified ? "Cliente não identificado" : notif.customer_name}
                           </span>
                           {notif.customer_cpf_masked && (
                             <span className="text-xs text-muted-foreground">CPF {notif.customer_cpf_masked}</span>
                           )}
                         </div>
-                        <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
-                          {notif.points_credited} pts
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {isUnidentified && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs text-primary"
+                              onClick={() => setIdentifyNotif(notif)}
+                            >
+                              Identificar
+                            </Button>
+                          )}
+                          <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
+                            {notif.points_credited} pts
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        {notif.driver_name && (
-                          <span className="flex items-center gap-1"><Car className="h-3 w-3" />Motorista: {notif.driver_name}</span>
-                        )}
                         {notif.customer_phone && (
                           <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{notif.customer_phone}</span>
                         )}
@@ -776,7 +787,8 @@ export default function MachineIntegrationPage() {
                         <span className="ml-auto">{new Date(notif.created_at).toLocaleTimeString("pt-BR")}</span>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
