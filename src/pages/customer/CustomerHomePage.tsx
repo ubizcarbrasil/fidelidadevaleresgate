@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import { hslToCss } from "@/lib/utils";
-import SegmentNavSection from "@/components/customer/SegmentNavSection";
 
 import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
