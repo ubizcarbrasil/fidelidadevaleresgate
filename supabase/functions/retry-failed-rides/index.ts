@@ -228,7 +228,9 @@ async function retryRide(
     ride_status: "FINALIZED",
     ride_value: rideValue,
     points_credited: pointsCredited ? points : 0,
+    passenger_name: passengerName || null,
     passenger_cpf: passengerCpf || null,
+    passenger_phone: passengerPhone || null,
     driver_name: driverName || null,
     finalized_at: new Date().toISOString(),
   }).eq("id", ride.id);
@@ -261,6 +263,7 @@ async function retryRide(
       brand_id: brandId,
       branch_id: branchId,
       machine_ride_id: machineRideId,
+      customer_id: customerId || null,
       customer_name: customer?.name || passengerName || null,
       customer_phone: customer?.phone || passengerPhone || null,
       customer_cpf_masked: passengerCpf ? `•••${passengerCpf.slice(-4)}` : null,

@@ -1097,14 +1097,38 @@ export default function MachineIntegrationPage() {
                 const cpf = identifyForm.cpf.trim() || null;
                 const phone = identifyForm.phone.trim() || null;
 
-                // Update machine_ride_notifications
-                await (supabase as any).from("machine_ride_notifications").update({
+                // 1. Resolve customer_id: from notification, or look up via points_ledger
+                let customerId = identifyNotif.customer_id || null;
+                if (!customerId && identifyNotif.machine_ride_id && identifyNotif.brand_id) {
+                  const { data: ledgerEntry } = await (supabase as any)
+                    .from("points_ledger")
+                    .select("customer_id")
+                    .eq("brand_id", identifyNotif.brand_id)
+                    .eq("reference_type", "MACHINE_RIDE")
+                    .ilike("reason", `%#${identifyNotif.machine_ride_id}%`)
+                    .limit(1)
+                    .maybeSingle();
+                  if (ledgerEntry?.customer_id) customerId = ledgerEntry.customer_id;
+                }
+
+                // 2. Update customer record
+                if (customerId) {
+                  const updates: Record<string, any> = { name };
+                  if (cpf) updates.cpf = cpf;
+                  if (phone) updates.phone = phone;
+                  await (supabase as any).from("customers").update(updates).eq("id", customerId);
+                }
+
+                // 3. Update machine_ride_notifications (+ link customer_id)
+                const notifUpdate: Record<string, any> = {
                   customer_name: name,
                   customer_phone: phone,
                   customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null,
-                }).eq("id", identifyNotif.id);
+                };
+                if (customerId) notifUpdate.customer_id = customerId;
+                await (supabase as any).from("machine_ride_notifications").update(notifUpdate).eq("id", identifyNotif.id);
 
-                // Update machine_rides
+                // 4. Update machine_rides
                 if (identifyNotif.machine_ride_id) {
                   await (supabase as any).from("machine_rides").update({
                     passenger_name: name,
@@ -1113,15 +1137,8 @@ export default function MachineIntegrationPage() {
                   }).eq("brand_id", identifyNotif.brand_id).eq("machine_ride_id", identifyNotif.machine_ride_id);
                 }
 
-                // Update customer record if exists
-                if (identifyNotif.customer_id) {
-                  await (supabase as any).from("customers").update({
-                    name, cpf, phone,
-                  }).eq("id", identifyNotif.customer_id);
-                }
-
-                // Update local state
-                setLiveNotifications(prev => prev.map(n => n.id === identifyNotif.id ? { ...n, customer_name: name, customer_phone: phone, customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null } : n));
+                // 5. Update local state
+                setLiveNotifications(prev => prev.map(n => n.id === identifyNotif.id ? { ...n, customer_name: name, customer_phone: phone, customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null, customer_id: customerId } : n));
                 setIdentifyNotif(null);
                 setIdentifyForm({ name: "", cpf: "", phone: "" });
                 toast({ title: "Cliente identificado!", description: `${name} vinculado à corrida.` });

@@ -1,35 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Problema encontrado: o botão "Identificar" está quebrado
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-Investiguei o banco de dados e o código. O sistema **já tem** o botão "Identificar" nas Últimas Pontuações, mas ele **não funciona** por causa de colunas faltando:
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Bugs atuais
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-1. **`machine_rides`** não tem colunas `passenger_name` nem `passenger_phone` — o dialog tenta fazer `UPDATE` nessas colunas que não existem, falhando silenciosamente
-2. **`machine_ride_notifications`** não tem `customer_id` — o dialog verifica `identifyNotif.customer_id` que é sempre `undefined`, então o registro do **cliente nunca é atualizado**
-3. Resultado: ao clicar "Salvar identificação", **apenas a notificação visual é atualizada** (local state), mas os dados **não são persistidos** no cliente
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-### Dados atuais no banco
-- Todos os 51+ clientes: `name = "Passageiro corrida #675..."`, `cpf = null`, `phone = null`, `email = null`
-- Todas as notificações: `customer_name = null`, `customer_phone = null`, `customer_cpf_masked = null`
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### Plano de correção
-
-#### 1. Migração: adicionar colunas faltando
-- `machine_rides`: adicionar `passenger_name` (text) e `passenger_phone` (text)
-- `machine_ride_notifications`: adicionar `customer_id` (uuid, FK → customers)
-
-#### 2. Webhook: salvar `customer_id` na notificação
-- Atualizar `machine-webhook` e `retry-failed-rides` para gravar `customer_id` junto com a notificação
-
-#### 3. Corrigir dialog "Identificar" 
-- Quando `customer_id` não existir na notificação, buscar o cliente via `points_ledger` (que já liga `customer_id` ao `machine_ride_id` pelo campo `reason`)
-- Garantir que o `UPDATE` no `customers` funcione corretamente
-
-#### 4. Resultados nas 4 telas
-- **Últimas pontuações**: após identificar, nome/CPF/telefone aparecem imediatamente e são persistidos
-- **Clientes pontuados**: já funciona — vai mostrar o nome atualizado do customer
-- **Página de Clientes**: já funciona — mostra nome atualizado
-- **Telegram**: já funciona — próximas corridas do mesmo cliente mostrarão o nome correto (match por CPF/telefone)
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
