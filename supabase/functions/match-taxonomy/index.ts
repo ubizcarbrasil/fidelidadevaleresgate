@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
@@ -171,7 +171,7 @@ function matchSegments(query: string, segments: Segment[], limit = 5): MatchResu
   return results.slice(0, limit);
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
