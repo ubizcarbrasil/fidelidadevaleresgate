@@ -199,6 +199,11 @@ export default function MachineIntegrationPage() {
   const [showReceiptApiKey, setShowReceiptApiKey] = useState(false);
   const [urlReceiptApiKey, setUrlReceiptApiKey] = useState("");
   const [showUrlReceiptApiKey, setShowUrlReceiptApiKey] = useState(false);
+  const [matrixApiKey, setMatrixApiKey] = useState("");
+  const [showMatrixApiKey, setShowMatrixApiKey] = useState(false);
+  const [matrixBasicUser, setMatrixBasicUser] = useState("");
+  const [matrixBasicPass, setMatrixBasicPass] = useState("");
+  const [showMatrixPass, setShowMatrixPass] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const [activatingBranchId, setActivatingBranchId] = useState<string>("");
   const [urlBranchId, setUrlBranchId] = useState<string>("");
