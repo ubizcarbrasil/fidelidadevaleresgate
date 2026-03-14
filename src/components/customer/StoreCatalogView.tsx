@@ -248,7 +248,7 @@ export default function StoreCatalogView({
           {uniqueCategories.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              onClick={() => setActiveCategory(activeCategory === cat ? null : cat || null)}
               className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors"
               style={{
                 backgroundColor: activeCategory === cat ? primary : `${primary}10`,
