@@ -1,0 +1,187 @@
+/**
+ * Dual-endpoint TaxiMachine ride data fetcher.
+ * Tries the Recibo endpoint first, falls back to Request V1.
+ * If Recibo succeeds but lacks passenger phone, enriches from V1.
+ */
+
+import { createEdgeLogger } from "./edgeLogger.ts";
+
+const logger = createEdgeLogger("fetchRideData");
+
+const BASE_URL = "https://api-vendas.taximachine.com.br";
+
+export interface RideData {
+  source: "recibo" | "request_v1" | "recibo+v1";
+  rideValue: number;
+  passengerName: string | null;
+  passengerCpf: string | null;
+  passengerPhone: string | null;
+  driverName: string | null;
+}
+
+export interface FetchRideResult {
+  ok: true;
+  data: RideData;
+} | {
+  ok: false;
+  error: string;
+  status: number;
+}
+
+function parseRecibo(json: any): Omit<RideData, "source"> {
+  const response = json?.response || json;
+  const clienteBlock = response?.cliente || {};
+  const condutorBlock = response?.condutor || {};
+  const rawCpf = (clienteBlock.cpf || "").replace(/\D/g, "");
+
+  return {
+    rideValue: Number(response?.dados_solicitacao?.valor || 0),
+    passengerName: clienteBlock.nome || null,
+    passengerCpf: rawCpf || null,
+    passengerPhone: null, // Recibo endpoint does NOT return passenger phone
+    driverName: condutorBlock.nome || null,
+  };
+}
+
+function parseRequestV1(json: any): Omit<RideData, "source"> {
+  const firstStop = Array.isArray(json?.stops) ? json.stops[0] : null;
+  const client = firstStop?.client || {};
+  const driver = json?.driver || {};
+
+  return {
+    rideValue: Number(json?.finished?.final_value || 0),
+    passengerName: client.name || null,
+    passengerCpf: null, // V1 endpoint does NOT return passenger CPF
+    passengerPhone: client.phone || null,
+    driverName: driver.name || null,
+  };
+}
+
+export function buildApiHeaders(
+  receiptApiKey: string,
+  basicUser: string,
+  basicPass: string
+): Record<string, string> {
+  const headers: Record<string, string> = { "api-key": receiptApiKey };
+  if (basicUser && basicPass) {
+    headers["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
+  }
+  return headers;
+}
+
+export async function fetchRideData(
+  headers: Record<string, string>,
+  machineRideId: string
+): Promise<FetchRideResult> {
+  // 1. Try Recibo endpoint first
+  const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  logger.info("Trying recibo endpoint", { machineRideId, url: reciboUrl });
+
+  let reciboData: Omit<RideData, "source"> | null = null;
+
+  try {
+    const reciboRes = await fetch(reciboUrl, { headers });
+    if (reciboRes.ok) {
+      const reciboJson = await reciboRes.json();
+      reciboData = parseRecibo(reciboJson);
+      logger.info("Recibo OK", { machineRideId, rideValue: reciboData.rideValue });
+    } else {
+      const body = await reciboRes.text();
+      logger.warn("Recibo failed", { machineRideId, status: reciboRes.status, body: body.slice(0, 300) });
+    }
+  } catch (e) {
+    logger.warn("Recibo fetch exception", { machineRideId, error: String(e) });
+  }
+
+  // 2. If recibo succeeded, optionally enrich with V1 for phone
+  if (reciboData) {
+    if (!reciboData.passengerPhone) {
+      try {
+        const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+        const v1Res = await fetch(v1Url, { headers });
+        if (v1Res.ok) {
+          const v1Json = await v1Res.json();
+          const v1Data = parseRequestV1(v1Json);
+          if (v1Data.passengerPhone) {
+            logger.info("Enriched phone from V1", { machineRideId, phone: v1Data.passengerPhone });
+            return {
+              ok: true,
+              data: {
+                source: "recibo+v1",
+                ...reciboData,
+                passengerPhone: v1Data.passengerPhone,
+              },
+            };
+          }
+        }
+      } catch (e) {
+        logger.warn("V1 enrich fetch exception", { machineRideId, error: String(e) });
+      }
+    }
+
+    return { ok: true, data: { source: "recibo", ...reciboData } };
+  }
+
+  // 3. Recibo failed — try V1 as fallback
+  const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+  logger.info("Trying V1 fallback", { machineRideId, url: v1Url });
+
+  try {
+    const v1Res = await fetch(v1Url, { headers });
+    if (v1Res.ok) {
+      const v1Json = await v1Res.json();
+      const v1Data = parseRequestV1(v1Json);
+      logger.info("V1 OK", { machineRideId, rideValue: v1Data.rideValue });
+      return { ok: true, data: { source: "request_v1", ...v1Data } };
+    }
+
+    const body = await v1Res.text();
+    logger.error("Both endpoints failed", { machineRideId, v1Status: v1Res.status, body: body.slice(0, 300) });
+
+    if (v1Res.status === 401) {
+      return { ok: false, error: "Credenciais TaxiMachine inválidas em ambos endpoints.", status: 401 };
+    }
+    return { ok: false, error: `Ambos endpoints falharam. V1 status: ${v1Res.status}`, status: 502 };
+  } catch (e) {
+    logger.error("V1 fallback exception", { machineRideId, error: String(e) });
+    return { ok: false, error: `Falha ao conectar com TaxiMachine: ${String(e)}`, status: 502 };
+  }
+}
+
+/**
+ * Test both endpoints independently and return results for each.
+ */
+export async function testBothEndpoints(
+  headers: Record<string, string>,
+  testRideId = "100003661"
+): Promise<{
+  recibo: { ok: boolean; status: number; error?: string };
+  request_v1: { ok: boolean; status: number; error?: string };
+}> {
+  const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${testRideId}`;
+  const v1Url = `${BASE_URL}/api/v1/request/${testRideId}`;
+
+  const [reciboResult, v1Result] = await Promise.allSettled([
+    fetch(reciboUrl, { headers }),
+    fetch(v1Url, { headers }),
+  ]);
+
+  const recibo = reciboResult.status === "fulfilled"
+    ? { ok: reciboResult.value.ok, status: reciboResult.value.status }
+    : { ok: false, status: 0, error: String((reciboResult as PromiseRejectedResult).reason) };
+
+  // Consume body to avoid leak
+  if (reciboResult.status === "fulfilled") {
+    await reciboResult.value.text().catch(() => {});
+  }
+
+  const request_v1 = v1Result.status === "fulfilled"
+    ? { ok: v1Result.value.ok, status: v1Result.value.status }
+    : { ok: false, status: 0, error: String((v1Result as PromiseRejectedResult).reason) };
+
+  if (v1Result.status === "fulfilled") {
+    await v1Result.value.text().catch(() => {});
+  }
+
+  return { recibo, request_v1 };
+}

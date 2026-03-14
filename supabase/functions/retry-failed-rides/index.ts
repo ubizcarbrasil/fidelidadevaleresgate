@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
+import { fetchRideData, buildApiHeaders } from "../_shared/fetchRideData.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -76,30 +77,18 @@ async function retryRide(
     return { machineRideId, status: "SKIP", reason: "no_receipt_api_key" };
   }
 
-  const receiptHeaders: Record<string, string> = { "api-key": receiptApiKey };
-  if (basicUser && basicPass) {
-    receiptHeaders["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
+  const headers = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+
+  logger.info("Retry: fetching ride data (dual endpoint)", { machineRideId });
+
+  const rideResult = await fetchRideData(headers, machineRideId);
+
+  if (!rideResult.ok) {
+    logger.error("Retry: both endpoints failed", { machineRideId, error: rideResult.error });
+    return { machineRideId, status: "FAILED", reason: rideResult.error };
   }
 
-  const receiptUrl = `https://api-vendas.taximachine.com.br/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Retry: fetching receipt", { machineRideId, url: receiptUrl });
-
-  const receiptRes = await fetch(receiptUrl, { headers: receiptHeaders });
-
-  if (!receiptRes.ok) {
-    const body = await receiptRes.text();
-    logger.error("Retry: receipt fetch failed", { machineRideId, status: receiptRes.status, body });
-    return { machineRideId, status: "FAILED", reason: `API returned ${receiptRes.status}` };
-  }
-
-  const receiptJson = await receiptRes.json();
-  const receiptData = receiptJson?.response || receiptJson;
-  const rideValue = Number(receiptData?.dados_solicitacao?.valor || 0);
-
-  const clienteBlock = receiptData?.cliente || {};
-  const passengerCpf = (clienteBlock.cpf || "").replace(/\D/g, "") || null;
-  const passengerName: string | null = clienteBlock.nome || null;
-  const passengerPhone: string | null = clienteBlock.telefone || clienteBlock.phone || null;
+  const { rideValue, passengerName, passengerCpf, passengerPhone, source } = rideResult.data;
 
   if (rideValue <= 0) {
     await sb.from("machine_rides").update({
@@ -109,7 +98,7 @@ async function retryRide(
       passenger_cpf: passengerCpf,
       finalized_at: new Date().toISOString(),
     }).eq("id", ride.id);
-    return { machineRideId, status: "NO_VALUE", rideValue: 0 };
+    return { machineRideId, status: "NO_VALUE", rideValue: 0, source };
   }
 
   const points = Math.floor(rideValue);
@@ -232,6 +221,7 @@ async function retryRide(
     points: pointsCredited ? points : 0,
     matchedBy,
     customerId,
+    source,
   });
 
   return {
@@ -239,6 +229,7 @@ async function retryRide(
     status: "FINALIZED",
     rideValue,
     pointsCredited: pointsCredited ? points : 0,
+    source,
   };
 }
 
@@ -253,7 +244,6 @@ Deno.serve(async (req) => {
   );
 
   try {
-    // Validate auth — require Authorization header with anon/service key or valid JWT
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return json({ error: "Unauthorized" }, 401);
@@ -266,7 +256,6 @@ Deno.serve(async (req) => {
       return json({ error: "brand_id is required" }, 400);
     }
 
-    // Fetch failed rides (API_ERROR or CREDENTIAL_ERROR) for this brand, max 50
     const { data: failedRides, error: fetchErr } = await sb
       .from("machine_rides")
       .select("*")
@@ -286,7 +275,6 @@ Deno.serve(async (req) => {
 
     logger.info("Retrying failed rides", { brand_id, count: failedRides.length });
 
-    // Fetch all active integrations for this brand
     const { data: integrations } = await sb
       .from("machine_integrations")
       .select("*")
@@ -300,7 +288,6 @@ Deno.serve(async (req) => {
     const results: any[] = [];
 
     for (const ride of failedRides) {
-      // Match integration by branch_id, or fallback to first
       const integration =
         integrations.find((i: any) => i.branch_id === ride.branch_id) ||
         integrations[0];
