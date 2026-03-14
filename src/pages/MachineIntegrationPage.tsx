@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins, Eye, EyeOff } from "lucide-react";
+import { Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins, Eye, EyeOff, Copy, Check } from "lucide-react";
 
 export default function MachineIntegrationPage() {
   const { currentBrandId } = useBrandGuard();
