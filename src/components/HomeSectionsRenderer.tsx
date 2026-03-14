@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -9,6 +9,9 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { motion } from "framer-motion";
 import OfferBadge from "@/components/customer/OfferBadge";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { hslToCss } from "@/lib/utils";
 
 type Voucher = Tables<"vouchers">;
 
