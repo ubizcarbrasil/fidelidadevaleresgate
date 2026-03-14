@@ -1,0 +1,1 @@
+ALTER TYPE ledger_reference_type ADD VALUE IF NOT EXISTS 'MACHINE_RIDE';

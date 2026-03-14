@@ -4789,6 +4789,7 @@ export type Database = {
         | "EARNING_EVENT"
         | "REDEMPTION"
         | "MANUAL_ADJUSTMENT"
+        | "MACHINE_RIDE"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
       points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
       redemption_status: "PENDING" | "USED" | "EXPIRED" | "CANCELED"
@@ -4963,6 +4964,7 @@ export const Constants = {
         "EARNING_EVENT",
         "REDEMPTION",
         "MANUAL_ADJUSTMENT",
+        "MACHINE_RIDE",
       ],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
       points_rule_type: ["PER_REAL", "FIXED", "TIERED"],

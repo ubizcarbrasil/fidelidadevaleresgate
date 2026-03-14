@@ -291,11 +291,11 @@ async function processFinalized(
         brand_id: brandId,
         branch_id: customer.branch_id,
         customer_id: customer.id,
-        points,
-        type: "EARN",
-        source: "MACHINE_RIDE",
-        description: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
-        reference_id: machineRideId,
+        entry_type: "CREDIT",
+        points_amount: points,
+        money_amount: rideValue,
+        reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
+        reference_type: "MACHINE_RIDE",
       });
 
       await sb
