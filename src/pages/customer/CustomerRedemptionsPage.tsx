@@ -43,7 +43,7 @@ export default function CustomerRedemptionsPage() {
   const { theme } = useBrand();
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [search, setSearch] = useState("");
-  const [selectedRedemption, setSelectedRedemption] = useState<Record<string, unknown> | null>(null);
+  const [selectedRedemption, setSelectedRedemption] = useState<RedemptionWithOffer | null>(null);
   const queryClient = useQueryClient();
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
