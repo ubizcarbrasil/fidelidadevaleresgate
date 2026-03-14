@@ -826,15 +826,30 @@ export default function MachineIntegrationPage() {
                 </p>
               </div>
 
-              <Button
-                variant="destructive" size="sm"
-                onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)}
-                disabled={deactivateMutation.isPending}
-              >
-                {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                <PowerOff className="h-4 w-4 mr-1" />
-                Desativar esta cidade
-              </Button>
+              <div className="flex items-center gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="destructive" size="sm"
+                  onClick={() => {
+                    if (confirm("Remover esta conexão? Você poderá reconectar com novas credenciais.")) {
+                      deleteIntegrationMutation.mutate(selectedIntegration.id);
+                    }
+                  }}
+                  disabled={deleteIntegrationMutation.isPending}
+                >
+                  {deleteIntegrationMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Remover conexão
+                </Button>
+                <Button
+                  variant="outline" size="sm"
+                  onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)}
+                  disabled={deactivateMutation.isPending}
+                >
+                  {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <PowerOff className="h-4 w-4 mr-1" />
+                  Desativar
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </>
