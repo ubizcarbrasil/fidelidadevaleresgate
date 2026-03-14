@@ -86,9 +86,9 @@ export default function StoreCatalogView({
           .order("created_at", { ascending: false })
           .limit(10),
       ]);
-      setItems(itemsRes.data || []);
-      setCategories(catsRes.data || []);
-      setOffers(offersRes.data || []);
+      setItems((itemsRes.data || []) as unknown as CatalogItem[]);
+      setCategories((catsRes.data || []) as unknown as CatalogCategory[]);
+      setOffers((offersRes.data || []) as unknown as CatalogOffer[]);
       setLoading(false);
     };
     fetchData();
