@@ -2304,6 +2304,7 @@ export type Database = {
           basic_auth_password: string
           basic_auth_user: string
           brand_id: string
+          callback_url: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -2318,6 +2319,7 @@ export type Database = {
           basic_auth_password?: string
           basic_auth_user?: string
           brand_id: string
+          callback_url?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -2332,6 +2334,7 @@ export type Database = {
           basic_auth_password?: string
           basic_auth_user?: string
           brand_id?: string
+          callback_url?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
