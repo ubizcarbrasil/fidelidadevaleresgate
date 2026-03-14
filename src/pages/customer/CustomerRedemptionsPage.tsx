@@ -522,14 +522,15 @@ function CancelButton({ redemptionId, token, onCanceled, fg }: { redemptionId: s
     try {
       const { error } = await supabase
         .from("redemptions")
-        .update({ status: "CANCELED" as any })
+        .update({ status: "CANCELED" as string })
         .eq("id", redemptionId)
         .eq("status", "PENDING");
       if (error) throw error;
       toast.success("Resgate estornado com sucesso!");
       onCanceled();
-    } catch (err: any) {
-      toast.error("Erro ao estornar: " + (err.message || "Tente novamente"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Tente novamente";
+      toast.error("Erro ao estornar: " + message);
     } finally {
       setLoading(false);
       setConfirming(false);
