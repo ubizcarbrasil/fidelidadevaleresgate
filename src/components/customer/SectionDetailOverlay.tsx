@@ -53,7 +53,7 @@ export default function SectionDetailOverlay({
     if (!query.trim()) return items;
     const q = query.toLowerCase();
     return items.filter(
-      (i: any) =>
+      (i) =>
         i.name?.toLowerCase().includes(q) ||
         i.title?.toLowerCase().includes(q) ||
         i.stores?.name?.toLowerCase().includes(q) ||
