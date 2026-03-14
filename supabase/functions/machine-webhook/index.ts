@@ -188,7 +188,7 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "As credenciais Basic Auth (usuário/senha) da TaxiMachine não foram configuradas. Acesse a configuração da integração e preencha os campos de usuário e senha.", status: 400 };
+    return { error: "As credenciais da TaxiMachine (usuário/senha e/ou chave de acesso) não foram configuradas. Acesse a configuração da integração e preencha todos os campos.", status: 400 };
   }
 
   const basicAuth = btoa(`${basicUser}:${basicPass}`);
@@ -196,7 +196,7 @@ async function processFinalized(
 
   const receiptRes = await fetch(
     `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`,
-    { headers: { "Authorization": `Basic ${basicAuth}` } }
+    { headers: { "Authorization": `Basic ${basicAuth}`, "api-key": apiKey } }
   );
 
   if (!receiptRes.ok) {
