@@ -101,6 +101,7 @@ const PartnerLandingPage = lazy(() => import("@/pages/PartnerLandingPage"));
 const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfigPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
+const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
