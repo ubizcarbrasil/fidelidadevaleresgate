@@ -229,6 +229,7 @@ async function retryRide(
     ride_value: rideValue,
     points_credited: pointsCredited ? points : 0,
     passenger_cpf: passengerCpf || null,
+    driver_name: driverName || null,
     finalized_at: new Date().toISOString(),
   }).eq("id", ride.id);
 
