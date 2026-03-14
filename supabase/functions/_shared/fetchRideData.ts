@@ -8,7 +8,10 @@ import { createEdgeLogger } from "./edgeLogger.ts";
 
 const logger = createEdgeLogger("fetchRideData");
 
-const BASE_URL = "https://api.taximachine.com.br";
+/** Recibo lives on the Sales API domain */
+const RECIBO_BASE_URL = "https://api-vendas.taximachine.com.br";
+/** V1 lives on the main API domain */
+const V1_BASE_URL = "https://api.taximachine.com.br";
 
 export interface RideData {
   source: "recibo" | "request_v1" | "recibo+v1";
@@ -16,6 +19,7 @@ export interface RideData {
   passengerName: string | null;
   passengerCpf: string | null;
   passengerPhone: string | null;
+  passengerEmail: string | null;
   driverName: string | null;
 }
 
@@ -23,7 +27,13 @@ export type FetchRideResult =
   | { ok: true; data: RideData }
   | { ok: false; error: string; status: number };
 
-function parseRecibo(json: any): Omit<RideData, "source"> {
+function parseRecibo(json: any): Omit<RideData, "source"> | null {
+  // Validate success flag — if explicitly false, treat as failure
+  if (json?.success === false) {
+    logger.warn("Recibo returned success=false", { message: json?.message || json?.msg });
+    return null;
+  }
+
   const response = json?.response || json;
   const clienteBlock = response?.cliente || {};
   const condutorBlock = response?.condutor || {};
@@ -33,7 +43,8 @@ function parseRecibo(json: any): Omit<RideData, "source"> {
     rideValue: Number(response?.dados_solicitacao?.valor || 0),
     passengerName: clienteBlock.nome || null,
     passengerCpf: rawCpf || null,
-    passengerPhone: null, // Recibo endpoint does NOT return passenger phone
+    passengerPhone: clienteBlock.telefone || null,
+    passengerEmail: clienteBlock.email || null,
     driverName: condutorBlock.nome || null,
   };
 }
@@ -65,6 +76,7 @@ function parseRequestV1(json: any): Omit<RideData, "source"> {
     passengerName: name,
     passengerCpf: cpf,
     passengerPhone: phone,
+    passengerEmail: null, // V1 does not return email
     driverName: driver.name || null,
   };
 }
@@ -99,8 +111,8 @@ async function fetchReciboFirst(
   headers: Record<string, string>,
   machineRideId: string
 ): Promise<FetchRideResult> {
-  const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Trying recibo endpoint (primary)", { machineRideId });
+  const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  logger.info("Trying recibo endpoint (primary)", { machineRideId, url: reciboUrl });
 
   let reciboData: Omit<RideData, "source"> | null = null;
 
@@ -109,7 +121,11 @@ async function fetchReciboFirst(
     if (reciboRes.ok) {
       const reciboJson = await reciboRes.json();
       reciboData = parseRecibo(reciboJson);
-      logger.info("Recibo OK", { machineRideId, rideValue: reciboData.rideValue });
+      if (reciboData) {
+        logger.info("Recibo OK", { machineRideId, rideValue: reciboData.rideValue, hasPhone: !!reciboData.passengerPhone, hasEmail: !!reciboData.passengerEmail });
+      } else {
+        logger.warn("Recibo returned success=false, falling through to V1", { machineRideId });
+      }
     } else {
       const body = await reciboRes.text();
       logger.warn("Recibo failed", { machineRideId, status: reciboRes.status, body: body.slice(0, 300) });
@@ -121,7 +137,7 @@ async function fetchReciboFirst(
   if (reciboData) {
     if (!reciboData.passengerPhone) {
       try {
-        const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+        const v1Url = `${V1_BASE_URL}/api/v1/request/${machineRideId}`;
         const v1Res = await fetch(v1Url, { headers });
         if (v1Res.ok) {
           const v1Json = await v1Res.json();
@@ -146,7 +162,7 @@ async function fetchV1First(
   headers: Record<string, string>,
   machineRideId: string
 ): Promise<FetchRideResult> {
-  const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+  const v1Url = `${V1_BASE_URL}/api/v1/request/${machineRideId}`;
   logger.info("Trying V1 endpoint (primary)", { machineRideId });
 
   let v1Data: Omit<RideData, "source"> | null = null;
@@ -169,14 +185,14 @@ async function fetchV1First(
     // Enrich with CPF from recibo if missing
     if (!v1Data.passengerCpf) {
       try {
-        const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+        const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
         const reciboRes = await fetch(reciboUrl, { headers });
         if (reciboRes.ok) {
           const reciboJson = await reciboRes.json();
           const reciboData = parseRecibo(reciboJson);
-          if (reciboData.passengerCpf) {
+          if (reciboData?.passengerCpf) {
             logger.info("Enriched CPF from recibo", { machineRideId });
-            return { ok: true, data: { source: "recibo+v1", ...v1Data, passengerCpf: reciboData.passengerCpf } };
+            return { ok: true, data: { source: "recibo+v1", ...v1Data, passengerCpf: reciboData.passengerCpf, passengerEmail: reciboData.passengerEmail } };
           }
         } else { await reciboRes.text().catch(() => {}); }
       } catch (e) {
@@ -187,15 +203,18 @@ async function fetchV1First(
   }
 
   // Fallback to recibo
-  const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
   logger.info("Trying recibo fallback", { machineRideId });
   try {
     const reciboRes = await fetch(reciboUrl, { headers });
     if (reciboRes.ok) {
       const reciboJson = await reciboRes.json();
       const data = parseRecibo(reciboJson);
-      logger.info("Recibo fallback OK", { machineRideId, rideValue: data.rideValue });
-      return { ok: true, data: { source: "recibo", ...data } };
+      if (data) {
+        logger.info("Recibo fallback OK", { machineRideId, rideValue: data.rideValue });
+        return { ok: true, data: { source: "recibo", ...data } };
+      }
+      logger.warn("Recibo fallback returned success=false", { machineRideId });
     }
     const body = await reciboRes.text();
     logger.error("Both endpoints failed", { machineRideId, reciboStatus: reciboRes.status, body: body.slice(0, 300) });
@@ -213,7 +232,7 @@ async function tryV1(
   headers: Record<string, string>,
   machineRideId: string
 ): Promise<FetchRideResult> {
-  const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+  const v1Url = `${V1_BASE_URL}/api/v1/request/${machineRideId}`;
   logger.info("Trying V1 fallback", { machineRideId });
   try {
     const v1Res = await fetch(v1Url, { headers });
@@ -245,8 +264,8 @@ export async function testBothEndpoints(
   recibo: { ok: boolean; status: number; error?: string; body?: string };
   request_v1: { ok: boolean; status: number; error?: string; body?: string };
 }> {
-  const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${testRideId}`;
-  const v1Url = `${BASE_URL}/api/v1/request/${testRideId}`;
+  const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${testRideId}`;
+  const v1Url = `${V1_BASE_URL}/api/v1/request/${testRideId}`;
 
   const [reciboResult, v1Result] = await Promise.allSettled([
     fetch(reciboUrl, { headers }),

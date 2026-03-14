@@ -2521,6 +2521,7 @@ export type Database = {
           id: string
           machine_ride_id: string
           passenger_cpf: string | null
+          passenger_email: string | null
           passenger_name: string | null
           passenger_phone: string | null
           points_credited: number
@@ -2536,6 +2537,7 @@ export type Database = {
           id?: string
           machine_ride_id: string
           passenger_cpf?: string | null
+          passenger_email?: string | null
           passenger_name?: string | null
           passenger_phone?: string | null
           points_credited?: number
@@ -2551,6 +2553,7 @@ export type Database = {
           id?: string
           machine_ride_id?: string
           passenger_cpf?: string | null
+          passenger_email?: string | null
           passenger_name?: string | null
           passenger_phone?: string | null
           points_credited?: number
