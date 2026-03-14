@@ -90,6 +90,7 @@ const BrandSettingsPage = lazy(() => import("@/pages/BrandSettingsPage"));
 const SponsoredPlacementsPage = lazy(() => import("@/pages/SponsoredPlacementsPage"));
 const MachineIntegrationPage = lazy(() => import("@/pages/MachineIntegrationPage"));
 const MachineWebhookTestPage = lazy(() => import("@/pages/MachineWebhookTestPage"));
+const OfferCardConfigPage = lazy(() => import("@/pages/OfferCardConfigPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
