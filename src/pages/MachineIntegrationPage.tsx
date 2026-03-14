@@ -68,6 +68,11 @@ export default function MachineIntegrationPage() {
   const [callbackSaved, setCallbackSaved] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const [activatingBranchId, setActivatingBranchId] = useState<string>("");
+  const [urlBranchId, setUrlBranchId] = useState<string>("");
+  const [urlBasicUser, setUrlBasicUser] = useState("");
+  const [urlBasicPass, setUrlBasicPass] = useState("");
+  const [showUrlPass, setShowUrlPass] = useState(false);
+  const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;

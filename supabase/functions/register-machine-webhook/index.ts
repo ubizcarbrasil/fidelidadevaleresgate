@@ -114,48 +114,56 @@ Deno.serve(async (req) => {
     }
 
     // ACTIVATE action
-    if (!api_key || !basic_auth_user || !basic_auth_password) {
-      return json({ error: "api_key, basic_auth_user, basic_auth_password are required" }, 400);
+    if (!basic_auth_user || !basic_auth_password) {
+      return json({ error: "basic_auth_user and basic_auth_password are required" }, 400);
     }
 
     if (!branch_id) {
       return json({ error: "branch_id is required" }, 400);
     }
 
+    // api_key is optional — generate placeholder for URL-only setups
+    const effectiveApiKey = api_key || `url-only-${branch_id}`;
+
     // Store credentials and attempt webhook registration
     const basicAuth = btoa(`${basic_auth_user}:${basic_auth_password}`);
     const machineBaseUrl = "https://api.taximachine.com.br";
 
-    // Register webhook at TaxiMachine — include branch_id in URL
+    // Register webhook at TaxiMachine — only if api_key was provided (not URL-only)
     const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook?brand_id=${encodeURIComponent(brand_id)}&branch_id=${encodeURIComponent(branch_id)}`;
     let webhookRegistered = false;
 
-    try {
-      const webhookRes = await fetch(
-        `${machineBaseUrl}/api/integracao/cadastrarWebhook`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Basic ${basicAuth}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            tipo: "status",
-            responsabilidade: "empresa",
-            url: webhookUrl,
-          }),
-        }
-      );
+    if (api_key) {
+      try {
+        const webhookRes = await fetch(
+          `${machineBaseUrl}/api/integracao/cadastrarWebhook`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${basicAuth}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              tipo: "status",
+              responsabilidade: "empresa",
+              url: webhookUrl,
+            }),
+          }
+        );
 
-      if (webhookRes.ok) {
-        webhookRegistered = true;
-      } else {
-        const errText = await webhookRes.text();
-        createEdgeLogger("register-machine-webhook").error("Webhook registration response", { status: webhookRes.status, body: errText });
+        if (webhookRes.ok) {
+          webhookRegistered = true;
+        } else {
+          const errText = await webhookRes.text();
+          createEdgeLogger("register-machine-webhook").error("Webhook registration response", { status: webhookRes.status, body: errText });
+        }
+        if (!webhookRegistered) await webhookRes.text().catch(() => {});
+      } catch (e) {
+        createEdgeLogger("register-machine-webhook").error("Webhook registration error", { error: String(e) });
       }
-      if (!webhookRegistered) await webhookRes.text().catch(() => {});
-    } catch (e) {
-      createEdgeLogger("register-machine-webhook").error("Webhook registration error", { error: String(e) });
+    } else {
+      // URL-only mode: user will manually paste the webhook URL
+      webhookRegistered = false;
     }
 
     // Upsert integration record — unique per (brand_id, branch_id)
@@ -165,7 +173,7 @@ Deno.serve(async (req) => {
         {
           brand_id,
           branch_id,
-          api_key,
+          api_key: effectiveApiKey,
           basic_auth_user,
           basic_auth_password,
           webhook_registered: webhookRegistered,
@@ -183,15 +191,20 @@ Deno.serve(async (req) => {
       userId,
       brandId: brand_id,
       ip: clientIp,
-      details: { webhook_registered: webhookRegistered, branch_id },
+      details: { webhook_registered: webhookRegistered, branch_id, url_only: !api_key },
     });
+
+    const webhookUrlFull = `${supabaseUrl}/functions/v1/machine-webhook?brand_id=${encodeURIComponent(brand_id)}&branch_id=${encodeURIComponent(branch_id)}`;
 
     return json({
       success: true,
       webhook_registered: webhookRegistered,
-      message: webhookRegistered
-        ? "Integration activated and webhook registered"
-        : "Integration activated, but webhook registration failed. You may need to register the webhook manually.",
+      webhook_url: webhookUrlFull,
+      message: api_key
+        ? (webhookRegistered
+          ? "Integration activated and webhook registered"
+          : "Integration activated, but webhook registration failed. You may need to register the webhook manually.")
+        : "Integration activated in URL-only mode. Copy the webhook URL and paste it in your status router.",
     });
   } catch (err) {
     createEdgeLogger("register-machine-webhook").error("register-machine-webhook error", { error: String(err) });
