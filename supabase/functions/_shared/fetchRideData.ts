@@ -9,7 +9,7 @@ import { createEdgeLogger } from "./edgeLogger.ts";
 const logger = createEdgeLogger("fetchRideData");
 
 /** Recibo lives on the Sales API domain */
-const RECIBO_BASE_URL = "https://api-vendas.taximachine.com.br";
+const RECIBO_BASE_URL = "https://api.taximachine.com.br";
 /** V1 lives on the main API domain */
 const V1_BASE_URL = "https://api.taximachine.com.br";
 
@@ -89,6 +89,7 @@ export function buildApiHeaders(
   const headers: Record<string, string> = {
     "api-key": receiptApiKey,
     "User-Agent": "ua-ubizcar",
+    "Content-Type": "application/json",
   };
   if (basicUser && basicPass) {
     headers["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
