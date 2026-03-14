@@ -241,7 +241,7 @@ function RedemptionCard({
     : { label: "LOJA", bg: "#FEF3C7", color: "#92400E" };
 
   // Can cancel within 24h of creation
-  const hoursSinceCreation = (Date.now() - new Date(r.created_at as string).getTime()) / (1000 * 60 * 60);
+  const hoursSinceCreation = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60);
   const canCancel = r.status === "PENDING" && hoursSinceCreation <= 24;
 
   const expiryDays = r.expires_at
