@@ -802,6 +802,15 @@ export default function AffiliateDealsPage() {
           )}
         </TabsContent>
       </Tabs>
+      {isMobile && (
+        <Button
+          onClick={() => navigate("/affiliate-deals/import-mobile")}
+          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg p-0"
+          size="icon"
+        >
+          <Import className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 }
