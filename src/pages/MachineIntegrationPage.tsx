@@ -430,6 +430,30 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const saveMatrixMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .update({
+          matrix_api_key: selectedMatrixApiKey || null,
+          matrix_basic_auth_user: selectedMatrixBasicUser || null,
+          matrix_basic_auth_password: selectedMatrixBasicPass || null,
+        })
+        .eq("id", selectedIntegration.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setMatrixSaved(true);
+      setTimeout(() => setMatrixSaved(false), 2000);
+      toast({ title: "Credenciais da matriz salvas!" });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
+
   const saveTelegramMutation = useMutation({
     mutationFn: async () => {
       if (!selectedIntegration?.id) throw new Error("Integration not found");
