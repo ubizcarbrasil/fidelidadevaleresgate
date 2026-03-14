@@ -43,6 +43,10 @@
 | Rate limiting em edge functions (agent-api, earn-webhook, mobility-webhook) | ✅ PASS |
 | Anonymous signups desabilitados | ✅ PASS |
 | Auto-confirm email desabilitado | ✅ PASS |
+| CSP, X-Frame-Options, X-Content-Type-Options headers | ✅ PASS |
+| Input sanitization library (stripHtml, sanitizeUrl, sanitizePhone) | ✅ PASS |
+| Audit logging em login/logout/password_reset | ✅ PASS |
+| RLS penetration tests (cross-user data access) | ✅ PASS |
 
 ### Itens Pendentes (P1)
 
