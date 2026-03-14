@@ -89,6 +89,7 @@ export function buildApiHeaders(
   const headers: Record<string, string> = {
     "api-key": receiptApiKey,
     "User-Agent": "ua-ubizcar",
+    "Content-Type": "application/json",
   };
   if (basicUser && basicPass) {
     headers["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
