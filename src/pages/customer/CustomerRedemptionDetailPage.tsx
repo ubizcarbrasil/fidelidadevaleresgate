@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { RedemptionWithOffer, OfferInfo } from "@/types/customer";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -14,7 +15,7 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 }
 
 interface Props {
-  redemption: Record<string, unknown>;
+  redemption: RedemptionWithOffer;
   onBack: () => void;
   onCanceled?: () => void;
 }
