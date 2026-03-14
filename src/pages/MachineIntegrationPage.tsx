@@ -198,10 +198,6 @@ export default function MachineIntegrationPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("");
   const [callbackSaved, setCallbackSaved] = useState(false);
-  const [receiptApiKey, setReceiptApiKey] = useState("");
-  const [showReceiptApiKey, setShowReceiptApiKey] = useState(false);
-  const [urlReceiptApiKey, setUrlReceiptApiKey] = useState("");
-  const [showUrlReceiptApiKey, setShowUrlReceiptApiKey] = useState(false);
   const [matrixApiKey, setMatrixApiKey] = useState("");
   const [showMatrixApiKey, setShowMatrixApiKey] = useState(false);
   const [matrixBasicUser, setMatrixBasicUser] = useState("");
