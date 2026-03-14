@@ -176,10 +176,9 @@ async function processFinalized(
   // Use receipt_api_key (dedicated key for Sales API) with fallback to api_key for backward compat
   const receiptApiKey = (integration.receipt_api_key || integration.api_key || "").trim();
   const hasValidReceiptKey = receiptApiKey && !receiptApiKey.startsWith("url-only-");
-  if (!basicUser || !basicPass || !hasValidReceiptKey) {
-    const missing = [!basicUser || !basicPass ? "basic_auth" : null, !hasValidReceiptKey ? "receipt_api_key" : null].filter(Boolean);
-    logger.error("Missing credentials on integration", { brandId, missing });
-    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing } });
+  if (!hasValidReceiptKey) {
+    logger.error("Missing receipt_api_key on integration", { brandId });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing: ["receipt_api_key"] } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
@@ -189,26 +188,29 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "As credenciais da TaxiMachine (usuário/senha e/ou chave de acesso) não foram configuradas. Acesse a configuração da integração e preencha todos os campos.", status: 400 };
+    return { error: "A chave da API de Vendas (receipt_api_key) não foi configurada. Acesse a configuração da integração e preencha o campo.", status: 400 };
+  }
+
+  // Build headers: api-key is required; Basic Auth is optional
+  const receiptHeaders: Record<string, string> = { "api-key": receiptApiKey };
+  if (basicUser && basicPass) {
+    receiptHeaders["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
   }
 
   logger.info("TaxiMachine auth config", {
     brandId,
     machineRideId,
     hasBasicAuth: !!(basicUser && basicPass),
-    basicAuthUser: basicUser ? `${basicUser.slice(0, 3)}***` : null,
-    hasReceiptApiKey: hasValidReceiptKey,
+    hasReceiptApiKey: true,
     receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
   });
 
-  const basicAuth = btoa(`${basicUser}:${basicPass}`);
   const machineBaseUrl = "https://api-vendas.taximachine.com.br";
-
   const receiptUrl = `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl, headers: ["Authorization: Basic ***", `api-key: ${receiptApiKey.slice(0, 6)}***`] });
+  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl });
 
   const receiptRes = await fetch(receiptUrl, {
-    headers: { "Authorization": `Basic ${basicAuth}`, "api-key": receiptApiKey },
+    headers: receiptHeaders,
   });
 
   if (!receiptRes.ok) {
