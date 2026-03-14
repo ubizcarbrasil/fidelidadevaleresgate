@@ -197,8 +197,8 @@ async function processFinalized(
     machineRideId,
     hasBasicAuth: !!(basicUser && basicPass),
     basicAuthUser: basicUser ? `${basicUser.slice(0, 3)}***` : null,
-    hasApiKey: hasValidApiKey,
-    apiKeyPrefix: apiKey ? `${apiKey.slice(0, 6)}***` : null,
+    hasReceiptApiKey: hasValidReceiptKey,
+    receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
   });
 
   const basicAuth = btoa(`${basicUser}:${basicPass}`);
