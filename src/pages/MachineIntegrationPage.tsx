@@ -192,7 +192,8 @@ export default function MachineIntegrationPage() {
         basic_auth_user: user,
         basic_auth_password: pass,
       };
-      if (!isUrlOnly && apiKey) body.api_key = apiKey;
+      const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
+      if (resolvedApiKey) body.api_key = resolvedApiKey;
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
