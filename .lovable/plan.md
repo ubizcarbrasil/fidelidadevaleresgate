@@ -1,30 +1,60 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+# Plano: Importação CSV de Cupons/Vouchers
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+## Objetivo
+Adicionar o tipo **COUPONS** ao importador CSV existente (`CsvImportPage.tsx`), com validação de código único e vinculação automática a campanhas (offers) existentes.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+## Mudanças
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### 1. Definir campos-alvo para cupons
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Novo array `COUPON_FIELDS` com os campos mapeáveis:
+- `code` (obrigatório) — código do cupom
+- `store_name` / `store_slug` — para resolver `store_id`
+- `type` (obrigatório) — PERCENT ou FIXED
+- `value` — valor do desconto
+- `expires_at` (obrigatório) — data de expiração
+- `campaign` — título da oferta/campanha para vincular `offer_id`
+- `status` — ACTIVE/INACTIVE (default: ACTIVE)
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### 2. Registrar o tipo no sistema
+
+- Adicionar `"COUPONS"` ao union type `ImportType`
+- Adicionar entrada no `<Select>` de tipo
+- Registrar no `getTargetFields()`
+- Permitir download do template CSV
+
+### 3. Validação específica para cupons
+
+Na função `validateMappedRow`, adicionar regras:
+- `code` obrigatório, formato `[A-Z0-9]{4,16}`
+- `type` deve ser PERCENT ou FIXED
+- `value` numérico e positivo
+- `expires_at` data válida
+- **Validação de código único**: antes da importação, buscar todos os códigos existentes na branch via `supabase.from("coupons").select("code")` e rejeitar duplicatas tanto contra o banco quanto dentro do próprio CSV
+
+### 4. Lógica de importação
+
+No bloco `importMutation`, adicionar branch `importType === "COUPONS"`:
+
+1. Pré-carregar lojas da branch (como OFFERS faz) para resolver `store_name`/`store_slug` → `store_id`
+2. Pré-carregar ofertas ativas da branch para vincular `campaign` → `offer_id` (match por título case-insensitive)
+3. Pré-carregar códigos existentes para validação de unicidade
+4. Inserir row-a-row com tratamento de erro individual
+5. Invalidar query cache `["coupons"]` no sucesso
+
+### 5. Arquivo modificado
+
+Apenas `src/pages/CsvImportPage.tsx`:
+- ~30 linhas novas para `COUPON_FIELDS` + validação
+- ~50 linhas novas para lógica de importação de cupons
+- ~5 linhas para registrar no Select e getTargetFields
+
+### Resultado Esperado
+- Novo tipo "Cupons" no dropdown de importação
+- Validação de formato de código + unicidade (banco + intra-CSV)
+- Vinculação automática a ofertas/campanhas por título
+- Auto-resolve store por nome/slug
+- Template CSV baixável com colunas corretas
+
