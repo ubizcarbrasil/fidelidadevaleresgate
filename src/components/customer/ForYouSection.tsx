@@ -169,12 +169,12 @@ export default function ForYouSection() {
               )}
               {o.coupon_type === "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {Math.floor(Number(o.value_rescue))} pts = R$ {Number(o.value_rescue).toFixed(2)}
+                  {formatSubtitle("product", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
                 </span>
               )}
               {o.coupon_type !== "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {Math.floor(Number(o.value_rescue))} pontos por R$ {Number(o.value_rescue).toFixed(2)}
+                  {formatSubtitle("store", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
                 </span>
               )}
             </div>
