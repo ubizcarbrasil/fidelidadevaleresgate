@@ -207,6 +207,7 @@ function getTargetFields(importType: ImportType): TargetField[] {
     case "OFFERS": return OFFER_FIELDS;
     case "CUSTOMERS": return CUSTOMER_FIELDS;
     case "CRM_CONTACTS": return CRM_CONTACT_FIELDS;
+    case "COUPONS": return COUPON_FIELDS;
   }
 }
 
