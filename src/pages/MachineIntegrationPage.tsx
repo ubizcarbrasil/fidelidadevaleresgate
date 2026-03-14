@@ -197,6 +197,8 @@ export default function MachineIntegrationPage() {
       };
       const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
       if (resolvedApiKey) body.api_key = resolvedApiKey;
+      const resolvedReceiptKey = isUrlOnly ? urlReceiptApiKey : receiptApiKey;
+      if (resolvedReceiptKey) body.receipt_api_key = resolvedReceiptKey;
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
