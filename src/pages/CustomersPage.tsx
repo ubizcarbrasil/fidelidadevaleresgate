@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, ScrollText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Pencil, ScrollText, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
@@ -30,6 +31,11 @@ export default function CustomersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [ledgerCustomer, setLedgerCustomer] = useState<any>(null);
+
+  // Bulk identify state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkForm, setBulkForm] = useState({ name: "", cpf: "", phone: "" });
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -72,6 +78,64 @@ export default function CustomersPage() {
   const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
   const openEdit = (c: any) => { setEditId(c.id); setForm({ name: c.name, phone: c.phone || "", brand_id: c.brand_id, branch_id: c.branch_id, cpf: c.cpf || "", email: c.email || "" }); setOpen(true); };
 
+  // Bulk identify helpers
+  const unidentifiedOnPage = data?.items?.filter((c: any) => c.name?.startsWith("Passageiro corrida #")) || [];
+  const isUnidentified = (c: any) => c.name?.startsWith("Passageiro corrida #");
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (unidentifiedOnPage.length === 0) return;
+    const allSelected = unidentifiedOnPage.every((c: any) => selectedIds.has(c.id));
+    if (allSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        unidentifiedOnPage.forEach((c: any) => next.delete(c.id));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        unidentifiedOnPage.forEach((c: any) => next.add(c.id));
+        return next;
+      });
+    }
+  };
+
+  const bulkIdentifyMutation = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) throw new Error("Nenhum cliente selecionado");
+      const updates: Record<string, any> = {};
+      if (bulkForm.name.trim()) updates.name = bulkForm.name.trim();
+      if (bulkForm.cpf.trim()) updates.cpf = bulkForm.cpf.trim();
+      if (bulkForm.phone.trim()) updates.phone = bulkForm.phone.trim();
+      if (Object.keys(updates).length === 0) throw new Error("Preencha pelo menos um campo");
+
+      // If only 1 selected, update directly
+      // For multiple, update each individually (Supabase .in() with update)
+      const { error } = await (supabase as any)
+        .from("customers")
+        .update(updates)
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`);
+      setSelectedIds(new Set());
+      setBulkOpen(false);
+      setBulkForm({ name: "", cpf: "", phone: "" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -79,39 +143,47 @@ export default function CustomersPage() {
           <h2 className="text-2xl font-bold tracking-tight">Clientes</h2>
           <p className="text-muted-foreground">Gerencie clientes por filial</p>
         </div>
-        <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Cliente</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{editId ? "Editar Cliente" : "Novo Cliente"}</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>CPF</Label><Input value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
-              </div>
-              <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@exemplo.com" /></div>
-              <div className="grid grid-cols-2 gap-4">
-                {isRootAdmin && (
-                <div className="space-y-2">
-                  <Label>Marca</Label>
-                  <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "" }))}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                  </Select>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button variant="outline" onClick={() => setBulkOpen(true)}>
+              <UserCheck className="h-4 w-4 mr-2" />
+              Identificar {selectedIds.size} selecionado(s)
+            </Button>
+          )}
+          <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Cliente</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>{editId ? "Editar Cliente" : "Novo Cliente"}</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>CPF</Label><Input value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
                 </div>
-                )}
-                <div className="space-y-2">
-                  <Label>Filial</Label>
-                  <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>{filteredBranches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                  </Select>
+                <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@exemplo.com" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  {isRootAdmin && (
+                  <div className="space-y-2">
+                    <Label>Marca</Label>
+                    <Select value={form.brand_id} onValueChange={v => setForm(f => ({ ...f, brand_id: v, branch_id: "" }))}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Filial</Label>
+                    <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{filteredBranches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                 </div>
+                <Button onClick={() => save.mutate()} disabled={!form.name || !form.brand_id || !form.branch_id} className="w-full">Salvar</Button>
               </div>
-              <Button onClick={() => save.mutate()} disabled={!form.name || !form.brand_id || !form.branch_id} className="w-full">Salvar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
@@ -121,6 +193,14 @@ export default function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  {unidentifiedOnPage.length > 0 && (
+                    <Checkbox
+                      checked={unidentifiedOnPage.length > 0 && unidentifiedOnPage.every((c: any) => selectedIds.has(c.id))}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  )}
+                </TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>CPF</TableHead>
@@ -134,11 +214,22 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
               {data?.items?.map((c: any) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
+                <TableRow key={c.id} className={isUnidentified(c) ? "bg-yellow-500/5" : ""}>
+                  <TableCell>
+                    {isUnidentified(c) && (
+                      <Checkbox
+                        checked={selectedIds.has(c.id)}
+                        onCheckedChange={() => toggleSelect(c.id)}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {c.name}
+                    {isUnidentified(c) && <Badge variant="outline" className="ml-2 text-xs border-yellow-400 text-yellow-700">Não identificado</Badge>}
+                  </TableCell>
                   <TableCell>{c.phone || "—"}</TableCell>
                   <TableCell>{c.cpf || "—"}</TableCell>
                   <TableCell>{c.email || "—"}</TableCell>
@@ -163,6 +254,33 @@ export default function CustomersPage() {
         open={!!ledgerCustomer}
         onOpenChange={open => { if (!open) setLedgerCustomer(null); }}
       />
+
+      {/* ─── BULK IDENTIFY DIALOG ─── */}
+      <Dialog open={bulkOpen} onOpenChange={v => { if (!v) { setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Identificar {selectedIds.size} cliente(s)</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Preencha os dados que deseja atualizar. Campos vazios serão ignorados.
+            {selectedIds.size === 1 && " Para um único cliente, preencha nome, CPF e telefone."}
+            {selectedIds.size > 1 && " Para múltiplos clientes, normalmente só o nome faz sentido (ex: mesmo passageiro em várias corridas)."}
+          </p>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2"><Label>Nome</Label><Input value={bulkForm.name} onChange={e => setBulkForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>CPF</Label><Input value={bulkForm.cpf} onChange={e => setBulkForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              <div className="space-y-2"><Label>Telefone</Label><Input value={bulkForm.phone} onChange={e => setBulkForm(f => ({ ...f, phone: e.target.value }))} placeholder="(00) 00000-0000" /></div>
+            </div>
+            <Button
+              className="w-full"
+              disabled={!bulkForm.name.trim() && !bulkForm.cpf.trim() && !bulkForm.phone.trim()}
+              onClick={() => bulkIdentifyMutation.mutate()}
+            >
+              <UserCheck className="h-4 w-4 mr-2" />
+              Salvar identificação
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
