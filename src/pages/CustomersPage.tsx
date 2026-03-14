@@ -123,6 +123,8 @@ export default function CustomersPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
+                <TableHead>CPF</TableHead>
+                <TableHead>E-mail</TableHead>
                 <TableHead>Marca</TableHead>
                 <TableHead>Filial</TableHead>
                 <TableHead>Pontos</TableHead>
