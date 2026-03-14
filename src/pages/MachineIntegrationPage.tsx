@@ -432,6 +432,26 @@ export default function MachineIntegrationPage() {
                 </div>
               </div>
 
+              {/* Telegram Chat ID */}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Send className="h-3 w-3" /> Chat ID do Telegram (opcional)
+                </Label>
+                <div className="flex items-center gap-2 max-w-lg">
+                  <Input
+                    value={telegramChatId}
+                    onChange={(e) => setTelegramChatId(e.target.value)}
+                    placeholder="-1001234567890"
+                  />
+                  <Button variant="outline" size="icon" onClick={() => saveTelegramMutation.mutate()} disabled={saveTelegramMutation.isPending}>
+                    {telegramSaved ? <Check className="h-4 w-4 text-primary" /> : saveTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Crie um bot no <strong>@BotFather</strong>, adicione ao grupo e use <strong>@userinfobot</strong> para obter o chat_id.
+                </p>
+              </div>
+
               <Button
                 variant="destructive" size="sm"
                 onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)}
@@ -444,6 +464,58 @@ export default function MachineIntegrationPage() {
             </CardContent>
           </Card>
         </>
+      )}
+
+      {/* ─── ÚLTIMAS PONTUAÇÕES (realtime) ─── */}
+      {activeIntegrations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Trophy className="h-4 w-4 text-primary" />
+              Últimas pontuações
+            </CardTitle>
+            <CardDescription>Pontuações creditadas em tempo real, todas as cidades.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-80">
+              {liveNotifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                  <Trophy className="h-8 w-8 mb-2 opacity-40" />
+                  <p className="text-sm">Nenhuma pontuação registrada ainda.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {liveNotifications.map((notif: any) => (
+                    <div key={notif.id} className="flex flex-col gap-1 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-medium text-xs">{notif.customer_name || "Não identificado"}</span>
+                          {notif.customer_cpf_masked && (
+                            <span className="text-xs text-muted-foreground">CPF {notif.customer_cpf_masked}</span>
+                          )}
+                        </div>
+                        <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
+                          {notif.points_credited} pts
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {notif.customer_phone && (
+                          <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{notif.customer_phone}</span>
+                        )}
+                        {notif.city_name && (
+                          <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{notif.city_name}</span>
+                        )}
+                        <span className="flex items-center gap-1"><Coins className="h-3 w-3" />R$ {Number(notif.ride_value || 0).toFixed(2)}</span>
+                        <span className="ml-auto">{new Date(notif.created_at).toLocaleTimeString("pt-BR")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
       )}
 
       {/* ─── REALTIME FEED (always visible if any integration active) ─── */}
