@@ -56,7 +56,7 @@ export default function CustomerOffersPage() {
       if (!data) return;
       const segMap = new Map<string, { id: string; name: string }>();
       for (const s of data) {
-        const seg = s.taxonomy_segments as any;
+        const seg = s.taxonomy_segments as { id: string; name: string } | null;
         if (seg && !segMap.has(seg.id)) {
           segMap.set(seg.id, { id: seg.id, name: seg.name });
         }
