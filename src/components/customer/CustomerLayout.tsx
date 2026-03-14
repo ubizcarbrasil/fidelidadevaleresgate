@@ -311,7 +311,9 @@ export default function CustomerLayout() {
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
                 />
               ) : (
-                <ActivePage />
+                <Suspense fallback={<TabSkeleton />}>
+                  <ActivePage />
+                </Suspense>
               )}
             </motion.div>
           </AnimatePresence>
