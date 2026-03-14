@@ -98,7 +98,7 @@ interface OffersListProps {
   fontHeading: string;
   fg: string;
   isDark: boolean;
-  onOfferClick?: (offer: any) => void;
+  onOfferClick?: (offer: Offer) => void;
 }
 
 export const StoreOffersList = React.memo(function StoreOffersList({
@@ -152,7 +152,7 @@ export const StoreOffersList = React.memo(function StoreOffersList({
               isDark={isDark}
               isNew={idx < 2}
               index={idx}
-              onClick={() => onOfferClick?.({ ...offer, stores: { name: storeName, logo_url: storeLogoUrl } })}
+              onClick={() => onOfferClick?.(Object.assign({}, offer, { stores: { name: storeName, logo_url: storeLogoUrl } }) as Offer & { stores: { name: string; logo_url: string | null } })}
             />
           ))}
         </div>

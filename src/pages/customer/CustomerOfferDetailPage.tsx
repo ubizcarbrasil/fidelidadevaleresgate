@@ -1117,7 +1117,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   );
 }
 
-function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: any; primary: string; fg: string; label: string; value: string }) {
+function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; primary: string; fg: string; label: string; value: string }) {
   const dark = document.documentElement.classList.contains("dark");
   const iconColor = dark ? "hsl(var(--foreground))" : primary;
   return (

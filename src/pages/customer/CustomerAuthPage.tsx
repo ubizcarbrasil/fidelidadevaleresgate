@@ -63,10 +63,11 @@ export default function CustomerAuthPage({ onSkip }: Props) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao autenticar";
       toast({
         title: "Erro",
-        description: translateError(err.message) || "Erro ao autenticar",
+        description: translateError(message),
         variant: "destructive",
       });
     } finally {

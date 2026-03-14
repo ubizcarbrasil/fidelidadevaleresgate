@@ -19,7 +19,7 @@ interface SectionItem {
   category?: string;
   store_name?: string;
   address?: string;
-  stores?: { name: string } | null;
+  stores?: { name: string; logo_url?: string | null } | null;
   taxonomy_segments?: { name: string } | null;
 }
 

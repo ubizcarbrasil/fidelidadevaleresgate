@@ -53,3 +53,15 @@ export interface RedemptionWithOffer {
   offers?: OfferInfo | null;
   branches?: { name: string } | null;
 }
+
+/**
+ * Lightweight types for navigation context.
+ * These use `& Record<string, any>` to allow concrete types
+ * (Tables<"stores">, OfferWithStore, etc.) to be passed without casting.
+ * The `any` here is intentional — it's a variance escape hatch for the nav context only.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type NavOffer = { id: string; title?: string; image_url?: string | null; store_id?: string | null; stores?: { name: string; logo_url?: string | null } | null } & Record<string, any>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type NavStore = { id: string; name?: string; logo_url?: string | null } & Record<string, any>;

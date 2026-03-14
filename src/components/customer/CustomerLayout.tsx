@@ -24,6 +24,8 @@ import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
+import type { Tables } from "@/integrations/supabase/types";
+import type { OfferWithStore, NavOffer, NavStore } from "@/types/customer";
 
 interface SectionDetail {
   title: string | null;
@@ -40,10 +42,9 @@ interface SectionItem {
   [key: string]: unknown;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CustomerNavContextType {
-  openOffer: (offer: any) => void;
-  openStore: (store: any) => void;
+  openOffer: (offer: NavOffer) => void;
+  openStore: (store: NavStore) => void;
   openSectionDetail: (section: SectionDetail, items: SectionItem[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
@@ -107,9 +108,8 @@ export default function CustomerLayout() {
   const { customer } = useCustomer();
   const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedOffer, setSelectedOffer] = useState<any>(null);
-  const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [selectedOffer, setSelectedOffer] = useState<NavOffer | null>(null);
+  const [selectedStore, setSelectedStore] = useState<NavStore | null>(null);
   const [sectionDetail, setSectionDetail] = useState<{ section: SectionDetail; items: SectionItem[] } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -195,12 +195,12 @@ export default function CustomerLayout() {
     }).then(() => {});
   }, [customer, brand, selectedBranch]);
 
-  const handleOpenOffer = useCallback((offer: any) => {
-    trackClick("offer", offer.id, offer.store_id);
+  const handleOpenOffer = useCallback((offer: NavOffer) => {
+    trackClick("offer", offer.id, offer.store_id ?? undefined);
     setSelectedOffer(offer);
   }, [trackClick]);
 
-  const handleOpenStore = useCallback((store: any) => {
+  const handleOpenStore = useCallback((store: NavStore) => {
     trackClick("store", store.id, store.id);
     setSelectedStore(store);
   }, [trackClick]);
@@ -367,7 +367,7 @@ export default function CustomerLayout() {
         <AnimatePresence>
           {selectedOffer && (
             <CustomerOfferDetailPage
-              offer={selectedOffer}
+              offer={selectedOffer as OfferWithStore}
               onBack={() => setSelectedOffer(null)}
               onOfferClick={(offer) => {
                 setSelectedOffer(null);
@@ -385,7 +385,7 @@ export default function CustomerLayout() {
         <AnimatePresence>
           {selectedStore && (
             <CustomerStoreDetailPage
-              store={selectedStore}
+              store={selectedStore as Tables<"stores">}
               onBack={() => setSelectedStore(null)}
               onOfferClick={(offer) => {
                 setSelectedStore(null);
