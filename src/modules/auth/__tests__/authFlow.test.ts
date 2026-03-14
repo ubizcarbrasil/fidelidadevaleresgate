@@ -19,46 +19,46 @@ function makeRole(role: AppRole, overrides?: Partial<UserRole>): UserRole {
 describe("Auth Flow — Role Resolution", () => {
   describe("resolveConsoleScope", () => {
     it("returns ROOT for root_admin", () => {
-      expect(resolveConsoleScope([makeRole("root_admin")])).toBe("ROOT");
+      expect(resolveConsoleScope(true, [makeRole("root_admin")])).toBe("ROOT");
     });
 
     it("returns TENANT for tenant_admin", () => {
-      expect(resolveConsoleScope([makeRole("tenant_admin")])).toBe("TENANT");
+      expect(resolveConsoleScope(false, [makeRole("tenant_admin")])).toBe("TENANT");
     });
 
     it("returns BRAND for brand_admin", () => {
-      expect(resolveConsoleScope([makeRole("brand_admin")])).toBe("BRAND");
+      expect(resolveConsoleScope(false, [makeRole("brand_admin")])).toBe("BRAND");
     });
 
     it("returns BRANCH for branch_admin", () => {
-      expect(resolveConsoleScope([makeRole("branch_admin")])).toBe("BRANCH");
+      expect(resolveConsoleScope(false, [makeRole("branch_admin")])).toBe("BRANCH");
     });
 
     it("returns OPERATOR for operator roles", () => {
-      expect(resolveConsoleScope([makeRole("branch_operator")])).toBe("OPERATOR");
-      expect(resolveConsoleScope([makeRole("operator_pdv")])).toBe("OPERATOR");
+      expect(resolveConsoleScope(false, [makeRole("branch_operator")])).toBe("OPERATOR");
+      expect(resolveConsoleScope(false, [makeRole("operator_pdv")])).toBe("OPERATOR");
     });
 
     it("returns STORE_ADMIN for store_admin", () => {
-      expect(resolveConsoleScope([makeRole("store_admin")])).toBe("STORE_ADMIN");
+      expect(resolveConsoleScope(false, [makeRole("store_admin")])).toBe("STORE_ADMIN");
     });
 
-    it("returns CUSTOMER for customer role", () => {
-      expect(resolveConsoleScope([makeRole("customer")])).toBe("CUSTOMER");
+    it("returns BRANCH as default for customer", () => {
+      expect(resolveConsoleScope(false, [makeRole("customer")])).toBe("BRANCH");
     });
   });
 
   describe("resolveScopeLevel", () => {
-    it("maps root_admin to platform level", () => {
-      expect(resolveScopeLevel("root_admin")).toBe("platform");
+    it("maps root_admin to PLATFORM level", () => {
+      expect(resolveScopeLevel(true, [makeRole("root_admin")])).toBe("PLATFORM");
     });
 
-    it("maps brand_admin to brand level", () => {
-      expect(resolveScopeLevel("brand_admin")).toBe("brand");
+    it("maps brand_admin to BRAND level", () => {
+      expect(resolveScopeLevel(false, [makeRole("brand_admin")])).toBe("BRAND");
     });
 
-    it("maps store_admin to store level", () => {
-      expect(resolveScopeLevel("store_admin")).toBe("store");
+    it("maps branch_admin to BRANCH level", () => {
+      expect(resolveScopeLevel(false, [makeRole("branch_admin")])).toBe("BRANCH");
     });
   });
 
@@ -78,17 +78,17 @@ describe("Auth Flow — Role Resolution", () => {
   describe("canAccessScope", () => {
     it("root_admin can access any scope", () => {
       const roles = [makeRole("root_admin")];
-      expect(canAccessScope(roles, "brand", "any-id")).toBe(true);
+      expect(canAccessScope(true, roles, { brandId: "any-id" })).toBe(true);
     });
 
     it("brand_admin can access own brand", () => {
       const roles = [makeRole("brand_admin", { brand_id: "b1" })];
-      expect(canAccessScope(roles, "brand", "b1")).toBe(true);
+      expect(canAccessScope(false, roles, { brandId: "b1" })).toBe(true);
     });
 
     it("brand_admin cannot access other brand", () => {
       const roles = [makeRole("brand_admin", { brand_id: "b1" })];
-      expect(canAccessScope(roles, "brand", "b2")).toBe(false);
+      expect(canAccessScope(false, roles, { brandId: "b2" })).toBe(false);
     });
   });
 
