@@ -271,13 +271,13 @@ function RedemptionCard({
   onViewDetail: () => void;
   onCanceled: () => void;
 }) {
-  const offer = r.offers as { coupon_type?: string; discount_percent?: number; value_rescue?: number; min_purchase?: number; is_cumulative?: boolean; stores?: { name?: string; logo_url?: string | null; address?: string; whatsapp?: string; site_url?: string; instagram?: string } } | null;
+  const offer = r.offers;
   const store = offer?.stores;
   const snapshot = (r.offer_snapshot_json || {}) as Record<string, unknown>;
-  const badge = STATUS_BADGE[r.status as string] || STATUS_BADGE.PENDING;
+  const badge = STATUS_BADGE[r.status] || STATUS_BADGE.PENDING;
   const isProduct = offer?.coupon_type === "PRODUCT" || snapshot?.coupon_type === "PRODUCT";
-  const creditValue = (r.credit_value_applied as number) || offer?.value_rescue || (snapshot?.value_rescue as number) || 0;
-  const purchaseValue = (r.purchase_value as number) || 0;
+  const creditValue = r.credit_value_applied || offer?.value_rescue || (snapshot?.value_rescue as number) || 0;
+  const purchaseValue = r.purchase_value || 0;
   const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
   const minPurchase = Number(offer?.min_purchase || snapshot?.min_purchase) || 0;
 
