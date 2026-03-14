@@ -262,7 +262,7 @@ export default function CustomerRedemptionsPage() {
 function RedemptionCard({
   r, primary, fg, fontHeading, formatCurrency, formatDate, onViewDetail, onCanceled,
 }: {
-  r: Record<string, unknown>;
+  r: RedemptionWithOffer;
   primary: string;
   fg: string;
   fontHeading: string;
