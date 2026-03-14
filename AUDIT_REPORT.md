@@ -13,7 +13,7 @@
 | 🔐 Segurança & RLS | 92% | ✅ PASS (CSP + sanitização + audit logging) |
 | 📊 Arquitetura & Código | 78% | ✅ PASS (após refatoração) |
 | ⚡ Performance | 82% | ✅ PASS |
-| 🧪 Testes | 35% | ⚠️ WARNING |
+| 🧪 Testes | 40% | ⚠️ WARNING |
 | 🎨 UX | 88% | ✅ PASS |
 | 📡 Observabilidade | 55% | ⚠️ WARNING |
 | 🚀 Deploy & DevOps | 72% | ⚠️ WARNING |
