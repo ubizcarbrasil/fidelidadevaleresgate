@@ -119,9 +119,7 @@ Deno.serve(async (req) => {
         for (const sub of subscriptions) {
           const customerNotifs = notifByCustomer.get(sub.customer_id);
           if (customerNotifs) {
-            console.log(
-              `Would send push to ${sub.endpoint} for ${customerNotifs.length} notifications`
-            );
+            log.info("Would send push notification", { endpoint: sub.endpoint, count: customerNotifs.length });
             pushCount++;
           }
         }
