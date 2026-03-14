@@ -459,13 +459,13 @@ function RedemptionCard({
         </div>
         <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>Resgate:</span>
-          <span>{formatDate(r.created_at)}</span>
+          <span>{formatDate(r.created_at as string)}</span>
         </div>
         {r.expires_at && (
           <div className="flex justify-between text-[11px]">
             <span className="text-muted-foreground">Expira:</span>
-            <span style={{ color: r.status === "EXPIRED" ? "#DC2626" : primary }}>
-              {formatDate(r.expires_at)}
+            <span style={{ color: (r.status as string) === "EXPIRED" ? "#DC2626" : primary }}>
+              {formatDate(r.expires_at as string)}
             </span>
           </div>
         )}
