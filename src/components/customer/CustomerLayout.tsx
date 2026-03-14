@@ -108,8 +108,8 @@ export default function CustomerLayout() {
   const { customer } = useCustomer();
   const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
-  const [selectedOffer, setSelectedOffer] = useState<OfferWithStore | null>(null);
-  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<NavOffer | null>(null);
+  const [selectedStore, setSelectedStore] = useState<NavStore | null>(null);
   const [sectionDetail, setSectionDetail] = useState<{ section: SectionDetail; items: SectionItem[] } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
