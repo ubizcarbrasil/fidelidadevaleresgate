@@ -248,8 +248,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       }
 
       toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
-    } catch (err: any) {
-      toast({ title: "Erro ao resgatar", description: translateError(err.message), variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao resgatar", description: translateError(message), variant: "destructive" });
     } finally {
       setRedeeming(false);
     }
