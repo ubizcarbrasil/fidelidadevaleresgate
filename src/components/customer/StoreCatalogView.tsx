@@ -72,7 +72,7 @@ export default function StoreCatalogView({
           .eq("is_active", true)
           .order("order_index"),
         supabase
-          .from("store_catalog_categories" as any)
+          .from("store_catalog_categories" as "stores")
           .select("*")
           .eq("store_id", storeId)
           .eq("is_active", true)
