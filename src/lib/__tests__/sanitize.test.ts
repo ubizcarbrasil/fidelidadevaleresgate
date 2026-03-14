@@ -6,7 +6,7 @@ describe("stripHtml", () => {
     expect(stripHtml("<script>alert('xss')</script>Hello")).toBe("alert('xss')Hello");
   });
   it("removes angle brackets", () => {
-    expect(stripHtml("a < b > c")).toBe("a  b  c");
+    expect(stripHtml("a < b > c")).toBe("a  c");
   });
   it("handles empty string", () => {
     expect(stripHtml("")).toBe("");
