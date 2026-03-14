@@ -1078,6 +1078,60 @@ export default function MachineIntegrationPage() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* ─── IDENTIFICAR CLIENTE DIALOG ─── */}
+      <Dialog open={!!identifyNotif} onOpenChange={(v) => { if (!v) { setIdentifyNotif(null); setIdentifyForm({ name: "", cpf: "", phone: "" }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Identificar Cliente</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Corrida #{identifyNotif?.machine_ride_id} — R$ {Number(identifyNotif?.ride_value || 0).toFixed(2)}</p>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2"><Label>Nome</Label><Input value={identifyForm.name} onChange={e => setIdentifyForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>CPF</Label><Input value={identifyForm.cpf} onChange={e => setIdentifyForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              <div className="space-y-2"><Label>Telefone</Label><Input value={identifyForm.phone} onChange={e => setIdentifyForm(f => ({ ...f, phone: e.target.value }))} placeholder="(99) 99999-9999" /></div>
+            </div>
+            <Button className="w-full" disabled={!identifyForm.name.trim()} onClick={async () => {
+              if (!identifyNotif) return;
+              try {
+                const name = identifyForm.name.trim();
+                const cpf = identifyForm.cpf.trim() || null;
+                const phone = identifyForm.phone.trim() || null;
+
+                // Update machine_ride_notifications
+                await (supabase as any).from("machine_ride_notifications").update({
+                  customer_name: name,
+                  customer_phone: phone,
+                  customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null,
+                }).eq("id", identifyNotif.id);
+
+                // Update machine_rides
+                if (identifyNotif.machine_ride_id) {
+                  await (supabase as any).from("machine_rides").update({
+                    passenger_name: name,
+                    passenger_cpf: cpf,
+                    passenger_phone: phone,
+                  }).eq("brand_id", identifyNotif.brand_id).eq("machine_ride_id", identifyNotif.machine_ride_id);
+                }
+
+                // Update customer record if exists
+                if (identifyNotif.customer_id) {
+                  await (supabase as any).from("customers").update({
+                    name, cpf, phone,
+                  }).eq("id", identifyNotif.customer_id);
+                }
+
+                // Update local state
+                setLiveNotifications(prev => prev.map(n => n.id === identifyNotif.id ? { ...n, customer_name: name, customer_phone: phone, customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null } : n));
+                setIdentifyNotif(null);
+                setIdentifyForm({ name: "", cpf: "", phone: "" });
+                toast({ title: "Cliente identificado!", description: `${name} vinculado à corrida.` });
+              } catch (err: any) {
+                toast({ title: "Erro", description: err.message, variant: "destructive" });
+              }
+            }}>Salvar identificação</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

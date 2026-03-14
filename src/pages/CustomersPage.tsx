@@ -114,7 +114,7 @@ export default function CustomersPage() {
         </Dialog>
       </div>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome ou telefone..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
         <CardContent className="p-0">
