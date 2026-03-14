@@ -948,6 +948,71 @@ export default function CsvImportPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Import History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <History className="h-5 w-5" />
+            Histórico de Importações
+          </CardTitle>
+          <CardDescription>Últimas 50 importações realizadas.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {historyLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !importHistory || importHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhuma importação registrada.</p>
+          ) : (
+            <ScrollArea className="max-h-[400px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    {isRootAdmin && <TableHead>Marca</TableHead>}
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Sucesso</TableHead>
+                    <TableHead className="text-right">Erros</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {importHistory.map(job => {
+                    const summary = job.summary_json as { total?: number; success?: number; errors?: number } | null;
+                    const statusColor = job.status === "DONE" ? "default" : job.status === "FAILED" ? "destructive" : "secondary";
+                    const statusLabel = job.status === "DONE" ? "Concluído" : job.status === "FAILED" ? "Com erros" : job.status === "IMPORTING" ? "Em andamento" : job.status;
+                    return (
+                      <TableRow key={job.id}>
+                        <TableCell className="text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            {new Date(job.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </TableCell>
+                        {isRootAdmin && (
+                          <TableCell className="text-sm">{brandNamesMap?.[job.brand_id] || "—"}</TableCell>
+                        )}
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{TYPE_LABELS[job.type] || job.type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusColor} className="text-xs">{statusLabel}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">{summary?.total ?? "—"}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-green-600">{summary?.success ?? "—"}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-destructive">{summary?.errors ?? 0}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
