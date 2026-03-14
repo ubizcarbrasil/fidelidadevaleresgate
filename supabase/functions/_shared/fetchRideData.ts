@@ -66,11 +66,21 @@ export function buildApiHeaders(
 
 export async function fetchRideData(
   headers: Record<string, string>,
+  machineRideId: string,
+  preferredEndpoint: "recibo" | "request_v1" = "recibo"
+): Promise<FetchRideResult> {
+  if (preferredEndpoint === "request_v1") {
+    return fetchV1First(headers, machineRideId);
+  }
+  return fetchReciboFirst(headers, machineRideId);
+}
+
+async function fetchReciboFirst(
+  headers: Record<string, string>,
   machineRideId: string
 ): Promise<FetchRideResult> {
-  // 1. Try Recibo endpoint first
   const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Trying recibo endpoint", { machineRideId, url: reciboUrl });
+  logger.info("Trying recibo endpoint (primary)", { machineRideId });
 
   let reciboData: Omit<RideData, "source"> | null = null;
 
@@ -88,7 +98,6 @@ export async function fetchRideData(
     logger.warn("Recibo fetch exception", { machineRideId, error: String(e) });
   }
 
-  // 2. If recibo succeeded, optionally enrich with V1 for phone
   if (reciboData) {
     if (!reciboData.passengerPhone) {
       try {
@@ -99,28 +108,93 @@ export async function fetchRideData(
           const v1Data = parseRequestV1(v1Json);
           if (v1Data.passengerPhone) {
             logger.info("Enriched phone from V1", { machineRideId, phone: v1Data.passengerPhone });
-            return {
-              ok: true,
-              data: {
-                source: "recibo+v1",
-                ...reciboData,
-                passengerPhone: v1Data.passengerPhone,
-              },
-            };
+            return { ok: true, data: { source: "recibo+v1", ...reciboData, passengerPhone: v1Data.passengerPhone } };
           }
-        }
+        } else { await v1Res.text().catch(() => {}); }
       } catch (e) {
         logger.warn("V1 enrich fetch exception", { machineRideId, error: String(e) });
       }
     }
-
     return { ok: true, data: { source: "recibo", ...reciboData } };
   }
 
-  // 3. Recibo failed — try V1 as fallback
-  const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
-  logger.info("Trying V1 fallback", { machineRideId, url: v1Url });
+  // Fallback to V1
+  return tryV1(headers, machineRideId);
+}
 
+async function fetchV1First(
+  headers: Record<string, string>,
+  machineRideId: string
+): Promise<FetchRideResult> {
+  const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+  logger.info("Trying V1 endpoint (primary)", { machineRideId });
+
+  let v1Data: Omit<RideData, "source"> | null = null;
+
+  try {
+    const v1Res = await fetch(v1Url, { headers });
+    if (v1Res.ok) {
+      const v1Json = await v1Res.json();
+      v1Data = parseRequestV1(v1Json);
+      logger.info("V1 OK", { machineRideId, rideValue: v1Data.rideValue });
+    } else {
+      const body = await v1Res.text();
+      logger.warn("V1 failed", { machineRideId, status: v1Res.status, body: body.slice(0, 300) });
+    }
+  } catch (e) {
+    logger.warn("V1 fetch exception", { machineRideId, error: String(e) });
+  }
+
+  if (v1Data) {
+    // Enrich with CPF from recibo if missing
+    if (!v1Data.passengerCpf) {
+      try {
+        const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+        const reciboRes = await fetch(reciboUrl, { headers });
+        if (reciboRes.ok) {
+          const reciboJson = await reciboRes.json();
+          const reciboData = parseRecibo(reciboJson);
+          if (reciboData.passengerCpf) {
+            logger.info("Enriched CPF from recibo", { machineRideId });
+            return { ok: true, data: { source: "recibo+v1", ...v1Data, passengerCpf: reciboData.passengerCpf } };
+          }
+        } else { await reciboRes.text().catch(() => {}); }
+      } catch (e) {
+        logger.warn("Recibo enrich fetch exception", { machineRideId, error: String(e) });
+      }
+    }
+    return { ok: true, data: { source: "request_v1", ...v1Data } };
+  }
+
+  // Fallback to recibo
+  const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  logger.info("Trying recibo fallback", { machineRideId });
+  try {
+    const reciboRes = await fetch(reciboUrl, { headers });
+    if (reciboRes.ok) {
+      const reciboJson = await reciboRes.json();
+      const data = parseRecibo(reciboJson);
+      logger.info("Recibo fallback OK", { machineRideId, rideValue: data.rideValue });
+      return { ok: true, data: { source: "recibo", ...data } };
+    }
+    const body = await reciboRes.text();
+    logger.error("Both endpoints failed", { machineRideId, reciboStatus: reciboRes.status, body: body.slice(0, 300) });
+    if (reciboRes.status === 401) {
+      return { ok: false, error: "Credenciais TaxiMachine inválidas em ambos endpoints.", status: 401 };
+    }
+    return { ok: false, error: `Ambos endpoints falharam. Recibo status: ${reciboRes.status}`, status: 502 };
+  } catch (e) {
+    logger.error("Recibo fallback exception", { machineRideId, error: String(e) });
+    return { ok: false, error: `Falha ao conectar com TaxiMachine: ${String(e)}`, status: 502 };
+  }
+}
+
+async function tryV1(
+  headers: Record<string, string>,
+  machineRideId: string
+): Promise<FetchRideResult> {
+  const v1Url = `${BASE_URL}/api/v1/request/${machineRideId}`;
+  logger.info("Trying V1 fallback", { machineRideId });
   try {
     const v1Res = await fetch(v1Url, { headers });
     if (v1Res.ok) {
@@ -129,10 +203,8 @@ export async function fetchRideData(
       logger.info("V1 OK", { machineRideId, rideValue: v1Data.rideValue });
       return { ok: true, data: { source: "request_v1", ...v1Data } };
     }
-
     const body = await v1Res.text();
     logger.error("Both endpoints failed", { machineRideId, v1Status: v1Res.status, body: body.slice(0, 300) });
-
     if (v1Res.status === 401) {
       return { ok: false, error: "Credenciais TaxiMachine inválidas em ambos endpoints.", status: 401 };
     }

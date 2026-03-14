@@ -47,6 +47,7 @@ type Integration = {
   last_webhook_at: string | null; last_ride_processed_at: string | null;
   total_rides: number; total_points: number;
   callback_url: string | null; created_at: string; updated_at: string;
+  preferred_endpoint?: string;
 };
 
 type Branch = { id: string; name: string; city: string | null; state: string | null };
@@ -670,6 +671,45 @@ export default function MachineIntegrationPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Crie um bot no <strong>@BotFather</strong>, adicione ao grupo e use <strong>@userinfobot</strong> para obter o chat_id.
+                </p>
+              </div>
+
+              {/* Preferred Endpoint */}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Radio className="h-3 w-3" /> Endpoint primário da API
+                </Label>
+                <div className="flex items-center gap-2 max-w-lg">
+                  <Select
+                    value={selectedIntegration.preferred_endpoint || "recibo"}
+                    onValueChange={async (val) => {
+                      const { error } = await (supabase as any)
+                        .from("machine_integrations")
+                        .update({ preferred_endpoint: val })
+                        .eq("id", selectedIntegration.id);
+                      if (error) {
+                        toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+                      } else {
+                        toast({ title: "Endpoint primário atualizado" });
+                        queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recibo">
+                        Recibo (padrão) — retorna CPF do passageiro
+                      </SelectItem>
+                      <SelectItem value="request_v1">
+                        Request v1 — retorna telefone do passageiro
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O sistema tenta o endpoint primário primeiro. Se falhar, usa o outro como fallback. Dados exclusivos de cada endpoint são combinados automaticamente.
                 </p>
               </div>
 

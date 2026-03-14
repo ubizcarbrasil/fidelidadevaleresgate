@@ -203,8 +203,9 @@ async function processFinalized(
     receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
   });
 
-  // Dual-endpoint fetch: recibo first, then v1/request as fallback + phone enrichment
-  const rideResult = await fetchRideData(receiptHeaders, machineRideId);
+  // Dual-endpoint fetch with configurable primary endpoint
+  const preferredEndpoint = (integration.preferred_endpoint || "recibo") as "recibo" | "request_v1";
+  const rideResult = await fetchRideData(receiptHeaders, machineRideId, preferredEndpoint);
 
   if (!rideResult.ok) {
     logger.error("TaxiMachine fetch failed", { machineRideId, error: rideResult.error });

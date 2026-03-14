@@ -2311,6 +2311,7 @@ export type Database = {
           is_active: boolean
           last_ride_processed_at: string | null
           last_webhook_at: string | null
+          preferred_endpoint: string
           receipt_api_key: string | null
           telegram_chat_id: string | null
           total_points: number
@@ -2330,6 +2331,7 @@ export type Database = {
           is_active?: boolean
           last_ride_processed_at?: string | null
           last_webhook_at?: string | null
+          preferred_endpoint?: string
           receipt_api_key?: string | null
           telegram_chat_id?: string | null
           total_points?: number
@@ -2349,6 +2351,7 @@ export type Database = {
           is_active?: boolean
           last_ride_processed_at?: string | null
           last_webhook_at?: string | null
+          preferred_endpoint?: string
           receipt_api_key?: string | null
           telegram_chat_id?: string | null
           total_points?: number

@@ -79,9 +79,10 @@ async function retryRide(
 
   const headers = buildApiHeaders(receiptApiKey, basicUser, basicPass);
 
-  logger.info("Retry: fetching ride data (dual endpoint)", { machineRideId });
+  const preferredEndpoint = (integration.preferred_endpoint || "recibo") as "recibo" | "request_v1";
+  logger.info("Retry: fetching ride data (dual endpoint)", { machineRideId, preferredEndpoint });
 
-  const rideResult = await fetchRideData(headers, machineRideId);
+  const rideResult = await fetchRideData(headers, machineRideId, preferredEndpoint);
 
   if (!rideResult.ok) {
     logger.error("Retry: both endpoints failed", { machineRideId, error: rideResult.error });
