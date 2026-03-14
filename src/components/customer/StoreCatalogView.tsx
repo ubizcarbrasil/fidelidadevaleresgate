@@ -185,7 +185,7 @@ export default function StoreCatalogView({
                 <div className="p-2.5">
                   <p className="text-xs font-semibold line-clamp-2" style={{ fontFamily: fontHeading }}>{offer.title}</p>
                   <div className="flex items-center justify-between mt-1.5">
-                    {offer.discount_percent > 0 && (
+                    {(offer.discount_percent ?? 0) > 0 && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: primary }}>
                         -{offer.discount_percent}%
                       </span>
