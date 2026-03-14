@@ -196,7 +196,7 @@ export default function CustomerLayout() {
   }, [customer, brand, selectedBranch]);
 
   const handleOpenOffer = useCallback((offer: NavOffer) => {
-    trackClick("offer", offer.id, offer.store_id || null);
+    trackClick("offer", offer.id, offer.store_id ?? undefined);
     setSelectedOffer(offer);
   }, [trackClick]);
 
