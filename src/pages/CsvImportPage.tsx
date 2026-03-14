@@ -92,6 +92,17 @@ const CRM_CONTACT_FIELDS: TargetField[] = [
   { key: "is_active", label: "Ativo", required: false },
 ];
 
+const COUPON_FIELDS: TargetField[] = [
+  { key: "code", label: "Código", required: true },
+  { key: "store_name", label: "Nome da Loja", required: true },
+  { key: "store_slug", label: "Slug da Loja", required: false },
+  { key: "type", label: "Tipo (PERCENT/FIXED)", required: true },
+  { key: "value", label: "Valor", required: true },
+  { key: "expires_at", label: "Data de Expiração", required: true },
+  { key: "campaign", label: "Campanha (título da oferta)", required: false },
+  { key: "status", label: "Status", required: false },
+];
+
 // ── Validation ──
 const WEEKDAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 interface ValidationError { row: number; field: string; message: string; }
@@ -124,6 +135,20 @@ function validateMappedRow(row: Record<string, string>, idx: number, importType:
     if (row.min_purchase && isNaN(Number(row.min_purchase))) errors.push({ row: rowNum, field: "min_purchase", message: "Deve ser numérico" });
     if (row.start_at && isNaN(Date.parse(row.start_at))) errors.push({ row: rowNum, field: "start_at", message: "Data inválida" });
     if (row.end_at && isNaN(Date.parse(row.end_at))) errors.push({ row: rowNum, field: "end_at", message: "Data inválida" });
+  }
+  if (importType === "COUPONS") {
+    if (!row.code?.trim()) errors.push({ row: rowNum, field: "code", message: "Código é obrigatório" });
+    else if (!/^[A-Z0-9]{4,16}$/.test(row.code.trim().toUpperCase())) errors.push({ row: rowNum, field: "code", message: "Código deve ter 4-16 caracteres (A-Z, 0-9)" });
+    if (!row.store_name?.trim() && !row.store_slug?.trim()) errors.push({ row: rowNum, field: "store_name", message: "store_name ou store_slug é obrigatório" });
+    const typeVal = row.type?.trim().toUpperCase();
+    if (!typeVal || !["PERCENT", "FIXED"].includes(typeVal)) errors.push({ row: rowNum, field: "type", message: "Tipo deve ser PERCENT ou FIXED" });
+    if (!row.value?.trim() || isNaN(Number(row.value)) || Number(row.value) < 0) errors.push({ row: rowNum, field: "value", message: "Valor deve ser numérico e positivo" });
+    if (!row.expires_at?.trim()) errors.push({ row: rowNum, field: "expires_at", message: "Data de expiração é obrigatória" });
+    else if (!parseBrDate(row.expires_at)) errors.push({ row: rowNum, field: "expires_at", message: "Data de expiração inválida" });
+    if (row.status?.trim()) {
+      const st = row.status.trim().toUpperCase();
+      if (!["ACTIVE", "INACTIVE", "EXPIRED"].includes(st)) errors.push({ row: rowNum, field: "status", message: "Status deve ser ACTIVE, INACTIVE ou EXPIRED" });
+    }
   }
   if (importType === "CUSTOMERS") {
     if (row.points_balance && isNaN(Number(row.points_balance))) errors.push({ row: rowNum, field: "points_balance", message: "Deve ser numérico" });
@@ -173,7 +198,7 @@ function applyMapping(rows: Record<string, string>[], mapping: Record<string, st
   });
 }
 
-type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS";
+type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS" | "COUPONS";
 type Step = "config" | "mapping" | "preview" | "importing" | "done";
 
 function getTargetFields(importType: ImportType): TargetField[] {
@@ -182,6 +207,7 @@ function getTargetFields(importType: ImportType): TargetField[] {
     case "OFFERS": return OFFER_FIELDS;
     case "CUSTOMERS": return CUSTOMER_FIELDS;
     case "CRM_CONTACTS": return CRM_CONTACT_FIELDS;
+    case "COUPONS": return COUPON_FIELDS;
   }
 }
 
@@ -348,6 +374,79 @@ export default function CsvImportPage() {
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
           setImportProgress(prev => ({ ...prev, current: i + 1 }));
         }
+      } else if (importType === "COUPONS") {
+        // Pre-load stores for resolution
+        const { data: existingStores } = await supabase.from("stores").select("id, name, slug").eq("brand_id", brandId).eq("branch_id", branchId);
+        const storeByName = new Map((existingStores || []).map(s => [s.name.toLowerCase(), s.id]));
+        const storeBySlug = new Map((existingStores || []).map(s => [s.slug.toLowerCase(), s.id]));
+
+        // Pre-load offers for campaign linking (case-insensitive title match)
+        const { data: existingOffers } = await supabase.from("offers").select("id, title").eq("brand_id", brandId).eq("branch_id", branchId).eq("is_active", true);
+        const offerByTitle = new Map((existingOffers || []).map(o => [o.title.toLowerCase(), o.id]));
+
+        // Pre-load existing coupon codes for uniqueness validation
+        const { data: existingCoupons } = await supabase.from("coupons").select("code").eq("brand_id", brandId).eq("branch_id", branchId);
+        const existingCodes = new Set((existingCoupons || []).map(c => c.code.toUpperCase()));
+
+        // Track intra-CSV duplicates
+        const csvCodes = new Set<string>();
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          try {
+            const code = row.code.trim().toUpperCase();
+
+            // Uniqueness: check DB
+            if (existingCodes.has(code)) {
+              result.errors.push({ row: i + 2, message: `Código "${code}" já existe no banco` });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+            // Uniqueness: check intra-CSV
+            if (csvCodes.has(code)) {
+              result.errors.push({ row: i + 2, message: `Código "${code}" duplicado no CSV` });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+            csvCodes.add(code);
+
+            // Resolve store
+            const storeName = row.store_name?.trim() || "";
+            const storeSlug = row.store_slug?.trim() || "";
+            const storeId = storeByName.get(storeName.toLowerCase()) || storeBySlug.get(storeSlug.toLowerCase());
+            if (!storeId) {
+              result.errors.push({ row: i + 2, message: `Loja "${storeName || storeSlug}" não encontrada` });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+
+            // Resolve campaign → offer_id
+            const campaignTitle = row.campaign?.trim() || "";
+            const offerId = campaignTitle ? (offerByTitle.get(campaignTitle.toLowerCase()) || null) : null;
+
+            const expiresAt = parseBrDate(row.expires_at);
+            if (!expiresAt) throw new Error("Data de expiração inválida");
+
+            const { error } = await supabase.from("coupons").insert({
+              code,
+              brand_id: brandId,
+              branch_id: branchId,
+              store_id: storeId,
+              type: row.type.trim().toUpperCase(),
+              value: Number(row.value),
+              expires_at: expiresAt,
+              offer_id: offerId,
+              status: row.status?.trim().toUpperCase() || "ACTIVE",
+            });
+            if (error) throw error;
+            existingCodes.add(code);
+            result.success++;
+          } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
+        }
       } else if (importType === "CUSTOMERS") {
         // Batch insert customers, then mirror to crm_contacts
         for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
@@ -466,7 +565,7 @@ export default function CsvImportPage() {
 
       await supabase.from("audit_logs").insert({
         actor_user_id: user.id, action: "CSV_IMPORT",
-        entity_type: importType === "STORES" ? "stores" : importType === "OFFERS" ? "offers" : importType === "CUSTOMERS" ? "customers" : "crm_contacts",
+        entity_type: importType === "STORES" ? "stores" : importType === "OFFERS" ? "offers" : importType === "CUSTOMERS" ? "customers" : importType === "COUPONS" ? "coupons" : "crm_contacts",
         details_json: { brand_id: brandId, branch_id: branchId, type: importType, success: result.success, errors: result.errors.length },
       });
 
@@ -479,6 +578,7 @@ export default function CsvImportPage() {
       qc.invalidateQueries({ queryKey: ["offers"] });
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["crm-contacts"] });
+      qc.invalidateQueries({ queryKey: ["coupons"] });
       if (result.errors.length === 0) toast.success(`${result.success} registros importados com sucesso!`);
       else toast.warning(`${result.success} importados, ${result.errors.length} erros.`);
     },
@@ -527,6 +627,7 @@ export default function CsvImportPage() {
                     <SelectItem value="OFFERS">Ofertas</SelectItem>
                     <SelectItem value="CUSTOMERS">Clientes</SelectItem>
                     <SelectItem value="CRM_CONTACTS">Contatos CRM</SelectItem>
+                    <SelectItem value="COUPONS">Cupons / Vouchers</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -559,6 +660,11 @@ export default function CsvImportPage() {
                 <Checkbox id="auto-create" checked={autoCreateStores} onCheckedChange={v => setAutoCreateStores(!!v)} />
                 <Label htmlFor="auto-create">Criar lojas automaticamente se não existirem</Label>
               </div>
+            )}
+            {importType === "COUPONS" && (
+              <Alert>
+                <AlertDescription>Códigos duplicados (no CSV ou já existentes) serão rejeitados. O campo "Campanha" vincula automaticamente à oferta pelo título.</AlertDescription>
+              </Alert>
             )}
 
             {(importType === "CUSTOMERS" || importType === "CRM_CONTACTS") && (
