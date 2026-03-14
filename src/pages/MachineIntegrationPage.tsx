@@ -68,6 +68,11 @@ export default function MachineIntegrationPage() {
   const [callbackSaved, setCallbackSaved] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const [activatingBranchId, setActivatingBranchId] = useState<string>("");
+  const [urlBranchId, setUrlBranchId] = useState<string>("");
+  const [urlBasicUser, setUrlBasicUser] = useState("");
+  const [urlBasicPass, setUrlBasicPass] = useState("");
+  const [showUrlPass, setShowUrlPass] = useState(false);
+  const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
@@ -151,24 +156,42 @@ export default function MachineIntegrationPage() {
 
   /* ── Mutations ── */
   const activateMutation = useMutation({
-    mutationFn: async () => {
-      if (!activatingBranchId) throw new Error("Selecione uma cidade");
-      const { data, error } = await supabase.functions.invoke("register-machine-webhook", {
-        body: { brand_id: currentBrandId, branch_id: activatingBranchId, api_key: apiKey, basic_auth_user: basicUser, basic_auth_password: basicPass },
-      });
+    mutationFn: async (opts?: { urlOnly?: boolean }) => {
+      const isUrlOnly = opts?.urlOnly;
+      const branchId = isUrlOnly ? urlBranchId : activatingBranchId;
+      const user = isUrlOnly ? urlBasicUser : basicUser;
+      const pass = isUrlOnly ? urlBasicPass : basicPass;
+      if (!branchId) throw new Error("Selecione uma cidade");
+      const body: Record<string, string> = {
+        brand_id: currentBrandId!,
+        branch_id: branchId,
+        basic_auth_user: user,
+        basic_auth_password: pass,
+      };
+      if (!isUrlOnly && apiKey) body.api_key = apiKey;
+      const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      return data;
+      return { ...data, isUrlOnly };
     },
     onSuccess: (data) => {
-      toast({
-        title: "Integração ativada!",
-        description: data.webhook_registered
-          ? "Webhook registrado com sucesso."
-          : "Integração ativada, mas o registro automático falhou. Tente novamente.",
-      });
+      if (data.isUrlOnly) {
+        setUrlActivatedWebhook(data.webhook_url || null);
+        toast({
+          title: "Cidade ativada por URL!",
+          description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine.",
+        });
+        setUrlBasicUser(""); setUrlBasicPass("");
+      } else {
+        toast({
+          title: "Integração ativada!",
+          description: data.webhook_registered
+            ? "Webhook registrado com sucesso."
+            : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
+        });
+        setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
+      }
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-      setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
     },
     onError: (err: any) => {
       toast({ title: "Erro ao ativar", description: err.message || "Falha ao ativar.", variant: "destructive" });
@@ -462,8 +485,8 @@ export default function MachineIntegrationPage() {
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                   <li>Selecione a <strong>cidade</strong> que deseja conectar.</li>
                   <li>Obtenha as credenciais no painel da TaxiMachine para essa cidade.</li>
-                  <li>Preencha os 3 campos: <strong>chave de acesso</strong>, <strong>usuário</strong> e <strong>senha</strong>.</li>
-                  <li>Clique em "Ativar cidade".</li>
+                  <li>Preencha a <strong>chave de acesso</strong> (opcional), <strong>usuário</strong> e <strong>senha</strong>.</li>
+                  <li>Clique em "Ativar cidade". Se a chave foi informada, o webhook é registrado automaticamente.</li>
                   <li>Cada corrida finalizada credita pontos ao passageiro (<strong>R$ 1 = 1 ponto</strong>).</li>
                 </ol>
               </div>
@@ -520,7 +543,7 @@ export default function MachineIntegrationPage() {
                     </button>
                   </div>
                 </div>
-                <Button onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !apiKey || !basicUser || !basicPass || !activatingBranchId}>
+                <Button onClick={() => activateMutation.mutate({})} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
                   {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Power className="h-4 w-4 mr-1" />
                   Ativar cidade
@@ -533,29 +556,74 @@ export default function MachineIntegrationPage() {
               <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
                 <h3 className="font-semibold text-sm">Como funciona</h3>
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Primeiro ative a cidade pela aba "Por credenciais".</li>
-                  <li>Depois copie a URL do webhook nos detalhes da cidade ativa.</li>
-                  <li>Cole a URL no campo de webhook da plataforma de mobilidade.</li>
+                  <li>Selecione a <strong>cidade</strong> que deseja conectar.</li>
+                  <li>Preencha <strong>usuário</strong> e <strong>senha</strong> da TaxiMachine (necessário para consultar recibos).</li>
+                  <li>Clique em "Ativar cidade".</li>
+                  <li>Copie a URL gerada e cole no <strong>roteador de status</strong> da TaxiMachine.</li>
                 </ol>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">URL base (sem cidade)</Label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">
-                    {`${webhookBaseUrl}?brand_id=${encodeURIComponent(currentBrandId || "")}`}
-                  </code>
-                  <Button variant="outline" size="icon" onClick={() => handleCopyUrl()}>
-                    {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-                  </Button>
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label>Cidade</Label>
+                  {availableBranches.length > 0 ? (
+                    <Select value={urlBranchId} onValueChange={(v) => { setUrlBranchId(v); setUrlActivatedWebhook(null); }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a cidade..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableBranches.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {branches.length === 0
+                        ? "Nenhuma cidade cadastrada. Cadastre cidades antes de ativar."
+                        : "Todas as cidades já estão conectadas."}
+                    </p>
+                  )}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="url_basic_user">Usuário</Label>
+                  <Input id="url_basic_user" value={urlBasicUser} onChange={(e) => setUrlBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="url_basic_pass">Senha</Label>
+                  <div className="relative">
+                    <Input id="url_basic_pass" type={showUrlPass ? "text" : "password"} value={urlBasicPass} onChange={(e) => setUrlBasicPass(e.target.value)} placeholder="Senha de autenticação" />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlPass(!showUrlPass)}>
+                      {showUrlPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlBasicUser || !urlBasicPass || !urlBranchId}>
+                  {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <Power className="h-4 w-4 mr-1" />
+                  Ativar cidade
+                </Button>
               </div>
 
-              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Dica:</strong> Use a URL específica de cada cidade (disponível nos detalhes acima) para garantir o roteamento correto.
-                </p>
-              </div>
+              {urlActivatedWebhook && (
+                <Alert className="border-primary/30 bg-primary/5">
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                  <AlertTitle>Cidade ativada!</AlertTitle>
+                  <AlertDescription className="space-y-2">
+                    <p className="text-sm">Copie a URL abaixo e cole no roteador de status da TaxiMachine:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">
+                        {urlActivatedWebhook}
+                      </code>
+                      <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(urlActivatedWebhook); setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }}>
+                        {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
