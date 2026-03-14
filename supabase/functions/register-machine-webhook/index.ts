@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
     const machineBaseUrl = "https://api.taximachine.com.br";
 
     // Register webhook at TaxiMachine
-    const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook`;
+    const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook?brand_id=${encodeURIComponent(brand_id)}`;
     let webhookRegistered = false;
 
     try {

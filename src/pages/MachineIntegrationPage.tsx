@@ -53,7 +53,10 @@ export default function MachineIntegrationPage() {
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const webhookUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
+  const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
+  const webhookUrl = currentBrandId
+    ? `${webhookBaseUrl}?brand_id=${encodeURIComponent(currentBrandId)}`
+    : webhookBaseUrl;
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(webhookUrl);
@@ -357,7 +360,7 @@ export default function MachineIntegrationPage() {
                     <li>Copie a URL abaixo.</li>
                     <li>Acesse a plataforma da sua empresa de mobilidade.</li>
                     <li>Cole a URL no campo de <strong>webhook</strong> ou <strong>notificações</strong>.</li>
-                    <li>Inclua o campo <code className="bg-muted px-1 rounded text-xs">brand_id</code> no corpo (body) de cada requisição enviada — informe o ID da sua marca.</li>
+                    <li>A URL já inclui automaticamente o identificador da sua marca (não precisa enviar <code className="bg-muted px-1 rounded text-xs">brand_id</code> no body).</li>
                     <li>Pronto! Cada corrida finalizada vai gerar pontos para o passageiro (<strong>R$ 1 = 1 ponto</strong>).</li>
                   </ol>
                 </div>
@@ -377,7 +380,7 @@ export default function MachineIntegrationPage() {
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-xs text-muted-foreground">
                     <strong>Dica:</strong> Se a plataforma pedir autenticação, use o header{" "}
-                    <code className="bg-muted px-1 rounded">x-api-secret</code> com a chave de acesso configurada na aba "Por credenciais".
+                    <code className="bg-muted px-1 rounded">x-api-secret</code> (ou <code className="bg-muted px-1 rounded">x-api-key</code>) com a chave de acesso configurada na aba "Por credenciais".
                   </p>
                 </div>
               </TabsContent>
