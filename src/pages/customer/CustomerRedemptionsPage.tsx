@@ -97,7 +97,7 @@ export default function CustomerRedemptionsPage() {
       .eq("customer_id", customer.id)
       .order("created_at", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
-    const items = (data || []) as unknown as Record<string, unknown>[];
+    const items = (data || []) as unknown as RedemptionWithOffer[];
     setAllRedemptions(prev => [...prev, ...items]);
     setHasMore(items.length >= PAGE_SIZE);
     setPage(nextPage);
