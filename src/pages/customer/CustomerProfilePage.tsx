@@ -50,7 +50,7 @@ export default function CustomerProfilePage() {
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const settings = (brand?.brand_settings_json as Record<string, unknown>) || {};
+  const settings = (brand?.brand_settings_json ?? {}) as { profile_menu_links?: ProfileMenuItem[] };
   const profileMenuLinks: ProfileMenuItem[] = settings.profile_menu_links || [
     { id: "privacy", label: "Privacidade e Segurança", type: "link", url: "", text_content: "", icon_name: "Shield", is_visible: true },
     { id: "help", label: "Ajuda e Suporte", type: "link", url: "", text_content: "", icon_name: "CircleHelp", is_visible: true },

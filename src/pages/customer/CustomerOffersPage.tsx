@@ -95,7 +95,7 @@ export default function CustomerOffersPage() {
         .eq("status", "ACTIVE")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
-      setOffers(data || []);
+      setOffers((data || []) as OfferWithStore[]);
       setLoading(false);
     };
     fetchOffers();
