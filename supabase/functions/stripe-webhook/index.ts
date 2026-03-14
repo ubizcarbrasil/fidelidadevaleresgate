@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
           .update({ subscription_status: "EXPIRED" })
           .eq("id", brandId);
 
-        if (error) console.error("Error expiring brand:", error);
-        else console.log(`Brand ${brandId} subscription expired`);
+        if (error) log.error("Error expiring brand", { brandId, error });
+        else log.info("Brand subscription expired", { brandId });
       }
     }
 
