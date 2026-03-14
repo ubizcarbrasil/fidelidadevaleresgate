@@ -503,6 +503,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { request_id, status_code } = body;
 
+    // Log full raw payload to identify alternative ID fields and client data
+    logger.info("Raw webhook payload", { payload: JSON.stringify(body).slice(0, 2000) });
+
     if (!request_id || !status_code) {
       logAudit(sb, "MACHINE_WEBHOOK_REJECTED", { ip, details: { reason: "missing_fields", request_id, status_code } });
       return json({ error: "Missing request_id or status_code" }, 400);
