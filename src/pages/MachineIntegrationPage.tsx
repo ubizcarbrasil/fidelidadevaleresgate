@@ -72,6 +72,8 @@ export default function MachineIntegrationPage() {
   const [urlBasicUser, setUrlBasicUser] = useState("");
   const [urlBasicPass, setUrlBasicPass] = useState("");
   const [showUrlPass, setShowUrlPass] = useState(false);
+  const [urlApiKey, setUrlApiKey] = useState("");
+  const [showUrlApiKey, setShowUrlApiKey] = useState(false);
   const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
   const [telegramChatId, setTelegramChatId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
