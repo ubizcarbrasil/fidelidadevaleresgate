@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Wand2, Smartphone } from "lucide-react";
+import { Loader2, Wand2, Smartphone, Import } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ const newDraft = (): DealDraft => ({
 
 export default function AffiliateDealsPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
@@ -801,6 +803,15 @@ export default function AffiliateDealsPage() {
           )}
         </TabsContent>
       </Tabs>
+      {isMobile && (
+        <Button
+          onClick={() => navigate("/affiliate-deals/import-mobile")}
+          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg p-0"
+          size="icon"
+        >
+          <Import className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 }
