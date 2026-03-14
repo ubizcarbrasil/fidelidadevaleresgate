@@ -233,7 +233,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       setRedeemed(true);
       setShowConfirm(false);
       if (fullRedemption) {
-        setCompletedRedemption(fullRedemption);
+        setCompletedRedemption(fullRedemption as unknown as RedemptionWithOffer);
       }
 
       // Record Ganha-Ganha billing event for the redemption (fire-and-forget)
