@@ -1,30 +1,47 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+# Plano: Corrigir inconsistências restantes + Modernizar BranchSidebar
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+## 1. Rotas faltantes no RootSidebar
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Rotas existentes em `App.tsx` e/ou `BrandSidebar` que não aparecem no `RootSidebar`:
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+| Rota | Presente em | Ação |
+|------|------------|------|
+| `/app-icons` | App.tsx | Adicionar em "Identidade & Vitrine" |
+| `/machine-integration` | App.tsx + BrandSidebar | Adicionar em "Plataforma" |
+| `/brand-settings` | App.tsx + BrandSidebar | Adicionar em "Plataforma" |
+| `/api-keys` | App.tsx + BrandSidebar | Adicionar em "Plataforma" |
+| `/api-docs` | App.tsx + BrandSidebar | Adicionar em "Plataforma" |
+| `/partner-landing-config` | App.tsx + BrandSidebar | Adicionar em "Identidade & Vitrine" |
+| `/subscription` | App.tsx | Adicionar em "Plataforma" |
+| `/send-notification` | App.tsx + BranchSidebar | Adicionar em "Operação" |
+| `/ganha-ganha-store-summary` | App.tsx (rota existe?) | Verificar — parece page órfã |
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+### Page Builder inconsistente
+- `RootSidebar` aponta para `/page-builder` (v1)
+- `BrandSidebar` aponta para `/page-builder-v2`
+- Ambas as rotas existem em `App.tsx`
+- **Ação**: Atualizar `RootSidebar` para `/page-builder-v2` (padrão atual)
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+## 2. Modernizar BranchSidebar
+
+O `BranchSidebar` é o único sidebar ainda no padrão legado:
+- Usa emojis nos labels de grupo
+- Não usa `CollapsibleGroup`
+- Não usa `useMenuLabels` nem `useSidebarBadges`
+- Não usa `PlatformLogo`
+- Falta `moduleKey` em vários itens (achadinhos, notificação, PDV)
+
+**Ação**: Reescrever para o mesmo padrão do `RootSidebar`/`BrandSidebar`:
+- Grupos colapsáveis com `Collapsible`
+- `useMenuLabels("admin")` + `useSidebarBadges()`
+- `PlatformLogo` no header
+- Remover emojis
+- Adicionar `moduleKey` corretos onde falta
+
+## Arquivos modificados
+
+1. **`src/components/consoles/RootSidebar.tsx`** — Adicionar rotas faltantes + corrigir page-builder para v2
+2. **`src/components/consoles/BranchSidebar.tsx`** — Reescrita completa no padrão colapsável moderno
+
