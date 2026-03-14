@@ -146,7 +146,7 @@ export default function EarnPointsPage() {
         .eq("status", "APPROVED")
         .gte("created_at", todayISO);
       const custDayTotal = (custToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
-      if (rule && custDayTotal + preview.points > rule.max_points_per_customer_per_day) {
+      if (rule && preview.points !== undefined && custDayTotal + preview.points > rule.max_points_per_customer_per_day) {
         throw new Error(`Limite diário do cliente atingido (${rule.max_points_per_customer_per_day} pontos)`);
       }
 
