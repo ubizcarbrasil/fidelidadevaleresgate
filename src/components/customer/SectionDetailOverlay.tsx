@@ -4,6 +4,25 @@ import { ArrowLeft, Search, Store, ShoppingBag, MapPin } from "lucide-react";
 import OfferBadge from "@/components/customer/OfferBadge";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 
+interface SectionItem {
+  id: string;
+  name?: string;
+  title?: string;
+  banner_url?: string | null;
+  logo_url?: string | null;
+  image_url?: string | null;
+  discount_percent?: number;
+  value_rescue?: number;
+  min_purchase?: number;
+  coupon_type?: string;
+  points_per_real?: number;
+  category?: string;
+  store_name?: string;
+  address?: string;
+  stores?: { name: string } | null;
+  taxonomy_segments?: { name: string } | null;
+}
+
 interface SectionDetailOverlayProps {
   section: {
     title: string | null;
@@ -12,7 +31,7 @@ interface SectionDetailOverlayProps {
     banner_height?: string;
     templateType?: string;
   };
-  items: any[];
+  items: SectionItem[];
   onBack: () => void;
   primary: string;
   fg: string;
