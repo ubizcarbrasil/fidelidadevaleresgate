@@ -103,7 +103,8 @@ export async function checkRateLimit(
     };
   } catch (err) {
     // On error, allow the request (fail open) but log
-    console.error("Rate limiter error (allowing request):", err);
+    const { createEdgeLogger: createLogger } = await import("./edgeLogger.ts");
+    createLogger("rateLimiter").error("Rate limiter error (allowing request)", { error: String(err) });
     return { allowed: true, current: 0, limit: maxRequests, remaining: maxRequests };
   }
 }

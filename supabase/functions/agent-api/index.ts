@@ -503,7 +503,7 @@ Deno.serve(async (req) => {
     // ── 404 fallback ──────────────────────────
     return json(404, { ok: false, error: "Not Found", details: { path: `/${segments.join("/")}`, method } });
   } catch (err) {
-    console.error("agent-api unhandled error:", err);
+    logger.error("Unhandled error", { error: String(err) });
     return json(500, { ok: false, error: "Internal error", details: { message: String(err) } });
   }
 });
