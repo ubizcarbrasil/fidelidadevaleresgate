@@ -286,7 +286,7 @@ Deno.serve(async (req) => {
       })
       .eq("id", integration.id);
 
-    if (updateErr) console.error("Update integration counters error:", updateErr);
+    if (updateErr) createEdgeLogger("machine-webhook").error("Update integration counters error", { error: updateErr });
 
     // Audit: ride processed successfully
     logAudit(sb, "MACHINE_RIDE_PROCESSED", {
