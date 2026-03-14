@@ -446,6 +446,15 @@ export default function MachineIntegrationPage() {
                   <Button variant="outline" size="icon" onClick={() => saveTelegramMutation.mutate()} disabled={saveTelegramMutation.isPending}>
                     {telegramSaved ? <Check className="h-4 w-4 text-primary" /> : saveTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={!telegramChatId.trim() || testTelegramMutation.isPending}
+                    onClick={() => testTelegramMutation.mutate()}
+                  >
+                    {testTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                    Testar
+                  </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Crie um bot no <strong>@BotFather</strong>, adicione ao grupo e use <strong>@userinfobot</strong> para obter o chat_id.
