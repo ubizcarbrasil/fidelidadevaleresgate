@@ -1,0 +1,213 @@
+/**
+ * Manual PIN + CPF lookup form for store owner redemption.
+ */
+import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ScanLine, CheckCircle2, XCircle, Loader2, KeyRound, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
+import { useRedeemMutation } from "@/hooks/useRedeemMutation";
+
+export interface RedemptionResult {
+  id: string;
+  token: string;
+  status: string;
+  offer_title: string;
+  customer_name: string;
+  customer_cpf: string;
+  branch_name: string;
+  value_rescue: number;
+  min_purchase: number;
+  expires_at: string | null;
+}
+
+const formatCpf = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  return digits
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+
+export const maskCpf = (cpf: string) => {
+  if (!cpf || cpf.length < 11) return cpf || "—";
+  return `***.***.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+};
+
+interface RedeemPinInputProps {
+  storeId: string;
+  onConfirmed: () => void;
+}
+
+export default function RedeemPinInput({ storeId, onConfirmed }: RedeemPinInputProps) {
+  const [showManual, setShowManual] = useState(false);
+  const [pin, setPin] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [purchaseValue, setPurchaseValue] = useState("");
+  const [result, setResult] = useState<RedemptionResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const lookup = useMutation({
+    mutationFn: async ({ pinInput, cpfInput }: { pinInput: string; cpfInput: string }) => {
+      const cpfDigits = cpfInput.replace(/\D/g, "");
+      if (pinInput.length !== 6) throw new Error("PIN deve ter 6 dígitos");
+      if (cpfDigits.length !== 11) throw new Error("CPF deve ter 11 dígitos");
+
+      const { data, error } = await supabase
+        .from("redemptions")
+        .select("*, offers!inner(title, value_rescue, min_purchase, store_id), customers(name), branches(name)")
+        .eq("token", pinInput)
+        .eq("customer_cpf", cpfDigits)
+        .eq("status", "PENDING")
+        .eq("offers.store_id", storeId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error("PIN + CPF inválidos, resgate já utilizado ou não pertence a esta loja");
+
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        await supabase.from("redemptions").update({ status: "EXPIRED" as string } as Record<string, unknown>).eq("id", data.id);
+        throw new Error("PIN expirado. Este resgate não pode mais ser utilizado.");
+      }
+
+      const offers = data.offers as { title?: string; value_rescue?: number; min_purchase?: number } | null;
+      const customers = data.customers as { name?: string } | null;
+      const branches = data.branches as { name?: string } | null;
+
+      return {
+        id: data.id,
+        token: data.token,
+        status: data.status,
+        offer_title: offers?.title || "",
+        customer_name: customers?.name || "",
+        customer_cpf: data.customer_cpf || "",
+        branch_name: branches?.name || "",
+        value_rescue: Number(offers?.value_rescue || 0),
+        min_purchase: Number(offers?.min_purchase || 0),
+        expires_at: data.expires_at,
+      } as RedemptionResult;
+    },
+    onSuccess: (data) => { setResult(data); setError(null); },
+    onError: (e: Error) => { setResult(null); setError(e.message); },
+  });
+
+  const confirmMutation = useRedeemMutation(() => {
+    setResult(null); setPin(""); setCpf(""); setPurchaseValue(""); setError(null);
+    onConfirmed();
+  });
+
+  const canSearch = pin.length === 6 && cpf.replace(/\D/g, "").length === 11;
+
+  return (
+    <Card className="rounded-2xl">
+      <CardHeader className="pb-2">
+        <button
+          onClick={() => setShowManual(!showManual)}
+          className="w-full flex items-center justify-between"
+        >
+          <CardTitle className="text-base flex items-center gap-2">
+            <KeyRound className="h-5 w-5" /> Buscar por PIN + CPF
+          </CardTitle>
+          {showManual ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+      </CardHeader>
+      {showManual && (
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">PIN (6 dígitos)</Label>
+            <Input
+              placeholder="000000"
+              value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onKeyDown={e => e.key === "Enter" && canSearch && lookup.mutate({ pinInput: pin, cpfInput: cpf })}
+              className="font-mono text-2xl tracking-[0.3em] text-center h-14"
+              maxLength={6}
+              inputMode="numeric"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">CPF do cliente</Label>
+            <Input
+              placeholder="000.000.000-00"
+              value={cpf}
+              onChange={e => setCpf(formatCpf(e.target.value))}
+              onKeyDown={e => e.key === "Enter" && canSearch && lookup.mutate({ pinInput: pin, cpfInput: cpf })}
+              className="font-mono text-lg tracking-wider text-center h-12"
+              maxLength={14}
+              inputMode="numeric"
+            />
+          </div>
+          <Button
+            onClick={() => lookup.mutate({ pinInput: pin, cpfInput: cpf })}
+            disabled={!canSearch || lookup.isPending}
+            className="w-full h-12"
+          >
+            {lookup.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ScanLine className="h-4 w-4 mr-2" />}
+            Buscar Resgate
+          </Button>
+
+          {error && (
+            <div className="flex items-center gap-2 text-destructive text-sm">
+              <XCircle className="h-4 w-4" /> {error}
+            </div>
+          )}
+
+          {result && (
+            <Card className="rounded-2xl border-primary/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" /> Resgate Encontrado
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-muted-foreground">Oferta:</span> <strong>{result.offer_title}</strong></div>
+                  <div><span className="text-muted-foreground">Cliente:</span> <strong>{result.customer_name}</strong></div>
+                  <div><span className="text-muted-foreground">CPF:</span> <strong>{maskCpf(result.customer_cpf)}</strong></div>
+                  <div><span className="text-muted-foreground">Filial:</span> <strong>{result.branch_name}</strong></div>
+                  <div><span className="text-muted-foreground">Crédito:</span> <strong>R$ {result.value_rescue.toFixed(2)}</strong></div>
+                  <div><span className="text-muted-foreground">Compra Mín.:</span> <strong>R$ {result.min_purchase.toFixed(2)}</strong></div>
+                  <div><span className="text-muted-foreground">PIN:</span> <strong className="font-mono tracking-wider">{result.token}</strong></div>
+                  <div><span className="text-muted-foreground">Status:</span> <Badge variant="outline">{result.status}</Badge></div>
+                  {result.expires_at && (
+                    <div className="col-span-2"><span className="text-muted-foreground">Expira em:</span> <strong>{new Date(result.expires_at).toLocaleString("pt-BR")}</strong></div>
+                  )}
+                </div>
+
+                <div className="space-y-2 pt-2 border-t">
+                  <Label>Valor da Compra (R$)</Label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={purchaseValue}
+                    onChange={e => setPurchaseValue(e.target.value)}
+                  />
+                </div>
+
+                <Button
+                  onClick={() => confirmMutation.mutate({
+                    redemptionId: result.id,
+                    purchaseValue: Number(purchaseValue) || null,
+                    creditValueApplied: result.value_rescue,
+                    minPurchase: result.min_purchase,
+                  })}
+                  disabled={confirmMutation.isPending}
+                  className="w-full"
+                  size="lg"
+                >
+                  {confirmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                  Confirmar Resgate
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}

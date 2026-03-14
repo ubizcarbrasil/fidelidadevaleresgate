@@ -48,7 +48,13 @@ export default function CustomerRedemptionsPage() {
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const { data: redemptions = [], isLoading } = useQuery({
+  const PAGE_SIZE = 30;
+  const [page, setPage] = useState(0);
+  const [allRedemptions, setAllRedemptions] = useState<Record<string, unknown>[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const { isLoading } = useQuery({
     queryKey: ["customer-redemptions", customer?.id],
     queryFn: async () => {
       if (!customer?.id) return [];
@@ -65,12 +71,37 @@ export default function CustomerRedemptionsPage() {
           branches(name)
         `)
         .eq("customer_id", customer.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(0, PAGE_SIZE - 1);
       if (error) throw error;
-      return data || [];
+      const items = (data || []) as unknown as Record<string, unknown>[];
+      setAllRedemptions(items);
+      setHasMore(items.length >= PAGE_SIZE);
+      setPage(0);
+      return items;
     },
     enabled: !!customer?.id,
   });
+
+  const redemptions = allRedemptions;
+
+  const handleLoadMore = async () => {
+    if (!customer?.id || loadingMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const from = nextPage * PAGE_SIZE;
+    const { data } = await supabase
+      .from("redemptions")
+      .select(`*, offers(title, image_url, value_rescue, discount_percent, coupon_type, redemption_type, terms_text, min_purchase, start_at, end_at, is_cumulative, allowed_weekdays, allowed_hours, stores(name, logo_url, address, whatsapp, site_url, instagram)), branches(name)`)
+      .eq("customer_id", customer.id)
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+    const items = (data || []) as unknown as Record<string, unknown>[];
+    setAllRedemptions(prev => [...prev, ...items]);
+    setHasMore(items.length >= PAGE_SIZE);
+    setPage(nextPage);
+    setLoadingMore(false);
+  };
 
   const counts = useMemo(() => {
     const c = { ALL: 0, PENDING: 0, USED: 0, EXPIRED: 0 };
