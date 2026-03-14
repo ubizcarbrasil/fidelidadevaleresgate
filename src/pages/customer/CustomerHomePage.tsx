@@ -25,10 +25,7 @@ const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
   { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
 ];
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+// hslToCss imported from @/lib/utils
 
 function getGreeting(): string {
   const h = new Date().getHours();
