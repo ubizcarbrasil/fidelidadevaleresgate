@@ -48,7 +48,10 @@ function logAudit(
 }
 
 async function findIntegration(sb: ReturnType<typeof createClient>, req: Request, body: Record<string, unknown>) {
-  const apiSecret = req.headers.get("x-api-secret");
+  const apiSecret = req.headers.get("x-api-secret") || req.headers.get("x-api-key");
+  const queryBrandId = new URL(req.url).searchParams.get("brand_id");
+  const bodyBrandId = typeof body.brand_id === "string" ? body.brand_id : null;
+
   if (apiSecret) {
     const { data } = await sb
       .from("machine_integrations")
@@ -57,18 +60,22 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-    return data;
+
+    if (data) return data;
   }
-  if (body.brand_id) {
+
+  const brandId = bodyBrandId || queryBrandId;
+  if (brandId) {
     const { data } = await sb
       .from("machine_integrations")
       .select("*")
-      .eq("brand_id", body.brand_id)
+      .eq("brand_id", brandId)
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
     return data;
   }
+
   return null;
 }
 

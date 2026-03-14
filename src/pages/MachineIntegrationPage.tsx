@@ -53,7 +53,10 @@ export default function MachineIntegrationPage() {
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const webhookUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
+  const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
+  const webhookUrl = currentBrandId
+    ? `${webhookBaseUrl}?brand_id=${encodeURIComponent(currentBrandId)}`
+    : webhookBaseUrl;
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(webhookUrl);
