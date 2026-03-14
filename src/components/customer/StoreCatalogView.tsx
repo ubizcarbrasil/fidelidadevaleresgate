@@ -30,6 +30,7 @@ interface CatalogOffer {
   image_url?: string | null;
   discount_percent?: number;
   stores?: { name: string; logo_url: string | null } | null;
+  [key: string]: unknown;
 }
 
 interface Props {
