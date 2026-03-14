@@ -116,7 +116,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
   // Pre-calculated product values for PRODUCT offers
   const discountPctOffer = Number(offer.discount_percent) || 0;
-  const termsParamsOffer = offer.terms_params_json as any;
+  const termsParamsOffer = offer.terms_params_json as Record<string, unknown> | null;
   const productPriceOffer = termsParamsOffer?.product_price
     ? Number(termsParamsOffer.product_price)
     : (discountPctOffer > 0 && Number(offer.value_rescue) > 0)
