@@ -258,7 +258,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             <div className="space-y-2">
               {store?.address && (
                 <ActionButton icon={<MapPin className="h-5 w-5" />} label="Ver Localização" bg="#FBBF24" color="#1F2937"
-                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`, "_blank")} />
+                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address || "")}`, "_blank")} />
               )}
               {store?.whatsapp && (
                 <ActionButton icon={<MessageCircle className="h-5 w-5" />} label="Resgatar no WhatsApp" bg="#25D366" color="#fff"
