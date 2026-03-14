@@ -65,6 +65,7 @@ export default function MachineIntegrationPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("");
+  const [callbackSaved, setCallbackSaved] = useState(false);
   const [receiptApiKey, setReceiptApiKey] = useState("");
   const [showReceiptApiKey, setShowReceiptApiKey] = useState(false);
   const [urlReceiptApiKey, setUrlReceiptApiKey] = useState("");
