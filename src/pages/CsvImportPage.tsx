@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2, Download, ArrowRight, Link2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2, Download, ArrowRight, Link2, History, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 // ── CSV Parsing ──
