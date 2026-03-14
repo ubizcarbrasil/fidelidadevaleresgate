@@ -31,6 +31,7 @@ export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
+  const { formatSubtitle } = useOfferCardConfig();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
