@@ -92,6 +92,57 @@ async function retryRide(
 
   const { rideValue, passengerName, passengerCpf, passengerPhone, source } = rideResult.data;
 
+  // --- BACKFILL MODE: ride already finalized, just enrich customer data ---
+  if (isBackfill) {
+    const hasNewData = passengerCpf || passengerPhone || (passengerName && !passengerName.startsWith("Passageiro"));
+    if (!hasNewData) {
+      return { machineRideId, status: "SKIP", reason: "no_new_data_from_api", source };
+    }
+
+    // Update ride with passenger data
+    await sb.from("machine_rides").update({
+      passenger_cpf: passengerCpf || ride.passenger_cpf || null,
+    }).eq("id", ride.id);
+
+    // Find the customer linked to this ride via points_ledger
+    const { data: ledgerEntry } = await sb
+      .from("points_ledger")
+      .select("customer_id")
+      .eq("brand_id", brandId)
+      .eq("reference_type", "MACHINE_RIDE")
+      .ilike("reason", `%#${machineRideId}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (ledgerEntry?.customer_id) {
+      const updates: Record<string, any> = {};
+      if (passengerName && !passengerName.startsWith("Passageiro")) updates.name = passengerName;
+      if (passengerCpf) updates.cpf = passengerCpf;
+      if (passengerPhone) updates.phone = passengerPhone;
+
+      if (Object.keys(updates).length > 0) {
+        await sb.from("customers").update(updates).eq("id", ledgerEntry.customer_id);
+        logger.info("Backfill: updated customer", { customerId: ledgerEntry.customer_id, updates: Object.keys(updates) });
+      }
+    }
+
+    // Update notifications too
+    const notifUpdates: Record<string, any> = {};
+    if (passengerName) notifUpdates.customer_name = passengerName;
+    if (passengerPhone) notifUpdates.customer_phone = passengerPhone;
+    if (passengerCpf) notifUpdates.customer_cpf_masked = `•••${passengerCpf.slice(-4)}`;
+
+    if (Object.keys(notifUpdates).length > 0) {
+      await sb.from("machine_ride_notifications")
+        .update(notifUpdates)
+        .eq("brand_id", brandId)
+        .eq("machine_ride_id", machineRideId);
+    }
+
+    return { machineRideId, status: "BACKFILLED", source, updatedFields: Object.keys(notifUpdates) };
+  }
+
+  // --- RETRY MODE: ride failed, full processing ---
   if (rideValue <= 0) {
     await sb.from("machine_rides").update({
       ride_status: "NO_VALUE",
