@@ -1,30 +1,21 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico: 3 problemas encontrados no código atual
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+Comparei o fluxo que você descreveu com o código em `fetchRideData.ts` e encontrei **3 diferenças críticas**:
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### 1. URL BASE ERRADA (provável causa do erro 400)
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+| O que você pediu | O que o código usa |
+|---|---|
+| `https://api-vendas.taximachine.com.br/api/integracao/recibo` | `https://api.taximachine.com.br/api/integracao/recibo` |
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+O domínio está errado: deveria ser **`api-vendas`**, não **`api`**. Isso explica por que o Recibo sempre retorna `400 "Solicitação não encontrada"` — está batendo no servidor errado.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### 2. Não valida `success = true` na resposta
+
+O código atual pega o JSON e extrai direto os campos sem verificar se `success === true`. Se a API retornar `{ success: false, message: "..." }`, o sistema vai processar como se fosse válido.
+
+### 3. Não extrai `telefone` e `email` do Recibo
+
+O código assume que o Recibo **nunca** traz telefone (linha 36: `passengerPhone: null`). Mas
