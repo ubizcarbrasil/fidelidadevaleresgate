@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (contactErr) {
-        console.error("Contact upsert error:", contactErr);
+        createEdgeLogger("mobility-webhook").error("Contact upsert error", { error: contactErr.message });
         continue;
       }
 
