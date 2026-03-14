@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss } from "@/lib/utils";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 interface ScoredOffer { offer_id: string; score: number }
 type OfferWithStore = Tables<"offers"> & {
