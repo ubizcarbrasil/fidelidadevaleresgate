@@ -113,6 +113,55 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
   return null;
 }
 
+async function findCustomerCascade(
+  sb: ReturnType<typeof createClient>,
+  brandId: string,
+  cpf: string | null,
+  phone: string | null,
+  name: string | null
+) {
+  // 1. By CPF
+  if (cpf) {
+    const { data } = await sb
+      .from("customers")
+      .select("id, branch_id, points_balance, name, phone")
+      .eq("brand_id", brandId)
+      .eq("cpf", cpf)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (data) return { customer: data, matchedBy: "cpf" };
+  }
+
+  // 2. By phone
+  if (phone) {
+    const { data } = await sb
+      .from("customers")
+      .select("id, branch_id, points_balance, name, phone")
+      .eq("brand_id", brandId)
+      .eq("phone", phone)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (data) return { customer: data, matchedBy: "phone" };
+  }
+
+  // 3. By exact name
+  if (name) {
+    const { data } = await sb
+      .from("customers")
+      .select("id, branch_id, points_balance, name, phone")
+      .eq("brand_id", brandId)
+      .eq("name", name)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (data) return { customer: data, matchedBy: "name" };
+  }
+
+  return null;
+}
+
 async function processFinalized(
   sb: ReturnType<typeof createClient>,
   integration: any,
@@ -121,9 +170,11 @@ async function processFinalized(
   machineRideId: string,
   ip: string
 ) {
-  if (!integration.basic_auth_user || !integration.basic_auth_password) {
-    logger.error("Missing basic auth credentials", { brandId });
-    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "basic_auth_empty" } });
+  // Use api-key header against api-vendas endpoint
+  const apiKey = (integration.api_key || "").trim();
+  if (!apiKey) {
+    logger.error("Missing api_key on integration", { brandId });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "api_key_empty" } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
@@ -133,48 +184,51 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "Basic auth credentials not configured. Please set user/password in integration settings.", status: 400 };
+    return { error: "API key not configured. Please set the api-key in integration settings.", status: 400 };
   }
 
-  const basicAuth = btoa(`${(integration.basic_auth_user || "").trim()}:${(integration.basic_auth_password || "").trim()}`);
-  const machineBaseUrl = "https://api.taximachine.com.br";
+  const machineBaseUrl = "https://api-vendas.taximachine.com.br";
 
-  const [statusRes, receiptRes] = await Promise.all([
-    fetch(`${machineBaseUrl}/api/integracao/solicitacaoStatus?id_mch=${machineRideId}`, {
-      headers: { Authorization: `Basic ${basicAuth}` },
-    }),
-    fetch(`${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`, {
-      headers: { Authorization: `Basic ${basicAuth}` },
-    }),
-  ]);
+  const receiptRes = await fetch(
+    `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`,
+    { headers: { "api-key": apiKey } }
+  );
 
-  if (!statusRes.ok) {
-    const statusBody = await statusRes.text();
-    logger.error("TaxiMachine solicitacaoStatus error", { body: statusBody });
-    logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
-    if (statusRes.status === 401) {
-      return { error: "Credenciais TaxiMachine inválidas. Verifique usuário e senha na configuração da integração.", status: 400 };
-    }
-    return { error: "Failed to fetch ride status from TaxiMachine", status: 502 };
-  }
   if (!receiptRes.ok) {
     const receiptBody = await receiptRes.text();
-    logger.error("TaxiMachine recibo error", { body: receiptBody });
+    logger.error("TaxiMachine recibo error", { status: receiptRes.status, body: receiptBody });
     logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
+
+    // Register ride anyway so we don't lose the event
+    await sb.from("machine_rides").upsert({
+      brand_id: brandId,
+      branch_id: branchId,
+      machine_ride_id: machineRideId,
+      ride_status: "API_ERROR",
+      ride_value: 0,
+      points_credited: 0,
+      finalized_at: new Date().toISOString(),
+    }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
+
     if (receiptRes.status === 401) {
-      return { error: "Credenciais TaxiMachine inválidas. Verifique usuário e senha na configuração da integração.", status: 400 };
+      return { error: "Credenciais TaxiMachine inválidas. Verifique a api-key na configuração da integração.", status: 400 };
     }
     return { error: "Failed to fetch receipt from TaxiMachine", status: 502 };
   }
 
-  const [statusData, receiptData] = await Promise.all([statusRes.json(), receiptRes.json()]);
+  const receiptJson = await receiptRes.json();
+  const receiptData = receiptJson?.response || receiptJson;
 
-  const rideValue = Number(
-    receiptData?.dados_solicitacao?.valor ||
-    receiptData?.valor ||
-    statusData?.dados_solicitacao?.valor ||
-    0
-  );
+  const rideValue = Number(receiptData?.dados_solicitacao?.valor || 0);
+
+  // Extract client info from receipt
+  const clienteBlock = receiptData?.cliente || {};
+  const passengerCpf = (clienteBlock.cpf || "").replace(/\D/g, "") || null;
+  const passengerName: string | null = clienteBlock.nome || null;
+  const passengerPhone: string | null = clienteBlock.telefone || clienteBlock.phone || null;
+
+  // Extract driver info
+  const condutorBlock = receiptData?.condutor || {};
 
   if (rideValue <= 0) {
     await sb.from("machine_rides").upsert({
@@ -184,62 +238,57 @@ async function processFinalized(
       ride_value: 0,
       ride_status: "NO_VALUE",
       points_credited: 0,
+      passenger_cpf: passengerCpf,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
     logAudit(sb, "MACHINE_RIDE_NO_VALUE", { brandId, entityId: machineRideId, ip, details: { ride_value: 0 } });
     return { data: { message: "Ride has no value", machine_ride_id: machineRideId, points_credited: 0 } };
   }
 
-  const passengerCpf = (
-    statusData?.cliente?.cpf ||
-    statusData?.dados_solicitacao?.cpf_passageiro ||
-    receiptData?.cliente?.cpf ||
-    ""
-  ).replace(/\D/g, "");
-
   const points = Math.floor(rideValue);
-
-  await sb.from("machine_rides").upsert({
-    brand_id: brandId,
-    branch_id: branchId,
-    machine_ride_id: machineRideId,
-    passenger_cpf: passengerCpf || null,
-    ride_value: rideValue,
-    ride_status: "FINALIZED",
-    points_credited: points,
-    finalized_at: new Date().toISOString(),
-  }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-
-  // Credit points if CPF found
-  let pointsCredited = false;
-  let customerId: string | null = null;
 
   // Resolve the branch to use for customer creation
   const customerBranchId = branchId || integration.branch_id;
 
-  if (passengerCpf && points > 0) {
-    let customer: any = null;
+  // --- Cascading customer lookup ---
+  let customer: any = null;
+  let matchedBy: string | null = null;
 
-    const { data: existing } = await sb
-      .from("customers")
-      .select("id, branch_id, points_balance")
-      .eq("brand_id", brandId)
-      .eq("cpf", passengerCpf)
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
+  const cascadeResult = await findCustomerCascade(sb, brandId, passengerCpf, passengerPhone, passengerName);
+  if (cascadeResult) {
+    customer = cascadeResult.customer;
+    matchedBy = cascadeResult.matchedBy;
+  }
 
-    if (existing) {
-      customer = existing;
-    } else if (customerBranchId) {
-      const customerName = `Passageiro •••${passengerCpf.slice(-4)}`;
+  // If not found, create a new customer
+  let customerId: string | null = null;
+  let pointsCredited = false;
+
+  if (!customer) {
+    // Determine which branch to use
+    let resolveBranchId = customerBranchId;
+    if (!resolveBranchId) {
+      const { data: branch } = await sb
+        .from("branches")
+        .select("id")
+        .eq("brand_id", brandId)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      resolveBranchId = branch?.id || null;
+    }
+
+    if (resolveBranchId) {
+      const customerDisplayName = passengerName || (passengerCpf ? `Passageiro •••${passengerCpf.slice(-4)}` : `Passageiro corrida #${machineRideId}`);
       const { data: created } = await sb
         .from("customers")
         .insert({
           brand_id: brandId,
-          branch_id: customerBranchId,
-          cpf: passengerCpf,
-          name: customerName,
+          branch_id: resolveBranchId,
+          cpf: passengerCpf || null,
+          phone: passengerPhone || null,
+          name: customerDisplayName,
           points_balance: 0,
           money_balance: 0,
         })
@@ -252,68 +301,49 @@ async function processFinalized(
           brandId,
           entityId: created.id,
           ip,
-          details: { cpf_masked: `***${passengerCpf.slice(-4)}`, branch_id: customerBranchId },
+          details: {
+            name: customerDisplayName,
+            cpf_masked: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
+            phone: passengerPhone,
+            branch_id: resolveBranchId,
+          },
         });
       }
-    } else {
-      // Fallback: find first branch
-      const { data: branch } = await sb
-        .from("branches")
-        .select("id")
-        .eq("brand_id", brandId)
-        .eq("is_active", true)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      if (branch) {
-        const customerName = `Passageiro •••${passengerCpf.slice(-4)}`;
-        const { data: created } = await sb
-          .from("customers")
-          .insert({
-            brand_id: brandId,
-            branch_id: branch.id,
-            cpf: passengerCpf,
-            name: customerName,
-            points_balance: 0,
-            money_balance: 0,
-          })
-          .select("id, branch_id, points_balance")
-          .single();
-
-        if (created) {
-          customer = created;
-          logAudit(sb, "MACHINE_CUSTOMER_CREATED", {
-            brandId,
-            entityId: created.id,
-            ip,
-            details: { cpf_masked: `***${passengerCpf.slice(-4)}`, branch_id: branch.id },
-          });
-        }
-      }
-    }
-
-    if (customer) {
-      customerId = customer.id;
-      await sb.from("points_ledger").insert({
-        brand_id: brandId,
-        branch_id: customer.branch_id,
-        customer_id: customer.id,
-        entry_type: "CREDIT",
-        points_amount: points,
-        money_amount: rideValue,
-        reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
-        reference_type: "MACHINE_RIDE",
-      });
-
-      await sb
-        .from("customers")
-        .update({ points_balance: (customer.points_balance || 0) + points })
-        .eq("id", customer.id);
-
-      pointsCredited = true;
     }
   }
+
+  if (customer && points > 0) {
+    customerId = customer.id;
+    await sb.from("points_ledger").insert({
+      brand_id: brandId,
+      branch_id: customer.branch_id,
+      customer_id: customer.id,
+      entry_type: "CREDIT",
+      points_amount: points,
+      money_amount: rideValue,
+      reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
+      reference_type: "MACHINE_RIDE",
+    });
+
+    await sb
+      .from("customers")
+      .update({ points_balance: (customer.points_balance || 0) + points })
+      .eq("id", customer.id);
+
+    pointsCredited = true;
+  }
+
+  // Persist ride
+  await sb.from("machine_rides").upsert({
+    brand_id: brandId,
+    branch_id: branchId,
+    machine_ride_id: machineRideId,
+    passenger_cpf: passengerCpf || null,
+    ride_value: rideValue,
+    ride_status: "FINALIZED",
+    points_credited: pointsCredited ? points : 0,
+    finalized_at: new Date().toISOString(),
+  }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
 
   // Update integration counters
   const { error: updateErr } = await sb
@@ -335,15 +365,17 @@ async function processFinalized(
       ride_value: rideValue,
       points,
       points_credited: pointsCredited,
+      matched_by: matchedBy,
       customer_id: customerId,
+      passenger_name: passengerName,
       passenger_cpf: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
+      driver_name: condutorBlock.nome || null,
       branch_id: branchId,
     },
   });
 
   // Insert into machine_ride_notifications for realtime dashboard
   if (pointsCredited) {
-    // Fetch branch info for city name
     let resolvedCityName: string | null = null;
     if (branchId || integration.branch_id) {
       const { data: branchData } = await sb
@@ -356,26 +388,14 @@ async function processFinalized(
       }
     }
 
-    // Fetch customer phone if available
-    let customerPhone: string | null = null;
-    let customerFullName: string | null = null;
-    if (customerId) {
-      const { data: custData } = await sb
-        .from("customers")
-        .select("name, phone")
-        .eq("id", customerId)
-        .maybeSingle();
-      if (custData) {
-        customerFullName = custData.name || null;
-        customerPhone = custData.phone || null;
-      }
-    }
+    const customerFullName = customer?.name || passengerName || (passengerCpf ? `Passageiro •••${passengerCpf.slice(-4)}` : null);
+    const customerPhone = customer?.phone || passengerPhone || null;
 
     await sb.from("machine_ride_notifications").insert({
       brand_id: brandId,
       branch_id: branchId,
       machine_ride_id: machineRideId,
-      customer_name: customerFullName || (passengerCpf ? `Passageiro •••${passengerCpf.slice(-4)}` : null),
+      customer_name: customerFullName,
       customer_phone: customerPhone,
       customer_cpf_masked: passengerCpf ? `•••${passengerCpf.slice(-4)}` : null,
       city_name: resolvedCityName,
@@ -397,7 +417,7 @@ async function processFinalized(
           },
           body: JSON.stringify({
             chat_id: integration.telegram_chat_id,
-            customer_name: customerFullName || (passengerCpf ? `Passageiro •••${passengerCpf.slice(-4)}` : null),
+            customer_name: customerFullName,
             customer_phone: customerPhone,
             city_name: resolvedCityName,
             ride_value: rideValue,
@@ -426,6 +446,7 @@ async function processFinalized(
           machine_ride_id: machineRideId,
           ride_value: rideValue,
           points,
+          passenger_name: passengerName,
           cpf_masked: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
           customer_id: customerId,
           brand_id: brandId,
@@ -449,7 +470,9 @@ async function processFinalized(
       machine_ride_id: machineRideId,
       ride_value: rideValue,
       points_credited: pointsCredited ? points : 0,
-      customer_found: pointsCredited,
+      customer_found: !!matchedBy,
+      customer_created: !matchedBy && !!customerId,
+      matched_by: matchedBy,
     },
   };
 }
