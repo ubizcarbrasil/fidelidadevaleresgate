@@ -1838,6 +1838,45 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          id: string
+          message: string
+          metadata_json: Json | null
+          severity: string
+          source: string
+          stack: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          metadata_json?: Json | null
+          severity?: string
+          source?: string
+          stack?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          metadata_json?: Json | null
+          severity?: string
+          source?: string
+          stack?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string
