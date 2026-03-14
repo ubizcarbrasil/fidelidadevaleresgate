@@ -54,12 +54,14 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Identidade & Vitrine",
     items: [
       { key: "sidebar.galeria_icones", defaultTitle: "Galeria de Ícones", url: "/icon-library", icon: Image },
+      { key: "sidebar.app_icons", defaultTitle: "Ícones do App", url: "/app-icons", icon: Image },
       { key: "sidebar.central_banners", defaultTitle: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
-      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder", icon: Layers },
+      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder-v2", icon: Layers },
       { key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2 },
       { key: "sidebar.welcome_tour", defaultTitle: "Tour de Boas-Vindas", url: "/welcome-tour", icon: Rocket },
       { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText },
+      { key: "sidebar.partner_landing", defaultTitle: "LP de Parceiros", url: "/partner-landing-config", icon: FileText },
     ],
   },
   {
