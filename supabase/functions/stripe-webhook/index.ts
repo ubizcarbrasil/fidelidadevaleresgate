@@ -31,7 +31,8 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    console.log("Stripe event:", event.type);
+    const log = createEdgeLogger("stripe-webhook");
+    log.info("Stripe event received", { type: event.type });
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
