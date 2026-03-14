@@ -6,6 +6,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import CatalogCartDrawer, { type CartItem } from "./CatalogCartDrawer";
 
+interface CatalogItem {
+  id: string;
+  name: string;
+  price: number;
+  half_price?: number | null;
+  description?: string | null;
+  image_url?: string | null;
+  category?: string | null;
+  allow_half?: boolean;
+  order_index?: number;
+}
+
+interface CatalogCategory {
+  id: string;
+  name: string;
+  order_index?: number;
+}
+
+interface CatalogOffer {
+  id: string;
+  title: string;
+  image_url?: string | null;
+  discount_percent?: number;
+  stores?: { name: string; logo_url: string | null } | null;
+}
+
 interface Props {
   storeId: string;
   storeName: string;
@@ -18,7 +44,7 @@ interface Props {
   customerId?: string;
   primary: string;
   fontHeading: string;
-  onOfferClick?: (offer: any) => void;
+  onOfferClick?: (offer: CatalogOffer & Record<string, unknown>) => void;
 }
 
 export default function StoreCatalogView({
