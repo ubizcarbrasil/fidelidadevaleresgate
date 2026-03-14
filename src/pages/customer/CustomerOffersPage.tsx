@@ -260,9 +260,9 @@ export default function CustomerOffersPage() {
                     {hasCashback && (
                       <div className="flex items-center gap-1">
                         <span className="text-base font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                          {offer.coupon_type !== "PRODUCT"
+                           {offer.coupon_type !== "PRODUCT"
                             ? `${Math.floor(Number(offer.value_rescue))} pontos por R$ ${Number(offer.value_rescue).toFixed(2)}`
-                            : `${Number(offer.value_rescue).toLocaleString("pt-BR")} pts`}
+                            : `${Math.floor(Number(offer.value_rescue))} pts = R$ ${Number(offer.value_rescue).toFixed(2)}`}
                         </span>
                       </div>
                     )}

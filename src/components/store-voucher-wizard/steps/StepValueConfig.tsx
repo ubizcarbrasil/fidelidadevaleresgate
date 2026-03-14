@@ -142,7 +142,7 @@ export default function StepValueConfig({ data, update }: Props) {
             <strong>PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS</strong>
             <br />
             <span className="text-muted-foreground">
-              Produto: R$ {data.product_price.toFixed(2)} → Cliente usa {Math.floor(creditValue)} pts (= R$ {creditValue.toFixed(2)} de crédito)
+              {Math.floor(creditValue)} pts = R$ {creditValue.toFixed(2)} | Produto: R$ {data.product_price.toFixed(2)}
             </span>
           </>
         ) : (

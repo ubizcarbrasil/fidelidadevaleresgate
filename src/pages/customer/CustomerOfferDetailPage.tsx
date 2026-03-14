@@ -600,11 +600,18 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         <div>
                           <p className="text-xs font-medium mb-0.5 text-muted-foreground">Pague com Pontos</p>
                           <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                            {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
+                            {Math.floor(Number(offer.value_rescue))} pts = R$ {Number(offer.value_rescue).toFixed(2)}
                           </p>
-                          <p className="text-[11px] mt-0.5 text-muted-foreground">
-                            {Math.floor(Number(offer.value_rescue))} pts = R$ {Number(offer.value_rescue).toFixed(2)} de crédito
-                          </p>
+                          {Number(offer.min_purchase || 0) > 0 && (
+                            <p className="text-[11px] mt-0.5 text-muted-foreground">
+                              Compra mínima de R$ {Number(offer.min_purchase).toFixed(2)}
+                            </p>
+                          )}
+                          {offer.redemption_type && (
+                            <p className="text-[11px] mt-1 text-muted-foreground">
+                              Resgate: {offer.redemption_type === "PRESENCIAL" ? "🏪 Presencial" : offer.redemption_type === "SITE" ? "🌐 Online" : "📱 WhatsApp"}
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <div>
