@@ -1,31 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Painel de Diagnóstico — Últimos 10 Eventos do Webhook
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### O que será adicionado
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-Um novo Card na `MachineIntegrationPage` chamado **"Diagnóstico do Webhook"** que mostra os últimos 10 registros da tabela `machine_rides` com foco em erros e status problemáticos. Diferente do feed de eventos em tempo real (que mostra `machine_ride_events` brutos), este painel mostra o **resultado final** de cada corrida processada, incluindo erros como `API_ERROR`, `CREDENTIAL_ERROR` e `NO_VALUE`.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-### Localização na UI
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-Será inserido **entre** o card "Últimas pontuações" e o card "Eventos em tempo real", visível quando houver integrações ativas.
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### Conteúdo do painel
-
-Cada linha mostrará:
-- **Status** com badge colorido (FINALIZED = verde, API_ERROR / CREDENTIAL_ERROR = vermelho, NO_VALUE = amarelo, outros = cinza)
-- **ID da corrida** (`machine_ride_id`)
-- **Valor** e **pontos creditados** (se houver)
-- **Data/hora** de criação e finalização
-- Ícone de alerta para status de erro
-
-### Implementação
-
-1. **Nova query** (`useQuery`) buscando os últimos 10 registros de `machine_rides` filtrados por `brand_id`, ordenados por `created_at DESC`
-2. **Novo Card** com `ScrollArea` renderizando as linhas com badges de status
-3. **Mapa de status** com cores e labels em português para todos os status possíveis (`FINALIZED`, `API_ERROR`, `CREDENTIAL_ERROR`, `NO_VALUE`, `PENDING`, `ACCEPTED`, `IN_PROGRESS`, `CANCELLED`, `DENIED`)
-4. **Auto-refresh** via `refetchInterval: 30000` para manter atualizado sem depender de realtime
-
-### Arquivo alterado
-- `src/pages/MachineIntegrationPage.tsx` — adicionar query + Card de diagnóstico (~60 linhas)
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
