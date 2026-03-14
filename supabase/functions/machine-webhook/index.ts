@@ -397,6 +397,7 @@ async function processFinalized(
       brand_id: brandId,
       branch_id: branchId,
       machine_ride_id: machineRideId,
+      customer_id: customerId || null,
       customer_name: customerFullName,
       customer_phone: customerPhone,
       customer_cpf_masked: passengerCpf ? `•••${passengerCpf.slice(-4)}` : null,
