@@ -171,7 +171,7 @@ function matchSegments(query: string, segments: Segment[], limit = 5): MatchResu
   return results.slice(0, limit);
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
