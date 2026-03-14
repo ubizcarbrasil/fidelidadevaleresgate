@@ -72,15 +72,15 @@ export default function ForYouSection() {
       }
 
       // Fetch full offer data for the scored IDs (preserving score order)
-      const offerIds = scored.map((s: any) => s.offer_id);
+      const offerIds = scored.map((s: ScoredOffer) => s.offer_id);
       const { data: fullOffers } = await supabase
         .from("offers")
         .select("*, stores(name, logo_url)")
         .in("id", offerIds);
 
       // Re-order by score
-      const offerMap = new Map((fullOffers || []).map((o: any) => [o.id, o]));
-      const ordered = offerIds.map((id: string) => offerMap.get(id)).filter(Boolean);
+      const offerMap = new Map((fullOffers || []).map((o: OfferWithStore) => [o.id, o]));
+      const ordered = offerIds.map((id: string) => offerMap.get(id)).filter(Boolean) as OfferWithStore[];
       setOffers(ordered);
       setLoading(false);
     };
