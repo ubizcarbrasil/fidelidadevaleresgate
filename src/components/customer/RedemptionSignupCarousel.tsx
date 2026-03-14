@@ -119,8 +119,9 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
       // Give React context time to update with new auth state
       setTimeout(() => onComplete(data.cpf), 2000);
-    } catch (err: any) {
-      toast({ title: "Erro", description: translateError(err.message), variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro inesperado";
+      toast({ title: "Erro", description: translateError(message), variant: "destructive" });
     } finally {
       setLoading(false);
     }

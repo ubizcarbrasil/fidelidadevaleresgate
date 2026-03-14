@@ -178,7 +178,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
           .eq("brand_id", brand.id)
           .eq("is_active", true)
           .eq("taxonomy_segment_id", selectedSegmentId);
-        const storeIds = (segStores || []).map((s: any) => s.id);
+        const storeIds = (segStores || []).map((s: { id: string }) => s.id);
         if (storeIds.length === 0) {
           setStores([]);
           setOffers([]);

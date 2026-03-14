@@ -98,7 +98,7 @@ interface OffersListProps {
   fontHeading: string;
   fg: string;
   isDark: boolean;
-  onOfferClick?: (offer: any) => void;
+  onOfferClick?: (offer: Offer) => void;
 }
 
 export const StoreOffersList = React.memo(function StoreOffersList({
