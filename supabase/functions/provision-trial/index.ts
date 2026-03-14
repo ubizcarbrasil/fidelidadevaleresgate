@@ -517,7 +517,7 @@ Deno.serve(async (req) => {
         }
       }
     }
-    console.log("Demo stores created successfully.");
+    log.info("Demo stores created successfully", { count: DEMO_STORES.length });
 
     // ─── 11. Save test accounts in brand settings ────────────────
     const testAccounts = [
