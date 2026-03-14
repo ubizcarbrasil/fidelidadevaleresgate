@@ -317,7 +317,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: Re
         .select("offer_id, offers(id, title, image_url, value_rescue, description, stores(name, logo_url))")
         .eq("customer_id", customer.id)
         .order("created_at", { ascending: false });
-      setFavorites((data || []).map((d: any) => d.offers).filter(Boolean));
+      setFavorites((data || []).map((d: Record<string, unknown>) => d.offers as Record<string, unknown>).filter(Boolean));
       setLoading(false);
     };
     fetch();
