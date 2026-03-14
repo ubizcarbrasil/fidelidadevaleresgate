@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
       });
 
       if (eventErr) {
-        console.error("Event insert error:", eventErr);
+        createEdgeLogger("mobility-webhook").error("Event insert error", { error: eventErr.message });
         continue;
       }
 
