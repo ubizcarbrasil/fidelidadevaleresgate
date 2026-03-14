@@ -96,7 +96,7 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
 
     const { error } = myReview
       ? await supabase.from("store_reviews").update({ rating, comment: comment.trim() || null }).eq("id", myReview.id)
-      : await supabase.from("store_reviews").insert(payload as Record<string, unknown>);
+      : await supabase.from("store_reviews").insert([payload] as Record<string, unknown>[]);
 
     setSubmitting(false);
     if (error) {
