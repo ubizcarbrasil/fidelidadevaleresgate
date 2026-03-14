@@ -185,6 +185,7 @@ export default function MachineIntegrationPage() {
   });
 
   const isActive = integration?.is_active;
+  const hasBasicAuthCredentials = Boolean(integration?.basic_auth_user && integration?.basic_auth_password);
 
   /* ══════════════════════ RENDER ══════════════════════ */
   return (
@@ -220,7 +221,7 @@ export default function MachineIntegrationPage() {
           </div>
 
           {/* Credential warning */}
-          {(!integration.basic_auth_user || !integration.basic_auth_password) && (
+          {!hasBasicAuthCredentials && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Credenciais incompletas</AlertTitle>
@@ -243,8 +244,12 @@ export default function MachineIntegrationPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                <span>Credenciais configuradas</span>
+                {hasBasicAuthCredentials ? (
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-destructive" />
+                )}
+                <span>{hasBasicAuthCredentials ? "Credenciais configuradas" : "Credenciais não configuradas"}</span>
               </div>
               {integration.webhook_registered ? (
                 <div className="flex items-center gap-2 text-sm">
