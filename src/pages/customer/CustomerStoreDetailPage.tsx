@@ -204,7 +204,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             pointsPerReal={Number(store.points_per_real) || 1}
             whatsapp={store.whatsapp}
             customerName={customer?.name}
-            customerCpf={(customer as any)?.cpf || ""}
+            customerCpf={(customer as (typeof customer & { cpf?: string }))?.cpf || ""}
             customerId={customer?.id}
             primary={primary}
             fontHeading={fontHeading}
