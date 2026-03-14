@@ -2303,6 +2303,7 @@ export type Database = {
           api_key: string
           basic_auth_password: string
           basic_auth_user: string
+          branch_id: string | null
           brand_id: string
           callback_url: string | null
           created_at: string
@@ -2318,6 +2319,7 @@ export type Database = {
           api_key: string
           basic_auth_password?: string
           basic_auth_user?: string
+          branch_id?: string | null
           brand_id: string
           callback_url?: string | null
           created_at?: string
@@ -2333,6 +2335,7 @@ export type Database = {
           api_key?: string
           basic_auth_password?: string
           basic_auth_user?: string
+          branch_id?: string | null
           brand_id?: string
           callback_url?: string | null
           created_at?: string
@@ -2346,16 +2349,23 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "machine_integrations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "machine_integrations_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "machine_integrations_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
@@ -2408,6 +2418,7 @@ export type Database = {
       }
       machine_rides: {
         Row: {
+          branch_id: string | null
           brand_id: string
           created_at: string
           finalized_at: string | null
@@ -2419,6 +2430,7 @@ export type Database = {
           ride_value: number
         }
         Insert: {
+          branch_id?: string | null
           brand_id: string
           created_at?: string
           finalized_at?: string | null
@@ -2430,6 +2442,7 @@ export type Database = {
           ride_value?: number
         }
         Update: {
+          branch_id?: string | null
           brand_id?: string
           created_at?: string
           finalized_at?: string | null
@@ -2441,6 +2454,13 @@ export type Database = {
           ride_value?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "machine_rides_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "machine_rides_brand_id_fkey"
             columns: ["brand_id"]
