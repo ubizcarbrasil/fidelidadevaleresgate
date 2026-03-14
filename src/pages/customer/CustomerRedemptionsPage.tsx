@@ -368,7 +368,7 @@ function RedemptionCard({
           </DetailInfoRow>
 
           {/* Cumulative */}
-          {(offer?.is_cumulative === false || snapshot?.is_cumulative === false) && (
+      {(offer?.is_cumulative === false || snapshot?.is_cumulative === false) && (
             <DetailInfoRow icon={<AlertTriangle className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
               Oferta <strong>não cumulativa</strong> com outras promoções
             </DetailInfoRow>
