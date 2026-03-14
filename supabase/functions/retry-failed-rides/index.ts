@@ -257,11 +257,12 @@ Deno.serve(async (req) => {
       return json({ error: "brand_id is required" }, 400);
     }
 
+    // Also include FINALIZED rides with no passenger data for backfill
     const { data: failedRides, error: fetchErr } = await sb
       .from("machine_rides")
       .select("*")
       .eq("brand_id", brand_id)
-      .in("ride_status", ["API_ERROR", "CREDENTIAL_ERROR"])
+      .or("ride_status.in.(API_ERROR,CREDENTIAL_ERROR),and(ride_status.eq.FINALIZED,passenger_cpf.is.null)")
       .order("created_at", { ascending: false })
       .limit(50);
 

@@ -39,15 +39,32 @@ function parseRecibo(json: any): Omit<RideData, "source"> {
 }
 
 function parseRequestV1(json: any): Omit<RideData, "source"> {
+  // Log raw V1 JSON for debugging missing client data
+  logger.info("V1 raw payload (first 1500 chars)", {
+    raw: JSON.stringify(json).slice(0, 1500),
+  });
+
   const firstStop = Array.isArray(json?.stops) ? json.stops[0] : null;
   const client = firstStop?.client || {};
   const driver = json?.driver || {};
 
+  // Also check for client data in alternative locations
+  const rootClient = json?.client || {};
+  const passenger = json?.passenger || {};
+
+  const name = client.name || rootClient.name || passenger.name || json?.passenger_name || null;
+  const phone = client.phone || rootClient.phone || passenger.phone || json?.passenger_phone || null;
+  const cpf = (client.cpf || rootClient.cpf || passenger.cpf || json?.passenger_cpf || "").replace(/\D/g, "") || null;
+
+  if (name || phone || cpf) {
+    logger.info("V1 client data found", { name, hasPhone: !!phone, hasCpf: !!cpf, source: client.name ? "stops[0].client" : rootClient.name ? "root.client" : "passenger/root" });
+  }
+
   return {
     rideValue: Number(json?.finished?.final_value || 0),
-    passengerName: client.name || null,
-    passengerCpf: null, // V1 endpoint does NOT return passenger CPF
-    passengerPhone: client.phone || null,
+    passengerName: name,
+    passengerCpf: cpf,
+    passengerPhone: phone,
     driverName: driver.name || null,
   };
 }
