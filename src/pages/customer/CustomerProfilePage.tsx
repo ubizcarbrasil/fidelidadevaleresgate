@@ -365,7 +365,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: Re
         </div>
       ) : (
         <div className="space-y-1.5">
-          {favorites.map((offer: any) => (
+          {favorites.map((offer: Record<string, unknown>) => (
             <motion.button
               key={offer.id}
               whileTap={{ scale: 0.97 }}
