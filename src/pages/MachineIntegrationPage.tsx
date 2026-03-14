@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
-  Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound,
+  Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound, AlertTriangle,
 } from "lucide-react";
 
 /* ── Status labels ── */
@@ -217,6 +218,17 @@ export default function MachineIntegrationPage() {
               <span className="text-2xl font-bold">{integration.total_points}</span>
             </StatusCard>
           </div>
+
+          {/* Credential warning */}
+          {(!integration.basic_auth_user || !integration.basic_auth_password) && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Credenciais incompletas</AlertTitle>
+              <AlertDescription>
+                O usuário e/ou senha da API estão vazios. Corridas finalizadas <strong>não serão pontuadas</strong> até que as credenciais sejam configuradas. Desative e reative a integração com as credenciais corretas.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Active info + deactivate */}
           <Card>
