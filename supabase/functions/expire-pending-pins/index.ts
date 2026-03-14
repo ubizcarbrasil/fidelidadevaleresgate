@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const count = data?.length || 0;
-    console.log(`Expired ${count} pending redemptions`);
+    const log = createEdgeLogger("expire-pending-pins");
+    log.info("Expired pending redemptions", { count });
 
     return new Response(JSON.stringify({ expired: count }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
