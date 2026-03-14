@@ -88,7 +88,7 @@ const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string }
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
 ];
 
-const TAB_CONTENT: Record<Tab, React.FC<Record<string, unknown>>> = {
+const TAB_CONTENT: Record<Tab, React.FC<any>> = {
   home: CustomerHomePage,
   offers: CustomerOffersPage,
   redemptions: CustomerRedemptionsPage,
