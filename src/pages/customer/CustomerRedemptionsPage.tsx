@@ -51,7 +51,7 @@ export default function CustomerRedemptionsPage() {
 
   const PAGE_SIZE = 30;
   const [page, setPage] = useState(0);
-  const [allRedemptions, setAllRedemptions] = useState<Record<string, unknown>[]>([]);
+  const [allRedemptions, setAllRedemptions] = useState<RedemptionWithOffer[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
