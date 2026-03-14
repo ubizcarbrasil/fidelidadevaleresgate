@@ -443,7 +443,25 @@ export default function MachineIntegrationPage() {
     },
   });
 
-  // Branches not yet integrated
+  const testCredentialsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("No integration selected");
+      setCredTestResult(null);
+      const { data, error } = await supabase.functions.invoke("test-machine-credentials", {
+        body: { integration_id: selectedIntegration.id },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setCredTestResult(data);
+    },
+    onError: (err: any) => {
+      setCredTestResult({ success: false, error: err.message || "Erro ao testar", details: "Verifique a conexão e tente novamente." });
+    },
+  });
+
+
   const integratedBranchIds = new Set(activeIntegrations.map((i) => i.branch_id));
   const availableBranches = branches.filter((b) => !integratedBranchIds.has(b.id));
 
