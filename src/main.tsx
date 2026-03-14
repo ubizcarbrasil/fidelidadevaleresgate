@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
+import { initErrorTracker } from "@/lib/errorTracker";
 
 async function clearPreviewPwaCache() {
   if (typeof window === "undefined") return;
