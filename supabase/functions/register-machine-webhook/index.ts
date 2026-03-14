@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
         : "Integration activated, but webhook registration failed. You may need to register the webhook manually.",
     });
   } catch (err) {
-    console.error("register-machine-webhook error:", err);
+    createEdgeLogger("register-machine-webhook").error("register-machine-webhook error", { error: String(err) });
     logAudit(sb, "MACHINE_INTEGRATION_ERROR", { userId, ip: clientIp, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }

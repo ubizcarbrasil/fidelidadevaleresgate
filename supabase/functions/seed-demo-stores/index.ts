@@ -363,7 +363,7 @@ Deno.serve(async (req) => {
           approved_at: new Date().toISOString(), email: `${demo.slug}@demo.com`,
         }).select("id").single();
 
-      if (storeErr) { console.error(`Store ${demo.name}: ${storeErr.message}`); continue; }
+      if (storeErr) { createEdgeLogger("seed-demo-stores").error(`Store creation failed: ${demo.name}`, { error: storeErr.message }); continue; }
 
       // Create offers with correct value_rescue calculations
       for (const offer of demo.offers) {

@@ -229,7 +229,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    console.error("match-taxonomy error:", e);
+    createEdgeLogger("match-taxonomy").error("match-taxonomy error", { error: e instanceof Error ? e.message : String(e) });
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (err) {
-    console.error("Error:", err);
+    createEdgeLogger("send-push-notification").error("Unexpected error", { error: String(err) });
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

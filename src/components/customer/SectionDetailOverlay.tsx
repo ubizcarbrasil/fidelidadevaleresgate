@@ -120,7 +120,7 @@ export default function SectionDetailOverlay({
           <div className="max-w-lg mx-auto px-4 pt-3 space-y-3">
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground/40 text-sm">Nenhum resultado encontrado</div>
-            ) : filtered.map((item: any, idx: number) => {
+            ) : filtered.map((item, idx) => {
               const imgSrc = item.banner_url || item.logo_url || item.image_url;
               const storeName = item.stores?.name || item.store_name || item.name;
               const title = item.name || item.title;

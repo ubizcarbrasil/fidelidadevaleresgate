@@ -507,7 +507,7 @@ Deno.serve(async (req) => {
   });
 
   if (ledgerErr) {
-    console.error("points_ledger insert error:", ledgerErr);
+    createEdgeLogger("earn-webhook").error("points_ledger insert error", { error: ledgerErr });
   }
 
   // 11. Update customer balance

@@ -310,7 +310,7 @@ Deno.serve(async (req) => {
       customer_found: pointsCredited,
     });
   } catch (err) {
-    console.error("machine-webhook error:", err);
+    createEdgeLogger("machine-webhook").error("machine-webhook error", { error: String(err) });
     logAudit(sb, "MACHINE_WEBHOOK_ERROR", { ip, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }

@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("Webhook error:", err);
+    createEdgeLogger("mobility-webhook").error("Webhook error", { error: String(err) });
     return new Response(JSON.stringify({ ok: false, error: "Internal server error", code: "INTERNAL_ERROR" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

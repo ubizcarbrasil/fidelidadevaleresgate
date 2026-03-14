@@ -111,7 +111,7 @@ export default function StoreCatalogView({
 
   const cartTotal = cart.reduce((s, i) => s + i.qty, 0);
 
-  const addToCart = (item: any, isHalf = false) => {
+  const addToCart = (item: CatalogItem, isHalf = false) => {
     const price = isHalf ? (item.half_price ? Number(item.half_price) : Number(item.price) / 2) : Number(item.price);
     const cartKey = `${item.id}-${isHalf}`;
     setCart(prev => {
