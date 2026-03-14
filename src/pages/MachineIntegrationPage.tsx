@@ -20,6 +20,15 @@ export default function MachineIntegrationPage() {
   const [basicPass, setBasicPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const webhookUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(webhookUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const { data: integration, isLoading } = useQuery({
     queryKey: ["machine-integration", currentBrandId],
