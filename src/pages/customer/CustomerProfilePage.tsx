@@ -303,9 +303,9 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
 }
 
 // --- Favorites Section ---
-function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: any; primary: string; fg: string; fontHeading: string }) {
+function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: Record<string, unknown> | null; primary: string; fg: string; fontHeading: string }) {
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
