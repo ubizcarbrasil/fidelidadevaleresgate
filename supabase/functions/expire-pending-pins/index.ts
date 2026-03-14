@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,13 +27,15 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const count = data?.length || 0;
-    console.log(`Expired ${count} pending redemptions`);
+    const log = createEdgeLogger("expire-pending-pins");
+    log.info("Expired pending redemptions", { count });
 
     return new Response(JSON.stringify({ expired: count }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Error expiring PINs:", err);
+    const errLog = createEdgeLogger("expire-pending-pins");
+    errLog.error("Error expiring PINs", { message: err.message });
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

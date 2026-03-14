@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,8 +35,9 @@ Deno.serve(async (req) => {
       .eq("offers.is_active", true)
       .eq("offers.status", "ACTIVE");
 
+    const log = createEdgeLogger("check-expiring-favorites");
     if (fetchError) {
-      console.error("Error fetching expiring favorites:", fetchError);
+      log.error("Error fetching expiring favorites", { error: fetchError.message });
       return new Response(JSON.stringify({ error: fetchError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -87,7 +89,7 @@ Deno.serve(async (req) => {
         .insert(notifications);
 
       if (insertError) {
-        console.error("Error inserting notifications:", insertError);
+        log.error("Error inserting notifications", { error: insertError.message });
       } else {
         insertedCount = notifications.length;
       }
@@ -117,9 +119,7 @@ Deno.serve(async (req) => {
         for (const sub of subscriptions) {
           const customerNotifs = notifByCustomer.get(sub.customer_id);
           if (customerNotifs) {
-            console.log(
-              `Would send push to ${sub.endpoint} for ${customerNotifs.length} notifications`
-            );
+            log.info("Would send push notification", { endpoint: sub.endpoint, count: customerNotifs.length });
             pushCount++;
           }
         }
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("Unexpected error:", err);
+    log.error("Unexpected error", { error: String(err) });
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,7 +34,8 @@ Deno.serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    console.log('Scraping product URL:', formattedUrl);
+    const log = createEdgeLogger("scrape-product");
+    log.info("Scraping product URL", { url: formattedUrl });
 
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -51,7 +53,7 @@ Deno.serve(async (req) => {
     const raw = await response.json();
 
     if (!response.ok) {
-      console.error('Firecrawl API error:', raw);
+      log.error("Firecrawl API error", { status: response.status, raw });
       return new Response(
         JSON.stringify({ success: false, error: raw.error || `Failed with status ${response.status}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -124,7 +126,7 @@ Deno.serve(async (req) => {
           }
         }
       } catch (e) {
-        console.error('Category matching error:', e);
+        log.error("Category matching error", { error: String(e) });
       }
     }
 
@@ -140,14 +142,15 @@ Deno.serve(async (req) => {
       category_name: matched_category_name,
     };
 
-    console.log('Extracted product:', JSON.stringify(product));
+    log.info("Extracted product", { product });
 
     return new Response(
       JSON.stringify({ success: true, product }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error scraping product:', error);
+    const errLog = createEdgeLogger("scrape-product");
+    errLog.error("Error scraping product", { message: error instanceof Error ? error.message : String(error) });
     const errorMessage = error instanceof Error ? error.message : 'Failed to scrape';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),

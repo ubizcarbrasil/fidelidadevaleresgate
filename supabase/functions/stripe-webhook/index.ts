@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,8 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    console.log("Stripe event:", event.type);
+    const log = createEdgeLogger("stripe-webhook");
+    log.info("Stripe event received", { type: event.type });
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -46,8 +48,8 @@ Deno.serve(async (req) => {
           })
           .eq("id", brandId);
 
-        if (error) console.error("Error updating brand:", error);
-        else console.log(`Brand ${brandId} activated via Stripe checkout`);
+        if (error) log.error("Error updating brand", { brandId, error });
+        else log.info("Brand activated via Stripe checkout", { brandId });
       }
     }
 
@@ -61,8 +63,8 @@ Deno.serve(async (req) => {
           .update({ subscription_status: "EXPIRED" })
           .eq("id", brandId);
 
-        if (error) console.error("Error expiring brand:", error);
-        else console.log(`Brand ${brandId} subscription expired`);
+        if (error) log.error("Error expiring brand", { brandId, error });
+        else log.info("Brand subscription expired", { brandId });
       }
     }
 
@@ -70,7 +72,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("stripe-webhook error:", error);
+    const errLog = createEdgeLogger("stripe-webhook");
+    errLog.error("stripe-webhook error", { message: error.message });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }

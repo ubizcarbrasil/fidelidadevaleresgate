@@ -25,11 +25,26 @@ import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
 
-// Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
+interface SectionDetail {
+  title: string | null;
+  subtitle: string | null;
+  banner_image_url?: string | null;
+  banner_height?: string;
+  templateType?: string;
+}
+
+interface SectionItem {
+  id: string;
+  name?: string;
+  title?: string;
+  [key: string]: unknown;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CustomerNavContextType {
   openOffer: (offer: any) => void;
   openStore: (store: any) => void;
-  openSectionDetail: (section: any, items: any[]) => void;
+  openSectionDetail: (section: SectionDetail, items: SectionItem[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
   navigateToTab: (tab: Tab) => void;
@@ -92,9 +107,10 @@ export default function CustomerLayout() {
   const { customer } = useCustomer();
   const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
-  const [sectionDetail, setSectionDetail] = useState<{ section: any; items: any[] } | null>(null);
+  const [sectionDetail, setSectionDetail] = useState<{ section: SectionDetail; items: SectionItem[] } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [ledgerOpen, setLedgerOpen] = useState(false);

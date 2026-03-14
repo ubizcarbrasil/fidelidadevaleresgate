@@ -74,16 +74,17 @@ export default function CustomerRedemptionsPage() {
 
   const counts = useMemo(() => {
     const c = { ALL: 0, PENDING: 0, USED: 0, EXPIRED: 0 };
-    redemptions.forEach((r: any) => {
+    redemptions.forEach((r) => {
       c.ALL++;
-      if (r.status in c) c[r.status as keyof typeof c]++;
+      const status = r.status as keyof typeof c;
+      if (status in c) c[status]++;
     });
     return c;
   }, [redemptions]);
 
   const filtered = useMemo(() => {
     let list = redemptions;
-    if (filter !== "ALL") list = list.filter((r: any) => r.status === filter);
+    if (filter !== "ALL") list = list.filter((r) => r.status === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((r: any) =>
@@ -177,7 +178,7 @@ export default function CustomerRedemptionsPage() {
           </div>
         ) : (
           <div className="px-5 space-y-4">
-            {filtered.map((r: any) => (
+            {filtered.map((r) => (
               <RedemptionCard
                 key={r.id}
                 r={r}
@@ -363,7 +364,7 @@ function RedemptionCard({
           </DetailInfoRow>
 
           {/* Cumulative */}
-          {(offer?.is_cumulative === false || snapshot?.is_cumulative === false) && (
+      {(offer?.is_cumulative === false || snapshot?.is_cumulative === false) && (
             <DetailInfoRow icon={<AlertTriangle className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
               Oferta <strong>não cumulativa</strong> com outras promoções
             </DetailInfoRow>

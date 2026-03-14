@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -599,7 +600,8 @@ Deno.serve(async (req) => {
     }
 
     // ─── 10. Create 40 demo stores with offers & catalogs ───────
-    console.log("Creating demo stores...");
+    const log = createEdgeLogger("provision-brand");
+    log.info("Creating demo stores...");
     for (const demo of DEMO_STORES) {
       const storeSlug = `${demo.slug}-${emailPrefix}`;
       const logoUrl = logo(demo.name, demo.color);
@@ -627,7 +629,7 @@ Deno.serve(async (req) => {
         }).select("id").single();
 
       if (storeErr) {
-        console.error(`Store ${demo.name}: ${storeErr.message}`);
+        log.error("Store creation failed", { name: demo.name, error: storeErr.message });
         continue;
       }
 
@@ -669,7 +671,7 @@ Deno.serve(async (req) => {
         }
       }
     }
-    console.log("Demo stores created successfully.");
+    log.info("Demo stores created successfully", { count: DEMO_STORES.length });
 
     // ─── 11. Store test accounts ────────────────────────────────
     const testAccounts = [
@@ -694,7 +696,8 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: any) {
-    console.error("provision-brand error:", err);
+    const errLog = createEdgeLogger("provision-brand");
+    errLog.error("provision-brand error", { message: err.message });
     return new Response(
       JSON.stringify({ error: err.message || "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
