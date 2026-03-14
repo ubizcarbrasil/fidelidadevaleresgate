@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     const rl = await checkRateLimit(rlSb, rlKey, { maxRequests: 30, windowSeconds: 60 });
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
   } catch (e) {
-    console.error("Rate limit check failed (allowing):", e);
+    createEdgeLogger("mobility-webhook").error("Rate limit check failed (allowing)", { error: String(e) });
   }
 
   try {
