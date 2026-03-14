@@ -211,7 +211,7 @@ export default function MachineIntegrationPage() {
           title: "Cidade ativada por URL!",
           description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine.",
         });
-        setUrlBasicUser(""); setUrlBasicPass(""); setUrlApiKey("");
+        setUrlBasicUser(""); setUrlBasicPass(""); setUrlApiKey(""); setUrlReceiptApiKey("");
       } else {
         toast({
           title: "Integração ativada!",
