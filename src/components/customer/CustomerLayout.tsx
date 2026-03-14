@@ -43,8 +43,8 @@ interface SectionItem {
 }
 
 interface CustomerNavContextType {
-  openOffer: (offer: OfferWithStore) => void;
-  openStore: (store: StoreRow) => void;
+  openOffer: (offer: NavOffer) => void;
+  openStore: (store: NavStore) => void;
   openSectionDetail: (section: SectionDetail, items: SectionItem[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
