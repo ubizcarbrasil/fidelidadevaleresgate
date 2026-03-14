@@ -42,10 +42,7 @@ interface BrandSection {
   }[];
 }
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+// hslToCss imported from @/lib/utils
 
 // --- Lazy Image Component ---
 function LazyImage({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
