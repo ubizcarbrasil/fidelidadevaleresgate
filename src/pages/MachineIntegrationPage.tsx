@@ -410,6 +410,23 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const deleteIntegrationMutation = useMutation({
+    mutationFn: async (integrationId: string) => {
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .delete()
+        .eq("id", integrationId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Conexão removida", description: "Agora você pode reconectar com novas credenciais." });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao remover", description: err.message, variant: "destructive" });
+    },
+  });
+
   const saveCallbackMutation = useMutation({
     mutationFn: async () => {
       if (!selectedIntegration?.id) throw new Error("Integration not found");
