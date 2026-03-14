@@ -33,7 +33,7 @@ function logAudit(
       changes_json: opts.changes || {},
     })
     .then(({ error }) => {
-      if (error) console.error("audit_log insert error:", error);
+      if (error) createEdgeLogger("machine-webhook").error("audit_log insert error", { error });
     });
 }
 
