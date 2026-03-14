@@ -137,6 +137,13 @@ export default function MachineIntegrationPage() {
       .eq("brand_id", currentBrandId)
       .order("created_at", { ascending: false }).limit(50)
       .then(({ data }: { data: RideEvent[] | null }) => { if (data) setLiveEvents(data); });
+
+    // Load initial notifications
+    (supabase as any)
+      .from("machine_ride_notifications").select("*")
+      .eq("brand_id", currentBrandId)
+      .order("created_at", { ascending: false }).limit(30)
+      .then(({ data }: { data: any[] | null }) => { if (data) setLiveNotifications(data); });
   }, [currentBrandId]);
 
   /* ── Realtime ── */
