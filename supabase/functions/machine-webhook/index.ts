@@ -174,12 +174,11 @@ async function processFinalized(
   // City-level credentials (used for V1 endpoint)
   const basicUser = (integration.basic_auth_user || "").trim();
   const basicPass = (integration.basic_auth_password || "").trim();
-  // Use receipt_api_key (dedicated key for Sales API) with fallback to api_key for backward compat
-  const receiptApiKey = (integration.receipt_api_key || integration.api_key || "").trim();
-  const hasValidReceiptKey = receiptApiKey && !receiptApiKey.startsWith("url-only-");
-  if (!hasValidReceiptKey) {
-    logger.error("Missing receipt_api_key on integration", { brandId });
-    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing: ["receipt_api_key"] } });
+  const cityApiKey = (integration.api_key || "").trim();
+  const hasValidCityKey = cityApiKey && !cityApiKey.startsWith("url-only-");
+  if (!hasValidCityKey) {
+    logger.error("Missing api_key on integration", { brandId });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing: ["api_key"] } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
@@ -189,11 +188,11 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "A chave da API de Vendas (receipt_api_key) não foi configurada. Acesse a configuração da integração e preencha o campo.", status: 400 };
+    return { error: "A api-key da cidade não foi configurada. Acesse a configuração da integração e preencha o campo.", status: 400 };
   }
 
   // Build city-level headers (used for V1 endpoint)
-  const cityHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+  const cityHeaders = buildApiHeaders(cityApiKey, basicUser, basicPass);
 
   // Build matrix-level headers for Recibo endpoint (headquarters credentials)
   const matrixApiKey = (integration.matrix_api_key || "").trim();
