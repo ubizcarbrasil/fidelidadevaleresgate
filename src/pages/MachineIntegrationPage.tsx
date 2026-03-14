@@ -51,6 +51,91 @@ type Integration = {
 
 type Branch = { id: string; name: string; city: string | null; state: string | null };
 
+/* ── Ride status map for diagnostics ── */
+const RIDE_STATUS_MAP: Record<string, { label: string; className: string }> = {
+  FINALIZED: { label: "Finalizada", className: "bg-primary/10 text-primary border-primary/30" },
+  API_ERROR: { label: "Erro API", className: "bg-destructive/10 text-destructive border-destructive/30" },
+  CREDENTIAL_ERROR: { label: "Erro Credencial", className: "bg-destructive/10 text-destructive border-destructive/30" },
+  NO_VALUE: { label: "Sem valor", className: "bg-yellow-500/10 text-yellow-700 border-yellow-300" },
+  PENDING: { label: "Pendente", className: "bg-muted text-muted-foreground border-border" },
+  ACCEPTED: { label: "Aceita", className: "bg-blue-500/10 text-blue-700 border-blue-300" },
+  IN_PROGRESS: { label: "Em andamento", className: "bg-indigo-500/10 text-indigo-700 border-indigo-300" },
+  CANCELLED: { label: "Cancelada", className: "bg-muted text-muted-foreground border-border" },
+  DENIED: { label: "Negada", className: "bg-muted text-muted-foreground border-border" },
+};
+
+function WebhookDiagnosticsCard({ brandId }: { brandId: string }) {
+  const { data: rides = [], isLoading } = useQuery({
+    queryKey: ["machine-rides-diag", brandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("machine_rides")
+        .select("id, machine_ride_id, ride_status, ride_value, points_credited, created_at, finalized_at")
+        .eq("brand_id", brandId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 30_000,
+  });
+
+  const hasErrors = rides.some((r: any) => ["API_ERROR", "CREDENTIAL_ERROR"].includes(r.ride_status));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Activity className="h-4 w-4 text-primary" />
+          Diagnóstico do Webhook
+          {hasErrors && <AlertTriangle className="h-4 w-4 text-destructive" />}
+        </CardTitle>
+        <CardDescription>Últimas 10 corridas processadas — resultado final de cada uma.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-80">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <span className="text-sm">Carregando...</span>
+            </div>
+          ) : rides.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Activity className="h-8 w-8 mb-2 opacity-40" />
+              <p className="text-sm">Nenhuma corrida processada ainda.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {rides.map((r: any) => {
+                const st = RIDE_STATUS_MAP[r.ride_status] || { label: r.ride_status, className: "bg-muted text-muted-foreground border-border" };
+                const isError = ["API_ERROR", "CREDENTIAL_ERROR"].includes(r.ride_status);
+                return (
+                  <div key={r.id} className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm ${isError ? "border-destructive/30 bg-destructive/5" : "border-border"}`}>
+                    <Badge variant="outline" className={`text-xs shrink-0 ${st.className}`}>
+                      {isError && <AlertTriangle className="h-3 w-3 mr-1" />}
+                      {st.label}
+                    </Badge>
+                    <span className="font-mono text-xs text-muted-foreground">#{r.machine_ride_id}</span>
+                    {r.ride_value != null && (
+                      <span className="text-xs text-muted-foreground">R$ {Number(r.ride_value).toFixed(2)}</span>
+                    )}
+                    {r.points_credited > 0 && (
+                      <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">{r.points_credited} pts</Badge>
+                    )}
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════════ */
 
 export default function MachineIntegrationPage() {
