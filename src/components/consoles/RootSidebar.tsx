@@ -135,6 +135,11 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { key: "sidebar.kit_inicial", defaultTitle: "Kit Inicial", url: "/starter-kit", icon: PackageSearch },
       { key: "sidebar.teste_webhook", defaultTitle: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical },
+      { key: "sidebar.machine", defaultTitle: "TaxiMachine", url: "/machine-integration", icon: Zap },
+      { key: "sidebar.configuracoes", defaultTitle: "Configurações da Marca", url: "/brand-settings", icon: Settings2 },
+      { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key },
+      { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
+      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
     ],
   },
 ];
