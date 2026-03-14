@@ -274,6 +274,29 @@ export default function MachineIntegrationPage() {
         </CardContent>
       </Card>
 
+      {/* Webhook URL Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">URL do Webhook</CardTitle>
+          <CardDescription>
+            Cole esta URL na sua plataforma de mobilidade para receber eventos de corrida em tempo real.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all">
+              {webhookUrl}
+            </code>
+            <Button variant="outline" size="icon" onClick={handleCopy}>
+              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Autenticação: header <code className="bg-muted px-1 rounded">x-api-secret</code> com a API Key configurada, ou campo <code className="bg-muted px-1 rounded">brand_id</code> no body.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Info Card */}
       <Card>
         <CardHeader>
@@ -282,9 +305,10 @@ export default function MachineIntegrationPage() {
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>1. Insira suas credenciais da API TaxiMachine acima.</p>
           <p>2. Ao ativar, registramos um webhook na TaxiMachine para receber eventos de corrida.</p>
-          <p>3. Quando uma corrida é finalizada (status "F"), o sistema busca o recibo automaticamente.</p>
-          <p>4. Se o passageiro tiver CPF cadastrado na sua base de clientes, os pontos são creditados.</p>
-          <p>5. Regra de pontos: <strong>1 Real = 1 ponto</strong> (arredondado para baixo).</p>
+          <p>3. Todos os eventos de status são registrados em tempo real (P, A, S, C, N, F).</p>
+          <p>4. Quando uma corrida é finalizada (status "F"), o sistema busca o recibo e credita pontos.</p>
+          <p>5. Se o passageiro tiver CPF cadastrado, os pontos são creditados automaticamente.</p>
+          <p>6. Regra de pontos: <strong>1 Real = 1 ponto</strong> (arredondado para baixo).</p>
           <p className="text-xs">Exemplo: Corrida de R$ 15,80 → 15 pontos.</p>
         </CardContent>
       </Card>
