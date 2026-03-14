@@ -39,7 +39,7 @@ interface Props {
   offer: OfferWithStore;
   onBack: () => void;
   onOfferClick?: (offer: OfferWithStore) => void;
-  onOpenStore?: (store: any) => void;
+  onOpenStore?: (store: Tables<"stores">) => void;
 }
 
 export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, onOpenStore }: Props) {
