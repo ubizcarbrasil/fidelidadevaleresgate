@@ -193,10 +193,7 @@ async function processFinalized(
   }
 
   // Build headers: api-key is required; Basic Auth is optional
-  const receiptHeaders: Record<string, string> = { "api-key": receiptApiKey };
-  if (basicUser && basicPass) {
-    receiptHeaders["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
-  }
+  const receiptHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
 
   logger.info("TaxiMachine auth config", {
     brandId,
@@ -206,49 +203,31 @@ async function processFinalized(
     receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
   });
 
-  const machineBaseUrl = "https://api-vendas.taximachine.com.br";
-  const receiptUrl = `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl });
+  // Dual-endpoint fetch: recibo first, then v1/request as fallback + phone enrichment
+  const rideResult = await fetchRideData(receiptHeaders, machineRideId);
 
-  const receiptRes = await fetch(receiptUrl, {
-    headers: receiptHeaders,
-  });
+  if (!rideResult.ok) {
+    logger.error("TaxiMachine fetch failed", { machineRideId, error: rideResult.error });
+    logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { error: rideResult.error, status: rideResult.status } });
 
-  if (!receiptRes.ok) {
-    const receiptBody = await receiptRes.text();
-    logger.error("TaxiMachine recibo error", { status: receiptRes.status, body: receiptBody });
-    logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
-
-    // Register ride anyway so we don't lose the event
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
       machine_ride_id: machineRideId,
-      ride_status: "API_ERROR",
+      ride_status: rideResult.status === 401 ? "CREDENTIAL_ERROR" : "API_ERROR",
       ride_value: 0,
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
 
-    if (receiptRes.status === 401) {
+    if (rideResult.status === 401) {
       return { error: "Credenciais TaxiMachine inválidas. Verifique a api-key na configuração da integração.", status: 400 };
     }
-    return { error: "Failed to fetch receipt from TaxiMachine", status: 502 };
+    return { error: rideResult.error, status: 502 };
   }
 
-  const receiptJson = await receiptRes.json();
-  const receiptData = receiptJson?.response || receiptJson;
-
-  const rideValue = Number(receiptData?.dados_solicitacao?.valor || 0);
-
-  // Extract client info from receipt
-  const clienteBlock = receiptData?.cliente || {};
-  const passengerCpf = (clienteBlock.cpf || "").replace(/\D/g, "") || null;
-  const passengerName: string | null = clienteBlock.nome || null;
-  const passengerPhone: string | null = clienteBlock.telefone || clienteBlock.phone || null;
-
-  // Extract driver info
-  const condutorBlock = receiptData?.condutor || {};
+  const { rideValue, passengerName, passengerCpf, passengerPhone, driverName, source } = rideResult.data;
+  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone });
 
   if (rideValue <= 0) {
     await sb.from("machine_rides").upsert({
@@ -261,7 +240,7 @@ async function processFinalized(
       passenger_cpf: passengerCpf,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    logAudit(sb, "MACHINE_RIDE_NO_VALUE", { brandId, entityId: machineRideId, ip, details: { ride_value: 0 } });
+    logAudit(sb, "MACHINE_RIDE_NO_VALUE", { brandId, entityId: machineRideId, ip, details: { ride_value: 0, source } });
     return { data: { message: "Ride has no value", machine_ride_id: machineRideId, points_credited: 0 } };
   }
 
