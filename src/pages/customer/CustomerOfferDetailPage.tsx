@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 type Offer = Tables<"offers">;
 
