@@ -436,7 +436,9 @@ export default function CustomerLayout() {
         {/* Emissoras List Overlay */}
         <AnimatePresence>
           {emissorasOpen && (
-            <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+            <Suspense fallback={<TabSkeleton />}>
+              <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+            </Suspense>
           )}
         </AnimatePresence>
 
