@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.register-machine-webhook]
 verify_jwt = false
+
+[functions.send-telegram-ride-notification]
+verify_jwt = false
