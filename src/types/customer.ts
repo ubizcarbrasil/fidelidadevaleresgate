@@ -57,19 +57,20 @@ export interface RedemptionWithOffer {
 /**
  * Lightweight types for navigation context.
  * Components pass partial objects — these define the minimum contract.
+ * Using Record<string, unknown> intersection to accept any object with at least `id`.
  */
-export interface NavOffer {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface NavOffer extends Record<string, unknown> {
   id: string;
   title?: string;
   image_url?: string | null;
   store_id?: string;
   stores?: { name: string; logo_url: string | null } | null;
-  [key: string]: unknown;
 }
 
-export interface NavStore {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface NavStore extends Record<string, unknown> {
   id: string;
   name?: string;
   logo_url?: string | null;
-  [key: string]: unknown;
 }
