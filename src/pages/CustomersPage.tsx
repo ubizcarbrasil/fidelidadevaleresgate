@@ -61,9 +61,9 @@ export default function CustomersPage() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { name: form.name, phone: form.phone || null, brand_id: form.brand_id, branch_id: form.branch_id };
-      if (editId) { const { error } = await supabase.from("customers").update(payload).eq("id", editId); if (error) throw error; }
-      else { const { error } = await supabase.from("customers").insert(payload); if (error) throw error; }
+      const payload: any = { name: form.name, phone: form.phone || null, brand_id: form.brand_id, branch_id: form.branch_id, cpf: form.cpf || null, email: form.email || null };
+      if (editId) { const { error } = await (supabase as any).from("customers").update(payload).eq("id", editId); if (error) throw error; }
+      else { const { error } = await (supabase as any).from("customers").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
