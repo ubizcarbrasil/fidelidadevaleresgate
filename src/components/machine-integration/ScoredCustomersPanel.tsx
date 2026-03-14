@@ -98,7 +98,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
           email: c.user_id ? emailMap[c.user_id] || null : null,
           total_ride_points: c.cpf ? ridePointsByCpf[c.cpf] || 0 : 0,
         }))
-        .filter((c: ScoredCustomer) => c.total_ride_points > 0 || debouncedSearch.trim());
+        .filter((c: ScoredCustomer) => c.total_ride_points > 0 || debouncedSearch.trim()) as ScoredCustomer[];
     },
     enabled: !!brandId,
   });
