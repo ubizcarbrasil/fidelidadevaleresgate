@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
           }
         }
       } catch (e) {
-        console.error('Category matching error:', e);
+        log.error("Category matching error", { error: String(e) });
       }
     }
 
