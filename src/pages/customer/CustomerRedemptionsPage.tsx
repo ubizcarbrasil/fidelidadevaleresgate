@@ -211,7 +211,7 @@ export default function CustomerRedemptionsPage() {
           <div className="px-5 space-y-4">
             {filtered.map((r) => (
               <RedemptionCard
-                key={r.id}
+                key={r.id as string}
                 r={r}
                 primary={primary}
                 fg={fg}
