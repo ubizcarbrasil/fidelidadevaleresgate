@@ -49,6 +49,9 @@ type Integration = {
   total_rides: number; total_points: number;
   callback_url: string | null; created_at: string; updated_at: string;
   preferred_endpoint?: string;
+  matrix_api_key?: string | null;
+  matrix_basic_auth_user?: string | null;
+  matrix_basic_auth_password?: string | null;
 };
 
 type Branch = { id: string; name: string; city: string | null; state: string | null };
@@ -204,6 +207,12 @@ export default function MachineIntegrationPage() {
   const [matrixBasicUser, setMatrixBasicUser] = useState("");
   const [matrixBasicPass, setMatrixBasicPass] = useState("");
   const [showMatrixPass, setShowMatrixPass] = useState(false);
+  const [selectedMatrixApiKey, setSelectedMatrixApiKey] = useState("");
+  const [selectedShowMatrixApiKey, setSelectedShowMatrixApiKey] = useState(false);
+  const [selectedMatrixBasicUser, setSelectedMatrixBasicUser] = useState("");
+  const [selectedMatrixBasicPass, setSelectedMatrixBasicPass] = useState("");
+  const [selectedShowMatrixPass, setSelectedShowMatrixPass] = useState(false);
+  const [matrixSaved, setMatrixSaved] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const [activatingBranchId, setActivatingBranchId] = useState<string>("");
   const [urlBranchId, setUrlBranchId] = useState<string>("");
@@ -270,7 +279,17 @@ export default function MachineIntegrationPage() {
   useEffect(() => {
     if (selectedIntegration?.callback_url !== undefined) setCallbackUrl(selectedIntegration?.callback_url || "");
     setTelegramChatId((selectedIntegration as any)?.telegram_chat_id || "");
-  }, [selectedIntegration?.callback_url, (selectedIntegration as any)?.telegram_chat_id]);
+    setSelectedMatrixApiKey(selectedIntegration?.matrix_api_key || "");
+    setSelectedMatrixBasicUser(selectedIntegration?.matrix_basic_auth_user || "");
+    setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
+  }, [
+    selectedIntegration?.id,
+    selectedIntegration?.callback_url,
+    (selectedIntegration as any)?.telegram_chat_id,
+    selectedIntegration?.matrix_api_key,
+    selectedIntegration?.matrix_basic_auth_user,
+    selectedIntegration?.matrix_basic_auth_password,
+  ]);
 
   /* ── Initial events ── */
   useEffect(() => {
@@ -404,6 +423,30 @@ export default function MachineIntegrationPage() {
       setCallbackSaved(true);
       setTimeout(() => setCallbackSaved(false), 2000);
       toast({ title: "URL de retorno salva!" });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const saveMatrixMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .update({
+          matrix_api_key: selectedMatrixApiKey || null,
+          matrix_basic_auth_user: selectedMatrixBasicUser || null,
+          matrix_basic_auth_password: selectedMatrixBasicPass || null,
+        })
+        .eq("id", selectedIntegration.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setMatrixSaved(true);
+      setTimeout(() => setMatrixSaved(false), 2000);
+      toast({ title: "Credenciais da matriz salvas!" });
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
     onError: (err: any) => {
@@ -656,6 +699,44 @@ export default function MachineIntegrationPage() {
                   />
                   <Button variant="outline" size="icon" onClick={() => saveCallbackMutation.mutate()} disabled={saveCallbackMutation.isPending}>
                     {callbackSaved ? <Check className="h-4 w-4 text-primary" /> : saveCallbackMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Matrix Credentials */}
+              <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Credenciais da Matriz (Recibo)</Label>
+                <Input
+                  value={selectedMatrixBasicUser}
+                  onChange={(e) => setSelectedMatrixBasicUser(e.target.value)}
+                  placeholder="Usuário Basic Auth da Matriz"
+                />
+                <div className="relative">
+                  <Input
+                    type={selectedShowMatrixPass ? "text" : "password"}
+                    value={selectedMatrixBasicPass}
+                    onChange={(e) => setSelectedMatrixBasicPass(e.target.value)}
+                    placeholder="Senha Basic Auth da Matriz"
+                  />
+                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSelectedShowMatrixPass(!selectedShowMatrixPass)}>
+                    {selectedShowMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={selectedShowMatrixApiKey ? "text" : "password"}
+                    value={selectedMatrixApiKey}
+                    onChange={(e) => setSelectedMatrixApiKey(e.target.value)}
+                    placeholder="api-key da Matriz"
+                  />
+                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSelectedShowMatrixApiKey(!selectedShowMatrixApiKey)}>
+                    {selectedShowMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={() => saveMatrixMutation.mutate()} disabled={saveMatrixMutation.isPending}>
+                    {matrixSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveMatrixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar matriz
                   </Button>
                 </div>
               </div>
