@@ -337,6 +337,12 @@ export default function MachineIntegrationPage() {
       if (resolvedApiKey) body.api_key = resolvedApiKey;
       const resolvedReceiptKey = isUrlOnly ? urlReceiptApiKey : receiptApiKey;
       if (resolvedReceiptKey) body.receipt_api_key = resolvedReceiptKey;
+      // Matrix credentials (only from credentials tab)
+      if (!isUrlOnly) {
+        if (matrixApiKey) body.matrix_api_key = matrixApiKey;
+        if (matrixBasicUser) body.matrix_basic_auth_user = matrixBasicUser;
+        if (matrixBasicPass) body.matrix_basic_auth_password = matrixBasicPass;
+      }
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

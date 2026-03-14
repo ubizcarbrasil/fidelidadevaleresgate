@@ -167,21 +167,24 @@ Deno.serve(async (req) => {
     }
 
     // Upsert integration record — unique per (brand_id, branch_id)
+    const upsertData: Record<string, any> = {
+      brand_id,
+      branch_id,
+      api_key: effectiveApiKey,
+      receipt_api_key: receipt_api_key || null,
+      basic_auth_user,
+      basic_auth_password,
+      webhook_registered: webhookRegistered,
+      is_active: true,
+    };
+    // Include matrix credentials if provided
+    if (matrix_api_key !== undefined) upsertData.matrix_api_key = matrix_api_key || null;
+    if (matrix_basic_auth_user !== undefined) upsertData.matrix_basic_auth_user = matrix_basic_auth_user || null;
+    if (matrix_basic_auth_password !== undefined) upsertData.matrix_basic_auth_password = matrix_basic_auth_password || null;
+
     const { error: upsertErr } = await sb
       .from("machine_integrations")
-      .upsert(
-        {
-          brand_id,
-          branch_id,
-          api_key: effectiveApiKey,
-          receipt_api_key: receipt_api_key || null,
-          basic_auth_user,
-          basic_auth_password,
-          webhook_registered: webhookRegistered,
-          is_active: true,
-        },
-        { onConflict: "brand_id,branch_id" }
-      );
+      .upsert(upsertData, { onConflict: "brand_id,branch_id" });
 
     if (upsertErr) {
       createEdgeLogger("register-machine-webhook").error("Upsert error", { error: upsertErr });
