@@ -109,7 +109,7 @@ export default function CustomerRedemptionsPage() {
     redemptions.forEach((r) => {
       c.ALL++;
       const status = r.status as keyof typeof c;
-      if (status in c) c[status]++;
+      if (status in c) c[status as keyof typeof c]++;
     });
     return c;
   }, [redemptions]);
