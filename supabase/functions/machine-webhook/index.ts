@@ -247,6 +247,36 @@ async function processFinalized(
     },
   });
 
+  // Fire callback URL if configured (fire-and-forget)
+  if (pointsCredited && integration.callback_url) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      fetch(integration.callback_url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          event: "points_credited",
+          machine_ride_id: machineRideId,
+          ride_value: rideValue,
+          points,
+          cpf_masked: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
+          customer_id: customerId,
+          brand_id: brandId,
+          timestamp: new Date().toISOString(),
+        }),
+      })
+        .then(() => clearTimeout(timeout))
+        .catch((e) => {
+          clearTimeout(timeout);
+          logger.error("Callback URL error", { url: integration.callback_url, error: String(e) });
+        });
+    } catch (e) {
+      logger.error("Callback URL setup error", { error: String(e) });
+    }
+  }
+
   return {
     data: {
       success: true,
