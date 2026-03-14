@@ -193,7 +193,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
         branch_id: selectedBranch.id,
         status: "PENDING",
         customer_cpf: cpf.replace(/\D/g, ""),
-        offer_snapshot_json: offerSnapshot as any,
+        offer_snapshot_json: offerSnapshot as Record<string, unknown>,
         purchase_value: parsedProductValue || null,
         credit_value_applied: creditApplied || null,
       }).select("id, token").single();
