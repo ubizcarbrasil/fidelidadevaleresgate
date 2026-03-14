@@ -67,6 +67,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const isDark = document.documentElement.classList.contains("dark");
   const accentOrWhite = isDark ? "hsl(var(--foreground))" : primary;
+  const { formatDetail, formatSubtitle } = useOfferCardConfig();
 
   // Fetch similar offers
   useEffect(() => {
