@@ -484,7 +484,7 @@ Deno.serve(async (req) => {
     .single();
 
   if (eventErr) {
-    console.error("earning_events insert error:", eventErr);
+    createEdgeLogger("earn-webhook").error("earning_events insert error", { error: eventErr });
     logAudit("EARN_WEBHOOK_ERROR", {
       brandId,
       details: { reason: "earning_events insert failed", error: eventErr.message, store_id, customer_id: customer.id, api_key_id: keyRow.id },
