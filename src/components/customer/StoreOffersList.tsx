@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import SafeImage from "@/components/customer/SafeImage";
 import type { Tables } from "@/integrations/supabase/types";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 type Offer = Tables<"offers">;
 
