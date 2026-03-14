@@ -134,7 +134,7 @@ export default function ForYouSection() {
             <div className="relative h-28 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
               {o.image_url || o.stores?.logo_url ? (
                 <img
-                  src={o.image_url || o.stores?.logo_url}
+                  src={o.image_url || o.stores?.logo_url || undefined}
                   alt={o.title}
                   className="h-28 w-full object-cover"
                   loading="lazy"
