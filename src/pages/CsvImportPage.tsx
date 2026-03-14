@@ -136,6 +136,20 @@ function validateMappedRow(row: Record<string, string>, idx: number, importType:
     if (row.start_at && isNaN(Date.parse(row.start_at))) errors.push({ row: rowNum, field: "start_at", message: "Data inválida" });
     if (row.end_at && isNaN(Date.parse(row.end_at))) errors.push({ row: rowNum, field: "end_at", message: "Data inválida" });
   }
+  if (importType === "COUPONS") {
+    if (!row.code?.trim()) errors.push({ row: rowNum, field: "code", message: "Código é obrigatório" });
+    else if (!/^[A-Z0-9]{4,16}$/.test(row.code.trim().toUpperCase())) errors.push({ row: rowNum, field: "code", message: "Código deve ter 4-16 caracteres (A-Z, 0-9)" });
+    if (!row.store_name?.trim() && !row.store_slug?.trim()) errors.push({ row: rowNum, field: "store_name", message: "store_name ou store_slug é obrigatório" });
+    const typeVal = row.type?.trim().toUpperCase();
+    if (!typeVal || !["PERCENT", "FIXED"].includes(typeVal)) errors.push({ row: rowNum, field: "type", message: "Tipo deve ser PERCENT ou FIXED" });
+    if (!row.value?.trim() || isNaN(Number(row.value)) || Number(row.value) < 0) errors.push({ row: rowNum, field: "value", message: "Valor deve ser numérico e positivo" });
+    if (!row.expires_at?.trim()) errors.push({ row: rowNum, field: "expires_at", message: "Data de expiração é obrigatória" });
+    else if (!parseBrDate(row.expires_at)) errors.push({ row: rowNum, field: "expires_at", message: "Data de expiração inválida" });
+    if (row.status?.trim()) {
+      const st = row.status.trim().toUpperCase();
+      if (!["ACTIVE", "INACTIVE", "EXPIRED"].includes(st)) errors.push({ row: rowNum, field: "status", message: "Status deve ser ACTIVE, INACTIVE ou EXPIRED" });
+    }
+  }
   if (importType === "CUSTOMERS") {
     if (row.points_balance && isNaN(Number(row.points_balance))) errors.push({ row: rowNum, field: "points_balance", message: "Deve ser numérico" });
     if (row.money_balance && isNaN(Number(row.money_balance))) errors.push({ row: rowNum, field: "money_balance", message: "Deve ser numérico" });
