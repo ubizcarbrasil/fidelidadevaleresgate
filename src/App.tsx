@@ -101,6 +101,7 @@ const PartnerLandingPage = lazy(() => import("@/pages/PartnerLandingPage"));
 const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfigPage"));
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
+const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
@@ -174,6 +175,7 @@ function AppRoutes() {
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
           <Route path="store-approvals" element={<StoreApprovalsPage />} />
           <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
+          <Route path="affiliate-deals/import-mobile" element={<AchadinhosMobileImportPage />} />
           <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="stores"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ReportsPage />} />

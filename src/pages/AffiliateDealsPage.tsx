@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { Loader2, Wand2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Loader2, Wand2, Smartphone } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ const newDraft = (): DealDraft => ({
 });
 
 export default function AffiliateDealsPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
@@ -352,9 +354,15 @@ export default function AffiliateDealsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Achadinhos</h2>
-        <p className="text-muted-foreground">Gerencie ofertas de afiliados do marketplace</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Achadinhos</h2>
+          <p className="text-muted-foreground">Gerencie ofertas de afiliados do marketplace</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => navigate("/affiliate-deals/import-mobile")}>
+          <Smartphone className="h-4 w-4 mr-2" />
+          Importar pelo Celular
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
