@@ -2358,6 +2358,51 @@ export type Database = {
           },
         ]
       }
+      machine_ride_events: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          machine_ride_id: string
+          raw_payload: Json
+          status_code: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          machine_ride_id: string
+          raw_payload?: Json
+          status_code: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          machine_ride_id?: string
+          raw_payload?: Json
+          status_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_ride_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_ride_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machine_rides: {
         Row: {
           brand_id: string

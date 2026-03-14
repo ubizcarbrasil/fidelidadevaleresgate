@@ -8,13 +8,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-api-key, x-api-secret",
 };
 
+const logger = createEdgeLogger("machine-webhook");
+
+const STATUS_MAP: Record<string, string> = {
+  P: "PENDING",
+  A: "ACCEPTED",
+  S: "IN_PROGRESS",
+  F: "FINALIZED",
+  C: "CANCELLED",
+  N: "DENIED",
+};
+
 function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
-
 
 function logAudit(
   sb: ReturnType<typeof createClient>,
@@ -33,8 +43,219 @@ function logAudit(
       changes_json: opts.changes || {},
     })
     .then(({ error }) => {
-      if (error) createEdgeLogger("machine-webhook").error("audit_log insert error", { error });
+      if (error) logger.error("audit_log insert error", { error });
     });
+}
+
+async function findIntegration(sb: ReturnType<typeof createClient>, req: Request, body: Record<string, unknown>) {
+  const apiSecret = req.headers.get("x-api-secret");
+  if (apiSecret) {
+    const { data } = await sb
+      .from("machine_integrations")
+      .select("*")
+      .eq("api_key", apiSecret)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    return data;
+  }
+  if (body.brand_id) {
+    const { data } = await sb
+      .from("machine_integrations")
+      .select("*")
+      .eq("brand_id", body.brand_id)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    return data;
+  }
+  return null;
+}
+
+async function processFinalized(
+  sb: ReturnType<typeof createClient>,
+  integration: any,
+  brandId: string,
+  machineRideId: string,
+  ip: string
+) {
+  // Call TaxiMachine API to get ride details
+  const basicAuth = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
+  const machineBaseUrl = "https://api.taximachine.com.br";
+
+  // Fetch status and receipt in parallel
+  const [statusRes, receiptRes] = await Promise.all([
+    fetch(`${machineBaseUrl}/api/integracao/solicitacaoStatus?id_mch=${machineRideId}`, {
+      headers: { Authorization: `Basic ${basicAuth}` },
+    }),
+    fetch(`${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`, {
+      headers: { Authorization: `Basic ${basicAuth}` },
+    }),
+  ]);
+
+  if (!statusRes.ok) {
+    logger.error("TaxiMachine solicitacaoStatus error", { body: await statusRes.text() });
+    logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
+    return { error: "Failed to fetch ride status from TaxiMachine", status: 502 };
+  }
+  if (!receiptRes.ok) {
+    logger.error("TaxiMachine recibo error", { body: await receiptRes.text() });
+    logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
+    return { error: "Failed to fetch receipt from TaxiMachine", status: 502 };
+  }
+
+  const [statusData, receiptData] = await Promise.all([statusRes.json(), receiptRes.json()]);
+
+  const rideValue = Number(
+    receiptData?.dados_solicitacao?.valor ||
+    receiptData?.valor ||
+    statusData?.dados_solicitacao?.valor ||
+    0
+  );
+
+  if (rideValue <= 0) {
+    await sb.from("machine_rides").upsert({
+      brand_id: brandId,
+      machine_ride_id: machineRideId,
+      ride_value: 0,
+      ride_status: "NO_VALUE",
+      points_credited: 0,
+      finalized_at: new Date().toISOString(),
+    }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
+    logAudit(sb, "MACHINE_RIDE_NO_VALUE", { brandId, entityId: machineRideId, ip, details: { ride_value: 0 } });
+    return { data: { message: "Ride has no value", machine_ride_id: machineRideId, points_credited: 0 } };
+  }
+
+  const passengerCpf = (
+    statusData?.cliente?.cpf ||
+    statusData?.dados_solicitacao?.cpf_passageiro ||
+    receiptData?.cliente?.cpf ||
+    ""
+  ).replace(/\D/g, "");
+
+  const points = Math.floor(rideValue);
+
+  await sb.from("machine_rides").upsert({
+    brand_id: brandId,
+    machine_ride_id: machineRideId,
+    passenger_cpf: passengerCpf || null,
+    ride_value: rideValue,
+    ride_status: "FINALIZED",
+    points_credited: points,
+    finalized_at: new Date().toISOString(),
+  }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
+
+  // Credit points if CPF found
+  let pointsCredited = false;
+  let customerId: string | null = null;
+
+  if (passengerCpf && points > 0) {
+    let customer: any = null;
+
+    const { data: existing } = await sb
+      .from("customers")
+      .select("id, branch_id, points_balance")
+      .eq("brand_id", brandId)
+      .eq("cpf", passengerCpf)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      customer = existing;
+    } else {
+      const { data: branch } = await sb
+        .from("branches")
+        .select("id")
+        .eq("brand_id", brandId)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (branch) {
+        const customerName = `Passageiro •••${passengerCpf.slice(-4)}`;
+        const { data: created } = await sb
+          .from("customers")
+          .insert({
+            brand_id: brandId,
+            branch_id: branch.id,
+            cpf: passengerCpf,
+            name: customerName,
+            points_balance: 0,
+            money_balance: 0,
+          })
+          .select("id, branch_id, points_balance")
+          .single();
+
+        if (created) {
+          customer = created;
+          logAudit(sb, "MACHINE_CUSTOMER_CREATED", {
+            brandId,
+            entityId: created.id,
+            ip,
+            details: { cpf_masked: `***${passengerCpf.slice(-4)}`, branch_id: branch.id },
+          });
+        }
+      }
+    }
+
+    if (customer) {
+      customerId = customer.id;
+      await sb.from("points_ledger").insert({
+        brand_id: brandId,
+        branch_id: customer.branch_id,
+        customer_id: customer.id,
+        points,
+        type: "EARN",
+        source: "MACHINE_RIDE",
+        description: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
+        reference_id: machineRideId,
+      });
+
+      await sb
+        .from("customers")
+        .update({ points_balance: (customer.points_balance || 0) + points })
+        .eq("id", customer.id);
+
+      pointsCredited = true;
+    }
+  }
+
+  // Update integration counters
+  const { error: updateErr } = await sb
+    .from("machine_integrations")
+    .update({
+      total_rides: integration.total_rides + 1,
+      total_points: integration.total_points + (pointsCredited ? points : 0),
+      last_ride_processed_at: new Date().toISOString(),
+    })
+    .eq("id", integration.id);
+
+  if (updateErr) logger.error("Update integration counters error", { error: updateErr });
+
+  logAudit(sb, "MACHINE_RIDE_PROCESSED", {
+    brandId,
+    entityId: machineRideId,
+    ip,
+    details: {
+      ride_value: rideValue,
+      points,
+      points_credited: pointsCredited,
+      customer_id: customerId,
+      passenger_cpf: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
+    },
+  });
+
+  return {
+    data: {
+      success: true,
+      machine_ride_id: machineRideId,
+      ride_value: rideValue,
+      points_credited: pointsCredited ? points : 0,
+      customer_found: pointsCredited,
+    },
+  };
 }
 
 Deno.serve(async (req) => {
@@ -67,42 +288,16 @@ Deno.serve(async (req) => {
       return json({ error: "Missing request_id or status_code" }, 400);
     }
 
-    // Only process finalized rides
-    if (status_code !== "F") {
-      logAudit(sb, "MACHINE_WEBHOOK_IGNORED", { ip, details: { request_id, status_code, reason: "not_finalized" } });
-      return json({ message: "Ignored non-finalized event", status_code });
-    }
-
-    // Find the integration config
-    const apiSecret = req.headers.get("x-api-secret");
-    let integration: any = null;
-
-    if (apiSecret) {
-      const { data } = await sb
-        .from("machine_integrations")
-        .select("*")
-        .eq("api_key", apiSecret)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-      integration = data;
-    } else if (bodyBrandId) {
-      const { data } = await sb
-        .from("machine_integrations")
-        .select("*")
-        .eq("brand_id", bodyBrandId)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-      integration = data;
-    }
-
+    // Find integration
+    const integration = await findIntegration(sb, req, body);
     if (!integration) {
       logAudit(sb, "MACHINE_WEBHOOK_AUTH_FAILED", { ip, details: { request_id, reason: "integration_not_found" } });
       return json({ error: "Integration not found or inactive" }, 401);
     }
 
     const brandId = integration.brand_id;
+    const machineRideId = String(request_id);
+    const mappedStatus = STATUS_MAP[status_code] || status_code;
 
     // Update last_webhook_at
     sb.from("machine_integrations")
@@ -110,207 +305,56 @@ Deno.serve(async (req) => {
       .eq("id", integration.id)
       .then();
 
+    // 1. Always log the event for real-time tracking
+    await sb.from("machine_ride_events").insert({
+      brand_id: brandId,
+      machine_ride_id: machineRideId,
+      status_code,
+      raw_payload: body,
+      ip_address: ip,
+    });
+
+    logAudit(sb, "MACHINE_WEBHOOK_RECEIVED", { brandId, entityId: machineRideId, ip, details: { status_code, mapped: mappedStatus } });
+
+    // 2. Upsert ride status (for non-finalized, just track status)
+    if (status_code !== "F") {
+      await sb.from("machine_rides").upsert({
+        brand_id: brandId,
+        machine_ride_id: machineRideId,
+        ride_status: mappedStatus,
+        ride_value: 0,
+        points_credited: 0,
+      }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
+
+      return json({
+        success: true,
+        machine_ride_id: machineRideId,
+        status: mappedStatus,
+        message: "Event recorded",
+      });
+    }
+
+    // 3. Finalized ride — full processing with points
     // Anti-duplication check
-    const machineRideId = String(request_id);
     const { data: existing } = await sb
       .from("machine_rides")
-      .select("id")
+      .select("id, ride_status")
       .eq("brand_id", brandId)
       .eq("machine_ride_id", machineRideId)
       .maybeSingle();
 
-    if (existing) {
-      logAudit(sb, "MACHINE_RIDE_DUPLICATE", { brandId, entityId: machineRideId, ip, details: { reason: "already_processed" } });
+    if (existing?.ride_status === "FINALIZED") {
+      logAudit(sb, "MACHINE_RIDE_DUPLICATE", { brandId, entityId: machineRideId, ip, details: { reason: "already_finalized" } });
       return json({ message: "Ride already processed", machine_ride_id: machineRideId });
     }
 
-    logAudit(sb, "MACHINE_WEBHOOK_RECEIVED", { brandId, entityId: machineRideId, ip, details: { status_code } });
-
-    // Call TaxiMachine API to get ride details
-    const basicAuth = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
-    const machineBaseUrl = "https://api.taximachine.com.br";
-
-    // 1. Get ride status
-    const statusRes = await fetch(
-      `${machineBaseUrl}/api/integracao/solicitacaoStatus?id_mch=${machineRideId}`,
-      { headers: { Authorization: `Basic ${basicAuth}` } }
-    );
-    if (!statusRes.ok) {
-      const errText = await statusRes.text();
-      createEdgeLogger("machine-webhook").error("TaxiMachine solicitacaoStatus error", { body: errText });
-      logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
-      return json({ error: "Failed to fetch ride status from TaxiMachine" }, 502);
+    const result = await processFinalized(sb, integration, brandId, machineRideId, ip);
+    if (result.error) {
+      return json({ error: result.error }, result.status);
     }
-    const statusData = await statusRes.json();
-
-    // 2. Get receipt
-    const receiptRes = await fetch(
-      `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`,
-      { headers: { Authorization: `Basic ${basicAuth}` } }
-    );
-    if (!receiptRes.ok) {
-      const errText = await receiptRes.text();
-      createEdgeLogger("machine-webhook").error("TaxiMachine recibo error", { body: errText });
-      logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
-      return json({ error: "Failed to fetch receipt from TaxiMachine" }, 502);
-    }
-    const receiptData = await receiptRes.json();
-
-    // Extract ride value
-    const rideValue = Number(
-      receiptData?.dados_solicitacao?.valor ||
-      receiptData?.valor ||
-      statusData?.dados_solicitacao?.valor ||
-      0
-    );
-
-    if (rideValue <= 0) {
-      await sb.from("machine_rides").insert({
-        brand_id: brandId,
-        machine_ride_id: machineRideId,
-        ride_value: 0,
-        ride_status: "NO_VALUE",
-        points_credited: 0,
-        finalized_at: new Date().toISOString(),
-      });
-      logAudit(sb, "MACHINE_RIDE_NO_VALUE", { brandId, entityId: machineRideId, ip, details: { ride_value: 0 } });
-      return json({ message: "Ride has no value", machine_ride_id: machineRideId });
-    }
-
-    // Extract passenger CPF
-    const passengerCpf = (
-      statusData?.cliente?.cpf ||
-      statusData?.dados_solicitacao?.cpf_passageiro ||
-      receiptData?.cliente?.cpf ||
-      ""
-    ).replace(/\D/g, "");
-
-    // Calculate points: 1 Real = 1 point
-    const points = Math.floor(rideValue);
-
-    // Insert machine_ride record
-    await sb.from("machine_rides").insert({
-      brand_id: brandId,
-      machine_ride_id: machineRideId,
-      passenger_cpf: passengerCpf || null,
-      ride_value: rideValue,
-      ride_status: "FINALIZED",
-      points_credited: points,
-      finalized_at: new Date().toISOString(),
-    });
-
-    // If we have a CPF, find or create customer and credit points
-    let pointsCredited = false;
-    let customerId: string | null = null;
-    if (passengerCpf && points > 0) {
-      let customer: any = null;
-
-      const { data: existing } = await sb
-        .from("customers")
-        .select("id, branch_id, points_balance")
-        .eq("brand_id", brandId)
-        .eq("cpf", passengerCpf)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-
-      if (existing) {
-        customer = existing;
-      } else {
-        // Auto-create: find first branch of brand
-        const { data: branch } = await sb
-          .from("branches")
-          .select("id")
-          .eq("brand_id", brandId)
-          .eq("is_active", true)
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
-
-        if (branch) {
-          const customerName = `Passageiro •••${passengerCpf.slice(-4)}`;
-          const { data: created } = await sb
-            .from("customers")
-            .insert({
-              brand_id: brandId,
-              branch_id: branch.id,
-              cpf: passengerCpf,
-              name: customerName,
-              points_balance: 0,
-              money_balance: 0,
-            })
-            .select("id, branch_id, points_balance")
-            .single();
-
-          if (created) {
-            customer = created;
-            logAudit(sb, "MACHINE_CUSTOMER_CREATED", {
-              brandId,
-              entityId: created.id,
-              ip,
-              details: { cpf_masked: `***${passengerCpf.slice(-4)}`, branch_id: branch.id },
-            });
-          }
-        }
-      }
-
-      if (customer) {
-        customerId = customer.id;
-        await sb.from("points_ledger").insert({
-          brand_id: brandId,
-          branch_id: customer.branch_id,
-          customer_id: customer.id,
-          points,
-          type: "EARN",
-          source: "MACHINE_RIDE",
-          description: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
-          reference_id: machineRideId,
-        });
-
-        await sb
-          .from("customers")
-          .update({ points_balance: (customer.points_balance || 0) + points })
-          .eq("id", customer.id);
-
-        pointsCredited = true;
-      }
-    }
-
-    // Update integration counters
-    const { error: updateErr } = await sb
-      .from("machine_integrations")
-      .update({
-        total_rides: integration.total_rides + 1,
-        total_points: integration.total_points + (pointsCredited ? points : 0),
-        last_ride_processed_at: new Date().toISOString(),
-      })
-      .eq("id", integration.id);
-
-    if (updateErr) createEdgeLogger("machine-webhook").error("Update integration counters error", { error: updateErr });
-
-    // Audit: ride processed successfully
-    logAudit(sb, "MACHINE_RIDE_PROCESSED", {
-      brandId,
-      entityId: machineRideId,
-      ip,
-      details: {
-        ride_value: rideValue,
-        points,
-        points_credited: pointsCredited,
-        customer_id: customerId,
-        passenger_cpf: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
-      },
-    });
-
-    return json({
-      success: true,
-      machine_ride_id: machineRideId,
-      ride_value: rideValue,
-      points_credited: pointsCredited ? points : 0,
-      customer_found: pointsCredited,
-    });
+    return json(result.data!);
   } catch (err) {
-    createEdgeLogger("machine-webhook").error("machine-webhook error", { error: String(err) });
+    logger.error("machine-webhook error", { error: String(err) });
     logAudit(sb, "MACHINE_WEBHOOK_ERROR", { ip, details: { error: String(err) } });
     return json({ error: "Internal server error" }, 500);
   }
