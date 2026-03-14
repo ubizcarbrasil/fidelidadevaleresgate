@@ -138,17 +138,23 @@ export default function CustomerLayout() {
   const lastScrollY = useRef(0);
   const mainRef = useRef<HTMLDivElement>(null);
 
+  const rafRef = useRef(0);
   const handleScroll = useCallback(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const currentY = el.scrollTop;
-    const delta = currentY - lastScrollY.current;
-    if (delta > 8 && currentY > 60) {
-      setHeaderVisible(false);
-    } else if (delta < -5) {
-      setHeaderVisible(true);
-    }
-    lastScrollY.current = currentY;
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      const el = mainRef.current;
+      if (el) {
+        const currentY = el.scrollTop;
+        const delta = currentY - lastScrollY.current;
+        if (delta > 8 && currentY > 60) {
+          setHeaderVisible(false);
+        } else if (delta < -5) {
+          setHeaderVisible(true);
+        }
+        lastScrollY.current = currentY;
+      }
+      rafRef.current = 0;
+    });
   }, []);
 
   // Default to dark mode for customer app (respect user preference if saved)
