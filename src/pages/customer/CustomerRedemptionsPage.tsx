@@ -272,8 +272,8 @@ function RedemptionCard({
 
       {/* Store info + type badge */}
       <div className="px-4 py-3 flex items-center gap-3">
-        {store?.logo_url ? (
-          <img src={store.logo_url} alt={store.name} className="h-11 w-11 rounded-xl object-cover" />
+        {(store?.logo_url as string) ? (
+          <img src={store?.logo_url as string} alt={store?.name as string} className="h-11 w-11 rounded-xl object-cover" />
         ) : (
           <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
             <Store className="h-5 w-5" style={{ color: primary }} />
@@ -281,7 +281,7 @@ function RedemptionCard({
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold truncate" style={{ color: fg }}>{store?.name || "Loja"}</p>
+            <p className="text-sm font-semibold truncate" style={{ color: fg }}>{(store?.name as string) || "Loja"}</p>
             <span
               className="px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0"
               style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}
