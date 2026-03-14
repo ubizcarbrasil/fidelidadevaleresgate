@@ -195,13 +195,13 @@ export default function CustomerLayout() {
     }).then(() => {});
   }, [customer, brand, selectedBranch]);
 
-  const handleOpenOffer = useCallback((offer: Record<string, unknown>) => {
-    trackClick("offer", offer.id as string, offer.store_id as string);
+  const handleOpenOffer = useCallback((offer: any) => {
+    trackClick("offer", offer.id, offer.store_id);
     setSelectedOffer(offer);
   }, [trackClick]);
 
-  const handleOpenStore = useCallback((store: Record<string, unknown>) => {
-    trackClick("store", store.id as string, store.id as string);
+  const handleOpenStore = useCallback((store: any) => {
+    trackClick("store", store.id, store.id);
     setSelectedStore(store);
   }, [trackClick]);
 
