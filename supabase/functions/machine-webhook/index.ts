@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
     );
     if (!receiptRes.ok) {
       const errText = await receiptRes.text();
-      console.error("TaxiMachine recibo error:", errText);
+      createEdgeLogger("machine-webhook").error("TaxiMachine recibo error", { body: errText });
       logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
       return json({ error: "Failed to fetch receipt from TaxiMachine" }, 502);
     }
