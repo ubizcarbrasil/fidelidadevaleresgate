@@ -703,6 +703,44 @@ export default function MachineIntegrationPage() {
                 </div>
               </div>
 
+              {/* Matrix Credentials */}
+              <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Credenciais da Matriz (Recibo)</Label>
+                <Input
+                  value={selectedMatrixBasicUser}
+                  onChange={(e) => setSelectedMatrixBasicUser(e.target.value)}
+                  placeholder="Usuário Basic Auth da Matriz"
+                />
+                <div className="relative">
+                  <Input
+                    type={selectedShowMatrixPass ? "text" : "password"}
+                    value={selectedMatrixBasicPass}
+                    onChange={(e) => setSelectedMatrixBasicPass(e.target.value)}
+                    placeholder="Senha Basic Auth da Matriz"
+                  />
+                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSelectedShowMatrixPass(!selectedShowMatrixPass)}>
+                    {selectedShowMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={selectedShowMatrixApiKey ? "text" : "password"}
+                    value={selectedMatrixApiKey}
+                    onChange={(e) => setSelectedMatrixApiKey(e.target.value)}
+                    placeholder="api-key da Matriz"
+                  />
+                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSelectedShowMatrixApiKey(!selectedShowMatrixApiKey)}>
+                    {selectedShowMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={() => saveMatrixMutation.mutate()} disabled={saveMatrixMutation.isPending}>
+                    {matrixSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveMatrixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar matriz
+                  </Button>
+                </div>
+              </div>
+
               {/* Telegram Chat ID */}
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground flex items-center gap-1">
