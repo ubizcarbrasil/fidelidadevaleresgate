@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type CSSProperties } from "react";
+import React, { useState, type ReactNode, type CSSProperties } from "react";
 
 interface SafeImageProps {
   src: string | null | undefined;
@@ -14,7 +14,7 @@ interface SafeImageProps {
  * Image component with graceful fallback chain.
  * Tries `src` → `fallbackSrc` → `fallback` ReactNode.
  */
-export default function SafeImage({
+const SafeImage = React.memo(function SafeImage({
   src,
   fallbackSrc,
   alt,
@@ -26,12 +26,10 @@ export default function SafeImage({
   const [srcFailed, setSrcFailed] = useState(false);
   const [fallbackSrcFailed, setFallbackSrcFailed] = useState(false);
 
-  // No src at all → render fallback
   if (!src || (srcFailed && (!fallbackSrc || fallbackSrcFailed))) {
     return <>{fallback}</>;
   }
 
-  // Primary src failed, try fallbackSrc
   if (srcFailed && fallbackSrc && !fallbackSrcFailed) {
     return (
       <img
@@ -55,4 +53,6 @@ export default function SafeImage({
       onError={() => setSrcFailed(true)}
     />
   );
-}
+});
+
+export default SafeImage;

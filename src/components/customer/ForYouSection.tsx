@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -19,7 +20,11 @@ export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
-  const [offers, setOffers] = useState<any[]>([]);
+  interface ScoredOffer { offer_id: string; score: number }
+  type OfferWithStore = Tables<"offers"> & {
+    stores: { name: string; logo_url: string | null } | null;
+  };
+  const [offers, setOffers] = useState<OfferWithStore[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -57,15 +62,15 @@ export default function ForYouSection() {
       }
 
       // Fetch full offer data for the scored IDs (preserving score order)
-      const offerIds = scored.map((s: any) => s.offer_id);
+      const offerIds = scored.map((s: ScoredOffer) => s.offer_id);
       const { data: fullOffers } = await supabase
         .from("offers")
         .select("*, stores(name, logo_url)")
         .in("id", offerIds);
 
       // Re-order by score
-      const offerMap = new Map((fullOffers || []).map((o: any) => [o.id, o]));
-      const ordered = offerIds.map((id: string) => offerMap.get(id)).filter(Boolean);
+      const offerMap = new Map((fullOffers || []).map((o: OfferWithStore) => [o.id, o]));
+      const ordered = offerIds.map((id: string) => offerMap.get(id)).filter(Boolean) as OfferWithStore[];
       setOffers(ordered);
       setLoading(false);
     };
@@ -129,7 +134,7 @@ export default function ForYouSection() {
             <div className="relative h-28 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
               {o.image_url || o.stores?.logo_url ? (
                 <img
-                  src={o.image_url || o.stores?.logo_url}
+                  src={o.image_url || o.stores?.logo_url || undefined}
                   alt={o.title}
                   className="h-28 w-full object-cover"
                   loading="lazy"
@@ -139,13 +144,13 @@ export default function ForYouSection() {
                   <ShoppingBag className="h-8 w-8 text-muted-foreground/20" />
                 </div>
               )}
-              {(o.discount_percent > 0 || o.value_rescue > 0) && (
+              {((o.discount_percent ?? 0) > 0 || (o.value_rescue ?? 0) > 0) && (
                 <div className="absolute top-2.5 left-2.5">
                   <OfferBadge
-                    discountPercent={o.discount_percent}
+                    discountPercent={o.discount_percent ?? 0}
                     primaryColor="hsl(var(--vb-highlight))"
                     size="sm"
-                    couponType={o.coupon_type}
+                    couponType={o.coupon_type ?? undefined}
                     valueRescue={Number(o.value_rescue || 0)}
                     minPurchase={Number(o.min_purchase || 0)}
                   />
@@ -159,7 +164,7 @@ export default function ForYouSection() {
               {o.stores?.name && (
                 <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
               )}
-              {o.coupon_type === "PRODUCT" && o.discount_percent > 0 && (
+              {o.coupon_type === "PRODUCT" && (o.discount_percent ?? 0) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
                   {Math.floor(Number(o.value_rescue || 0))} pts = R$ {Number(o.value_rescue || 0).toFixed(2)}
                 </span>

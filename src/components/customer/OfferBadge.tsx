@@ -1,7 +1,8 @@
-import { Sparkles, Tag, Star, Percent, Zap, Gift, Heart, Award } from "lucide-react";
+import React from "react";
+import { Sparkles, Tag, Star, Percent, Zap, Gift, Heart, Award, type LucideIcon } from "lucide-react";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
 
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   sparkles: Sparkles,
   tag: Tag,
   star: Star,
@@ -14,23 +15,17 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
 
 interface OfferBadgeProps {
   discountPercent: number;
-  /** Per-offer override config (from badge_config_json) */
   offerBadgeConfig?: BadgeConfig | null;
-  /** Brand-level default config (from brand_settings_json.badge_config) */
   brandBadgeConfig?: BadgeConfig | null;
-  /** Fallback primary color */
   primaryColor: string;
   className?: string;
   size?: "sm" | "md";
-  /** Offer type: PRODUCT or STORE */
   couponType?: string;
-  /** Credit value (value_rescue) */
   valueRescue?: number;
-  /** Minimum purchase amount */
   minPurchase?: number;
 }
 
-export default function OfferBadge({
+const OfferBadge = React.memo(function OfferBadge({
   discountPercent,
   offerBadgeConfig,
   brandBadgeConfig,
@@ -43,7 +38,6 @@ export default function OfferBadge({
 }: OfferBadgeProps) {
   if (discountPercent <= 0 && valueRescue <= 0) return null;
 
-  // Merge: offer override > brand default > hardcoded defaults
   const defaultTemplate = couponType === "PRODUCT"
     ? "Pague {percent}% com Pontos"
     : "Troque {points} pts por R$ {credit}";
@@ -56,7 +50,6 @@ export default function OfferBadge({
 
   const IconComponent = ICON_MAP[config.icon || "sparkles"] || Sparkles;
 
-  // Build text based on coupon type
   const points = Math.floor(valueRescue);
   const credit = valueRescue.toFixed(2).replace(".", ",");
   const text = (config.text_template || defaultTemplate)
@@ -79,4 +72,6 @@ export default function OfferBadge({
       {text}
     </div>
   );
-}
+});
+
+export default OfferBadge;

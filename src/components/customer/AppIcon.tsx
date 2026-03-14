@@ -1,3 +1,4 @@
+import React from "react";
 import { useAppIcons, type AppIconKey } from "@/hooks/useAppIcons";
 
 interface AppIconProps {
@@ -8,7 +9,7 @@ interface AppIconProps {
 }
 
 /** Renders an icon from the brand's app_icons config — lucide or custom image */
-export default function AppIcon({ iconKey, className = "h-5 w-5", style, strokeWidth }: AppIconProps) {
+const AppIcon = React.memo(function AppIcon({ iconKey, className = "h-5 w-5", style, strokeWidth }: AppIconProps) {
   const { getLucideComponent, getCustomUrl } = useAppIcons();
 
   const customUrl = getCustomUrl(iconKey);
@@ -22,4 +23,6 @@ export default function AppIcon({ iconKey, className = "h-5 w-5", style, strokeW
   }
 
   return null;
-}
+});
+
+export default AppIcon;

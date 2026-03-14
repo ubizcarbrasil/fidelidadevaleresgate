@@ -43,5 +43,5 @@ export async function fetchRedemptions(params: {
     throw error;
   }
 
-  return { items: (data || []) as any, total: count || 0 };
+  return { items: (data || []) as RedemptionListItem[], total: count || 0 };
 }

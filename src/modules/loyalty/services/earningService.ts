@@ -80,12 +80,12 @@ export async function checkDailyLimits(params: {
       .gte("created_at", todayISO),
   ]);
 
-  const custDayTotal = (custToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
+  const custDayTotal = (custToday || []).reduce((s: number, e: { points_earned: number }) => s + e.points_earned, 0);
   if (custDayTotal + params.pointsToAdd > params.maxCustomerDay) {
     return { allowed: false, reason: `Limite diário do cliente atingido (${params.maxCustomerDay} pontos)` };
   }
 
-  const storeDayTotal = (storeToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
+  const storeDayTotal = (storeToday || []).reduce((s: number, e: { points_earned: number }) => s + e.points_earned, 0);
   if (storeDayTotal + params.pointsToAdd > params.maxStoreDay) {
     return { allowed: false, reason: `Limite diário do parceiro atingido (${params.maxStoreDay} pontos)` };
   }

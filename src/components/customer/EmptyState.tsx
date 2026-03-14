@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { PackageOpen, Coins, Ticket, Tag } from "lucide-react";
 
@@ -33,7 +34,7 @@ const PRESETS = {
   },
 };
 
-export default function EmptyState({ type = "generic", title, description, ctaLabel, onCta, primary }: EmptyStateProps) {
+const EmptyState = React.memo(function EmptyState({ type = "generic", title, description, ctaLabel, onCta, primary }: EmptyStateProps) {
   const preset = PRESETS[type];
   const Icon = preset.icon;
   const displayTitle = title || preset.title;
@@ -66,4 +67,6 @@ export default function EmptyState({ type = "generic", title, description, ctaLa
       )}
     </motion.div>
   );
-}
+});
+
+export default EmptyState;
