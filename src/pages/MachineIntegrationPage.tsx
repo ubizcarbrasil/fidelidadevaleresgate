@@ -594,7 +594,7 @@ export default function MachineIntegrationPage() {
                     )}
                   </AlertDescription>
                 </Alert>
-              )
+              )}
 
               {/* Webhook URL for this city */}
               <div className="space-y-1">
