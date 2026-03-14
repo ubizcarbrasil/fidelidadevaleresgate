@@ -149,7 +149,8 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error scraping product:', error);
+    const errLog = createEdgeLogger("scrape-product");
+    errLog.error("Error scraping product", { message: error instanceof Error ? error.message : String(error) });
     const errorMessage = error instanceof Error ? error.message : 'Failed to scrape';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),

@@ -72,7 +72,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("stripe-webhook error:", error);
+    const errLog = createEdgeLogger("stripe-webhook");
+    errLog.error("stripe-webhook error", { message: error.message });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
