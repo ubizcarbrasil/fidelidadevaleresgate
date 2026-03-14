@@ -73,6 +73,9 @@ export default function MachineIntegrationPage() {
   const [urlBasicPass, setUrlBasicPass] = useState("");
   const [showUrlPass, setShowUrlPass] = useState(false);
   const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
+  const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramSaved, setTelegramSaved] = useState(false);
+  const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;

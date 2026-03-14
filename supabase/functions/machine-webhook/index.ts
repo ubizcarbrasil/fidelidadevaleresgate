@@ -333,6 +333,82 @@ async function processFinalized(
     },
   });
 
+  // Insert into machine_ride_notifications for realtime dashboard
+  if (pointsCredited) {
+    const branchForCity = branches_cache?.[branchId || integration.branch_id] || null;
+    const cityName = branchForCity?.city
+      ? `${branchForCity.city}${branchForCity.state ? ` - ${branchForCity.state}` : ""}`
+      : null;
+
+    // Fetch branch info for city name
+    let resolvedCityName = cityName;
+    if (!resolvedCityName && (branchId || integration.branch_id)) {
+      const { data: branchData } = await sb
+        .from("branches")
+        .select("city, state")
+        .eq("id", branchId || integration.branch_id)
+        .maybeSingle();
+      if (branchData?.city) {
+        resolvedCityName = `${branchData.city}${branchData.state ? ` - ${branchData.state}` : ""}`;
+      }
+    }
+
+    // Fetch customer phone if available
+    let customerPhone: string | null = null;
+    let customerFullName: string | null = null;
+    if (customerId) {
+      const { data: custData } = await sb
+        .from("customers")
+        .select("name, phone")
+        .eq("id", customerId)
+        .maybeSingle();
+      if (custData) {
+        customerFullName = custData.name || null;
+        customerPhone = custData.phone || null;
+      }
+    }
+
+    await sb.from("machine_ride_notifications").insert({
+      brand_id: brandId,
+      branch_id: branchId,
+      machine_ride_id: machineRideId,
+      customer_name: customerFullName || (passengerCpf ? `Passageiro •••${passengerCpf.slice(-4)}` : null),
+      customer_phone: customerPhone,
+      customer_cpf_masked: passengerCpf ? `•••${passengerCpf.slice(-4)}` : null,
+      city_name: resolvedCityName,
+      points_credited: points,
+      ride_value: rideValue,
+      finalized_at: new Date().toISOString(),
+    });
+
+    // Send Telegram notification if chat_id configured (fire-and-forget)
+    if (integration.telegram_chat_id) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        fetch(`${supabaseUrl}/functions/v1/send-telegram-ride-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            chat_id: integration.telegram_chat_id,
+            customer_name: customerFullName || (passengerCpf ? `Passageiro •••${passengerCpf.slice(-4)}` : null),
+            customer_phone: customerPhone,
+            city_name: resolvedCityName,
+            ride_value: rideValue,
+            points_credited: points,
+            finalized_at: new Date().toISOString(),
+            machine_ride_id: machineRideId,
+          }),
+        }).catch((e) => logger.error("Telegram notification error", { error: String(e) }));
+      } catch (e) {
+        logger.error("Telegram notification setup error", { error: String(e) });
+      }
+    }
+  }
+
   // Fire callback URL if configured (fire-and-forget)
   if (pointsCredited && integration.callback_url) {
     try {
