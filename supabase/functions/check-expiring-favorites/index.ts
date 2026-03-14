@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
         .insert(notifications);
 
       if (insertError) {
-        console.error("Error inserting notifications:", insertError);
+        log.error("Error inserting notifications", { error: insertError.message });
       } else {
         insertedCount = notifications.length;
       }
