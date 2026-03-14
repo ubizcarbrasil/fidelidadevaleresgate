@@ -389,9 +389,9 @@ function RedemptionCard({
           )}
 
           {/* Site */}
-          {store?.site_url && (
+          {(store?.site_url as string) && (
             <DetailInfoRow icon={<Globe className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
-              Site: {store.site_url}
+              Site: {store?.site_url as string}
             </DetailInfoRow>
           )}
         </div>
