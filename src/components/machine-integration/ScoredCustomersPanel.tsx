@@ -125,17 +125,54 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
     return cpf;
   };
 
+  const handleExportCsv = () => {
+    if (!customers || customers.length === 0) return;
+    const header = "Nome,CPF,Telefone,Email,Saldo Pontos,Pontos Corridas";
+    const rows = customers.map((c) =>
+      [
+        `"${(c.name || "").replace(/"/g, '""')}"`,
+        c.cpf || "",
+        c.phone || "",
+        c.email || "",
+        c.points_balance,
+        c.total_ride_points,
+      ].join(",")
+    );
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clientes-pontuados-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Users className="h-4 w-4 text-primary" />
-            Clientes pontuados
-          </CardTitle>
-          <CardDescription>
-            Busque por nome, CPF ou telefone para verificar dados e saldo de pontos dos clientes pontuados por corridas.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-primary" />
+                Clientes pontuados
+              </CardTitle>
+              <CardDescription>
+                Busque por nome, CPF ou telefone para verificar dados e saldo de pontos dos clientes pontuados por corridas.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={!customers || customers.length === 0}
+              className="shrink-0"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Exportar CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative max-w-sm">
