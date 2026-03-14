@@ -45,7 +45,7 @@ export default function CustomersPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["customers", debouncedSearch, page, currentBrandId],
     queryFn: async () => {
-      let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" });
+      let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
