@@ -157,7 +157,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
 
         {/* Tab switcher */}
         {hasCatalog && (() => {
-          const catalogConfig = (store as any).store_catalog_config_json as any;
+          const catalogConfig = (store as StoreRow & { store_catalog_config_json?: { tab_label?: string } }).store_catalog_config_json;
           const tabLabel = catalogConfig?.tab_label || "Catálogo";
           return (
             <div className="flex gap-1.5 mx-4 mt-5 bg-card/80 rounded-xl p-1" style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.04)" }}>
