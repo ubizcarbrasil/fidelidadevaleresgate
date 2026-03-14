@@ -1,30 +1,29 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico: Por que algumas corridas pontuam e outras dão erro
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema identificado
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Analisei os logs e o banco de dados e encontrei **dois problemas distintos**:
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+**Problema 1 — Credenciais Basic Auth vazias (causa principal)**
+As credenciais `basic_auth_user` e `basic_auth_password` na tabela de integrações estão **vazias**. Quando uma corrida é finalizada (status `F`), o webhook tenta consultar a API da TaxiMachine para obter o valor da corrida e o CPF do passageiro, mas recebe erro 401 ("Access credentials are invalid") porque as credenciais estão em branco.
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+- Corridas com status `P`, `A`, `S`, `C` funcionam normalmente porque **não precisam chamar a API da TaxiMachine** — apenas registram o status.
+- Corridas com status `F` (finalizada) **sempre falham** porque precisam buscar o recibo na API externa.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+Confirmação: **nenhuma corrida foi pontuada** — todas têm `points_credited = 0` e nenhuma chegou ao status `FINALIZED` no banco.
+
+**Problema 2 — Erro no audit_log**
+O campo `entity_id` na tabela `audit_logs` é do tipo UUID, mas o código está passando o `machine_ride_id` (ex: "675512794") que é um número, não um UUID. Isso gera o erro `invalid input syntax for type uuid`.
+
+### Plano de correção
+
+| Arquivo | Ação |
+|---|---|
+| `supabase/functions/machine-webhook/index.ts` | 1. Na função `logAudit`, não passar `machine_ride_id` como `entity_id` — mover para `details_json` em vez disso. 2. Verificar se `basic_auth_user` e `basic_auth_password` existem antes de chamar a API da TaxiMachine; se estiverem vazios, registrar o valor da corrida como 0 e retornar mensagem clara de erro. |
+| `src/pages/MachineIntegrationPage.tsx` | Exibir alerta visual quando as credenciais Basic Auth estiverem vazias e a integração estiver ativa, avisando que corridas finalizadas não serão pontuadas sem as credenciais. |
+
+### Sobre as credenciais
+O usuário precisa preencher o **usuário e senha de integração da TaxiMachine** na aba "Por credenciais" da página de integração. Sem isso, o sistema recebe o webhook mas não consegue buscar o valor da corrida para calcular os pontos.
+
