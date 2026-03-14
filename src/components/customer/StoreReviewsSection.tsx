@@ -14,12 +14,31 @@ interface Review {
   customer_name: string;
 }
 
+interface StoreReviewRow {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  customer_id: string;
+  customers: { name?: string } | null;
+}
+
 interface Props {
   storeId: string;
   customerId: string | undefined;
   primary: string;
   fontHeading: string;
   fg: string;
+}
+
+function mapReview(r: StoreReviewRow): Review {
+  return {
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    created_at: r.created_at,
+    customer_name: r.customers?.name || "Cliente",
+  };
 }
 
 export default function StoreReviewsSection({ storeId, customerId, primary, fontHeading, fg }: Props) {
@@ -45,27 +64,14 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
       .order("created_at", { ascending: false })
       .limit(20);
 
-    const mapped = (data || []).map((r: any) => ({
-      id: r.id,
-      rating: r.rating,
-      comment: r.comment,
-      created_at: r.created_at,
-      customer_name: r.customers?.name || "Cliente",
-    }));
+    const rows = (data || []) as unknown as StoreReviewRow[];
+    const mapped = rows.map(mapReview);
 
     setReviews(mapped);
 
     if (customerId) {
-      const mine = (data || []).find((r: any) => r.customer_id === customerId);
-      if (mine) {
-        setMyReview({
-          id: mine.id,
-          rating: mine.rating,
-          comment: mine.comment,
-          created_at: mine.created_at,
-          customer_name: (mine as any).customers?.name || "Cliente",
-        });
-      }
+      const mine = rows.find(r => r.customer_id === customerId);
+      if (mine) setMyReview(mapReview(mine));
     }
     setLoading(false);
   };
@@ -90,7 +96,7 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
 
     const { error } = myReview
       ? await supabase.from("store_reviews").update({ rating, comment: comment.trim() || null }).eq("id", myReview.id)
-      : await supabase.from("store_reviews").insert(payload as any);
+      : await (supabase.from("store_reviews").insert as Function)(payload);
 
     setSubmitting(false);
     if (error) {
@@ -136,16 +142,12 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
         )}
       </div>
 
-      {/* Write review button */}
       {customerId && !showForm && (
         <Button
           variant="outline"
           size="sm"
           onClick={() => {
-            if (myReview) {
-              setRating(myReview.rating);
-              setComment(myReview.comment || "");
-            }
+            if (myReview) { setRating(myReview.rating); setComment(myReview.comment || ""); }
             setShowForm(true);
           }}
           className="w-full mb-4 rounded-xl"
@@ -155,7 +157,6 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
         </Button>
       )}
 
-      {/* Review form */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -175,13 +176,7 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
               className="rounded-xl"
             />
             <div className="flex gap-2">
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                size="sm"
-                className="flex-1 rounded-xl"
-                style={{ backgroundColor: primary }}
-              >
+              <Button onClick={handleSubmit} disabled={submitting} size="sm" className="flex-1 rounded-xl" style={{ backgroundColor: primary }}>
                 <Send className="h-4 w-4 mr-1" />
                 {submitting ? "Enviando..." : "Enviar"}
               </Button>
@@ -193,7 +188,6 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
         )}
       </AnimatePresence>
 
-      {/* Reviews list */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
