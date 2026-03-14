@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
     );
     if (!statusRes.ok) {
       const errText = await statusRes.text();
-      console.error("TaxiMachine solicitacaoStatus error:", errText);
+      createEdgeLogger("machine-webhook").error("TaxiMachine solicitacaoStatus error", { body: errText });
       logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
       return json({ error: "Failed to fetch ride status from TaxiMachine" }, 502);
     }
