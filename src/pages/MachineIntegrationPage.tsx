@@ -350,8 +350,6 @@ export default function MachineIntegrationPage() {
       };
       const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
       if (resolvedApiKey) body.api_key = resolvedApiKey;
-      const resolvedReceiptKey = isUrlOnly ? urlReceiptApiKey : receiptApiKey;
-      if (resolvedReceiptKey) body.receipt_api_key = resolvedReceiptKey;
       // Matrix credentials (only from credentials tab)
       if (!isUrlOnly) {
         if (matrixApiKey) body.matrix_api_key = matrixApiKey;
