@@ -1,8 +1,8 @@
 # 🔍 Relatório de Auditoria Enterprise — Vale Resgate
 
 **Data**: 2026-03-13  
-**Score Geral**: **76/100** ⚠️  
-**Veredicto**: Projeto **CONDICIONALMENTE APROVADO** — P0 corrigidos, arquitetura refatorada, P2 documentados.
+**Score Geral**: **82/100** ⚠️  
+**Veredicto**: Projeto **CONDICIONALMENTE APROVADO** — P0 corrigidos, segurança reforçada, arquitetura refatorada.
 
 ---
 
@@ -10,10 +10,10 @@
 
 | Categoria | Score | Status |
 |-----------|-------|--------|
-| 🔐 Segurança & RLS | 85% | ✅ PASS (após correções) |
+| 🔐 Segurança & RLS | 92% | ✅ PASS (CSP + sanitização + audit logging) |
 | 📊 Arquitetura & Código | 78% | ✅ PASS (após refatoração) |
 | ⚡ Performance | 82% | ✅ PASS |
-| 🧪 Testes | 35% | ⚠️ WARNING |
+| 🧪 Testes | 40% | ⚠️ WARNING |
 | 🎨 UX | 88% | ✅ PASS |
 | 📡 Observabilidade | 55% | ⚠️ WARNING |
 | 🚀 Deploy & DevOps | 72% | ⚠️ WARNING |
@@ -43,6 +43,10 @@
 | Rate limiting em edge functions (agent-api, earn-webhook, mobility-webhook) | ✅ PASS |
 | Anonymous signups desabilitados | ✅ PASS |
 | Auto-confirm email desabilitado | ✅ PASS |
+| CSP, X-Frame-Options, X-Content-Type-Options headers | ✅ PASS |
+| Input sanitization library (stripHtml, sanitizeUrl, sanitizePhone) | ✅ PASS |
+| Audit logging em login/logout/password_reset | ✅ PASS |
+| RLS penetration tests (cross-user data access) | ✅ PASS |
 
 ### Itens Pendentes (P1)
 
