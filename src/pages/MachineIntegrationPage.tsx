@@ -485,8 +485,8 @@ export default function MachineIntegrationPage() {
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                   <li>Selecione a <strong>cidade</strong> que deseja conectar.</li>
                   <li>Obtenha as credenciais no painel da TaxiMachine para essa cidade.</li>
-                  <li>Preencha os 3 campos: <strong>chave de acesso</strong>, <strong>usuário</strong> e <strong>senha</strong>.</li>
-                  <li>Clique em "Ativar cidade".</li>
+                  <li>Preencha a <strong>chave de acesso</strong> (opcional), <strong>usuário</strong> e <strong>senha</strong>.</li>
+                  <li>Clique em "Ativar cidade". Se a chave foi informada, o webhook é registrado automaticamente.</li>
                   <li>Cada corrida finalizada credita pontos ao passageiro (<strong>R$ 1 = 1 ponto</strong>).</li>
                 </ol>
               </div>
