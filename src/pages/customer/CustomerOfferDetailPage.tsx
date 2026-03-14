@@ -3,12 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, Json } from "@/integrations/supabase/types";
 import type { RedemptionWithOffer } from "@/types/customer";
-import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
-import { useBrand } from "@/contexts/BrandContext";
-import { useCustomer } from "@/contexts/CustomerContext";
-import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
@@ -191,17 +187,18 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       const parsedProductValue = offer.coupon_type === "PRODUCT" ? productPriceOffer : undefined;
       const creditApplied = offer.coupon_type === "PRODUCT" ? creditAmountOffer : undefined;
 
-      const { data: created, error } = await supabase.from("redemptions").insert({
+      const insertPayload = {
         offer_id: offer.id,
         customer_id: customer.id,
         brand_id: brand.id,
         branch_id: selectedBranch.id,
-        status: "PENDING",
+        status: "PENDING" as const,
         customer_cpf: cpf.replace(/\D/g, ""),
-        offer_snapshot_json: offerSnapshot as Record<string, unknown>,
-        purchase_value: parsedProductValue || null,
-        credit_value_applied: creditApplied || null,
-      }).select("id, token").single();
+        offer_snapshot_json: offerSnapshot as unknown as Json,
+        purchase_value: parsedProductValue ?? null,
+        credit_value_applied: creditApplied ?? null,
+      };
+      const { data: created, error } = await supabase.from("redemptions").insert(insertPayload).select("id, token").single();
       if (error) throw error;
       setPin(created.token);
 
@@ -237,7 +234,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       setRedeemed(true);
       setShowConfirm(false);
       if (fullRedemption) {
-        setCompletedRedemption(fullRedemption);
+        setCompletedRedemption(fullRedemption as unknown as RedemptionWithOffer);
       }
 
       // Record Ganha-Ganha billing event for the redemption (fire-and-forget)
