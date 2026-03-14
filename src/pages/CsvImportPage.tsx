@@ -198,7 +198,7 @@ function applyMapping(rows: Record<string, string>[], mapping: Record<string, st
   });
 }
 
-type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS";
+type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS" | "COUPONS";
 type Step = "config" | "mapping" | "preview" | "importing" | "done";
 
 function getTargetFields(importType: ImportType): TargetField[] {
