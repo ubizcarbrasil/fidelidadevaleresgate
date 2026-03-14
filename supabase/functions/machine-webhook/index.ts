@@ -102,6 +102,21 @@ async function processFinalized(
   machineRideId: string,
   ip: string
 ) {
+  // Validate credentials before calling TaxiMachine API
+  if (!integration.basic_auth_user || !integration.basic_auth_password) {
+    logger.error("Missing basic auth credentials", { brandId });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "basic_auth_empty" } });
+    await sb.from("machine_rides").upsert({
+      brand_id: brandId,
+      machine_ride_id: machineRideId,
+      ride_status: "CREDENTIAL_ERROR",
+      ride_value: 0,
+      points_credited: 0,
+      finalized_at: new Date().toISOString(),
+    }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
+    return { error: "Basic auth credentials not configured. Please set user/password in integration settings.", status: 400 };
+  }
+
   // Call TaxiMachine API to get ride details
   const basicAuth = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
   const machineBaseUrl = "https://api.taximachine.com.br";

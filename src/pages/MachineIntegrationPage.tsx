@@ -219,6 +219,17 @@ export default function MachineIntegrationPage() {
             </StatusCard>
           </div>
 
+          {/* Credential warning */}
+          {(!integration.basic_auth_user || !integration.basic_auth_password) && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Credenciais incompletas</AlertTitle>
+              <AlertDescription>
+                O usuário e/ou senha da API estão vazios. Corridas finalizadas <strong>não serão pontuadas</strong> até que as credenciais sejam configuradas. Desative e reative a integração com as credenciais corretas.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Active info + deactivate */}
           <Card>
             <CardHeader>
