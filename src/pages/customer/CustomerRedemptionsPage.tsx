@@ -245,7 +245,7 @@ function RedemptionCard({
   const canCancel = r.status === "PENDING" && hoursSinceCreation <= 24;
 
   const expiryDays = r.expires_at
-    ? Math.max(0, Math.ceil((new Date(r.expires_at as string).getTime() - new Date(r.created_at as string).getTime()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(0, Math.ceil((new Date(r.expires_at).getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24)))
     : 30;
 
   return (
