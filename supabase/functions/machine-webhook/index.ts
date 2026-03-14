@@ -205,10 +205,10 @@ async function processFinalized(
   const machineBaseUrl = "https://api-vendas.taximachine.com.br";
 
   const receiptUrl = `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl, headers: ["Authorization: Basic ***", `api-key: ${apiKey.slice(0, 6)}***`] });
+  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl, headers: ["Authorization: Basic ***", `api-key: ${receiptApiKey.slice(0, 6)}***`] });
 
   const receiptRes = await fetch(receiptUrl, {
-    headers: { "Authorization": `Basic ${basicAuth}`, "api-key": apiKey },
+    headers: { "Authorization": `Basic ${basicAuth}`, "api-key": receiptApiKey },
   });
 
   if (!receiptRes.ok) {
