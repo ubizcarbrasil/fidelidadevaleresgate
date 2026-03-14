@@ -335,14 +335,9 @@ async function processFinalized(
 
   // Insert into machine_ride_notifications for realtime dashboard
   if (pointsCredited) {
-    const branchForCity = branches_cache?.[branchId || integration.branch_id] || null;
-    const cityName = branchForCity?.city
-      ? `${branchForCity.city}${branchForCity.state ? ` - ${branchForCity.state}` : ""}`
-      : null;
-
     // Fetch branch info for city name
-    let resolvedCityName = cityName;
-    if (!resolvedCityName && (branchId || integration.branch_id)) {
+    let resolvedCityName: string | null = null;
+    if (branchId || integration.branch_id) {
       const { data: branchData } = await sb
         .from("branches")
         .select("city, state")
