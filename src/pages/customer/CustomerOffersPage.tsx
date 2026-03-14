@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
 import SafeImage from "@/components/customer/SafeImage";
 import type { OfferWithStore } from "@/types/customer";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
