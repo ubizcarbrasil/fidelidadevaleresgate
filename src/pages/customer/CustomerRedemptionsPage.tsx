@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
 import { toast } from "sonner";
+import type { RedemptionWithOffer } from "@/types/customer";
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
