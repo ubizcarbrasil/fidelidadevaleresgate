@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2, Download, ArrowRight, Link2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2, Download, ArrowRight, Link2, History, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 // ── CSV Parsing ──
@@ -599,6 +599,39 @@ export default function CsvImportPage() {
   const previewRows = mappedRows.slice(0, 20);
   const errorRowNumbers = new Set(validationErrors.map(e => e.row));
 
+  const TYPE_LABELS: Record<string, string> = {
+    STORES: "Lojas", OFFERS: "Ofertas", CUSTOMERS: "Clientes", CRM_CONTACTS: "Contatos CRM", COUPONS: "Cupons",
+  };
+
+  // ── Import history query ──
+  const { data: importHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ["import-jobs-history", brandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("import_jobs")
+        .select("id, brand_id, branch_id, type, status, created_at, finished_at, summary_json, created_by")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (brandId && !isRootAdmin) q = q.eq("brand_id", brandId);
+      const { data } = await q;
+      return data || [];
+    },
+  });
+
+  // Load brand names for history display (root admin sees all brands)
+  const brandIdsInHistory = [...new Set((importHistory || []).map(j => j.brand_id))];
+  const { data: brandNamesMap } = useQuery({
+    queryKey: ["brand-names-for-history", brandIdsInHistory.join(",")],
+    queryFn: async () => {
+      if (brandIdsInHistory.length === 0) return {};
+      const { data } = await supabase.from("brands").select("id, name").in("id", brandIdsInHistory);
+      const map: Record<string, string> = {};
+      (data || []).forEach(b => { map[b.id] = b.name; });
+      return map;
+    },
+    enabled: brandIdsInHistory.length > 0,
+  });
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
@@ -915,6 +948,71 @@ export default function CsvImportPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Import History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <History className="h-5 w-5" />
+            Histórico de Importações
+          </CardTitle>
+          <CardDescription>Últimas 50 importações realizadas.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {historyLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !importHistory || importHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhuma importação registrada.</p>
+          ) : (
+            <ScrollArea className="max-h-[400px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    {isRootAdmin && <TableHead>Marca</TableHead>}
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Sucesso</TableHead>
+                    <TableHead className="text-right">Erros</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {importHistory.map(job => {
+                    const summary = job.summary_json as { total?: number; success?: number; errors?: number } | null;
+                    const statusColor = job.status === "DONE" ? "default" : job.status === "FAILED" ? "destructive" : "secondary";
+                    const statusLabel = job.status === "DONE" ? "Concluído" : job.status === "FAILED" ? "Com erros" : job.status === "IMPORTING" ? "Em andamento" : job.status;
+                    return (
+                      <TableRow key={job.id}>
+                        <TableCell className="text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            {new Date(job.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </TableCell>
+                        {isRootAdmin && (
+                          <TableCell className="text-sm">{brandNamesMap?.[job.brand_id] || "—"}</TableCell>
+                        )}
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{TYPE_LABELS[job.type] || job.type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusColor} className="text-xs">{statusLabel}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">{summary?.total ?? "—"}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-green-600">{summary?.success ?? "—"}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-destructive">{summary?.errors ?? 0}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
