@@ -25,7 +25,7 @@ type Offer = Tables<"offers">;
 interface Props {
   store: StoreRow;
   onBack: () => void;
-  onOfferClick?: (offer: any) => void;
+  onOfferClick?: (offer: Offer) => void;
 }
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
