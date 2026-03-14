@@ -191,13 +191,24 @@ async function processFinalized(
     return { error: "As credenciais da TaxiMachine (usuário/senha e/ou chave de acesso) não foram configuradas. Acesse a configuração da integração e preencha todos os campos.", status: 400 };
   }
 
+  logger.info("TaxiMachine auth config", {
+    brandId,
+    machineRideId,
+    hasBasicAuth: !!(basicUser && basicPass),
+    basicAuthUser: basicUser ? `${basicUser.slice(0, 3)}***` : null,
+    hasApiKey: hasValidApiKey,
+    apiKeyPrefix: apiKey ? `${apiKey.slice(0, 6)}***` : null,
+  });
+
   const basicAuth = btoa(`${basicUser}:${basicPass}`);
   const machineBaseUrl = "https://api-vendas.taximachine.com.br";
 
-  const receiptRes = await fetch(
-    `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`,
-    { headers: { "Authorization": `Basic ${basicAuth}`, "api-key": apiKey } }
-  );
+  const receiptUrl = `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`;
+  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl, headers: ["Authorization: Basic ***", `api-key: ${apiKey.slice(0, 6)}***`] });
+
+  const receiptRes = await fetch(receiptUrl, {
+    headers: { "Authorization": `Basic ${basicAuth}`, "api-key": apiKey },
+  });
 
   if (!receiptRes.ok) {
     const receiptBody = await receiptRes.text();
