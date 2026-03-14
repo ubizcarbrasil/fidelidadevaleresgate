@@ -599,6 +599,39 @@ export default function CsvImportPage() {
   const previewRows = mappedRows.slice(0, 20);
   const errorRowNumbers = new Set(validationErrors.map(e => e.row));
 
+  const TYPE_LABELS: Record<string, string> = {
+    STORES: "Lojas", OFFERS: "Ofertas", CUSTOMERS: "Clientes", CRM_CONTACTS: "Contatos CRM", COUPONS: "Cupons",
+  };
+
+  // ── Import history query ──
+  const { data: importHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ["import-jobs-history", brandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("import_jobs")
+        .select("id, brand_id, branch_id, type, status, created_at, finished_at, summary_json, created_by")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (brandId && !isRootAdmin) q = q.eq("brand_id", brandId);
+      const { data } = await q;
+      return data || [];
+    },
+  });
+
+  // Load brand names for history display (root admin sees all brands)
+  const brandIdsInHistory = [...new Set((importHistory || []).map(j => j.brand_id))];
+  const { data: brandNamesMap } = useQuery({
+    queryKey: ["brand-names-for-history", brandIdsInHistory.join(",")],
+    queryFn: async () => {
+      if (brandIdsInHistory.length === 0) return {};
+      const { data } = await supabase.from("brands").select("id, name").in("id", brandIdsInHistory);
+      const map: Record<string, string> = {};
+      (data || []).forEach(b => { map[b.id] = b.name; });
+      return map;
+    },
+    enabled: brandIdsInHistory.length > 0,
+  });
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
