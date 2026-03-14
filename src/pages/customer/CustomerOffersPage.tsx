@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
 import SafeImage from "@/components/customer/SafeImage";
+import type { OfferWithStore } from "@/types/customer";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -24,7 +25,7 @@ export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
-  const [offers, setOffers] = useState<any[]>([]);
+  const [offers, setOffers] = useState<OfferWithStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -56,7 +57,7 @@ export default function CustomerOffersPage() {
       if (!data) return;
       const segMap = new Map<string, { id: string; name: string }>();
       for (const s of data) {
-        const seg = s.taxonomy_segments as any;
+        const seg = s.taxonomy_segments as { id: string; name: string } | null;
         if (seg && !segMap.has(seg.id)) {
           segMap.set(seg.id, { id: seg.id, name: seg.name });
         }
@@ -69,11 +70,11 @@ export default function CustomerOffersPage() {
   const filtered = useMemo(() => {
     let result = offers;
     if (selectedSegmentId) {
-      result = result.filter((o: any) => o.stores?.taxonomy_segment_id === selectedSegmentId);
+      result = result.filter((o) => o.stores?.taxonomy_segment_id === selectedSegmentId);
     }
     if (query.trim()) {
       const q = query.toLowerCase();
-      result = result.filter((o: any) =>
+      result = result.filter((o) =>
         o.title?.toLowerCase().includes(q) ||
         o.description?.toLowerCase().includes(q) ||
         o.stores?.name?.toLowerCase().includes(q)
@@ -94,7 +95,7 @@ export default function CustomerOffersPage() {
         .eq("status", "ACTIVE")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
-      setOffers(data || []);
+      setOffers((data || []) as OfferWithStore[]);
       setLoading(false);
     };
     fetchOffers();

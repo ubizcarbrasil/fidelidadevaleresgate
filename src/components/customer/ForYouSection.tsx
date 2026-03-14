@@ -55,7 +55,7 @@ export default function ForYouSection() {
           .eq("is_active", true)
           .eq("status", "ACTIVE")
           .order("likes_count", { ascending: false })
-          .limit(8);
+          .range(0, 11);
         setOffers(data || []);
         setLoading(false);
         return;

@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
 import { toast } from "sonner";
+import type { RedemptionWithOffer } from "@/types/customer";
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
@@ -42,7 +43,7 @@ export default function CustomerRedemptionsPage() {
   const { theme } = useBrand();
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [search, setSearch] = useState("");
-  const [selectedRedemption, setSelectedRedemption] = useState<any>(null);
+  const [selectedRedemption, setSelectedRedemption] = useState<RedemptionWithOffer | null>(null);
   const queryClient = useQueryClient();
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
@@ -50,7 +51,7 @@ export default function CustomerRedemptionsPage() {
 
   const PAGE_SIZE = 30;
   const [page, setPage] = useState(0);
-  const [allRedemptions, setAllRedemptions] = useState<Record<string, unknown>[]>([]);
+  const [allRedemptions, setAllRedemptions] = useState<RedemptionWithOffer[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -74,7 +75,7 @@ export default function CustomerRedemptionsPage() {
         .order("created_at", { ascending: false })
         .range(0, PAGE_SIZE - 1);
       if (error) throw error;
-      const items = (data || []) as unknown as Record<string, unknown>[];
+      const items = (data || []) as unknown as RedemptionWithOffer[];
       setAllRedemptions(items);
       setHasMore(items.length >= PAGE_SIZE);
       setPage(0);
@@ -96,7 +97,7 @@ export default function CustomerRedemptionsPage() {
       .eq("customer_id", customer.id)
       .order("created_at", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
-    const items = (data || []) as unknown as Record<string, unknown>[];
+    const items = (data || []) as unknown as RedemptionWithOffer[];
     setAllRedemptions(prev => [...prev, ...items]);
     setHasMore(items.length >= PAGE_SIZE);
     setPage(nextPage);
@@ -108,7 +109,7 @@ export default function CustomerRedemptionsPage() {
     redemptions.forEach((r) => {
       c.ALL++;
       const status = r.status as keyof typeof c;
-      if (status in c) c[status]++;
+      if (status in c) c[status as keyof typeof c]++;
     });
     return c;
   }, [redemptions]);
@@ -118,12 +119,15 @@ export default function CustomerRedemptionsPage() {
     if (filter !== "ALL") list = list.filter((r) => r.status === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((r: any) =>
-        r.token?.toLowerCase().includes(q) ||
-        r.id?.toLowerCase().includes(q) ||
-        r.offers?.title?.toLowerCase().includes(q) ||
-        r.offers?.stores?.name?.toLowerCase().includes(q)
-      );
+      list = list.filter((r) => {
+        const q = search.toLowerCase();
+        return (
+          r.token?.toLowerCase().includes(q) ||
+          r.id?.toLowerCase().includes(q) ||
+          r.offers?.title?.toLowerCase().includes(q) ||
+          r.offers?.stores?.name?.toLowerCase().includes(q)
+        );
+      });
     }
     return list;
   }, [redemptions, filter, search]);
@@ -258,7 +262,7 @@ export default function CustomerRedemptionsPage() {
 function RedemptionCard({
   r, primary, fg, fontHeading, formatCurrency, formatDate, onViewDetail, onCanceled,
 }: {
-  r: any;
+  r: RedemptionWithOffer;
   primary: string;
   fg: string;
   fontHeading: string;
@@ -269,10 +273,10 @@ function RedemptionCard({
 }) {
   const offer = r.offers;
   const store = offer?.stores;
-  const snapshot = r.offer_snapshot_json || {};
+  const snapshot = (r.offer_snapshot_json || {}) as Record<string, unknown>;
   const badge = STATUS_BADGE[r.status] || STATUS_BADGE.PENDING;
   const isProduct = offer?.coupon_type === "PRODUCT" || snapshot?.coupon_type === "PRODUCT";
-  const creditValue = r.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0;
+  const creditValue = r.credit_value_applied || offer?.value_rescue || (snapshot?.value_rescue as number) || 0;
   const purchaseValue = r.purchase_value || 0;
   const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
   const minPurchase = Number(offer?.min_purchase || snapshot?.min_purchase) || 0;
@@ -455,14 +459,14 @@ function RedemptionCard({
           <span>Resgate:</span>
           <span>{formatDate(r.created_at)}</span>
         </div>
-        {r.expires_at && (
+        {r.expires_at ? (
           <div className="flex justify-between text-[11px]">
             <span className="text-muted-foreground">Expira:</span>
             <span style={{ color: r.status === "EXPIRED" ? "#DC2626" : primary }}>
               {formatDate(r.expires_at)}
             </span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* QR / PIN button + Estorno */}
@@ -516,14 +520,15 @@ function CancelButton({ redemptionId, token, onCanceled, fg }: { redemptionId: s
     try {
       const { error } = await supabase
         .from("redemptions")
-        .update({ status: "CANCELED" as any })
+        .update({ status: "CANCELED" as "CANCELED" | "EXPIRED" | "PENDING" | "USED" })
         .eq("id", redemptionId)
         .eq("status", "PENDING");
       if (error) throw error;
       toast.success("Resgate estornado com sucesso!");
       onCanceled();
-    } catch (err: any) {
-      toast.error("Erro ao estornar: " + (err.message || "Tente novamente"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Tente novamente";
+      toast.error("Erro ao estornar: " + message);
     } finally {
       setLoading(false);
       setConfirming(false);

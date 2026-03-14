@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
+
+const logger = createEdgeLogger("agent-api");
 
 // ── CORS ────────────────────────────────────────────────────────────────
 const corsHeaders = {
@@ -500,7 +503,7 @@ Deno.serve(async (req) => {
     // ── 404 fallback ──────────────────────────
     return json(404, { ok: false, error: "Not Found", details: { path: `/${segments.join("/")}`, method } });
   } catch (err) {
-    console.error("agent-api unhandled error:", err);
+    logger.error("Unhandled error", { error: String(err) });
     return json(500, { ok: false, error: "Internal error", details: { message: String(err) } });
   }
 });

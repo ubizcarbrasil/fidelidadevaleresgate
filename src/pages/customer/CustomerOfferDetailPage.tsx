@@ -4,6 +4,11 @@ import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
+import type { RedemptionWithOffer } from "@/types/customer";
+import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
+import { useBrand } from "@/contexts/BrandContext";
+import { useCustomer } from "@/contexts/CustomerContext";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
   CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
@@ -39,7 +44,7 @@ interface Props {
   offer: OfferWithStore;
   onBack: () => void;
   onOfferClick?: (offer: OfferWithStore) => void;
-  onOpenStore?: (store: any) => void;
+  onOpenStore?: (store: Tables<"stores">) => void;
 }
 
 export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, onOpenStore }: Props) {
@@ -53,9 +58,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   const [cpf, setCpf] = useState("");
   
   const [pin, setPin] = useState<string | null>(null);
-  const [completedRedemption, setCompletedRedemption] = useState<any>(null);
+  const [completedRedemption, setCompletedRedemption] = useState<RedemptionWithOffer | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
-  const [similarOffers, setSimilarOffers] = useState<any[]>([]);
+  const [similarOffers, setSimilarOffers] = useState<OfferWithStore[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [contentKey, setContentKey] = useState(offer.id);
   const [isFading, setIsFading] = useState(false);
@@ -116,7 +121,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
   // Pre-calculated product values for PRODUCT offers
   const discountPctOffer = Number(offer.discount_percent) || 0;
-  const termsParamsOffer = offer.terms_params_json as any;
+  const termsParamsOffer = offer.terms_params_json as Record<string, unknown> | null;
   const productPriceOffer = termsParamsOffer?.product_price
     ? Number(termsParamsOffer.product_price)
     : (discountPctOffer > 0 && Number(offer.value_rescue) > 0)
@@ -193,7 +198,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
         branch_id: selectedBranch.id,
         status: "PENDING",
         customer_cpf: cpf.replace(/\D/g, ""),
-        offer_snapshot_json: offerSnapshot as any,
+        offer_snapshot_json: offerSnapshot as Record<string, unknown>,
         purchase_value: parsedProductValue || null,
         credit_value_applied: creditApplied || null,
       }).select("id, token").single();
@@ -207,10 +212,10 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
           customer_id: customer.id,
           brand_id: brand.id,
           branch_id: selectedBranch.id,
-          entry_type: "DEBIT" as any,
+          entry_type: "DEBIT",
           points_amount: finalRequired,
           money_amount: 0,
-          reference_type: "REDEMPTION" as any,
+          reference_type: "REDEMPTION",
           reference_id: created.id,
           reason: `Resgate: ${offer.title}`,
           created_by_user_id: (await supabase.auth.getUser()).data.user!.id,
@@ -248,8 +253,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       }
 
       toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
-    } catch (err: any) {
-      toast({ title: "Erro ao resgatar", description: translateError(err.message), variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao resgatar", description: translateError(message), variant: "destructive" });
     } finally {
       setRedeeming(false);
     }
@@ -292,7 +298,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       >
         {(() => {
           const isProduct = offer.coupon_type === "PRODUCT";
-          const termsParams = offer.terms_params_json as any;
+          const termsParams = offer.terms_params_json as Record<string, unknown> | null;
           const discountPct = Number(offer.discount_percent) || 0;
           // Product price: try terms_params_json first, then fall back to value_rescue / (discount/100)
           const productPrice = termsParams?.product_price

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { RedemptionWithOffer, OfferInfo } from "@/types/customer";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -14,7 +15,7 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 }
 
 interface Props {
-  redemption: any;
+  redemption: RedemptionWithOffer;
   onBack: () => void;
   onCanceled?: () => void;
 }
@@ -31,9 +32,9 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const offer = redemption.offers;
+  const offer: OfferInfo | null = redemption.offers ?? null;
   const store = offer?.stores;
-  const snapshot = redemption.offer_snapshot_json || {};
+  const snapshot = (redemption.offer_snapshot_json || {}) as OfferInfo;
   const isProduct = offer?.coupon_type === "PRODUCT" || snapshot?.coupon_type === "PRODUCT";
   const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
   const creditValue = redemption.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0;
@@ -61,7 +62,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
     try {
       const { error } = await supabase
         .from("redemptions")
-        .update({ status: "CANCELED" as any })
+        .update({ status: "CANCELED" as "CANCELED" | "EXPIRED" | "PENDING" | "USED" })
         .eq("id", redemption.id)
         .eq("status", "PENDING");
       if (error) throw error;
@@ -83,11 +84,11 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             customer_id: debitEntry.customer_id,
             brand_id: debitEntry.brand_id,
             branch_id: debitEntry.branch_id,
-            entry_type: "CREDIT" as any,
+            entry_type: "CREDIT",
             points_amount: debitEntry.points_amount,
             money_amount: 0,
-            reference_type: "REDEMPTION" as any,
-            reference_id: redemption.id,
+            reference_type: "REDEMPTION",
+            reference_id: redemption.id as string,
             reason: "Estorno de resgate",
             created_by_user_id: userId,
           });
@@ -109,8 +110,9 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
       toast.success("Resgate estornado com sucesso!");
       onCanceled?.();
-    } catch (err: any) {
-      toast.error("Erro ao estornar: " + (err.message || "Tente novamente"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Tente novamente";
+      toast.error("Erro ao estornar: " + message);
     } finally {
       setCanceling(false);
     }
@@ -256,11 +258,11 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             <div className="space-y-2">
               {store?.address && (
                 <ActionButton icon={<MapPin className="h-5 w-5" />} label="Ver Localização" bg="#FBBF24" color="#1F2937"
-                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`, "_blank")} />
+                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address || "")}`, "_blank")} />
               )}
               {store?.whatsapp && (
                 <ActionButton icon={<MessageCircle className="h-5 w-5" />} label="Resgatar no WhatsApp" bg="#25D366" color="#fff"
-                  onClick={() => window.open(`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`, "_blank")} />
+                  onClick={() => window.open(`https://wa.me/${(store.whatsapp || "").replace(/\D/g, "")}`, "_blank")} />
               )}
               {store?.site_url && (
                 <ActionButton icon={<Globe className="h-5 w-5" />} label="Resgatar no Site" bg="#1F2937" color="#fff"
@@ -268,7 +270,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
               )}
               {store?.instagram && (
                 <ActionButton icon={<Instagram className="h-5 w-5" />} label="Ver Instagram" bg="linear-gradient(135deg, #833AB4, #E1306C, #F77737)" color="#fff"
-                  onClick={() => window.open(`https://instagram.com/${store.instagram.replace("@", "")}`, "_blank")} />
+                  onClick={() => window.open(`https://instagram.com/${(store.instagram || "").replace("@", "")}`, "_blank")} />
               )}
             </div>
           </div>

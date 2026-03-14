@@ -50,7 +50,7 @@ export default function CustomerProfilePage() {
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const settings = (brand?.brand_settings_json as any) || {};
+  const settings = (brand?.brand_settings_json ?? {}) as { profile_menu_links?: ProfileMenuItem[] };
   const profileMenuLinks: ProfileMenuItem[] = settings.profile_menu_links || [
     { id: "privacy", label: "Privacidade e Segurança", type: "link", url: "", text_content: "", icon_name: "Shield", is_visible: true },
     { id: "help", label: "Ajuda e Suporte", type: "link", url: "", text_content: "", icon_name: "CircleHelp", is_visible: true },
@@ -72,8 +72,9 @@ export default function CustomerProfilePage() {
       if (error) throw error;
       await refetch();
       toast({ title: "Perfil atualizado!" });
-    } catch (err: any) {
-      toast({ title: "Erro", description: translateError(err.message), variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro", description: translateError(message), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -302,9 +303,18 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
 }
 
 // --- Favorites Section ---
-function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: any; primary: string; fg: string; fontHeading: string }) {
+interface FavoriteOffer {
+  id: string;
+  title: string;
+  image_url: string | null;
+  value_rescue: number;
+  description: string | null;
+  stores?: { name: string; logo_url: string | null } | null;
+}
+
+function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { id: string } | null; primary: string; fg: string; fontHeading: string }) {
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteOffer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -316,7 +326,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
         .select("offer_id, offers(id, title, image_url, value_rescue, description, stores(name, logo_url))")
         .eq("customer_id", customer.id)
         .order("created_at", { ascending: false });
-      setFavorites((data || []).map((d: any) => d.offers).filter(Boolean));
+      setFavorites((data || []).map((d) => d.offers as unknown as FavoriteOffer).filter(Boolean));
       setLoading(false);
     };
     fetch();
@@ -364,7 +374,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: an
         </div>
       ) : (
         <div className="space-y-1.5">
-          {favorites.map((offer: any) => (
+          {favorites.map((offer) => (
             <motion.button
               key={offer.id}
               whileTap={{ scale: 0.97 }}
@@ -417,7 +427,7 @@ function ProfileMenuItemButton({
   fg: string;
   onOpenText: (title: string, content: string) => void;
 }) {
-  const LucideIcon = (icons as Record<string, any>)[item.icon_name];
+  const LucideIcon = (icons as Record<string, React.ComponentType<{ className?: string }>>)[item.icon_name];
 
   const handleClick = () => {
     if (item.type === "text") {
