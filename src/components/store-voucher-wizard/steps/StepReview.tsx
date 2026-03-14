@@ -64,7 +64,7 @@ export default function StepReview({ data }: Props) {
                 {Math.floor(creditBase)} pontos por R$ {creditBase.toFixed(2)} na compra mínima de R$ {data.min_purchase.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "ONLINE" ? "Online" : "WhatsApp"}
+                Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "SITE" ? "Online" : "WhatsApp"}
               </p>
             </div>
           )}

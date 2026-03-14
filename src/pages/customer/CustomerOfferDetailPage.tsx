@@ -613,7 +613,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           </p>
                           {offer.redemption_type && (
                             <p className="text-[11px] mt-1.5 text-muted-foreground">
-                              Resgate: {offer.redemption_type === "PRESENCIAL" ? "🏪 Presencial" : offer.redemption_type === "ONLINE" ? "🌐 Online" : "📱 WhatsApp"}
+                              Resgate: {offer.redemption_type === "PRESENCIAL" ? "🏪 Presencial" : offer.redemption_type === "SITE" ? "🌐 Online" : "📱 WhatsApp"}
                             </p>
                           )}
                         </div>
