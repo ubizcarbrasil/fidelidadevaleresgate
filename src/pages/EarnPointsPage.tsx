@@ -158,7 +158,7 @@ export default function EarnPointsPage() {
         .eq("status", "APPROVED")
         .gte("created_at", todayISO);
       const storeDayTotal = (storeToday || []).reduce((s: number, e: any) => s + e.points_earned, 0);
-      if (rule && storeDayTotal + preview.points > rule.max_points_per_store_per_day) {
+      if (rule && preview.points !== undefined && storeDayTotal + preview.points > rule.max_points_per_store_per_day) {
         throw new Error(`Limite diário do parceiro atingido (${rule.max_points_per_store_per_day} pontos)`);
       }
 
