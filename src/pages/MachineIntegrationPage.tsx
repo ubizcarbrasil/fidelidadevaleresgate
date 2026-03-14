@@ -279,7 +279,17 @@ export default function MachineIntegrationPage() {
   useEffect(() => {
     if (selectedIntegration?.callback_url !== undefined) setCallbackUrl(selectedIntegration?.callback_url || "");
     setTelegramChatId((selectedIntegration as any)?.telegram_chat_id || "");
-  }, [selectedIntegration?.callback_url, (selectedIntegration as any)?.telegram_chat_id]);
+    setSelectedMatrixApiKey(selectedIntegration?.matrix_api_key || "");
+    setSelectedMatrixBasicUser(selectedIntegration?.matrix_basic_auth_user || "");
+    setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
+  }, [
+    selectedIntegration?.id,
+    selectedIntegration?.callback_url,
+    (selectedIntegration as any)?.telegram_chat_id,
+    selectedIntegration?.matrix_api_key,
+    selectedIntegration?.matrix_basic_auth_user,
+    selectedIntegration?.matrix_basic_auth_password,
+  ]);
 
   /* ── Initial events ── */
   useEffect(() => {
