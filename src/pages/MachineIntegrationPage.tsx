@@ -49,6 +49,9 @@ type Integration = {
   total_rides: number; total_points: number;
   callback_url: string | null; created_at: string; updated_at: string;
   preferred_endpoint?: string;
+  matrix_api_key?: string | null;
+  matrix_basic_auth_user?: string | null;
+  matrix_basic_auth_password?: string | null;
 };
 
 type Branch = { id: string; name: string; city: string | null; state: string | null };
