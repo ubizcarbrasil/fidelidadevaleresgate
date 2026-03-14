@@ -410,6 +410,23 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const deleteIntegrationMutation = useMutation({
+    mutationFn: async (integrationId: string) => {
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .delete()
+        .eq("id", integrationId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Conexão removida", description: "Agora você pode reconectar com novas credenciais." });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao remover", description: err.message, variant: "destructive" });
+    },
+  });
+
   const saveCallbackMutation = useMutation({
     mutationFn: async () => {
       if (!selectedIntegration?.id) throw new Error("Integration not found");
@@ -809,15 +826,30 @@ export default function MachineIntegrationPage() {
                 </p>
               </div>
 
-              <Button
-                variant="destructive" size="sm"
-                onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)}
-                disabled={deactivateMutation.isPending}
-              >
-                {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                <PowerOff className="h-4 w-4 mr-1" />
-                Desativar esta cidade
-              </Button>
+              <div className="flex items-center gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="destructive" size="sm"
+                  onClick={() => {
+                    if (confirm("Remover esta conexão? Você poderá reconectar com novas credenciais.")) {
+                      deleteIntegrationMutation.mutate(selectedIntegration.id);
+                    }
+                  }}
+                  disabled={deleteIntegrationMutation.isPending}
+                >
+                  {deleteIntegrationMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Remover conexão
+                </Button>
+                <Button
+                  variant="outline" size="sm"
+                  onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)}
+                  disabled={deactivateMutation.isPending}
+                >
+                  {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <PowerOff className="h-4 w-4 mr-1" />
+                  Desativar
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </>
