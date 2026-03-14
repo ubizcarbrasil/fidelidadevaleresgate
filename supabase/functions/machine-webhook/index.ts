@@ -149,13 +149,21 @@ async function processFinalized(
   ]);
 
   if (!statusRes.ok) {
-    logger.error("TaxiMachine solicitacaoStatus error", { body: await statusRes.text() });
+    const statusBody = await statusRes.text();
+    logger.error("TaxiMachine solicitacaoStatus error", { body: statusBody });
     logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "solicitacaoStatus", status: statusRes.status } });
+    if (statusRes.status === 401) {
+      return { error: "Credenciais TaxiMachine inválidas. Verifique usuário e senha na configuração da integração.", status: 400 };
+    }
     return { error: "Failed to fetch ride status from TaxiMachine", status: 502 };
   }
   if (!receiptRes.ok) {
-    logger.error("TaxiMachine recibo error", { body: await receiptRes.text() });
+    const receiptBody = await receiptRes.text();
+    logger.error("TaxiMachine recibo error", { body: receiptBody });
     logAudit(sb, "MACHINE_API_ERROR", { brandId, entityId: machineRideId, ip, details: { endpoint: "recibo", status: receiptRes.status } });
+    if (receiptRes.status === 401) {
+      return { error: "Credenciais TaxiMachine inválidas. Verifique usuário e senha na configuração da integração.", status: 400 };
+    }
     return { error: "Failed to fetch receipt from TaxiMachine", status: 502 };
   }
 
