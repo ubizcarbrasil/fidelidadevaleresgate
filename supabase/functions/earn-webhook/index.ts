@@ -61,7 +61,7 @@ function createAuditLogger(
         changes_json: opts.changes || {},
       })
       .then(({ error }) => {
-        if (error) console.error("audit_log insert error:", error);
+        if (error) createEdgeLogger("earn-webhook").error("audit_log insert error", { error });
       });
   };
 }
