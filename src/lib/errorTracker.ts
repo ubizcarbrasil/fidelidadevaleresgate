@@ -29,7 +29,7 @@ export function setErrorContext(userId: string | null, brandId: string | null): 
 /** Report an error to the error_logs table */
 export async function reportError(report: ErrorReport): Promise<void> {
   try {
-    const { error } = await supabase.from("error_logs").insert({
+    const { error } = await supabase.from("error_logs" as "audit_logs").insert({
       message: report.message.slice(0, 2000),
       stack: report.stack?.slice(0, 5000) || null,
       url: report.url || (typeof window !== "undefined" ? window.location.href : null),
@@ -38,7 +38,7 @@ export async function reportError(report: ErrorReport): Promise<void> {
       severity: report.severity || "error",
       source: report.source || "client",
       metadata_json: report.metadata || {},
-    });
+    } as Record<string, unknown>);
 
     if (error) {
       log.warn("Failed to persist error log", error);
