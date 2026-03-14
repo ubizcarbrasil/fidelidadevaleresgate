@@ -1,7 +1,7 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
   ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
-  TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen,
+  TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen, Crown, Car,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -54,12 +54,14 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Identidade & Vitrine",
     items: [
       { key: "sidebar.galeria_icones", defaultTitle: "Galeria de Ícones", url: "/icon-library", icon: Image },
+      { key: "sidebar.app_icons", defaultTitle: "Ícones do App", url: "/app-icons", icon: Image },
       { key: "sidebar.central_banners", defaultTitle: "Central de Propagandas", url: "/banner-manager", icon: Image },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomes e Rótulos", url: "/menu-labels", icon: Type },
-      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder", icon: Layers },
+      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder-v2", icon: Layers },
       { key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2 },
       { key: "sidebar.welcome_tour", defaultTitle: "Tour de Boas-Vindas", url: "/welcome-tour", icon: Rocket },
       { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText },
+      { key: "sidebar.partner_landing", defaultTitle: "LP de Parceiros", url: "/partner-landing-config", icon: FileText },
     ],
   },
   {
@@ -83,6 +85,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias Achadinhos", url: "/affiliate-categories", icon: Sparkles },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
+      { key: "sidebar.gg_store_summary", defaultTitle: "Resumo Loja GG", url: "/ganha-ganha-store-summary", icon: Handshake },
       { key: "sidebar.operador_pdv", defaultTitle: "Operador PDV", url: "/pdv", icon: ScanLine },
       { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap },
     ],
@@ -132,6 +135,11 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { key: "sidebar.kit_inicial", defaultTitle: "Kit Inicial", url: "/starter-kit", icon: PackageSearch },
       { key: "sidebar.teste_webhook", defaultTitle: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical },
+      { key: "sidebar.machine", defaultTitle: "TaxiMachine", url: "/machine-integration", icon: Zap },
+      { key: "sidebar.configuracoes", defaultTitle: "Configurações da Marca", url: "/brand-settings", icon: Settings2 },
+      { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key },
+      { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
+      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
     ],
   },
 ];
