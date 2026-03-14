@@ -95,7 +95,7 @@ export default function StoreCatalogView({
   }, [storeId]);
 
   const uniqueCategories = useMemo(() => {
-    if (categories.length > 0) return categories.map((c: any) => c.name);
+    if (categories.length > 0) return categories.map((c) => c.name);
     return [...new Set(items.map(i => i.category).filter(Boolean))];
   }, [items, categories]);
 
