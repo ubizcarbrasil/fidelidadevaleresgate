@@ -325,6 +325,9 @@ export default function MachineIntegrationPage() {
               </ScrollArea>
             </CardContent>
           </Card>
+
+          {/* Scored Customers Panel */}
+          <ScoredCustomersPanel brandId={currentBrandId!} />
         </>
       )}
 
