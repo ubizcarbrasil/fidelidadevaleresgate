@@ -24,6 +24,10 @@ import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
+import type { Tables } from "@/integrations/supabase/types";
+import type { OfferWithStore } from "@/types/customer";
+
+type StoreRow = Tables<"stores">;
 
 interface SectionDetail {
   title: string | null;
@@ -40,10 +44,9 @@ interface SectionItem {
   [key: string]: unknown;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CustomerNavContextType {
-  openOffer: (offer: any) => void;
-  openStore: (store: any) => void;
+  openOffer: (offer: OfferWithStore) => void;
+  openStore: (store: StoreRow) => void;
   openSectionDetail: (section: SectionDetail, items: SectionItem[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
