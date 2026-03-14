@@ -217,7 +217,7 @@ export default function CustomerRedemptionsPage() {
 function RedemptionCard({
   r, primary, fg, fontHeading, formatCurrency, formatDate, onViewDetail, onCanceled,
 }: {
-  r: Record<string, unknown>;
+  r: any;
   primary: string;
   fg: string;
   fontHeading: string;
@@ -226,9 +226,9 @@ function RedemptionCard({
   onViewDetail: () => void;
   onCanceled: () => void;
 }) {
-  const offer = r.offers as Record<string, unknown> | null;
-  const store = (offer as Record<string, unknown> & { stores?: Record<string, unknown> })?.stores;
-  const snapshot = (r.offer_snapshot_json || {}) as Record<string, unknown>;
+  const offer = r.offers;
+  const store = offer?.stores;
+  const snapshot = r.offer_snapshot_json || {};
   const badge = STATUS_BADGE[r.status as string] || STATUS_BADGE.PENDING;
   const isProduct = (offer?.coupon_type as string) === "PRODUCT" || (snapshot?.coupon_type as string) === "PRODUCT";
   const creditValue = (r.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0) as number;
