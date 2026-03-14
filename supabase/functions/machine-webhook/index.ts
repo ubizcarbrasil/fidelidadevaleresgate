@@ -427,6 +427,7 @@ async function processFinalized(
             points_credited: points,
             finalized_at: new Date().toISOString(),
             machine_ride_id: machineRideId,
+            driver_name: driverName || null,
           }),
         }).catch((e) => logger.error("Telegram notification error", { error: String(e) }));
       } catch (e) {

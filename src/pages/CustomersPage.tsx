@@ -134,12 +134,14 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
-              {data?.items?.map(c => (
+              {isLoading && <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
+              {data?.items?.map((c: any) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>{c.phone || "—"}</TableCell>
+                  <TableCell>{c.cpf || "—"}</TableCell>
+                  <TableCell>{c.email || "—"}</TableCell>
                   <TableCell>{(c.brands as any)?.name}</TableCell>
                   <TableCell>{(c.branches as any)?.name}</TableCell>
                   <TableCell>{c.points_balance}</TableCell>

@@ -751,7 +751,9 @@ export default function MachineIntegrationPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <User className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="font-medium text-xs">{notif.customer_name || "Não identificado"}</span>
+                          <span className="font-medium text-xs">
+                            {notif.customer_name || "Não identificado"}
+                          </span>
                           {notif.customer_cpf_masked && (
                             <span className="text-xs text-muted-foreground">CPF {notif.customer_cpf_masked}</span>
                           )}
@@ -761,6 +763,9 @@ export default function MachineIntegrationPage() {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {notif.driver_name && (
+                          <span className="flex items-center gap-1"><Car className="h-3 w-3" />Motorista: {notif.driver_name}</span>
+                        )}
                         {notif.customer_phone && (
                           <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{notif.customer_phone}</span>
                         )}

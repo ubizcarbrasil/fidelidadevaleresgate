@@ -268,6 +268,7 @@ async function retryRide(
       points_credited: points,
       ride_value: rideValue,
       finalized_at: new Date().toISOString(),
+      driver_name: driverName || null,
     });
   }
 
