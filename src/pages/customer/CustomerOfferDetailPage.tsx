@@ -187,17 +187,18 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       const parsedProductValue = offer.coupon_type === "PRODUCT" ? productPriceOffer : undefined;
       const creditApplied = offer.coupon_type === "PRODUCT" ? creditAmountOffer : undefined;
 
-      const { data: created, error } = await supabase.from("redemptions").insert({
+      const insertPayload = {
         offer_id: offer.id,
         customer_id: customer.id,
         brand_id: brand.id,
         branch_id: selectedBranch.id,
-        status: "PENDING",
+        status: "PENDING" as const,
         customer_cpf: cpf.replace(/\D/g, ""),
-        offer_snapshot_json: offerSnapshot as Record<string, unknown>,
-        purchase_value: parsedProductValue || null,
-        credit_value_applied: creditApplied || null,
-      }).select("id, token").single();
+        offer_snapshot_json: offerSnapshot as unknown as Json,
+        purchase_value: parsedProductValue ?? null,
+        credit_value_applied: creditApplied ?? null,
+      };
+      const { data: created, error } = await supabase.from("redemptions").insert(insertPayload).select("id, token").single();
       if (error) throw error;
       setPin(created.token);
 
