@@ -1,30 +1,28 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Criar documentação MD do fluxo TaxiMachine
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+Criar o arquivo `TAXIMACHINE_FLOW.md` na raiz do projeto documentando o fluxo completo desde o recebimento do webhook até a pontuação do cliente.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Conteudo
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+O documento cobrira:
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+1. **Webhook recebido** - payload da TaxiMachine (`id_solicitacao`, `status_solicitacao`) e como a integracão e localizada (`x-api-secret`, `brand_id`, `branch_id`)
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+2. **Consulta ao Recibo** - chamada ao endpoint `GET https://api.taximachine.com.br/api/integracao/recibo?id_mch={id}` com headers `api-key` e `User-Agent: ua-ubizcar`, mostrando o JSON de retorno (valor, CPF, nome do passageiro)
+
+3. **Consulta Request V1 (enriquecimento)** - chamada ao `GET https://api.taximachine.com.br/api/v1/request/{id}` para obter o telefone do passageiro quando o Recibo nao retorna
+
+4. **Busca do cliente (cascade)** - ordem de busca: CPF → telefone → nome exato na tabela `customers`
+
+5. **Criacao de cliente** - quando nenhum match e encontrado, cria automaticamente
+
+6. **Credito de pontos** - insere no `points_ledger` e atualiza `points_balance`
+
+7. **Diagrama ASCII** do fluxo completo
+
+### Arquivo
+
+`TAXIMACHINE_FLOW.md` na raiz do projeto
+
