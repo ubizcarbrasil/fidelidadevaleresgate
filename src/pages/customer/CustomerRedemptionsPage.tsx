@@ -378,9 +378,9 @@ function RedemptionCard({
           )}
 
           {/* WhatsApp */}
-          {(store?.whatsapp as string) && (
+          {store?.whatsapp && (
             <DetailInfoRow icon={<Phone className="h-3.5 w-3.5" style={{ color: primary }} />} primary={primary}>
-              WhatsApp: {store?.whatsapp as string}
+              WhatsApp: {store.whatsapp}
             </DetailInfoRow>
           )}
 
