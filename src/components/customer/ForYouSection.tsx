@@ -20,20 +20,9 @@ export default function ForYouSection() {
   const { customer } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
   interface ScoredOffer { offer_id: string; score: number }
-  interface OfferWithStore {
-    id: string;
-    title: string;
-    description: string | null;
-    image_url: string | null;
-    discount_percent: number;
-    coupon_type: string;
-    value_rescue: number;
-    min_purchase: number;
-    badge_config_json: Record<string, unknown> | null;
-    likes_count: number;
+  type OfferWithStore = Tables<"offers"> & {
     stores: { name: string; logo_url: string | null } | null;
-    [key: string]: unknown;
-  }
+  };
   const [offers, setOffers] = useState<OfferWithStore[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
