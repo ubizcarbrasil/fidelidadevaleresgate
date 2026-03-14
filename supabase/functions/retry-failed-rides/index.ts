@@ -65,6 +65,7 @@ async function retryRide(
   integration: any,
   ride: any,
 ) {
+  const isBackfill = ride.ride_status === "FINALIZED";
   const brandId = ride.brand_id;
   const branchId = ride.branch_id || integration.branch_id || null;
   const machineRideId = ride.machine_ride_id;
