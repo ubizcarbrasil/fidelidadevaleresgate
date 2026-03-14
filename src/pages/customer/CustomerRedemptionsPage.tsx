@@ -74,9 +74,10 @@ export default function CustomerRedemptionsPage() {
 
   const counts = useMemo(() => {
     const c = { ALL: 0, PENDING: 0, USED: 0, EXPIRED: 0 };
-    redemptions.forEach((r: any) => {
+    redemptions.forEach((r) => {
       c.ALL++;
-      if (r.status in c) c[r.status as keyof typeof c]++;
+      const status = r.status as keyof typeof c;
+      if (status in c) c[status]++;
     });
     return c;
   }, [redemptions]);
