@@ -265,7 +265,7 @@ async function processGanhaGanhaBilling(
       reference_type: "EARNING_EVENT",
     });
   } catch (e) {
-    console.error("GG billing error (non-fatal):", e);
+    createEdgeLogger("earn-webhook").error("GG billing error (non-fatal)", { error: String(e) });
   }
 }
 
