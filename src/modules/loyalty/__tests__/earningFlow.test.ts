@@ -4,23 +4,28 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Track call counts to return different values per from() call
 let fromCallCount = 0;
 const mockResults: Array<{ data: unknown[]; error: null }> = [];
+
+function createChainable(idx: number) {
+  const result = () => Promise.resolve(mockResults[idx] ?? { data: [], error: null });
+  return {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    // gte is the terminal call in checkDailyLimits chains
+    gte: vi.fn(() => Promise.resolve(mockResults[idx] ?? { data: [], error: null })),
+    or: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    // limit is terminal for checkReceiptUniqueness
+    limit: vi.fn(() => Promise.resolve(mockResults[idx] ?? { data: [], error: null })),
+  };
+}
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => {
       const idx = fromCallCount++;
-      const builder = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        or: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn(() => Promise.resolve(mockResults[idx] ?? { data: [], error: null })),
-      };
-      return builder;
+      return createChainable(idx);
     }),
   },
 }));
@@ -92,14 +97,12 @@ describe("Earning Flow — Service Layer", () => {
   describe("checkReceiptUniqueness", () => {
     it("returns true when receipt is unique", async () => {
       mockResults.push({ data: [], error: null });
-
       const result = await checkReceiptUniqueness("s1", "REC-001");
       expect(result).toBe(true);
     });
 
     it("returns false when receipt already exists", async () => {
       mockResults.push({ data: [{ id: "existing" }], error: null });
-
       const result = await checkReceiptUniqueness("s1", "REC-001");
       expect(result).toBe(false);
     });
