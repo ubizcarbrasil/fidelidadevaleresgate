@@ -19,14 +19,9 @@ export interface RideData {
   driverName: string | null;
 }
 
-export interface FetchRideResult {
-  ok: true;
-  data: RideData;
-} | {
-  ok: false;
-  error: string;
-  status: number;
-}
+export type FetchRideResult =
+  | { ok: true; data: RideData }
+  | { ok: false; error: string; status: number };
 
 function parseRecibo(json: any): Omit<RideData, "source"> {
   const response = json?.response || json;
