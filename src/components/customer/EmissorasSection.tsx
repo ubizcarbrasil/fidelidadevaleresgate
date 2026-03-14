@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 interface EmissoraStore {
   id: string;
