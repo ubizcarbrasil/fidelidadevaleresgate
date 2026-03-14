@@ -170,12 +170,12 @@ async function processFinalized(
   machineRideId: string,
   ip: string
 ) {
-  // Use api-key header against api-vendas endpoint
-  const apiKey = (integration.api_key || "").trim();
-  const isPlaceholder = apiKey.startsWith("url-only-") || !apiKey;
-  if (isPlaceholder) {
-    logger.error("Missing api_key on integration", { brandId });
-    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "api_key_placeholder_or_empty", api_key_prefix: apiKey.slice(0, 12) } });
+  // Use Basic Auth (base64 of user:password) against api-vendas endpoint
+  const basicUser = (integration.basic_auth_user || "").trim();
+  const basicPass = (integration.basic_auth_password || "").trim();
+  if (!basicUser || !basicPass) {
+    logger.error("Missing basic_auth credentials on integration", { brandId });
+    logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "basic_auth_missing" } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
       branch_id: branchId,
@@ -185,14 +185,15 @@ async function processFinalized(
       points_credited: 0,
       finalized_at: new Date().toISOString(),
     }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
-    return { error: "A chave da API TaxiMachine não foi configurada. Acesse a configuração da integração e cole a chave real fornecida pela TaxiMachine.", status: 400 };
+    return { error: "As credenciais Basic Auth (usuário/senha) da TaxiMachine não foram configuradas. Acesse a configuração da integração e preencha os campos de usuário e senha.", status: 400 };
   }
 
+  const basicAuth = btoa(`${basicUser}:${basicPass}`);
   const machineBaseUrl = "https://api-vendas.taximachine.com.br";
 
   const receiptRes = await fetch(
     `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`,
-    { headers: { "api-key": apiKey } }
+    { headers: { "Authorization": `Basic ${basicAuth}` } }
   );
 
   if (!receiptRes.ok) {
