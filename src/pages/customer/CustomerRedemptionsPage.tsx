@@ -522,7 +522,7 @@ function CancelButton({ redemptionId, token, onCanceled, fg }: { redemptionId: s
     try {
       const { error } = await supabase
         .from("redemptions")
-        .update({ status: "CANCELED" as string })
+        .update({ status: "CANCELED" as "CANCELED" | "EXPIRED" | "PENDING" | "USED" })
         .eq("id", redemptionId)
         .eq("status", "PENDING");
       if (error) throw error;
