@@ -222,6 +222,16 @@ export default function CustomerRedemptionsPage() {
                 onCanceled={() => queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] })}
               />
             ))}
+            {hasMore && (
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="w-full py-3 rounded-2xl text-sm font-semibold"
+                style={{ backgroundColor: `${primary}15`, color: primary }}
+              >
+                {loadingMore ? "Carregando..." : "Carregar mais"}
+              </button>
+            )}
           </div>
         )}
       </div>
