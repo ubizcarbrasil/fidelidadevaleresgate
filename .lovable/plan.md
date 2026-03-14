@@ -1,30 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Diagnóstico do problema
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-A tabela `machine_integrations` usa **uma única coluna `api_key`** para dois propósitos diferentes:
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-1. **Autenticação do webhook** — a TaxiMachine envia o header `x-api-secret` com essa chave para se identificar ao nosso webhook
-2. **Consulta de recibos** — nosso webhook envia essa mesma chave como header `api-key` para a API `api-vendas.taximachine.com.br`
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-Essas são chaves **diferentes** na TaxiMachine. O erro "Chave da API inválida" acontece porque a chave usada para autenticar o webhook (vinda do painel de integração da TaxiMachine) não é a mesma chave que autoriza consultas de recibo na API de vendas.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-## Solução
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-Separar em duas colunas distintas na tabela `machine_integrations`:
-
-| Coluna | Uso | Header |
-|---|---|---|
-| `api_key` (existente) | Autenticação do webhook (TaxiMachine → nosso servidor) | `x-api-secret` |
-| `receipt_api_key` (nova) | Consulta de recibos (nosso servidor → api-vendas) | `api-key` |
-
-### Mudanças
-
-1. **Migração SQL** — Adicionar coluna `receipt_api_key text default null` à tabela `machine_integrations`
-
-2. **`supabase/functions/machine-webhook/index.ts`** — Na função `processFinalized`, usar `integration.receipt_api_key` (em vez de `integration.api_key`) no header `api-key` da chamada de recibo. Validar que `receipt_api_key` existe antes de chamar a API.
-
-3. **`supabase/functions/register-machine-webhook/index.ts`** — Aceitar campo `receipt_api_key` no body e salvar na coluna correspondente no upsert.
-
-4. **`src/pages/MachineIntegrationPage.tsx`** — Adicionar campo separado "Chave da API de Vendas" (para recibos) tanto na aba "Por credenciais" quanto na aba "Por URL", mantendo o campo existente "Chave de acesso" para autenticação do webhook.
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

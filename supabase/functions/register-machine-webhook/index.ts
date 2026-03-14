@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { brand_id, branch_id, api_key, basic_auth_user, basic_auth_password, action } = body;
+    const { brand_id, branch_id, api_key, receipt_api_key, basic_auth_user, basic_auth_password, action } = body;
 
     if (!brand_id) {
       return json({ error: "brand_id is required" }, 400);
@@ -174,6 +174,7 @@ Deno.serve(async (req) => {
           brand_id,
           branch_id,
           api_key: effectiveApiKey,
+          receipt_api_key: receipt_api_key || null,
           basic_auth_user,
           basic_auth_password,
           webhook_registered: webhookRegistered,

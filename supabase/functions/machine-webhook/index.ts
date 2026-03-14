@@ -173,10 +173,11 @@ async function processFinalized(
   // Use Basic Auth (base64 of user:password) against api-vendas endpoint
   const basicUser = (integration.basic_auth_user || "").trim();
   const basicPass = (integration.basic_auth_password || "").trim();
-  const apiKey = (integration.api_key || "").trim();
-  const hasValidApiKey = apiKey && !apiKey.startsWith("url-only-");
-  if (!basicUser || !basicPass || !hasValidApiKey) {
-    const missing = [!basicUser || !basicPass ? "basic_auth" : null, !hasValidApiKey ? "api_key" : null].filter(Boolean);
+  // Use receipt_api_key (dedicated key for Sales API) with fallback to api_key for backward compat
+  const receiptApiKey = (integration.receipt_api_key || integration.api_key || "").trim();
+  const hasValidReceiptKey = receiptApiKey && !receiptApiKey.startsWith("url-only-");
+  if (!basicUser || !basicPass || !hasValidReceiptKey) {
+    const missing = [!basicUser || !basicPass ? "basic_auth" : null, !hasValidReceiptKey ? "receipt_api_key" : null].filter(Boolean);
     logger.error("Missing credentials on integration", { brandId, missing });
     logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "credentials_missing", missing } });
     await sb.from("machine_rides").upsert({
@@ -196,18 +197,18 @@ async function processFinalized(
     machineRideId,
     hasBasicAuth: !!(basicUser && basicPass),
     basicAuthUser: basicUser ? `${basicUser.slice(0, 3)}***` : null,
-    hasApiKey: hasValidApiKey,
-    apiKeyPrefix: apiKey ? `${apiKey.slice(0, 6)}***` : null,
+    hasReceiptApiKey: hasValidReceiptKey,
+    receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
   });
 
   const basicAuth = btoa(`${basicUser}:${basicPass}`);
   const machineBaseUrl = "https://api-vendas.taximachine.com.br";
 
   const receiptUrl = `${machineBaseUrl}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl, headers: ["Authorization: Basic ***", `api-key: ${apiKey.slice(0, 6)}***`] });
+  logger.info("Fetching TaxiMachine receipt", { url: receiptUrl, headers: ["Authorization: Basic ***", `api-key: ${receiptApiKey.slice(0, 6)}***`] });
 
   const receiptRes = await fetch(receiptUrl, {
-    headers: { "Authorization": `Basic ${basicAuth}`, "api-key": apiKey },
+    headers: { "Authorization": `Basic ${basicAuth}`, "api-key": receiptApiKey },
   });
 
   if (!receiptRes.ok) {

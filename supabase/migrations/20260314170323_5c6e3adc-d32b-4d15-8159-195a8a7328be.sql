@@ -1,0 +1,1 @@
+ALTER TABLE public.machine_integrations ADD COLUMN IF NOT EXISTS receipt_api_key text DEFAULT null;

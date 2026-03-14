@@ -66,6 +66,10 @@ export default function MachineIntegrationPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("");
   const [callbackSaved, setCallbackSaved] = useState(false);
+  const [receiptApiKey, setReceiptApiKey] = useState("");
+  const [showReceiptApiKey, setShowReceiptApiKey] = useState(false);
+  const [urlReceiptApiKey, setUrlReceiptApiKey] = useState("");
+  const [showUrlReceiptApiKey, setShowUrlReceiptApiKey] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const [activatingBranchId, setActivatingBranchId] = useState<string>("");
   const [urlBranchId, setUrlBranchId] = useState<string>("");
@@ -194,6 +198,8 @@ export default function MachineIntegrationPage() {
       };
       const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
       if (resolvedApiKey) body.api_key = resolvedApiKey;
+      const resolvedReceiptKey = isUrlOnly ? urlReceiptApiKey : receiptApiKey;
+      if (resolvedReceiptKey) body.receipt_api_key = resolvedReceiptKey;
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -206,7 +212,7 @@ export default function MachineIntegrationPage() {
           title: "Cidade ativada por URL!",
           description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine.",
         });
-        setUrlBasicUser(""); setUrlBasicPass(""); setUrlApiKey("");
+        setUrlBasicUser(""); setUrlBasicPass(""); setUrlApiKey(""); setUrlReceiptApiKey("");
       } else {
         toast({
           title: "Integração ativada!",
@@ -214,7 +220,7 @@ export default function MachineIntegrationPage() {
             ? "Webhook registrado com sucesso."
             : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
         });
-        setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
+        setApiKey(""); setReceiptApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
       }
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
@@ -670,19 +676,36 @@ export default function MachineIntegrationPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="api_key">Chave de acesso</Label>
+                  <Label htmlFor="api_key">Chave de acesso (webhook)</Label>
                   <div className="relative">
                     <Input
                       id="api_key"
                       type={showApiKey ? "text" : "password"}
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Sua chave fornecida pela plataforma"
+                      placeholder="Chave que a TaxiMachine envia no header x-api-secret"
                     />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
                       {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <p className="text-xs text-muted-foreground">Opcional. Usada para autenticar o webhook recebido.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="receipt_api_key">Chave da API de Vendas (recibos)</Label>
+                  <div className="relative">
+                    <Input
+                      id="receipt_api_key"
+                      type={showReceiptApiKey ? "text" : "password"}
+                      value={receiptApiKey}
+                      onChange={(e) => setReceiptApiKey(e.target.value)}
+                      placeholder="Chave para consultar recibos na api-vendas"
+                    />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowReceiptApiKey(!showReceiptApiKey)}>
+                      {showReceiptApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Enviada como header <code className="bg-muted px-1 rounded">api-key</code> para consultar recibos.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="basic_user">Usuário</Label>
@@ -743,19 +766,36 @@ export default function MachineIntegrationPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="url_api_key">Chave de acesso (API Key)</Label>
+                  <Label htmlFor="url_api_key">Chave de acesso (webhook)</Label>
                   <div className="relative">
                     <Input
                       id="url_api_key"
                       type={showUrlApiKey ? "text" : "password"}
                       value={urlApiKey}
                       onChange={(e) => setUrlApiKey(e.target.value)}
-                      placeholder="Chave fornecida pela TaxiMachine"
+                      placeholder="Chave que a TaxiMachine envia no header x-api-secret"
                     />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlApiKey(!showUrlApiKey)}>
                       {showUrlApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <p className="text-xs text-muted-foreground">Opcional. Usada para autenticar o webhook recebido.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="url_receipt_api_key">Chave da API de Vendas (recibos)</Label>
+                  <div className="relative">
+                    <Input
+                      id="url_receipt_api_key"
+                      type={showUrlReceiptApiKey ? "text" : "password"}
+                      value={urlReceiptApiKey}
+                      onChange={(e) => setUrlReceiptApiKey(e.target.value)}
+                      placeholder="Chave para consultar recibos na api-vendas"
+                    />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlReceiptApiKey(!showUrlReceiptApiKey)}>
+                      {showUrlReceiptApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Enviada como header <code className="bg-muted px-1 rounded">api-key</code> para consultar recibos.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="url_basic_user">Usuário</Label>
@@ -770,7 +810,7 @@ export default function MachineIntegrationPage() {
                     </button>
                   </div>
                 </div>
-                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlApiKey || !urlBasicUser || !urlBasicPass || !urlBranchId}>
+                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlReceiptApiKey || !urlBasicUser || !urlBasicPass || !urlBranchId}>
                   {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Power className="h-4 w-4 mr-1" />
                   Ativar cidade
