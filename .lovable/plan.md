@@ -1,30 +1,28 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+Os logs confirmam: **"Chave da API inválida"** — a TaxiMachine rejeita o header `api-key`. 
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Olhando o screenshot que você enviou, a autenticação da API de recibos usa **Basic Auth** (Base64 do email:senha), **não** o header `api-key`. O campo destacado em vermelho ("Base64 Auth Header") é exatamente o que deve ser enviado como `Authorization: Basic {base64}`.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+## Solução
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Trocar a autenticação no `processFinalized` de `api-key` para `Authorization: Basic {base64(user:pass)}`, usando `basic_auth_user` e `basic_auth_password` já armazenados na tabela `machine_integrations`.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### Mudança
+
+| Arquivo | O que muda |
+|---|---|
+| `supabase/functions/machine-webhook/index.ts` | Na função `processFinalized`: trocar header `api-key: {apiKey}` por `Authorization: Basic {btoa(user:pass)}`. Validar que `basic_auth_user` e `basic_auth_password` existem. Remover a validação de placeholder do `api_key` (não é mais necessário para auth do recibo). |
+
+### Código (resumo)
+
+```typescript
+// ANTES (linha 193-195)
+const receiptRes = await fetch(url, {
+  headers: { "api-key": apiKey }
+});
+
+// DEPOIS
+const basic
