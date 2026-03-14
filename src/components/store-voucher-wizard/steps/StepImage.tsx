@@ -57,6 +57,23 @@ export default function StepImage({ data, update, storeId }: Props) {
     if (inputRef.current) inputRef.current.value = "";
   };
 
+  if (data.coupon_type === "STORE") {
+    return (
+      <div className="space-y-4">
+        <Label className="text-base font-semibold">Imagem do Cupom</Label>
+        <div className="p-4 bg-muted/50 rounded-xl border border-border text-center space-y-2">
+          <ImagePlus className="h-10 w-10 mx-auto text-muted-foreground/40" />
+          <p className="text-sm font-medium text-muted-foreground">
+            A logo da sua loja será usada automaticamente
+          </p>
+          <p className="text-xs text-muted-foreground/60">
+            Para ofertas de loja toda, utilizamos a logo do perfil da loja como imagem padrão.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Label className="text-base font-semibold">Imagem do Cupom (opcional)</Label>

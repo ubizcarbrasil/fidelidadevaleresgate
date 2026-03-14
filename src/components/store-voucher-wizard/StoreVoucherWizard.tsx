@@ -150,12 +150,12 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
 
     const autoTitle = isProduct
       ? `Pague ${data.discount_percent}% com Pontos — ${data.coupon_category}`
-      : `Troque ${Math.floor(creditBase)} pts por R$ ${creditBase.toFixed(2)} — ${data.coupon_category}`;
+      : `CRÉDITO DE R$ ${creditBase.toFixed(2)}`;
 
     const payload: any = {
       title: autoTitle,
-      description: data.description || null,
-      image_url: data.image_url || null,
+      description: isProduct ? (data.description || null) : null,
+      image_url: isProduct ? (data.image_url || null) : null,
       coupon_type: data.coupon_type,
       coupon_category: data.coupon_category,
       discount_percent: isPercent ? data.discount_percent : 0,

@@ -170,9 +170,9 @@ export default function ForYouSection() {
                   {Math.floor(Number(o.value_rescue || 0))} pts = R$ {Number(o.value_rescue || 0).toFixed(2)}
                 </span>
               )}
-              {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
+              {o.coupon_type !== "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
+                  {Math.floor(Number(o.value_rescue))} pontos por R$ {Number(o.value_rescue).toFixed(2)}
                 </span>
               )}
             </div>
