@@ -343,6 +343,7 @@ async function processFinalized(
     ride_status: "FINALIZED",
     points_credited: pointsCredited ? points : 0,
     finalized_at: new Date().toISOString(),
+    driver_name: driverName || null,
   }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
 
   // Update integration counters
