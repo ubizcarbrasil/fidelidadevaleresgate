@@ -472,7 +472,7 @@ function RedemptionCard({
       </div>
 
       {/* QR / PIN button + Estorno */}
-      {r.status === "PENDING" && (
+      {(r.status as string) === "PENDING" && (
         <div className="px-4 pb-4 space-y-2">
           <button
             onClick={onViewDetail}
@@ -483,7 +483,7 @@ function RedemptionCard({
             VER QR CODE E PIN
           </button>
           {canCancel && (
-            <CancelButton redemptionId={r.id} token={r.token} onCanceled={onCanceled} fg={fg} />
+            <CancelButton redemptionId={r.id as string} token={r.token as string} onCanceled={onCanceled} fg={fg} />
           )}
         </div>
       )}
