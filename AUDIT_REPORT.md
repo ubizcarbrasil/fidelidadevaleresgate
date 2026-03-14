@@ -10,7 +10,7 @@
 
 | Categoria | Score | Status |
 |-----------|-------|--------|
-| 🔐 Segurança & RLS | 85% | ✅ PASS (após correções) |
+| 🔐 Segurança & RLS | 92% | ✅ PASS (CSP + sanitização + audit logging) |
 | 📊 Arquitetura & Código | 78% | ✅ PASS (após refatoração) |
 | ⚡ Performance | 82% | ✅ PASS |
 | 🧪 Testes | 35% | ⚠️ WARNING |
