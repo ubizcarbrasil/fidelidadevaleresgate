@@ -99,9 +99,10 @@ async function retryRide(
       return { machineRideId, status: "SKIP", reason: "no_new_data_from_api", source };
     }
 
-    // Update ride with passenger data
+    // Update ride with passenger data + driver name
     await sb.from("machine_rides").update({
       passenger_cpf: passengerCpf || ride.passenger_cpf || null,
+      driver_name: driverName || ride.driver_name || null,
     }).eq("id", ride.id);
 
     // Find the customer linked to this ride via points_ledger
