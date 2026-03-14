@@ -118,12 +118,18 @@ export default function CustomerRedemptionsPage() {
     if (filter !== "ALL") list = list.filter((r) => r.status === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((r: any) =>
-        r.token?.toLowerCase().includes(q) ||
-        r.id?.toLowerCase().includes(q) ||
-        r.offers?.title?.toLowerCase().includes(q) ||
-        r.offers?.stores?.name?.toLowerCase().includes(q)
-      );
+      list = list.filter((r) => {
+        const q = search.toLowerCase();
+        const token = r.token as string | undefined;
+        const id = r.id as string | undefined;
+        const offers = r.offers as { title?: string; stores?: { name?: string } } | null;
+        return (
+          token?.toLowerCase().includes(q) ||
+          id?.toLowerCase().includes(q) ||
+          offers?.title?.toLowerCase().includes(q) ||
+          offers?.stores?.name?.toLowerCase().includes(q)
+        );
+      });
     }
     return list;
   }, [redemptions, filter, search]);
