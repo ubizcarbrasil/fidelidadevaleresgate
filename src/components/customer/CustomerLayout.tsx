@@ -40,9 +40,10 @@ interface SectionItem {
   [key: string]: unknown;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CustomerNavContextType {
-  openOffer: (offer: Record<string, unknown>) => void;
-  openStore: (store: Record<string, unknown>) => void;
+  openOffer: (offer: any) => void;
+  openStore: (store: any) => void;
   openSectionDetail: (section: SectionDetail, items: SectionItem[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
