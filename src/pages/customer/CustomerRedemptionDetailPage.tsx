@@ -14,7 +14,7 @@ function hslToCss(hsl: string | undefined, fallback: string): string {
 }
 
 interface Props {
-  redemption: any;
+  redemption: Record<string, unknown>;
   onBack: () => void;
   onCanceled?: () => void;
 }
