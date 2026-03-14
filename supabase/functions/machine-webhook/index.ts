@@ -341,6 +341,7 @@ async function processFinalized(
     passenger_name: passengerName || null,
     passenger_cpf: passengerCpf || null,
     passenger_phone: passengerPhone || null,
+    passenger_email: passengerEmail || null,
     ride_value: rideValue,
     ride_status: "FINALIZED",
     points_credited: pointsCredited ? points : 0,
