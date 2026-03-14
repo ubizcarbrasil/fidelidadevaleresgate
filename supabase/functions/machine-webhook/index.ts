@@ -136,7 +136,7 @@ async function processFinalized(
     return { error: "Basic auth credentials not configured. Please set user/password in integration settings.", status: 400 };
   }
 
-  const basicAuth = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
+  const basicAuth = btoa(`${(integration.basic_auth_user || "").trim()}:${(integration.basic_auth_password || "").trim()}`);
   const machineBaseUrl = "https://api.taximachine.com.br";
 
   const [statusRes, receiptRes] = await Promise.all([
