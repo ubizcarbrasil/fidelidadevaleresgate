@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    console.log('Scraping product URL:', formattedUrl);
+    const log = createEdgeLogger("scrape-product");
+    log.info("Scraping product URL", { url: formattedUrl });
 
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
