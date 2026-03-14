@@ -9,12 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
-  Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save,
+  Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound,
 } from "lucide-react";
 
+/* ── Status labels ── */
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   P: { label: "Pendente", color: "bg-yellow-500/10 text-yellow-700 border-yellow-300" },
   A: { label: "Aceita", color: "bg-blue-500/10 text-blue-700 border-blue-300" },
@@ -34,6 +36,8 @@ type RideEvent = {
   created_at: string;
 };
 
+/* ══════════════════════════════════════════════════════════════════ */
+
 export default function MachineIntegrationPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
@@ -43,7 +47,7 @@ export default function MachineIntegrationPage() {
   const [basicPass, setBasicPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
   const [callbackUrl, setCallbackUrl] = useState("");
   const [callbackSaved, setCallbackSaved] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
@@ -51,12 +55,13 @@ export default function MachineIntegrationPage() {
 
   const webhookUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
 
-  const handleCopy = () => {
+  const handleCopyUrl = () => {
     navigator.clipboard.writeText(webhookUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 2000);
   };
 
+  /* ── Query: integration row ── */
   const { data: integration, isLoading } = useQuery({
     queryKey: ["machine-integration", currentBrandId],
     queryFn: async () => {
@@ -67,90 +72,55 @@ export default function MachineIntegrationPage() {
         .maybeSingle();
       if (error) throw error;
       return data as {
-        id: string;
-        brand_id: string;
-        api_key: string;
-        basic_auth_user: string;
-        basic_auth_password: string;
-        webhook_registered: boolean;
-        is_active: boolean;
-        last_webhook_at: string | null;
-        last_ride_processed_at: string | null;
-        total_rides: number;
-        total_points: number;
-        callback_url: string | null;
-        created_at: string;
-        updated_at: string;
+        id: string; brand_id: string; api_key: string;
+        basic_auth_user: string; basic_auth_password: string;
+        webhook_registered: boolean; is_active: boolean;
+        last_webhook_at: string | null; last_ride_processed_at: string | null;
+        total_rides: number; total_points: number;
+        callback_url: string | null; created_at: string; updated_at: string;
       } | null;
     },
     enabled: !!currentBrandId,
   });
 
-  // Load initial callback_url when integration loads
   useEffect(() => {
-    if (integration?.callback_url !== undefined) {
-      setCallbackUrl(integration.callback_url || "");
-    }
+    if (integration?.callback_url !== undefined) setCallbackUrl(integration.callback_url || "");
   }, [integration?.callback_url]);
 
-  // Load initial events
+  /* ── Initial events ── */
   useEffect(() => {
     if (!currentBrandId) return;
     (supabase as any)
-      .from("machine_ride_events")
-      .select("*")
+      .from("machine_ride_events").select("*")
       .eq("brand_id", currentBrandId)
-      .order("created_at", { ascending: false })
-      .limit(50)
-      .then(({ data }: { data: RideEvent[] | null }) => {
-        if (data) setLiveEvents(data);
-      });
+      .order("created_at", { ascending: false }).limit(50)
+      .then(({ data }: { data: RideEvent[] | null }) => { if (data) setLiveEvents(data); });
   }, [currentBrandId]);
 
-  // Realtime subscription
+  /* ── Realtime ── */
   useEffect(() => {
     if (!currentBrandId) return;
     const channel = supabase
       .channel(`ride-events-${currentBrandId}`)
-      .on(
-        "postgres_changes" as any,
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "machine_ride_events",
-          filter: `brand_id=eq.${currentBrandId}`,
-        },
-        (payload: any) => {
-          const newEvent = payload.new as RideEvent;
-          setLiveEvents((prev) => [newEvent, ...prev].slice(0, 100));
-
-          // Toast for finalized rides with points
-          if (newEvent.status_code === "F") {
-            toast({
-              title: "🎯 Pontuação creditada!",
-              description: `Corrida #${newEvent.machine_ride_id} finalizada`,
-            });
-            // Refresh integration counters
-            queryClient.invalidateQueries({ queryKey: ["machine-integration", currentBrandId] });
-          }
+      .on("postgres_changes" as any, {
+        event: "INSERT", schema: "public", table: "machine_ride_events",
+        filter: `brand_id=eq.${currentBrandId}`,
+      }, (payload: any) => {
+        const ev = payload.new as RideEvent;
+        setLiveEvents((prev) => [ev, ...prev].slice(0, 100));
+        if (ev.status_code === "F") {
+          toast({ title: "🎯 Pontuação creditada!", description: `Corrida #${ev.machine_ride_id} finalizada` });
+          queryClient.invalidateQueries({ queryKey: ["machine-integration", currentBrandId] });
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [currentBrandId, queryClient]);
 
+  /* ── Mutations ── */
   const activateMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", {
-        body: {
-          brand_id: currentBrandId,
-          api_key: apiKey,
-          basic_auth_user: basicUser,
-          basic_auth_password: basicPass,
-        },
+        body: { brand_id: currentBrandId, api_key: apiKey, basic_auth_user: basicUser, basic_auth_password: basicPass },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -160,20 +130,14 @@ export default function MachineIntegrationPage() {
       toast({
         title: "Integração ativada!",
         description: data.webhook_registered
-          ? "Webhook registrado com sucesso na TaxiMachine."
-          : "Integração ativada, mas o registro do webhook falhou. Tente novamente.",
+          ? "Webhook registrado com sucesso."
+          : "Integração ativada, mas o registro automático falhou. Tente novamente.",
       });
       queryClient.invalidateQueries({ queryKey: ["machine-integration"] });
-      setApiKey("");
-      setBasicUser("");
-      setBasicPass("");
+      setApiKey(""); setBasicUser(""); setBasicPass("");
     },
     onError: (err: any) => {
-      toast({
-        title: "Erro ao ativar",
-        description: err.message || "Falha ao ativar a integração.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro ao ativar", description: err.message || "Falha ao ativar.", variant: "destructive" });
     },
   });
 
@@ -207,7 +171,7 @@ export default function MachineIntegrationPage() {
     onSuccess: () => {
       setCallbackSaved(true);
       setTimeout(() => setCallbackSaved(false), 2000);
-      toast({ title: "Callback URL salva!" });
+      toast({ title: "URL de retorno salva!" });
       queryClient.invalidateQueries({ queryKey: ["machine-integration"] });
     },
     onError: (err: any) => {
@@ -217,90 +181,59 @@ export default function MachineIntegrationPage() {
 
   const isActive = integration?.is_active;
 
+  /* ══════════════════════ RENDER ══════════════════════ */
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Integração TaxiMachine"
-        description="Configure a pontuação automática de corridas via TaxiMachine"
+        title="Integração de Mobilidade"
+        description="Conecte sua plataforma de corridas para pontuar clientes automaticamente"
       />
 
-      {/* Status Dashboard */}
-      {integration && (
-        <div className="grid gap-4 md:grid-cols-5">
-          <Card>
-            <CardContent className="pt-4 flex flex-col items-center gap-1">
-              <Activity className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Status</span>
-              {isActive ? (
-                <Badge className="bg-primary text-primary-foreground">Ativo</Badge>
-              ) : (
-                <Badge variant="secondary">Inativo</Badge>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 flex flex-col items-center gap-1">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Último Webhook</span>
+      {/* ─── ACTIVE: Status Dashboard ─── */}
+      {isActive && integration && (
+        <>
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
+            <StatusCard icon={Activity} label="Status">
+              <Badge className="bg-primary text-primary-foreground">Ativo</Badge>
+            </StatusCard>
+            <StatusCard icon={Clock} label="Último evento">
               <span className="text-sm font-medium">
-                {integration.last_webhook_at
-                  ? new Date(integration.last_webhook_at).toLocaleString("pt-BR")
-                  : "—"}
+                {integration.last_webhook_at ? new Date(integration.last_webhook_at).toLocaleString("pt-BR") : "—"}
               </span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 flex flex-col items-center gap-1">
-              <Car className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Última Corrida</span>
+            </StatusCard>
+            <StatusCard icon={Car} label="Última corrida">
               <span className="text-sm font-medium">
-                {integration.last_ride_processed_at
-                  ? new Date(integration.last_ride_processed_at).toLocaleString("pt-BR")
-                  : "—"}
+                {integration.last_ride_processed_at ? new Date(integration.last_ride_processed_at).toLocaleString("pt-BR") : "—"}
               </span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 flex flex-col items-center gap-1">
-              <Hash className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Corridas</span>
+            </StatusCard>
+            <StatusCard icon={Hash} label="Corridas">
               <span className="text-2xl font-bold">{integration.total_rides}</span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 flex flex-col items-center gap-1">
-              <Coins className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Pontos Gerados</span>
+            </StatusCard>
+            <StatusCard icon={Coins} label="Pontos gerados">
               <span className="text-2xl font-bold">{integration.total_points}</span>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </StatusCard>
+          </div>
 
-      {/* Configuration Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Car className="h-5 w-5" />
-            {isActive ? "Integração Ativa" : "Configurar Credenciais"}
-          </CardTitle>
-          <CardDescription>
-            {isActive
-              ? "Sua integração está funcionando. Corridas finalizadas geram pontos automaticamente (1 Real = 1 ponto)."
-              : "Insira suas credenciais da API TaxiMachine para ativar a pontuação automática de corridas."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isActive ? (
-            <div className="space-y-4">
+          {/* Active info + deactivate */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CheckCircle className="h-5 w-5 text-primary" />
+                Integração ativa
+              </CardTitle>
+              <CardDescription>
+                Corridas finalizadas geram pontos automaticamente. Regra: <strong>R$ 1 = 1 ponto</strong> (arredondado para baixo).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-primary" />
                 <span>Credenciais configuradas</span>
               </div>
-              {integration?.webhook_registered ? (
+              {integration.webhook_registered ? (
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-primary" />
-                  <span>Webhook registrado na TaxiMachine</span>
+                  <span>Webhook registrado na plataforma</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm">
@@ -309,212 +242,211 @@ export default function MachineIntegrationPage() {
                 </div>
               )}
               <Button
-                variant="destructive"
+                variant="destructive" size="sm"
                 onClick={() => deactivateMutation.mutate()}
                 disabled={deactivateMutation.isPending}
               >
                 {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Desativar Integração
+                Desativar integração
               </Button>
-            </div>
-          ) : (
-            <div className="space-y-4 max-w-md">
-              <div className="space-y-2">
-                <Label htmlFor="api_key">API Key</Label>
-                <div className="relative">
-                  <Input
-                    id="api_key"
-                    type={showApiKey ? "text" : "password"}
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Sua chave de API TaxiMachine"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                  >
-                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="basic_user">Basic Auth Usuário</Label>
+            </CardContent>
+          </Card>
+
+          {/* Callback URL */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <ExternalLink className="h-4 w-4" />
+                URL de retorno (opcional)
+              </CardTitle>
+              <CardDescription>
+                Quando um cliente for pontuado, enviaremos os dados da pontuação para esta URL via POST.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2 max-w-lg">
                 <Input
-                  id="basic_user"
-                  value={basicUser}
-                  onChange={(e) => setBasicUser(e.target.value)}
-                  placeholder="Usuário de autenticação"
+                  value={callbackUrl}
+                  onChange={(e) => setCallbackUrl(e.target.value)}
+                  placeholder="https://seu-sistema.com/webhook/pontuacao"
+                  type="url"
                 />
+                <Button variant="outline" size="icon" onClick={() => saveCallbackMutation.mutate()} disabled={saveCallbackMutation.isPending}>
+                  {callbackSaved ? <Check className="h-4 w-4 text-primary" /> : saveCallbackMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="basic_pass">Basic Auth Senha</Label>
-                <div className="relative">
-                  <Input
-                    id="basic_pass"
-                    type={showPass ? "text" : "password"}
-                    value={basicPass}
-                    onChange={(e) => setBasicPass(e.target.value)}
-                    placeholder="Senha de autenticação"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowPass(!showPass)}
-                  >
-                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <Button
-                onClick={() => activateMutation.mutate()}
-                disabled={activateMutation.isPending || !apiKey || !basicUser || !basicPass}
-              >
-                {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Ativar Integração
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Callback URL Card */}
-      {integration?.is_active && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <ExternalLink className="h-4 w-4" />
-              Callback URL (Sistema Externo)
-            </CardTitle>
-            <CardDescription>
-              Quando um cliente for pontuado, enviaremos um POST com os dados da pontuação para esta URL.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 max-w-lg">
-              <Input
-                value={callbackUrl}
-                onChange={(e) => setCallbackUrl(e.target.value)}
-                placeholder="https://seu-sistema.com/webhook/pontuacao"
-                type="url"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => saveCallbackMutation.mutate()}
-                disabled={saveCallbackMutation.isPending}
-              >
-                {callbackSaved ? (
-                  <Check className="h-4 w-4 text-primary" />
-                ) : saveCallbackMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+          {/* Realtime Feed */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Radio className="h-4 w-4 text-primary animate-pulse" />
+                Eventos em tempo real
+              </CardTitle>
+              <CardDescription>Corridas recebidas ao vivo. Finalizadas com pontuação são destacadas.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-80">
+                {liveEvents.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                    <Radio className="h-8 w-8 mb-2 opacity-40" />
+                    <p className="text-sm">Aguardando eventos...</p>
+                    <p className="text-xs">Os eventos aparecerão aqui em tempo real.</p>
+                  </div>
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <div className="space-y-2" ref={scrollRef}>
+                    {liveEvents.map((ev) => {
+                      const st = STATUS_LABELS[ev.status_code] || { label: ev.status_code, color: "bg-muted text-muted-foreground" };
+                      const isFinalized = ev.status_code === "F";
+                      const payload = ev.raw_payload as Record<string, unknown>;
+                      return (
+                        <div key={ev.id} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${isFinalized ? "border-primary/30 bg-primary/5" : "border-border"}`}>
+                          <Badge variant="outline" className={`text-xs shrink-0 ${st.color}`}>{st.label}</Badge>
+                          <span className="font-mono text-xs text-muted-foreground shrink-0">#{ev.machine_ride_id}</span>
+                          {isFinalized && payload?.ride_value !== undefined && (
+                            <span className="text-xs font-medium text-primary shrink-0">
+                              R$ {Number(payload.ride_value || 0).toFixed(2)} → {Math.floor(Number(payload.ride_value || 0))} pts
+                            </span>
+                          )}
+                          <span className="ml-auto text-xs text-muted-foreground shrink-0">
+                            {new Date(ev.created_at).toLocaleTimeString("pt-BR")}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Payload: <code className="bg-muted px-1 rounded">{"{ event, machine_ride_id, ride_value, points, cpf_masked, timestamp }"}</code>
-            </p>
-          </CardContent>
-        </Card>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </>
       )}
 
-      {/* Realtime Events Feed */}
-      {integration?.is_active && (
+      {/* ─── INACTIVE: Activation modes ─── */}
+      {!isActive && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Radio className="h-4 w-4 text-primary animate-pulse" />
-              Relatório em tempo real
+            <CardTitle className="flex items-center gap-2">
+              <Car className="h-5 w-5" />
+              Escolha como ativar
             </CardTitle>
             <CardDescription>
-              Eventos de corrida recebidos ao vivo. Corridas finalizadas com pontuação são destacadas.
+              Selecione o método de conexão que melhor se encaixa na sua plataforma de mobilidade.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-80">
-              {liveEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
-                  <Radio className="h-8 w-8 mb-2 opacity-40" />
-                  <p className="text-sm">Aguardando eventos...</p>
-                  <p className="text-xs">Os eventos aparecerão aqui em tempo real.</p>
+            <Tabs defaultValue="url" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="url" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                  <Link2 className="h-4 w-4" />
+                  Por URL (simples)
+                </TabsTrigger>
+                <TabsTrigger value="credentials" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                  <KeyRound className="h-4 w-4" />
+                  Por credenciais
+                </TabsTrigger>
+              </TabsList>
+
+              {/* ── Tab: URL ── */}
+              <TabsContent value="url" className="space-y-4 mt-4">
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <h3 className="font-semibold text-sm">Como funciona</h3>
+                  <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                    <li>Copie a URL abaixo.</li>
+                    <li>Acesse a plataforma da sua empresa de mobilidade.</li>
+                    <li>Cole a URL no campo de <strong>webhook</strong> ou <strong>notificações</strong>.</li>
+                    <li>Inclua o campo <code className="bg-muted px-1 rounded text-xs">brand_id</code> no corpo (body) de cada requisição enviada — informe o ID da sua marca.</li>
+                    <li>Pronto! Cada corrida finalizada vai gerar pontos para o passageiro (<strong>R$ 1 = 1 ponto</strong>).</li>
+                  </ol>
                 </div>
-              ) : (
-                <div className="space-y-2" ref={scrollRef}>
-                  {liveEvents.map((ev) => {
-                    const st = STATUS_LABELS[ev.status_code] || { label: ev.status_code, color: "bg-muted text-muted-foreground" };
-                    const isFinalized = ev.status_code === "F";
-                    const payload = ev.raw_payload as Record<string, unknown>;
-                    return (
-                      <div
-                        key={ev.id}
-                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                          isFinalized ? "border-primary/30 bg-primary/5" : "border-border"
-                        }`}
-                      >
-                        <Badge variant="outline" className={`text-xs shrink-0 ${st.color}`}>
-                          {st.label}
-                        </Badge>
-                        <span className="font-mono text-xs text-muted-foreground shrink-0">
-                          #{ev.machine_ride_id}
-                        </span>
-                        {isFinalized && payload?.ride_value !== undefined && (
-                          <span className="text-xs font-medium text-primary shrink-0">
-                            R$ {Number(payload.ride_value || 0).toFixed(2)} → {Math.floor(Number(payload.ride_value || 0))} pts
-                          </span>
-                        )}
-                        <span className="ml-auto text-xs text-muted-foreground shrink-0">
-                          {new Date(ev.created_at).toLocaleTimeString("pt-BR")}
-                        </span>
-                      </div>
-                    );
-                  })}
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">URL para copiar e colar</Label>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">
+                      {webhookUrl}
+                    </code>
+                    <Button variant="outline" size="icon" onClick={handleCopyUrl}>
+                      {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </ScrollArea>
+
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Dica:</strong> Se a plataforma pedir autenticação, use o header{" "}
+                    <code className="bg-muted px-1 rounded">x-api-secret</code> com a chave de acesso configurada na aba "Por credenciais".
+                  </p>
+                </div>
+              </TabsContent>
+
+              {/* ── Tab: Credentials ── */}
+              <TabsContent value="credentials" className="space-y-4 mt-4">
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <h3 className="font-semibold text-sm">Como funciona</h3>
+                  <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                    <li>Obtenha suas credenciais no painel da sua plataforma de mobilidade (ex: TaxiMachine).</li>
+                    <li>Preencha os 3 campos abaixo: <strong>chave de acesso</strong>, <strong>usuário</strong> e <strong>senha</strong>.</li>
+                    <li>Clique em "Ativar integração".</li>
+                    <li>O sistema vai registrar automaticamente o webhook na plataforma e começar a receber corridas.</li>
+                    <li>Cada corrida finalizada credita pontos ao passageiro (<strong>R$ 1 = 1 ponto</strong>).</li>
+                  </ol>
+                </div>
+
+                <div className="space-y-4 max-w-md">
+                  <div className="space-y-2">
+                    <Label htmlFor="api_key">Chave de acesso</Label>
+                    <div className="relative">
+                      <Input
+                        id="api_key"
+                        type={showApiKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Sua chave fornecida pela plataforma"
+                      />
+                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
+                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="basic_user">Usuário</Label>
+                    <Input id="basic_user" value={basicUser} onChange={(e) => setBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="basic_pass">Senha</Label>
+                    <div className="relative">
+                      <Input id="basic_pass" type={showPass ? "text" : "password"} value={basicPass} onChange={(e) => setBasicPass(e.target.value)} placeholder="Senha de autenticação" />
+                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPass(!showPass)}>
+                        {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !apiKey || !basicUser || !basicPass}>
+                    {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Ativar integração
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       )}
-
-      {/* Webhook URL Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">URL do Webhook</CardTitle>
-          <CardDescription>
-            Cole esta URL na sua plataforma de mobilidade para receber eventos de corrida em tempo real.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all">
-              {webhookUrl}
-            </code>
-            <Button variant="outline" size="icon" onClick={handleCopy}>
-              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Autenticação: header <code className="bg-muted px-1 rounded">x-api-secret</code> com a API Key configurada, ou campo <code className="bg-muted px-1 rounded">brand_id</code> no body.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Como funciona?</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>1. Insira suas credenciais da API TaxiMachine acima.</p>
-          <p>2. Ao ativar, registramos um webhook na TaxiMachine para receber eventos de corrida.</p>
-          <p>3. Todos os eventos de status são registrados em tempo real (P, A, S, C, N, F).</p>
-          <p>4. Quando uma corrida é finalizada (status "F"), o sistema busca o recibo e credita pontos.</p>
-          <p>5. Se o passageiro tiver CPF cadastrado, os pontos são creditados automaticamente.</p>
-          <p>6. Regra de pontos: <strong>1 Real = 1 ponto</strong> (arredondado para baixo).</p>
-          <p className="text-xs">Exemplo: Corrida de R$ 15,80 → 15 pontos.</p>
-        </CardContent>
-      </Card>
     </div>
+  );
+}
+
+/* ── Small helper component ── */
+function StatusCard({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
+  return (
+    <Card>
+      <CardContent className="pt-4 flex flex-col items-center gap-1">
+        <Icon className="h-5 w-5 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">{label}</span>
+        {children}
+      </CardContent>
+    </Card>
   );
 }
