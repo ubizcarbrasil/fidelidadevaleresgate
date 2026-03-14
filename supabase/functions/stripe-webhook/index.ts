@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
           })
           .eq("id", brandId);
 
-        if (error) console.error("Error updating brand:", error);
-        else console.log(`Brand ${brandId} activated via Stripe checkout`);
+        if (error) log.error("Error updating brand", { brandId, error });
+        else log.info("Brand activated via Stripe checkout", { brandId });
       }
     }
 
