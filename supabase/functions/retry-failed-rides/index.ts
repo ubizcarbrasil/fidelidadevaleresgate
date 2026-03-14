@@ -90,7 +90,7 @@ async function retryRide(
     return { machineRideId, status: "FAILED", reason: rideResult.error };
   }
 
-  const { rideValue, passengerName, passengerCpf, passengerPhone, source } = rideResult.data;
+  const { rideValue, passengerName, passengerCpf, passengerPhone, driverName, source } = rideResult.data;
 
   // --- BACKFILL MODE: ride already finalized, just enrich customer data ---
   if (isBackfill) {
