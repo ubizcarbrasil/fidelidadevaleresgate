@@ -76,12 +76,14 @@ Deno.serve(async (req) => {
     const anyOk = results.recibo.ok || results.request_v1.ok;
 
     const lines: string[] = [];
+    const reciboDetail = results.recibo.error || results.recibo.body || "";
     lines.push(results.recibo.ok
       ? `✅ Endpoint Recibo: OK (status ${results.recibo.status})`
-      : `❌ Endpoint Recibo: Falhou (status ${results.recibo.status}${results.recibo.error ? ` — ${results.recibo.error}` : ""})`);
+      : `❌ Endpoint Recibo: Falhou (status ${results.recibo.status}${reciboDetail ? ` — ${reciboDetail}` : ""})`);
+    const v1Detail = results.request_v1.error || results.request_v1.body || "";
     lines.push(results.request_v1.ok
       ? `✅ Endpoint Request v1: OK (status ${results.request_v1.status})`
-      : `❌ Endpoint Request v1: Falhou (status ${results.request_v1.status}${results.request_v1.error ? ` — ${results.request_v1.error}` : ""})`);
+      : `❌ Endpoint Request v1: Falhou (status ${results.request_v1.status}${v1Detail ? ` — ${v1Detail}` : ""})`);
 
     return json({
       success: anyOk,
