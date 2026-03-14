@@ -70,16 +70,15 @@ export default function CustomerOffersPage() {
   const filtered = useMemo(() => {
     let result = offers;
     if (selectedSegmentId) {
-      result = result.filter((o) => (o.stores as Record<string, unknown> | null)?.taxonomy_segment_id === selectedSegmentId);
+      result = result.filter((o) => o.stores?.taxonomy_segment_id === selectedSegmentId);
     }
     if (query.trim()) {
       const q = query.toLowerCase();
-      result = result.filter((o) => {
-        const title = (o.title as string || "").toLowerCase();
-        const desc = (o.description as string || "").toLowerCase();
-        const storeName = ((o.stores as Record<string, unknown> | null)?.name as string || "").toLowerCase();
-        return title.includes(q) || desc.includes(q) || storeName.includes(q);
-      });
+      result = result.filter((o) =>
+        o.title?.toLowerCase().includes(q) ||
+        o.description?.toLowerCase().includes(q) ||
+        o.stores?.name?.toLowerCase().includes(q)
+      );
     }
     return result;
   }, [offers, selectedSegmentId, query]);
