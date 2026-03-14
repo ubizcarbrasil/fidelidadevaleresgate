@@ -169,7 +169,7 @@ export default function SectionDetailOverlay({
                       </div>
                     )}
 
-                    {item.points_per_real > 0 && !hasDiscount && !item.value_rescue && (
+                    {(item.points_per_real ?? 0) > 0 && !hasDiscount && !(item.value_rescue ?? 0) && (
                       <div className="absolute top-3 left-3 vb-discount-badge">
                         {item.points_per_real}x pts
                       </div>
