@@ -209,6 +209,7 @@ export default function MachineIntegrationPage() {
   const [telegramChatId, setTelegramChatId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
+  const [credTestResult, setCredTestResult] = useState<{ success: boolean; message?: string; error?: string; details?: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
@@ -442,7 +443,25 @@ export default function MachineIntegrationPage() {
     },
   });
 
-  // Branches not yet integrated
+  const testCredentialsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("No integration selected");
+      setCredTestResult(null);
+      const { data, error } = await supabase.functions.invoke("test-machine-credentials", {
+        body: { integration_id: selectedIntegration.id },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setCredTestResult(data);
+    },
+    onError: (err: any) => {
+      setCredTestResult({ success: false, error: err.message || "Erro ao testar", details: "Verifique a conexão e tente novamente." });
+    },
+  });
+
+
   const integratedBranchIds = new Set(activeIntegrations.map((i) => i.branch_id));
   const availableBranches = branches.filter((b) => !integratedBranchIds.has(b.id));
 
@@ -553,19 +572,48 @@ export default function MachineIntegrationPage() {
                 </Alert>
               )}
 
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
                 {selectedIntegration.webhook_registered ? (
-                  <>
+                  <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-primary" />
                     <span>Webhook registrado</span>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-destructive" />
                     <span>Webhook não registrado</span>
-                  </>
+                  </div>
                 )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => testCredentialsMutation.mutate()}
+                  disabled={testCredentialsMutation.isPending}
+                >
+                  {testCredentialsMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : (
+                    <KeyRound className="h-4 w-4 mr-1" />
+                  )}
+                  Testar Credenciais
+                </Button>
               </div>
+
+              {credTestResult && (
+                <Alert variant={credTestResult.success ? "default" : "destructive"}>
+                  {credTestResult.success ? <CheckCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                  <AlertTitle>{credTestResult.success ? "Credenciais válidas" : "Erro nas credenciais"}</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    {credTestResult.success ? credTestResult.message : (
+                      <>
+                        <p className="font-medium">{credTestResult.error}</p>
+                        {credTestResult.details && <p className="mt-1 opacity-80">{credTestResult.details}</p>}
+                      </>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Webhook URL for this city */}
               <div className="space-y-1">
