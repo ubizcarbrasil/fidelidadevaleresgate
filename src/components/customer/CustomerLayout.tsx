@@ -25,11 +25,25 @@ import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
 
-// Context to allow child components to open offer/store/section detail, manage favorites, and navigate tabs
+interface SectionDetail {
+  title: string | null;
+  subtitle: string | null;
+  banner_image_url?: string | null;
+  banner_height?: string;
+  templateType?: string;
+}
+
+interface SectionItem {
+  id: string;
+  name?: string;
+  title?: string;
+  [key: string]: unknown;
+}
+
 interface CustomerNavContextType {
-  openOffer: (offer: any) => void;
-  openStore: (store: any) => void;
-  openSectionDetail: (section: any, items: any[]) => void;
+  openOffer: (offer: Record<string, unknown>) => void;
+  openStore: (store: Record<string, unknown>) => void;
+  openSectionDetail: (section: SectionDetail, items: SectionItem[]) => void;
   isFavorite: (offerId: string) => boolean;
   toggleFavorite: (offerId: string) => void;
   navigateToTab: (tab: Tab) => void;
