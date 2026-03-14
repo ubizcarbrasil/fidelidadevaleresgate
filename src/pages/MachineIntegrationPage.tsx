@@ -553,19 +553,48 @@ export default function MachineIntegrationPage() {
                 </Alert>
               )}
 
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
                 {selectedIntegration.webhook_registered ? (
-                  <>
+                  <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-primary" />
                     <span>Webhook registrado</span>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-destructive" />
                     <span>Webhook não registrado</span>
-                  </>
+                  </div>
                 )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => testCredentialsMutation.mutate()}
+                  disabled={testCredentialsMutation.isPending}
+                >
+                  {testCredentialsMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : (
+                    <KeyRound className="h-4 w-4 mr-1" />
+                  )}
+                  Testar Credenciais
+                </Button>
               </div>
+
+              {credTestResult && (
+                <Alert variant={credTestResult.success ? "default" : "destructive"}>
+                  {credTestResult.success ? <CheckCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                  <AlertTitle>{credTestResult.success ? "Credenciais válidas" : "Erro nas credenciais"}</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    {credTestResult.success ? credTestResult.message : (
+                      <>
+                        <p className="font-medium">{credTestResult.error}</p>
+                        {credTestResult.details && <p className="mt-1 opacity-80">{credTestResult.details}</p>}
+                      </>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )
 
               {/* Webhook URL for this city */}
               <div className="space-y-1">
