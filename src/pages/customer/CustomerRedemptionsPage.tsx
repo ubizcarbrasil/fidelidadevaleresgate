@@ -182,7 +182,7 @@ export default function CustomerRedemptionsPage() {
           </div>
         ) : (
           <div className="px-5 space-y-4">
-            {filtered.map((r: any) => (
+            {filtered.map((r) => (
               <RedemptionCard
                 key={r.id}
                 r={r}
