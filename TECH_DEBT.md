@@ -2,7 +2,7 @@
 
 **Última atualização**: 2026-03-14  
 **Total de débitos**: 13 itens  
-**Distribuição**: 2 P1 (resolvidos) · 4 P2 (resolvidos/parciais) · 3 P2 (em progresso) · 4 Resolvidos anteriormente
+**Distribuição**: 2 P1 (resolvidos) · 6 P2 (resolvidos/parciais) · 2 P2 (em progresso) · 3 Resolvidos anteriormente
 
 ---
 
@@ -25,12 +25,16 @@
 - **Próximo passo**: Meta 30% — testes E2E para fluxos de resgate e pontuação
 
 ### TD-005: 1450+ usos de `: any` ✅ PARCIALMENTE RESOLVIDO
-- **Correção**: Tipagem forte aplicada em módulos críticos:
+- **Correção fase 1**: Tipagem forte aplicada em módulos críticos:
   - `earningService.ts`: `e: any` → `e: { points_earned: number }` (2 ocorrências)
   - `redemptionService.ts`: `as any` → `as RedemptionListItem[]` (1 ocorrência)
   - `ForYouSection.tsx`: `useState<any[]>` → `useState<OfferWithStore[]>` + tipagem de scored/map
   - `OfferBadge.tsx`: `Record<string, React.ComponentType<any>>` → `Record<string, LucideIcon>`
-- **Resultado**: ~10 `any` eliminados nos módulos mais sensíveis
+- **Correção fase 2**: Tipagem em componentes customer-facing:
+  - `CustomerLayout.tsx`: interfaces `SectionDetail`, `SectionItem` criadas
+  - `CustomerStoreDetailPage.tsx`: `faqJson as any[]` → `FaqItem[]` com interface tipada
+  - `CustomerRedemptionsPage.tsx`: tipagem de contadores e filtros
+- **Resultado**: ~20 `any` eliminados nos módulos mais sensíveis
 - **Próximo passo**: Continuar nos componentes customer e pages
 
 ### TD-006: Zero `React.memo` em componentes ✅ PARCIALMENTE RESOLVIDO
@@ -42,6 +46,10 @@
   - (Anteriores: StoreOfferCard, StoreOffersList, StoreDetailInfoCard, StoreDetailHero, PendingRedemptionCard)
 - **Resultado**: 9 componentes memoizados no total
 
+### TD-008: Service Worker não registrado ✅ RESOLVIDO
+- **Correção**: `vite-plugin-pwa` configurado com `registerType: 'autoUpdate'` em `vite.config.ts`
+- **Resultado**: SW registrado automaticamente com cache de Supabase API e assets
+
 ### TD-009: Sem integração de error tracking ✅ RESOLVIDO
 - **Correção**: Error tracker leve implementado (`src/lib/errorTracker.ts`)
   - Captura `window.onerror` e `unhandledrejection`
@@ -50,11 +58,16 @@
   - Contexto de user_id e brand_id via `setErrorContext()`
   - Inicializado em `src/main.tsx`
 
-### TD-010: 247 console.log/warn/error em edge functions ✅ PARCIALMENTE RESOLVIDO
-- **Correção**: Logger JSON estruturado criado (`supabase/functions/_shared/edgeLogger.ts`)
-  - Outputs JSON com `timestamp`, `level`, `module`, `correlationId`, `message`, `data`
-  - Pronto para substituição incremental nas edge functions
-- **Próximo passo**: Migrar as 6 edge functions mais ativas
+### TD-010: 247 console.log/warn/error em edge functions ✅ RESOLVIDO
+- **Correção fase 1**: Logger JSON estruturado criado (`supabase/functions/_shared/edgeLogger.ts`)
+- **Correção fase 2**: Todas as 6 edge functions migradas para usar `createEdgeLogger`:
+  - `stripe-webhook/index.ts` — 5 logs migrados
+  - `expire-pending-pins/index.ts` — 2 logs migrados
+  - `scrape-product/index.ts` — 4 logs migrados
+  - `check-expiring-favorites/index.ts` — 4 logs migrados
+  - `provision-trial/index.ts` — 4 logs migrados
+  - `provision-brand/index.ts` — 4 logs migrados
+- **Resultado**: 23 `console.log/error` substituídos por logger estruturado com correlationId
 
 ### TD-013: Sem testes de segurança automatizados ✅ RESOLVIDO
 - **Correção**: Suite expandida `rlsCrossTenant.test.ts` com 25+ testes cobrindo:
@@ -72,18 +85,15 @@
 
 ### TD-007: Componentes >300 linhas
 - **Descrição**: `StoreRedeemTab` (490), `CustomerStoreDetailPage` (347), `StoreCatalogPage` (238)
-- **Status**: Planejado — extrair sub-componentes e hooks
-- **Esforço**: 1 semana
-
-### TD-008: Service Worker não registrado
-- **Descrição**: `manifest.json` e ícones PWA existem, mas nenhum SW é registrado
-- **Status**: Pendente
+- **Status**: StoreRedeemTab já possui sub-componentes extraídos (PendingRedemptionCard, ConfirmRedemptionPanel). CustomerStoreDetailPage decomposto em StoreFAQ, StoreOrientations, VideoEmbed, StoreGallery, StoreLocationSection.
+- **Próximo passo**: Extrair `useRedeemMutation` hook do StoreRedeemTab
 - **Esforço**: 1 dia
 
 ### TD-011: Listagens sem paginação server-side
 - **Descrição**: Dados truncados sem indicação ao usuário
 - **Correção parcial**: Hook `usePaginatedQuery` criado (`src/hooks/usePaginatedQuery.ts`)
-- **Próximo passo**: Aplicar em CustomerWalletPage, StoreRedeemTab, ForYouSection
+- **Próximo passo**: Aplicar em CustomerWalletPage, StoreRedeemTab, CustomerRedemptionsPage
+- **Esforço**: 1 dia
 
 ### TD-012: Páginas/componentes flat fora de modules
 - **Descrição**: ~90 páginas em `src/pages/` flat
