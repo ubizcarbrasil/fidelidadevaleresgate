@@ -1,30 +1,51 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Problema encontrado
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+A imagem do usuário mostra o cURL oficial da TaxiMachine para buscar recibos:
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+```
+curl --location 'https://api-vendas.taximachine.com.br/api/integracao/recibo?id_mch=100003661' \
+--header 'api-key: {{api-key}}'
+```
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+**Só precisa do header `api-key`**. Não usa `Authorization: Basic`.
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Nosso código (linha 210-211) envia **dois headers**:
+```typescript
+headers: { "Authorization": `Basic ${basicAuth}`, "api-key": receiptApiKey }
+```
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+E na validação (linha 179) **exige** `basic_auth_user` e `basic_auth_password`, bloqueando integrações que não têm essas credenciais.
+
+O header `Authorization: Basic` extra pode estar causando a rejeição pela API da TaxiMachine.
+
+## Plano de correção
+
+### 1. `supabase/functions/machine-webhook/index.ts` — função `processFinalized`
+
+- **Remover** a exigência de `basicUser`/`basicPass` da validação obrigatória (linha 179)
+- **Enviar** apenas o header `api-key` na chamada de recibo
+- Se `basicUser` e `basicPass` estiverem preenchidos, incluir `Authorization: Basic` como **opcional** (para compatibilidade futura), mas **não bloquear** se estiverem vazios
+- Simplificar a validação: só exigir `receiptApiKey`
+
+**Antes:**
+```typescript
+if (!basicUser || !basicPass || !hasValidReceiptKey) { ... }
+// ...
+headers: { "Authorization": `Basic ${basicAuth}`, "api-key": receiptApiKey }
+```
+
+**Depois:**
+```typescript
+if (!hasValidReceiptKey) { ... }
+// ...
+const headers: Record<string, string> = { "api-key": receiptApiKey };
+if (basicUser && basicPass) {
+  headers["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
+}
+```
+
+### 2. Nenhuma mudança no banco ou UI necessária
+A coluna `receipt_api_key` já existe. Os campos de Basic Auth continuam opcionais na UI.
+
