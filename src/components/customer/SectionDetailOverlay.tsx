@@ -156,7 +156,7 @@ export default function SectionDetailOverlay({
                     )}
 
                     {/* Offer badge - top left */}
-                    {(hasDiscount || item.value_rescue > 0) && (
+                    {((item.discount_percent ?? 0) > 0 || (item.value_rescue ?? 0) > 0) && (
                       <div className="absolute top-3 left-3">
                         <OfferBadge
                           discountPercent={item.discount_percent || 0}
