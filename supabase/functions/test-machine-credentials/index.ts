@@ -49,19 +49,19 @@ Deno.serve(async (req) => {
       return json({ error: "Integration not found" }, 404);
     }
 
-    const receiptApiKey = (integration.receipt_api_key || integration.api_key || "").trim();
+    const cityApiKey = (integration.api_key || "").trim();
     const basicUser = (integration.basic_auth_user || "").trim();
     const basicPass = (integration.basic_auth_password || "").trim();
 
-    if (!receiptApiKey || receiptApiKey.startsWith("url-only-")) {
+    if (!cityApiKey || cityApiKey.startsWith("url-only-")) {
       return json({
         success: false,
-        error: "Chave da API de Vendas (receipt_api_key) não configurada.",
-        details: "Configure a chave no painel de integração antes de testar.",
+        error: "api-key da Cidade não configurada.",
+        details: "Configure a api-key da cidade no painel de integração antes de testar.",
       });
     }
 
-    const cityHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+    const cityHeaders = buildApiHeaders(cityApiKey, basicUser, basicPass);
 
     // Matrix credentials for Recibo endpoint
     const matrixApiKey = (integration.matrix_api_key || "").trim();
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       integrationId: integration_id,
       hasBasicAuth: !!(basicUser && basicPass),
       hasMatrixCredentials: !!matrixApiKey,
-      receiptApiKeyPrefix: receiptApiKey.slice(0, 6) + "***",
+      cityApiKeyPrefix: cityApiKey.slice(0, 6) + "***",
     });
 
     const results = await testBothEndpoints(cityHeaders, "100003661", matrixHeaders);
