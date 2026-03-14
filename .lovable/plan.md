@@ -1,37 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Continuação: Notificações Telegram + Painel em Tempo Real
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-O plano já foi aprovado. A implementação anterior foi interrompida porque o **conector Telegram ainda não está vinculado** ao projeto (apenas Firecrawl está conectado).
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Sequência de implementação
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**1. Conectar Telegram**
-- Vincular o conector Telegram ao projeto via `standard_connectors--connect`. Isso disponibilizará `TELEGRAM_API_KEY` e `LOVABLE_API_KEY` como secrets para as edge functions.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**2. Migração SQL**
-- Adicionar coluna `telegram_chat_id TEXT` em `machine_integrations`
-- Criar tabela `machine_ride_notifications` com RLS e Realtime habilitado
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**3. Edge Function `send-telegram-ride-notification`**
-- Recebe dados da pontuação, formata mensagem em português e envia via gateway Telegram (`https://connector-gateway.lovable.dev/telegram/sendMessage`)
-- Registrar em `supabase/config.toml` com `verify_jwt = false`
-
-**4. Atualizar `machine-webhook/index.ts`**
-- Após `pointsCredited = true`, inserir registro em `machine_ride_notifications` (com nome, telefone, cidade, pontos, valor, horário)
-- Se `telegram_chat_id` estiver configurado na integração, invocar `send-telegram-ride-notification` (fire-and-forget)
-
-**5. UI — `MachineIntegrationPage.tsx`**
-- Novo card **"Últimas pontuações"** com Supabase Realtime na tabela `machine_ride_notifications` — mostra nome, telefone mascarado, cidade, valor, pontos, horário
-- Campo **"Chat ID do Telegram"** no card de detalhes de cada cidade ativa, com botão Salvar
-- Instrução inline sobre como obter o chat_id via @BotFather e @userinfobot
-
-### Arquivos impactados
-| Arquivo | Ação |
-|---|---|
-| Migration SQL | Nova tabela + coluna |
-| `supabase/functions/send-telegram-ride-notification/index.ts` | Criar |
-| `supabase/functions/machine-webhook/index.ts` | Editar (inserir notificação + chamar Telegram) |
-| `src/pages/MachineIntegrationPage.tsx` | Editar (painel realtime + campo chat_id) |
-| `supabase/config.toml` | Registrar nova function |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

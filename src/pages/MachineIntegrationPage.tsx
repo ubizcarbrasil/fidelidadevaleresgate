@@ -17,7 +17,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
   Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound, AlertTriangle,
-  MapPin, Plus, Power, PowerOff,
+  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User,
 } from "lucide-react";
 
 /* ── Status labels ── */
@@ -73,6 +73,9 @@ export default function MachineIntegrationPage() {
   const [urlBasicPass, setUrlBasicPass] = useState("");
   const [showUrlPass, setShowUrlPass] = useState(false);
   const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
+  const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramSaved, setTelegramSaved] = useState(false);
+  const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
@@ -123,7 +126,8 @@ export default function MachineIntegrationPage() {
 
   useEffect(() => {
     if (selectedIntegration?.callback_url !== undefined) setCallbackUrl(selectedIntegration?.callback_url || "");
-  }, [selectedIntegration?.callback_url]);
+    setTelegramChatId((selectedIntegration as any)?.telegram_chat_id || "");
+  }, [selectedIntegration?.callback_url, (selectedIntegration as any)?.telegram_chat_id]);
 
   /* ── Initial events ── */
   useEffect(() => {
@@ -133,6 +137,13 @@ export default function MachineIntegrationPage() {
       .eq("brand_id", currentBrandId)
       .order("created_at", { ascending: false }).limit(50)
       .then(({ data }: { data: RideEvent[] | null }) => { if (data) setLiveEvents(data); });
+
+    // Load initial notifications
+    (supabase as any)
+      .from("machine_ride_notifications").select("*")
+      .eq("brand_id", currentBrandId)
+      .order("created_at", { ascending: false }).limit(30)
+      .then(({ data }: { data: any[] | null }) => { if (data) setLiveNotifications(data); });
   }, [currentBrandId]);
 
   /* ── Realtime ── */
@@ -151,7 +162,18 @@ export default function MachineIntegrationPage() {
           queryClient.invalidateQueries({ queryKey: ["machine-integrations", currentBrandId] });
         }
       }).subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    // Realtime: notifications
+    const notifChannel = supabase
+      .channel(`ride-notifs-${currentBrandId}`)
+      .on("postgres_changes" as any, {
+        event: "INSERT", schema: "public", table: "machine_ride_notifications",
+        filter: `brand_id=eq.${currentBrandId}`,
+      }, (payload: any) => {
+        setLiveNotifications((prev) => [payload.new, ...prev].slice(0, 50));
+      }).subscribe();
+
+    return () => { supabase.removeChannel(channel); supabase.removeChannel(notifChannel); };
   }, [currentBrandId, queryClient]);
 
   /* ── Mutations ── */
@@ -229,6 +251,26 @@ export default function MachineIntegrationPage() {
       setCallbackSaved(true);
       setTimeout(() => setCallbackSaved(false), 2000);
       toast({ title: "URL de retorno salva!" });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const saveTelegramMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .update({ telegram_chat_id: telegramChatId || null })
+        .eq("id", selectedIntegration.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setTelegramSaved(true);
+      setTimeout(() => setTelegramSaved(false), 2000);
+      toast({ title: "Chat ID do Telegram salvo!" });
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
     onError: (err: any) => {
@@ -390,6 +432,26 @@ export default function MachineIntegrationPage() {
                 </div>
               </div>
 
+              {/* Telegram Chat ID */}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Send className="h-3 w-3" /> Chat ID do Telegram (opcional)
+                </Label>
+                <div className="flex items-center gap-2 max-w-lg">
+                  <Input
+                    value={telegramChatId}
+                    onChange={(e) => setTelegramChatId(e.target.value)}
+                    placeholder="-1001234567890"
+                  />
+                  <Button variant="outline" size="icon" onClick={() => saveTelegramMutation.mutate()} disabled={saveTelegramMutation.isPending}>
+                    {telegramSaved ? <Check className="h-4 w-4 text-primary" /> : saveTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Crie um bot no <strong>@BotFather</strong>, adicione ao grupo e use <strong>@userinfobot</strong> para obter o chat_id.
+                </p>
+              </div>
+
               <Button
                 variant="destructive" size="sm"
                 onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)}
@@ -402,6 +464,58 @@ export default function MachineIntegrationPage() {
             </CardContent>
           </Card>
         </>
+      )}
+
+      {/* ─── ÚLTIMAS PONTUAÇÕES (realtime) ─── */}
+      {activeIntegrations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Trophy className="h-4 w-4 text-primary" />
+              Últimas pontuações
+            </CardTitle>
+            <CardDescription>Pontuações creditadas em tempo real, todas as cidades.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-80">
+              {liveNotifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                  <Trophy className="h-8 w-8 mb-2 opacity-40" />
+                  <p className="text-sm">Nenhuma pontuação registrada ainda.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {liveNotifications.map((notif: any) => (
+                    <div key={notif.id} className="flex flex-col gap-1 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-medium text-xs">{notif.customer_name || "Não identificado"}</span>
+                          {notif.customer_cpf_masked && (
+                            <span className="text-xs text-muted-foreground">CPF {notif.customer_cpf_masked}</span>
+                          )}
+                        </div>
+                        <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
+                          {notif.points_credited} pts
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {notif.customer_phone && (
+                          <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{notif.customer_phone}</span>
+                        )}
+                        {notif.city_name && (
+                          <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{notif.city_name}</span>
+                        )}
+                        <span className="flex items-center gap-1"><Coins className="h-3 w-3" />R$ {Number(notif.ride_value || 0).toFixed(2)}</span>
+                        <span className="ml-auto">{new Date(notif.created_at).toLocaleTimeString("pt-BR")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
       )}
 
       {/* ─── REALTIME FEED (always visible if any integration active) ─── */}

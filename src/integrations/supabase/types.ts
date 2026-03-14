@@ -2311,6 +2311,7 @@ export type Database = {
           is_active: boolean
           last_ride_processed_at: string | null
           last_webhook_at: string | null
+          telegram_chat_id: string | null
           total_points: number
           total_rides: number
           updated_at: string
@@ -2328,6 +2329,7 @@ export type Database = {
           is_active?: boolean
           last_ride_processed_at?: string | null
           last_webhook_at?: string | null
+          telegram_chat_id?: string | null
           total_points?: number
           total_rides?: number
           updated_at?: string
@@ -2345,6 +2347,7 @@ export type Database = {
           is_active?: boolean
           last_ride_processed_at?: string | null
           last_webhook_at?: string | null
+          telegram_chat_id?: string | null
           total_points?: number
           total_rides?: number
           updated_at?: string
@@ -2412,6 +2415,73 @@ export type Database = {
           },
           {
             foreignKeyName: "machine_ride_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      machine_ride_notifications: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          city_name: string | null
+          created_at: string
+          customer_cpf_masked: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          finalized_at: string
+          id: string
+          machine_ride_id: string
+          points_credited: number
+          ride_value: number
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          city_name?: string | null
+          created_at?: string
+          customer_cpf_masked?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          finalized_at?: string
+          id?: string
+          machine_ride_id: string
+          points_credited?: number
+          ride_value?: number
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          city_name?: string | null
+          created_at?: string
+          customer_cpf_masked?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          finalized_at?: string
+          id?: string
+          machine_ride_id?: string
+          points_credited?: number
+          ride_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_ride_notifications_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_ride_notifications_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_ride_notifications_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
