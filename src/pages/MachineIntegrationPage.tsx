@@ -72,6 +72,8 @@ export default function MachineIntegrationPage() {
   const [urlBasicUser, setUrlBasicUser] = useState("");
   const [urlBasicPass, setUrlBasicPass] = useState("");
   const [showUrlPass, setShowUrlPass] = useState(false);
+  const [urlApiKey, setUrlApiKey] = useState("");
+  const [showUrlApiKey, setShowUrlApiKey] = useState(false);
   const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
   const [telegramChatId, setTelegramChatId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
@@ -190,7 +192,8 @@ export default function MachineIntegrationPage() {
         basic_auth_user: user,
         basic_auth_password: pass,
       };
-      if (!isUrlOnly && apiKey) body.api_key = apiKey;
+      const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
+      if (resolvedApiKey) body.api_key = resolvedApiKey;
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -203,7 +206,7 @@ export default function MachineIntegrationPage() {
           title: "Cidade ativada por URL!",
           description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine.",
         });
-        setUrlBasicUser(""); setUrlBasicPass("");
+        setUrlBasicUser(""); setUrlBasicPass(""); setUrlApiKey("");
       } else {
         toast({
           title: "Integração ativada!",
@@ -708,7 +711,8 @@ export default function MachineIntegrationPage() {
                 <h3 className="font-semibold text-sm">Como funciona</h3>
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                   <li>Selecione a <strong>cidade</strong> que deseja conectar.</li>
-                  <li>Preencha <strong>usuário</strong> e <strong>senha</strong> da TaxiMachine (necessário para consultar recibos).</li>
+                  <li>Informe a <strong>chave de acesso</strong> (API Key) fornecida pela TaxiMachine para consulta de recibos.</li>
+                  <li>Preencha <strong>usuário</strong> e <strong>senha</strong> da TaxiMachine.</li>
                   <li>Clique em "Ativar cidade".</li>
                   <li>Copie a URL gerada e cole no <strong>roteador de status</strong> da TaxiMachine.</li>
                 </ol>
@@ -739,6 +743,21 @@ export default function MachineIntegrationPage() {
                   )}
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="url_api_key">Chave de acesso (API Key)</Label>
+                  <div className="relative">
+                    <Input
+                      id="url_api_key"
+                      type={showUrlApiKey ? "text" : "password"}
+                      value={urlApiKey}
+                      onChange={(e) => setUrlApiKey(e.target.value)}
+                      placeholder="Chave fornecida pela TaxiMachine"
+                    />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlApiKey(!showUrlApiKey)}>
+                      {showUrlApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="url_basic_user">Usuário</Label>
                   <Input id="url_basic_user" value={urlBasicUser} onChange={(e) => setUrlBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
                 </div>
@@ -751,7 +770,7 @@ export default function MachineIntegrationPage() {
                     </button>
                   </div>
                 </div>
-                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlBasicUser || !urlBasicPass || !urlBranchId}>
+                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlApiKey || !urlBasicUser || !urlBasicPass || !urlBranchId}>
                   {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Power className="h-4 w-4 mr-1" />
                   Ativar cidade

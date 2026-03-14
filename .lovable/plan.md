@@ -1,26 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Problema
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-Quando você ativa a integração pela aba **"Por URL"**, o campo de **API Key** (chave de acesso da TaxiMachine para consultar recibos) **não existe** nessa aba. Ele só aparece na aba "Por Credenciais".
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-No código atual, a ativação por URL deliberadamente **não envia** a `api_key` (linha 193: `if (!isUrlOnly && apiKey) body.api_key = apiKey`), e o sistema gera um placeholder `url-only-...`. Porém, o webhook precisa dessa chave para chamar o endpoint `api-vendas.taximachine.com.br/api/integracao/recibo` e buscar os dados da corrida.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-## Solução
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-Adicionar o campo **"Chave de acesso (API Key)"** na aba "Por URL" da página de integração, e enviar essa chave no momento da ativação.
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### Mudanças
-
-| Arquivo | O que muda |
-|---|---|
-| `src/pages/MachineIntegrationPage.tsx` | Adicionar campo `api_key` na aba URL, criar state `urlApiKey`, enviar no body da ativação |
-
-### Detalhes
-
-1. **Novo state**: `urlApiKey` para armazenar a chave digitada na aba URL
-2. **Novo campo na UI**: Input "Chave de acesso (API Key)" na aba URL, entre a cidade e o usuário, com toggle de visibilidade (mesmo padrão da aba credenciais)
-3. **Texto explicativo atualizado**: Adicionar no passo-a-passo: "Informe a **chave de acesso** (API Key) fornecida pela TaxiMachine para consulta de recibos"
-4. **Enviar no body**: Remover a condição `!isUrlOnly` da linha 193, passando `api_key` sempre que preenchida (seja da aba URL ou credenciais)
-5. **Validação**: O botão "Ativar cidade" na aba URL só fica habilitado se `urlApiKey` estiver preenchido (além de usuário, senha e cidade)
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
