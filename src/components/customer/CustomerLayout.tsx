@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -10,22 +10,28 @@ import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
-import CustomerOffersPage from "@/pages/customer/CustomerOffersPage";
-import CustomerRedemptionsPage from "@/pages/customer/CustomerRedemptionsPage";
-import CustomerWalletPage from "@/pages/customer/CustomerWalletPage";
-import CustomerProfilePage from "@/pages/customer/CustomerProfilePage";
-import CustomerOfferDetailPage from "@/pages/customer/CustomerOfferDetailPage";
-import CustomerStoreDetailPage from "@/pages/customer/CustomerStoreDetailPage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
 import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
-import CustomerEmissorasPage from "@/pages/customer/CustomerEmissorasPage";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
+import { hslToCss } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
 import type { OfferWithStore, NavOffer, NavStore } from "@/types/customer";
+
+// Lazy-loaded tab pages (not needed on initial render)
+const CustomerOffersPage = lazy(() => import("@/pages/customer/CustomerOffersPage"));
+const CustomerRedemptionsPage = lazy(() => import("@/pages/customer/CustomerRedemptionsPage"));
+const CustomerWalletPage = lazy(() => import("@/pages/customer/CustomerWalletPage"));
+const CustomerProfilePage = lazy(() => import("@/pages/customer/CustomerProfilePage"));
+const CustomerEmissorasPage = lazy(() => import("@/pages/customer/CustomerEmissorasPage"));
+
+// Lazy-loaded overlays (rendered on demand)
+const CustomerOfferDetailPage = lazy(() => import("@/pages/customer/CustomerOfferDetailPage"));
+const CustomerStoreDetailPage = lazy(() => import("@/pages/customer/CustomerStoreDetailPage"));
 
 interface SectionDetail {
   title: string | null;
