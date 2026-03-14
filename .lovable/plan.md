@@ -1,30 +1,14 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+A seção "Melhores" com template `OFFERS_CAROUSEL` está configurada no banco com `rows_count = 2`. Quando `rows_count > 1`, o código usa CSS Grid com `gridTemplateRows: repeat(2, 1fr)` e `gridAutoFlow: column`, o que empilha os cards verticalmente em 2 linhas dentro de cada coluna — causando o layout em coluna que você vê na screenshot.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+## Solução
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+1. **Corrigir no banco**: Atualizar o `rows_count` da seção "Melhores" (OFFERS_CAROUSEL) de `2` para `1`, fazendo os cards voltarem ao layout de carrossel horizontal (`flex` + `overflow-x-auto`).
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+2. **Garantia no código**: Nenhuma alteração de código necessária — o `OffersCarousel` já renderiza corretamente em carrossel horizontal quando `rowsCount = 1`.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+A seção `MANUAL_LINKS_GRID` com título "Melhores" não é afetada (outro template).
+
