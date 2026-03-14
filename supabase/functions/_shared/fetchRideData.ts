@@ -66,7 +66,8 @@ export function buildApiHeaders(
 
 export async function fetchRideData(
   headers: Record<string, string>,
-  machineRideId: string
+  machineRideId: string,
+  preferredEndpoint: "recibo" | "request_v1" = "recibo"
 ): Promise<FetchRideResult> {
   // 1. Try Recibo endpoint first
   const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
