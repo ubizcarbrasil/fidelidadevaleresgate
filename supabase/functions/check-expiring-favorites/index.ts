@@ -35,8 +35,9 @@ Deno.serve(async (req) => {
       .eq("offers.is_active", true)
       .eq("offers.status", "ACTIVE");
 
+    const log = createEdgeLogger("check-expiring-favorites");
     if (fetchError) {
-      console.error("Error fetching expiring favorites:", fetchError);
+      log.error("Error fetching expiring favorites", { error: fetchError.message });
       return new Response(JSON.stringify({ error: fetchError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
