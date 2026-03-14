@@ -303,9 +303,18 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
 }
 
 // --- Favorites Section ---
-function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: Record<string, unknown> | null; primary: string; fg: string; fontHeading: string }) {
+interface FavoriteOffer {
+  id: string;
+  title: string;
+  image_url: string | null;
+  value_rescue: number;
+  description: string | null;
+  stores?: { name: string; logo_url: string | null } | null;
+}
+
+function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { id: string } | null; primary: string; fg: string; fontHeading: string }) {
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
-  const [favorites, setFavorites] = useState<Record<string, unknown>[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteOffer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -317,7 +326,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: Re
         .select("offer_id, offers(id, title, image_url, value_rescue, description, stores(name, logo_url))")
         .eq("customer_id", customer.id)
         .order("created_at", { ascending: false });
-      setFavorites((data || []).map((d: Record<string, unknown>) => d.offers as Record<string, unknown>).filter(Boolean));
+      setFavorites((data || []).map((d) => d.offers as unknown as FavoriteOffer).filter(Boolean));
       setLoading(false);
     };
     fetch();
