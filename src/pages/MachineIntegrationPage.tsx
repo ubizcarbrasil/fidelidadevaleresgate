@@ -258,6 +258,26 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const saveTelegramMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .update({ telegram_chat_id: telegramChatId || null })
+        .eq("id", selectedIntegration.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setTelegramSaved(true);
+      setTimeout(() => setTelegramSaved(false), 2000);
+      toast({ title: "Chat ID do Telegram salvo!" });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
+
   // Branches not yet integrated
   const integratedBranchIds = new Set(activeIntegrations.map((i) => i.branch_id));
   const availableBranches = branches.filter((b) => !integratedBranchIds.has(b.id));
