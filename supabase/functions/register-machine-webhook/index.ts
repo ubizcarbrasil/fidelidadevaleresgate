@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
         webhookRegistered = true;
       } else {
         const errText = await webhookRes.text();
-        console.error("Webhook registration response:", webhookRes.status, errText);
+        createEdgeLogger("register-machine-webhook").error("Webhook registration response", { status: webhookRes.status, body: errText });
         // Continue even if webhook registration fails — admin can retry
       }
       if (!webhookRegistered) await webhookRes.text().catch(() => {});
