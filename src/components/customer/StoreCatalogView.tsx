@@ -45,7 +45,7 @@ interface Props {
   customerId?: string;
   primary: string;
   fontHeading: string;
-  onOfferClick?: (offer: CatalogOffer & Record<string, unknown>) => void;
+  onOfferClick?: (offer: CatalogOffer) => void;
 }
 
 export default function StoreCatalogView({
