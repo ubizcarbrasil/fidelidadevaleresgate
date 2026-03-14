@@ -1097,9 +1097,10 @@ export default function MachineIntegrationPage() {
                 const cpf = identifyForm.cpf.trim() || null;
                 const phone = identifyForm.phone.trim() || null;
 
-                // 1. Resolve customer_id: from notification, or look up via points_ledger
+                // 1. Resolve customer_id: from notification → points_ledger → customer name match
                 let customerId = identifyNotif.customer_id || null;
                 if (!customerId && identifyNotif.machine_ride_id && identifyNotif.brand_id) {
+                  // Try points_ledger first
                   const { data: ledgerEntry } = await (supabase as any)
                     .from("points_ledger")
                     .select("customer_id")
@@ -1109,6 +1110,17 @@ export default function MachineIntegrationPage() {
                     .limit(1)
                     .maybeSingle();
                   if (ledgerEntry?.customer_id) customerId = ledgerEntry.customer_id;
+                }
+                // Fallback: find customer by placeholder name pattern
+                if (!customerId && identifyNotif.machine_ride_id && identifyNotif.brand_id) {
+                  const { data: custByName } = await (supabase as any)
+                    .from("customers")
+                    .select("id")
+                    .eq("brand_id", identifyNotif.brand_id)
+                    .eq("name", `Passageiro corrida #${identifyNotif.machine_ride_id}`)
+                    .limit(1)
+                    .maybeSingle();
+                  if (custByName?.id) customerId = custByName.id;
                 }
 
                 // 2. Update customer record
