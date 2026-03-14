@@ -162,7 +162,18 @@ export default function MachineIntegrationPage() {
           queryClient.invalidateQueries({ queryKey: ["machine-integrations", currentBrandId] });
         }
       }).subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    // Realtime: notifications
+    const notifChannel = supabase
+      .channel(`ride-notifs-${currentBrandId}`)
+      .on("postgres_changes" as any, {
+        event: "INSERT", schema: "public", table: "machine_ride_notifications",
+        filter: `brand_id=eq.${currentBrandId}`,
+      }, (payload: any) => {
+        setLiveNotifications((prev) => [payload.new, ...prev].slice(0, 50));
+      }).subscribe();
+
+    return () => { supabase.removeChannel(channel); supabase.removeChannel(notifChannel); };
   }, [currentBrandId, queryClient]);
 
   /* ── Mutations ── */
