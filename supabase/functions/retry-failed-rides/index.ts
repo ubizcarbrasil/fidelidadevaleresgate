@@ -132,6 +132,7 @@ async function retryRide(
     if (passengerName) notifUpdates.customer_name = passengerName;
     if (passengerPhone) notifUpdates.customer_phone = passengerPhone;
     if (passengerCpf) notifUpdates.customer_cpf_masked = `•••${passengerCpf.slice(-4)}`;
+    if (driverName) notifUpdates.driver_name = driverName;
 
     if (Object.keys(notifUpdates).length > 0) {
       await sb.from("machine_ride_notifications")
