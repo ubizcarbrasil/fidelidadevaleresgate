@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     const raw = await response.json();
 
     if (!response.ok) {
-      console.error('Firecrawl API error:', raw);
+      log.error("Firecrawl API error", { status: response.status, raw });
       return new Response(
         JSON.stringify({ success: false, error: raw.error || `Failed with status ${response.status}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
