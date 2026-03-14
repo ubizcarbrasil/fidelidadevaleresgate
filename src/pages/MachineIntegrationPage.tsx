@@ -210,6 +210,8 @@ export default function MachineIntegrationPage() {
   const [telegramChatId, setTelegramChatId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
+  const [identifyNotif, setIdentifyNotif] = useState<any>(null);
+  const [identifyForm, setIdentifyForm] = useState({ name: "", cpf: "", phone: "" });
   const [credTestResult, setCredTestResult] = useState<{ success: boolean; message?: string; error?: string; details?: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
