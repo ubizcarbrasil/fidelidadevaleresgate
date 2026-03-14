@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     const message = [
       "🎯 <b>Nova pontuação por corrida!</b>",
       "",
-      `👤 Nome: ${customer_name || "Não identificado"}`,
+      `👤 Cliente: ${customer_name || "Não identificado"}`,
       customer_phone ? `📱 Telefone: ${customer_phone}` : null,
       driver_name ? `🚗 Motorista: ${driver_name}` : null,
       city_name ? `🏙️ Cidade: ${city_name}` : null,

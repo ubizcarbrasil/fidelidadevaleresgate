@@ -47,7 +47,7 @@ export default function CustomersPage() {
     queryFn: async () => {
       let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
-      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,cpf.ilike.%${debouncedSearch}%`);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
@@ -114,7 +114,7 @@ export default function CustomersPage() {
         </Dialog>
       </div>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome ou telefone..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
         <CardContent className="p-0">

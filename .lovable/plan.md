@@ -1,38 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Situação real: a API da TaxiMachine não retorna dados do passageiro
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-Analisei os logs de produção em detalhe. O JSON retornado pelo endpoint V1 contém **apenas**:
-- `request_id`, `category`, `driver` (nome, telefone, CPF), `progress`, `finished` (valor, endereço)
-- **Não existe** campo `client`, `passenger`, `stops` ou qualquer dado do passageiro
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-O endpoint Recibo (que teria o CPF do cliente) retorna `400 "Solicitação não encontrada"` para todas as corridas.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**Conclusão**: a TaxiMachine não está enviando dados do cliente pela API. Não é um bug do nosso código — é uma limitação da API deles.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
----
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-## Plano: permitir identificação manual + auto-registro do cliente
-
-### 1. Remover referências ao motorista das telas de cliente
-- Parar de mostrar "Motorista: X" nas telas de clientes/pontuações (isso confunde)
-- Mostrar "Cliente não identificado" com botão de ação para editar
-
-### 2. Melhorar edição inline na tela "Últimas pontuações"
-- Adicionar botão "Identificar cliente" em cada notificação sem nome
-- Ao clicar, abre dialog para digitar nome, CPF e telefone do cliente
-- Salva nos 3 lugares: `customers`, `machine_rides`, `machine_ride_notifications`
-
-### 3. Busca por CPF/telefone na página de Clientes
-- Adicionar busca por CPF além de nome/telefone (já tem nome e telefone)
-- Permitir merge: se identificar que dois "Passageiro corrida #..." são a mesma pessoa, unificar
-
-### 4. Telegram: mostrar "Cliente não identificado" em vez do nome do motorista
-- Remover `driver_name` da mensagem de cliente
-- Manter motorista como informação separada (campo próprio, não confundindo com cliente)
-
-### Resultado
-- Telas param de confundir motorista com cliente
-- Operador pode identificar clientes manualmente até a TaxiMachine liberar dados de passageiro na API
-- Dados corretos nas 4 telas solicitadas
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

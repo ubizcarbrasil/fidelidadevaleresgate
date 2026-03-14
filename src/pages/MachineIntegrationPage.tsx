@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -210,6 +211,8 @@ export default function MachineIntegrationPage() {
   const [telegramChatId, setTelegramChatId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
+  const [identifyNotif, setIdentifyNotif] = useState<any>(null);
+  const [identifyForm, setIdentifyForm] = useState({ name: "", cpf: "", phone: "" });
   const [credTestResult, setCredTestResult] = useState<{ success: boolean; message?: string; error?: string; details?: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -746,26 +749,37 @@ export default function MachineIntegrationPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {liveNotifications.map((notif: any) => (
+                  {liveNotifications.map((notif: any) => {
+                    const isUnidentified = !notif.customer_name || notif.customer_name?.startsWith("Passageiro corrida");
+                    return (
                     <div key={notif.id} className="flex flex-col gap-1 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <User className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="font-medium text-xs">
-                            {notif.customer_name || "Não identificado"}
+                          <span className={`font-medium text-xs ${isUnidentified ? "italic text-muted-foreground" : ""}`}>
+                            {isUnidentified ? "Cliente não identificado" : notif.customer_name}
                           </span>
                           {notif.customer_cpf_masked && (
                             <span className="text-xs text-muted-foreground">CPF {notif.customer_cpf_masked}</span>
                           )}
                         </div>
-                        <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
-                          {notif.points_credited} pts
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {isUnidentified && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs text-primary"
+                              onClick={() => setIdentifyNotif(notif)}
+                            >
+                              Identificar
+                            </Button>
+                          )}
+                          <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
+                            {notif.points_credited} pts
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        {notif.driver_name && (
-                          <span className="flex items-center gap-1"><Car className="h-3 w-3" />Motorista: {notif.driver_name}</span>
-                        )}
                         {notif.customer_phone && (
                           <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{notif.customer_phone}</span>
                         )}
@@ -776,7 +790,8 @@ export default function MachineIntegrationPage() {
                         <span className="ml-auto">{new Date(notif.created_at).toLocaleTimeString("pt-BR")}</span>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
@@ -1063,6 +1078,60 @@ export default function MachineIntegrationPage() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* ─── IDENTIFICAR CLIENTE DIALOG ─── */}
+      <Dialog open={!!identifyNotif} onOpenChange={(v) => { if (!v) { setIdentifyNotif(null); setIdentifyForm({ name: "", cpf: "", phone: "" }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Identificar Cliente</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Corrida #{identifyNotif?.machine_ride_id} — R$ {Number(identifyNotif?.ride_value || 0).toFixed(2)}</p>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2"><Label>Nome</Label><Input value={identifyForm.name} onChange={e => setIdentifyForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>CPF</Label><Input value={identifyForm.cpf} onChange={e => setIdentifyForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              <div className="space-y-2"><Label>Telefone</Label><Input value={identifyForm.phone} onChange={e => setIdentifyForm(f => ({ ...f, phone: e.target.value }))} placeholder="(99) 99999-9999" /></div>
+            </div>
+            <Button className="w-full" disabled={!identifyForm.name.trim()} onClick={async () => {
+              if (!identifyNotif) return;
+              try {
+                const name = identifyForm.name.trim();
+                const cpf = identifyForm.cpf.trim() || null;
+                const phone = identifyForm.phone.trim() || null;
+
+                // Update machine_ride_notifications
+                await (supabase as any).from("machine_ride_notifications").update({
+                  customer_name: name,
+                  customer_phone: phone,
+                  customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null,
+                }).eq("id", identifyNotif.id);
+
+                // Update machine_rides
+                if (identifyNotif.machine_ride_id) {
+                  await (supabase as any).from("machine_rides").update({
+                    passenger_name: name,
+                    passenger_cpf: cpf,
+                    passenger_phone: phone,
+                  }).eq("brand_id", identifyNotif.brand_id).eq("machine_ride_id", identifyNotif.machine_ride_id);
+                }
+
+                // Update customer record if exists
+                if (identifyNotif.customer_id) {
+                  await (supabase as any).from("customers").update({
+                    name, cpf, phone,
+                  }).eq("id", identifyNotif.customer_id);
+                }
+
+                // Update local state
+                setLiveNotifications(prev => prev.map(n => n.id === identifyNotif.id ? { ...n, customer_name: name, customer_phone: phone, customer_cpf_masked: cpf ? `•••${cpf.slice(-4)}` : null } : n));
+                setIdentifyNotif(null);
+                setIdentifyForm({ name: "", cpf: "", phone: "" });
+                toast({ title: "Cliente identificado!", description: `${name} vinculado à corrida.` });
+              } catch (err: any) {
+                toast({ title: "Erro", description: err.message, variant: "destructive" });
+              }
+            }}>Salvar identificação</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
