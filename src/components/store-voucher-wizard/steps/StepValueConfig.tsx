@@ -147,10 +147,10 @@ export default function StepValueConfig({ data, update }: Props) {
           </>
         ) : (
           <>
-            <strong>Troque {Math.floor(creditValue)} pts por R$ {creditValue.toFixed(2)} em crédito</strong>
+            <strong>CRÉDITO DE R$ {creditValue.toFixed(2)}</strong>
             <br />
             <span className="text-muted-foreground">
-              Sobre compra mínima de R$ {data.min_purchase.toFixed(2)}
+              {Math.floor(creditValue)} pontos por R$ {creditValue.toFixed(2)} na compra mínima de R$ {data.min_purchase.toFixed(2)}
             </span>
           </>
         )}

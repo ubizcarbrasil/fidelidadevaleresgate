@@ -44,7 +44,7 @@ export default function StepReview({ data }: Props) {
 
         {/* Differentiated nomenclature */}
         <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
-          {isProduct ? (
+        {isProduct ? (
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
               <p className="text-lg font-bold text-primary">
@@ -58,10 +58,13 @@ export default function StepReview({ data }: Props) {
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom</p>
               <p className="text-lg font-bold text-primary">
-                Troque {Math.floor(creditBase)} pts por R$ {creditBase.toFixed(2)}
+                CRÉDITO DE R$ {creditBase.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Sobre compra mínima de R$ {data.min_purchase.toFixed(2)}
+                {Math.floor(creditBase)} pontos por R$ {creditBase.toFixed(2)} na compra mínima de R$ {data.min_purchase.toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "ONLINE" ? "Online" : "WhatsApp"}
               </p>
             </div>
           )}

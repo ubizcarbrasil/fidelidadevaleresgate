@@ -61,14 +61,18 @@ export const StoreOfferCard = React.memo(function StoreOfferCard({
                 </span>
               )}
             </div>
-            {offer.description && (
+            {offer.coupon_type !== "PRODUCT" && Number(offer.value_rescue) > 0 ? (
+              <p className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground">
+                {Math.floor(Number(offer.value_rescue))} pontos por R$ {Number(offer.value_rescue).toFixed(2)}
+              </p>
+            ) : offer.description ? (
               <p className="text-[11px] line-clamp-1 mt-0.5 text-muted-foreground">
                 {offer.description}
               </p>
-            )}
+            ) : null}
           </div>
           <div className="flex items-center justify-between mt-2">
-            {Number(offer.value_rescue) > 0 && (
+            {offer.coupon_type === "PRODUCT" && Number(offer.value_rescue) > 0 && (
               <span
                 className="font-bold text-sm"
                 style={{ color: isDark ? "hsl(var(--vb-highlight))" : primary, fontFamily: fontHeading }}

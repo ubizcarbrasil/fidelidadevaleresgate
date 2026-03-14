@@ -595,32 +595,33 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 {/* Vale Resgate value highlight */}
                 {Number(offer.value_rescue) > 0 && (
                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
-                    <div className="p-4 flex items-center justify-between" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
-                      <div>
-                         <p className="text-xs font-medium mb-0.5 text-muted-foreground">
-                           {offer.coupon_type === "PRODUCT" ? "Pague com Pontos" : "Troque Pontos por Crédito"}
-                         </p>
-                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                           {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
-                         </p>
-                         <p className="text-[11px] mt-0.5 text-muted-foreground">
-                           {offer.coupon_type === "PRODUCT"
-                             ? `${Math.floor(Number(offer.value_rescue))} pts = R$ ${Number(offer.value_rescue).toFixed(2)} de crédito`
-                             : `sobre compra mínima de R$ ${Number(offer.min_purchase || 0).toFixed(2)}`}
-                         </p>
-                      </div>
-                      {Number(offer.min_purchase) > 0 && (
-                        <div className="text-right">
-                         <p className="text-[10px] font-medium text-muted-foreground">Compra mínima</p>
-                          <p className="text-sm font-bold text-muted-foreground">
-                             R$ {Number(offer.min_purchase).toFixed(2)}
+                    <div className="p-4" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
+                      {offer.coupon_type === "PRODUCT" ? (
+                        <div>
+                          <p className="text-xs font-medium mb-0.5 text-muted-foreground">Pague com Pontos</p>
+                          <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
+                            {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                           </p>
+                          <p className="text-[11px] mt-0.5 text-muted-foreground">
+                            {Math.floor(Number(offer.value_rescue))} pts = R$ {Number(offer.value_rescue).toFixed(2)} de crédito
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
+                            {Math.floor(Number(offer.value_rescue))} pontos por R$ {Number(offer.value_rescue).toFixed(2)} em créditos na compra mínima de R$ {Number(offer.min_purchase || 0).toFixed(2)}
+                          </p>
+                          {offer.redemption_type && (
+                            <p className="text-[11px] mt-1.5 text-muted-foreground">
+                              Resgate: {offer.redemption_type === "PRESENCIAL" ? "🏪 Presencial" : offer.redemption_type === "ONLINE" ? "🌐 Online" : "📱 WhatsApp"}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
-                    {Number(offer.discount_percent) > 0 && (
+                    {offer.end_at && (
                       <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : `${primary}12`, color: isDark ? "hsl(var(--foreground))" : primary }}>
-                        {offer.discount_percent}% de desconto aplicado
+                        Válido até {new Date(offer.end_at).toLocaleDateString("pt-BR")}
                       </div>
                     )}
                   </div>
