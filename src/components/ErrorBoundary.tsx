@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { reportError } from "@/lib/errorTracker";
 
 interface Props {
   children: React.ReactNode;
@@ -18,6 +19,18 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    reportError({
+      message: error.message,
+      stack: error.stack,
+      source: "boundary",
+      severity: "fatal",
+      metadata: {
+        componentStack: errorInfo.componentStack?.slice(0, 2000),
+      },
+    });
   }
 
   render() {

@@ -55,6 +55,7 @@ async function clearPreviewPwaCache() {
 }
 
 void clearPreviewPwaCache();
+initErrorTracker();
 initWebVitals();
 
 // Fix React 18 "removeChild" error caused by third-party DOM manipulation
