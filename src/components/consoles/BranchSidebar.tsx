@@ -41,7 +41,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { title: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
       { title: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { title: "Categorias Achadinhos", url: "/affiliate-categories", icon: Sparkles },
-      { title: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "stores" },
+      { title: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
       { title: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { title: "Operador PDV", url: "/pdv", icon: ScanLine },
     ],

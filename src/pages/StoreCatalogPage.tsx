@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import ImageUploadField from "@/components/ImageUploadField";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
@@ -35,6 +36,7 @@ const emptyForm: CatalogForm = {
 
 export default function StoreCatalogPage() {
   const qc = useQueryClient();
+  const { currentBrandId, applyBrandFilter } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CatalogForm>(emptyForm);
@@ -44,19 +46,22 @@ export default function StoreCatalogPage() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: stores } = useQuery({
-    queryKey: ["stores-catalog-select"],
+    queryKey: ["stores-catalog-select", currentBrandId],
     queryFn: async () => {
-      const { data } = await supabase.from("stores").select("id, name").eq("is_active", true).order("name");
+      let query = supabase.from("stores").select("id, name").eq("is_active", true);
+      query = applyBrandFilter(query);
+      const { data } = await query.order("name");
       return data || [];
     },
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["catalog-items", debouncedSearch, page, storeFilter],
+    queryKey: ["catalog-items", debouncedSearch, page, storeFilter, currentBrandId],
     queryFn: async () => {
-      let query = supabase.from("store_catalog_items").select("*, stores(name)", { count: "exact" });
+      let query = supabase.from("store_catalog_items").select("*, stores!inner(name, brand_id)", { count: "exact" });
       if (debouncedSearch) query = query.ilike("name", `%${debouncedSearch}%`);
       if (storeFilter) query = query.eq("store_id", storeFilter);
+      if (currentBrandId) query = query.eq("stores.brand_id", currentBrandId);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("order_index").range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
