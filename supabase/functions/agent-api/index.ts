@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { createEdgeLogger } from "../_shared/edgeLogger.ts";
+
+const logger = createEdgeLogger("agent-api");
 
 // ── CORS ────────────────────────────────────────────────────────────────
 const corsHeaders = {
