@@ -46,7 +46,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
       // Get customers with ride points
       let q = (supabase as any)
         .from("customers")
-        .select("id, name, cpf, phone, points_balance, user_id")
+        .select("id, name, cpf, phone, points_balance, user_id, email")
         .eq("brand_id", brandId)
         .order("updated_at", { ascending: false })
         .limit(50);
