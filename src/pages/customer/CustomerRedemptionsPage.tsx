@@ -259,7 +259,7 @@ function RedemptionCard({
         <div>
           <span className="text-[10px] font-bold tracking-wider block text-muted-foreground">RESGATE</span>
           <span className="text-xs font-mono font-semibold" style={{ color: fg }}>
-            #PED{r.id.replace(/-/g, "").slice(0, 14).toUpperCase()}
+            #PED{(r.id as string).replace(/-/g, "").slice(0, 14).toUpperCase()}
           </span>
         </div>
         <span
