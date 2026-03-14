@@ -2438,6 +2438,7 @@ export type Database = {
           city_name: string | null
           created_at: string
           customer_cpf_masked: string | null
+          customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
           driver_name: string | null
@@ -2453,6 +2454,7 @@ export type Database = {
           city_name?: string | null
           created_at?: string
           customer_cpf_masked?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           driver_name?: string | null
@@ -2468,6 +2470,7 @@ export type Database = {
           city_name?: string | null
           created_at?: string
           customer_cpf_masked?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           driver_name?: string | null
@@ -2499,6 +2502,13 @@ export type Database = {
             referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "machine_ride_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       machine_rides: {
@@ -2511,6 +2521,8 @@ export type Database = {
           id: string
           machine_ride_id: string
           passenger_cpf: string | null
+          passenger_name: string | null
+          passenger_phone: string | null
           points_credited: number
           ride_status: string
           ride_value: number
@@ -2524,6 +2536,8 @@ export type Database = {
           id?: string
           machine_ride_id: string
           passenger_cpf?: string | null
+          passenger_name?: string | null
+          passenger_phone?: string | null
           points_credited?: number
           ride_status?: string
           ride_value?: number
@@ -2537,6 +2551,8 @@ export type Database = {
           id?: string
           machine_ride_id?: string
           passenger_cpf?: string | null
+          passenger_name?: string | null
+          passenger_phone?: string | null
           points_credited?: number
           ride_status?: string
           ride_value?: number
