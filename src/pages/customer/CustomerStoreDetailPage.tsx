@@ -208,7 +208,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
             customerId={customer?.id}
             primary={primary}
             fontHeading={fontHeading}
-            onOfferClick={onOfferClick}
+            onOfferClick={onOfferClick as ((offer: Record<string, unknown>) => void) | undefined}
           />
         )}
       </div>
