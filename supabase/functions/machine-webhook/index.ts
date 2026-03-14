@@ -404,6 +404,7 @@ async function processFinalized(
       points_credited: points,
       ride_value: rideValue,
       finalized_at: new Date().toISOString(),
+      driver_name: driverName || null,
     });
 
     // Send Telegram notification if chat_id configured (fire-and-forget)
