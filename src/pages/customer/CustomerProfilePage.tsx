@@ -72,8 +72,9 @@ export default function CustomerProfilePage() {
       if (error) throw error;
       await refetch();
       toast({ title: "Perfil atualizado!" });
-    } catch (err: any) {
-      toast({ title: "Erro", description: translateError(err.message), variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro", description: translateError(message), variant: "destructive" });
     } finally {
       setSaving(false);
     }
