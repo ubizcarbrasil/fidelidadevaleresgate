@@ -318,7 +318,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { request_id, status_code, brand_id: bodyBrandId } = body;
+    const { request_id, status_code } = body;
 
     if (!request_id || !status_code) {
       logAudit(sb, "MACHINE_WEBHOOK_REJECTED", { ip, details: { reason: "missing_fields", request_id, status_code } });

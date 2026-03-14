@@ -380,7 +380,7 @@ export default function MachineIntegrationPage() {
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
                   <p className="text-xs text-muted-foreground">
                     <strong>Dica:</strong> Se a plataforma pedir autenticação, use o header{" "}
-                    <code className="bg-muted px-1 rounded">x-api-secret</code> com a chave de acesso configurada na aba "Por credenciais".
+                    <code className="bg-muted px-1 rounded">x-api-secret</code> (ou <code className="bg-muted px-1 rounded">x-api-key</code>) com a chave de acesso configurada na aba "Por credenciais".
                   </p>
                 </div>
               </TabsContent>
