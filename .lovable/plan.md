@@ -1,30 +1,24 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico: Recibo retornando 400
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+O `testBothEndpoints` não captura o **body** da resposta do Recibo, então não sabemos o motivo exato do 400. Pode ser:
+- O ID de teste (`100003661`) não ter recibo nessa conta
+- O path ou parâmetros do endpoint estarem incorretos
+- Algum header adicional necessário
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+## Plano
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+1. **Alterar `testBothEndpoints` em `_shared/fetchRideData.ts`** para retornar o `body` da resposta quando o status não for OK, permitindo diagnóstico:
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+```typescript
+recibo: { ok: boolean; status: number; error?: string; body?: string };
+request_v1: { ok: boolean; status: number; error?: string; body?: string };
+```
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+Capturar `await res.text()` e incluir os primeiros 500 caracteres no resultado.
+
+2. **Alterar `test-machine-credentials/index.ts`** para exibir o body do erro na mensagem de retorno, facilitando o debug.
+
+3. **Testar novamente** para capturar a mensagem de erro exata do endpoint Recibo e então corrigir o problema real (path, parâmetros, ou ID de teste).
+
