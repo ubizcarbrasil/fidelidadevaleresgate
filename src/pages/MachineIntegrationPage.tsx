@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
-  Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound,
+  Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound, AlertTriangle,
 } from "lucide-react";
 
 /* ── Status labels ── */
