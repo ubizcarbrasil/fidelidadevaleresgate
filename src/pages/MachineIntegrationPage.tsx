@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ScoredCustomersPanel from "@/components/machine-integration/ScoredCustomersPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
@@ -324,6 +325,9 @@ export default function MachineIntegrationPage() {
               </ScrollArea>
             </CardContent>
           </Card>
+
+          {/* Scored Customers Panel */}
+          <ScoredCustomersPanel brandId={currentBrandId!} />
         </>
       )}
 
