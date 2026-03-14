@@ -171,7 +171,7 @@ async function processFinalized(
   machineRideId: string,
   ip: string
 ) {
-  // Use Basic Auth (base64 of user:password) against api-vendas endpoint
+  // City-level credentials (used for V1 endpoint)
   const basicUser = (integration.basic_auth_user || "").trim();
   const basicPass = (integration.basic_auth_password || "").trim();
   // Use receipt_api_key (dedicated key for Sales API) with fallback to api_key for backward compat
@@ -192,20 +192,29 @@ async function processFinalized(
     return { error: "A chave da API de Vendas (receipt_api_key) não foi configurada. Acesse a configuração da integração e preencha o campo.", status: 400 };
   }
 
-  // Build headers: api-key is required; Basic Auth is optional
-  const receiptHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+  // Build city-level headers (used for V1 endpoint)
+  const cityHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+
+  // Build matrix-level headers for Recibo endpoint (headquarters credentials)
+  const matrixApiKey = (integration.matrix_api_key || "").trim();
+  const matrixUser = (integration.matrix_basic_auth_user || "").trim();
+  const matrixPass = (integration.matrix_basic_auth_password || "").trim();
+  const matrixHeaders = matrixApiKey
+    ? buildApiHeaders(matrixApiKey, matrixUser, matrixPass)
+    : undefined; // fallback: fetchRideData will use cityHeaders for Recibo
 
   logger.info("TaxiMachine auth config", {
     brandId,
     machineRideId,
     hasBasicAuth: !!(basicUser && basicPass),
     hasReceiptApiKey: true,
+    hasMatrixCredentials: !!matrixApiKey,
     receiptApiKeyPrefix: receiptApiKey ? `${receiptApiKey.slice(0, 6)}***` : null,
   });
 
   // Dual-endpoint fetch with configurable primary endpoint
   const preferredEndpoint = (integration.preferred_endpoint || "recibo") as "recibo" | "request_v1";
-  const rideResult = await fetchRideData(receiptHeaders, machineRideId, preferredEndpoint);
+  const rideResult = await fetchRideData(cityHeaders, machineRideId, preferredEndpoint, matrixHeaders);
 
   if (!rideResult.ok) {
     logger.error("TaxiMachine fetch failed", { machineRideId, error: rideResult.error });

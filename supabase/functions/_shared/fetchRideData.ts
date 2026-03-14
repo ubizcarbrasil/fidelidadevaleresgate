@@ -2,16 +2,17 @@
  * Dual-endpoint TaxiMachine ride data fetcher.
  * Tries the Recibo endpoint first, falls back to Request V1.
  * If Recibo succeeds but lacks passenger phone, enriches from V1.
+ *
+ * IMPORTANT: Recibo endpoint requires MATRIX (headquarters) credentials,
+ * while V1 uses city-level credentials.
  */
 
 import { createEdgeLogger } from "./edgeLogger.ts";
 
 const logger = createEdgeLogger("fetchRideData");
 
-/** Recibo lives on the Sales API domain */
-const RECIBO_BASE_URL = "https://api.taximachine.com.br";
-/** V1 lives on the main API domain */
-const V1_BASE_URL = "https://api.taximachine.com.br";
+/** Both endpoints live on the same base domain */
+const API_BASE_URL = "https://api.taximachine.com.br";
 
 export interface RideData {
   source: "recibo" | "request_v1" | "recibo+v1";
@@ -27,25 +28,33 @@ export type FetchRideResult =
   | { ok: true; data: RideData }
   | { ok: false; error: string; status: number };
 
+/**
+ * Parse the Recibo API response.
+ * The API returns an ARRAY: [{ success, response: { cliente, motorista, corrida, ... } }]
+ */
 function parseRecibo(json: any): Omit<RideData, "source"> | null {
-  // Validate success flag — if explicitly false, treat as failure
-  if (json?.success === false) {
-    logger.warn("Recibo returned success=false", { message: json?.message || json?.msg });
+  // API returns an array — take first element
+  const item = Array.isArray(json) ? json[0] : json;
+
+  // Validate success flag
+  if (item?.success === false) {
+    logger.warn("Recibo returned success=false", { message: item?.message || item?.msg });
     return null;
   }
 
-  const response = json?.response || json;
+  const response = item?.response || item;
   const clienteBlock = response?.cliente || {};
-  const condutorBlock = response?.condutor || {};
+  const motoristaBlock = response?.motorista || response?.condutor || {};
+  const corridaBlock = response?.corrida || response?.dados_solicitacao || {};
   const rawCpf = (clienteBlock.cpf || "").replace(/\D/g, "");
 
   return {
-    rideValue: Number(response?.dados_solicitacao?.valor || 0),
+    rideValue: Number(corridaBlock.valor || 0),
     passengerName: clienteBlock.nome || null,
     passengerCpf: rawCpf || null,
-    passengerPhone: clienteBlock.telefone || null,
-    passengerEmail: clienteBlock.email || null,
-    driverName: condutorBlock.nome || null,
+    passengerPhone: null,  // Recibo API does not return passenger phone
+    passengerEmail: null,  // Recibo API does not return passenger email
+    driverName: motoristaBlock.nome || null,
   };
 }
 
@@ -97,28 +106,38 @@ export function buildApiHeaders(
   return headers;
 }
 
+/**
+ * Fetch ride data from TaxiMachine APIs.
+ * @param headers - City-level headers (used for V1 endpoint)
+ * @param machineRideId - The ride ID from TaxiMachine
+ * @param preferredEndpoint - Which endpoint to try first
+ * @param matrixHeaders - Matrix (headquarters) headers for Recibo endpoint. If not provided, falls back to city headers.
+ */
 export async function fetchRideData(
   headers: Record<string, string>,
   machineRideId: string,
-  preferredEndpoint: "recibo" | "request_v1" = "recibo"
+  preferredEndpoint: "recibo" | "request_v1" = "recibo",
+  matrixHeaders?: Record<string, string>
 ): Promise<FetchRideResult> {
   if (preferredEndpoint === "request_v1") {
-    return fetchV1First(headers, machineRideId);
+    return fetchV1First(headers, machineRideId, matrixHeaders);
   }
-  return fetchReciboFirst(headers, machineRideId);
+  return fetchReciboFirst(headers, machineRideId, matrixHeaders);
 }
 
 async function fetchReciboFirst(
   headers: Record<string, string>,
-  machineRideId: string
+  machineRideId: string,
+  matrixHeaders?: Record<string, string>
 ): Promise<FetchRideResult> {
-  const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
-  logger.info("Trying recibo endpoint (primary)", { machineRideId, url: reciboUrl });
+  const reciboUrl = `${API_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  const reciboHeaders = matrixHeaders ?? headers;
+  logger.info("Trying recibo endpoint (primary)", { machineRideId, url: reciboUrl, usingMatrixHeaders: !!matrixHeaders });
 
   let reciboData: Omit<RideData, "source"> | null = null;
 
   try {
-    const reciboRes = await fetch(reciboUrl, { headers });
+    const reciboRes = await fetch(reciboUrl, { headers: reciboHeaders });
     if (reciboRes.ok) {
       const reciboJson = await reciboRes.json();
       reciboData = parseRecibo(reciboJson);
@@ -138,7 +157,7 @@ async function fetchReciboFirst(
   if (reciboData) {
     if (!reciboData.passengerPhone) {
       try {
-        const v1Url = `${V1_BASE_URL}/api/v1/request/${machineRideId}`;
+        const v1Url = `${API_BASE_URL}/api/v1/request/${machineRideId}`;
         const v1Res = await fetch(v1Url, { headers });
         if (v1Res.ok) {
           const v1Json = await v1Res.json();
@@ -161,9 +180,10 @@ async function fetchReciboFirst(
 
 async function fetchV1First(
   headers: Record<string, string>,
-  machineRideId: string
+  machineRideId: string,
+  matrixHeaders?: Record<string, string>
 ): Promise<FetchRideResult> {
-  const v1Url = `${V1_BASE_URL}/api/v1/request/${machineRideId}`;
+  const v1Url = `${API_BASE_URL}/api/v1/request/${machineRideId}`;
   logger.info("Trying V1 endpoint (primary)", { machineRideId });
 
   let v1Data: Omit<RideData, "source"> | null = null;
@@ -186,8 +206,9 @@ async function fetchV1First(
     // Enrich with CPF from recibo if missing
     if (!v1Data.passengerCpf) {
       try {
-        const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
-        const reciboRes = await fetch(reciboUrl, { headers });
+        const reciboUrl = `${API_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+        const reciboHeaders = matrixHeaders ?? headers;
+        const reciboRes = await fetch(reciboUrl, { headers: reciboHeaders });
         if (reciboRes.ok) {
           const reciboJson = await reciboRes.json();
           const reciboData = parseRecibo(reciboJson);
@@ -204,10 +225,11 @@ async function fetchV1First(
   }
 
   // Fallback to recibo
-  const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  const reciboUrl = `${API_BASE_URL}/api/integracao/recibo?id_mch=${machineRideId}`;
+  const reciboHeaders = matrixHeaders ?? headers;
   logger.info("Trying recibo fallback", { machineRideId });
   try {
-    const reciboRes = await fetch(reciboUrl, { headers });
+    const reciboRes = await fetch(reciboUrl, { headers: reciboHeaders });
     if (reciboRes.ok) {
       const reciboJson = await reciboRes.json();
       const data = parseRecibo(reciboJson);
@@ -233,7 +255,7 @@ async function tryV1(
   headers: Record<string, string>,
   machineRideId: string
 ): Promise<FetchRideResult> {
-  const v1Url = `${V1_BASE_URL}/api/v1/request/${machineRideId}`;
+  const v1Url = `${API_BASE_URL}/api/v1/request/${machineRideId}`;
   logger.info("Trying V1 fallback", { machineRideId });
   try {
     const v1Res = await fetch(v1Url, { headers });
@@ -257,19 +279,22 @@ async function tryV1(
 
 /**
  * Test both endpoints independently and return results for each.
+ * Uses matrixHeaders for Recibo if provided, otherwise falls back to headers.
  */
 export async function testBothEndpoints(
   headers: Record<string, string>,
-  testRideId = "100003661"
+  testRideId = "100003661",
+  matrixHeaders?: Record<string, string>
 ): Promise<{
   recibo: { ok: boolean; status: number; error?: string; body?: string };
   request_v1: { ok: boolean; status: number; error?: string; body?: string };
 }> {
-  const reciboUrl = `${RECIBO_BASE_URL}/api/integracao/recibo?id_mch=${testRideId}`;
-  const v1Url = `${V1_BASE_URL}/api/v1/request/${testRideId}`;
+  const reciboUrl = `${API_BASE_URL}/api/integracao/recibo?id_mch=${testRideId}`;
+  const v1Url = `${API_BASE_URL}/api/v1/request/${testRideId}`;
+  const reciboHeaders = matrixHeaders ?? headers;
 
   const [reciboResult, v1Result] = await Promise.allSettled([
-    fetch(reciboUrl, { headers }),
+    fetch(reciboUrl, { headers: reciboHeaders }),
     fetch(v1Url, { headers }),
   ]);
 

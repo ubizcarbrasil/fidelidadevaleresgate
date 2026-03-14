@@ -61,15 +61,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const headers = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+    const cityHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+
+    // Matrix credentials for Recibo endpoint
+    const matrixApiKey = (integration.matrix_api_key || "").trim();
+    const matrixUser = (integration.matrix_basic_auth_user || "").trim();
+    const matrixPass = (integration.matrix_basic_auth_password || "").trim();
+    const matrixHeaders = matrixApiKey
+      ? buildApiHeaders(matrixApiKey, matrixUser, matrixPass)
+      : undefined;
 
     logger.info("Testing credentials on both endpoints", {
       integrationId: integration_id,
       hasBasicAuth: !!(basicUser && basicPass),
+      hasMatrixCredentials: !!matrixApiKey,
       receiptApiKeyPrefix: receiptApiKey.slice(0, 6) + "***",
     });
 
-    const results = await testBothEndpoints(headers);
+    const results = await testBothEndpoints(cityHeaders, "100003661", matrixHeaders);
 
     logger.info("Test results", results);
 
