@@ -25,9 +25,7 @@ import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import type { Tables } from "@/integrations/supabase/types";
-import type { OfferWithStore } from "@/types/customer";
-
-type StoreRow = Tables<"stores">;
+import type { OfferWithStore, NavOffer, NavStore } from "@/types/customer";
 
 interface SectionDetail {
   title: string | null;
