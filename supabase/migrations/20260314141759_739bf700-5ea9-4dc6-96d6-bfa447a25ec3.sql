@@ -1,0 +1,1 @@
+ALTER TABLE public.machine_integrations ADD COLUMN webhook_registered BOOLEAN NOT NULL DEFAULT false;

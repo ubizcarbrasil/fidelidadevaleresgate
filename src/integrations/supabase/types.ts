@@ -2314,6 +2314,7 @@ export type Database = {
           total_points: number
           total_rides: number
           updated_at: string
+          webhook_registered: boolean
         }
         Insert: {
           api_key: string
@@ -2330,6 +2331,7 @@ export type Database = {
           total_points?: number
           total_rides?: number
           updated_at?: string
+          webhook_registered?: boolean
         }
         Update: {
           api_key?: string
@@ -2346,6 +2348,7 @@ export type Database = {
           total_points?: number
           total_rides?: number
           updated_at?: string
+          webhook_registered?: boolean
         }
         Relationships: [
           {
