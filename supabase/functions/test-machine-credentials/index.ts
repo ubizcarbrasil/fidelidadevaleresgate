@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
+import { buildApiHeaders, testBothEndpoints } from "../_shared/fetchRideData.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +39,6 @@ Deno.serve(async (req) => {
       return json({ error: "integration_id is required" }, 400);
     }
 
-    // Fetch integration
     const { data: integration, error: fetchErr } = await sb
       .from("machine_integrations")
       .select("*")
@@ -61,57 +61,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build headers
-    const receiptHeaders: Record<string, string> = { "api-key": receiptApiKey };
-    if (basicUser && basicPass) {
-      receiptHeaders["Authorization"] = `Basic ${btoa(`${basicUser}:${basicPass}`)}`;
-    }
+    const headers = buildApiHeaders(receiptApiKey, basicUser, basicPass);
 
-    // Use a known test ride ID (100003661 from TaxiMachine docs) or id_mch=0 for a simple auth check
-    const testUrl = "https://api-vendas.taximachine.com.br/api/integracao/recibo?id_mch=100003661";
-
-    logger.info("Testing credentials", {
+    logger.info("Testing credentials on both endpoints", {
       integrationId: integration_id,
       hasBasicAuth: !!(basicUser && basicPass),
       receiptApiKeyPrefix: receiptApiKey.slice(0, 6) + "***",
-      headersSent: Object.keys(receiptHeaders),
     });
 
-    const res = await fetch(testUrl, { headers: receiptHeaders });
-    const bodyText = await res.text();
+    const results = await testBothEndpoints(headers);
 
-    logger.info("Test result", { status: res.status, body: bodyText.slice(0, 500) });
+    logger.info("Test results", results);
 
-    if (res.ok) {
-      return json({
-        success: true,
-        message: "✅ Credenciais válidas! A API de vendas respondeu com sucesso.",
-        api_status: res.status,
-      });
-    }
+    const anyOk = results.recibo.ok || results.request_v1.ok;
 
-    // Parse error
-    let errorMessage = `API retornou status ${res.status}`;
-    try {
-      const parsed = JSON.parse(bodyText);
-      if (parsed.errors && Array.isArray(parsed.errors)) {
-        errorMessage = parsed.errors.join(", ");
-      } else if (parsed.message) {
-        errorMessage = parsed.message;
-      }
-    } catch {
-      errorMessage = bodyText.slice(0, 200) || errorMessage;
-    }
+    const lines: string[] = [];
+    lines.push(results.recibo.ok
+      ? `✅ Endpoint Recibo: OK (status ${results.recibo.status})`
+      : `❌ Endpoint Recibo: Falhou (status ${results.recibo.status}${results.recibo.error ? ` — ${results.recibo.error}` : ""})`);
+    lines.push(results.request_v1.ok
+      ? `✅ Endpoint Request v1: OK (status ${results.request_v1.status})`
+      : `❌ Endpoint Request v1: Falhou (status ${results.request_v1.status}${results.request_v1.error ? ` — ${results.request_v1.error}` : ""})`);
 
     return json({
-      success: false,
-      error: errorMessage,
-      api_status: res.status,
-      details: res.status === 400
+      success: anyOk,
+      message: anyOk
+        ? `Credenciais válidas! ${lines.join(" | ")}`
+        : `Credenciais inválidas em ambos endpoints. ${lines.join(" | ")}`,
+      endpoints: results,
+      details: !anyOk
         ? "Verifique se a chave da API de Vendas está correta no painel da TaxiMachine."
-        : res.status === 401
-        ? "Credenciais rejeitadas pela TaxiMachine. Gere uma nova chave."
-        : "Erro inesperado ao comunicar com a API da TaxiMachine.",
+        : undefined,
     });
   } catch (err) {
     logger.error("test-machine-credentials error", { error: String(err) });

@@ -368,7 +368,8 @@ async function processFinalized(
       customer_id: customerId,
       passenger_name: passengerName,
       passenger_cpf: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
-      driver_name: condutorBlock.nome || null,
+      driver_name: driverName,
+      data_source: source,
       branch_id: branchId,
     },
   });
