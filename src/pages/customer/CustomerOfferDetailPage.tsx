@@ -53,9 +53,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
   const [cpf, setCpf] = useState("");
   
   const [pin, setPin] = useState<string | null>(null);
-  const [completedRedemption, setCompletedRedemption] = useState<any>(null);
+  const [completedRedemption, setCompletedRedemption] = useState<Record<string, unknown> | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
-  const [similarOffers, setSimilarOffers] = useState<any[]>([]);
+  const [similarOffers, setSimilarOffers] = useState<OfferWithStore[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [contentKey, setContentKey] = useState(offer.id);
   const [isFading, setIsFading] = useState(false);
