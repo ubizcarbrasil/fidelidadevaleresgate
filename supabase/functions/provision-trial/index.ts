@@ -475,7 +475,7 @@ Deno.serve(async (req) => {
         }).select("id").single();
 
       if (storeErr) {
-        console.error(`Store ${demo.name}: ${storeErr.message}`);
+        log.error("Store creation failed", { name: demo.name, error: storeErr.message });
         continue;
       }
 
