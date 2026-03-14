@@ -156,24 +156,42 @@ export default function MachineIntegrationPage() {
 
   /* ── Mutations ── */
   const activateMutation = useMutation({
-    mutationFn: async () => {
-      if (!activatingBranchId) throw new Error("Selecione uma cidade");
-      const { data, error } = await supabase.functions.invoke("register-machine-webhook", {
-        body: { brand_id: currentBrandId, branch_id: activatingBranchId, api_key: apiKey, basic_auth_user: basicUser, basic_auth_password: basicPass },
-      });
+    mutationFn: async (opts?: { urlOnly?: boolean }) => {
+      const isUrlOnly = opts?.urlOnly;
+      const branchId = isUrlOnly ? urlBranchId : activatingBranchId;
+      const user = isUrlOnly ? urlBasicUser : basicUser;
+      const pass = isUrlOnly ? urlBasicPass : basicPass;
+      if (!branchId) throw new Error("Selecione uma cidade");
+      const body: Record<string, string> = {
+        brand_id: currentBrandId!,
+        branch_id: branchId,
+        basic_auth_user: user,
+        basic_auth_password: pass,
+      };
+      if (!isUrlOnly && apiKey) body.api_key = apiKey;
+      const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      return data;
+      return { ...data, isUrlOnly };
     },
     onSuccess: (data) => {
-      toast({
-        title: "Integração ativada!",
-        description: data.webhook_registered
-          ? "Webhook registrado com sucesso."
-          : "Integração ativada, mas o registro automático falhou. Tente novamente.",
-      });
+      if (data.isUrlOnly) {
+        setUrlActivatedWebhook(data.webhook_url || null);
+        toast({
+          title: "Cidade ativada por URL!",
+          description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine.",
+        });
+        setUrlBasicUser(""); setUrlBasicPass("");
+      } else {
+        toast({
+          title: "Integração ativada!",
+          description: data.webhook_registered
+            ? "Webhook registrado com sucesso."
+            : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
+        });
+        setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
+      }
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-      setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
     },
     onError: (err: any) => {
       toast({ title: "Erro ao ativar", description: err.message || "Falha ao ativar.", variant: "destructive" });
