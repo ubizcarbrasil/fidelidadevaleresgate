@@ -78,12 +78,20 @@ async function retryRide(
     return { machineRideId, status: "SKIP", reason: "no_receipt_api_key" };
   }
 
-  const headers = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+  const cityHeaders = buildApiHeaders(receiptApiKey, basicUser, basicPass);
+
+  // Matrix credentials for Recibo endpoint
+  const matrixApiKey = (integration.matrix_api_key || "").trim();
+  const matrixUser = (integration.matrix_basic_auth_user || "").trim();
+  const matrixPass = (integration.matrix_basic_auth_password || "").trim();
+  const matrixHeaders = matrixApiKey
+    ? buildApiHeaders(matrixApiKey, matrixUser, matrixPass)
+    : undefined;
 
   const preferredEndpoint = (integration.preferred_endpoint || "recibo") as "recibo" | "request_v1";
-  logger.info("Retry: fetching ride data (dual endpoint)", { machineRideId, preferredEndpoint });
+  logger.info("Retry: fetching ride data (dual endpoint)", { machineRideId, preferredEndpoint, hasMatrixCredentials: !!matrixApiKey });
 
-  const rideResult = await fetchRideData(headers, machineRideId, preferredEndpoint);
+  const rideResult = await fetchRideData(cityHeaders, machineRideId, preferredEndpoint, matrixHeaders);
 
   if (!rideResult.ok) {
     logger.error("Retry: both endpoints failed", { machineRideId, error: rideResult.error });
