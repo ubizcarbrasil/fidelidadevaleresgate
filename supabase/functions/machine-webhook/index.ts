@@ -172,7 +172,8 @@ async function processFinalized(
 ) {
   // Use api-key header against api-vendas endpoint
   const apiKey = (integration.api_key || "").trim();
-  if (!apiKey) {
+  const isPlaceholder = apiKey.startsWith("url-only-") || !apiKey;
+  if (isPlaceholder) {
     logger.error("Missing api_key on integration", { brandId });
     logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "api_key_empty" } });
     await sb.from("machine_rides").upsert({
