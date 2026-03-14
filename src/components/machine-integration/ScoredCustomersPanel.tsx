@@ -162,7 +162,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
               </div>
             ) : (
               <div className="space-y-2">
-                {customers.map((c) => (
+                {customers.map((c: ScoredCustomer) => (
                   <div
                     key={c.id}
                     className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm hover:bg-muted/50 transition-colors"
