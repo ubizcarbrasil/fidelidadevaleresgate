@@ -87,16 +87,12 @@ export default function CustomerRedemptionsPage() {
     if (filter !== "ALL") list = list.filter((r) => r.status === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((r) => {
-        const offer = r.offers as Record<string, unknown> | null;
-        const store = (offer as Record<string, unknown> & { stores?: Record<string, unknown> })?.stores;
-        return (
-          r.token?.toLowerCase().includes(q) ||
-          r.id?.toLowerCase().includes(q) ||
-          (offer?.title as string)?.toLowerCase().includes(q) ||
-          (store?.name as string)?.toLowerCase().includes(q)
-        );
-      });
+      list = list.filter((r: any) =>
+        r.token?.toLowerCase().includes(q) ||
+        r.id?.toLowerCase().includes(q) ||
+        r.offers?.title?.toLowerCase().includes(q) ||
+        r.offers?.stores?.name?.toLowerCase().includes(q)
+      );
     }
     return list;
   }, [redemptions, filter, search]);
