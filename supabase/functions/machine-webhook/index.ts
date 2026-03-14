@@ -73,7 +73,18 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-    return data;
+    if (data) return data;
+  }
+
+  // Backward compatibility: allow legacy webhook URLs with no brand identifier
+  const { data: activeIntegrations } = await sb
+    .from("machine_integrations")
+    .select("*")
+    .eq("is_active", true)
+    .limit(2);
+
+  if (activeIntegrations && activeIntegrations.length === 1) {
+    return activeIntegrations[0];
   }
 
   return null;
