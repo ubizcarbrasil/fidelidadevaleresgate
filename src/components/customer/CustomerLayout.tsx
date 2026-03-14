@@ -367,7 +367,7 @@ export default function CustomerLayout() {
         <AnimatePresence>
           {selectedOffer && (
             <CustomerOfferDetailPage
-              offer={selectedOffer}
+              offer={selectedOffer as OfferWithStore}
               onBack={() => setSelectedOffer(null)}
               onOfferClick={(offer) => {
                 setSelectedOffer(null);
@@ -385,7 +385,7 @@ export default function CustomerLayout() {
         <AnimatePresence>
           {selectedStore && (
             <CustomerStoreDetailPage
-              store={selectedStore}
+              store={selectedStore as Tables<"stores">}
               onBack={() => setSelectedStore(null)}
               onOfferClick={(offer) => {
                 setSelectedStore(null);
