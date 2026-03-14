@@ -54,6 +54,7 @@ const newDraft = (): DealDraft => ({
 });
 
 export default function AffiliateDealsPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
