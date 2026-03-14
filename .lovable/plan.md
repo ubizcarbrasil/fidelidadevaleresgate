@@ -1,30 +1,98 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+# Plano: Atualizar RootSidebar para alinhar com BrandSidebar
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+## Problema
+O `RootSidebar` está desatualizado em relação ao `BrandSidebar`, que é o padrão mais evoluído. Diferenças:
+- Emojis nos rótulos de grupo (Root usa "📊 Visão Geral", Brand usa "Configure")
+- Root não tem grupos colapsáveis (Brand usa `Collapsible`)
+- Root não usa `useMenuLabels` nem `useSidebarBadges`
+- Organização de itens diferente e nomenclatura inconsistente
+- "Nova Empresa" deveria seguir terminologia padronizada
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+## Alterações em `src/components/consoles/RootSidebar.tsx`
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### 1. Adotar o padrão do BrandSidebar
+- Usar `CollapsibleGroup` idêntico ao do BrandSidebar
+- Remover emojis dos labels de grupo
+- Adicionar `useMenuLabels("admin")` e `useSidebarBadges()`
+- Usar interface `MenuItem` com `key` + `defaultTitle` (igual ao Brand)
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+### 2. Reorganizar grupos para espelhar a estrutura do BrandSidebar + itens ROOT-only
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+```text
+── Painel Principal (fixo no topo)
+├─ Jornadas
+│  ├─ Jornada Completa (ROOT-only)
+│  ├─ Jornada do Empreendedor
+│  └─ Jornada do Emissor
+├─ Estrutura (ROOT-only)
+│  ├─ Empresas
+│  ├─ Marcas
+│  ├─ Cidades
+│  ├─ Clonar Cidade
+│  ├─ Domínios
+│  ├─ Provisionar Marca
+│  └─ Central de Acessos
+├─ Identidade & Vitrine
+│  ├─ Galeria de Ícones
+│  ├─ Central de Propagandas
+│  ├─ Nomes e Rótulos
+│  ├─ Construtor de Páginas
+│  ├─ Tema da Plataforma
+│  ├─ Tour de Boas-Vindas
+│  └─ Links do Perfil
+├─ Validação
+│  ├─ Aprovação de Parceiros
+│  ├─ Aprovar Regras
+│  ├─ Solicitações de Emissor
+│  └─ Catálogo
+├─ Operação
+│  ├─ Parceiros
+│  ├─ Ofertas
+│  ├─ Clientes
+│  ├─ Resgates
+│  ├─ Cupons
+│  ├─ Importar Planilha
+│  ├─ Achadinhos
+│  ├─ Categorias Achadinhos
+│  ├─ Enviar Notificação
+│  ├─ Operador PDV
+│  └─ Patrocinados
+├─ Pontos
+│  ├─ Pontuar
+│  ├─ Regras de Pontos
+│  └─ Extrato de Pontos
+├─ Ganha-Ganha
+│  ├─ Dashboard Consolidado
+│  ├─ Configuração GG
+│  ├─ Painel Financeiro GG
+│  └─ Fechamento Mensal
+├─ Usuários e Permissões
+│  ├─ Usuários
+│  ├─ Módulos da Marca
+│  └─ Permissões por Empresa
+├─ CRM Estratégico
+│  └─ CRM Estratégico
+├─ Plataforma (ROOT-only)
+│  ├─ Funcionalidades
+│  ├─ Permissões Globais
+│  ├─ Seções da Home
+│  ├─ Modelos de Home
+│  ├─ Controle de Recursos
+│  ├─ Atualizações
+│  ├─ Auditoria
+│  ├─ Relatórios
+│  ├─ Taxonomia
+│  ├─ Kit Inicial
+│  └─ Teste Webhook
+```
+
+### 3. Nomenclatura corrigida
+- "Nova Empresa" → "Provisionar Marca"
+- Labels sem emoji
+- Mesmas keys do `DEFAULT_LABELS` de `useMenuLabels` onde aplicável
+
+### Arquivo modificado
+- `src/components/consoles/RootSidebar.tsx` — reescrita completa mantendo a mesma estrutura de componente
+
