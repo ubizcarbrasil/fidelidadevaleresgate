@@ -8,7 +8,7 @@ import { createEdgeLogger } from "./edgeLogger.ts";
 
 const logger = createEdgeLogger("fetchRideData");
 
-const BASE_URL = "https://api-vendas.taximachine.com.br";
+const BASE_URL = "https://api.taximachine.com.br";
 
 export interface RideData {
   source: "recibo" | "request_v1" | "recibo+v1";
