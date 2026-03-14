@@ -72,15 +72,15 @@ const CustomerNavContext = createContext<CustomerNavContextType>({
 export const useOfferNav = () => useContext(CustomerNavContext);
 export const useCustomerNav = () => useContext(CustomerNavContext);
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
+// Tab loading fallback
+function TabSkeleton() {
+  return (
+    <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
+      <Skeleton className="h-6 w-48 rounded-lg" />
+      <Skeleton className="h-32 w-full rounded-2xl" />
+      <Skeleton className="h-32 w-full rounded-2xl" />
+    </div>
+  );
 }
 
 type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
