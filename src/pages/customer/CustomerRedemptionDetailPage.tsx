@@ -61,7 +61,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
     try {
       const { error } = await supabase
         .from("redemptions")
-        .update({ status: "CANCELED" as any })
+        .update({ status: "CANCELED" as "CANCELED" | "EXPIRED" | "PENDING" | "USED" })
         .eq("id", redemption.id)
         .eq("status", "PENDING");
       if (error) throw error;
