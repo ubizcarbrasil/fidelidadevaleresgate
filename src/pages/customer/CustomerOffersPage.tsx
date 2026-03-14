@@ -26,6 +26,7 @@ export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
+  const { formatSubtitle } = useOfferCardConfig();
   const [offers, setOffers] = useState<OfferWithStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
