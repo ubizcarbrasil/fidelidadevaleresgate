@@ -17,8 +17,8 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
-interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; }
-const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "" };
+interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; cpf: string; email: string; }
+const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "", cpf: "", email: "" };
 
 export default function CustomersPage() {
   const qc = useQueryClient();
