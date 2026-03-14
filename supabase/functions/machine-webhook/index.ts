@@ -31,7 +31,6 @@ function logAudit(
   action: string,
   opts: { brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
 ) {
-  // entity_id is UUID type — machine_ride_id is numeric, so move it to details_json instead
   const details = { ...opts.details };
   if (opts.entityId) {
     details.machine_ride_id = opts.entityId;
@@ -54,9 +53,13 @@ function logAudit(
 
 async function findIntegration(sb: ReturnType<typeof createClient>, req: Request, body: Record<string, unknown>) {
   const apiSecret = req.headers.get("x-api-secret") || req.headers.get("x-api-key");
-  const queryBrandId = new URL(req.url).searchParams.get("brand_id");
+  const url = new URL(req.url);
+  const queryBrandId = url.searchParams.get("brand_id");
+  const queryBranchId = url.searchParams.get("branch_id");
   const bodyBrandId = typeof body.brand_id === "string" ? body.brand_id : null;
+  const bodyBranchId = typeof body.branch_id === "string" ? body.branch_id : null;
 
+  // 1. Try by api_key first
   if (apiSecret) {
     const { data } = await sb
       .from("machine_integrations")
@@ -65,11 +68,26 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-
     if (data) return data;
   }
 
+  // 2. Try by brand_id + branch_id
   const brandId = bodyBrandId || queryBrandId;
+  const branchId = bodyBranchId || queryBranchId;
+
+  if (brandId && branchId) {
+    const { data } = await sb
+      .from("machine_integrations")
+      .select("*")
+      .eq("brand_id", brandId)
+      .eq("branch_id", branchId)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (data) return data;
+  }
+
+  // 3. Fallback: brand_id only — pick first active integration for this brand
   if (brandId) {
     const { data } = await sb
       .from("machine_integrations")
@@ -81,7 +99,7 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
     if (data) return data;
   }
 
-  // Backward compatibility: allow legacy webhook URLs with no brand identifier
+  // 4. Legacy: single active integration across all brands
   const { data: activeIntegrations } = await sb
     .from("machine_integrations")
     .select("*")
@@ -99,15 +117,16 @@ async function processFinalized(
   sb: ReturnType<typeof createClient>,
   integration: any,
   brandId: string,
+  branchId: string | null,
   machineRideId: string,
   ip: string
 ) {
-  // Validate credentials before calling TaxiMachine API
   if (!integration.basic_auth_user || !integration.basic_auth_password) {
     logger.error("Missing basic auth credentials", { brandId });
     logAudit(sb, "MACHINE_RIDE_NO_CREDENTIALS", { brandId, entityId: machineRideId, ip, details: { reason: "basic_auth_empty" } });
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
+      branch_id: branchId,
       machine_ride_id: machineRideId,
       ride_status: "CREDENTIAL_ERROR",
       ride_value: 0,
@@ -117,11 +136,9 @@ async function processFinalized(
     return { error: "Basic auth credentials not configured. Please set user/password in integration settings.", status: 400 };
   }
 
-  // Call TaxiMachine API to get ride details
   const basicAuth = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
   const machineBaseUrl = "https://api.taximachine.com.br";
 
-  // Fetch status and receipt in parallel
   const [statusRes, receiptRes] = await Promise.all([
     fetch(`${machineBaseUrl}/api/integracao/solicitacaoStatus?id_mch=${machineRideId}`, {
       headers: { Authorization: `Basic ${basicAuth}` },
@@ -154,6 +171,7 @@ async function processFinalized(
   if (rideValue <= 0) {
     await sb.from("machine_rides").upsert({
       brand_id: brandId,
+      branch_id: branchId,
       machine_ride_id: machineRideId,
       ride_value: 0,
       ride_status: "NO_VALUE",
@@ -175,6 +193,7 @@ async function processFinalized(
 
   await sb.from("machine_rides").upsert({
     brand_id: brandId,
+    branch_id: branchId,
     machine_ride_id: machineRideId,
     passenger_cpf: passengerCpf || null,
     ride_value: rideValue,
@@ -186,6 +205,9 @@ async function processFinalized(
   // Credit points if CPF found
   let pointsCredited = false;
   let customerId: string | null = null;
+
+  // Resolve the branch to use for customer creation
+  const customerBranchId = branchId || integration.branch_id;
 
   if (passengerCpf && points > 0) {
     let customer: any = null;
@@ -201,7 +223,32 @@ async function processFinalized(
 
     if (existing) {
       customer = existing;
+    } else if (customerBranchId) {
+      const customerName = `Passageiro •••${passengerCpf.slice(-4)}`;
+      const { data: created } = await sb
+        .from("customers")
+        .insert({
+          brand_id: brandId,
+          branch_id: customerBranchId,
+          cpf: passengerCpf,
+          name: customerName,
+          points_balance: 0,
+          money_balance: 0,
+        })
+        .select("id, branch_id, points_balance")
+        .single();
+
+      if (created) {
+        customer = created;
+        logAudit(sb, "MACHINE_CUSTOMER_CREATED", {
+          brandId,
+          entityId: created.id,
+          ip,
+          details: { cpf_masked: `***${passengerCpf.slice(-4)}`, branch_id: customerBranchId },
+        });
+      }
     } else {
+      // Fallback: find first branch
       const { data: branch } = await sb
         .from("branches")
         .select("id")
@@ -282,6 +329,7 @@ async function processFinalized(
       points_credited: pointsCredited,
       customer_id: customerId,
       passenger_cpf: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
+      branch_id: branchId,
     },
   });
 
@@ -302,6 +350,7 @@ async function processFinalized(
           cpf_masked: passengerCpf ? `***${passengerCpf.slice(-4)}` : null,
           customer_id: customerId,
           brand_id: brandId,
+          branch_id: branchId,
           timestamp: new Date().toISOString(),
         }),
       })
@@ -364,6 +413,7 @@ Deno.serve(async (req) => {
     }
 
     const brandId = integration.brand_id;
+    const branchId = integration.branch_id || null;
     const machineRideId = String(request_id);
     const mappedStatus = STATUS_MAP[status_code] || status_code;
 
@@ -382,12 +432,13 @@ Deno.serve(async (req) => {
       ip_address: ip,
     });
 
-    logAudit(sb, "MACHINE_WEBHOOK_RECEIVED", { brandId, entityId: machineRideId, ip, details: { status_code, mapped: mappedStatus } });
+    logAudit(sb, "MACHINE_WEBHOOK_RECEIVED", { brandId, entityId: machineRideId, ip, details: { status_code, mapped: mappedStatus, branch_id: branchId } });
 
     // 2. Upsert ride status (for non-finalized, just track status)
     if (status_code !== "F") {
       await sb.from("machine_rides").upsert({
         brand_id: brandId,
+        branch_id: branchId,
         machine_ride_id: machineRideId,
         ride_status: mappedStatus,
         ride_value: 0,
@@ -416,7 +467,7 @@ Deno.serve(async (req) => {
       return json({ message: "Ride already processed", machine_ride_id: machineRideId });
     }
 
-    const result = await processFinalized(sb, integration, brandId, machineRideId, ip);
+    const result = await processFinalized(sb, integration, brandId, branchId, machineRideId, ip);
     if (result.error) {
       return json({ error: result.error }, result.status);
     }

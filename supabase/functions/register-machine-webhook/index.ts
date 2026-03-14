@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { brand_id, api_key, basic_auth_user, basic_auth_password, action } = body;
+    const { brand_id, branch_id, api_key, basic_auth_user, basic_auth_password, action } = body;
 
     if (!brand_id) {
       return json({ error: "brand_id is required" }, 400);
@@ -99,11 +99,17 @@ Deno.serve(async (req) => {
 
     // DEACTIVATE action
     if (action === "deactivate") {
-      await sb
+      const deactivateQuery = sb
         .from("machine_integrations")
         .update({ is_active: false })
         .eq("brand_id", brand_id);
-      logAudit(sb, "MACHINE_INTEGRATION_DEACTIVATED", { userId, brandId: brand_id, ip: clientIp });
+
+      if (branch_id) {
+        deactivateQuery.eq("branch_id", branch_id);
+      }
+
+      await deactivateQuery;
+      logAudit(sb, "MACHINE_INTEGRATION_DEACTIVATED", { userId, brandId: brand_id, ip: clientIp, details: { branch_id } });
       return json({ success: true, message: "Integration deactivated" });
     }
 
@@ -112,12 +118,16 @@ Deno.serve(async (req) => {
       return json({ error: "api_key, basic_auth_user, basic_auth_password are required" }, 400);
     }
 
+    if (!branch_id) {
+      return json({ error: "branch_id is required" }, 400);
+    }
+
     // Store credentials and attempt webhook registration
     const basicAuth = btoa(`${basic_auth_user}:${basic_auth_password}`);
     const machineBaseUrl = "https://api.taximachine.com.br";
 
-    // Register webhook at TaxiMachine
-    const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook?brand_id=${encodeURIComponent(brand_id)}`;
+    // Register webhook at TaxiMachine — include branch_id in URL
+    const webhookUrl = `${supabaseUrl}/functions/v1/machine-webhook?brand_id=${encodeURIComponent(brand_id)}&branch_id=${encodeURIComponent(branch_id)}`;
     let webhookRegistered = false;
 
     try {
@@ -142,26 +152,26 @@ Deno.serve(async (req) => {
       } else {
         const errText = await webhookRes.text();
         createEdgeLogger("register-machine-webhook").error("Webhook registration response", { status: webhookRes.status, body: errText });
-        // Continue even if webhook registration fails — admin can retry
       }
       if (!webhookRegistered) await webhookRes.text().catch(() => {});
     } catch (e) {
       createEdgeLogger("register-machine-webhook").error("Webhook registration error", { error: String(e) });
     }
 
-    // Upsert integration record
+    // Upsert integration record — unique per (brand_id, branch_id)
     const { error: upsertErr } = await sb
       .from("machine_integrations")
       .upsert(
         {
           brand_id,
+          branch_id,
           api_key,
           basic_auth_user,
           basic_auth_password,
           webhook_registered: webhookRegistered,
           is_active: true,
         },
-        { onConflict: "brand_id" }
+        { onConflict: "brand_id,branch_id" }
       );
 
     if (upsertErr) {
@@ -173,7 +183,7 @@ Deno.serve(async (req) => {
       userId,
       brandId: brand_id,
       ip: clientIp,
-      details: { webhook_registered: webhookRegistered },
+      details: { webhook_registered: webhookRegistered, branch_id },
     });
 
     return json({

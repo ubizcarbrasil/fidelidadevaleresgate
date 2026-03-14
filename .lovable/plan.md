@@ -1,41 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Múltiplas integrações por cidade (branch)
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema atual
-A tabela `machine_integrations` tem uma constraint **UNIQUE** em `brand_id`, permitindo apenas **uma integração por marca**. Como cada cidade (branch) tem seu próprio login/senha na TaxiMachine, é preciso suportar múltiplas integrações — uma por cidade.
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### O que será feito
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**1. Alteração no banco de dados (migração)**
-- Adicionar coluna `branch_id` (UUID, FK para `branches`) na tabela `machine_integrations`
-- Remover a constraint UNIQUE de `brand_id` 
-- Adicionar nova constraint UNIQUE em `(brand_id, branch_id)` — uma integração por cidade
-- Atualizar o `onConflict` dos upserts para usar `brand_id,branch_id`
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**2. Edge Function `register-machine-webhook`**
-- Aceitar `branch_id` no body
-- Upsert com conflict em `brand_id,branch_id`
-- Incluir `branch_id` na URL do webhook para roteamento correto
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**3. Edge Function `machine-webhook`**
-- Extrair `branch_id` da query string ou do body
-- Buscar integração por `brand_id + branch_id` (ou fallback por `api_key`)
-- Ao criar clientes novos, vincular à branch correta (não mais "primeira branch da marca")
-
-**4. UI — Página de Integração (`MachineIntegrationPage.tsx`)**
-- Adicionar seletor de cidade (branch) no topo
-- Listar integrações existentes com status por cidade
-- Permitir ativar/desativar cada cidade individualmente
-- Cada cidade mostra seus próprios contadores (corridas, pontos, último evento)
-- Formulário de ativação inclui campo de seleção de cidade
-
-### Alterações
-
-| Arquivo | Ação |
-|---|---|
-| Migração SQL | Adicionar `branch_id`, trocar constraint unique |
-| `supabase/functions/register-machine-webhook/index.ts` | Suportar `branch_id` no activate/deactivate |
-| `supabase/functions/machine-webhook/index.ts` | Buscar integração por `brand_id + branch_id` |
-| `src/pages/MachineIntegrationPage.tsx` | UI multi-cidade com seletor e lista de integrações |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
