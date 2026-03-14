@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       );
 
     if (upsertErr) {
-      console.error("Upsert error:", upsertErr);
+      createEdgeLogger("register-machine-webhook").error("Upsert error", { error: upsertErr });
       return json({ error: "Failed to save integration" }, 500);
     }
 
