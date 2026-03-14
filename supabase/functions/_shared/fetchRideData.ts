@@ -225,8 +225,8 @@ export async function testBothEndpoints(
   headers: Record<string, string>,
   testRideId = "100003661"
 ): Promise<{
-  recibo: { ok: boolean; status: number; error?: string };
-  request_v1: { ok: boolean; status: number; error?: string };
+  recibo: { ok: boolean; status: number; error?: string; body?: string };
+  request_v1: { ok: boolean; status: number; error?: string; body?: string };
 }> {
   const reciboUrl = `${BASE_URL}/api/integracao/recibo?id_mch=${testRideId}`;
   const v1Url = `${BASE_URL}/api/v1/request/${testRideId}`;
@@ -236,21 +236,28 @@ export async function testBothEndpoints(
     fetch(v1Url, { headers }),
   ]);
 
-  const recibo = reciboResult.status === "fulfilled"
-    ? { ok: reciboResult.value.ok, status: reciboResult.value.status }
-    : { ok: false, status: 0, error: String((reciboResult as PromiseRejectedResult).reason) };
-
-  // Consume body to avoid leak
+  let recibo: { ok: boolean; status: number; error?: string; body?: string };
   if (reciboResult.status === "fulfilled") {
-    await reciboResult.value.text().catch(() => {});
+    const bodyText = await reciboResult.value.text().catch(() => "");
+    recibo = {
+      ok: reciboResult.value.ok,
+      status: reciboResult.value.status,
+      ...(!reciboResult.value.ok ? { body: bodyText.slice(0, 500) } : {}),
+    };
+  } else {
+    recibo = { ok: false, status: 0, error: String((reciboResult as PromiseRejectedResult).reason) };
   }
 
-  const request_v1 = v1Result.status === "fulfilled"
-    ? { ok: v1Result.value.ok, status: v1Result.value.status }
-    : { ok: false, status: 0, error: String((v1Result as PromiseRejectedResult).reason) };
-
+  let request_v1: { ok: boolean; status: number; error?: string; body?: string };
   if (v1Result.status === "fulfilled") {
-    await v1Result.value.text().catch(() => {});
+    const bodyText = await v1Result.value.text().catch(() => "");
+    request_v1 = {
+      ok: v1Result.value.ok,
+      status: v1Result.value.status,
+      ...(!v1Result.value.ok ? { body: bodyText.slice(0, 500) } : {}),
+    };
+  } else {
+    request_v1 = { ok: false, status: 0, error: String((v1Result as PromiseRejectedResult).reason) };
   }
 
   return { recibo, request_v1 };
