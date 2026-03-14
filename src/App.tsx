@@ -213,6 +213,7 @@ function AppRoutes() {
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
           <Route path="machine-integration" element={<MachineIntegrationPage />} />
           <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
+          <Route path="offer-card-config" element={<OfferCardConfigPage />} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
