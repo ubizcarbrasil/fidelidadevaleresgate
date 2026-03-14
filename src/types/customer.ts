@@ -53,3 +53,23 @@ export interface RedemptionWithOffer {
   offers?: OfferInfo | null;
   branches?: { name: string } | null;
 }
+
+/**
+ * Lightweight types for navigation context.
+ * Components pass partial objects — these define the minimum contract.
+ */
+export interface NavOffer {
+  id: string;
+  title?: string;
+  image_url?: string | null;
+  store_id?: string;
+  stores?: { name: string; logo_url: string | null } | null;
+  [key: string]: unknown;
+}
+
+export interface NavStore {
+  id: string;
+  name?: string;
+  logo_url?: string | null;
+  [key: string]: unknown;
+}
