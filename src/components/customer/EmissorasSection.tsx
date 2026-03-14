@@ -33,6 +33,7 @@ export default function EmissorasSection() {
   const { brand, selectedBranch, theme } = useBrand();
   const { openStore, openEmissorasList } = useCustomerNav();
   const { isFavoriteStore, toggleFavoriteStore } = useCustomerFavoriteStores();
+  const { formatSubtitle } = useOfferCardConfig();
 
   const primary = "hsl(var(--vb-highlight))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
