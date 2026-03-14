@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       .insert(notifications);
 
     if (insertError) {
-      console.error("Insert error:", insertError);
+      createEdgeLogger("send-push-notification").error("Insert error", { error: insertError.message });
       return new Response(JSON.stringify({ error: insertError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
