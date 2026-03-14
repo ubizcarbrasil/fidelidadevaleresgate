@@ -1,0 +1,1 @@
+ALTER TABLE public.machine_rides ADD COLUMN IF NOT EXISTS passenger_email text DEFAULT NULL;
