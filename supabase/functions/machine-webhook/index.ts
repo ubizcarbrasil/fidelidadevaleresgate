@@ -31,15 +31,20 @@ function logAudit(
   action: string,
   opts: { brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
 ) {
+  // entity_id is UUID type — machine_ride_id is numeric, so move it to details_json instead
+  const details = { ...opts.details };
+  if (opts.entityId) {
+    details.machine_ride_id = opts.entityId;
+  }
   sb.from("audit_logs")
     .insert({
       action,
       entity_type: "MACHINE_WEBHOOK",
-      entity_id: opts.entityId || null,
+      entity_id: null,
       scope_type: opts.brandId ? "BRAND" : null,
       scope_id: opts.brandId || null,
       ip_address: opts.ip || null,
-      details_json: opts.details || {},
+      details_json: details,
       changes_json: opts.changes || {},
     })
     .then(({ error }) => {
