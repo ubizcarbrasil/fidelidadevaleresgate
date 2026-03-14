@@ -261,6 +261,7 @@ async function retryRide(
       brand_id: brandId,
       branch_id: branchId,
       machine_ride_id: machineRideId,
+      customer_id: customerId || null,
       customer_name: customer?.name || passengerName || null,
       customer_phone: customer?.phone || passengerPhone || null,
       customer_cpf_masked: passengerCpf ? `•••${passengerCpf.slice(-4)}` : null,
