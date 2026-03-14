@@ -171,7 +171,7 @@ export default function StoreCatalogView({
             {offers.map(offer => (
               <button
                 key={offer.id}
-                onClick={() => onOfferClick?.({ ...offer, stores: offer.stores || { name: storeName } })}
+                onClick={() => onOfferClick?.({ ...offer, stores: offer.stores || { name: storeName, logo_url: null } })}
                 className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-card text-left"
                 style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)" }}
               >
