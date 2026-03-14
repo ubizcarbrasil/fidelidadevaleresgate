@@ -360,7 +360,7 @@ export default function MachineIntegrationPage() {
                     <li>Copie a URL abaixo.</li>
                     <li>Acesse a plataforma da sua empresa de mobilidade.</li>
                     <li>Cole a URL no campo de <strong>webhook</strong> ou <strong>notificações</strong>.</li>
-                    <li>Inclua o campo <code className="bg-muted px-1 rounded text-xs">brand_id</code> no corpo (body) de cada requisição enviada — informe o ID da sua marca.</li>
+                    <li>A URL já inclui automaticamente o identificador da sua marca (não precisa enviar <code className="bg-muted px-1 rounded text-xs">brand_id</code> no body).</li>
                     <li>Pronto! Cada corrida finalizada vai gerar pontos para o passageiro (<strong>R$ 1 = 1 ponto</strong>).</li>
                   </ol>
                 </div>
