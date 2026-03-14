@@ -32,9 +32,9 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const offer = redemption.offers;
+  const offer: OfferInfo | null = redemption.offers ?? null;
   const store = offer?.stores;
-  const snapshot = redemption.offer_snapshot_json || {};
+  const snapshot = (redemption.offer_snapshot_json || {}) as OfferInfo;
   const isProduct = offer?.coupon_type === "PRODUCT" || snapshot?.coupon_type === "PRODUCT";
   const discountPct = Number(offer?.discount_percent || snapshot?.discount_percent) || 0;
   const creditValue = redemption.credit_value_applied || offer?.value_rescue || snapshot?.value_rescue || 0;
