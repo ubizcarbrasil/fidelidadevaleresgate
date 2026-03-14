@@ -251,16 +251,22 @@ function StoreOrientations({ store, primary, fg, fontHeading }: {
 }
 
 /* ─── FAQ Section ─── */
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 function StoreFAQ({ faqJson, primary, fg, fontHeading }: {
   faqJson: unknown; primary: string; fg: string; fontHeading: string;
 }) {
   if (!faqJson || !Array.isArray(faqJson) || faqJson.length === 0) return null;
+  const items = faqJson as FaqItem[];
   return (
     <div className="mx-4 mt-5">
       <h2 className="text-lg font-bold mb-3" style={{ fontFamily: fontHeading }}>Dúvidas frequentes</h2>
       <div className="rounded-2xl bg-card overflow-hidden" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
         <Accordion type="single" collapsible>
-          {(faqJson as any[]).map((faq: any, idx: number) => (
+          {items.map((faq, idx) => (
             <AccordionItem key={idx} value={`faq-${idx}`} className="border-b last:border-b-0">
               <AccordionTrigger className="px-4 py-3.5 text-sm font-semibold text-left hover:no-underline">
                 {faq.question}

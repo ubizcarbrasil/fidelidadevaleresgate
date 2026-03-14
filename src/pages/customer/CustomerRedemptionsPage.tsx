@@ -422,7 +422,7 @@ function RedemptionCard({
           <div className="flex justify-between text-[11px]">
             <span className="text-muted-foreground">Expira:</span>
             <span style={{ color: r.status === "EXPIRED" ? "#DC2626" : primary }}>
-              {formatDate(r.expires_at)}
+              {formatDate(r.expires_at as string)}
             </span>
           </div>
         )}
