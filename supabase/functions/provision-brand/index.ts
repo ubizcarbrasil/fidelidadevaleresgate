@@ -696,7 +696,8 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: any) {
-    console.error("provision-brand error:", err);
+    const errLog = createEdgeLogger("provision-brand");
+    errLog.error("provision-brand error", { message: err.message });
     return new Response(
       JSON.stringify({ error: err.message || "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

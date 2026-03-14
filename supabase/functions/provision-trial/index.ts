@@ -543,7 +543,8 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: any) {
-    console.error("provision-trial error:", err);
+    const errLog = createEdgeLogger("provision-trial");
+    errLog.error("provision-trial error", { message: err.message });
     return new Response(
       JSON.stringify({ error: err.message || "Erro interno. Tente novamente." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
