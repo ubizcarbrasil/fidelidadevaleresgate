@@ -92,6 +92,17 @@ const CRM_CONTACT_FIELDS: TargetField[] = [
   { key: "is_active", label: "Ativo", required: false },
 ];
 
+const COUPON_FIELDS: TargetField[] = [
+  { key: "code", label: "Código", required: true },
+  { key: "store_name", label: "Nome da Loja", required: true },
+  { key: "store_slug", label: "Slug da Loja", required: false },
+  { key: "type", label: "Tipo (PERCENT/FIXED)", required: true },
+  { key: "value", label: "Valor", required: true },
+  { key: "expires_at", label: "Data de Expiração", required: true },
+  { key: "campaign", label: "Campanha (título da oferta)", required: false },
+  { key: "status", label: "Status", required: false },
+];
+
 // ── Validation ──
 const WEEKDAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 interface ValidationError { row: number; field: string; message: string; }
