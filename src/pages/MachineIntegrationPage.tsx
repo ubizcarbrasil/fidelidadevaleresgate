@@ -766,19 +766,36 @@ export default function MachineIntegrationPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="url_api_key">Chave de acesso (API Key)</Label>
+                  <Label htmlFor="url_api_key">Chave de acesso (webhook)</Label>
                   <div className="relative">
                     <Input
                       id="url_api_key"
                       type={showUrlApiKey ? "text" : "password"}
                       value={urlApiKey}
                       onChange={(e) => setUrlApiKey(e.target.value)}
-                      placeholder="Chave fornecida pela TaxiMachine"
+                      placeholder="Chave que a TaxiMachine envia no header x-api-secret"
                     />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlApiKey(!showUrlApiKey)}>
                       {showUrlApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <p className="text-xs text-muted-foreground">Opcional. Usada para autenticar o webhook recebido.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="url_receipt_api_key">Chave da API de Vendas (recibos)</Label>
+                  <div className="relative">
+                    <Input
+                      id="url_receipt_api_key"
+                      type={showUrlReceiptApiKey ? "text" : "password"}
+                      value={urlReceiptApiKey}
+                      onChange={(e) => setUrlReceiptApiKey(e.target.value)}
+                      placeholder="Chave para consultar recibos na api-vendas"
+                    />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlReceiptApiKey(!showUrlReceiptApiKey)}>
+                      {showUrlReceiptApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Enviada como header <code className="bg-muted px-1 rounded">api-key</code> para consultar recibos.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="url_basic_user">Usuário</Label>
