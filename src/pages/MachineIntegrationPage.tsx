@@ -1035,43 +1035,27 @@ export default function MachineIntegrationPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="api_key">Chave de acesso (webhook)</Label>
+                  <Label htmlFor="api_key">api-key da Cidade</Label>
                   <div className="relative">
                     <Input
                       id="api_key"
                       type={showApiKey ? "text" : "password"}
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Chave que a TaxiMachine envia no header x-api-secret"
+                      placeholder="Token da cidade no painel TaxiMachine"
                     />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
                       {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Opcional. Usada para autenticar o webhook recebido.</p>
+                  <p className="text-xs text-muted-foreground">Token da cidade. Usada para consultar corridas no V1 e autenticar o webhook.</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="receipt_api_key">Chave da API de Vendas (recibos)</Label>
-                  <div className="relative">
-                    <Input
-                      id="receipt_api_key"
-                      type={showReceiptApiKey ? "text" : "password"}
-                      value={receiptApiKey}
-                      onChange={(e) => setReceiptApiKey(e.target.value)}
-                      placeholder="Chave para consultar recibos na api-vendas"
-                    />
-                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowReceiptApiKey(!showReceiptApiKey)}>
-                      {showReceiptApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Enviada como header <code className="bg-muted px-1 rounded">api-key</code> para consultar recibos.</p>
+                  <Label htmlFor="basic_user">Usuário da Cidade</Label>
+                  <Input id="basic_user" value={basicUser} onChange={(e) => setBasicUser(e.target.value)} placeholder="Usuário de autenticação da cidade" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="basic_user">Usuário</Label>
-                  <Input id="basic_user" value={basicUser} onChange={(e) => setBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="basic_pass">Senha</Label>
+                  <Label htmlFor="basic_pass">Senha da Cidade</Label>
                   <div className="relative">
                     <Input id="basic_pass" type={showPass ? "text" : "password"} value={basicPass} onChange={(e) => setBasicPass(e.target.value)} placeholder="Senha de autenticação" />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPass(!showPass)}>
