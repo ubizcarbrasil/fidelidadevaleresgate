@@ -600,7 +600,8 @@ Deno.serve(async (req) => {
     }
 
     // ─── 10. Create 40 demo stores with offers & catalogs ───────
-    console.log("Creating demo stores...");
+    const log = createEdgeLogger("provision-brand");
+    log.info("Creating demo stores...");
     for (const demo of DEMO_STORES) {
       const storeSlug = `${demo.slug}-${emailPrefix}`;
       const logoUrl = logo(demo.name, demo.color);
