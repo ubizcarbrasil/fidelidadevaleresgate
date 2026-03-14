@@ -418,7 +418,7 @@ function ProfileMenuItemButton({
   fg: string;
   onOpenText: (title: string, content: string) => void;
 }) {
-  const LucideIcon = (icons as Record<string, any>)[item.icon_name];
+  const LucideIcon = (icons as Record<string, React.ComponentType<{ className?: string }>>)[item.icon_name];
 
   const handleClick = () => {
     if (item.type === "text") {

@@ -109,8 +109,9 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
       toast.success("Resgate estornado com sucesso!");
       onCanceled?.();
-    } catch (err: any) {
-      toast.error("Erro ao estornar: " + (err.message || "Tente novamente"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Tente novamente";
+      toast.error("Erro ao estornar: " + message);
     } finally {
       setCanceling(false);
     }

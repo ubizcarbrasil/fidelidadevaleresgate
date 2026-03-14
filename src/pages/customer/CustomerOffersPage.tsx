@@ -73,11 +73,12 @@ export default function CustomerOffersPage() {
     }
     if (query.trim()) {
       const q = query.toLowerCase();
-      result = result.filter((o: any) =>
-        o.title?.toLowerCase().includes(q) ||
-        o.description?.toLowerCase().includes(q) ||
-        o.stores?.name?.toLowerCase().includes(q)
-      );
+      result = result.filter((o) => {
+        const title = (o.title as string || "").toLowerCase();
+        const desc = (o.description as string || "").toLowerCase();
+        const storeName = ((o.stores as Record<string, unknown> | null)?.name as string || "").toLowerCase();
+        return title.includes(q) || desc.includes(q) || storeName.includes(q);
+      });
     }
     return result;
   }, [offers, selectedSegmentId, query]);

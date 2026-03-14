@@ -293,7 +293,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
       >
         {(() => {
           const isProduct = offer.coupon_type === "PRODUCT";
-          const termsParams = offer.terms_params_json as any;
+          const termsParams = offer.terms_params_json as Record<string, unknown> | null;
           const discountPct = Number(offer.discount_percent) || 0;
           // Product price: try terms_params_json first, then fall back to value_rescue / (discount/100)
           const productPrice = termsParams?.product_price
