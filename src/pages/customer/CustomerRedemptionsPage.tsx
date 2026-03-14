@@ -416,7 +416,7 @@ function RedemptionCard({
         </div>
         <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>Resgate:</span>
-          <span>{formatDate(r.created_at)}</span>
+          <span>{formatDate(r.created_at as string)}</span>
         </div>
         {r.expires_at && (
           <div className="flex justify-between text-[11px]">
