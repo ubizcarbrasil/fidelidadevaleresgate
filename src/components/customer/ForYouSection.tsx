@@ -156,6 +156,8 @@ export default function ForYouSection() {
                     couponType={o.coupon_type ?? undefined}
                     valueRescue={Number(o.value_rescue || 0)}
                     minPurchase={Number(o.min_purchase || 0)}
+                    brandBadgeConfig={theme?.badge_config}
+                    offerBadgeConfig={(o as any).badge_config_json ?? undefined}
                   />
                 </div>
               )}
