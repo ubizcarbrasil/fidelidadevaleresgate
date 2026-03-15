@@ -114,7 +114,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
       { key: "sidebar.modulos", defaultTitle: "Recursos Ativos", url: "/brand-modules", icon: Blocks },
-      { key: "sidebar.perm_parceiros", defaultTitle: "Controle de Acesso", url: "/brand-permissions", icon: ShieldCheck },
+      { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: ShieldCheck },
     ],
   },
   {
