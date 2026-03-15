@@ -1,37 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Botão "Aplicar Retroativamente" por Plano
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### O que será feito
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-Adicionar, abaixo da matriz, um grupo de botões (um por plano) que permite ao ROOT aplicar o template de módulos de um plano a **todas as marcas existentes** que possuem aquele `subscription_plan`.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-### Mudanças
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**1. Edge Function `apply-plan-template/index.ts` (nova)**
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-Recebe `{ plan_key }`, busca todas as marcas com `subscription_plan = plan_key`, e para cada uma:
-- Deleta os `brand_modules` existentes
-- Insere os módulos do template correspondente (com core modules sempre habilitados)
-- Retorna quantas marcas foram atualizadas
-
-Usa `SUPABASE_SERVICE_ROLE_KEY` para bypass de RLS. Valida que o chamador é `root_admin`.
-
-**2. `src/pages/PlanModuleTemplatesPage.tsx`**
-
-- Adicionar uma seção "Aplicar Retroativamente" com 3 botões (Free, Starter, Profissional)
-- Cada botão abre um `AlertDialog` de confirmação informando quantas marcas serão afetadas
-- Ao confirmar, invoca a edge function `apply-plan-template`
-- Exibe toast com resultado (X marcas atualizadas)
-
-**3. `supabase/config.toml`**
-
-Registrar a nova function com `verify_jwt = false` (validação manual no código).
-
-### Arquivos
-
-| Arquivo | Ação |
-|---|---|
-| `supabase/functions/apply-plan-template/index.ts` | Criar edge function |
-| `src/pages/PlanModuleTemplatesPage.tsx` | Adicionar seção com botões + AlertDialog |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

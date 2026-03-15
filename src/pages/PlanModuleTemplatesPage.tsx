@@ -7,7 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, Crown, Rocket, Zap } from "lucide-react";
+import { Loader2, Save, Crown, Rocket, Zap, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const PLANS = [
   { key: "free", label: "Free", icon: Zap, color: "text-muted-foreground" },
@@ -41,6 +52,22 @@ export default function PlanModuleTemplatesPage() {
         .select("*");
       if (error) throw error;
       return data as { id: string; plan_key: string; module_definition_id: string; is_enabled: boolean }[];
+    },
+  });
+
+  // Count brands per plan for the retroactive apply section
+  const { data: brandCounts } = useQuery({
+    queryKey: ["brand-counts-by-plan"],
+    queryFn: async () => {
+      const counts: Record<PlanKey, number> = { free: 0, starter: 0, profissional: 0 };
+      for (const plan of PLANS) {
+        const { count, error } = await supabase
+          .from("brands")
+          .select("id", { count: "exact", head: true })
+          .eq("subscription_plan", plan.key);
+        if (!error && count !== null) counts[plan.key] = count;
+      }
+      return counts;
     },
   });
 
@@ -97,6 +124,28 @@ export default function PlanModuleTemplatesPage() {
     },
     onError: (err: any) => {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const [applyingPlan, setApplyingPlan] = useState<PlanKey | null>(null);
+
+  const applyMutation = useMutation({
+    mutationFn: async (planKey: PlanKey) => {
+      setApplyingPlan(planKey);
+      const { data, error } = await supabase.functions.invoke("apply-plan-template", {
+        body: { plan_key: planKey },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { updated: number; total: number };
+    },
+    onSuccess: (data) => {
+      toast({ title: `${data.updated} marca(s) atualizada(s) com sucesso!` });
+      setApplyingPlan(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao aplicar", description: err.message, variant: "destructive" });
+      setApplyingPlan(null);
     },
   });
 
@@ -170,6 +219,58 @@ export default function PlanModuleTemplatesPage() {
           Salvar Configuração
         </Button>
       </div>
+
+      {/* Retroactive Apply Section */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-sm">Aplicar Retroativamente</h3>
+            <p className="text-xs text-muted-foreground">
+              Substitui os módulos de todas as marcas de um plano pelo template atual configurado acima.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PLANS.map((plan) => {
+              const count = brandCounts?.[plan.key] ?? 0;
+              const isApplying = applyingPlan === plan.key && applyMutation.isPending;
+              return (
+                <AlertDialog key={plan.key}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={isApplying || count === 0}>
+                      {isApplying ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-1.5" />
+                      )}
+                      <plan.icon className={`h-3.5 w-3.5 mr-1 ${plan.color}`} />
+                      {plan.label}
+                      <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
+                        {count}
+                      </Badge>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Aplicar template "{plan.label}" retroativamente?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Isso irá substituir os módulos de <strong>{count} marca(s)</strong> pelo template
+                        atual do plano <strong>{plan.label}</strong>. Módulos core permanecerão sempre ativos.
+                        Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => applyMutation.mutate(plan.key)}>
+                        Confirmar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

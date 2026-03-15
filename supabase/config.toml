@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.scrape-product]
 verify_jwt = false
+
+[functions.apply-plan-template]
+verify_jwt = false
