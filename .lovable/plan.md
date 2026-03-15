@@ -1,29 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Banners aparecem mesmo sem seção BANNER_CAROUSEL configurada
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema raiz
-O fluxo atual exige que o administrador crie **duas coisas** para banners funcionarem:
-1. Uma `brand_section` do tipo `BANNER_CAROUSEL` (no Construtor de Páginas)
-2. Os registros de `banner_schedules` (na Central de Banners)
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-A marca `db15bd21...` (do screenshot do admin) tem banners cadastrados na Central de Banners, mas **não tem** uma seção `BANNER_CAROUSEL` no construtor de páginas. Por isso, o `HomeSectionsRenderer` com `renderBannersOnly` não encontra nenhuma seção e retorna `null`.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-### Solução
-Modificar o componente nativo **BANNERS** em `CustomerHomePage.tsx` para buscar `banner_schedules` diretamente quando `HomeSectionsRenderer` não encontrar seções `BANNER_CAROUSEL`. Isso elimina a dependência de configuração dupla.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-### Alterações
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**1. `src/pages/customer/CustomerHomePage.tsx`** — No `renderNativeSection`, case `"BANNERS"`:
-- Criar um novo componente `StandaloneBannerCarousel` que busca `banner_schedules` diretamente pelo `brand_id`, sem depender de `brand_sections`
-- Renderizar `HomeSectionsRenderer renderBannersOnly` normalmente, e em paralelo/fallback renderizar o carrossel standalone para banners globais (sem `brand_section_id`)
-
-**2. `src/components/HomeSectionsRenderer.tsx`** — Alternativa mais limpa:
-- Quando `renderBannersOnly=true` e não existem seções BANNER_CAROUSEL, fazer query direta a `banner_schedules` onde `brand_id = brand.id` e `is_active = true` e `start_at <= now` e filtrar expirados
-- Renderizar o `BannerCarousel` existente com esses itens
-
-A segunda abordagem é preferível pois mantém toda a lógica de banners centralizada no `HomeSectionsRenderer`.
-
-### Arquivo alterado
-1. `src/components/HomeSectionsRenderer.tsx` — adicionar fallback de banners diretos quando não existem seções BANNER_CAROUSEL
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
