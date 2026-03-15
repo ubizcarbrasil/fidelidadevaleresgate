@@ -114,13 +114,13 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     switch (key) {
       case "BANNERS":
         return (
-          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-2">
+          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-3">
             <HomeSectionsRenderer renderBannersOnly />
           </motion.div>
         );
       case "CATEGORIES":
         return (
-          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
             <SegmentNavSection
               onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
               onSeeMore={() => onOpenCategoryGrid?.()}
@@ -129,19 +129,19 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         );
       case "FOR_YOU":
         return (
-          <motion.div key="foryou" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+          <motion.div key="foryou" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
             <ForYouSection />
           </motion.div>
         );
       case "EMISSORAS":
         return (
-          <motion.div key="emissoras" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+          <motion.div key="emissoras" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
             <EmissorasSection />
           </motion.div>
         );
       case "ACHADINHOS":
         return (
-          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
             <AchadinhoSection />
           </motion.div>
         );
@@ -205,7 +205,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
-        className="mt-3"
+        className="mt-6"
       >
         <HomeSectionsRenderer skipBanners />
       </motion.div>
