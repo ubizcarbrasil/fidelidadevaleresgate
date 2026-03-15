@@ -15,7 +15,7 @@ interface PlatformLogoProps {
  * Tries image src → falls back to styled badge with initials.
  */
 export default function PlatformLogo({
-  src = "/logo-vale-resgate.jpeg",
+  src = "/logo-vale-resgate.png",
   alt = "Vale Resgate",
   className = "h-9 w-9",
   fallbackLabel = "VR",
