@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
+import StoreProfileWizard from "@/components/store-owner/StoreProfileWizard";
+import { useStoreProfileCompleteness } from "@/hooks/useStoreProfileCompleteness";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
 import StoreProfileTab from "@/components/store-owner/StoreProfileTab";
 import StoreExtratoTab from "@/components/store-owner/StoreExtratoTab";
@@ -64,6 +67,7 @@ export default function StoreOwnerPanel() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
   const [showWizard, setShowWizard] = useState(false);
+  const [showProfileWizard, setShowProfileWizard] = useState(false);
   const [editingOffer, setEditingOffer] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
@@ -296,7 +300,17 @@ export default function StoreOwnerPanel() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-auto px-4 pt-4 pb-24">
-        {activeTab === "dashboard" && <StoreOwnerDashboard store={store} />}
+        {activeTab === "dashboard" && (
+          showProfileWizard ? (
+            <StoreProfileWizard
+              store={store}
+              onClose={() => setShowProfileWizard(false)}
+              onComplete={() => { setShowProfileWizard(false); /* refresh store */ window.location.reload(); }}
+            />
+          ) : (
+            <StoreOwnerDashboard store={store} onOpenWizard={() => setShowProfileWizard(true)} />
+          )
+        )}
         {activeTab === "cupons" && (
           showWizard ? (
             <StoreVoucherWizard
@@ -377,7 +391,8 @@ export default function StoreOwnerPanel() {
   );
 }
 
-function StoreOwnerDashboard({ store }: { store: any }) {
+function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard: () => void }) {
+  const { percent, isComplete, missingSteps } = useStoreProfileCompleteness(store);
   const [stats, setStats] = useState({
     cuponsEmitidos: 0,
     cuponsResgatados: 0,
@@ -460,6 +475,33 @@ function StoreOwnerDashboard({ store }: { store: any }) {
 
   return (
     <div className="space-y-5">
+      {/* Profile completeness card */}
+      {!isComplete && (
+        <Card className="rounded-2xl border-primary/20 bg-primary/5 overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm">Complete seu perfil</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Para aparecer no app dos clientes</p>
+              </div>
+              <div className="h-12 w-12 rounded-full border-4 border-primary/20 flex items-center justify-center">
+                <span className="text-sm font-bold text-primary">{percent}%</span>
+              </div>
+            </div>
+            <Progress value={percent} className="h-2" />
+            <div className="flex flex-wrap gap-1.5">
+              {missingSteps.slice(0, 3).map(s => (
+                <Badge key={s.key} variant="outline" className="text-[10px]">{s.label}</Badge>
+              ))}
+              {missingSteps.length > 3 && <Badge variant="outline" className="text-[10px]">+{missingSteps.length - 3}</Badge>}
+            </div>
+            <Button onClick={onOpenWizard} className="w-full gap-2" size="sm">
+              <ArrowRight className="h-4 w-4" /> Continuar configuração
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h1 className="text-xl font-bold">Painel Principal</h1>
         <p className="text-xs text-muted-foreground mt-0.5">Visão geral do seu estabelecimento</p>

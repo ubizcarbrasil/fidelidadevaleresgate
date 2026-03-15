@@ -149,9 +149,11 @@ export default function StoreProfileTab({ store }: { store: any }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-8">
-      <div>
-        <h1 className="text-2xl font-bold">Meu Perfil</h1>
-        <p className="text-sm text-muted-foreground">Configure o perfil público do seu estabelecimento</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Meu Perfil</h1>
+          <p className="text-sm text-muted-foreground">Configure o perfil público do seu estabelecimento</p>
+        </div>
       </div>
 
       {/* Logomarca */}
