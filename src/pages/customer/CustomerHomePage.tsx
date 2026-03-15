@@ -38,6 +38,7 @@ interface CustomerHomePageProps {
   onOpenLedger?: () => void;
   onOpenCategoryGrid?: () => void;
   onOpenCategoryStores?: (category: { id: string; name: string; icon_name: string | null }) => void;
+  onOpenAchadinhoCategoryGrid?: () => void;
 }
 
 export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores }: CustomerHomePageProps) {
