@@ -36,8 +36,8 @@ function RedemptionCardInner({
   const minPurchase = Number(offer?.min_purchase || snapshot?.min_purchase) || 0;
 
   const typeBadge = isProduct
-    ? { label: "PRODUTO", bg: "#DBEAFE", color: "#1E40AF" }
-    : { label: "LOJA", bg: "#FEF3C7", color: "#92400E" };
+    ? { label: "PRODUTO", className: "bg-primary/15 text-primary" }
+    : { label: "LOJA", className: "bg-warning/15 text-warning" };
 
   const hoursSinceCreation = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60);
   const canCancel = r.status === "PENDING" && hoursSinceCreation <= 24;
