@@ -136,7 +136,7 @@ const DARK_PRESETS: DarkPreset[] = [
   },
 ];
 
-export default function BrandThemeEditor({ value, onChange, brandId, brandName }: BrandThemeEditorProps) {
+export default function BrandThemeEditor({ value, onChange, brandId, brandName, offerCardConfig, onOfferCardConfigChange }: BrandThemeEditorProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
