@@ -25,9 +25,9 @@ export default function PlanModuleTemplatesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("module_definitions")
-        .select("id, key, label, is_active, is_core")
+        .select("id, key, name, is_active, is_core")
         .eq("is_active", true)
-        .order("label");
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -36,15 +36,14 @@ export default function PlanModuleTemplatesPage() {
   const { data: templates, isLoading: loadingTemplates } = useQuery({
     queryKey: ["plan-module-templates"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("plan_module_templates")
         .select("*");
       if (error) throw error;
-      return data;
+      return data as { id: string; plan_key: string; module_definition_id: string; is_enabled: boolean }[];
     },
   });
 
-  // Local state: { [moduleDefId]: { free: bool, starter: bool, profissional: bool } }
   const [matrix, setMatrix] = useState<Record<string, Record<PlanKey, boolean>>>({});
 
   useEffect(() => {
@@ -76,8 +75,8 @@ export default function PlanModuleTemplatesPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // Delete existing and re-insert
-      await supabase.from("plan_module_templates").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const sb = supabase as any;
+      await sb.from("plan_module_templates").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
       const rows: { plan_key: string; module_definition_id: string; is_enabled: boolean }[] = [];
       for (const [modId, plans] of Object.entries(matrix)) {
@@ -89,7 +88,7 @@ export default function PlanModuleTemplatesPage() {
           });
         }
       }
-      const { error } = await supabase.from("plan_module_templates").insert(rows);
+      const { error } = await sb.from("plan_module_templates").insert(rows);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -105,7 +104,7 @@ export default function PlanModuleTemplatesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Perfil de Planos" subtitle="Configure quais módulos estão disponíveis em cada plano de assinatura" />
+      <PageHeader title="Perfil de Planos" description="Configure quais módulos estão disponíveis em cada plano de assinatura" />
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -136,7 +135,7 @@ export default function PlanModuleTemplatesPage() {
                       <tr key={mod.id} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
                         <td className="p-3">
                           <div className="flex items-center gap-2">
-                            <span>{mod.label}</span>
+                            <span>{mod.name}</span>
                             {isCore && (
                               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                                 core

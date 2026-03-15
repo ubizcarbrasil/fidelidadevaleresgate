@@ -770,6 +770,7 @@ export type Database = {
           name: string
           slug: string
           stripe_customer_id: string | null
+          subscription_plan: string
           subscription_status: string
           tenant_id: string
           trial_expires_at: string | null
@@ -784,6 +785,7 @@ export type Database = {
           name: string
           slug: string
           stripe_customer_id?: string | null
+          subscription_plan?: string
           subscription_status?: string
           tenant_id: string
           trial_expires_at?: string | null
@@ -798,6 +800,7 @@ export type Database = {
           name?: string
           slug?: string
           stripe_customer_id?: string | null
+          subscription_plan?: string
           subscription_status?: string
           tenant_id?: string
           trial_expires_at?: string | null
@@ -2966,6 +2969,41 @@ export type Database = {
           module?: string
         }
         Relationships: []
+      }
+      plan_module_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          module_definition_id: string
+          plan_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id: string
+          plan_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id?: string
+          plan_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_module_templates_module_definition_id_fkey"
+            columns: ["module_definition_id"]
+            isOneToOne: false
+            referencedRelation: "module_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_config: {
         Row: {
