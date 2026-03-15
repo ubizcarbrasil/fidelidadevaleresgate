@@ -67,7 +67,7 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
 
   return (
     <>
-      <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+      <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-warning/8 to-warning/3">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
             <Zap className="h-4 w-4 text-amber-600" />
