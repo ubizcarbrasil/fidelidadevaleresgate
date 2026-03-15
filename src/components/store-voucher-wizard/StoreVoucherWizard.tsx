@@ -12,6 +12,7 @@ import { generateTerms } from "./steps/StepTermsAccept";
 
 import StepCategory from "./steps/StepCategory";
 import StepCouponType from "./steps/StepCouponType";
+import StepPurpose from "./steps/StepPurpose";
 import StepValueConfig from "./steps/StepValueConfig";
 import StepScheduling from "./steps/StepScheduling";
 import StepCumulative from "./steps/StepCumulative";
@@ -25,7 +26,7 @@ import StepBadge from "./steps/StepBadge";
 import StepReview from "./steps/StepReview";
 
 const STEP_LABELS = [
-  "Categoria", "Tipo", "Valor", "Agendamento", "Cumulativo",
+  "Categoria", "Tipo", "Finalidade", "Valor", "Agendamento", "Cumulativo",
   "Dias/Horários", "Validade", "Limites", "Termos", "Resgate", "Imagem", "Etiqueta", "Revisão",
 ];
 
@@ -52,6 +53,9 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       taxonomy_segment_id: (editOffer.terms_params_json as any)?.taxonomy_segment_id || "",
       coupon_type: editOffer.coupon_type || "STORE",
       product_id: editOffer.product_id || "",
+      offer_purpose: editOffer.offer_purpose || "REDEEM",
+      product_title: p.product_title || editOffer.title || "",
+      product_description: p.product_description || editOffer.description || "",
       discount_percent: p.discount_percent ?? editOffer.discount_percent ?? 20,
       discount_fixed: p.discount_fixed ?? 0,
       discount_mode: p.discount_mode || "PERCENT",
@@ -78,6 +82,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       description: editOffer.description || "",
       image_url: editOffer.image_url || "",
       badge_config: editOffer.badge_config_json || null,
+      publish_to_catalog: p.publish_to_catalog ?? false,
     };
   };
 
@@ -101,9 +106,14 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
   const canAdvance = (): boolean => {
     switch (step) {
       case 0: return !!data.coupon_category && !!data.taxonomy_segment_id;
-      case 1: return data.coupon_type === "STORE" || !!data.product_id;
-      case 2: return data.discount_mode === "PERCENT" ? data.discount_percent > 0 : data.discount_fixed > 0;
-      case 8: return data.terms_accepted;
+      case 1:
+        if (data.coupon_type === "STORE") return true;
+        return !!data.product_title && data.product_price > 0;
+      case 2: return !!data.offer_purpose;
+      case 3:
+        if (data.offer_purpose === "EARN") return true;
+        return data.discount_mode === "PERCENT" ? data.discount_percent > 0 : data.discount_fixed > 0;
+      case 9: return data.terms_accepted;
       default: return true;
     }
   };
@@ -112,7 +122,9 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
     setSaving(true);
     const isPercent = data.discount_mode === "PERCENT";
     const isProduct = data.coupon_type === "PRODUCT";
-    const creditBase = isProduct
+    const isEarnOnly = data.offer_purpose === "EARN";
+
+    const creditBase = isEarnOnly ? 0 : isProduct
       ? isPercent
         ? (data.discount_percent / 100) * data.product_price
         : data.discount_fixed
@@ -146,15 +158,19 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       coupon_category: data.coupon_category,
       taxonomy_segment_id: data.taxonomy_segment_id,
       product_price: data.product_price,
+      product_title: data.product_title,
+      product_description: data.product_description,
+      offer_purpose: data.offer_purpose,
+      publish_to_catalog: data.publish_to_catalog,
     };
 
     const autoTitle = isProduct
-      ? `PAGUE ${data.discount_percent}% COM PONTOS`
+      ? data.product_title || `PAGUE ${data.discount_percent}% COM PONTOS`
       : `CRÉDITO DE R$ ${creditBase.toFixed(2)}`;
 
     const payload: any = {
       title: autoTitle,
-      description: null,
+      description: isProduct ? data.product_description || null : null,
       image_url: isProduct ? (data.image_url || null) : null,
       coupon_type: data.coupon_type,
       coupon_category: data.coupon_category,
@@ -179,6 +195,7 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       terms_accepted_by_user_id: user?.id || null,
       product_id: data.coupon_type === "PRODUCT" ? data.product_id || null : null,
       badge_config_json: data.badge_config as any,
+      offer_purpose: data.offer_purpose,
       allowed_weekdays: data.has_specific_days
         ? data.specific_days.map(d => d.weekday)
         : [0, 1, 2, 3, 4, 5, 6],
@@ -216,17 +233,18 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
     switch (step) {
       case 0: return <StepCategory data={data} update={update} />;
       case 1: return <StepCouponType data={data} update={update} catalogItems={catalogItems || []} />;
-      case 2: return <StepValueConfig data={data} update={update} />;
-      case 3: return <StepScheduling data={data} update={update} />;
-      case 4: return <StepCumulative data={data} update={update} />;
-      case 5: return <StepSpecificDays data={data} update={update} />;
-      case 6: return <StepValidity data={data} update={update} />;
-      case 7: return <StepLimits data={data} update={update} />;
-      case 8: return <StepTermsAccept data={data} update={update} />;
-      case 9: return <StepRedemptionType data={data} update={update} />;
-      case 10: return <StepImage data={data} update={update} storeId={storeId} />;
-      case 11: return <StepBadge data={data} update={update} />;
-      case 12: return <StepReview data={data} />;
+      case 2: return <StepPurpose data={data} update={update} />;
+      case 3: return <StepValueConfig data={data} update={update} />;
+      case 4: return <StepScheduling data={data} update={update} />;
+      case 5: return <StepCumulative data={data} update={update} />;
+      case 6: return <StepSpecificDays data={data} update={update} />;
+      case 7: return <StepValidity data={data} update={update} />;
+      case 8: return <StepLimits data={data} update={update} />;
+      case 9: return <StepTermsAccept data={data} update={update} />;
+      case 10: return <StepRedemptionType data={data} update={update} />;
+      case 11: return <StepImage data={data} update={update} storeId={storeId} />;
+      case 12: return <StepBadge data={data} update={update} />;
+      case 13: return <StepReview data={data} />;
       default: return null;
     }
   };

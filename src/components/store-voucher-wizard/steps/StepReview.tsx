@@ -1,16 +1,20 @@
 import { StoreVoucherData, WEEKDAY_LABELS } from "../types";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 
 interface Props {
   data: StoreVoucherData;
 }
 
+const PURPOSE_LABELS = { EARN: "Ganhe Pontos", REDEEM: "Resgate", BOTH: "Ganhe & Resgate" };
+
 export default function StepReview({ data }: Props) {
   const isPercent = data.discount_mode === "PERCENT";
   const isProduct = data.coupon_type === "PRODUCT";
+  const isEarnOnly = data.offer_purpose === "EARN";
 
-  const creditBase = isProduct
+  const creditBase = isEarnOnly ? 0 : isProduct
     ? isPercent
       ? (data.discount_percent / 100) * data.product_price
       : data.discount_fixed
@@ -41,20 +45,34 @@ export default function StepReview({ data }: Props) {
           <span className="text-muted-foreground">Tipo</span>
           <span>{isProduct ? "Produto Específico" : "Loja Toda"}</span>
         </div>
+        <div className="flex justify-between border-b pb-2">
+          <span className="text-muted-foreground">Finalidade</span>
+          <OfferPurposeBadge purpose={data.offer_purpose} size="md" />
+        </div>
 
-        {/* Differentiated nomenclature */}
+        {isProduct && data.product_title && (
+          <div className="flex justify-between border-b pb-2">
+            <span className="text-muted-foreground">Produto</span>
+            <span className="font-medium text-right max-w-[60%] truncate">{data.product_title}</span>
+          </div>
+        )}
+
+        {/* Nomenclatura */}
         <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
-        {isProduct ? (
+          {isEarnOnly ? (
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-1">Finalidade</p>
+              <p className="text-lg font-bold text-green-600">GANHE PONTOS</p>
+              <p className="text-xs text-muted-foreground mt-1">O cliente acumula pontos pelo valor pago</p>
+            </div>
+          ) : isProduct ? (
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Nomenclatura do cupom (automática)</p>
               <p className="text-lg font-bold text-primary">
-                PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS
+                Pague {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} com pontos
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {Math.floor(creditBase)} pts = R$ {creditBase.toFixed(2)} | Produto: R$ {data.product_price.toFixed(2)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "SITE" ? "Online" : "WhatsApp"}
+                {Math.floor(creditBase)} pontos por R$ {creditBase.toFixed(2)} | Produto: R$ {data.product_price.toFixed(2)}
               </p>
             </div>
           ) : (
@@ -66,29 +84,33 @@ export default function StepReview({ data }: Props) {
               <p className="text-xs text-muted-foreground mt-1">
                 {Math.floor(creditBase)} pontos por R$ {creditBase.toFixed(2)} na compra mínima de R$ {data.min_purchase.toFixed(2)}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "SITE" ? "Online" : "WhatsApp"}
-              </p>
             </div>
           )}
+          <p className="text-xs text-muted-foreground mt-1 text-center">
+            Resgate: {data.redemption_type === "PRESENCIAL" ? "Presencial" : data.redemption_type === "SITE" ? "Online" : "WhatsApp"}
+          </p>
         </div>
 
-        <div className="flex justify-between border-b pb-2">
-          <span className="text-muted-foreground">Desconto</span>
-          <span className="font-bold">
-            {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`}
-          </span>
-        </div>
-        {isProduct && (
-          <div className="flex justify-between border-b pb-2">
-            <span className="text-muted-foreground">Valor do produto</span>
-            <span className="font-bold">R$ {data.product_price.toFixed(2)}</span>
-          </div>
+        {!isEarnOnly && (
+          <>
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-muted-foreground">Desconto</span>
+              <span className="font-bold">
+                {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`}
+              </span>
+            </div>
+            {isProduct && (
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-muted-foreground">Valor do produto</span>
+                <span className="font-bold">R$ {data.product_price.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-muted-foreground">{isProduct ? "Pontos necessários" : "Pontos de troca"}</span>
+              <span>{Math.floor(creditBase)} pts{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
+            </div>
+          </>
         )}
-        <div className="flex justify-between border-b pb-2">
-          <span className="text-muted-foreground">{isProduct ? "Pontos necessários" : "Pontos de troca"}</span>
-          <span>{Math.floor(creditBase)} pts{!isProduct && ` (mín. R$ ${data.min_purchase.toFixed(2)})`}</span>
-        </div>
         {data.scaled_values.length > 0 && (
           <div className="border-b pb-2">
             <span className="text-muted-foreground">Faixas escalonadas:</span>
