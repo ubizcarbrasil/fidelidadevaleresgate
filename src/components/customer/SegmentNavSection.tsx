@@ -29,14 +29,14 @@ function kebabToPascal(name: string): string {
 function CategoryIcon({ iconName }: { iconName: string | null }) {
   const isDark = document.documentElement.classList.contains("dark");
   const color = isDark ? "hsl(var(--vb-gold))" : "#FFFFFF";
-  if (!iconName) return <Store className="h-5 w-5" style={{ color }} />;
+  if (!iconName) return <Store className="h-7 w-7" style={{ color }} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className="h-5 w-5 object-contain" />;
+    return <img src={iconName} alt="" className="h-7 w-7 object-contain" />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-  if (!LucideIcon) return <Store className="h-5 w-5" style={{ color }} />;
-  return <LucideIcon className="h-5 w-5" style={{ color }} />;
+  if (!LucideIcon) return <Store className="h-7 w-7" style={{ color }} />;
+  return <LucideIcon className="h-7 w-7" style={{ color }} />;
 }
 
 const containerVariants = {
@@ -141,18 +141,18 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               key={cat.id}
               variants={itemVariants}
               whileTap={{ scale: 0.92 }}
-              className="flex flex-col items-center gap-1 flex-shrink-0"
-              style={{ width: 68 }}
+              className="flex flex-col items-center gap-1.5 flex-shrink-0"
+              style={{ width: 88 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
               <div
-                className="h-11 w-11 rounded-xl flex items-center justify-center"
+                className="h-16 w-16 rounded-2xl flex items-center justify-center"
                 style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
               >
                 <CategoryIcon iconName={cat.icon_name} />
               </div>
               <span
-                className="text-[9px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+                className="text-[11px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
               >
                 {cat.name}
               </span>
