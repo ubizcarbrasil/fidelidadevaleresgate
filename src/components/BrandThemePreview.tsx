@@ -28,16 +28,10 @@ function hslAlpha(p: { h: string; s: string; l: string }, a: number) {
   return `hsla(${p.h}, ${p.s}, ${p.l}, ${a})`;
 }
 
-type Screen = "home" | "offers" | "wallet" | "profile";
+type Screen = "home" | "offers" | "redemptions" | "wallet" | "profile";
 
-const QUICK_ACTIONS = [
-  { label: "Ofertas", icon: Tag, color: "#FF6B35", bg: "#FFE0CC" },
-  { label: "Cupons", icon: Percent, color: "#E91E63", bg: "#F8C8D8" },
-  { label: "Parceiros", icon: Store, color: "#7C3AED", bg: "#DDD6FE" },
-  { label: "Pontos", icon: Coins, color: "#059669", bg: "#A7F3D0" },
-  { label: "Presentes", icon: Gift, color: "#D97706", bg: "#FDE68A" },
-  { label: "Achadinhos", icon: Sparkles, color: "#0EA5E9", bg: "#BAE6FD" },
-];
+const VB_GOLD = "#D4A017";
+const VB_GOLD_HSL = "hsl(45, 80%, 45%)";
 
 const DARK_DEFAULTS = {
   background: "222 47% 7%",
