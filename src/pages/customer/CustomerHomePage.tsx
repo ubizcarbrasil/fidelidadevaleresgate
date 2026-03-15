@@ -205,7 +205,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
-        className="mt-3"
+        className="mt-6"
       >
         <HomeSectionsRenderer skipBanners />
       </motion.div>
