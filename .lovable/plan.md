@@ -1,35 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Diagnóstico
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-O código da edge function `seed-demo-stores` foi atualizado corretamente, **mas a função não foi re-executada** para as marcas existentes. Resultado no banco de dados agora:
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-| Marca | Lojas | Com taxonomy_segment_id | Seções CMS | Achadinhos |
-|---|---|---|---|---|
-| Ubiz Resgata | 41 | **0** | ? | 3 |
-| Urbano Norte | 41 | 20 | ? | ? |
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-As lojas da "Ubiz Resgata" têm `taxonomy_segment_id = null` → o `SegmentNavSection` filtra tudo → **nenhuma categoria aparece**.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-A edge function **já tem a lógica** para corrigir lojas existentes (linhas 506-511: atualiza `taxonomy_segment_id` se for null), criar seções CMS temáticas e os 20 achadinhos. Porém, precisa ser **invocada novamente**.
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-## Plano
-
-### 1. Execução imediata: Re-invocar o seed para a marca do usuário
-
-Usar a ferramenta `curl_edge_functions` para chamar `seed-demo-stores` com o `brand_id` e `branch_id` da marca "Ubiz Resgata", o que irá:
-- Vincular `taxonomy_segment_id` nas 41 lojas existentes → categorias aparecem
-- Criar as 4 seções CMS temáticas ("Deu fome?", "Saúde e Beleza", etc.)
-- Criar os 20 achadinhos com links Mercado Livre
-- Adicionar as ~12 lojas novas que faltam (total → ~60)
-
-### 2. Automação futura: Auto-seed no primeiro acesso do app cliente
-
-Para garantir que novas marcas nunca fiquem sem dados, adicionar lógica no `CustomerHomePage` que detecta quando a marca não tem seções/categorias e dispara o seed automaticamente na primeira visita.
-
-| Arquivo | Ação |
-|---|---|
-| Edge function `seed-demo-stores` | **Invocar** para brand `db15bd21-9137-4965-a0fb-540d8e8b26f1` |
-| `src/pages/customer/CustomerHomePage.tsx` | Adicionar auto-seed: se brand tem 0 categorias com taxonomy e tem lojas demo, chamar seed automaticamente (uma vez, com flag em `brand_settings_json`) |
-| `src/components/DemoStoresToggle.tsx` | Melhorar o feedback — mostrar que re-executar atualiza taxonomia e seções CMS |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
