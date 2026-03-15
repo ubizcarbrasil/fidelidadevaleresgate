@@ -217,8 +217,8 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
                   <p className="text-sm font-medium">
                     {demoActive ? "Lojas teste ativas" : "Lojas teste desativadas"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {demoInfo!.total} parceiros em {">"}12 segmentos
+                <p className="text-xs text-muted-foreground">
+                    {demoInfo!.total} parceiros · taxonomia + seções CMS
                   </p>
                 </div>
               </div>
