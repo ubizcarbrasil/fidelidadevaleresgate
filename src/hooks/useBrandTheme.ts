@@ -8,9 +8,19 @@ export interface BadgeConfig {
   icon?: string;             // lucide icon name e.g. "sparkles", "tag", "percent", "star"
 }
 
+export interface BrandLayoutConfig {
+  card_border_radius?: number;
+  card_image_height?: number;
+  category_icon_size?: number;
+  category_icon_radius?: number;
+  category_font_size?: number;
+  button_radius?: number;
+  section_title_size?: number;
+}
+
 export interface BrandTheme {
   colors?: {
-    primary?: string;       // HSL: "220 70% 50%"
+    primary?: string;
     secondary?: string;
     accent?: string;
     background?: string;
@@ -29,13 +39,14 @@ export interface BrandTheme {
   };
   logo_url?: string;
   favicon_url?: string;
-  font_heading?: string;    // Google Fonts name
+  font_heading?: string;
   font_body?: string;
   background_image_url?: string;
   display_name?: string;
   slogan?: string;
   footer_text?: string;
   badge_config?: BadgeConfig;
+  layout?: BrandLayoutConfig;
 }
 
 const CSS_VAR_MAP: Record<string, string> = {
