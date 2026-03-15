@@ -424,7 +424,7 @@ function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, ca
 }
 
 /* ──────────────── Profile Screen ──────────────── */
-function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, logoUrl, isDark }: any) {
+function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, logoUrl, isDark, cardRadius }: any) {
   const items = [
     { icon: CircleUser, label: "Meus dados" },
     { icon: MapPin, label: "Minha cidade" },
