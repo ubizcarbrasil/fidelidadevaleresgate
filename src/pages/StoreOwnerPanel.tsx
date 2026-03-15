@@ -390,7 +390,8 @@ export default function StoreOwnerPanel() {
   );
 }
 
-function StoreOwnerDashboard({ store }: { store: any }) {
+function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard: () => void }) {
+  const { percent, isComplete, missingSteps } = useStoreProfileCompleteness(store);
   const [stats, setStats] = useState({
     cuponsEmitidos: 0,
     cuponsResgatados: 0,
