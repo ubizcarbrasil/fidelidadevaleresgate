@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import type { RedemptionWithOffer, OfferInfo } from "@/types/customer";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
 }

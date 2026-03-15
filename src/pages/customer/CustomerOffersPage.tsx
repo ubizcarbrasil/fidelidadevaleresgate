@@ -13,6 +13,8 @@ import type { OfferWithStore } from "@/types/customer";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
+  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
   if (!hsl) return fallback;
   return `hsl(${hsl})`;
 }

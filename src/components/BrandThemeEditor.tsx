@@ -139,9 +139,11 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
   const folder = brandId ? `brands/${brandId}` : `brands/new-${Date.now()}`;
 
   const isEditingDark = colorMode === "dark";
+  const lightColors = value.colors || {};
+  const { background: _bg, foreground: _fg, card: _card, muted: _mut, ...lightAccents } = lightColors;
   const currentPalette = isEditingDark
-    ? { ...DARK_DEFAULTS, ...value.colors, ...value.dark_colors }
-    : (value.colors || {});
+    ? { ...DARK_DEFAULTS, ...lightAccents, ...value.dark_colors }
+    : lightColors;
 
   const updateColor = (key: string, hex: string) => {
     const hsl = hexToHsl(hex);
