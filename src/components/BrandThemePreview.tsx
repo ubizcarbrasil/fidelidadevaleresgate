@@ -181,6 +181,7 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
           <div className="overflow-hidden" style={{ height: 380 }}>
             {screen === "home" && <HomeScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} isDark={previewDark} />}
             {screen === "offers" && <OffersScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
+            {screen === "redemptions" && <RedemptionsScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
             {screen === "wallet" && <WalletScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
             {screen === "profile" && <ProfileScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} logoUrl={theme.logo_url} isDark={previewDark} />}
           </div>
