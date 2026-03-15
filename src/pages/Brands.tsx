@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Power } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -14,20 +18,34 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
+const PLAN_OPTIONS = [
+  { key: "free", label: "Free" },
+  { key: "starter", label: "Starter" },
+  { key: "profissional", label: "Profissional" },
+];
+
 export default function Brands() {
   const { isRootAdmin, currentBrandId } = useBrandGuard();
   const navigate = useNavigate();
 
-  // Brand admins go directly to their brand editor
   useEffect(() => {
     if (!isRootAdmin && currentBrandId) {
       navigate(`/brands/${currentBrandId}`, { replace: true });
     }
   }, [isRootAdmin, currentBrandId, navigate]);
+
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
+
+  // Dialogs state
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [passwordTarget, setPasswordTarget] = useState<{ brandId: string; brandName: string; userId: string | null } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["brands", debouncedSearch, page],
@@ -50,14 +68,94 @@ export default function Brands() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const invokeAdminAction = async (body: Record<string, unknown>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await supabase.functions.invoke("admin-brand-actions", {
+      body,
+      headers: { Authorization: `Bearer ${session?.access_token}` },
+    });
+    if (res.error) throw new Error(res.error.message || "Erro na operação");
+    if (res.data?.error) throw new Error(res.data.error);
+    return res.data;
+  };
+
+  const handleChangePlan = async (brandId: string, plan: string) => {
+    try {
+      setActionLoading(true);
+      await invokeAdminAction({ action: "change_plan", brand_id: brandId, plan });
+      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      toast.success(`Plano alterado para ${plan}!`);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteBrand = async () => {
+    if (!deleteTarget || deleteConfirmName !== deleteTarget.name) return;
+    try {
+      setActionLoading(true);
+      await invokeAdminAction({ action: "delete_brand", brand_id: deleteTarget.id });
+      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      toast.success("Marca excluída permanentemente!");
+      setDeleteTarget(null);
+      setDeleteConfirmName("");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!passwordTarget?.userId) return;
+    if (newPassword.length < 6) { toast.error("Senha mínima de 6 caracteres"); return; }
+    if (newPassword !== confirmPassword) { toast.error("As senhas não coincidem"); return; }
+    try {
+      setActionLoading(true);
+      await invokeAdminAction({ action: "reset_password", user_id: passwordTarget.userId, new_password: newPassword });
+      toast.success("Senha redefinida com sucesso!");
+      setPasswordTarget(null);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openPasswordDialog = async (brandId: string, brandName: string) => {
+    // Find the brand_admin user for this brand
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("brand_id", brandId)
+      .eq("role", "brand_admin")
+      .limit(1);
+    const userId = roleData?.[0]?.user_id || null;
+    if (!userId) {
+      toast.error("Nenhum administrador encontrado para esta marca");
+      return;
+    }
+    setPasswordTarget({ brandId, brandName, userId });
+  };
+
+  const planMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+    free: { label: "Free", variant: "outline" },
+    starter: { label: "Starter", variant: "secondary" },
+    profissional: { label: "Profissional", variant: "default" },
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-           <h2 className="text-2xl font-bold tracking-tight">Marcas</h2>
-           <p className="text-muted-foreground">Gerencie as marcas das organizações</p>
-         </div>
-         <Button asChild><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Marca</Link></Button>
+          <h2 className="text-2xl font-bold tracking-tight">Marcas</h2>
+          <p className="text-muted-foreground">Gerencie as marcas das organizações</p>
+        </div>
+        <Button asChild><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Marca</Link></Button>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome ou slug..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
@@ -65,34 +163,129 @@ export default function Brands() {
         <CardContent>
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Organização</TableHead><TableHead>Identificador</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Organização</TableHead>
+                <TableHead>Identificador</TableHead>
+                <TableHead>Plano</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {data?.rows?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma marca cadastrada</TableCell></TableRow>}
               {data?.rows?.map((b) => {
-                const planMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-                  free: { label: "Free", variant: "outline" },
-                  starter: { label: "Starter", variant: "secondary" },
-                  profissional: { label: "Profissional", variant: "default" },
-                };
                 const plan = planMap[b.subscription_plan] || { label: b.subscription_plan, variant: "outline" as const };
                 return (
-                <TableRow key={b.id}>
-                  <TableCell className="font-medium">{b.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{(b.tenants as any)?.name || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{b.slug}</TableCell>
-                  <TableCell><Badge variant={plan.variant}>{plan.label}</Badge></TableCell>
-                  <TableCell><Badge variant={b.is_active ? "default" : "destructive"}>{b.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" asChild><Link to={`/brands/${b.id}`}><Pencil className="h-4 w-4" /></Link></Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}><Power className="h-4 w-4" /></Button>
-                  </TableCell>
-                </TableRow>
+                  <TableRow key={b.id}>
+                    <TableCell className="font-medium">{b.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{(b.tenants as any)?.name || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.slug}</TableCell>
+                    <TableCell><Badge variant={plan.variant}>{plan.label}</Badge></TableCell>
+                    <TableCell><Badge variant={b.is_active ? "default" : "destructive"}>{b.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}`)}>
+                            <Pencil className="h-4 w-4 mr-2" />Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openPasswordDialog(b.id, b.name)}>
+                            <Key className="h-4 w-4 mr-2" />Redefinir Senha
+                          </DropdownMenuItem>
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                              <ArrowUpDown className="h-4 w-4 mr-2" />Mudar Plano
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent>
+                              {PLAN_OPTIONS.map(p => (
+                                <DropdownMenuItem
+                                  key={p.key}
+                                  disabled={b.subscription_plan === p.key}
+                                  onClick={() => handleChangePlan(b.id, p.key)}
+                                >
+                                  {p.label} {b.subscription_plan === p.key && "✓"}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                          <DropdownMenuItem onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}>
+                            <Power className="h-4 w-4 mr-2" />{b.is_active ? "Inativar" : "Ativar"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: b.id, name: b.name })}>
+                            <Trash2 className="h-4 w-4 mr-2" />Excluir Marca
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
             </TableBody>
           </Table>)}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmName(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir marca permanentemente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é irreversível. Todos os dados da marca <strong>{deleteTarget?.name}</strong> serão excluídos permanentemente, incluindo filiais, lojas, ofertas e clientes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Digite <strong>{deleteTarget?.name}</strong> para confirmar:</Label>
+            <Input value={deleteConfirmName} onChange={e => setDeleteConfirmName(e.target.value)} placeholder="Nome da marca" />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteBrand}
+              disabled={deleteConfirmName !== deleteTarget?.name || actionLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {actionLoading ? "Excluindo..." : "Excluir Permanentemente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Password reset dialog */}
+      <AlertDialog open={!!passwordTarget} onOpenChange={(open) => { if (!open) { setPasswordTarget(null); setNewPassword(""); setConfirmPassword(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Redefinir Senha — {passwordTarget?.brandName}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Defina uma nova senha para o administrador desta marca.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label>Nova senha</Label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirmar senha</Label>
+              <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repita a senha" />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetPassword}
+              disabled={!newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6 || actionLoading}
+            >
+              {actionLoading ? "Salvando..." : "Redefinir Senha"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
