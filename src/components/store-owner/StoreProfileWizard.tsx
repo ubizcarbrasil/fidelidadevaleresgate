@@ -423,4 +423,4 @@ function GalleryUploadInline({ storeId, onUploaded }: { storeId: string; onUploa
   return <ImageUploadField value={tempUrl} onChange={handleChange} folder={`stores/${storeId}/gallery`} label="Adicionar foto" aspectRatio={1} previewClassName="hidden" />;
 }
 
-function useState_placeholder() {} // removed
+

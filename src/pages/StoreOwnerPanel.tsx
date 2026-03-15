@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
+import StoreProfileWizard from "@/components/store-owner/StoreProfileWizard";
+import { useStoreProfileCompleteness } from "@/hooks/useStoreProfileCompleteness";
 import StoreRedeemTab from "@/components/store-owner/StoreRedeemTab";
 import StoreProfileTab from "@/components/store-owner/StoreProfileTab";
 import StoreExtratoTab from "@/components/store-owner/StoreExtratoTab";
