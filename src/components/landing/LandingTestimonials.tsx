@@ -10,29 +10,14 @@ const fadeUp = {
 };
 
 const testimonials = [
-  {
-    name: "Marcos Andrade",
-    role: "Dono de frota — 12 veículos",
-    text: "Montei o programa de fidelidade da minha frota em 1 dia. Hoje meus passageiros voltam por causa dos pontos, não por desconto.",
-    initials: "MA",
-  },
-  {
-    name: "Fernanda Costa",
-    role: "Cooperativa de transporte",
-    text: "O app white-label ficou incrível com a nossa marca. Temos 15 lojas parceiras oferecendo resgate e a base de clientes não para de crescer.",
-    initials: "FC",
-  },
-  {
-    name: "Ricardo Oliveira",
-    role: "Rede de academias — 4 unidades",
-    text: "O CRM integrado me mostrou quem estava sumindo. Recuperamos 30% dos alunos inativos só com campanhas automáticas de pontos.",
-    initials: "RO",
-  },
+  { name: "Marcos Andrade", role: "Dono de frota — 12 veículos", text: "Montei o programa de fidelidade da minha frota em 1 dia. Hoje meus passageiros voltam por causa dos pontos, não por desconto.", initials: "MA" },
+  { name: "Fernanda Costa", role: "Cooperativa de transporte", text: "O app white-label ficou incrível com a nossa marca. Temos 15 lojas parceiras oferecendo resgate e a base de clientes não para de crescer.", initials: "FC" },
+  { name: "Ricardo Oliveira", role: "Rede de academias — 4 unidades", text: "O CRM integrado me mostrou quem estava sumindo. Recuperamos 30% dos alunos inativos só com campanhas automáticas de pontos.", initials: "RO" },
 ];
 
 export default function LandingTestimonials() {
   return (
-    <section className="py-20 md:py-28 bg-[hsl(160,30%,8%)]">
+    <section className="py-20 md:py-28 bg-[hsl(220,30%,9%)]">
       <div className="max-w-6xl mx-auto px-5">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} className="text-center mb-14">
           <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-4xl font-black text-white mb-4">
@@ -43,22 +28,12 @@ export default function LandingTestimonials() {
           </motion.p>
         </motion.div>
 
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-40px" }}
-          className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
-        >
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {testimonials.map((t, i) => (
-            <motion.div
-              key={t.name}
-              variants={fadeUp}
-              custom={i + 2}
-              className="relative rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 hover:border-emerald-500/20 transition-colors"
-            >
-              <Quote className="h-8 w-8 text-emerald-500/15 absolute top-4 right-4" />
+            <motion.div key={t.name} variants={fadeUp} custom={i + 2} className="relative rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 hover:border-cyan-500/20 transition-colors">
+              <Quote className="h-8 w-8 text-cyan-500/15 absolute top-4 right-4" />
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-11 w-11 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-bold text-emerald-400">
+                <div className="h-11 w-11 rounded-full bg-cyan-500/10 flex items-center justify-center text-sm font-bold text-cyan-400">
                   {t.initials}
                 </div>
                 <div>

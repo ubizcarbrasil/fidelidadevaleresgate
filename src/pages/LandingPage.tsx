@@ -20,9 +20,9 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[hsl(160,30%,6%)] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[hsl(220,30%,7%)] text-white overflow-x-hidden">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-[hsl(160,30%,6%)]/90 backdrop-blur-xl border-b border-white/5">
+      <nav className="sticky top-0 z-50 bg-[hsl(220,30%,7%)]/90 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <PlatformLogo className="h-9 w-9 rounded-lg" />
@@ -41,7 +41,7 @@ export default function LandingPage() {
             <Button asChild variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 hidden sm:inline-flex">
               <Link to="/auth">Entrar</Link>
             </Button>
-            <Button asChild size="sm" className="rounded-full px-6 bg-emerald-500 hover:bg-emerald-400 text-white border-0">
+            <Button asChild size="sm" className="rounded-full px-6 bg-cyan-500 hover:bg-cyan-400 text-white border-0">
               <Link to="/trial">
                 Começar Agora <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -55,7 +55,7 @@ export default function LandingPage() {
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden bg-[hsl(160,30%,8%)] border-t border-white/5 px-5 py-4 space-y-3">
+          <div className="md:hidden bg-[hsl(220,30%,9%)] border-t border-white/5 px-5 py-4 space-y-3">
             <a href="#como-funciona" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Como Funciona</a>
             <a href="#beneficios" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Benefícios</a>
             <a href="#modelo-comercial" className="block text-sm text-white/70 hover:text-white" onClick={() => setMenuOpen(false)}>Modelos</a>

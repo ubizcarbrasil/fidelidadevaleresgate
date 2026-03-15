@@ -18,7 +18,7 @@ const features = [
 function BrandVariationsMockup() {
   const brands = [
     { name: "Fideliza+", from: "from-violet-500", to: "to-violet-700", accent: "bg-violet-500", text: "text-violet-400" },
-    { name: "Club Pontos", from: "from-emerald-500", to: "to-emerald-700", accent: "bg-emerald-500", text: "text-emerald-400" },
+    { name: "Club Pontos", from: "from-cyan-500", to: "to-cyan-700", accent: "bg-cyan-500", text: "text-cyan-400" },
     { name: "Meu Resgate", from: "from-amber-500", to: "to-amber-700", accent: "bg-amber-500", text: "text-amber-400" },
   ];
 
@@ -29,7 +29,7 @@ function BrandVariationsMockup() {
         const scale = isCenter ? "scale-105 z-10" : "scale-95 opacity-70";
         return (
           <div key={brand.name} className={`relative transition-all ${scale}`}>
-            <div className={`rounded-[1.4rem] border-[4px] border-white/15 bg-[hsl(160,30%,10%)] shadow-xl overflow-hidden ${isCenter ? "w-[150px] md:w-[170px]" : "w-[120px] md:w-[140px]"}`}>
+            <div className={`rounded-[1.4rem] border-[4px] border-white/15 bg-[hsl(220,30%,10%)] shadow-xl overflow-hidden ${isCenter ? "w-[150px] md:w-[170px]" : "w-[120px] md:w-[140px]"}`}>
               <div className="flex justify-center pt-1.5 pb-0.5 bg-white/5">
                 <div className="w-10 h-3 rounded-full bg-white/10" />
               </div>
@@ -75,14 +75,14 @@ function BrandVariationsMockup() {
 
 export default function LandingWhiteLabel() {
   return (
-    <section id="marca-propria" className="py-20 md:py-28 bg-[hsl(160,30%,8%)] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-tl from-emerald-500/5 via-transparent to-violet-500/5 pointer-events-none" />
+    <section id="marca-propria" className="py-20 md:py-28 bg-[hsl(220,30%,9%)] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-tl from-cyan-500/5 via-transparent to-violet-500/5 pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-5 relative z-10">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }} className="max-w-6xl mx-auto">
           <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-5xl font-black text-center text-white mb-4">
             Sua marca, seu app,{" "}
-            <span className="text-emerald-400">seu domínio</span>
+            <span className="text-cyan-400">seu domínio</span>
           </motion.h2>
 
           <motion.p variants={fadeUp} custom={1} className="text-center text-white/50 text-lg max-w-2xl mx-auto mb-6">
@@ -99,9 +99,9 @@ export default function LandingWhiteLabel() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, i) => (
-              <motion.div key={feature.title} variants={fadeUp} custom={3 + i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 text-center hover:border-emerald-500/20 transition-colors">
-                <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                  <feature.icon className="h-6 w-6 text-emerald-400" />
+              <motion.div key={feature.title} variants={fadeUp} custom={3 + i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 text-center hover:border-cyan-500/20 transition-colors">
+                <div className="h-12 w-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="h-6 w-6 text-cyan-400" />
                 </div>
                 <h3 className="font-bold text-lg text-white mb-2">{feature.title}</h3>
                 <p className="text-white/50 text-sm">{feature.description}</p>
