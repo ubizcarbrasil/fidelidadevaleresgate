@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -222,6 +224,19 @@ export function RootSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
 
+  const { data: brands } = useQuery({
+    queryKey: ["brands-for-sidebar"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brands")
+        .select("id, name, slug")
+        .eq("is_active", true)
+        .order("name");
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
@@ -295,20 +310,39 @@ export function RootSidebar() {
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Landing Parceiros">
-                      <a
-                        href={`${window.location.origin}/parceiro`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        {!collapsed && <span className="flex-1">Landing Parceiros</span>}
-                        {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {brands && brands.length === 1 ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Landing Parceiros">
+                        <a
+                          href={`${window.location.origin}/${brands[0].slug}/parceiro`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {!collapsed && <span className="flex-1">Landing Parceiros</span>}
+                          {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : (
+                    brands?.map((brand) => (
+                      <SidebarMenuItem key={brand.id}>
+                        <SidebarMenuButton asChild tooltip={`Parceiros – ${brand.name}`}>
+                          <a
+                            href={`${window.location.origin}/${brand.slug}/parceiro`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            {!collapsed && <span className="flex-1 truncate">{brand.name}</span>}
+                            {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
+                          </a>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
