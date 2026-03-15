@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 30% 12%;
 
-    --primary: 217 90% 50%;
+    --primary: 187 90% 53%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 16% 93%;
@@ -22,41 +22,41 @@
     --muted: 220 16% 93%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 217 90% 95%;
-    --accent-foreground: 217 90% 35%;
+    --accent: 187 90% 92%;
+    --accent-foreground: 187 90% 35%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 72% 40%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 25 95% 53%;
     --warning-foreground: 0 0% 100%;
 
     --border: 220 16% 90%;
     --input: 220 16% 90%;
-    --ring: 217 90% 50%;
+    --ring: 187 90% 53%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
 
-    --sidebar-background: 217 90% 15%;
-    --sidebar-foreground: 217 10% 92%;
-    --sidebar-primary: 46 95% 55%;
-    --sidebar-primary-foreground: 217 90% 15%;
-    --sidebar-accent: 217 70% 22%;
-    --sidebar-accent-foreground: 217 10% 92%;
-    --sidebar-border: 217 60% 20%;
-    --sidebar-ring: 217 90% 50%;
+    --sidebar-background: 220 30% 12%;
+    --sidebar-foreground: 220 10% 92%;
+    --sidebar-primary: 187 90% 53%;
+    --sidebar-primary-foreground: 220 30% 10%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 220 10% 92%;
+    --sidebar-border: 220 25% 16%;
+    --sidebar-ring: 187 90% 53%;
 
-    /* Vale Bonus custom tokens */
+    /* Vale Resgate custom tokens */
     --vb-surface: 220 16% 93%;
     --vb-surface-elevated: 0 0% 100%;
-    --vb-gold: 46 95% 55%;
+    --vb-gold: 45 96% 56%;
     --vb-gold-foreground: 30 20% 10%;
     --vb-highlight: var(--primary);
-    --vb-badge-new: 142 72% 40%;
-    --vb-badge-hot: 0 72% 51%;
+    --vb-badge-new: 160 84% 39%;
+    --vb-badge-hot: 0 84% 60%;
     --vb-badge-exclusive: 270 60% 50%;
     --vb-card-dark: 240 12% 12%;
     --vb-card-elevated: 240 10% 16%;
