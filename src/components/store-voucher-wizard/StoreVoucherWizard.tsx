@@ -102,6 +102,18 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
     },
   });
 
+  const { data: storeInfo } = useQuery({
+    queryKey: ["store-info-wizard", storeId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("stores")
+        .select("name, logo_url")
+        .eq("id", storeId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const update = (partial: Partial<StoreVoucherData>) => setData((prev) => ({ ...prev, ...partial }));
 
   const canAdvance = (): boolean => {
