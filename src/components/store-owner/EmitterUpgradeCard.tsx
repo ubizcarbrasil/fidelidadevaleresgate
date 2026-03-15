@@ -67,10 +67,10 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
 
   return (
     <>
-      <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+      <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-warning/8 to-warning/3">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Zap className="h-4 w-4 text-amber-600" />
+            <Zap className="h-4 w-4 text-warning" />
             Tornar-se Emissor de Pontos
           </CardTitle>
           <CardDescription className="text-xs">
@@ -82,7 +82,7 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : hasPending ? (
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">
+              <Badge variant="outline" className="border-warning/40 text-warning bg-warning/10">
                 <Clock className="h-3 w-3 mr-1" /> Aguardando aprovação
               </Badge>
             </div>
@@ -109,7 +109,7 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-amber-600" />
+              <Zap className="h-5 w-5 text-warning" />
               Solicitar Ativação como Emissor
             </DialogTitle>
           </DialogHeader>
