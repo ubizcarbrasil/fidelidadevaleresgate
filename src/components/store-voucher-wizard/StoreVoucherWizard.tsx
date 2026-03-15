@@ -24,6 +24,7 @@ import StepRedemptionType from "./steps/StepRedemptionType";
 import StepImage from "./steps/StepImage";
 import StepBadge from "./steps/StepBadge";
 import StepReview from "./steps/StepReview";
+import OfferCardPreview from "./OfferCardPreview";
 
 const STEP_LABELS = [
   "Categoria", "Tipo", "Finalidade", "Valor", "Agendamento", "Cumulativo",
@@ -98,6 +99,18 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
         .eq("is_active", true)
         .order("name");
       return data || [];
+    },
+  });
+
+  const { data: storeInfo } = useQuery({
+    queryKey: ["store-info-wizard", storeId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("stores")
+        .select("name, logo_url")
+        .eq("id", storeId)
+        .maybeSingle();
+      return data;
     },
   });
 
@@ -285,8 +298,15 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
             ))}
           </div>
         </CardHeader>
-        <CardContent className="min-h-[300px]">
+        <CardContent className="min-h-[300px] space-y-6">
           {renderStep()}
+          {step < TOTAL - 1 && (
+            <OfferCardPreview
+              data={data}
+              storeName={storeInfo?.name || undefined}
+              storeLogo={storeInfo?.logo_url || undefined}
+            />
+          )}
         </CardContent>
         <div className="flex justify-between p-6 pt-0">
           <Button variant="outline" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
