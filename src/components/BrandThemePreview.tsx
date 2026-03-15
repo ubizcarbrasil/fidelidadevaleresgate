@@ -4,6 +4,7 @@ import {
   Eye, MapPin, Bell, Search, Wallet, House, Tag, Ticket, CircleUser,
   Coins, Percent, Store, Gift, Sparkles, ChevronRight, Heart, Star,
   Shield, CircleHelp, LogOut, Moon, ArrowUpRight, ArrowDownRight, Sun,
+  TicketCheck,
 } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 
