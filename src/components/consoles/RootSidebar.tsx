@@ -313,20 +313,39 @@ export function RootSidebar() {
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Landing Parceiros">
-                      <a
-                        href={`${window.location.origin}/parceiro`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        {!collapsed && <span className="flex-1">Landing Parceiros</span>}
-                        {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {brands && brands.length === 1 ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Landing Parceiros">
+                        <a
+                          href={`${window.location.origin}/${brands[0].slug}/parceiro`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {!collapsed && <span className="flex-1">Landing Parceiros</span>}
+                          {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : (
+                    brands?.map((brand) => (
+                      <SidebarMenuItem key={brand.id}>
+                        <SidebarMenuButton asChild tooltip={`Parceiros – ${brand.name}`}>
+                          <a
+                            href={`${window.location.origin}/${brand.slug}/parceiro`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            {!collapsed && <span className="flex-1 truncate">{brand.name}</span>}
+                            {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
+                          </a>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
