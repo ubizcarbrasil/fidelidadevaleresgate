@@ -226,7 +226,7 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
 }
 
 /* ──────────────── Home Screen ──────────────── */
-function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName, isDark }: any) {
+function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName, isDark, cardRadius, cardImgH, iconSize, iconRadius, catFontSize, btnRadius, sectionTitleSize }: any) {
   const STORES = [
     { name: "Pizzaria do João", initials: "PJ", color: "#E53935" },
     { name: "Burger House", initials: "BH", color: "#FF8F00" },
