@@ -342,7 +342,7 @@ function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading, cardRadius 
 }
 
 /* ──────────────── Offers Screen ──────────────── */
-function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
+function OffersScreen({ accent, fg, muted, cardBg, fontHeading, cardRadius, btnRadius, sectionTitleSize }: any) {
   const offers = [
     { title: "10% de desconto em pizzas", store: "Pizzaria do João", badge: "10% OFF", badgeColor: "#E53935" },
     { title: "Combo família completo", store: "Burger House", badge: "Combo", badgeColor: "#FF8F00" },
