@@ -240,12 +240,12 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
       {/* Greeting + balance badge */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-bold text-[13px]" style={{ fontFamily: fontHeading, color: fg }}>
+          <p className="font-bold" style={{ fontSize: sectionTitleSize * 0.8, fontFamily: fontHeading, color: fg }}>
             Olá, <span style={{ color: VB_GOLD }}>João</span>
           </p>
           <p className="text-[9px]" style={{ color: fg, opacity: 0.5 }}>Confira suas ofertas e pontos</p>
         </div>
-        <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full" style={{ backgroundColor: VB_GOLD, color: "#fff" }}>
+        <div className="flex items-center gap-1 px-2.5 py-1.5" style={{ borderRadius: btnRadius, backgroundColor: VB_GOLD, color: "#fff" }}>
           <Coins className="h-3 w-3" />
           <span className="text-[10px] font-bold">1.250 pts</span>
         </div>
@@ -262,7 +262,7 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <Sparkles className="h-3 w-3" style={{ color: accent }} />
-            <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
+            <span className="font-bold" style={{ fontSize: sectionTitleSize * 0.65, fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
           </div>
           <span className="text-[8px] font-semibold" style={{ color: accent }}>Ver todos</span>
         </div>
@@ -271,10 +271,10 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
             { title: "10% OFF em Pizzas", store: "Pizzaria do João", pts: 50, color: "#E53935" },
             { title: "Combo Família", store: "Burger House", pts: 30, color: "#FF8F00" },
           ].map((offer, i) => (
-            <div key={i} className="rounded-xl overflow-hidden flex-shrink-0" style={{ width: 120, backgroundColor: cardBg, boxShadow: `0 2px 8px ${fg}08` }}>
-              <div className="h-16 relative flex items-center justify-center" style={{ backgroundColor: `${offer.color}20` }}>
+            <div key={i} className="overflow-hidden flex-shrink-0" style={{ width: 120, backgroundColor: cardBg, boxShadow: `0 2px 8px ${fg}08`, borderRadius: cardRadius }}>
+              <div className="relative flex items-center justify-center" style={{ height: cardImgH * 0.45, backgroundColor: `${offer.color}20` }}>
                 <Tag className="h-6 w-6" style={{ color: offer.color, opacity: 0.4 }} />
-                <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ backgroundColor: VB_GOLD }}>
+                <div className="absolute top-1 right-1 px-1.5 py-0.5 text-[7px] font-bold text-white" style={{ backgroundColor: VB_GOLD, borderRadius: btnRadius }}>
                   +{offer.pts} pts
                 </div>
               </div>
@@ -287,22 +287,23 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
         </div>
       </div>
 
-      {/* Compre e pontue section */}
+      {/* Category icons section */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <Coins className="h-3 w-3" style={{ color: VB_GOLD }} />
-            <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Compre e pontue</span>
+            <span className="font-bold" style={{ fontSize: sectionTitleSize * 0.65, fontFamily: fontHeading, color: fg }}>Compre e pontue</span>
           </div>
           <span className="text-[8px] font-semibold" style={{ color: accent }}>Ver todos</span>
         </div>
         <div className="flex gap-3 overflow-hidden">
           {STORES.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0">
-              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white font-bold text-[10px]" style={{ backgroundColor: s.color }}>
+              <div className="flex items-center justify-center text-white font-bold text-[10px]"
+                style={{ height: iconSize * 0.7, width: iconSize * 0.7, borderRadius: iconRadius, backgroundColor: s.color }}>
                 {s.initials}
               </div>
-              <span className="text-[7px] font-medium text-center w-11 truncate" style={{ color: fg, opacity: 0.6 }}>{s.name.split(" ")[0]}</span>
+              <span className="font-medium text-center truncate" style={{ fontSize: catFontSize * 0.7, width: iconSize * 0.7, color: fg, opacity: 0.6 }}>{s.name.split(" ")[0]}</span>
             </div>
           ))}
         </div>
