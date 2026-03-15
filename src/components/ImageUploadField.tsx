@@ -90,7 +90,7 @@ export default function ImageUploadField({
 
   return (
     <div className="space-y-2">
-      {value ? (
+      {value && !previewClassName?.includes("hidden") ? (
         <div className="relative inline-block">
           <img
             src={value}
