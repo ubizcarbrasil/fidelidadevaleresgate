@@ -24,6 +24,7 @@ import StepRedemptionType from "./steps/StepRedemptionType";
 import StepImage from "./steps/StepImage";
 import StepBadge from "./steps/StepBadge";
 import StepReview from "./steps/StepReview";
+import OfferCardPreview from "./OfferCardPreview";
 
 const STEP_LABELS = [
   "Categoria", "Tipo", "Finalidade", "Valor", "Agendamento", "Cumulativo",
