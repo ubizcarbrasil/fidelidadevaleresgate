@@ -271,6 +271,47 @@ export function RootSidebar() {
             badges={badges}
           />
         ))}
+
+        <Collapsible defaultOpen={false} className="group/collapsible">
+          <SidebarGroup className="py-0">
+            <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors">
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              {!collapsed && <span>Links Públicos</span>}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Landing Empreendedor">
+                      <a
+                        href={`${window.location.origin}/landing`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        {!collapsed && <span className="flex-1">Landing Empreendedor</span>}
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Landing Parceiros">
+                      <a
+                        href={`${window.location.origin}/parceiro`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        {!collapsed && <span className="flex-1">Landing Parceiros</span>}
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && <div className="mb-2 truncate text-xs text-sidebar-foreground/60">{user?.email}</div>}
