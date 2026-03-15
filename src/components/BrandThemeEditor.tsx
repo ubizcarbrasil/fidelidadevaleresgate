@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
 import OfferCardConfigSection from "@/components/OfferCardConfigSection";
 import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
-import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
+import FontSelect from "@/components/brand-theme/FontSelect";
+import LayoutDimensionsSection from "@/components/brand-theme/LayoutDimensionsSection";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
@@ -86,52 +87,32 @@ const DARK_PRESETS: DarkPreset[] = [
     name: "Escuro Elegante",
     description: "Fundo profundo com destaques suaves em dourado",
     colors: {
-      background: "222 47% 7%",
-      foreground: "0 0% 98%",
-      card: "222 40% 10%",
-      muted: "222 30% 14%",
-      accent: "38 92% 55%",
-      secondary: "38 92% 55%",
-      primary: "222 50% 55%",
+      background: "222 47% 7%", foreground: "0 0% 98%", card: "222 40% 10%",
+      muted: "222 30% 14%", accent: "38 92% 55%", secondary: "38 92% 55%", primary: "222 50% 55%",
     },
   },
   {
     name: "Escuro Vibrante",
     description: "Fundo escuro com destaques em laranja vivo",
     colors: {
-      background: "240 10% 6%",
-      foreground: "0 0% 100%",
-      card: "240 10% 10%",
-      muted: "240 8% 15%",
-      accent: "25 95% 55%",
-      secondary: "25 95% 55%",
-      primary: "262 83% 58%",
+      background: "240 10% 6%", foreground: "0 0% 100%", card: "240 10% 10%",
+      muted: "240 8% 15%", accent: "25 95% 55%", secondary: "25 95% 55%", primary: "262 83% 58%",
     },
   },
   {
     name: "Meia-noite Azul",
     description: "Tom azul marinho sofisticado com ciano",
     colors: {
-      background: "220 40% 8%",
-      foreground: "210 40% 96%",
-      card: "220 35% 12%",
-      muted: "220 25% 16%",
-      accent: "190 90% 50%",
-      secondary: "190 90% 50%",
-      primary: "220 60% 55%",
+      background: "220 40% 8%", foreground: "210 40% 96%", card: "220 35% 12%",
+      muted: "220 25% 16%", accent: "190 90% 50%", secondary: "190 90% 50%", primary: "220 60% 55%",
     },
   },
   {
     name: "Escuro Rosé",
     description: "Fundo quente com destaques em rosa e rosa-claro",
     colors: {
-      background: "280 15% 7%",
-      foreground: "0 0% 97%",
-      card: "280 12% 11%",
-      muted: "280 10% 16%",
-      accent: "340 82% 60%",
-      secondary: "340 82% 60%",
-      primary: "280 60% 55%",
+      background: "280 15% 7%", foreground: "0 0% 97%", card: "280 12% 11%",
+      muted: "280 10% 16%", accent: "340 82% 60%", secondary: "340 82% 60%", primary: "280 60% 55%",
     },
   },
 ];
@@ -193,7 +174,6 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           <CardTitle className="text-sm flex items-center gap-2">
             <Palette className="h-4 w-4" /> Cores
           </CardTitle>
-          {/* Light / Dark toggle */}
           <div className="flex gap-1 mt-2">
             <button
               onClick={() => setColorMode("light")}
@@ -223,7 +203,6 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
               <p className="text-[11px] text-muted-foreground">
                 Configure as cores do modo escuro. Use um preset como ponto de partida ou personalize manualmente.
               </p>
-              {/* Dark presets */}
               <div className="grid grid-cols-2 gap-2">
                 {DARK_PRESETS.map((preset) => {
                   const presetBg = `hsl(${preset.colors.background})`;
@@ -235,7 +214,6 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
                       onClick={() => update({ dark_colors: { ...preset.colors } })}
                       className="flex items-center gap-2 p-2 rounded-lg border border-border hover:border-primary/50 transition-colors text-left group"
                     >
-                      {/* Color preview dots */}
                       <div className="flex flex-col gap-0.5 shrink-0">
                         <div className="flex gap-0.5">
                           <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: presetBg }} />
@@ -299,11 +277,11 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-xs">Fonte de títulos (Google Fonts)</Label>
-              <Input
+              <Label className="text-xs">Fonte de títulos</Label>
+              <FontSelect
                 value={value.font_heading || ""}
-                onChange={(e) => update({ font_heading: e.target.value || undefined })}
-                placeholder="Ex: Poppins, Montserrat, Playfair Display"
+                onChange={(v) => update({ font_heading: v || undefined })}
+                placeholder="Selecionar fonte de títulos"
               />
               {value.font_heading && (
                 <p
@@ -315,11 +293,11 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
               )}
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Fonte do corpo (Google Fonts)</Label>
-              <Input
+              <Label className="text-xs">Fonte do corpo</Label>
+              <FontSelect
                 value={value.font_body || ""}
-                onChange={(e) => update({ font_body: e.target.value || undefined })}
-                placeholder="Ex: Inter, Open Sans, Roboto"
+                onChange={(v) => update({ font_body: v || undefined })}
+                placeholder="Selecionar fonte do corpo"
               />
               {value.font_body && (
                 <p
@@ -414,6 +392,12 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+
+      {/* Layout & Dimensions */}
+      <LayoutDimensionsSection
+        value={value.layout || {}}
+        onChange={(layout) => update({ layout })}
+      />
 
       {/* Offer Card Config */}
       {onOfferCardConfigChange && offerCardConfig && (

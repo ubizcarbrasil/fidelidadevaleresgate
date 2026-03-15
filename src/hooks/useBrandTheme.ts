@@ -114,6 +114,27 @@ export function useBrandTheme(settings: Json | null | undefined) {
       }
     }
 
+    // Apply layout CSS variables
+    const layout = theme.layout;
+    if (layout) {
+      const LAYOUT_CSS_MAP: Record<string, string> = {
+        card_border_radius: "--brand-card-radius",
+        card_image_height: "--brand-card-img-height",
+        category_icon_size: "--brand-icon-size",
+        category_icon_radius: "--brand-icon-radius",
+        category_font_size: "--brand-cat-font-size",
+        button_radius: "--brand-btn-radius",
+        section_title_size: "--brand-section-title-size",
+      };
+      for (const [key, cssVar] of Object.entries(LAYOUT_CSS_MAP)) {
+        const val = (layout as any)[key];
+        if (val != null) {
+          root.style.setProperty(cssVar, `${val}px`);
+          appliedVars.push(cssVar);
+        }
+      }
+    }
+
     // Set --vb-highlight: brand accent in light, vb-gold in dark
     if (!isDark) {
       const highlight = theme.colors?.secondary || theme.colors?.primary;
