@@ -66,6 +66,7 @@ export default function StoreOwnerPanel() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
   const [showWizard, setShowWizard] = useState(false);
+  const [showProfileWizard, setShowProfileWizard] = useState(false);
   const [editingOffer, setEditingOffer] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
