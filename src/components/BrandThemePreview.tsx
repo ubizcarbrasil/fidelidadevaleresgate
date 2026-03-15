@@ -58,8 +58,9 @@ function resolveColors(theme: BrandTheme, isDark: boolean) {
       cardBg: hslToCss(colors.card, "hsl(0 0% 100%)"),
     };
   }
-  // Dark: merge defaults + colors + dark_colors
-  const merged = { ...DARK_DEFAULTS, ...theme.colors, ...theme.dark_colors };
+  // Dark: merge defaults + accent colors only (exclude light structural colors)
+  const { background: _bg, foreground: _fg, card: _card, muted: _mut, ...colorAccents } = (theme.colors || {});
+  const merged = { ...DARK_DEFAULTS, ...colorAccents, ...theme.dark_colors };
   return {
     accent: hslToCss(merged.secondary, "") || hslToCss(merged.primary, "hsl(220 70% 50%)"),
     accentParsed: parseHsl(merged.secondary || merged.primary, "220 70% 50%"),
