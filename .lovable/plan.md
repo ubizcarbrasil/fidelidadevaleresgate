@@ -1,30 +1,25 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Problema
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+O link "Landing Parceiros" no sidebar aponta para `/parceiro`, mas a rota requer um slug de marca: `/:slug/parceiro`. Como o root admin gerencia múltiplas marcas, não há uma marca fixa para usar no link.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+## Solução
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+Buscar a lista de marcas ativas e, se houver apenas uma, usar seu slug diretamente. Se houver múltiplas, mostrar um dropdown/select para o admin escolher qual landing de parceiro abrir.
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+**Abordagem simplificada**: Buscar todas as marcas com uma query leve no `RootSidebar` e transformar o item "Landing Parceiros" em um submenu com uma entrada por marca (cada uma abrindo `/${brand.slug}/parceiro` em nova aba).
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+## Mudanças
+
+| Arquivo | Ação |
+|---|---|
+| `src/components/consoles/RootSidebar.tsx` | Buscar marcas ativas via query, substituir o link fixo de parceiros por um submenu listando cada marca com seu slug correto |
+
+### Detalhes técnicos
+
+1. Adicionar `useQuery` para buscar `brands` (apenas `id`, `name`, `slug` onde `is_active = true`)
+2. Substituir o `<a>` fixo de "Landing Parceiros" por um `Collapsible` ou lista inline com um link por marca: `${origin}/${brand.slug}/parceiro`
+3. Cada link mantém `target="_blank"`, ícone `ExternalLink` e badge "Externo"
+4. Se houver apenas 1 marca, manter como link direto sem submenu
+
