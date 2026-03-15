@@ -954,7 +954,7 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
   }
 
   const currentBanner = banners[current];
-  const isClickable = !!currentBanner?.link_url;
+  const isClickable = !!(currentBanner?.link_url || currentBanner?.link_target_id) && currentBanner?.link_type !== "NONE";
 
   return (
     <div className="max-w-lg mx-auto px-4">
