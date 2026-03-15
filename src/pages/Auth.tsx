@@ -18,6 +18,10 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { brand, theme } = useBrand();
+
+  const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
+  const brandName = brand?.name || null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
