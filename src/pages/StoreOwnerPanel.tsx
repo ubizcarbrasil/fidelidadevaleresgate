@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +61,9 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 export default function StoreOwnerPanel() {
   const { user, signOut, isRootAdmin, roles } = useAuth();
   const { isModuleEnabled } = useBrandModules();
+  const { brand, theme } = useBrand();
+  const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
+  const brandName = brand?.name || null;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
@@ -214,6 +218,14 @@ export default function StoreOwnerPanel() {
               </button>
             )}
             <div className="flex items-center gap-3 min-w-0">
+              {/* Brand logo (small) */}
+              {brandLogoUrl ? (
+                <img src={brandLogoUrl} alt={brandName || "Marca"} className="h-7 w-7 rounded-lg object-contain shrink-0 ring-1 ring-border/40" />
+              ) : brandName ? (
+                <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground font-bold text-[10px] flex items-center justify-center shrink-0 ring-1 ring-border/40">
+                  {brandName.substring(0, 2).toUpperCase()}
+                </div>
+              ) : null}
               <div className="h-10 w-10 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 ring-2 ring-primary/10">
                 {store.logo_url ? (
                   <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />

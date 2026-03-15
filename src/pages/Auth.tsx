@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Ticket, Store, Rocket } from "lucide-react";
 import PlatformLogo from "@/components/PlatformLogo";
+import { useBrand } from "@/contexts/BrandContext";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +18,10 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { brand, theme } = useBrand();
+
+  const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
+  const brandName = brand?.name || null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +84,13 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <PlatformLogo className="mx-auto h-16 w-16 rounded-2xl shadow-md" />
-          <CardTitle className="text-2xl font-bold">Vale Resgate</CardTitle>
+          <PlatformLogo
+            src={brandLogoUrl || "/logo-vale-resgate.png"}
+            alt={brandName || "Vale Resgate"}
+            fallbackLabel={brandName ? brandName.substring(0, 2).toUpperCase() : "VR"}
+            className="mx-auto h-16 w-16 rounded-2xl shadow-md"
+          />
+          <CardTitle className="text-2xl font-bold">{brandName || "Vale Resgate"}</CardTitle>
           <CardDescription>
             {isForgot ? "Recuperar senha" : isLogin ? "Acesse sua conta" : "Crie sua conta"}
           </CardDescription>

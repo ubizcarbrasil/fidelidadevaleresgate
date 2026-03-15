@@ -199,7 +199,9 @@ function FileUploadCard({ label, field, accept, value, uploading, onUpload, onCl
 
 export default function StoreRegistrationWizard() {
   const { user } = useAuth();
-  const { brand, selectedBranch } = useBrand();
+  const { brand, selectedBranch, theme } = useBrand();
+  const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
+  const brandName = brand?.name || null;
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(defaultData);
   const [saving, setSaving] = useState(false);
@@ -468,7 +470,18 @@ export default function StoreRegistrationWizard() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
-        <div className="max-w-lg mx-auto px-5 py-4">
+        <div className="max-w-lg mx-auto px-5 py-4 space-y-4">
+          {/* Brand logo */}
+          <div className="flex flex-col items-center gap-1.5">
+            {brandLogoUrl ? (
+              <img src={brandLogoUrl} alt={brandName || "Marca"} className="h-10 w-10 rounded-xl object-contain shadow-sm" />
+            ) : brandName ? (
+              <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center shadow-sm">
+                {brandName.substring(0, 2).toUpperCase()}
+              </div>
+            ) : null}
+            {brandName && <p className="text-xs font-medium text-muted-foreground">{brandName}</p>}
+          </div>
           <StepIndicator currentStep={step} />
         </div>
       </div>
