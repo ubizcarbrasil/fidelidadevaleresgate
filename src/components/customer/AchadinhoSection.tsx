@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ExternalLink, icons } from "lucide-react";
+import { ChevronRight, ExternalLink, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
