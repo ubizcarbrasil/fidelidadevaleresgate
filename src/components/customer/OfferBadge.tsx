@@ -26,6 +26,16 @@ interface OfferBadgeProps {
   minPurchase?: number;
 }
 
+function cleanBadge(b: BadgeConfig | null | undefined): Partial<BadgeConfig> {
+  if (!b) return {};
+  const result: Partial<BadgeConfig> = {};
+  if (b.bg_color) result.bg_color = b.bg_color;
+  if (b.text_color) result.text_color = b.text_color;
+  if (b.text_template) result.text_template = b.text_template;
+  if (b.icon) result.icon = b.icon;
+  return result;
+}
+
 const OfferBadge = React.memo(function OfferBadge({
   discountPercent,
   offerBadgeConfig,
@@ -45,13 +55,14 @@ const OfferBadge = React.memo(function OfferBadge({
   const configBadge = getBadgeConfig(offerType);
 
   const config: BadgeConfig = {
-    ...{ bg_color: primaryColor, text_color: "#FFFFFF", icon: "sparkles" },
-    ...(configBadge.bg_color ? configBadge : {}),
-    ...(brandBadgeConfig || {}),
-    ...(offerBadgeConfig || {}),
+    bg_color: primaryColor,
+    text_color: "#FFFFFF",
+    icon: "sparkles",
+    ...cleanBadge(brandBadgeConfig),
+    ...cleanBadge(configBadge),
+    ...cleanBadge(offerBadgeConfig),
   };
 
-  // Use the text_template from config if available
   const defaultTemplate = configBadge.text_template || (couponType === "PRODUCT"
     ? "Pague {percent}% com Pontos"
     : "Troque {points} pts por R$ {credit}");
