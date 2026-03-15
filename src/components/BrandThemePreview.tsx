@@ -75,6 +75,16 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
   const fontBody = theme.font_body ? `"${theme.font_body}", sans-serif` : "system-ui, sans-serif";
   const displayName = theme.display_name || brandName || "Minha Marca";
 
+  // Layout config with defaults
+  const layout = theme.layout || {};
+  const cardRadius = layout.card_border_radius ?? 12;
+  const cardImgH = layout.card_image_height ?? 140;
+  const iconSize = layout.category_icon_size ?? 64;
+  const iconRadius = layout.category_icon_radius ?? 16;
+  const catFontSize = layout.category_font_size ?? 11;
+  const btnRadius = layout.button_radius ?? 8;
+  const sectionTitleSize = layout.section_title_size ?? 16;
+
   const TABS: { key: Screen; label: string; icon: any }[] = [
     { key: "home", label: "Início", icon: House },
     { key: "offers", label: "Ofertas", icon: Tag },
