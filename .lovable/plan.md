@@ -1,30 +1,27 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Aumentar ícones de categorias
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Situação atual
+No `SegmentNavSection.tsx`:
+- Container de cada item: `width: 68px`
+- Círculo do ícone: `h-11 w-11` (44px)
+- Ícone interno: `h-5 w-5` (20px)
+- Texto: `text-[9px]`
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Referência (screenshot)
+Os cards de categoria têm ~100px de largura, ícones com ~28-32px dentro de círculos de ~64px, e texto ~11px.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### Alterações
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+**`src/components/customer/SegmentNavSection.tsx`**
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+| Propriedade | Atual | Novo |
+|---|---|---|
+| Container width | 68px | 88px |
+| Círculo do ícone | h-11 w-11 (44px) | h-16 w-16 (64px) |
+| Ícone (CategoryIcon) | h-5 w-5 (20px) | h-7 w-7 (28px) |
+| Rounded do círculo | rounded-xl | rounded-2xl |
+| Texto | text-[9px] | text-[11px] |
+| Gap entre ícone e texto | gap-1 | gap-1.5 |
+
