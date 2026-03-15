@@ -1,30 +1,64 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Jornada Guiada do Parceiro (Profile Setup Wizard)
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+O perfil do parceiro é um formulário longo e livre — o parceiro pode salvar sem preencher campos essenciais (logo, banner, segmento, descrição, etc.), resultando em lojas incompletas no app do cliente.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Solução
+Criar um **wizard de completude de perfil** que aparece no Dashboard quando o perfil está incompleto, guiando o parceiro passo a passo. Cada etapa salva automaticamente ao avançar.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### Etapas do Wizard
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+| Passo | Título | Campos | Obrigatório |
+|-------|--------|--------|-------------|
+| 1 | Logomarca | `logo_url` (upload) | Sim |
+| 2 | Banner | `banner_url` (upload) | Sim |
+| 3 | Dados Básicos | `name`, `email`, `phone`, `description` | name, description |
+| 4 | Segmento | `taxonomy_segment_id` + tags dinâmicas | segment |
+| 5 | Endereço e Contato | `address`, `whatsapp`, `instagram`, `site_url` | address |
+| 6 | Galeria | `gallery_urls` (upload múltiplo) | Não (skip) |
+| 7 | Horário | `operating_hours_json` | Não (skip) |
+| 8 | Revisão | Preview do card como aparece para o cliente | — |
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### Componentes
+
+#### 1. `StoreProfileWizard.tsx` (novo)
+- Wizard com barra de progresso, animação de transição entre passos (similar ao `RedemptionSignupCarousel`)
+- Cada passo tem validação; botão "Próximo" só habilita quando campos obrigatórios preenchidos
+- Botão "Pular" nos passos opcionais (galeria, horário)
+- **Auto-save**: ao avançar de passo, salva os campos daquele passo no banco via `supabase.from("stores").update()`
+- Passo final (Revisão) mostra preview do card da loja + botão "Concluir"
+- Ao concluir, marca `profile_complete = true` (campo local, não precisa de migração — usa o próprio cálculo de completude)
+
+#### 2. `useStoreProfileCompleteness.ts` (novo hook)
+- Calcula % de completude baseado nos campos preenchidos
+- Retorna `{ percent, missingSteps, isComplete }`
+- Campos com peso: logo (15%), banner (15%), name+description (20%), segment (15%), address (10%), gallery (10%), hours (10%), contato (5%)
+
+#### 3. Integração no `StoreOwnerDashboard`
+- Se `isComplete === false`, mostrar card proeminente no topo do dashboard:
+  - Barra de progresso circular com % 
+  - "Complete seu perfil para aparecer no app"
+  - Botão "Continuar configuração" → abre wizard no passo correto
+- O parceiro pode fechar e voltar depois; o card persiste até 100%
+
+#### 4. Modificar `StoreProfileTab.tsx`
+- Adicionar botão "Configuração guiada" no topo que abre o wizard
+- Manter formulário livre para edições pontuais
+
+### Arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/store-owner/StoreProfileWizard.tsx` | Criar — wizard completo |
+| `src/hooks/useStoreProfileCompleteness.ts` | Criar — cálculo de completude |
+| `src/pages/StoreOwnerPanel.tsx` | Editar — card de completude no dashboard + estado do wizard |
+| `src/components/store-owner/StoreProfileTab.tsx` | Editar — botão para abrir wizard |
+
+### UX
+- Mobile-first, estilo carousel com animações suaves
+- Progress bar no topo com dots clicáveis (só para passos já visitados)
+- Ícone + título + subtítulo explicativo em cada passo
+- Salva silenciosamente a cada avanço (sem botão "Salvar" explícito até a revisão)
+
