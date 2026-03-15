@@ -195,29 +195,6 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         </div>
 
 
-        {/* Location line */}
-        <button
-          onClick={handleRedetect}
-          disabled={detecting}
-          className="flex items-center gap-2 active:scale-[0.97] transition-transform group mb-1"
-        >
-          {detecting ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "hsl(var(--vb-gold))" }} />
-          ) : (
-            <MapPin className="h-3.5 w-3.5" style={{ color: geoDetected ? "hsl(var(--vb-gold))" : "hsl(var(--muted-foreground))" }} />
-          )}
-          <span className="text-xs text-muted-foreground">
-            {detecting
-              ? "Detectando sua cidade..."
-              : cityName
-                ? <>Visualizando ofertas em: <strong className="text-foreground">{cityName}</strong></>
-                : "Toque para detectar sua cidade"
-            }
-          </span>
-          {!detecting && hasMultipleBranches && (
-            <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-          )}
-        </button>
       </motion.div>
 
       {/* Render native sections in configured order */}

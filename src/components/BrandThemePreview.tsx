@@ -251,11 +251,6 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
         </div>
       </div>
 
-      {/* Location line */}
-      <div className="flex items-center gap-1">
-        <MapPin className="h-2.5 w-2.5" style={{ color: accent }} />
-        <span className="text-[8px]" style={{ color: fg, opacity: 0.5 }}>Visualizando ofertas em: <b style={{ color: fg, opacity: 0.7 }}>Centro</b></span>
-      </div>
 
       {/* For you section */}
       <div>
