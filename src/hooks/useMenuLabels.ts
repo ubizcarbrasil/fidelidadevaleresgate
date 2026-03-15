@@ -41,7 +41,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.gg_closing": "Fechamento Financeiro",
     "sidebar.usuarios": "Usuários",
     "sidebar.modulos": "Módulos",
-    "sidebar.perm_parceiros": "Controle de Parceiros",
+    "sidebar.perm_parceiros": "Permissão de Parceiros",
     "sidebar.auditoria": "Auditoria",
     "sidebar.relatorios": "Relatórios",
     "sidebar.taxonomia": "Taxonomia",
