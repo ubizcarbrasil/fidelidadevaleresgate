@@ -77,7 +77,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isWhiteLabel, setIsWhiteLabel] = useState(false);
 
-  const theme = useBrandTheme(brand?.brand_settings_json);
+  const isCustomerPath = window.location.pathname.startsWith('/c/') || window.location.pathname.startsWith('/customer-preview');
+  const theme = useBrandTheme(isCustomerPath ? brand?.brand_settings_json : null);
 
   useEffect(() => {
     const resolve = async () => {
