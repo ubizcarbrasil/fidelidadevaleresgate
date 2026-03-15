@@ -472,6 +472,29 @@ export default function CustomerLayout() {
           )}
         </AnimatePresence>
 
+        {/* Achadinhos Category Grid Overlay */}
+        <AnimatePresence>
+          {achadinhoCatGridOpen && (
+            <AchadinhoCategoryGridOverlay
+              onBack={() => setAchadinhoCatGridOpen(false)}
+              onCategoryClick={(cat) => {
+                setAchadinhoCatGridOpen(false);
+                setSelectedAchadinhoCat(cat);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Achadinhos Deals Overlay */}
+        <AnimatePresence>
+          {selectedAchadinhoCat && (
+            <AchadinhoDealsOverlay
+              category={selectedAchadinhoCat}
+              onBack={() => setSelectedAchadinhoCat(null)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
 
