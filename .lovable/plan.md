@@ -1,30 +1,26 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Adicionar links das Landing Pages no Painel Raiz
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### O que será feito
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Adicionar dois itens de link externo no sidebar do ROOT para abrir as landing pages públicas diretamente:
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+1. **Landing Page Empreendedor** → `/landing` (abre em nova aba)
+2. **Landing Page Parceiros** → `/:slug/parceiro` (abre em nova aba, usando o slug da marca ativa)
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+### Mudanças
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+**`src/components/consoles/RootSidebar.tsx`**
+
+Adicionar um novo grupo **"Links Públicos"** (ou incluir no grupo "Marca & Experiência") com dois itens que abrem em nova aba (`target="_blank"`):
+
+- `Landing Empreendedor` → `${window.location.origin}/landing` com ícone `ExternalLink`
+- `Landing Parceiros` → `${window.location.origin}/${slug}/parceiro` com ícone `ExternalLink`
+
+Os links usarão `<a>` com `target="_blank"` em vez de `<NavLink>`, já que são páginas públicas fora do layout admin.
+
+| Arquivo | Ação |
+|---|---|
+| `src/components/consoles/RootSidebar.tsx` | Adicionar 2 links externos no sidebar |
+
