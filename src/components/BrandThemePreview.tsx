@@ -383,7 +383,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading, cardRadius, btnR
 }
 
 /* ──────────────── Wallet Screen ──────────────── */
-function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: any) {
+function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, cardRadius }: any) {
   return (
     <div className="px-4 py-3 space-y-3 overflow-y-auto" style={{ height: "100%" }}>
       <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Minha Carteira</p>
