@@ -54,6 +54,13 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  // Read layout config from theme with defaults
+  const layout = theme?.layout as any;
+  const iconSize = layout?.category_icon_size ?? 64;
+  const iconRadius = layout?.category_icon_radius ?? 16;
+  const catFontSize = layout?.category_font_size ?? 11;
+  const iconInner = Math.round(iconSize * 0.44);
+
   const { data: categories = [], isLoading: loading } = useQuery({
     queryKey: queryKeys.stores.list(brand?.id, selectedBranch?.id, "categories"),
     enabled: !!brand && !!selectedBranch,
