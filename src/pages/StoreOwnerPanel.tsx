@@ -474,6 +474,33 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
 
   return (
     <div className="space-y-5">
+      {/* Profile completeness card */}
+      {!isComplete && (
+        <Card className="rounded-2xl border-primary/20 bg-primary/5 overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm">Complete seu perfil</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Para aparecer no app dos clientes</p>
+              </div>
+              <div className="h-12 w-12 rounded-full border-4 border-primary/20 flex items-center justify-center">
+                <span className="text-sm font-bold text-primary">{percent}%</span>
+              </div>
+            </div>
+            <Progress value={percent} className="h-2" />
+            <div className="flex flex-wrap gap-1.5">
+              {missingSteps.slice(0, 3).map(s => (
+                <Badge key={s.key} variant="outline" className="text-[10px]">{s.label}</Badge>
+              ))}
+              {missingSteps.length > 3 && <Badge variant="outline" className="text-[10px]">+{missingSteps.length - 3}</Badge>}
+            </div>
+            <Button onClick={onOpenWizard} className="w-full gap-2" size="sm">
+              <ArrowRight className="h-4 w-4" /> Continuar configuração
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h1 className="text-xl font-bold">Painel Principal</h1>
         <p className="text-xs text-muted-foreground mt-0.5">Visão geral do seu estabelecimento</p>
