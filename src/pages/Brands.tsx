@@ -65,21 +65,30 @@ export default function Brands() {
         <CardContent>
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
           <Table>
-            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Organização</TableHead><TableHead>Identificador</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Organização</TableHead><TableHead>Identificador</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma marca cadastrada</TableCell></TableRow>}
-              {data?.rows?.map((b) => (
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma marca cadastrada</TableCell></TableRow>}
+              {data?.rows?.map((b) => {
+                const planMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+                  free: { label: "Free", variant: "outline" },
+                  starter: { label: "Starter", variant: "secondary" },
+                  profissional: { label: "Profissional", variant: "default" },
+                };
+                const plan = planMap[b.subscription_plan] || { label: b.subscription_plan, variant: "outline" as const };
+                return (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.name}</TableCell>
                   <TableCell className="text-muted-foreground">{(b.tenants as any)?.name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{b.slug}</TableCell>
+                  <TableCell><Badge variant={plan.variant}>{plan.label}</Badge></TableCell>
                   <TableCell><Badge variant={b.is_active ? "default" : "destructive"}>{b.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="icon" asChild><Link to={`/brands/${b.id}`}><Pencil className="h-4 w-4" /></Link></Button>
                     <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}><Power className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>)}
         </CardContent>
