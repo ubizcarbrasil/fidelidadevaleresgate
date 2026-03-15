@@ -185,6 +185,26 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
     },
   });
 
+  // Fallback: fetch banner_schedules directly when no BANNER_CAROUSEL section exists
+  const hasBannerSection = (fetchResult?.sections || []).some(
+    (s: any) => s.section_templates?.type === "BANNER_CAROUSEL"
+  );
+  const { data: standaloneBanners } = useQuery({
+    queryKey: ["standalone-banners", brand?.id],
+    enabled: !!brand && renderBannersOnly === true && !loading && !hasBannerSection,
+    queryFn: async () => {
+      const now = new Date().toISOString();
+      const { data } = await supabase
+        .from("banner_schedules")
+        .select("*")
+        .eq("brand_id", brand!.id)
+        .eq("is_active", true)
+        .lte("start_at", now)
+        .order("order_index");
+      return (data || []).filter((b: any) => !b.end_at || new Date(b.end_at) > new Date());
+    },
+  });
+
   const sections: BrandSection[] = fetchResult?.sections || [];
   const sponsoredStoreIds = fetchResult?.sponsoredStoreIds || new Set<string>();
   const rankedOfferIds = fetchResult?.rankedOfferIds || [];
@@ -197,8 +217,6 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
       </div>
     );
   }
-
-  if (!sections.length) return null;
 
   const primary = hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const accent = "hsl(var(--vb-highlight))";
@@ -214,6 +232,15 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
     if (skipBanners) return !isBanner;
     return true;
   });
+
+  // Fallback: render standalone banners when no BANNER_CAROUSEL section exists
+  if (renderBannersOnly && !filteredSections.length && standaloneBanners && standaloneBanners.length > 0) {
+    return (
+      <div className="space-y-1">
+        <BannerCarousel items={standaloneBanners} primary={primary} />
+      </div>
+    );
+  }
 
   if (!filteredSections.length) return null;
 
