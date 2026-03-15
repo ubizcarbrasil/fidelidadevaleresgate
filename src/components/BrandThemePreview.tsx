@@ -363,7 +363,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
         ))}
       </div>
       {offers.map((o, i) => (
-        <div key={i} className="flex gap-2 p-2 rounded-xl" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06` }}>
+        <div key={i} className="flex gap-2 p-2" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06`, borderRadius: cardRadius }}>
           <div className="h-14 w-14 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold text-[10px]"
             style={{ backgroundColor: o.badgeColor }}>
             {o.badge}
