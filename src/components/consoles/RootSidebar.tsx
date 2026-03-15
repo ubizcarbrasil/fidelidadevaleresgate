@@ -9,6 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMenuLabels } from "@/hooks/useMenuLabels";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem,
