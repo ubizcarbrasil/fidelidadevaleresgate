@@ -32,10 +32,13 @@ interface DealCategory {
   color: string;
 }
 
+const ICON_ALIASES: Record<string, string> = { Home: "House" };
+
 function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
   const pascalName = name.split("-").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("");
-  const Icon = (icons as any)[pascalName];
-  return Icon ? <Icon className={className} style={style} /> : null;
+  const resolved = ICON_ALIASES[pascalName] || pascalName;
+  const Icon = (icons as any)[resolved] || (icons as any)["Tag"];
+  return <Icon className={className} style={style} />;
 }
 
 const containerVariants = {
