@@ -45,6 +45,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.auditoria": "Auditoria",
     "sidebar.relatorios": "Relatórios",
     "sidebar.taxonomia": "Taxonomia",
+    "sidebar.patrocinados": "Patrocinados",
     "sidebar.api_keys": "APIs & Integrações",
     "sidebar.api_docs": "Documentação API",
     "sidebar.configuracoes": "Configurações",
