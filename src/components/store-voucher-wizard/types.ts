@@ -11,11 +11,16 @@ export interface SpecificDay {
   end_time: string;   // "18:00"
 }
 
+export type OfferPurpose = "EARN" | "REDEEM" | "BOTH";
+
 export interface StoreVoucherData {
   coupon_category: string;
   taxonomy_segment_id: string;
   coupon_type: "STORE" | "PRODUCT";
   product_id: string;
+  offer_purpose: OfferPurpose;
+  product_title: string;
+  product_description: string;
   discount_percent: number;
   discount_fixed: number;
   discount_mode: "PERCENT" | "FIXED";
@@ -42,6 +47,7 @@ export interface StoreVoucherData {
   image_url: string;
   product_price: number;
   badge_config: BadgeConfig | null;
+  publish_to_catalog: boolean;
 }
 
 export const WEEKDAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
