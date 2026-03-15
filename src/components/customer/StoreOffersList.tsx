@@ -74,6 +74,7 @@ export const StoreOfferCard = React.memo(function StoreOfferCard({
                 {subtitleText}
               </p>
             )}
+            <OfferPurposeBadge purpose={(offer as any).offer_purpose} className="mt-1" />
           </div>
           <div className="flex items-center justify-between mt-2">
             {offer.coupon_type === "PRODUCT" && Number(offer.value_rescue) > 0 && (
