@@ -26,17 +26,19 @@ function kebabToPascal(name: string): string {
     .join("");
 }
 
-function CategoryIcon({ iconName }: { iconName: string | null }) {
+function CategoryIcon({ iconName, size }: { iconName: string | null; size: number }) {
   const isDark = document.documentElement.classList.contains("dark");
   const color = isDark ? "hsl(var(--vb-gold))" : "#FFFFFF";
-  if (!iconName) return <Store className="h-7 w-7" style={{ color }} />;
+  const cls = `object-contain`;
+  const style = { color, width: size, height: size };
+  if (!iconName) return <Store style={style} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className="h-7 w-7 object-contain" />;
+    return <img src={iconName} alt="" className={cls} style={{ width: size, height: size }} />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-  if (!LucideIcon) return <Store className="h-7 w-7" style={{ color }} />;
-  return <LucideIcon className="h-7 w-7" style={{ color }} />;
+  if (!LucideIcon) return <Store style={style} />;
+  return <LucideIcon style={style} />;
 }
 
 const containerVariants = {
