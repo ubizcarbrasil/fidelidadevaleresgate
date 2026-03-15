@@ -163,11 +163,20 @@ export default function StoreProfileTab({ store }: { store: any }) {
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           {form.logo_url && (
-            <img
-              src={form.logo_url}
-              alt="Logo"
-              className="h-20 w-20 rounded-full object-cover border-2 border-input shadow-sm"
-            />
+            <div className="relative">
+              <img
+                src={form.logo_url}
+                alt="Logo"
+                className="h-20 w-20 rounded-full object-cover border-2 border-input shadow-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, logo_url: "" }))}
+                className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
           )}
           <ImageUploadField
             value={form.logo_url}
