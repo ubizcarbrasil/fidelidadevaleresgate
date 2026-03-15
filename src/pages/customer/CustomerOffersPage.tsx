@@ -4,6 +4,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp, Percent } from "lucide-react";
+import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
