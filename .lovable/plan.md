@@ -1,37 +1,60 @@
 
 
-## Análise: O que foi implementado vs. o que está visível
+## Plano: Corrigir cor das etiquetas (badges) nos cards de oferta
 
-### Status da implementação
+### Problema
+O usuário configura uma cor para as etiquetas (ex: `#012f7b` azul), mas na prática aparecem vermelhas. 
 
-Todos os componentes solicitados **foram criados e integrados corretamente**:
+**Causa raiz** está no `OfferBadge.tsx`, linha 47-52 — a ordem de merge está errada e valores vazios (`""`) sobrescrevem cores válidas:
 
-1. **FontSelect** (`src/components/brand-theme/FontSelect.tsx`) — Seletor com 30+ fontes Google organizadas por categoria (Sans-serif, Serif, Display, Monospace), com preview inline de cada fonte.
+```typescript
+const config = {
+  ...{ bg_color: primaryColor },           // 1. fallback (cor primária = vermelho)
+  ...(configBadge.bg_color ? configBadge : {}),  // 2. config por tipo (offer_card_config)
+  ...(brandBadgeConfig || {}),             // 3. badge global da marca ← SOBRESCREVE o #2!
+  ...(offerBadgeConfig || {}),             // 4. badge individual da oferta
+};
+```
 
-2. **LayoutDimensionsSection** (`src/components/brand-theme/LayoutDimensionsSection.tsx`) — 7 sliders de personalização:
-   - Border-radius dos cards (0-32px)
-   - Altura da imagem dos cards (80-240px)
-   - Tamanho do ícone de categoria (40-80px)
-   - Raio do ícone de categoria (4-50px)
-   - Tamanho da fonte de categoria (8-16px)
-   - Raio dos botões (0-24px)
-   - Tamanho do título de seção (12-24px)
+**Problemas:**
+1. O `brandBadgeConfig` (global) tem prioridade MAIOR que `configBadge` (por tipo) — inverte a hierarquia desejada
+2. Se `brandBadgeConfig` tem `bg_color: ""` (string vazia), esse valor vazio sobrescreve a cor configurada por tipo
+3. Na linha 79, `config.bg_color || primaryColor` faz fallback para a cor primária (vermelha)
 
-3. **BrandThemePreview** — O preview do celular na sidebar lê todos os valores de layout (cardRadius, iconSize, iconRadius, catFontSize, btnRadius, sectionTitleSize) e os aplica em tempo real.
+### Correção no `OfferBadge.tsx`
 
-4. **useBrandTheme** — Injeta variáveis CSS (`--brand-card-radius`, `--brand-icon-size`, etc.) no DOM.
+Criar uma função `mergeBadge` que filtra valores falsy antes de aplicar, e inverter a hierarquia:
 
-5. **SegmentNavSection** — Lê os valores de layout do tema da marca.
+```typescript
+function cleanBadge(b: BadgeConfig | null | undefined): Partial<BadgeConfig> {
+  if (!b) return {};
+  const result: Partial<BadgeConfig> = {};
+  if (b.bg_color) result.bg_color = b.bg_color;
+  if (b.text_color) result.text_color = b.text_color;
+  if (b.text_template) result.text_template = b.text_template;
+  if (b.icon) result.icon = b.icon;
+  return result;
+}
 
-### Por que você não está vendo
+const config: BadgeConfig = {
+  bg_color: primaryColor,
+  text_color: "#FFFFFF",
+  icon: "sparkles",
+  ...cleanBadge(brandBadgeConfig),   // global brand badge (menor prioridade)
+  ...cleanBadge(configBadge),         // config por tipo (offer_card_config) 
+  ...cleanBadge(offerBadgeConfig),    // individual da oferta (maior prioridade)
+};
+```
 
-Você está na página `/index` (landing page). O editor de personalização está disponível em **duas rotas**:
-- **Página de edição da marca** (`BrandForm.tsx`) — aba "Tema"
-- **Página de tema da plataforma** (`PlatformThemePage.tsx`)
+**Hierarquia correta (do menor ao maior):**
+1. Fallback (cor primária da marca)
+2. Badge global da marca (`theme.badge_config`)
+3. Config por tipo de oferta (`offer_card_config.store/product/emitter.badge`)
+4. Badge individual da oferta (`voucher.badge_config_json`)
 
-### Próximo passo
+### Arquivo alterado
 
-Não há código a corrigir — tudo está implementado. Para visualizar, navegue até a página de edição de uma marca (ex: Ubiz Resgata) e acesse a aba de **Tema/Personalização**. Lá verá os seletores de fonte, sliders de layout e o preview ao vivo.
-
-Se houver algo específico que está faltando ou diferente do esperado quando acessar o editor, me avise para ajustar.
+| Arquivo | Ação |
+|---|---|
+| `src/components/customer/OfferBadge.tsx` | Corrigir merge com `cleanBadge` e inverter hierarquia |
 
