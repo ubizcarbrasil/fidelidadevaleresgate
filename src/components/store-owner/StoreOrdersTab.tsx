@@ -182,8 +182,8 @@ export default function StoreOrdersTab({ store }: Props) {
                   {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${isPending ? "bg-amber-100" : "bg-green-100"}`}>
-                        {isPending ? <Clock className="h-4 w-4 text-amber-600" /> : <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${isPending ? "bg-warning/15" : "bg-success/15"}`}>
+                        {isPending ? <Clock className="h-4 w-4 text-warning" /> : <CheckCircle2 className="h-4 w-4 text-success" />}
                       </div>
                       <div>
                         <p className="text-xs font-bold">{order.customer_name || "Cliente"}</p>

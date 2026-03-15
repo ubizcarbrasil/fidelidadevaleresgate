@@ -109,7 +109,7 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-amber-600" />
+              <Zap className="h-5 w-5 text-warning" />
               Solicitar Ativação como Emissor
             </DialogTitle>
           </DialogHeader>
