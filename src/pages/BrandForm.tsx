@@ -17,6 +17,8 @@ import { ArrowLeft, Loader2, Key, Trash2, Save } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
 import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
+import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
+import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function BrandForm() {
