@@ -315,6 +315,7 @@ export default function CustomerLayout() {
                   onOpenLedger={() => setLedgerOpen(true)}
                   onOpenCategoryGrid={() => setCategoryGridOpen(true)}
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
+                  onOpenAchadinhoCategoryGrid={() => setAchadinhoCatGridOpen(true)}
                 />
               ) : (
                 <Suspense fallback={<TabSkeleton />}>
