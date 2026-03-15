@@ -313,7 +313,7 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
 }
 
 /* ──────────────── Redemptions Screen ──────────────── */
-function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
+function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading, cardRadius }: any) {
   const redemptions = [
     { title: "10% OFF em Pizzas", store: "Pizzaria do João", status: "Ativo", statusColor: "#059669", date: "Expira em 3 dias" },
     { title: "Combo Família", store: "Burger House", status: "Usado", statusColor: "#9CA3AF", date: "Usado em 12/03" },
