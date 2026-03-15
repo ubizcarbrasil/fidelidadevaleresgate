@@ -49,7 +49,11 @@ const cardVariants = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
-export default function AchadinhoSection() {
+interface AchadinhoSectionProps {
+  onOpenAllCategories?: () => void;
+}
+
+export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
