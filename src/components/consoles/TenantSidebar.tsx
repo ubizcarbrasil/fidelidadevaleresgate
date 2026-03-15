@@ -14,13 +14,13 @@ import { Button } from "@/components/ui/button";
 
 const groups = [
   {
-    label: "📊 Visão Geral",
+    label: "Visão Geral",
     items: [
-      { title: "Painel Principal", url: "/", icon: LayoutDashboard },
+      { title: "Visão Geral", url: "/", icon: LayoutDashboard },
     ],
   },
   {
-    label: "🏢 Estrutura",
+    label: "Organização",
     items: [
       { title: "Marcas", url: "/brands", icon: Store },
       { title: "Cidades", url: "/branches", icon: MapPin },
@@ -28,7 +28,7 @@ const groups = [
     ],
   },
   {
-    label: "🏪 Operações",
+    label: "Gestão Comercial",
     items: [
       { title: "Parceiros", url: "/stores", icon: ShoppingBag },
       { title: "Ofertas", url: "/offers", icon: Tag },
@@ -38,13 +38,13 @@ const groups = [
     ],
   },
   {
-    label: "👥 Usuários",
+    label: "Equipe",
     items: [
       { title: "Usuários", url: "/users", icon: Users },
     ],
   },
   {
-    label: "📈 Análises",
+    label: "Inteligência & Dados",
     items: [
       { title: "Relatórios", url: "/reports", icon: BarChart3 },
       { title: "Auditoria", url: "/audit", icon: ClipboardList },
@@ -68,7 +68,7 @@ export function TenantSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Administrador da Empresa</span>
+              <span className="text-xs text-sidebar-foreground/60">Gestão Corporativa</span>
             </div>
           )}
         </div>

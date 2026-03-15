@@ -20,12 +20,12 @@ import { ArrowLeft } from "lucide-react";
 import { ContextBadge } from "@/components/ContextBadge";
 
 const CONSOLE_TITLES: Record<string, string> = {
-  ROOT: "Painel Raiz",
-  TENANT: "Painel da Empresa",
-  BRAND: "Painel da Marca",
-  BRANCH: "Painel da Filial",
-  OPERATOR: "Operador do Ponto de Venda",
-  STORE_ADMIN: "Portal do Parceiro",
+  ROOT: "Central de Comando",
+  TENANT: "Gestão Corporativa",
+  BRAND: "Gestão da Marca",
+  BRANCH: "Gestão Regional",
+  OPERATOR: "Terminal de Vendas",
+  STORE_ADMIN: "Meu Negócio",
 };
 
 export default function AppLayout() {

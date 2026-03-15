@@ -29,38 +29,38 @@ interface MenuItem {
 }
 
 const dashboardItem: MenuItem = {
-  key: "sidebar.dashboard", defaultTitle: "Painel Principal", url: "/", icon: LayoutDashboard,
+  key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
 };
 
 const groups: { label: string; items: MenuItem[] }[] = [
   {
-    label: "Operações",
+    label: "Gestão Comercial",
     items: [
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
       { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
       { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
-      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovação de Parceiros", url: "/store-approvals", icon: Store, moduleKey: "stores" },
-      { key: "sidebar.aprovar_regras", defaultTitle: "Aprovar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
-      { key: "sidebar.importar_csv", defaultTitle: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovar Parceiros", url: "/store-approvals", icon: Store, moduleKey: "stores" },
+      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
+      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
+      { key: "sidebar.achadinhos", defaultTitle: "Descobertas", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Descobertas", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
-      { key: "sidebar.operador_pdv", defaultTitle: "Operador PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
+      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
     ],
   },
   {
-    label: "Programa de Pontos",
+    label: "Programa de Fidelidade",
     items: [
       { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
-      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
-      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
+      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
+      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
     ],
   },
   {
-    label: "Análises",
+    label: "Inteligência & Dados",
     items: [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
       { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList },
@@ -161,13 +161,12 @@ export function BranchSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Administrador da Cidade</span>
+              <span className="text-xs text-sidebar-foreground/60">Gestão Regional</span>
             </div>
           )}
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {/* Dashboard fixo no topo */}
         <SidebarGroup className="pb-0">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -192,7 +191,6 @@ export function BranchSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Grupos colapsáveis */}
         {visibleGroups.map((group) => {
           if (group.items.length === 0) return null;
           return (
