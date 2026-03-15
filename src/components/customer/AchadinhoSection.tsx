@@ -33,7 +33,8 @@ interface DealCategory {
 }
 
 function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
-  const Icon = (icons as any)[name];
+  const pascalName = name.split("-").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+  const Icon = (icons as any)[pascalName];
   return Icon ? <Icon className={className} style={style} /> : null;
 }
 
