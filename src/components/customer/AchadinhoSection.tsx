@@ -170,6 +170,16 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
             </p>
           </div>
         </div>
+        {categories.length > 0 && onOpenAllCategories && (
+          <button
+            onClick={onOpenAllCategories}
+            className="text-xs font-semibold flex items-center gap-0.5"
+            style={{ color: highlight }}
+          >
+            Ver todos
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Category pills */}
