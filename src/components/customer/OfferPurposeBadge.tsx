@@ -3,10 +3,10 @@ import { Coins, Gift, RefreshCw } from "lucide-react";
 
 type Purpose = "EARN" | "REDEEM" | "BOTH";
 
-const CONFIG: Record<Purpose, { label: string; bg: string; fg: string; icon: typeof Coins }> = {
-  EARN: { label: "Ganhe Pontos", bg: "hsl(142 71% 45% / 0.15)", fg: "hsl(142 71% 35%)", icon: Coins },
-  REDEEM: { label: "Resgate", bg: "hsl(45 93% 47% / 0.15)", fg: "hsl(35 80% 40%)", icon: Gift },
-  BOTH: { label: "Ganhe & Resgate", bg: "hsl(217 91% 60% / 0.15)", fg: "hsl(217 71% 45%)", icon: RefreshCw },
+const CONFIG: Record<Purpose, { label: string; bgClass: string; fgClass: string; icon: typeof Coins }> = {
+  EARN: { label: "Ganhe Pontos", bgClass: "bg-success/15", fgClass: "text-success", icon: Coins },
+  REDEEM: { label: "Resgate", bgClass: "bg-warning/15", fgClass: "text-warning", icon: Gift },
+  BOTH: { label: "Ganhe & Resgate", bgClass: "bg-primary/15", fgClass: "text-primary", icon: RefreshCw },
 };
 
 interface Props {
@@ -28,8 +28,7 @@ const OfferPurposeBadge = React.memo(function OfferPurposeBadge({ purpose, size 
 
   return (
     <span
-      className={`inline-flex items-center rounded-full font-bold ${sizeClasses} ${className}`}
-      style={{ backgroundColor: cfg.bg, color: cfg.fg }}
+      className={`inline-flex items-center rounded-full font-bold ${cfg.bgClass} ${cfg.fgClass} ${sizeClasses} ${className}`}
     >
       <Icon className={iconSize} />
       {cfg.label}

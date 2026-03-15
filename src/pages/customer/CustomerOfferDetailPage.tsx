@@ -1063,9 +1063,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         </span>
                       </div>
                       {/* Remaining to pay */}
-                      <div className="rounded-2xl p-3 flex justify-between items-center bg-amber-50 dark:bg-amber-950/30" style={{ border: "1.5px solid hsl(var(--chart-4, 45 93% 58%))" }}>
-                        <span className="text-sm font-semibold" style={{ color: "#5D4037" }}>Você paga (em R$)</span>
-                        <span className="text-lg font-bold" style={{ color: "#E65100" }}>
+                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: "hsl(var(--vb-gold) / 0.1)", border: "1.5px solid hsl(var(--vb-gold))" }}>
+                        <span className="text-sm font-semibold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>Você paga (em R$)</span>
+                        <span className="text-lg font-bold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>
                           R$ {remainingAfterCredit.toFixed(2)}
                         </span>
                       </div>

@@ -76,8 +76,7 @@ function RedemptionCardInner({
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold truncate" style={{ color: fg }}>{store?.name || "Loja"}</p>
             <span
-              className="px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0"
-              style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${typeBadge.className}`}
             >
               {typeBadge.label}
             </span>
