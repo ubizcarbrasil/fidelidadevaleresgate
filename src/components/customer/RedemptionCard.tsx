@@ -4,11 +4,11 @@ import type { RedemptionWithOffer } from "@/types/customer";
 import { DetailInfoRow } from "./DetailInfoRow";
 import { CancelRedemptionButton } from "./CancelRedemptionButton";
 
-const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING: { label: "EMITIDO", bg: "#FEF3C7", color: "#92400E" },
-  USED: { label: "USADO", bg: "#D1FAE5", color: "#065F46" },
-  EXPIRED: { label: "EXPIRADO", bg: "#FEE2E2", color: "#991B1B" },
-  CANCELED: { label: "ESTORNADO", bg: "#FEF3C7", color: "#D97706" },
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  PENDING: { label: "EMITIDO", className: "bg-warning/15 text-warning" },
+  USED: { label: "USADO", className: "bg-success/15 text-success" },
+  EXPIRED: { label: "EXPIRADO", className: "bg-destructive/15 text-destructive" },
+  CANCELED: { label: "ESTORNADO", className: "bg-warning/15 text-warning" },
 };
 
 interface RedemptionCardProps {
