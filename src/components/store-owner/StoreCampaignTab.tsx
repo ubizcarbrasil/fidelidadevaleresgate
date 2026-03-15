@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Send, Clock, CheckCircle, Megaphone } from "lucide-react";
+import { Plus, Send, Clock, CheckCircle, Megaphone, ArrowLeft } from "lucide-react";
 
 const CHANNEL_OPTIONS = [
   { value: "WHATSAPP", label: "WhatsApp — R$ 0,50/envio" },
@@ -20,13 +20,13 @@ const CHANNEL_OPTIONS = [
 
 const COST_MAP: Record<string, number> = { WHATSAPP: 0.50, PUSH: 0.03, EMAIL: 0.03 };
 
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Rascunho",
-  PENDING_APPROVAL: "Aguardando Aprovação",
-  APPROVED: "Aprovada",
-  SCHEDULED: "Agendada",
-  SENT: "Enviada",
-  CANCELLED: "Cancelada",
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  DRAFT: { label: "Rascunho", className: "bg-muted/60 text-muted-foreground" },
+  PENDING_APPROVAL: { label: "Aguardando", className: "bg-warning/15 text-warning" },
+  APPROVED: { label: "Aprovada", className: "bg-success/15 text-success" },
+  SCHEDULED: { label: "Agendada", className: "bg-primary/15 text-primary" },
+  SENT: { label: "Enviada", className: "bg-success/15 text-success" },
+  CANCELLED: { label: "Cancelada", className: "bg-destructive/15 text-destructive" },
 };
 
 export default function StoreCampaignTab({ store }: { store: any }) {
@@ -106,21 +106,23 @@ export default function StoreCampaignTab({ store }: { store: any }) {
 
   if (showForm) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>← Voltar</Button>
-          <h2 className="font-semibold">Nova Solicitação de Campanha</h2>
+          <Button variant="ghost" size="sm" onClick={() => setShowForm(false)} className="rounded-xl gap-1">
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </Button>
+          <h2 className="font-semibold">Nova Campanha</h2>
         </div>
 
         <div className="space-y-4">
           <div>
-            <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Promoção de verão" />
+            <Label className="text-xs">Título</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Promoção de verão" className="rounded-xl" />
           </div>
           <div>
-            <Label>Público alvo</Label>
+            <Label className="text-xs">Público alvo</Label>
             <Select value={audienceId} onValueChange={setAudienceId}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
                 {(audiences || []).map(a => (
                   <SelectItem key={a.id} value={a.id}>{a.name} ({a.estimated_count})</SelectItem>
@@ -129,45 +131,49 @@ export default function StoreCampaignTab({ store }: { store: any }) {
             </Select>
           </div>
           <div>
-            <Label>Canal</Label>
+            <Label className="text-xs">Canal</Label>
             <Select value={channel} onValueChange={setChannel}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {CHANNEL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Mensagem</Label>
-            <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Olá {nome}!" rows={3} />
+            <Label className="text-xs">Mensagem</Label>
+            <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Olá {nome}!" rows={3} className="rounded-xl" />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label>Giftback (%)</Label>
-              <Input type="number" value={giftback} onChange={(e) => setGiftback(e.target.value)} />
+              <Label className="text-[10px]">Giftback (%)</Label>
+              <Input type="number" value={giftback} onChange={(e) => setGiftback(e.target.value)} className="rounded-xl" />
             </div>
             <div>
-              <Label>Compra mín (R$)</Label>
-              <Input type="number" value={minPurchase} onChange={(e) => setMinPurchase(e.target.value)} />
+              <Label className="text-[10px]">Compra mín (R$)</Label>
+              <Input type="number" value={minPurchase} onChange={(e) => setMinPurchase(e.target.value)} className="rounded-xl" />
             </div>
             <div>
-              <Label>Validade (dias)</Label>
-              <Input type="number" value={validityDays} onChange={(e) => setValidityDays(e.target.value)} />
+              <Label className="text-[10px]">Validade (dias)</Label>
+              <Input type="number" value={validityDays} onChange={(e) => setValidityDays(e.target.value)} className="rounded-xl" />
             </div>
           </div>
 
           {selectedAudience && (
-            <Card className="bg-muted/50">
+            <Card className="rounded-2xl border-0 shadow-sm glow-primary bg-gradient-to-br from-primary/5 to-transparent">
               <CardContent className="pt-3 pb-3 text-sm">
-                <div className="flex justify-between">
-                  <span>{selectedAudience.estimated_count} destinatários × R$ {costPerSend.toFixed(2)}</span>
-                  <span className="font-bold text-primary">R$ {totalCost.toFixed(2)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">{selectedAudience.estimated_count} destinatários × R$ {costPerSend.toFixed(2)}</span>
+                  <span className="font-bold text-lg text-primary">R$ {totalCost.toFixed(2)}</span>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          <Button className="w-full" onClick={() => createMutation.mutate()} disabled={!title || !audienceId || createMutation.isPending}>
+          <Button
+            className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+            onClick={() => createMutation.mutate()}
+            disabled={!title || !audienceId || createMutation.isPending}
+          >
             {createMutation.isPending ? "Enviando..." : "Solicitar Aprovação"}
           </Button>
         </div>
@@ -176,33 +182,41 @@ export default function StoreCampaignTab({ store }: { store: any }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-lg">Minhas Campanhas</h2>
-        <Button size="sm" onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-1" /> Nova
+        <div>
+          <h2 className="font-semibold text-lg">Minhas Campanhas</h2>
+          <p className="text-xs text-muted-foreground">Solicite e acompanhe campanhas</p>
+        </div>
+        <Button size="sm" onClick={() => setShowForm(true)} className="rounded-xl gap-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+          <Plus className="h-4 w-4" /> Nova
         </Button>
       </div>
 
-      {(campaigns || []).map((c: any) => (
-        <Card key={c.id}>
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{c.title}</p>
-                <p className="text-xs text-muted-foreground">{c.channel} · {c.total_recipients} destinatários · R$ {Number(c.total_cost).toFixed(2)}</p>
+      {(campaigns || []).map((c: any) => {
+        const status = STATUS_CONFIG[c.status] || { label: c.status, className: "bg-muted/60 text-muted-foreground" };
+        return (
+          <Card key={c.id} className="rounded-2xl border-0 shadow-sm kpi-card-gradient hover-scale">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-sm">{c.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{c.channel} · {c.total_recipients} destinatários · R$ {Number(c.total_cost).toFixed(2)}</p>
+                </div>
+                <Badge className={`text-[10px] rounded-full border-0 ${status.className}`}>{status.label}</Badge>
               </div>
-              <Badge variant="secondary">{STATUS_LABELS[c.status] || c.status}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {(campaigns || []).length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          <Megaphone className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>Nenhuma campanha criada</p>
-          <p className="text-xs">Solicite campanhas para divulgar suas ofertas</p>
+        <div className="text-center py-12 text-muted-foreground">
+          <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+            <Megaphone className="h-8 w-8 opacity-30" />
+          </div>
+          <p className="font-semibold text-sm">Nenhuma campanha criada</p>
+          <p className="text-xs mt-1">Solicite campanhas para divulgar suas ofertas</p>
         </div>
       )}
     </div>

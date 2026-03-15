@@ -66,7 +66,9 @@ export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
   if (!ggConfig) {
     return (
       <div className="py-12 text-center space-y-4">
-        <Settings className="h-10 w-10 mx-auto text-muted-foreground/50" />
+        <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+          <Settings className="h-8 w-8 text-muted-foreground/30" />
+        </div>
         <h3 className="text-lg font-semibold">Módulo Ganha-Ganha não configurado</h3>
         <p className="text-sm text-muted-foreground">
           O módulo Ganha-Ganha precisa ser ativado pelo administrador da marca para exibir o consumo.
@@ -75,69 +77,79 @@ export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
     );
   }
 
+  const kpiCards = [
+    { label: "Pontos Gerados", value: kpis.earnPts.toLocaleString("pt-BR"), icon: ArrowUpCircle, iconClass: "kpi-icon-blue" },
+    { label: "Pontos Recebidos", value: kpis.redeemPts.toLocaleString("pt-BR"), icon: ArrowDownCircle, iconClass: "kpi-icon-amber" },
+    { label: "Custo Geração", value: formatMoney(kpis.earnFee), icon: DollarSign, iconClass: "kpi-icon-green" },
+    { label: "Custo Total", value: formatMoney(kpis.total), icon: DollarSign, iconClass: "kpi-icon-violet" },
+  ];
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in">
       <div>
         <h2 className="text-lg font-bold flex items-center gap-2">
-          <Handshake className="h-5 w-5" /> Meu Consumo Ganha-Ganha
+          <div className="h-8 w-8 rounded-lg kpi-icon-violet flex items-center justify-center text-white">
+            <Handshake className="h-4 w-4" />
+          </div>
+          Meu Consumo Ganha-Ganha
         </h2>
-        <p className="text-xs text-muted-foreground">Custos de uso do programa por período.</p>
+        <p className="text-xs text-muted-foreground mt-1">Custos de uso do programa por período.</p>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs">Período</Label>
-        <Input type="month" value={periodMonth} onChange={e => setPeriodMonth(e.target.value)} className="w-44" />
+        <Label className="text-[10px] text-muted-foreground">Período</Label>
+        <Input type="month" value={periodMonth} onChange={e => setPeriodMonth(e.target.value)} className="w-44 rounded-xl" />
       </div>
 
+      {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: "Pontos Gerados", value: kpis.earnPts.toLocaleString("pt-BR"), icon: ArrowUpCircle, color: "text-blue-600" },
-          { label: "Pontos Recebidos", value: kpis.redeemPts.toLocaleString("pt-BR"), icon: ArrowDownCircle, color: "text-amber-600" },
-          { label: "Custo Geração", value: formatMoney(kpis.earnFee), icon: DollarSign, color: "text-green-600" },
-          { label: "Custo Total", value: formatMoney(kpis.total), icon: DollarSign, color: "text-primary" },
-        ].map(k => (
-          <Card key={k.label}>
-            <CardContent className="pt-3 pb-2 px-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <k.icon className={`h-3.5 w-3.5 ${k.color}`} />
-                <span className="text-[10px] text-muted-foreground">{k.label}</span>
+        {kpiCards.map(k => (
+          <Card key={k.label} className="rounded-2xl border-0 shadow-sm kpi-card-gradient hover-scale">
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center mb-3 ${k.iconClass} text-white shadow-sm`}>
+                <k.icon className="h-4 w-4" />
               </div>
-              <p className="text-base font-bold">{k.value}</p>
+              <p className="text-xl font-bold">{k.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{k.label}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Extrato */}
-      <Card>
+      {/* ── Extrato Table ── */}
+      <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Extrato</CardTitle>
+          <CardTitle className="text-sm font-semibold">Extrato</CardTitle>
         </CardHeader>
         <CardContent>
           {(!events || events.length === 0) ? (
             <p className="text-sm text-muted-foreground py-6 text-center">Sem eventos no período.</p>
           ) : (
-            <div className="max-h-[300px] overflow-y-auto">
+            <div className="max-h-[300px] overflow-y-auto rounded-xl">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Pontos</TableHead>
-                    <TableHead className="text-right">Custo</TableHead>
+                  <TableRow className="border-border/30">
+                    <TableHead className="text-[11px]">Data</TableHead>
+                    <TableHead className="text-[11px]">Tipo</TableHead>
+                    <TableHead className="text-right text-[11px]">Pontos</TableHead>
+                    <TableHead className="text-right text-[11px]">Custo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {events.map((e: any) => (
-                    <TableRow key={e.id}>
+                  {events.map((e: any, idx: number) => (
+                    <TableRow key={e.id} className={`border-border/20 ${idx % 2 === 0 ? "bg-muted/20" : ""}`}>
                       <TableCell className="text-xs">{new Date(e.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>
-                        <Badge variant={e.event_type === "EARN" ? "default" : "secondary"} className="text-[10px]">
+                        <Badge className={`text-[10px] rounded-full border-0 ${
+                          e.event_type === "EARN"
+                            ? "bg-primary/15 text-primary"
+                            : "bg-warning/15 text-warning"
+                        }`}>
                           {e.event_type === "EARN" ? "Geração" : "Resgate"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right text-xs">{e.points_amount}</TableCell>
-                      <TableCell className="text-right text-xs font-medium">{formatMoney(Number(e.fee_total))}</TableCell>
+                      <TableCell className="text-right text-xs font-medium">{e.points_amount}</TableCell>
+                      <TableCell className="text-right text-xs font-bold">{formatMoney(Number(e.fee_total))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
