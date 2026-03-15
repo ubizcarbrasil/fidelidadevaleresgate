@@ -298,8 +298,15 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
             ))}
           </div>
         </CardHeader>
-        <CardContent className="min-h-[300px]">
+        <CardContent className="min-h-[300px] space-y-6">
           {renderStep()}
+          {step < TOTAL - 1 && (
+            <OfferCardPreview
+              data={data}
+              storeName={storeInfo?.name || undefined}
+              storeLogo={storeInfo?.logo_url || undefined}
+            />
+          )}
         </CardContent>
         <div className="flex justify-between p-6 pt-0">
           <Button variant="outline" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
