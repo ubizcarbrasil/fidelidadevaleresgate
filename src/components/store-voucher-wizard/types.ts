@@ -62,6 +62,9 @@ export const initialStoreVoucherData: StoreVoucherData = {
   taxonomy_segment_id: "",
   coupon_type: "STORE",
   product_id: "",
+  offer_purpose: "REDEEM",
+  product_title: "",
+  product_description: "",
   discount_percent: 20,
   discount_fixed: 0,
   discount_mode: "PERCENT",
@@ -88,4 +91,5 @@ export const initialStoreVoucherData: StoreVoucherData = {
   image_url: "",
   product_price: 0,
   badge_config: null,
+  publish_to_catalog: false,
 };
