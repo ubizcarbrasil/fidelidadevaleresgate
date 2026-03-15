@@ -57,8 +57,7 @@ function RedemptionCardInner({
           </span>
         </div>
         <span
-          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ backgroundColor: badge.bg, color: badge.color }}
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.className}`}
         >
           {badge.label}
         </span>
