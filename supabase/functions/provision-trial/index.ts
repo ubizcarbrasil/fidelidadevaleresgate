@@ -473,12 +473,47 @@ Deno.serve(async (req) => {
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
 
-    // ─── 10. Create 40 demo stores with offers & catalogs ────────
+    // ─── 10. Create demo stores with offers & catalogs ──────────
     const log = createEdgeLogger("provision-trial");
     log.info("Creating demo stores...");
+
+    // Build taxonomy segment map for linking
+    const { data: allTaxSegments } = await supabaseAdmin
+      .from("taxonomy_segments").select("id, name, category_id");
+    const segNameToId = new Map<string, string>();
+    for (const seg of (allTaxSegments || [])) {
+      segNameToId.set(seg.name.toLowerCase().trim(), seg.id);
+    }
+    const SEGMENT_ALIASES: Record<string, string> = {
+      "Restaurante Japonês": "Comida Japonesa",
+      "Restaurante Italiano": "Comida Italiana",
+      "Restaurante Vegano": "Comida Vegana",
+      "Açaíteria": "Açaiteria",
+      "Beleza e Bem-Estar": "Spa",
+      "Loja de Roupas": "Moda Feminina",
+      "Loja de Calçados": "Calçados",
+      "Loja de Eletrônicos": "Eletrônicos",
+      "Loja de Cosméticos": "Cosméticos",
+      "Loja de Brinquedos": "Brinquedos",
+      "Loja de Suplementos": "Suplementos",
+      "Loja de Vinhos": "Adega",
+      "Loja de Celulares": "Assistência Técnica",
+      "Estúdio de Tatuagem": "Tatuagem e Piercing",
+      "Loja de Produtos Naturais": "Empório e Produtos Naturais",
+      "Clínica Estética": "Clínica de Estética",
+    };
+    function findTaxSegId(name: string): string | null {
+      const exact = segNameToId.get(name.toLowerCase().trim());
+      if (exact) return exact;
+      const aliased = SEGMENT_ALIASES[name];
+      if (aliased) return segNameToId.get(aliased.toLowerCase().trim()) || null;
+      return null;
+    }
+
     for (const demo of DEMO_STORES) {
       const storeSlug = `${demo.slug}-${emailPrefix}`;
       const logoUrl = logo(demo.name, demo.color);
+      const taxonomySegmentId = findTaxSegId(demo.segment);
 
       const { data: newStore, error: storeErr } = await supabaseAdmin
         .from("stores").insert({
@@ -494,6 +529,7 @@ Deno.serve(async (req) => {
           is_active: true,
           approved_at: new Date().toISOString(),
           email: `${demo.slug}@demo.com`,
+          taxonomy_segment_id: taxonomySegmentId,
         }).select("id").single();
 
       if (storeErr) {

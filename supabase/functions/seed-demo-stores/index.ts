@@ -10,11 +10,8 @@ const corsHeaders = {
 interface DemoOffer {
   coupon_type: "PRODUCT" | "STORE";
   discount_percent: number;
-  /** For PRODUCT: the product price in R$ */
   product_price?: number;
-  /** For STORE: minimum purchase in R$ */
   min_purchase?: number;
-  /** Product/offer name (used in title generation) */
   label: string;
   image_url: string;
   description: string;
@@ -36,7 +33,6 @@ function logo(name: string, bg: string): string {
   return `https://ui-avatars.com/api/?name=${encoded}&background=${bg}&color=fff&size=256&rounded=true&bold=true`;
 }
 
-/** Build title + value_rescue from offer data */
 function buildOffer(o: DemoOffer) {
   if (o.coupon_type === "PRODUCT") {
     const price = o.product_price || 0;
@@ -52,6 +48,32 @@ function buildOffer(o: DemoOffer) {
     return { title, value_rescue: valueRescue, min_purchase: min, product_price: 0 };
   }
 }
+
+// Alias map for segment names that differ from taxonomy
+const SEGMENT_ALIASES: Record<string, string> = {
+  "Restaurante Japonês": "Comida Japonesa",
+  "Restaurante Italiano": "Comida Italiana",
+  "Restaurante Vegano": "Comida Vegana",
+  "Açaíteria": "Açaiteria",
+  "Beleza e Bem-Estar": "Spa",
+  "Loja de Roupas": "Moda Feminina",
+  "Loja de Calçados": "Calçados",
+  "Loja de Eletrônicos": "Eletrônicos",
+  "Loja de Cosméticos": "Cosméticos",
+  "Loja de Brinquedos": "Brinquedos",
+  "Loja de Suplementos": "Suplementos",
+  "Loja de Vinhos": "Adega",
+  "Loja de Celulares": "Assistência Técnica",
+  "Estúdio de Tatuagem": "Tatuagem e Piercing",
+  "Escola de Idiomas": "Escola de Idiomas",
+  "Oficina Mecânica": "Oficina Mecânica",
+  "Loja de Produtos Naturais": "Empório e Produtos Naturais",
+  "Casa de Carnes": "Casa de Carnes",
+  "Clínica Estética": "Clínica de Estética",
+  "Moto Peças": "Moto Peças",
+  "Material Elétrico": "Material Elétrico",
+  "Ateliê de Costura": "Ateliê",
+};
 
 const DEMO_STORES: DemoStore[] = [
   { name: "Pizzaria Bella Napoli", slug: "pizzaria-bella-napoli", segment: "Pizzaria", description: "As melhores pizzas artesanais da cidade, massa feita diariamente.", store_type: "MISTA", color: "E53935",
@@ -253,18 +275,14 @@ const DEMO_STORES: DemoStore[] = [
     ],
   },
   { name: "Make Art Studio", slug: "make-art-studio", segment: "Maquiagem", description: "Maquiagem profissional para eventos, noivas e produções especiais.", store_type: "RECEPTORA", color: "AD1457",
-    offers: [
-      { coupon_type: "PRODUCT", discount_percent: 25, product_price: 89, label: "Make Completa", image_url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=300&fit=crop", description: "Maquiagem completa para qualquer ocasião" },
-    ],
+    offers: [{ coupon_type: "PRODUCT", discount_percent: 25, product_price: 89, label: "Make Completa", image_url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=300&fit=crop", description: "Maquiagem completa para qualquer ocasião" }],
   },
   { name: "SuperMarket Economia", slug: "supermarket-economia", segment: "Supermercado", description: "Tudo para sua casa com os melhores preços e ofertas semanais.", store_type: "EMISSORA", color: "1B5E20",
     offers: [
       { coupon_type: "STORE", discount_percent: 5, min_purchase: 200, label: "", image_url: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop", description: "Desconto para compras do mês" },
       { coupon_type: "STORE", discount_percent: 15, min_purchase: 50, label: "", image_url: "", description: "Desconto em frutas, verduras e legumes" },
     ],
-    catalog: [
-      { name: "Cesta Básica Premium", price: 249.90, description: "40 itens essenciais para o mês", image_url: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop", category: "Cestas" },
-    ],
+    catalog: [{ name: "Cesta Básica Premium", price: 249.90, description: "40 itens essenciais para o mês", image_url: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop", category: "Cestas" }],
   },
   { name: "Spa Zen Beleza", slug: "spa-zen-beleza", segment: "Beleza e Bem-Estar", description: "Massagens relaxantes, tratamentos faciais e terapias holísticas.", store_type: "RECEPTORA", color: "00695C",
     offers: [
@@ -273,9 +291,7 @@ const DEMO_STORES: DemoStore[] = [
     ],
   },
   { name: "Loja Central", slug: "loja-central", segment: "Loja", description: "Variedades, utilidades domésticas, presentes e novidades para toda a família.", store_type: "RECEPTORA", color: "5D4037",
-    offers: [
-      { coupon_type: "STORE", discount_percent: 10, min_purchase: 50, label: "", image_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop", description: "Desconto válido em todos os produtos" },
-    ],
+    offers: [{ coupon_type: "STORE", discount_percent: 10, min_purchase: 50, label: "", image_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop", description: "Desconto válido em todos os produtos" }],
   },
   { name: "Restaurante Sabor da Casa", slug: "restaurante-sabor-da-casa", segment: "Restaurante", description: "Comida caseira feita com carinho, buffet por quilo e pratos executivos.", store_type: "MISTA", color: "BF360C",
     offers: [
@@ -287,6 +303,113 @@ const DEMO_STORES: DemoStore[] = [
       { name: "Executivo Frango", price: 22.90, description: "Arroz, feijão, frango grelhado, salada e suco", image_url: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=300&fit=crop", category: "Executivos" },
     ],
   },
+  // ─── 12 NEW STORES ─────────────────────────────────────────────
+  { name: "Studio Pilates Corpo Livre", slug: "studio-pilates-corpo-livre", segment: "Pilates", description: "Pilates reformer, solo e funcional com instrutores certificados.", store_type: "RECEPTORA", color: "7B1FA2",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 30, product_price: 120, label: "Aula Experimental", image_url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop", description: "Primeira aula de pilates reformer" },
+      { coupon_type: "STORE", discount_percent: 15, min_purchase: 300, label: "", image_url: "", description: "15% OFF no plano mensal" },
+    ],
+  },
+  { name: "Relojoaria Tempo & Arte", slug: "relojoaria-tempo-arte", segment: "Relojoaria", description: "Conserto de relógios, troca de baterias e relógios importados.", store_type: "RECEPTORA", color: "795548",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 20, product_price: 35, label: "Troca de Bateria", image_url: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=400&h=300&fit=crop", description: "Troca de bateria com garantia de 6 meses" },
+      { coupon_type: "STORE", discount_percent: 10, min_purchase: 200, label: "", image_url: "", description: "Desconto em consertos acima de R$200" },
+    ],
+  },
+  { name: "Nail Designer Studio", slug: "nail-designer-studio", segment: "Nail Designer", description: "Unhas em gel, fibra de vidro, nail art e esmaltação em gel.", store_type: "RECEPTORA", color: "E91E63",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 20, product_price: 89, label: "Unhas em Gel", image_url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop", description: "Alongamento em gel com design à escolha" },
+      { coupon_type: "STORE", discount_percent: 15, min_purchase: 120, label: "", image_url: "", description: "15% na primeira visita" },
+    ],
+  },
+  { name: "Moto Center Speed", slug: "moto-center-speed", segment: "Moto Peças", description: "Peças, acessórios, capacetes e serviços para motos de todas as marcas.", store_type: "RECEPTORA", color: "F44336",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 15, product_price: 89.90, label: "Troca de Óleo Moto", image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop", description: "Troca de óleo + filtro para qualquer moto" },
+      { coupon_type: "STORE", discount_percent: 10, min_purchase: 150, label: "", image_url: "", description: "Desconto em acessórios e capacetes" },
+    ],
+  },
+  { name: "Casa dos Parafusos", slug: "casa-dos-parafusos", segment: "Ferragens", description: "Parafusos, ferramentas, fechaduras e material para construção.", store_type: "RECEPTORA", color: "78909C",
+    offers: [
+      { coupon_type: "STORE", discount_percent: 10, min_purchase: 100, label: "", image_url: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&h=300&fit=crop", description: "Desconto em compras acima de R$100" },
+      { coupon_type: "PRODUCT", discount_percent: 20, product_price: 49.90, label: "Kit Ferramentas Básico", image_url: "https://images.unsplash.com/photo-1581783898377-1c85bf937427?w=400&h=300&fit=crop", description: "Kit com chaves, alicate e trena" },
+    ],
+  },
+  { name: "Empório Natural", slug: "emporio-natural", segment: "Loja de Produtos Naturais", description: "Grãos, cereais, temperos naturais, sucos detox e produtos orgânicos.", store_type: "MISTA", color: "558B2F",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 15, product_price: 29.90, label: "Kit Granola + Mel", image_url: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=400&h=300&fit=crop", description: "Granola artesanal 500g + mel orgânico 300ml" },
+      { coupon_type: "STORE", discount_percent: 10, min_purchase: 80, label: "", image_url: "", description: "Desconto em toda loja" },
+    ],
+    catalog: [
+      { name: "Mix de Castanhas 500g", price: 39.90, description: "Castanha-do-pará, amêndoas e nozes", image_url: "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?w=400&h=300&fit=crop", category: "Grãos" },
+      { name: "Suco Detox 1L", price: 18.90, description: "Couve, limão, gengibre e maçã verde", image_url: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400&h=300&fit=crop", category: "Bebidas" },
+    ],
+  },
+  { name: "Chácara Sabor do Campo", slug: "chacara-sabor-do-campo", segment: "Hortifruti", description: "Frutas, verduras e legumes frescos direto do produtor.", store_type: "EMISSORA", color: "33691E",
+    offers: [
+      { coupon_type: "STORE", discount_percent: 10, min_purchase: 60, label: "", image_url: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=300&fit=crop", description: "10% OFF em todas as frutas e verduras" },
+      { coupon_type: "PRODUCT", discount_percent: 20, product_price: 39.90, label: "Cesta de Frutas", image_url: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400&h=300&fit=crop", description: "Cesta com 10 frutas da estação" },
+    ],
+    catalog: [
+      { name: "Cesta Semanal", price: 49.90, description: "Verduras e legumes variados para a semana", image_url: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=300&fit=crop", category: "Cestas" },
+    ],
+  },
+  { name: "Elétrica Boa Luz", slug: "eletrica-boa-luz", segment: "Material Elétrico", description: "Fios, disjuntores, luminárias, LEDs e material elétrico em geral.", store_type: "RECEPTORA", color: "F57F17",
+    offers: [
+      { coupon_type: "STORE", discount_percent: 12, min_purchase: 150, label: "", image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop", description: "12% OFF em compras acima de R$150" },
+      { coupon_type: "PRODUCT", discount_percent: 25, product_price: 79.90, label: "Kit LED Residencial", image_url: "https://images.unsplash.com/photo-1565814636199-ae8133055c1c?w=400&h=300&fit=crop", description: "Kit com 10 lâmpadas LED 12W" },
+    ],
+  },
+  { name: "Joias & Prata", slug: "joias-e-prata", segment: "Joalheria", description: "Anéis, colares, brincos em prata 925 e semijoias banhadas a ouro.", store_type: "RECEPTORA", color: "FFD600",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 20, product_price: 149.90, label: "Colar Prata 925", image_url: "https://images.unsplash.com/photo-1515562141589-67f0d569b6e5?w=400&h=300&fit=crop", description: "Colar em prata 925 com pingente" },
+      { coupon_type: "STORE", discount_percent: 15, min_purchase: 200, label: "", image_url: "", description: "15% OFF em semijoias" },
+    ],
+  },
+  { name: "Estacionamento Seguro", slug: "estacionamento-seguro", segment: "Estacionamento", description: "Estacionamento coberto com segurança 24h e lavagem express.", store_type: "EMISSORA", color: "37474F",
+    offers: [
+      { coupon_type: "STORE", discount_percent: 20, min_purchase: 25, label: "", image_url: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&h=300&fit=crop", description: "20% OFF na diária" },
+      { coupon_type: "PRODUCT", discount_percent: 30, product_price: 49.90, label: "Lavagem Completa", image_url: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=400&h=300&fit=crop", description: "Lavagem interna + externa + cera" },
+    ],
+    catalog: [
+      { name: "Diária Coberta", price: 25.00, description: "Vaga coberta por 24h", image_url: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&h=300&fit=crop", category: "Vagas" },
+    ],
+  },
+  { name: "Gráfica Express", slug: "grafica-express", segment: "Gráfica", description: "Cartões de visita, banners, adesivos e impressão digital rápida.", store_type: "RECEPTORA", color: "0277BD",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 25, product_price: 79.90, label: "1000 Cartões de Visita", image_url: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&h=300&fit=crop", description: "1000 cartões em papel couchê 300g" },
+      { coupon_type: "STORE", discount_percent: 15, min_purchase: 200, label: "", image_url: "", description: "15% OFF em banners e faixas" },
+    ],
+  },
+  { name: "Costura & Estilo", slug: "costura-e-estilo", segment: "Ateliê de Costura", description: "Ajustes, consertos, roupas sob medida e customização.", store_type: "RECEPTORA", color: "6A1B9A",
+    offers: [
+      { coupon_type: "PRODUCT", discount_percent: 20, product_price: 35, label: "Ajuste de Bainha", image_url: "https://images.unsplash.com/photo-1558171813-01342dcc6ca0?w=400&h=300&fit=crop", description: "Ajuste de bainha em calça ou vestido" },
+      { coupon_type: "STORE", discount_percent: 10, min_purchase: 100, label: "", image_url: "", description: "10% OFF em roupas sob medida" },
+    ],
+  },
+];
+
+// ─── Affiliate Deals (Achadinhos) ──────────────────────────────────
+const DEMO_AFFILIATE_DEALS = [
+  { title: "Fone Bluetooth JBL Tune 520BT", price: 199.90, original_price: 299.90, image_url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Fone sem fio com até 57h de bateria", badge_label: "-33%" },
+  { title: "Air Fryer Philips 4.1L", price: 349.90, original_price: 499.90, image_url: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Fritadeira sem óleo 1400W", badge_label: "-30%" },
+  { title: "Tênis Nike Revolution 6", price: 249.90, original_price: 399.90, image_url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop", category: "Esportes", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Tênis de corrida leve e confortável", badge_label: "-37%" },
+  { title: "Kit Skincare Facial Completo", price: 89.90, original_price: 149.90, image_url: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=300&fit=crop", category: "Beleza", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Sérum + hidratante + protetor solar", badge_label: "-40%" },
+  { title: "Smartwatch Xiaomi Band 8", price: 179.90, original_price: 249.90, image_url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Monitor cardíaco, SpO2 e 16 dias de bateria", badge_label: "-28%" },
+  { title: "Cafeteira Nespresso Essenza Mini", price: 399.90, original_price: 599.90, image_url: "https://images.unsplash.com/photo-1517256064527-9d164d25e6ac?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Cafeteira de cápsulas compacta 19 bar", badge_label: "-33%" },
+  { title: "Mochila Notebook Executiva", price: 129.90, original_price: 199.90, image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop", category: "Moda", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Mochila anti-furto com USB para notebook 15.6\"", badge_label: "-35%" },
+  { title: "Whey Protein Gold Standard 907g", price: 189.90, original_price: 279.90, image_url: "https://images.unsplash.com/photo-1593095948071-474c5cc2c4d8?w=400&h=300&fit=crop", category: "Esportes", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Whey Protein isolado sabor chocolate", badge_label: "-32%" },
+  { title: "Echo Dot 5ª Geração Alexa", price: 299.90, original_price: 449.90, image_url: "https://images.unsplash.com/photo-1543512214-318c7553f230?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Smart speaker com Alexa e som premium", badge_label: "-33%" },
+  { title: "Conjunto Panelas Antiaderente 5pcs", price: 199.90, original_price: 349.90, image_url: "https://images.unsplash.com/photo-1585664811087-47f65abbad64?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Conjunto de panelas com revestimento cerâmico", badge_label: "-43%" },
+  { title: "Óculos de Sol Ray-Ban Aviator", price: 449.90, original_price: 699.90, image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=300&fit=crop", category: "Moda", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Óculos clássico com lente degradê", badge_label: "-36%" },
+  { title: "Colchão Casal Molas Ensacadas", price: 1299.90, original_price: 1999.90, image_url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop", category: "Casa", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Colchão casal D33 com pillow top", badge_label: "-35%" },
+  { title: "Perfume Masculino Malbec Gold 100ml", price: 149.90, original_price: 219.90, image_url: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=300&fit=crop", category: "Beleza", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Fragrância amadeirada e sofisticada", badge_label: "-32%" },
+  { title: "Bicicleta Aro 29 Shimano 21v", price: 899.90, original_price: 1399.90, image_url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&h=300&fit=crop", category: "Esportes", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Mountain bike com quadro alumínio", badge_label: "-36%" },
+  { title: "Aspirador Robô Inteligente", price: 599.90, original_price: 899.90, image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop", category: "Casa", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Robô aspirador com mapeamento e app", badge_label: "-33%" },
+  { title: "Kindle Paperwhite 16GB", price: 549.90, original_price: 749.90, image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "E-reader com tela antirreflexo 6.8\"", badge_label: "-27%" },
+  { title: "Bolsa Feminina Couro Ecológico", price: 119.90, original_price: 189.90, image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop", category: "Moda", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Bolsa transversal média com alça ajustável", badge_label: "-37%" },
+  { title: "Cama Pet Ortopédica GG", price: 149.90, original_price: 229.90, image_url: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=300&fit=crop", category: "Pet", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Cama ortopédica para cães grandes", badge_label: "-35%" },
+  { title: "Luminária de Mesa LED Articulada", price: 79.90, original_price: 129.90, image_url: "https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=400&h=300&fit=crop", category: "Casa", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Luminária com 3 temperaturas de cor e dimmer", badge_label: "-38%" },
+  { title: "Kit Churrasco Inox 10 Peças", price: 89.90, original_price: 139.90, image_url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Conjunto de espetos, faca e tábua em inox", badge_label: "-36%" },
 ];
 
 Deno.serve(async (req) => {
@@ -300,22 +423,16 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Allow service-role or authenticated user calls (function is idempotent)
     const authHeader = req.headers.get("Authorization") || "";
     let callerUserId = "00000000-0000-0000-0000-000000000000";
-
     if (authHeader.startsWith("Bearer ")) {
       const anonClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!,
         { global: { headers: { Authorization: authHeader } } },
       );
-      const { data: claimsData } = await anonClient.auth.getClaims(
-        authHeader.replace("Bearer ", ""),
-      );
-      if (claimsData?.claims?.sub) {
-        callerUserId = claimsData.claims.sub as string;
-      }
+      const { data: claimsData } = await anonClient.auth.getClaims(authHeader.replace("Bearer ", ""));
+      if (claimsData?.claims?.sub) callerUserId = claimsData.claims.sub as string;
     }
 
     const body = await req.json();
@@ -327,7 +444,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify brand and branch exist
     const { data: brand } = await supabaseAdmin.from("brands").select("id, slug").eq("id", brand_id).single();
     if (!brand) {
       return new Response(JSON.stringify({ error: "Brand not found" }), {
@@ -342,18 +458,60 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── Build taxonomy segment map ──────────────────────────────
+    const { data: allSegments } = await supabaseAdmin
+      .from("taxonomy_segments").select("id, name, category_id");
+    const segmentMap = new Map<string, string>();
+    const segmentCategoryMap = new Map<string, string>(); // segmentId → categoryId
+    for (const seg of (allSegments || [])) {
+      segmentMap.set(seg.name.toLowerCase().trim(), seg.id);
+      segmentCategoryMap.set(seg.id, seg.category_id);
+    }
+    function findSegmentId(segmentName: string): string | null {
+      // Try exact match first
+      const exact = segmentMap.get(segmentName.toLowerCase().trim());
+      if (exact) return exact;
+      // Try alias
+      const aliased = SEGMENT_ALIASES[segmentName];
+      if (aliased) {
+        const found = segmentMap.get(aliased.toLowerCase().trim());
+        if (found) return found;
+      }
+      return null;
+    }
+
+    // ─── Fetch category IDs for CMS sections ─────────────────────
+    const { data: allCategories } = await supabaseAdmin
+      .from("taxonomy_categories").select("id, name");
+    const categoryByName = new Map<string, string>();
+    for (const cat of (allCategories || [])) {
+      categoryByName.set(cat.name.toLowerCase().trim(), cat.id);
+    }
+
     const suffix = brand.slug.replace(/[^a-z0-9]/g, "");
     let created = 0;
     let skipped = 0;
+    const log = createEdgeLogger("seed-demo-stores");
 
     for (const demo of DEMO_STORES) {
       const storeSlug = `${demo.slug}-${suffix}`;
       const logoUrl = logo(demo.name, demo.color);
+      const taxonomySegmentId = findSegmentId(demo.segment);
 
       // Skip if already exists
       const { data: existing } = await supabaseAdmin
         .from("stores").select("id").eq("brand_id", brand_id).eq("slug", storeSlug).maybeSingle();
-      if (existing) { skipped++; continue; }
+      if (existing) {
+        // Update taxonomy_segment_id if missing
+        if (taxonomySegmentId) {
+          await supabaseAdmin.from("stores")
+            .update({ taxonomy_segment_id: taxonomySegmentId })
+            .eq("id", existing.id)
+            .is("taxonomy_segment_id", null);
+        }
+        skipped++;
+        continue;
+      }
 
       const { data: newStore, error: storeErr } = await supabaseAdmin
         .from("stores").insert({
@@ -361,11 +519,11 @@ Deno.serve(async (req) => {
           logo_url: logoUrl, segment: demo.segment, description: demo.description,
           store_type: demo.store_type, approval_status: "APPROVED", is_active: true,
           approved_at: new Date().toISOString(), email: `${demo.slug}@demo.com`,
+          taxonomy_segment_id: taxonomySegmentId,
         }).select("id").single();
 
-      if (storeErr) { createEdgeLogger("seed-demo-stores").error(`Store creation failed: ${demo.name}`, { error: storeErr.message }); continue; }
+      if (storeErr) { log.error(`Store creation failed: ${demo.name}`, { error: storeErr.message }); continue; }
 
-      // Create offers with correct value_rescue calculations
       for (const offer of demo.offers) {
         const built = buildOffer(offer);
         await supabaseAdmin.from("offers").insert({
@@ -382,7 +540,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Create catalog items
       if (demo.catalog?.length && (demo.store_type === "EMISSORA" || demo.store_type === "MISTA")) {
         for (let ci = 0; ci < demo.catalog.length; ci++) {
           const item = demo.catalog[ci];
@@ -398,47 +555,31 @@ Deno.serve(async (req) => {
       created++;
     }
 
-    // Credit 1000 points to all test customers of this brand
+    // ─── Credit 1000 points to test customers ────────────────────
     let creditedCustomers = 0;
     const { data: customers } = await supabaseAdmin
-      .from("customers")
-      .select("id")
-      .eq("brand_id", brand_id)
-      .eq("branch_id", branch_id);
+      .from("customers").select("id").eq("brand_id", brand_id).eq("branch_id", branch_id);
 
     if (customers?.length) {
       for (const cust of customers) {
-        // Check if already credited (avoid duplicates)
-        const { data: existing } = await supabaseAdmin
-          .from("points_ledger")
-          .select("id")
-          .eq("customer_id", cust.id)
-          .eq("reason", "DEMO_SEED_BONUS")
-          .maybeSingle();
+        const { data: existingLedger } = await supabaseAdmin
+          .from("points_ledger").select("id")
+          .eq("customer_id", cust.id).eq("reason", "DEMO_SEED_BONUS").maybeSingle();
 
-        if (!existing) {
+        if (!existingLedger) {
           await supabaseAdmin.from("points_ledger").insert({
-            brand_id,
-            branch_id,
-            customer_id: cust.id,
-            entry_type: "CREDIT",
-            points_amount: 1000,
-            money_amount: 0,
-            reason: "DEMO_SEED_BONUS",
-            reference_type: "MANUAL_ADJUSTMENT",
+            brand_id, branch_id, customer_id: cust.id,
+            entry_type: "CREDIT", points_amount: 1000, money_amount: 0,
+            reason: "DEMO_SEED_BONUS", reference_type: "MANUAL_ADJUSTMENT",
             created_by_user_id: callerUserId,
           });
-
-          // Update cached balance
-          await supabaseAdmin
-            .from("customers")
-            .update({ points_balance: 1000 })
-            .eq("id", cust.id);
-
+          await supabaseAdmin.from("customers").update({ points_balance: 1000 }).eq("id", cust.id);
           creditedCustomers++;
         }
       }
     }
+
+    // ─── Ensure all modules are enabled ──────────────────────────
     const { data: allMods } = await supabaseAdmin
       .from("module_definitions").select("id").eq("is_active", true);
     if (allMods?.length) {
@@ -453,6 +594,140 @@ Deno.serve(async (req) => {
           })),
         );
       }
+    }
+
+    // ─── Create CMS themed sections ──────────────────────────────
+    const { data: existingSections } = await supabaseAdmin
+      .from("brand_sections").select("title").eq("brand_id", brand_id);
+    const existingTitles = new Set((existingSections || []).map((s: any) => s.title));
+
+    // Fetch template IDs
+    const { data: sectionTemplates } = await supabaseAdmin
+      .from("section_templates").select("id, key").eq("is_active", true);
+    const templateByKey = new Map<string, string>();
+    for (const t of (sectionTemplates || [])) {
+      templateByKey.set(t.key, t.id);
+    }
+
+    const offersCarouselId = templateByKey.get("offers_carousel");
+    const storesGridId = templateByKey.get("stores_grid");
+
+    // Get segment IDs for each category to use in section filters
+    const alimentacaoCatId = categoryByName.get("alimentação");
+    const belezaCatId = categoryByName.get("beleza e estética");
+    const saudeCatId = categoryByName.get("saúde e bem-estar");
+    const automotivoCatId = categoryByName.get("automotivo");
+    const servicosCatId = categoryByName.get("serviços profissionais");
+    const modaCatId = categoryByName.get("moda e acessórios");
+
+    // Helper to get segment IDs for a category
+    function getSegmentIdsForCategory(categoryId: string | undefined): string[] {
+      if (!categoryId) return [];
+      const ids: string[] = [];
+      for (const [segId, catId] of segmentCategoryMap.entries()) {
+        if (catId === categoryId) ids.push(segId);
+      }
+      return ids;
+    }
+
+    const themedSections = [
+      {
+        title: "🍕 Deu fome? Troque por pontos",
+        subtitle: "Ofertas de alimentação para resgatar",
+        templateKey: "offers_carousel",
+        segmentIds: getSegmentIdsForCategory(alimentacaoCatId),
+      },
+      {
+        title: "💆 Saúde e Beleza",
+        subtitle: "Cuide de você com descontos especiais",
+        templateKey: "stores_grid",
+        segmentIds: [
+          ...getSegmentIdsForCategory(belezaCatId),
+          ...getSegmentIdsForCategory(saudeCatId),
+        ],
+      },
+      {
+        title: "🔧 Resgate serviços",
+        subtitle: "Use seus pontos em serviços",
+        templateKey: "offers_carousel",
+        segmentIds: [
+          ...getSegmentIdsForCategory(automotivoCatId),
+          ...getSegmentIdsForCategory(servicosCatId),
+        ],
+      },
+      {
+        title: "👗 Moda e Acessórios",
+        subtitle: "Estilo com desconto",
+        templateKey: "stores_grid",
+        segmentIds: getSegmentIdsForCategory(modaCatId),
+      },
+    ];
+
+    // Get current max order_index
+    const { data: maxOrderRow } = await supabaseAdmin
+      .from("brand_sections")
+      .select("order_index")
+      .eq("brand_id", brand_id)
+      .order("order_index", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    let nextOrder = (maxOrderRow?.order_index ?? -1) + 1;
+
+    for (const section of themedSections) {
+      if (existingTitles.has(section.title)) continue;
+      const templateId = templateByKey.get(section.templateKey);
+      if (!templateId) continue;
+      if (section.segmentIds.length === 0) continue;
+
+      const { data: newSection } = await supabaseAdmin.from("brand_sections").insert({
+        brand_id,
+        template_id: templateId,
+        title: section.title,
+        subtitle: section.subtitle,
+        order_index: nextOrder++,
+        is_enabled: true,
+        display_mode: "carousel",
+        segment_filter_ids: section.segmentIds,
+        min_stores_visible: 1,
+      }).select("id").single();
+    }
+
+    // ─── Create Affiliate Deals (Achadinhos) ─────────────────────
+    const { data: existingDeals } = await supabaseAdmin
+      .from("affiliate_deals").select("id").eq("brand_id", brand_id).limit(1);
+
+    if (!existingDeals?.length) {
+      // Seed affiliate categories first
+      await supabaseAdmin.rpc("seed_affiliate_categories", { p_brand_id: brand_id });
+
+      // Fetch category map for deals
+      const { data: dealCategories } = await supabaseAdmin
+        .from("affiliate_deal_categories").select("id, name").eq("brand_id", brand_id);
+      const dealCatMap = new Map<string, string>();
+      for (const dc of (dealCategories || [])) {
+        dealCatMap.set(dc.name.toLowerCase(), dc.id);
+      }
+
+      for (let i = 0; i < DEMO_AFFILIATE_DEALS.length; i++) {
+        const deal = DEMO_AFFILIATE_DEALS[i];
+        const categoryId = dealCatMap.get(deal.category.toLowerCase()) || null;
+        await supabaseAdmin.from("affiliate_deals").insert({
+          brand_id,
+          title: deal.title,
+          description: deal.description,
+          price: deal.price,
+          original_price: deal.original_price,
+          image_url: deal.image_url,
+          affiliate_url: deal.affiliate_url,
+          store_name: deal.store_name,
+          store_logo_url: "https://ui-avatars.com/api/?name=ML&background=FFE600&color=333&size=128&rounded=true&bold=true",
+          badge_label: deal.badge_label,
+          category_id: categoryId,
+          is_active: true,
+          order_index: i,
+        });
+      }
+      log.info("Created 20 affiliate deals");
     }
 
     return new Response(
