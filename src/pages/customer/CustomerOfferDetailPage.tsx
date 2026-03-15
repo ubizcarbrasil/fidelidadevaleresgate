@@ -419,7 +419,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                      </div>
                      <p className="text-xs text-muted-foreground">
                        Ao resgatar, você irá receber um crédito de{" "}
-                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>{" "}
+                       <strong style={{ color: "hsl(var(--vb-gold-foreground))" }}>R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>{" "}
                        para usar na compra desse produto.
                      </p>
                    </div>
