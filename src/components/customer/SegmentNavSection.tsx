@@ -26,17 +26,19 @@ function kebabToPascal(name: string): string {
     .join("");
 }
 
-function CategoryIcon({ iconName }: { iconName: string | null }) {
+function CategoryIcon({ iconName, size }: { iconName: string | null; size: number }) {
   const isDark = document.documentElement.classList.contains("dark");
   const color = isDark ? "hsl(var(--vb-gold))" : "#FFFFFF";
-  if (!iconName) return <Store className="h-7 w-7" style={{ color }} />;
+  const cls = `object-contain`;
+  const style = { color, width: size, height: size };
+  if (!iconName) return <Store style={style} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className="h-7 w-7 object-contain" />;
+    return <img src={iconName} alt="" className={cls} style={{ width: size, height: size }} />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
-  if (!LucideIcon) return <Store className="h-7 w-7" style={{ color }} />;
-  return <LucideIcon className="h-7 w-7" style={{ color }} />;
+  if (!LucideIcon) return <Store style={style} />;
+  return <LucideIcon style={style} />;
 }
 
 const containerVariants = {
@@ -51,6 +53,13 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
   const { brand, selectedBranch, theme } = useBrand();
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+
+  // Read layout config from theme with defaults
+  const layout = theme?.layout as any;
+  const iconSize = layout?.category_icon_size ?? 64;
+  const iconRadius = layout?.category_icon_radius ?? 16;
+  const catFontSize = layout?.category_font_size ?? 11;
+  const iconInner = Math.round(iconSize * 0.44);
 
   const { data: categories = [], isLoading: loading } = useQuery({
     queryKey: queryKeys.stores.list(brand?.id, selectedBranch?.id, "categories"),
@@ -142,17 +151,23 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               variants={itemVariants}
               whileTap={{ scale: 0.92 }}
               className="flex flex-col items-center gap-1.5 flex-shrink-0"
-              style={{ width: 88 }}
+              style={{ width: iconSize + 24 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
               <div
-                className="h-16 w-16 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
+                className="flex items-center justify-center"
+                style={{
+                  height: iconSize,
+                  width: iconSize,
+                  borderRadius: iconRadius,
+                  backgroundColor: "hsl(var(--vb-card-elevated))",
+                }}
               >
-                <CategoryIcon iconName={cat.icon_name} />
+                <CategoryIcon iconName={cat.icon_name} size={iconInner} />
               </div>
               <span
-                className="text-[11px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+                className="font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+                style={{ fontSize: catFontSize }}
               >
                 {cat.name}
               </span>

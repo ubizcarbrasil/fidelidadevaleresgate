@@ -8,9 +8,19 @@ export interface BadgeConfig {
   icon?: string;             // lucide icon name e.g. "sparkles", "tag", "percent", "star"
 }
 
+export interface BrandLayoutConfig {
+  card_border_radius?: number;
+  card_image_height?: number;
+  category_icon_size?: number;
+  category_icon_radius?: number;
+  category_font_size?: number;
+  button_radius?: number;
+  section_title_size?: number;
+}
+
 export interface BrandTheme {
   colors?: {
-    primary?: string;       // HSL: "220 70% 50%"
+    primary?: string;
     secondary?: string;
     accent?: string;
     background?: string;
@@ -29,13 +39,14 @@ export interface BrandTheme {
   };
   logo_url?: string;
   favicon_url?: string;
-  font_heading?: string;    // Google Fonts name
+  font_heading?: string;
   font_body?: string;
   background_image_url?: string;
   display_name?: string;
   slogan?: string;
   footer_text?: string;
   badge_config?: BadgeConfig;
+  layout?: BrandLayoutConfig;
 }
 
 const CSS_VAR_MAP: Record<string, string> = {
@@ -98,6 +109,27 @@ export function useBrandTheme(settings: Json | null | undefined) {
         const cssVar = CSS_VAR_MAP[key];
         if (cssVar) {
           root.style.setProperty(cssVar, value);
+          appliedVars.push(cssVar);
+        }
+      }
+    }
+
+    // Apply layout CSS variables
+    const layout = theme.layout;
+    if (layout) {
+      const LAYOUT_CSS_MAP: Record<string, string> = {
+        card_border_radius: "--brand-card-radius",
+        card_image_height: "--brand-card-img-height",
+        category_icon_size: "--brand-icon-size",
+        category_icon_radius: "--brand-icon-radius",
+        category_font_size: "--brand-cat-font-size",
+        button_radius: "--brand-btn-radius",
+        section_title_size: "--brand-section-title-size",
+      };
+      for (const [key, cssVar] of Object.entries(LAYOUT_CSS_MAP)) {
+        const val = (layout as any)[key];
+        if (val != null) {
+          root.style.setProperty(cssVar, `${val}px`);
           appliedVars.push(cssVar);
         }
       }

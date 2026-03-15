@@ -75,6 +75,16 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
   const fontBody = theme.font_body ? `"${theme.font_body}", sans-serif` : "system-ui, sans-serif";
   const displayName = theme.display_name || brandName || "Minha Marca";
 
+  // Layout config with defaults
+  const layout = theme.layout || {};
+  const cardRadius = layout.card_border_radius ?? 12;
+  const cardImgH = layout.card_image_height ?? 140;
+  const iconSize = layout.category_icon_size ?? 64;
+  const iconRadius = layout.category_icon_radius ?? 16;
+  const catFontSize = layout.category_font_size ?? 11;
+  const btnRadius = layout.button_radius ?? 8;
+  const sectionTitleSize = layout.section_title_size ?? 16;
+
   const TABS: { key: Screen; label: string; icon: any }[] = [
     { key: "home", label: "Início", icon: House },
     { key: "offers", label: "Ofertas", icon: Tag },
@@ -179,11 +189,11 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
 
           {/* Content area */}
           <div className="overflow-hidden" style={{ height: 380 }}>
-            {screen === "home" && <HomeScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} isDark={previewDark} />}
-            {screen === "offers" && <OffersScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
-            {screen === "redemptions" && <RedemptionsScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
-            {screen === "wallet" && <WalletScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} />}
-            {screen === "profile" && <ProfileScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} logoUrl={theme.logo_url} isDark={previewDark} />}
+            {screen === "home" && <HomeScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} isDark={previewDark} cardRadius={cardRadius} cardImgH={cardImgH} iconSize={iconSize} iconRadius={iconRadius} catFontSize={catFontSize} btnRadius={btnRadius} sectionTitleSize={sectionTitleSize} />}
+            {screen === "offers" && <OffersScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} cardRadius={cardRadius} btnRadius={btnRadius} sectionTitleSize={sectionTitleSize} />}
+            {screen === "redemptions" && <RedemptionsScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} cardRadius={cardRadius} />}
+            {screen === "wallet" && <WalletScreen accent={accent} accentParsed={accentParsed} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} cardRadius={cardRadius} />}
+            {screen === "profile" && <ProfileScreen accent={accent} fg={fg} muted={muted} cardBg={cardBg} fontHeading={fontHeading} displayName={displayName} logoUrl={theme.logo_url} isDark={previewDark} cardRadius={cardRadius} />}
           </div>
 
           {/* Bottom tab bar */}
@@ -216,7 +226,7 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
 }
 
 /* ──────────────── Home Screen ──────────────── */
-function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName, isDark }: any) {
+function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName, isDark, cardRadius, cardImgH, iconSize, iconRadius, catFontSize, btnRadius, sectionTitleSize }: any) {
   const STORES = [
     { name: "Pizzaria do João", initials: "PJ", color: "#E53935" },
     { name: "Burger House", initials: "BH", color: "#FF8F00" },
@@ -230,12 +240,12 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
       {/* Greeting + balance badge */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-bold text-[13px]" style={{ fontFamily: fontHeading, color: fg }}>
+          <p className="font-bold" style={{ fontSize: sectionTitleSize * 0.8, fontFamily: fontHeading, color: fg }}>
             Olá, <span style={{ color: VB_GOLD }}>João</span>
           </p>
           <p className="text-[9px]" style={{ color: fg, opacity: 0.5 }}>Confira suas ofertas e pontos</p>
         </div>
-        <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full" style={{ backgroundColor: VB_GOLD, color: "#fff" }}>
+        <div className="flex items-center gap-1 px-2.5 py-1.5" style={{ borderRadius: btnRadius, backgroundColor: VB_GOLD, color: "#fff" }}>
           <Coins className="h-3 w-3" />
           <span className="text-[10px] font-bold">1.250 pts</span>
         </div>
@@ -252,7 +262,7 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <Sparkles className="h-3 w-3" style={{ color: accent }} />
-            <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
+            <span className="font-bold" style={{ fontSize: sectionTitleSize * 0.65, fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
           </div>
           <span className="text-[8px] font-semibold" style={{ color: accent }}>Ver todos</span>
         </div>
@@ -261,10 +271,10 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
             { title: "10% OFF em Pizzas", store: "Pizzaria do João", pts: 50, color: "#E53935" },
             { title: "Combo Família", store: "Burger House", pts: 30, color: "#FF8F00" },
           ].map((offer, i) => (
-            <div key={i} className="rounded-xl overflow-hidden flex-shrink-0" style={{ width: 120, backgroundColor: cardBg, boxShadow: `0 2px 8px ${fg}08` }}>
-              <div className="h-16 relative flex items-center justify-center" style={{ backgroundColor: `${offer.color}20` }}>
+            <div key={i} className="overflow-hidden flex-shrink-0" style={{ width: 120, backgroundColor: cardBg, boxShadow: `0 2px 8px ${fg}08`, borderRadius: cardRadius }}>
+              <div className="relative flex items-center justify-center" style={{ height: cardImgH * 0.45, backgroundColor: `${offer.color}20` }}>
                 <Tag className="h-6 w-6" style={{ color: offer.color, opacity: 0.4 }} />
-                <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ backgroundColor: VB_GOLD }}>
+                <div className="absolute top-1 right-1 px-1.5 py-0.5 text-[7px] font-bold text-white" style={{ backgroundColor: VB_GOLD, borderRadius: btnRadius }}>
                   +{offer.pts} pts
                 </div>
               </div>
@@ -277,22 +287,23 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
         </div>
       </div>
 
-      {/* Compre e pontue section */}
+      {/* Category icons section */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <Coins className="h-3 w-3" style={{ color: VB_GOLD }} />
-            <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Compre e pontue</span>
+            <span className="font-bold" style={{ fontSize: sectionTitleSize * 0.65, fontFamily: fontHeading, color: fg }}>Compre e pontue</span>
           </div>
           <span className="text-[8px] font-semibold" style={{ color: accent }}>Ver todos</span>
         </div>
         <div className="flex gap-3 overflow-hidden">
           {STORES.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0">
-              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white font-bold text-[10px]" style={{ backgroundColor: s.color }}>
+              <div className="flex items-center justify-center text-white font-bold text-[10px]"
+                style={{ height: iconSize * 0.7, width: iconSize * 0.7, borderRadius: iconRadius, backgroundColor: s.color }}>
                 {s.initials}
               </div>
-              <span className="text-[7px] font-medium text-center w-11 truncate" style={{ color: fg, opacity: 0.6 }}>{s.name.split(" ")[0]}</span>
+              <span className="font-medium text-center truncate" style={{ fontSize: catFontSize * 0.7, width: iconSize * 0.7, color: fg, opacity: 0.6 }}>{s.name.split(" ")[0]}</span>
             </div>
           ))}
         </div>
@@ -302,7 +313,7 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
 }
 
 /* ──────────────── Redemptions Screen ──────────────── */
-function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
+function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading, cardRadius }: any) {
   const redemptions = [
     { title: "10% OFF em Pizzas", store: "Pizzaria do João", status: "Ativo", statusColor: "#059669", date: "Expira em 3 dias" },
     { title: "Combo Família", store: "Burger House", status: "Usado", statusColor: "#9CA3AF", date: "Usado em 12/03" },
@@ -312,7 +323,7 @@ function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
     <div className="px-4 py-3 space-y-2 overflow-y-auto" style={{ height: "100%" }}>
       <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Meus Resgates</p>
       {redemptions.map((r, i) => (
-        <div key={i} className="flex gap-2 p-2.5 rounded-xl" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06` }}>
+        <div key={i} className="flex gap-2 p-2.5" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06`, borderRadius: cardRadius }}>
           <div className="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: `${accent}15` }}>
             <TicketCheck className="h-4 w-4" style={{ color: accent }} />
           </div>
@@ -331,7 +342,7 @@ function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
 }
 
 /* ──────────────── Offers Screen ──────────────── */
-function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
+function OffersScreen({ accent, fg, muted, cardBg, fontHeading, cardRadius, btnRadius, sectionTitleSize }: any) {
   const offers = [
     { title: "10% de desconto em pizzas", store: "Pizzaria do João", badge: "10% OFF", badgeColor: "#E53935" },
     { title: "Combo família completo", store: "Burger House", badge: "Combo", badgeColor: "#FF8F00" },
@@ -352,7 +363,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
         ))}
       </div>
       {offers.map((o, i) => (
-        <div key={i} className="flex gap-2 p-2 rounded-xl" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06` }}>
+        <div key={i} className="flex gap-2 p-2" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06`, borderRadius: cardRadius }}>
           <div className="h-14 w-14 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold text-[10px]"
             style={{ backgroundColor: o.badgeColor }}>
             {o.badge}
@@ -372,7 +383,7 @@ function OffersScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
 }
 
 /* ──────────────── Wallet Screen ──────────────── */
-function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: any) {
+function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, cardRadius }: any) {
   return (
     <div className="px-4 py-3 space-y-3 overflow-y-auto" style={{ height: "100%" }}>
       <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Minha Carteira</p>
@@ -413,7 +424,7 @@ function WalletScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading }: 
 }
 
 /* ──────────────── Profile Screen ──────────────── */
-function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, logoUrl, isDark }: any) {
+function ProfileScreen({ accent, fg, muted, cardBg, fontHeading, displayName, logoUrl, isDark, cardRadius }: any) {
   const items = [
     { icon: CircleUser, label: "Meus dados" },
     { icon: MapPin, label: "Minha cidade" },
