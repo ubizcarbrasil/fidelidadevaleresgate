@@ -78,6 +78,7 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
   const TABS: { key: Screen; label: string; icon: any }[] = [
     { key: "home", label: "Início", icon: House },
     { key: "offers", label: "Ofertas", icon: Tag },
+    { key: "redemptions", label: "Resgates", icon: TicketCheck },
     { key: "wallet", label: "Carteira", icon: Wallet },
     { key: "profile", label: "Perfil", icon: CircleUser },
   ];
