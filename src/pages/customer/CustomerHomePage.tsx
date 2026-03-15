@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -48,6 +49,8 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
   const [geoDetected, setGeoDetected] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Auto-seed demo data if taxonomy is missing on first visit
+  useAutoSeedDemo(brand?.id, selectedBranch?.id);
   const accent = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
