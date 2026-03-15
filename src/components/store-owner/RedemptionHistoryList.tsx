@@ -50,14 +50,16 @@ export default function RedemptionHistoryList({
 
   return (
     <>
-      {/* Pending */}
-      <Card className="rounded-2xl">
+      {/* ── Pending ── */}
+      <Card className="rounded-2xl border-0 shadow-sm glow-amber bg-gradient-to-br from-warning/6 to-warning/2">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Ticket className="h-5 w-5 text-amber-600" />
-            Aguardando Baixa
+            <div className="h-8 w-8 rounded-lg kpi-icon-amber flex items-center justify-center text-white">
+              <Ticket className="h-4 w-4" />
+            </div>
+            <span>Aguardando Baixa</span>
             {pending.length > 0 && (
-              <Badge className="ml-auto bg-amber-100 text-amber-800 border-amber-300 text-xs">
+              <Badge className="ml-auto bg-warning/15 text-warning border-0 text-xs rounded-full">
                 {pending.length}
               </Badge>
             )}
@@ -80,23 +82,25 @@ export default function RedemptionHistoryList({
         </CardContent>
       </Card>
 
-      {/* Used */}
+      {/* ── Used ── */}
       {used.length > 0 && (
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              Baixas Recentes
-              <Badge className="ml-auto bg-emerald-100 text-emerald-800 border-emerald-300 text-xs">
+              <div className="h-8 w-8 rounded-lg kpi-icon-green flex items-center justify-center text-white">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
+              <span>Baixas Recentes</span>
+              <Badge className="ml-auto bg-success/15 text-success border-0 text-xs rounded-full">
                 {used.length}
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {used.slice(0, 10).map(r => (
-              <div key={r.id} className="flex items-center gap-3 rounded-xl border p-3">
-                <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <div key={r.id} className="flex items-center gap-3 rounded-xl bg-background/60 border border-border/30 p-3 hover-scale">
+                <div className="h-9 w-9 rounded-xl kpi-icon-green flex items-center justify-center text-white shrink-0">
+                  <CheckCircle2 className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{r.offer_title}</p>
@@ -105,7 +109,7 @@ export default function RedemptionHistoryList({
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-bold text-emerald-700">R$ {Number(r.credit_value_applied || r.value_rescue).toFixed(2)}</p>
+                  <p className="text-xs font-bold text-success">R$ {Number(r.credit_value_applied || r.value_rescue).toFixed(2)}</p>
                   {r.purchase_value && (
                     <p className="text-[10px] text-muted-foreground">Compra: R$ {Number(r.purchase_value).toFixed(2)}</p>
                   )}
@@ -116,7 +120,6 @@ export default function RedemptionHistoryList({
         </Card>
       )}
 
-      {/* Load more */}
       {hasMore && (
         <Button variant="outline" onClick={onLoadMore} disabled={loadingMore} className="w-full rounded-xl">
           {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -154,13 +157,17 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
   };
 
   return (
-    <div className={`rounded-xl border transition-all ${isExpired ? "opacity-50 border-destructive/30" : "border-amber-200 bg-amber-50/30 dark:bg-amber-950/10"}`}>
+    <div className={`rounded-xl transition-all ${
+      isExpired
+        ? "opacity-50 border border-destructive/30"
+        : "border border-warning/20 bg-gradient-to-br from-warning/5 to-transparent glow-amber"
+    }`}>
       <button
         onClick={() => !isExpired && setExpanded(!expanded)}
         className="w-full text-left p-3 flex items-center gap-3"
       >
-        <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-          <Ticket className="h-5 w-5 text-amber-600" />
+        <div className="h-10 w-10 rounded-xl kpi-icon-amber flex items-center justify-center text-white shrink-0 shadow-sm">
+          <Ticket className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate">{redemption.offer_title}</p>
@@ -174,7 +181,7 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
         <div className="text-right shrink-0">
           <p className="text-sm font-bold">R$ {redemption.value_rescue.toFixed(2)}</p>
           {timeLeft !== null && !isExpired && (
-            <p className="text-[10px] text-amber-600 flex items-center gap-0.5 justify-end">
+            <p className="text-[10px] text-warning flex items-center gap-0.5 justify-end font-medium">
               <Clock className="h-3 w-3" /> {timeLeft > 60 ? `${Math.floor(timeLeft / 60)}h${timeLeft % 60}m` : `${timeLeft}min`}
             </p>
           )}
@@ -183,24 +190,24 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
       </button>
 
       {expanded && !isExpired && (
-        <div className="px-3 pb-3 space-y-3 border-t border-amber-200/50 pt-3">
+        <div className="px-3 pb-3 space-y-3 border-t border-warning/10 pt-3">
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 bg-background/60 rounded-lg p-2">
               <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">Crédito:</span>
               <strong>R$ {redemption.value_rescue.toFixed(2)}</strong>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 bg-background/60 rounded-lg p-2">
               <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Compra mín.:</span>
+              <span className="text-muted-foreground">Mín.:</span>
               <strong>R$ {redemption.min_purchase.toFixed(2)}</strong>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 bg-background/60 rounded-lg p-2">
               <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">PIN:</span>
               <strong className="font-mono tracking-wider">{redemption.token}</strong>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 bg-background/60 rounded-lg p-2">
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">Em:</span>
               <strong>{format(new Date(redemption.created_at), "dd/MM HH:mm", { locale: ptBR })}</strong>
@@ -214,12 +221,17 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
               placeholder="0.00"
               value={purchaseValue}
               onChange={e => setPurchaseValue(e.target.value)}
-              className="h-11"
+              className="h-11 rounded-xl"
               inputMode="decimal"
             />
           </div>
 
-          <Button onClick={handleConfirm} disabled={redeemMutation.isPending} className="w-full" size="lg">
+          <Button
+            onClick={handleConfirm}
+            disabled={redeemMutation.isPending}
+            className="w-full rounded-xl bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 text-success-foreground"
+            size="lg"
+          >
             {redeemMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
             Confirmar Baixa
           </Button>

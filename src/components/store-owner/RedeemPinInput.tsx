@@ -103,89 +103,133 @@ export default function RedeemPinInput({ storeId, onConfirmed }: RedeemPinInputP
 
   const canSearch = pin.length === 6 && cpf.replace(/\D/g, "").length === 11;
 
+  // OTP-style visual boxes for PIN
+  const pinDigits = pin.padEnd(6, " ").split("");
+
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
       <CardHeader className="pb-2">
         <button
           onClick={() => setShowManual(!showManual)}
           className="w-full flex items-center justify-between"
         >
           <CardTitle className="text-base flex items-center gap-2">
-            <KeyRound className="h-5 w-5" /> Buscar por PIN + CPF
+            <div className="h-8 w-8 rounded-lg kpi-icon-violet flex items-center justify-center text-white">
+              <KeyRound className="h-4 w-4" />
+            </div>
+            Buscar por PIN + CPF
           </CardTitle>
           {showManual ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </button>
       </CardHeader>
       {showManual && (
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 animate-fade-in">
+          {/* OTP-style PIN input */}
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">PIN (6 dígitos)</Label>
-            <Input
-              placeholder="000000"
-              value={pin}
-              onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              onKeyDown={e => e.key === "Enter" && canSearch && lookup.mutate({ pinInput: pin, cpfInput: cpf })}
-              className="font-mono text-2xl tracking-[0.3em] text-center h-14"
-              maxLength={6}
-              inputMode="numeric"
-            />
+            <Label className="text-[10px] text-muted-foreground mb-2 block">PIN (6 dígitos)</Label>
+            <div className="relative">
+              <div className="flex gap-2 justify-center mb-1">
+                {pinDigits.map((d, i) => (
+                  <div
+                    key={i}
+                    className={`h-12 w-10 rounded-xl border-2 flex items-center justify-center text-xl font-mono font-bold transition-all ${
+                      d.trim()
+                        ? "border-primary/40 bg-primary/5 text-foreground"
+                        : i === pin.length
+                          ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                          : "border-border/50 bg-muted/30 text-muted-foreground"
+                    }`}
+                  >
+                    {d.trim() || ""}
+                  </div>
+                ))}
+              </div>
+              <Input
+                value={pin}
+                onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onKeyDown={e => e.key === "Enter" && canSearch && lookup.mutate({ pinInput: pin, cpfInput: cpf })}
+                className="absolute inset-0 opacity-0 h-12"
+                maxLength={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+              />
+            </div>
           </div>
+
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">CPF do cliente</Label>
+            <Label className="text-[10px] text-muted-foreground mb-1.5 block">CPF do cliente</Label>
             <Input
               placeholder="000.000.000-00"
               value={cpf}
               onChange={e => setCpf(formatCpf(e.target.value))}
               onKeyDown={e => e.key === "Enter" && canSearch && lookup.mutate({ pinInput: pin, cpfInput: cpf })}
-              className="font-mono text-lg tracking-wider text-center h-12"
+              className="font-mono text-lg tracking-wider text-center h-12 rounded-xl"
               maxLength={14}
               inputMode="numeric"
             />
           </div>
+
           <Button
             onClick={() => lookup.mutate({ pinInput: pin, cpfInput: cpf })}
             disabled={!canSearch || lookup.isPending}
-            className="w-full h-12"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
           >
             {lookup.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ScanLine className="h-4 w-4 mr-2" />}
             Buscar Resgate
           </Button>
 
           {error && (
-            <div className="flex items-center gap-2 text-destructive text-sm">
-              <XCircle className="h-4 w-4" /> {error}
+            <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/5 rounded-xl p-3">
+              <XCircle className="h-4 w-4 shrink-0" /> {error}
             </div>
           )}
 
           {result && (
-            <Card className="rounded-2xl border-primary/30">
+            <Card className="rounded-2xl border-0 shadow-md glow-primary bg-gradient-to-br from-primary/5 to-transparent animate-scale-in">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary" /> Resgate Encontrado
+                  <div className="h-8 w-8 rounded-lg kpi-icon-blue flex items-center justify-center text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  Resgate Encontrado
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-muted-foreground">Oferta:</span> <strong>{result.offer_title}</strong></div>
-                  <div><span className="text-muted-foreground">Cliente:</span> <strong>{result.customer_name}</strong></div>
-                  <div><span className="text-muted-foreground">CPF:</span> <strong>{maskCpf(result.customer_cpf)}</strong></div>
-                  <div><span className="text-muted-foreground">Filial:</span> <strong>{result.branch_name}</strong></div>
-                  <div><span className="text-muted-foreground">Crédito:</span> <strong>R$ {result.value_rescue.toFixed(2)}</strong></div>
-                  <div><span className="text-muted-foreground">Compra Mín.:</span> <strong>R$ {result.min_purchase.toFixed(2)}</strong></div>
-                  <div><span className="text-muted-foreground">PIN:</span> <strong className="font-mono tracking-wider">{result.token}</strong></div>
-                  <div><span className="text-muted-foreground">Status:</span> <Badge variant="outline">{result.status}</Badge></div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {[
+                    { label: "Oferta", value: result.offer_title },
+                    { label: "Cliente", value: result.customer_name },
+                    { label: "CPF", value: maskCpf(result.customer_cpf) },
+                    { label: "Filial", value: result.branch_name },
+                    { label: "Crédito", value: `R$ ${result.value_rescue.toFixed(2)}` },
+                    { label: "Compra Mín.", value: `R$ ${result.min_purchase.toFixed(2)}` },
+                    { label: "PIN", value: result.token, mono: true },
+                  ].map(item => (
+                    <div key={item.label} className="bg-background/60 rounded-lg p-2.5">
+                      <span className="text-[10px] text-muted-foreground block">{item.label}</span>
+                      <strong className={`text-xs ${item.mono ? "font-mono tracking-wider" : ""}`}>{item.value}</strong>
+                    </div>
+                  ))}
+                  <div className="bg-background/60 rounded-lg p-2.5">
+                    <span className="text-[10px] text-muted-foreground block">Status</span>
+                    <Badge variant="outline" className="text-[10px] mt-0.5 rounded-full">{result.status}</Badge>
+                  </div>
                   {result.expires_at && (
-                    <div className="col-span-2"><span className="text-muted-foreground">Expira em:</span> <strong>{new Date(result.expires_at).toLocaleString("pt-BR")}</strong></div>
+                    <div className="col-span-2 bg-background/60 rounded-lg p-2.5">
+                      <span className="text-[10px] text-muted-foreground block">Expira em</span>
+                      <strong className="text-xs">{new Date(result.expires_at).toLocaleString("pt-BR")}</strong>
+                    </div>
                   )}
                 </div>
 
-                <div className="space-y-2 pt-2 border-t">
-                  <Label>Valor da Compra (R$)</Label>
+                <div className="space-y-2 pt-2 border-t border-border/30">
+                  <Label className="text-xs">Valor da Compra (R$)</Label>
                   <Input
                     type="number"
                     placeholder="0.00"
                     value={purchaseValue}
                     onChange={e => setPurchaseValue(e.target.value)}
+                    className="rounded-xl"
                   />
                 </div>
 
@@ -197,7 +241,7 @@ export default function RedeemPinInput({ storeId, onConfirmed }: RedeemPinInputP
                     minPurchase: result.min_purchase,
                   })}
                   disabled={confirmMutation.isPending}
-                  className="w-full"
+                  className="w-full rounded-xl bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 text-success-foreground"
                   size="lg"
                 >
                   {confirmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
