@@ -73,7 +73,16 @@ export default function BrandForm() {
         setIsActive(data.is_active);
         setSubscriptionPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
-          setTheme(data.brand_settings_json as unknown as BrandTheme);
+          const settings = data.brand_settings_json as Record<string, any>;
+          const { offer_card_config: occ, ...themeData } = settings;
+          setTheme(themeData as unknown as BrandTheme);
+          if (occ) {
+            setOfferCardConfig({
+              store: { ...DEFAULT_CONFIG.store, ...(occ.store || {}) },
+              product: { ...DEFAULT_CONFIG.product, ...(occ.product || {}) },
+              emitter: { ...DEFAULT_CONFIG.emitter, ...(occ.emitter || {}) },
+            });
+          }
         }
       });
 
