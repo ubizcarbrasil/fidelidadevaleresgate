@@ -41,7 +41,7 @@ interface CustomerHomePageProps {
   onOpenAchadinhoCategoryGrid?: () => void;
 }
 
-export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores }: CustomerHomePageProps) {
+export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores, onOpenAchadinhoCategoryGrid }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const { navigateToOffersWithSegment } = useCustomerNav();
