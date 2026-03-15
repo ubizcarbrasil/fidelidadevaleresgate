@@ -141,7 +141,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         );
       case "ACHADINHOS":
         return (
-          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
             <AchadinhoSection />
           </motion.div>
         );
