@@ -120,7 +120,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         );
       case "CATEGORIES":
         return (
-          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-4">
+          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
             <SegmentNavSection
               onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
               onSeeMore={() => onOpenCategoryGrid?.()}
