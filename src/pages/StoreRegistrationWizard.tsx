@@ -199,7 +199,9 @@ function FileUploadCard({ label, field, accept, value, uploading, onUpload, onCl
 
 export default function StoreRegistrationWizard() {
   const { user } = useAuth();
-  const { brand, selectedBranch } = useBrand();
+  const { brand, selectedBranch, theme } = useBrand();
+  const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
+  const brandName = brand?.name || null;
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(defaultData);
   const [saving, setSaving] = useState(false);
