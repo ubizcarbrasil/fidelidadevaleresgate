@@ -127,6 +127,8 @@ export default function CustomerLayout() {
   const [categoryGridOpen, setCategoryGridOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [achadinhoCatGridOpen, setAchadinhoCatGridOpen] = useState(false);
+  const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
 
