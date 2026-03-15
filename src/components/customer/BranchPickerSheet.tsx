@@ -24,8 +24,8 @@ export default function BranchPickerSheet() {
   const [open, setOpen] = useState(false);
   const [detecting, setDetecting] = useState(false);
 
-  const primaryColor = theme?.colors?.primary ? `hsl(${theme.colors.primary})` : "hsl(var(--primary))";
-  const fg = theme?.colors?.foreground ? `hsl(${theme.colors.foreground})` : "hsl(var(--foreground))";
+  const primaryColor = "hsl(var(--primary))";
+  const fg = "hsl(var(--foreground))";
 
 
   // Group branches by state > city

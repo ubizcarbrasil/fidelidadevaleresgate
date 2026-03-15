@@ -7,19 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Mail, Lock, User, Phone, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
-}
+import { hslToCss, withAlpha } from "@/lib/utils";
 
 type Mode = "login" | "register";
 

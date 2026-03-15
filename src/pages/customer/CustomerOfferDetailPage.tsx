@@ -18,24 +18,12 @@ import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
+import { hslToCss, withAlpha } from "@/lib/utils";
 
 type Offer = Tables<"offers">;
 
 interface OfferWithStore extends Offer {
   stores?: { name: string; logo_url: string | null } | null;
-}
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -412,25 +400,26 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                 {/* Pague com Pontos card */}
                 {discountPct > 0 && (
-                   <div className="mx-4 mt-2 rounded-2xl p-4 bg-amber-50 dark:bg-amber-950/30" style={{
-                     border: "2px solid hsl(var(--chart-4, 45 93% 58%))",
+                   <div className="mx-4 mt-2 rounded-2xl p-4" style={{
+                     backgroundColor: "hsl(var(--vb-gold) / 0.1)",
+                     border: "2px solid hsl(var(--vb-gold))",
                    }}>
                      <div className="flex items-center gap-2 mb-3">
-                       <DollarSign className="h-5 w-5 text-[#E65100] dark:text-foreground" />
-                       <span className="text-base font-bold text-[#E65100] dark:text-foreground">Pague com Pontos</span>
+                       <DollarSign className="h-5 w-5" style={{ color: "hsl(var(--vb-gold-foreground))" }} />
+                       <span className="text-base font-bold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>Pague com Pontos</span>
                      </div>
                      <p className="text-sm font-semibold mb-3">
-                       Você pode <strong className="text-[#E65100] dark:text-foreground">pagar {discountPct}%</strong> com pontos
+                       Você pode <strong style={{ color: "hsl(var(--vb-gold-foreground))" }}>pagar {discountPct}%</strong> com pontos
                      </p>
                      <div className="flex gap-3 mb-3">
-                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
-                         <p className="text-2xl font-bold" style={{ color: "#3E2723" }}>{pointsValue} pontos</p>
-                         <p className="text-sm font-semibold" style={{ color: "#5D4037" }}>por R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "hsl(var(--vb-gold))" }}>
+                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>{pointsValue} pontos</p>
+                         <p className="text-sm font-semibold" style={{ color: "hsl(var(--vb-gold-foreground) / 0.7)" }}>por R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                        </div>
                      </div>
                      <p className="text-xs text-muted-foreground">
                        Ao resgatar, você irá receber um crédito de{" "}
-                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>{" "}
+                       <strong style={{ color: "hsl(var(--vb-gold-foreground))" }}>R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>{" "}
                        para usar na compra desse produto.
                      </p>
                    </div>
@@ -762,7 +751,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 setShowConfirm(true);
               }}
                 className="w-full py-4 rounded-2xl font-bold text-base shadow-lg"
-                style={{ backgroundColor: "#FFD54F", color: "hsl(var(--foreground))", boxShadow: "0 8px 24px rgba(255,213,79,0.4)" }}>
+                style={{ backgroundColor: "hsl(var(--vb-gold))", color: "hsl(var(--vb-gold-foreground))", boxShadow: "0 8px 24px hsl(var(--vb-gold) / 0.4)" }}>
                 PAGUE {offer.discount_percent}% COM PONTOS
               </motion.button>
             )}
@@ -1074,9 +1063,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         </span>
                       </div>
                       {/* Remaining to pay */}
-                      <div className="rounded-2xl p-3 flex justify-between items-center bg-amber-50 dark:bg-amber-950/30" style={{ border: "1.5px solid hsl(var(--chart-4, 45 93% 58%))" }}>
-                        <span className="text-sm font-semibold" style={{ color: "#5D4037" }}>Você paga (em R$)</span>
-                        <span className="text-lg font-bold" style={{ color: "#E65100" }}>
+                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: "hsl(var(--vb-gold) / 0.1)", border: "1.5px solid hsl(var(--vb-gold))" }}>
+                        <span className="text-sm font-semibold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>Você paga (em R$)</span>
+                        <span className="text-lg font-bold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>
                           R$ {remainingAfterCredit.toFixed(2)}
                         </span>
                       </div>

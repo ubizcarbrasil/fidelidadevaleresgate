@@ -4,11 +4,11 @@ import type { RedemptionWithOffer } from "@/types/customer";
 import { DetailInfoRow } from "./DetailInfoRow";
 import { CancelRedemptionButton } from "./CancelRedemptionButton";
 
-const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING: { label: "EMITIDO", bg: "#FEF3C7", color: "#92400E" },
-  USED: { label: "USADO", bg: "#D1FAE5", color: "#065F46" },
-  EXPIRED: { label: "EXPIRADO", bg: "#FEE2E2", color: "#991B1B" },
-  CANCELED: { label: "ESTORNADO", bg: "#FEF3C7", color: "#D97706" },
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  PENDING: { label: "EMITIDO", className: "bg-warning/15 text-warning" },
+  USED: { label: "USADO", className: "bg-success/15 text-success" },
+  EXPIRED: { label: "EXPIRADO", className: "bg-destructive/15 text-destructive" },
+  CANCELED: { label: "ESTORNADO", className: "bg-warning/15 text-warning" },
 };
 
 interface RedemptionCardProps {
@@ -36,8 +36,8 @@ function RedemptionCardInner({
   const minPurchase = Number(offer?.min_purchase || snapshot?.min_purchase) || 0;
 
   const typeBadge = isProduct
-    ? { label: "PRODUTO", bg: "#DBEAFE", color: "#1E40AF" }
-    : { label: "LOJA", bg: "#FEF3C7", color: "#92400E" };
+    ? { label: "PRODUTO", className: "bg-primary/15 text-primary" }
+    : { label: "LOJA", className: "bg-warning/15 text-warning" };
 
   const hoursSinceCreation = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60);
   const canCancel = r.status === "PENDING" && hoursSinceCreation <= 24;
@@ -57,8 +57,7 @@ function RedemptionCardInner({
           </span>
         </div>
         <span
-          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ backgroundColor: badge.bg, color: badge.color }}
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.className}`}
         >
           {badge.label}
         </span>
@@ -77,8 +76,7 @@ function RedemptionCardInner({
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold truncate" style={{ color: fg }}>{store?.name || "Loja"}</p>
             <span
-              className="px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0"
-              style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${typeBadge.className}`}
             >
               {typeBadge.label}
             </span>
