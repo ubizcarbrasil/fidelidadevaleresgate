@@ -400,20 +400,21 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                 {/* Pague com Pontos card */}
                 {discountPct > 0 && (
-                   <div className="mx-4 mt-2 rounded-2xl p-4 bg-amber-50 dark:bg-amber-950/30" style={{
-                     border: "2px solid hsl(var(--chart-4, 45 93% 58%))",
+                   <div className="mx-4 mt-2 rounded-2xl p-4" style={{
+                     backgroundColor: "hsl(var(--vb-gold) / 0.1)",
+                     border: "2px solid hsl(var(--vb-gold))",
                    }}>
                      <div className="flex items-center gap-2 mb-3">
-                       <DollarSign className="h-5 w-5 text-[#E65100] dark:text-foreground" />
-                       <span className="text-base font-bold text-[#E65100] dark:text-foreground">Pague com Pontos</span>
+                       <DollarSign className="h-5 w-5" style={{ color: "hsl(var(--vb-gold-foreground))" }} />
+                       <span className="text-base font-bold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>Pague com Pontos</span>
                      </div>
                      <p className="text-sm font-semibold mb-3">
-                       Você pode <strong className="text-[#E65100] dark:text-foreground">pagar {discountPct}%</strong> com pontos
+                       Você pode <strong style={{ color: "hsl(var(--vb-gold-foreground))" }}>pagar {discountPct}%</strong> com pontos
                      </p>
                      <div className="flex gap-3 mb-3">
-                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
-                         <p className="text-2xl font-bold" style={{ color: "#3E2723" }}>{pointsValue} pontos</p>
-                         <p className="text-sm font-semibold" style={{ color: "#5D4037" }}>por R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "hsl(var(--vb-gold))" }}>
+                         <p className="text-2xl font-bold" style={{ color: "hsl(var(--vb-gold-foreground))" }}>{pointsValue} pontos</p>
+                         <p className="text-sm font-semibold" style={{ color: "hsl(var(--vb-gold-foreground) / 0.7)" }}>por R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                        </div>
                      </div>
                      <p className="text-xs text-muted-foreground">
