@@ -51,8 +51,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Vitrine Digital",
     items: [
       { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers, moduleKey: "page_builder" },
-      { key: "sidebar.achadinhos", defaultTitle: "Descobertas", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Descobertas", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image, moduleKey: "banners" },
     ],
   },
