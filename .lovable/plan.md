@@ -1,30 +1,29 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Corrigir clique do banner carrossel no app do cliente
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+O `BannerCarousel` em `HomeSectionsRenderer.tsx` não trata corretamente os diferentes `link_type` dos banners. Para links internos (`/p/vitrine-teste`), ele faz `window.location.href = url`, o que navega a página inteira para fora do contexto do app do cliente (que roda dentro de `/customer-preview`).
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Os banners no banco possuem `link_type` como `"internal"`, `"external"`, `"webview"`, `"offer"`, `"store"`, `"category"`, `"custom_page"`, ou `"NONE"`.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### Solução
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+**`src/components/HomeSectionsRenderer.tsx`** — Refatorar `BannerCarousel`:
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+1. Importar `useCustomerNav` para acessar `openOffer`, `openStore`, `navigateToTab`
+2. Refatorar `handleBannerClick` para tratar cada `link_type`:
+   - `"NONE"` / sem url → ignorar (já funciona)
+   - `"external"` → `window.open(url, "_blank")` (já funciona)
+   - `"internal"` → Se for `/p/slug`, usar `window.location.href` mas adicionando o contexto do customer-preview. Alternativamente, abrir como webview dentro do app
+   - `"webview"` → Navegar para `/webview?url=...` via SPA
+   - `"offer"` → Buscar oferta pelo `link_target_id` e chamar `openOffer`
+   - `"store"` → Buscar store pelo `link_target_id` e chamar `openStore`
+   - `"category"` → Navegar para a aba de ofertas com filtro de categoria
+   - `"custom_page"` → Navegar para `/p/slug` internamente
+
+3. Para rotas internas (`/p/` paths), a forma mais simples e consistente é usar o sistema de webview do app (que já existe como overlay em `CustomerLayout`), tratando-as como webview interna com o path relativo.
+
+### Arquivos alterados
+1. `src/components/HomeSectionsRenderer.tsx` — Refatorar `handleBannerClick` no `BannerCarousel`
+
