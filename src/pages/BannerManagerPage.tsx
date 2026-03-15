@@ -78,6 +78,29 @@ export default function BannerManagerPage() {
       if (!currentBrandId) throw new Error("Selecione uma marca antes de criar um banner.");
       const sectionId = form.brand_section_id === "__none__" ? null : form.brand_section_id;
 
+      // Auto-create BANNER_CAROUSEL section if none exists for this brand
+      const { data: existingSections } = await supabase
+        .from("brand_sections")
+        .select("id, template_id, section_templates(type)")
+        .eq("brand_id", currentBrandId)
+        .eq("is_enabled", true);
+
+      const hasBannerSection = (existingSections || []).some(
+        (s: any) => s.section_templates?.type === "BANNER_CAROUSEL"
+      );
+
+      if (!hasBannerSection) {
+        const BANNER_TEMPLATE_ID = "059a63dd-c031-4880-bf51-5ecb10bfdef5";
+        await supabase.from("brand_sections").insert({
+          brand_id: currentBrandId,
+          template_id: BANNER_TEMPLATE_ID,
+          title: "Banners",
+          order_index: 0,
+          is_enabled: true,
+        });
+        queryClient.invalidateQueries({ queryKey: ["brand-sections-active"] });
+      }
+
       const { error } = await supabase.from("banner_schedules").insert({
         brand_id: currentBrandId,
         image_url: form.image_url,
