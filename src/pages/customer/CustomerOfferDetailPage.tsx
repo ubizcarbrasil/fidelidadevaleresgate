@@ -397,6 +397,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   {offer.description && (
                     <p className="text-sm leading-relaxed mb-2 text-muted-foreground">{offer.description}</p>
                   )}
+                  <OfferPurposeBadge purpose={(offer as any).offer_purpose} size="md" className="mb-2" />
                   {productPrice > 0 && (
                     <div className="mb-4">
                       <p className="text-xs text-muted-foreground">Preço</p>
