@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const brandId = session.metadata?.brand_id;
+      const planKey = session.metadata?.plan_key || "starter";
       const customerId = session.customer as string;
 
       if (brandId) {
@@ -45,11 +46,39 @@ Deno.serve(async (req) => {
           .update({
             subscription_status: "ACTIVE",
             stripe_customer_id: customerId,
+            subscription_plan: planKey,
           })
           .eq("id", brandId);
 
-        if (error) log.error("Error updating brand", { brandId, error });
-        else log.info("Brand activated via Stripe checkout", { brandId });
+        if (error) {
+          log.error("Error updating brand", { brandId, error });
+        } else {
+          log.info("Brand activated via Stripe checkout", { brandId, planKey });
+
+          // Re-apply modules from the plan template
+          const { data: planTemplates } = await adminClient
+            .from("plan_module_templates")
+            .select("module_definition_id, is_enabled")
+            .eq("plan_key", planKey);
+
+          if (planTemplates && planTemplates.length > 0) {
+            const { data: coreMods } = await adminClient
+              .from("module_definitions").select("id").eq("is_active", true).eq("is_core", true);
+            const coreIds = new Set((coreMods || []).map((m: any) => m.id));
+
+            // Delete existing brand_modules and re-insert from template
+            await adminClient.from("brand_modules").delete().eq("brand_id", brandId);
+            await adminClient.from("brand_modules").insert(
+              planTemplates.map((t: any, i: number) => ({
+                brand_id: brandId,
+                module_definition_id: t.module_definition_id,
+                is_enabled: coreIds.has(t.module_definition_id) ? true : t.is_enabled,
+                order_index: i,
+              })),
+            );
+            log.info("Brand modules re-applied from plan template", { brandId, planKey, count: planTemplates.length });
+          }
+        }
       }
     }
 

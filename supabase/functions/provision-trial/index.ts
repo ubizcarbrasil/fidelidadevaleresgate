@@ -358,18 +358,40 @@ Deno.serve(async (req) => {
       tenant_id: tenant.id,
     });
 
-    // ─── 7. Enable ALL modules ───────────────────────────────────
-    const { data: allMods } = await supabaseAdmin
-      .from("module_definitions").select("id").eq("is_active", true);
-    if (allMods && allMods.length > 0) {
+    // ─── 7. Enable modules based on "free" plan template ────────
+    const { data: planTemplates } = await supabaseAdmin
+      .from("plan_module_templates")
+      .select("module_definition_id, is_enabled")
+      .eq("plan_key", "free");
+
+    if (planTemplates && planTemplates.length > 0) {
+      // Use plan template to determine which modules to enable
+      const { data: coreMods } = await supabaseAdmin
+        .from("module_definitions").select("id").eq("is_active", true).eq("is_core", true);
+      const coreIds = new Set((coreMods || []).map((m: any) => m.id));
+
       await supabaseAdmin.from("brand_modules").insert(
-        allMods.map((m: any, i: number) => ({
+        planTemplates.map((t: any, i: number) => ({
           brand_id: brand.id,
-          module_definition_id: m.id,
-          is_enabled: true,
+          module_definition_id: t.module_definition_id,
+          is_enabled: coreIds.has(t.module_definition_id) ? true : t.is_enabled,
           order_index: i,
         })),
       );
+    } else {
+      // Fallback: enable ALL modules if no template configured yet
+      const { data: allMods } = await supabaseAdmin
+        .from("module_definitions").select("id").eq("is_active", true);
+      if (allMods && allMods.length > 0) {
+        await supabaseAdmin.from("brand_modules").insert(
+          allMods.map((m: any, i: number) => ({
+            brand_id: brand.id,
+            module_definition_id: m.id,
+            is_enabled: true,
+            order_index: i,
+          })),
+        );
+      }
     }
 
     // ─── 8. Apply default home template ──────────────────────────

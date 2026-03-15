@@ -140,6 +140,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_keys", defaultTitle: "APIs & Integrações", url: "/api-keys", icon: Key },
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
       { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
+      { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: Crown },
     ],
   },
 ];
