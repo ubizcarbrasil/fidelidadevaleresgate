@@ -867,6 +867,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
 // --- BANNER_CAROUSEL ---
 function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primary: string; bannerHeight?: string }) {
   const [current, setCurrent] = useState(0);
+  const { openOffer, openStore, navigateToTab, navigateToOffersWithSegment } = useCustomerNav();
   const banners = items.filter((i) => i.image_url);
 
   const h =
@@ -881,18 +882,66 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  const handleBannerClick = () => {
+  const handleBannerClick = useCallback(async () => {
     const banner = banners[current];
     if (!banner) return;
-    const url = banner.link_url;
-    if (!url) return;
-    if (banner.link_type === "external" || url.startsWith("http")) {
-      window.open(url, "_blank", "noopener");
-    } else {
-      // Internal route — use window.location for /p/ pages
-      window.location.href = url;
+    const linkType = banner.link_type || "";
+    const url = banner.link_url || "";
+    const targetId = banner.link_target_id || "";
+
+    // No link configured
+    if (linkType === "NONE" || (!url && !targetId)) return;
+
+    switch (linkType) {
+      case "offer":
+        if (targetId) {
+          const { data } = await supabase.from("offers").select("*, stores(name, logo_url)").eq("id", targetId).maybeSingle();
+          if (data) openOffer(data);
+        }
+        break;
+      case "store":
+        if (targetId) {
+          const { data } = await supabase.from("stores").select("*").eq("id", targetId).maybeSingle();
+          if (data) openStore(data);
+        }
+        break;
+      case "category":
+        if (targetId) navigateToOffersWithSegment(targetId);
+        break;
+      case "internal":
+      case "custom_page":
+        if (url) {
+          // Navigate within the SPA using the current base path
+          const basePath = window.location.pathname.replace(/\/+$/, "");
+          const isCustomerPreview = basePath.startsWith("/customer-preview") || basePath.startsWith("/c/");
+          if (url.startsWith("/p/") && isCustomerPreview) {
+            // Open custom page as full navigation within SPA
+            window.open(window.location.origin + url, "_blank", "noopener");
+          } else if (url.startsWith("http")) {
+            window.open(url, "_blank", "noopener");
+          } else {
+            window.open(window.location.origin + url, "_blank", "noopener");
+          }
+        }
+        break;
+      case "webview":
+        if (url) {
+          window.open(window.location.origin + "/webview?url=" + encodeURIComponent(url), "_blank", "noopener");
+        }
+        break;
+      case "external":
+        if (url) window.open(url, "_blank", "noopener");
+        break;
+      default:
+        // Fallback: external links open in new tab, internal paths navigate
+        if (url.startsWith("http")) {
+          window.open(url, "_blank", "noopener");
+        } else if (url) {
+          window.open(window.location.origin + url, "_blank", "noopener");
+        }
+        break;
     }
-  };
+  }, [banners, current, openOffer, openStore, navigateToOffersWithSegment]);
 
   if (!banners.length) {
     return (
@@ -905,7 +954,7 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
   }
 
   const currentBanner = banners[current];
-  const isClickable = !!currentBanner?.link_url;
+  const isClickable = !!(currentBanner?.link_url || currentBanner?.link_target_id) && currentBanner?.link_type !== "NONE";
 
   return (
     <div className="max-w-lg mx-auto px-4">
