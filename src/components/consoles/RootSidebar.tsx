@@ -291,6 +291,7 @@ export function RootSidebar() {
                       >
                         <ExternalLink className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">Landing Empreendedor</span>}
+                        {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -304,6 +305,7 @@ export function RootSidebar() {
                       >
                         <ExternalLink className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">Landing Parceiros</span>}
+                        {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
