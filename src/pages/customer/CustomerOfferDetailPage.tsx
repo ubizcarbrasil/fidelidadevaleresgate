@@ -17,6 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
+import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 
 type Offer = Tables<"offers">;
 
@@ -396,6 +397,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   {offer.description && (
                     <p className="text-sm leading-relaxed mb-2 text-muted-foreground">{offer.description}</p>
                   )}
+                  <OfferPurposeBadge purpose={(offer as any).offer_purpose} size="md" className="mb-2" />
                   {productPrice > 0 && (
                     <div className="mb-4">
                       <p className="text-xs text-muted-foreground">Preço</p>
@@ -415,24 +417,21 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                        <DollarSign className="h-5 w-5 text-[#E65100] dark:text-foreground" />
                        <span className="text-base font-bold text-[#E65100] dark:text-foreground">Pague com Pontos</span>
                      </div>
+                     <p className="text-sm font-semibold mb-3">
+                       Você pode <strong className="text-[#E65100] dark:text-foreground">pagar {discountPct}%</strong> com pontos
+                     </p>
                      <div className="flex gap-3 mb-3">
-                       <div className="flex-1 rounded-xl p-3 text-center bg-card/70">
-                         <p className="text-[11px] font-medium text-muted-foreground">Você pode usar</p>
-                         <p className="text-3xl font-bold text-[#E65100] dark:text-foreground">{discountPct}%</p>
-                         <p className="text-[11px] text-muted-foreground">do valor em pontos</p>
-                      </div>
-                      <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
-                        <p className="text-[11px] font-medium" style={{ color: "#5D4037" }}>Equivale a</p>
-                        <p className="text-3xl font-bold" style={{ color: "#3E2723" }}>{pointsValue}</p>
-                        <p className="text-[11px]" style={{ color: "#5D4037" }}>pontos</p>
-                      </div>
-                    </div>
+                       <div className="flex-1 rounded-xl p-3 text-center" style={{ backgroundColor: "#FFD54F" }}>
+                         <p className="text-2xl font-bold" style={{ color: "#3E2723" }}>{pointsValue} pontos</p>
+                         <p className="text-sm font-semibold" style={{ color: "#5D4037" }}>por R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                       </div>
+                     </div>
                      <p className="text-xs text-muted-foreground">
-                       Ao resgatar, você receberá um cupom de desconto de{" "}
-                        <strong className="text-[#E65100] dark:text-foreground">{creditAmount.toLocaleString("pt-BR")} pts</strong>{" "}
-                        para usar na compra deste produto.
-                    </p>
-                  </div>
+                       Ao resgatar, você irá receber um crédito de{" "}
+                       <strong className="text-[#E65100] dark:text-foreground">R$ {creditAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>{" "}
+                       para usar na compra desse produto.
+                     </p>
+                   </div>
                 )}
 
                 {/* Informações */}

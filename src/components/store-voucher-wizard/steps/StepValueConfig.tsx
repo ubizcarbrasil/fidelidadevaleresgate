@@ -12,6 +12,50 @@ interface Props {
 export default function StepValueConfig({ data, update }: Props) {
   const isPercent = data.discount_mode === "PERCENT";
   const isProduct = data.coupon_type === "PRODUCT";
+  const isEarnOnly = data.offer_purpose === "EARN";
+
+  // For EARN-only offers, no discount config needed
+  if (isEarnOnly) {
+    return (
+      <div className="space-y-5">
+        <Label className="text-base font-semibold">Configuração de Valor</Label>
+        {isProduct && (
+          <div className="p-3 border rounded-lg bg-accent/30">
+            <Label className="font-semibold">Valor do produto (R$)</Label>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-lg font-bold text-muted-foreground">R$</span>
+              <Input
+                type="number" min={0.01} step={0.01}
+                value={data.product_price}
+                onChange={(e) => update({ product_price: Number(e.target.value) })}
+                className="text-lg font-bold max-w-[140px]"
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+        )}
+        {!isProduct && (
+          <div className="space-y-1">
+            <Label>Compra mínima</Label>
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-muted-foreground">R$</span>
+              <Input
+                type="number" min={0} step={0.01}
+                value={data.min_purchase}
+                onChange={(e) => update({ min_purchase: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+        )}
+        <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg text-sm border border-green-200 dark:border-green-900">
+          <strong className="text-green-700 dark:text-green-300">Ganhe Pontos</strong>
+          <p className="text-xs text-muted-foreground mt-1">
+            O cliente acumula pontos pelo valor pago. Nenhuma configuração de desconto/resgate é necessária.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const creditValue = isProduct
     ? isPercent
@@ -95,7 +139,7 @@ export default function StepValueConfig({ data, update }: Props) {
       <div className="grid grid-cols-2 gap-4">
         {isPercent ? (
           <div className="space-y-1">
-            <Label>Percentual de desconto</Label>
+            <Label>Percentual pago com pontos</Label>
             <div className="flex items-center gap-1">
               <Input
                 type="number" min={1} max={100} step={1}
@@ -108,7 +152,7 @@ export default function StepValueConfig({ data, update }: Props) {
           </div>
         ) : (
           <div className="space-y-1">
-            <Label>Valor do desconto</Label>
+            <Label>Valor pago com pontos</Label>
             <div className="flex items-center gap-1">
               <span className="text-lg font-bold text-muted-foreground">R$</span>
               <Input
@@ -135,15 +179,23 @@ export default function StepValueConfig({ data, update }: Props) {
         )}
       </div>
 
-      {/* Summary box with differentiated nomenclature */}
+      {/* Summary */}
       <div className="p-3 bg-accent/50 rounded-lg text-sm">
         {isProduct ? (
           <>
-            <strong>PAGUE {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} COM PONTOS</strong>
+            <strong>Você pode pagar {isPercent ? `${data.discount_percent}%` : `R$ ${data.discount_fixed.toFixed(2)}`} com pontos</strong>
             <br />
             <span className="text-muted-foreground">
-              {Math.floor(creditValue)} pts = R$ {creditValue.toFixed(2)} | Produto: R$ {data.product_price.toFixed(2)}
+              {Math.floor(creditValue)} pontos por R$ {creditValue.toFixed(2)} | Produto: R$ {data.product_price.toFixed(2)}
             </span>
+            {data.offer_purpose === "BOTH" && (
+              <>
+                <br />
+                <span className="text-muted-foreground">
+                  Ao pagar R$ {(data.product_price - creditValue).toFixed(2)} em dinheiro, o cliente acumula {Math.floor(data.product_price - creditValue)} pontos
+                </span>
+              </>
+            )}
           </>
         ) : (
           <>

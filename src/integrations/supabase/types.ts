@@ -2700,6 +2700,7 @@ export type Database = {
           max_total_uses: number | null
           max_uses_per_customer: number | null
           min_purchase: number
+          offer_purpose: Database["public"]["Enums"]["offer_purpose"]
           product_id: string | null
           redemption_branch_id: string | null
           redemption_type: string | null
@@ -2741,6 +2742,7 @@ export type Database = {
           max_total_uses?: number | null
           max_uses_per_customer?: number | null
           min_purchase?: number
+          offer_purpose?: Database["public"]["Enums"]["offer_purpose"]
           product_id?: string | null
           redemption_branch_id?: string | null
           redemption_type?: string | null
@@ -2782,6 +2784,7 @@ export type Database = {
           max_total_uses?: number | null
           max_uses_per_customer?: number | null
           min_purchase?: number
+          offer_purpose?: Database["public"]["Enums"]["offer_purpose"]
           product_id?: string | null
           redemption_branch_id?: string | null
           redemption_type?: string | null
@@ -4833,6 +4836,7 @@ export type Database = {
         | "REDEMPTION"
         | "MANUAL_ADJUSTMENT"
         | "MACHINE_RIDE"
+      offer_purpose: "EARN" | "REDEEM" | "BOTH"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
       points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
       redemption_status: "PENDING" | "USED" | "EXPIRED" | "CANCELED"
@@ -5009,6 +5013,7 @@ export const Constants = {
         "MANUAL_ADJUSTMENT",
         "MACHINE_RIDE",
       ],
+      offer_purpose: ["EARN", "REDEEM", "BOTH"],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
       points_rule_type: ["PER_REAL", "FIXED", "TIERED"],
       redemption_status: ["PENDING", "USED", "EXPIRED", "CANCELED"],

@@ -3,6 +3,7 @@ import { ShoppingBag, Clock, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import SafeImage from "@/components/customer/SafeImage";
+import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 import type { Tables } from "@/integrations/supabase/types";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 
@@ -73,6 +74,7 @@ export const StoreOfferCard = React.memo(function StoreOfferCard({
                 {subtitleText}
               </p>
             )}
+            <OfferPurposeBadge purpose={(offer as any).offer_purpose} className="mt-1" />
           </div>
           <div className="flex items-center justify-between mt-2">
             {offer.coupon_type === "PRODUCT" && Number(offer.value_rescue) > 0 && (
