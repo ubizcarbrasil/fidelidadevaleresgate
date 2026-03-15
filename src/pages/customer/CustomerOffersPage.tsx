@@ -258,24 +258,22 @@ export default function CustomerOffersPage() {
                     {offer.title}
                   </h3>
 
-                  {/* Price row */}
-                  <div className="flex items-center gap-2 mt-auto">
-                    {hasCashback && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-base font-bold" style={{ color: "hsl(var(--vb-highlight))", fontFamily: fontHeading }}>
-                           {formatSubtitle(
-                             offer.coupon_type === "PRODUCT" ? "product" : "store",
-                             { points: Math.floor(Number(offer.value_rescue)), credit: Number(offer.value_rescue) }
-                           )}
+                  {/* Purpose badge + price */}
+                  <div className="flex items-center gap-2 mt-auto flex-wrap">
+                    <OfferPurposeBadge purpose={(offer as any).offer_purpose} />
+                    {offer.coupon_type === "PRODUCT" && (() => {
+                      const tp = offer.terms_params_json as Record<string, unknown> | null;
+                      const pp = tp?.product_price ? Number(tp.product_price) : 0;
+                      return pp > 0 ? (
+                        <span className="text-xs font-bold" style={{ fontFamily: fontHeading }}>
+                          R$ {pp.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </span>
-                      </div>
-                    )}
-                    {hasDiscount && offer.coupon_type === "PRODUCT" && (
-                      <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                        style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)", color: "hsl(var(--vb-highlight))" }}
-                      >
-                        {offer.discount_percent}% OFF
+                      ) : null;
+                    })()}
+                    {hasCashback && (offer as any).offer_purpose !== "EARN" && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                        style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)", color: "hsl(var(--vb-highlight))" }}>
+                        {Math.floor(Number(offer.value_rescue))} pts
                       </span>
                     )}
                   </div>
