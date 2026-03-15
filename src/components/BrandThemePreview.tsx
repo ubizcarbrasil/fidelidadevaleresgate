@@ -217,76 +217,115 @@ export default function BrandThemePreview({ theme, brandName }: Props) {
 
 /* ──────────────── Home Screen ──────────────── */
 function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, displayName, isDark }: any) {
+  const STORES = [
+    { name: "Pizzaria do João", initials: "PJ", color: "#E53935" },
+    { name: "Burger House", initials: "BH", color: "#FF8F00" },
+    { name: "Barbearia Premium", initials: "BP", color: "#7C3AED" },
+    { name: "Salão Beleza", initials: "SB", color: "#E91E63" },
+    { name: "Padaria Central", initials: "PC", color: "#059669" },
+  ];
+
   return (
     <div className="px-4 py-3 space-y-3 overflow-y-auto" style={{ height: "100%" }}>
-      {/* Greeting */}
-      <div>
-        <p className="font-bold text-[13px]" style={{ fontFamily: fontHeading, color: fg }}>
-          Boa tarde, <span style={{ color: accent }}>João</span>! 👋
-        </p>
-        <p className="text-[9px]" style={{ color: fg, opacity: 0.5 }}>Confira suas ofertas e pontos</p>
-      </div>
-
-      {/* Points banner */}
-      <div
-        className="rounded-2xl p-4 relative overflow-hidden"
-        style={{
-          background: `linear-gradient(145deg, ${hslAlpha(accentParsed, 1)} 0%, ${hslAlpha(accentParsed, 0.7)} 100%)`,
-          boxShadow: `0 6px 20px -6px ${hslAlpha(accentParsed, 0.4)}`,
-        }}
-      >
-        <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }} />
-        <div className="relative z-10 text-center">
-          <div className="flex items-center gap-1.5 justify-center mb-1">
-            <div className="h-5 w-5 rounded-lg flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-              <Coins className="h-2.5 w-2.5 text-white" />
-            </div>
-            <span className="text-[8px] font-semibold text-white/60 uppercase tracking-wider">Seus Pontos</span>
-          </div>
-          <span className="text-[28px] font-black text-white leading-none" style={{ fontFamily: fontHeading }}>1.250</span>
-          <div className="flex items-center justify-center gap-1 mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
-            <span className="text-[8px] text-white/50 font-semibold">Ver extrato completo</span>
-            <ChevronRight className="h-2.5 w-2.5 text-white/50" />
-          </div>
+      {/* Greeting + balance badge */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-bold text-[13px]" style={{ fontFamily: fontHeading, color: fg }}>
+            Olá, <span style={{ color: VB_GOLD }}>João</span>
+          </p>
+          <p className="text-[9px]" style={{ color: fg, opacity: 0.5 }}>Confira suas ofertas e pontos</p>
+        </div>
+        <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full" style={{ backgroundColor: VB_GOLD, color: "#fff" }}>
+          <Coins className="h-3 w-3" />
+          <span className="text-[10px] font-bold">1.250 pts</span>
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-6 gap-1">
-        {QUICK_ACTIONS.map((a) => {
-          const Icon = a.icon;
-          return (
-            <div key={a.label} className="flex flex-col items-center gap-1">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: isDark ? `${a.color}25` : a.bg }}>
-                <Icon className="h-4 w-4" style={{ color: a.color }} />
-              </div>
-              <span className="text-[7px] font-semibold text-center" style={{ color: fg, opacity: 0.6 }}>{a.label}</span>
-            </div>
-          );
-        })}
+      {/* Location line */}
+      <div className="flex items-center gap-1">
+        <MapPin className="h-2.5 w-2.5" style={{ color: accent }} />
+        <span className="text-[8px]" style={{ color: fg, opacity: 0.5 }}>Visualizando ofertas em: <b style={{ color: fg, opacity: 0.7 }}>Centro</b></span>
       </div>
 
       {/* For you section */}
       <div>
-        <div className="flex items-center gap-1 mb-2">
-          <Sparkles className="h-3 w-3" style={{ color: accent }} />
-          <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3" style={{ color: accent }} />
+            <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Selecionados para você</span>
+          </div>
+          <span className="text-[8px] font-semibold" style={{ color: accent }}>Ver todos</span>
         </div>
         <div className="flex gap-2 overflow-hidden">
-          {["Pizzaria do João", "Burger House"].map((name, i) => (
+          {[
+            { title: "10% OFF em Pizzas", store: "Pizzaria do João", pts: 50, color: "#E53935" },
+            { title: "Combo Família", store: "Burger House", pts: 30, color: "#FF8F00" },
+          ].map((offer, i) => (
             <div key={i} className="rounded-xl overflow-hidden flex-shrink-0" style={{ width: 120, backgroundColor: cardBg, boxShadow: `0 2px 8px ${fg}08` }}>
-              <div className="h-16 flex items-center justify-center text-white font-black text-lg"
-                style={{ backgroundColor: i === 0 ? "#E53935" : "#FF8F00" }}>
-                {name[0]}{name.split(" ").pop()?.[0]}
+              <div className="h-16 relative flex items-center justify-center" style={{ backgroundColor: `${offer.color}20` }}>
+                <Tag className="h-6 w-6" style={{ color: offer.color, opacity: 0.4 }} />
+                <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[7px] font-bold text-white" style={{ backgroundColor: VB_GOLD }}>
+                  +{offer.pts} pts
+                </div>
               </div>
               <div className="p-2">
-                <p className="text-[9px] font-bold truncate" style={{ color: fg }}>{name}</p>
-                <p className="text-[7px]" style={{ color: fg, opacity: 0.5 }}>10% OFF • Resgate</p>
+                <p className="text-[9px] font-bold truncate" style={{ color: fg }}>{offer.title}</p>
+                <p className="text-[7px]" style={{ color: fg, opacity: 0.5 }}>{offer.store}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Compre e pontue section */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1">
+            <Coins className="h-3 w-3" style={{ color: VB_GOLD }} />
+            <span className="text-[10px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Compre e pontue</span>
+          </div>
+          <span className="text-[8px] font-semibold" style={{ color: accent }}>Ver todos</span>
+        </div>
+        <div className="flex gap-3 overflow-hidden">
+          {STORES.map((s, i) => (
+            <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white font-bold text-[10px]" style={{ backgroundColor: s.color }}>
+                {s.initials}
+              </div>
+              <span className="text-[7px] font-medium text-center w-11 truncate" style={{ color: fg, opacity: 0.6 }}>{s.name.split(" ")[0]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── Redemptions Screen ──────────────── */
+function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
+  const redemptions = [
+    { title: "10% OFF em Pizzas", store: "Pizzaria do João", status: "Ativo", statusColor: "#059669", date: "Expira em 3 dias" },
+    { title: "Combo Família", store: "Burger House", status: "Usado", statusColor: "#9CA3AF", date: "Usado em 12/03" },
+    { title: "Corte + Barba", store: "Barbearia Premium", status: "Ativo", statusColor: "#059669", date: "Expira em 7 dias" },
+  ];
+  return (
+    <div className="px-4 py-3 space-y-2 overflow-y-auto" style={{ height: "100%" }}>
+      <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Meus Resgates</p>
+      {redemptions.map((r, i) => (
+        <div key={i} className="flex gap-2 p-2.5 rounded-xl" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06` }}>
+          <div className="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: `${accent}15` }}>
+            <TicketCheck className="h-4 w-4" style={{ color: accent }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold truncate" style={{ fontFamily: fontHeading, color: fg }}>{r.title}</p>
+            <p className="text-[8px]" style={{ color: fg, opacity: 0.5 }}>{r.store}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${r.statusColor}18`, color: r.statusColor }}>{r.status}</span>
+              <span className="text-[7px]" style={{ color: fg, opacity: 0.4 }}>{r.date}</span>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
