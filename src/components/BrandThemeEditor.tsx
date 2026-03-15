@@ -17,6 +17,8 @@ interface BrandThemeEditorProps {
   onChange: (theme: BrandTheme) => void;
   brandId?: string;
   brandName?: string;
+  offerCardConfig?: OfferCardConfig;
+  onOfferCardConfigChange?: (config: OfferCardConfig) => void;
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
