@@ -82,7 +82,7 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : hasPending ? (
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-amber-400 text-amber-700 bg-amber-50">
+              <Badge variant="outline" className="border-warning/40 text-warning bg-warning/10">
                 <Clock className="h-3 w-3 mr-1" /> Aguardando aprovação
               </Badge>
             </div>
