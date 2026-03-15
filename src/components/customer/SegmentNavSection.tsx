@@ -151,17 +151,23 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               variants={itemVariants}
               whileTap={{ scale: 0.92 }}
               className="flex flex-col items-center gap-1.5 flex-shrink-0"
-              style={{ width: 88 }}
+              style={{ width: iconSize + 24 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
               <div
-                className="h-16 w-16 rounded-2xl flex items-center justify-center"
-                style={{ backgroundColor: "hsl(var(--vb-card-elevated))" }}
+                className="flex items-center justify-center"
+                style={{
+                  height: iconSize,
+                  width: iconSize,
+                  borderRadius: iconRadius,
+                  backgroundColor: "hsl(var(--vb-card-elevated))",
+                }}
               >
-                <CategoryIcon iconName={cat.icon_name} />
+                <CategoryIcon iconName={cat.icon_name} size={iconInner} />
               </div>
               <span
-                className="text-[11px] font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+                className="font-semibold text-center leading-tight line-clamp-2 w-full text-muted-foreground"
+                style={{ fontSize: catFontSize }}
               >
                 {cat.name}
               </span>

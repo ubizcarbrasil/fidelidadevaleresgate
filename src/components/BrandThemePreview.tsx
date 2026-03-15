@@ -323,7 +323,7 @@ function RedemptionsScreen({ accent, fg, muted, cardBg, fontHeading }: any) {
     <div className="px-4 py-3 space-y-2 overflow-y-auto" style={{ height: "100%" }}>
       <p className="text-[12px] font-bold" style={{ fontFamily: fontHeading, color: fg }}>Meus Resgates</p>
       {redemptions.map((r, i) => (
-        <div key={i} className="flex gap-2 p-2.5 rounded-xl" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06` }}>
+        <div key={i} className="flex gap-2 p-2.5" style={{ backgroundColor: cardBg, boxShadow: `0 1px 4px ${fg}06`, borderRadius: cardRadius }}>
           <div className="h-10 w-10 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: `${accent}15` }}>
             <TicketCheck className="h-4 w-4" style={{ color: accent }} />
           </div>
