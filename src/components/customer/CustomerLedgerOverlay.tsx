@@ -7,13 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+import { hslToCss } from "@/lib/utils";
 
 type PeriodFilter = "7d" | "30d" | "90d" | "custom";
 type TypeFilter = "all" | "credits" | "debits" | "adjustments";

@@ -12,20 +12,9 @@ import { Button } from "@/components/ui/button";
 
 type LedgerEntry = Tables<"points_ledger">;
 
+import { hslToCss, withAlpha } from "@/lib/utils";
+
 const PAGE_SIZE = 30;
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
-}
 
 const cardStagger = {
   hidden: { opacity: 0, y: 16 },

@@ -28,12 +28,8 @@ interface Props {
   onOfferClick?: (offer: Offer) => void;
 }
 
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+// hslToCss imported below
+import { hslToCss } from "@/lib/utils";
 
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();

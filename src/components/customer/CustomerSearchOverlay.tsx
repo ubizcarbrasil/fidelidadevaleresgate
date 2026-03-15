@@ -6,13 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { useDebounce } from "@/hooks/useDebounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
+import { hslToCss } from "@/lib/utils";
 
 function kebabToPascal(name: string): string {
   return name.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");

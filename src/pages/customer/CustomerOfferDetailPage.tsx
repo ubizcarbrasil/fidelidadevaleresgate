@@ -18,24 +18,12 @@ import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
+import { hslToCss, withAlpha } from "@/lib/utils";
 
 type Offer = Tables<"offers">;
 
 interface OfferWithStore extends Offer {
   stores?: { name: string; logo_url: string | null } | null;
-}
-
-function hslToCss(hsl: string | undefined, fallback: string): string {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (isDark && fallback.startsWith("hsl(var(--")) return fallback;
-  if (!hsl) return fallback;
-  return `hsl(${hsl})`;
-}
-
-function withAlpha(hslColor: string, alpha: number): string {
-  const inner = hslColor.match(/hsl\((.+)\)/)?.[1];
-  if (!inner) return hslColor;
-  return `hsl(${inner} / ${alpha})`;
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
