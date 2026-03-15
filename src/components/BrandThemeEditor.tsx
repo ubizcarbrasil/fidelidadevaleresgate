@@ -415,11 +415,13 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
         </CardContent>
       </Card>
 
-      {/* Badge Config */}
-      <BadgeConfigEditor
-        value={value.badge_config || {}}
-        onChange={(badge_config) => update({ badge_config })}
-      />
+      {/* Offer Card Config */}
+      {onOfferCardConfigChange && offerCardConfig && (
+        <OfferCardConfigSection
+          value={offerCardConfig}
+          onChange={onOfferCardConfigChange}
+        />
+      )}
       </div>
 
       {/* Live Preview - sticky sidebar */}
