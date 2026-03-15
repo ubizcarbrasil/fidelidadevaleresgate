@@ -31,44 +31,44 @@ interface MenuItem {
 }
 
 const dashboardItem: MenuItem = {
-  key: "sidebar.dashboard", defaultTitle: "Painel Principal", url: "/", icon: LayoutDashboard,
+  key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
 };
 
 const groups: { label: string; items: MenuItem[] }[] = [
   {
-    label: "Configure",
+    label: "Personalização",
     items: [
       { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin, moduleKey: "branches" },
       { key: "sidebar.tema_marca", defaultTitle: "Aparência da Marca", url: "/brands", icon: Palette },
-      { key: "sidebar.galeria_icones", defaultTitle: "Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
-      { key: "sidebar.partner_landing", defaultTitle: "LP de Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing" },
-      { key: "sidebar.welcome_tour", defaultTitle: "Tour de Boas-Vindas", url: "/welcome-tour", icon: Rocket, moduleKey: "welcome_tour" },
+      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
+      { key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing" },
+      { key: "sidebar.welcome_tour", defaultTitle: "Boas-Vindas", url: "/welcome-tour", icon: Rocket, moduleKey: "welcome_tour" },
       { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText, moduleKey: "profile_links" },
-      { key: "sidebar.offer_card_config", defaultTitle: "Cards de Oferta", url: "/offer-card-config", icon: LayoutTemplate },
+      { key: "sidebar.offer_card_config", defaultTitle: "Layout de Ofertas", url: "/offer-card-config", icon: LayoutTemplate },
     ],
   },
   {
-    label: "Páginas do App",
+    label: "Vitrine Digital",
     items: [
-      { key: "sidebar.page_builder", defaultTitle: "Construtor de Páginas", url: "/page-builder-v2", icon: Layers, moduleKey: "page_builder" },
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.central_banners", defaultTitle: "Central de Propagandas", url: "/banner-manager", icon: Image, moduleKey: "banners" },
+      { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers, moduleKey: "page_builder" },
+      { key: "sidebar.achadinhos", defaultTitle: "Descobertas", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Descobertas", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image, moduleKey: "banners" },
     ],
   },
   {
-    label: "Validação",
+    label: "Aprovações",
     items: [
-      { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Emissor", url: "/emitter-requests", icon: Zap, moduleKey: "earn_points_store" },
-      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovação de Parceiros", url: "/store-approvals", icon: ShieldCheck, moduleKey: "approvals" },
-      { key: "sidebar.aprovar_regras", defaultTitle: "Aprovar Regras", url: "/approve-store-rules", icon: Shield, moduleKey: "earn_points_store" },
+      { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Upgrade", url: "/emitter-requests", icon: Zap, moduleKey: "earn_points_store" },
+      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovar Parceiros", url: "/store-approvals", icon: ShieldCheck, moduleKey: "approvals" },
+      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: Shield, moduleKey: "earn_points_store" },
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
     ],
   },
   {
-    label: "Operação",
+    label: "Gestão Comercial",
     items: [
-      { key: "sidebar.operador_pdv", defaultTitle: "Operador PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
+      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
       { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
       { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
@@ -78,60 +78,60 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
-    label: "Jornada",
+    label: "Guias Inteligentes",
     items: [
-      { key: "sidebar.jornada", defaultTitle: "Jornada do Empreendedor", url: "/brand-journey", icon: Rocket },
-      { key: "sidebar.jornada_emissor", defaultTitle: "Jornada do Emissor", url: "/emitter-journey", icon: Zap },
-      { key: "sidebar.crm_journey", defaultTitle: "Jornada do Cliente", url: "/crm", icon: Sparkles, moduleKey: "crm" },
+      { key: "sidebar.jornada", defaultTitle: "Guia do Empreendedor", url: "/brand-journey", icon: Rocket },
+      { key: "sidebar.jornada_emissor", defaultTitle: "Guia do Emissor", url: "/emitter-journey", icon: Zap },
+      { key: "sidebar.crm_journey", defaultTitle: "Jornada CRM", url: "/crm", icon: Sparkles, moduleKey: "crm" },
     ],
   },
   {
-    label: "Pontos",
+    label: "Programa de Fidelidade",
     items: [
       { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
-      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Pontos", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
-      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Pontos", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
+      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
+      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
     ],
   },
   {
-    label: "Usuários e Permissões",
+    label: "Equipe & Acessos",
     items: [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
-      { key: "sidebar.modulos", defaultTitle: "Funcionalidades", url: "/brand-modules", icon: Blocks },
-      { key: "sidebar.perm_parceiros", defaultTitle: "Permissões dos Parceiros", url: "/brand-permissions", icon: Shield },
-      { key: "sidebar.central_acessos", defaultTitle: "Central de Acessos", url: "/access-hub", icon: Eye },
+      { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
+      { key: "sidebar.perm_parceiros", defaultTitle: "Controle de Parceiros", url: "/brand-permissions", icon: Shield },
+      { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye },
       { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList, moduleKey: "audit" },
     ],
   },
   {
-    label: "Relatórios",
+    label: "Inteligência & Dados",
     items: [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3, moduleKey: "reports" },
-      { key: "sidebar.configuracoes", defaultTitle: "Configurações da Marca", url: "/brand-settings", icon: Settings2 },
+      { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
     ],
   },
   {
-    label: "Ganha-Ganha",
+    label: "Cashback Inteligente",
     items: [
-      { key: "sidebar.gg_config", defaultTitle: "Configuração GG", url: "/ganha-ganha-config", icon: Settings2, moduleKey: "ganha_ganha" },
-      { key: "sidebar.gg_billing", defaultTitle: "Painel Financeiro GG", url: "/ganha-ganha-billing", icon: ReceiptText, moduleKey: "ganha_ganha" },
-      { key: "sidebar.gg_closing", defaultTitle: "Fechamento Mensal", url: "/ganha-ganha-closing", icon: FileText, moduleKey: "ganha_ganha" },
+      { key: "sidebar.gg_config", defaultTitle: "Config. Cashback", url: "/ganha-ganha-config", icon: Settings2, moduleKey: "ganha_ganha" },
+      { key: "sidebar.gg_billing", defaultTitle: "Financeiro Cashback", url: "/ganha-ganha-billing", icon: ReceiptText, moduleKey: "ganha_ganha" },
+      { key: "sidebar.gg_closing", defaultTitle: "Fechamento Financeiro", url: "/ganha-ganha-closing", icon: FileText, moduleKey: "ganha_ganha" },
     ],
   },
   {
-    label: "CRM Estratégico",
+    label: "Inteligência de Clientes",
     items: [
-      { key: "sidebar.crm", defaultTitle: "CRM Estratégico", url: "/crm", icon: TrendingUp, moduleKey: "crm" },
-      { key: "sidebar.importar_csv", defaultTitle: "Importar Planilha", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
+      { key: "sidebar.crm", defaultTitle: "Inteligência CRM", url: "/crm", icon: TrendingUp, moduleKey: "crm" },
+      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
     ],
   },
   {
-    label: "Técnico",
+    label: "Integrações & API",
     items: [
-      { key: "sidebar.api_keys", defaultTitle: "Integrações API", url: "/api-keys", icon: Key, moduleKey: "api_keys" },
+      { key: "sidebar.api_keys", defaultTitle: "APIs & Integrações", url: "/api-keys", icon: Key, moduleKey: "api_keys" },
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
-      { key: "sidebar.machine", defaultTitle: "TaxiMachine", url: "/machine-integration", icon: Car },
-      { key: "sidebar.machine_test", defaultTitle: "Teste Webhook", url: "/machine-webhook-test", icon: FlaskConical },
+      { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car },
+      { key: "sidebar.machine_test", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree, moduleKey: "taxonomy" },
     ],
   },
@@ -243,13 +243,12 @@ export function BrandSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">{brandName || "Carregando..."}</span>
-              <span className="text-xs text-sidebar-foreground/60">Painel do Empreendedor</span>
+              <span className="text-xs text-sidebar-foreground/60">Gestão Estratégica</span>
             </div>
           )}
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {/* Dashboard fixo no topo */}
         <SidebarGroup className="pb-0">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -274,7 +273,6 @@ export function BrandSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Módulos colapsáveis */}
         {resolvedGroups.map((group) => {
           if (group.items.length === 0) return null;
           return (

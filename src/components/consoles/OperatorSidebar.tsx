@@ -10,8 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const items = [
-  { title: "Validar Resgate", url: "/", icon: ScanLine },
-  { title: "Pontuar Cliente", url: "/earn-points", icon: Coins },
+  { title: "Confirmar Resgate", url: "/", icon: ScanLine },
+  { title: "Registrar Pontos", url: "/earn-points", icon: Coins },
 ];
 
 export function OperatorSidebar() {
@@ -30,7 +30,7 @@ export function OperatorSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Operador PDV</span>
+              <span className="text-xs text-sidebar-foreground/60">Terminal de Vendas</span>
             </div>
           )}
         </div>
