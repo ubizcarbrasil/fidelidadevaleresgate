@@ -299,7 +299,17 @@ export default function StoreOwnerPanel() {
 
       {/* Main content area */}
       <main className="flex-1 overflow-auto px-4 pt-4 pb-24">
-        {activeTab === "dashboard" && <StoreOwnerDashboard store={store} />}
+        {activeTab === "dashboard" && (
+          showProfileWizard ? (
+            <StoreProfileWizard
+              store={store}
+              onClose={() => setShowProfileWizard(false)}
+              onComplete={() => { setShowProfileWizard(false); /* refresh store */ window.location.reload(); }}
+            />
+          ) : (
+            <StoreOwnerDashboard store={store} onOpenWizard={() => setShowProfileWizard(true)} />
+          )
+        )}
         {activeTab === "cupons" && (
           showWizard ? (
             <StoreVoucherWizard
