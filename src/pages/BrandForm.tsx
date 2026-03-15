@@ -17,6 +17,8 @@ import { ArrowLeft, Loader2, Key, Trash2, Save } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
 import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
+import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
+import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function BrandForm() {
@@ -32,6 +34,7 @@ export default function BrandForm() {
   const [isActive, setIsActive] = useState(true);
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
   const [theme, setTheme] = useState<BrandTheme>({});
+  const [offerCardConfig, setOfferCardConfig] = useState<OfferCardConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(false);
 
   // Password reset state
@@ -70,7 +73,16 @@ export default function BrandForm() {
         setIsActive(data.is_active);
         setSubscriptionPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
-          setTheme(data.brand_settings_json as unknown as BrandTheme);
+          const settings = data.brand_settings_json as Record<string, any>;
+          const { offer_card_config: occ, ...themeData } = settings;
+          setTheme(themeData as unknown as BrandTheme);
+          if (occ) {
+            setOfferCardConfig({
+              store: { ...DEFAULT_CONFIG.store, ...(occ.store || {}) },
+              product: { ...DEFAULT_CONFIG.product, ...(occ.product || {}) },
+              emitter: { ...DEFAULT_CONFIG.emitter, ...(occ.emitter || {}) },
+            });
+          }
         }
       });
 
@@ -112,7 +124,8 @@ export default function BrandForm() {
     if (isRootAdmin && !tenantId) { toast.error("Selecione um tenant"); return; }
     setLoading(true);
     const cleanTheme = JSON.parse(JSON.stringify(theme, (_, v) => (v === "" || v === undefined ? undefined : v)));
-    const basePayload = { name, brand_settings_json: Object.keys(cleanTheme).length > 0 ? cleanTheme : null };
+    const mergedSettings = { ...(Object.keys(cleanTheme).length > 0 ? cleanTheme : {}), offer_card_config: offerCardConfig };
+    const basePayload = { name, brand_settings_json: mergedSettings };
 
     const { error } = isEdit
       ? await supabase.from("brands").update({
@@ -248,7 +261,7 @@ export default function BrandForm() {
                 </CardContent>
               </Card>
             )}
-            <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} />
+            <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} offerCardConfig={offerCardConfig} onOfferCardConfigChange={setOfferCardConfig} />
           </TabsContent>
 
           {isEdit && id && (

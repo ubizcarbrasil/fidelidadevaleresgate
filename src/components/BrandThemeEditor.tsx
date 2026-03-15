@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,13 +8,17 @@ import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2 } from "lu
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
-import BadgeConfigEditor from "@/components/BadgeConfigEditor";
+import OfferCardConfigSection from "@/components/OfferCardConfigSection";
+import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
+import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
   onChange: (theme: BrandTheme) => void;
   brandId?: string;
   brandName?: string;
+  offerCardConfig?: OfferCardConfig;
+  onOfferCardConfigChange?: (config: OfferCardConfig) => void;
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
@@ -132,7 +136,7 @@ const DARK_PRESETS: DarkPreset[] = [
   },
 ];
 
-export default function BrandThemeEditor({ value, onChange, brandId, brandName }: BrandThemeEditorProps) {
+export default function BrandThemeEditor({ value, onChange, brandId, brandName, offerCardConfig, onOfferCardConfigChange }: BrandThemeEditorProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
@@ -411,11 +415,13 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName }
         </CardContent>
       </Card>
 
-      {/* Badge Config */}
-      <BadgeConfigEditor
-        value={value.badge_config || {}}
-        onChange={(badge_config) => update({ badge_config })}
-      />
+      {/* Offer Card Config */}
+      {onOfferCardConfigChange && offerCardConfig && (
+        <OfferCardConfigSection
+          value={offerCardConfig}
+          onChange={onOfferCardConfigChange}
+        />
+      )}
       </div>
 
       {/* Live Preview - sticky sidebar */}

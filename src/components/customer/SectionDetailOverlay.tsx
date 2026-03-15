@@ -165,6 +165,8 @@ export default function SectionDetailOverlay({
                           couponType={item.coupon_type}
                           valueRescue={Number(item.value_rescue || 0)}
                           minPurchase={Number(item.min_purchase || 0)}
+                          brandBadgeConfig={(item as any).brandBadgeConfig}
+                          offerBadgeConfig={(item as any).badge_config_json}
                         />
                       </div>
                     )}
