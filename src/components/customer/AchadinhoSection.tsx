@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ExternalLink, icons } from "lucide-react";
+import { ChevronRight, ExternalLink, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -49,7 +49,11 @@ const cardVariants = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
-export default function AchadinhoSection() {
+interface AchadinhoSectionProps {
+  onOpenAllCategories?: () => void;
+}
+
+export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
@@ -166,6 +170,16 @@ export default function AchadinhoSection() {
             </p>
           </div>
         </div>
+        {categories.length > 0 && onOpenAllCategories && (
+          <button
+            onClick={onOpenAllCategories}
+            className="text-xs font-semibold flex items-center gap-0.5"
+            style={{ color: highlight }}
+          >
+            Ver todos
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Category pills */}

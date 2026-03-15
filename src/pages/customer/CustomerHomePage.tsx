@@ -38,9 +38,10 @@ interface CustomerHomePageProps {
   onOpenLedger?: () => void;
   onOpenCategoryGrid?: () => void;
   onOpenCategoryStores?: (category: { id: string; name: string; icon_name: string | null }) => void;
+  onOpenAchadinhoCategoryGrid?: () => void;
 }
 
-export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores }: CustomerHomePageProps) {
+export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onOpenCategoryStores, onOpenAchadinhoCategoryGrid }: CustomerHomePageProps) {
   const { customer, loading } = useCustomer();
   const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } = useBrand();
   const { navigateToOffersWithSegment } = useCustomerNav();
@@ -142,7 +143,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       case "ACHADINHOS":
         return (
           <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
-            <AchadinhoSection />
+            <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
           </motion.div>
         );
       default:

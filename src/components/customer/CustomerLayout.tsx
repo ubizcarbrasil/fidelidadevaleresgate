@@ -6,6 +6,8 @@ import AppIcon from "@/components/customer/AppIcon";
 import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
 import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
+import AchadinhoCategoryGridOverlay from "@/components/customer/AchadinhoCategoryGridOverlay";
+import AchadinhoDealsOverlay from "@/components/customer/AchadinhoDealsOverlay";
 import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { AnimatePresence, motion } from "framer-motion";
@@ -125,6 +127,8 @@ export default function CustomerLayout() {
   const [categoryGridOpen, setCategoryGridOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; icon_name: string | null } | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [achadinhoCatGridOpen, setAchadinhoCatGridOpen] = useState(false);
+  const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
 
@@ -311,6 +315,7 @@ export default function CustomerLayout() {
                   onOpenLedger={() => setLedgerOpen(true)}
                   onOpenCategoryGrid={() => setCategoryGridOpen(true)}
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
+                  onOpenAchadinhoCategoryGrid={() => setAchadinhoCatGridOpen(true)}
                 />
               ) : (
                 <Suspense fallback={<TabSkeleton />}>
@@ -463,6 +468,29 @@ export default function CustomerLayout() {
             <CategoryStoresOverlay
               category={selectedCategory}
               onBack={() => setSelectedCategory(null)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Achadinhos Category Grid Overlay */}
+        <AnimatePresence>
+          {achadinhoCatGridOpen && (
+            <AchadinhoCategoryGridOverlay
+              onBack={() => setAchadinhoCatGridOpen(false)}
+              onCategoryClick={(cat) => {
+                setAchadinhoCatGridOpen(false);
+                setSelectedAchadinhoCat(cat);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Achadinhos Deals Overlay */}
+        <AnimatePresence>
+          {selectedAchadinhoCat && (
+            <AchadinhoDealsOverlay
+              category={selectedAchadinhoCat}
+              onBack={() => setSelectedAchadinhoCat(null)}
             />
           )}
         </AnimatePresence>

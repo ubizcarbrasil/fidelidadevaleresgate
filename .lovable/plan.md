@@ -1,34 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: "Ver todos" no Achadinhos abrindo grid de categorias
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema
-A seção Achadinhos não tem o botão "Ver todos". O usuário quer que, ao clicar, abra um overlay no mesmo formato do grid de categorias (cards quadrados 2 colunas), mas mostrando as categorias de achadinhos (`affiliate_deal_categories`).
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Alterações
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**1. `src/components/customer/AchadinhoSection.tsx`**
-- Aceitar nova prop `onOpenAllCategories?: () => void`
-- Adicionar botão "Ver todos >" ao lado do título (mesmo padrão do ForYouSection/EmissorasSection)
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**2. Criar `src/components/customer/AchadinhoCategoryGridOverlay.tsx`**
-- Overlay fullscreen (mesmo layout do `CategoryGridOverlay` existente)
-- Busca categorias da tabela `affiliate_deal_categories` (com contagem de deals ativos)
-- Grid 2 colunas com cards quadrados, ícone Lucide + nome
-- Ao clicar em uma categoria, filtra os deals daquela categoria (abre um segundo overlay ou volta à home com filtro)
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**3. `src/pages/customer/CustomerHomePage.tsx`**
-- Receber e repassar nova prop `onOpenAchadinhoCategoryGrid` para `AchadinhoSection`
-
-**4. `src/components/customer/CustomerLayout.tsx`**
-- Adicionar estado `achadinhoCatGridOpen`
-- Renderizar `AchadinhoCategoryGridOverlay` dentro do `AnimatePresence`
-- Ao clicar em uma categoria no grid, abrir deals filtrados (pode reusar o SectionDetailOverlay ou um overlay dedicado com cards de deals)
-- Passar `onOpenAchadinhoCategoryGrid` para `CustomerHomePage`
-
-### Fluxo
-```text
-Home → "Ver todos" → AchadinhoCategoryGridOverlay (grid 2col)
-  → clica categoria → AchadinhoCategoryDealsOverlay (lista de deals filtrados)
-```
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
