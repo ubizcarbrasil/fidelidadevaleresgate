@@ -1,30 +1,28 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Corrigir cor dos botões no painel admin
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+Os botões "Abrir" na seção "Links Úteis" do Dashboard estão exibindo um azul antigo. Isso acontece porque o `BrandContext` aplica `useBrandTheme(brand.brand_settings_json)` que sobrescreve a variável CSS `--primary` com a cor configurada da marca — que ainda está com o azul antigo.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Existem dois cenários possíveis:
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+**A)** A cor primária da marca no banco de dados não foi atualizada (ainda está no azul antigo). Nesse caso, basta atualizar o `brand_settings_json` da marca via o editor de tema.
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+**B)** O painel admin deveria sempre usar a cor da plataforma (Cyan `187 85% 43%`), independente da cor da marca. Nesse caso, precisamos ajustar a ordem de prioridade dos temas.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### Solução proposta (Cenário B — mais provável)
+
+**`src/components/AppLayout.tsx`**
+- Mover a chamada `useBrandTheme(platformTheme)` para que seja aplicada **depois** do `BrandContext`, ou adicionar prioridade ao tema da plataforma no admin.
+
+Alternativamente, no `BrandContext.tsx`, não aplicar o brand theme quando o contexto é admin (não é customer-facing):
+
+**`src/contexts/BrandContext.tsx`**
+- Condicionar a chamada `useBrandTheme(brand?.brand_settings_json)` para que só aplique no contexto do app do cliente (`/customer-preview`, `/c/`), não no painel admin.
+
+Isso fará com que o painel admin sempre use as cores da plataforma (Cyan), enquanto o app do cliente continua usando as cores configuradas da marca.
+
+### Arquivos alterados
+1. `src/contexts/BrandContext.tsx` — condicionar aplicação do tema da marca apenas no app do cliente
+
