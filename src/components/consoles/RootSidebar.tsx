@@ -227,6 +227,19 @@ export function RootSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
 
+  const { data: brands } = useQuery({
+    queryKey: ["brands-for-sidebar"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brands")
+        .select("id, name, slug")
+        .eq("is_active", true)
+        .order("name");
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
