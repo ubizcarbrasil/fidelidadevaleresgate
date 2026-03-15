@@ -209,11 +209,13 @@ export default function CustomerLayout() {
 
   const handleOpenOffer = useCallback((offer: NavOffer) => {
     trackClick("offer", offer.id, offer.store_id ?? undefined);
+    setSectionDetail(null);
     setSelectedOffer(offer);
   }, [trackClick]);
 
   const handleOpenStore = useCallback((store: NavStore) => {
     trackClick("store", store.id, store.id);
+    setSectionDetail(null);
     setSelectedStore(store);
   }, [trackClick]);
 
