@@ -70,7 +70,7 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
       <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-warning/8 to-warning/3">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Zap className="h-4 w-4 text-amber-600" />
+            <Zap className="h-4 w-4 text-warning" />
             Tornar-se Emissor de Pontos
           </CardTitle>
           <CardDescription className="text-xs">
