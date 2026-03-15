@@ -114,7 +114,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     switch (key) {
       case "BANNERS":
         return (
-          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-2">
+          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-3">
             <HomeSectionsRenderer renderBannersOnly />
           </motion.div>
         );
