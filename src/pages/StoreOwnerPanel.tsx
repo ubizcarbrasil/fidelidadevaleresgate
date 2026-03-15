@@ -86,7 +86,6 @@ export default function StoreOwnerPanel() {
     if (!user) return;
     const fetchStore = async () => {
       if (overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id))) {
-        // Admin override: load specific store by id
         const { data } = await supabase
           .from("stores")
           .select("*")
@@ -107,7 +106,6 @@ export default function StoreOwnerPanel() {
     fetchStore();
   }, [user, overrideStoreId, isRootAdmin]);
 
-  // Request browser notification permission
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().then(perm => {
@@ -118,7 +116,6 @@ export default function StoreOwnerPanel() {
     }
   }, []);
 
-  // Fetch pending orders count + realtime listener for new orders
   useEffect(() => {
     if (!store) return;
 
@@ -140,10 +137,7 @@ export default function StoreOwnerPanel() {
         table: "catalog_cart_orders",
         filter: `store_id=eq.${store.id}`,
       }, (payload) => {
-        // Increment badge
         setPendingOrdersCount(prev => prev + 1);
-
-        // Show browser notification
         const order = payload.new as any;
         const customerName = order.customer_name || "Novo cliente";
         const total = Number(order.total_amount || 0).toFixed(2);
@@ -155,12 +149,9 @@ export default function StoreOwnerPanel() {
               icon: store.logo_url || "/pwa-192x192.png",
               tag: `order-${order.id}`,
             });
-          } catch {
-            // Notification API not available (e.g. iOS PWA)
-          }
+          } catch { /* iOS PWA */ }
         }
 
-        // Also show in-app toast
         toast({
           title: "🛒 Novo Pedido!",
           description: `${customerName} — R$ ${total}`,
@@ -207,50 +198,49 @@ export default function StoreOwnerPanel() {
   });
 
   const isInBottomTabs = filteredBottomTabs.some(t => t.key === activeTab);
-  const activeLabel = [...filteredBottomTabs, ...filteredMoreMenu].find(t => t.key === activeTab)?.label || "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b pwa-safe-top">
-        <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2 min-w-0">
+      {/* ── Premium Glass Header ── */}
+      <header className="sticky top-0 z-40 glass-header border-b border-border/40 pwa-safe-top">
+        <div className="flex items-center justify-between px-4 h-16">
+          <div className="flex items-center gap-3 min-w-0">
             {isAdminOverride && (
               <button
                 onClick={() => navigate(-1)}
-                className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-muted/80 transition-all shrink-0"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
             )}
             <div className="flex items-center gap-3 min-w-0">
-            <div className="h-9 w-9 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
-              {store.logo_url ? (
-                <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />
-              ) : (
-                <Store className="h-4 w-4 text-primary" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-sm truncate">{store.name}</p>
-              <Badge variant="outline" className="text-[9px] h-4">
-                {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
-              </Badge>
-            </div>
+              <div className="h-10 w-10 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 ring-2 ring-primary/10">
+                {store.logo_url ? (
+                  <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />
+                ) : (
+                  <Store className="h-5 w-5 text-primary" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">{store.name}</p>
+                <Badge variant="outline" className="text-[9px] h-4 bg-background/50 border-border/50">
+                  {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
+                </Badge>
+              </div>
             </div>
             {isAdminOverride && (
-              <Badge variant="secondary" className="text-[9px] h-4 shrink-0">Admin</Badge>
+              <Badge className="text-[9px] h-4 shrink-0 bg-primary/10 text-primary border-0">Admin</Badge>
             )}
           </div>
 
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
-              <button className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
+              <button className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted/80 transition-all active:scale-95">
                 <Menu className="h-5 w-5 text-muted-foreground" />
               </button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] p-0">
-              <SheetHeader className="p-5 border-b">
+              <SheetHeader className="p-5 border-b border-border/50">
                 <SheetTitle className="text-left text-sm">Menu</SheetTitle>
               </SheetHeader>
               <div className="p-3 space-y-1">
@@ -261,11 +251,13 @@ export default function StoreOwnerPanel() {
                     <button
                       key={item.key}
                       onClick={() => { setActiveTab(item.key); setMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors ${
-                        isActive ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted"
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
+                        isActive ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted/60"
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${isActive ? "bg-primary/15" : "bg-muted/60"}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
                       <span className="flex-1 text-left">{item.label}</span>
                       {item.key === "pedidos" && pendingOrdersCount > 0 && (
                         <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-destructive text-destructive-foreground rounded-full">
@@ -276,20 +268,24 @@ export default function StoreOwnerPanel() {
                   );
                 })}
               </div>
-              <div className="border-t p-3 space-y-1">
+              <div className="border-t border-border/50 p-3 space-y-1">
                 <ChangePasswordDialog
                   trigger={
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted transition-colors">
-                      <Lock className="h-4 w-4" />
+                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted/60 transition-all">
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-muted/60">
+                        <Lock className="h-4 w-4" />
+                      </div>
                       Alterar Senha
                     </button>
                   }
                 />
                 <button
                   onClick={async () => { await signOut(); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-all"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-destructive/10">
+                    <LogOut className="h-4 w-4" />
+                  </div>
                   Sair da conta
                 </button>
               </div>
@@ -305,7 +301,7 @@ export default function StoreOwnerPanel() {
             <StoreProfileWizard
               store={store}
               onClose={() => setShowProfileWizard(false)}
-              onComplete={() => { setShowProfileWizard(false); /* refresh store */ window.location.reload(); }}
+              onComplete={() => { setShowProfileWizard(false); window.location.reload(); }}
             />
           ) : (
             <StoreOwnerDashboard store={store} onOpenWizard={() => setShowProfileWizard(true)} />
@@ -342,8 +338,8 @@ export default function StoreOwnerPanel() {
         {activeTab === "campanhas" && <StoreCampaignTab store={store} />}
       </main>
 
-      {/* Bottom tab bar - PWA style */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-md border-t pwa-safe-bottom">
+      {/* ── Premium Glass Bottom Nav ── */}
+      <nav className="fixed bottom-0 inset-x-0 z-50 glass-nav border-t border-border/30 pwa-safe-bottom">
         <div className="flex items-stretch h-16 max-w-lg mx-auto">
           {filteredBottomTabs.map(tab => {
             const Icon = tab.icon;
@@ -352,36 +348,42 @@ export default function StoreOwnerPanel() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative ${
                   isActive ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 rounded-b-full nav-pill-active" />
                 )}
-                <Icon className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`} />
-                <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>{tab.label}</span>
+                <div className={`h-8 w-8 rounded-xl flex items-center justify-center transition-all ${
+                  isActive ? "bg-primary/10 scale-110" : ""
+                }`}>
+                  <Icon className={`h-[18px] w-[18px] ${isActive ? "stroke-[2.5]" : ""}`} />
+                </div>
+                <span className={`text-[10px] leading-none ${isActive ? "font-bold" : "font-medium"}`}>{tab.label}</span>
               </button>
             );
           })}
           <button
             onClick={() => setMenuOpen(true)}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative ${
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative ${
               !isInBottomTabs ? "text-primary" : "text-muted-foreground"
             }`}
           >
             {!isInBottomTabs && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 rounded-b-full nav-pill-active" />
             )}
-            <div className="relative">
-              <Menu className={`h-5 w-5 ${!isInBottomTabs ? "stroke-[2.5]" : ""}`} />
+            <div className={`relative h-8 w-8 rounded-xl flex items-center justify-center transition-all ${
+              !isInBottomTabs ? "bg-primary/10 scale-110" : ""
+            }`}>
+              <Menu className={`h-[18px] w-[18px] ${!isInBottomTabs ? "stroke-[2.5]" : ""}`} />
               {pendingOrdersCount > 0 && activeTab !== "pedidos" && (
                 <span className="absolute -top-1 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
                   {pendingOrdersCount > 99 ? "99+" : pendingOrdersCount}
                 </span>
               )}
             </div>
-            <span className={`text-[10px] ${!isInBottomTabs ? "font-bold" : "font-medium"}`}>Mais</span>
+            <span className={`text-[10px] leading-none ${!isInBottomTabs ? "font-bold" : "font-medium"}`}>Mais</span>
           </button>
         </div>
       </nav>
@@ -391,6 +393,7 @@ export default function StoreOwnerPanel() {
   );
 }
 
+/* ─── Dashboard ─── */
 function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard: () => void }) {
   const { percent, isComplete, missingSteps } = useStoreProfileCompleteness(store);
   const [stats, setStats] = useState({
@@ -460,10 +463,10 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
   }, [store.id, period]);
 
   const kpis = [
-    { label: "Emitidos", value: stats.cuponsEmitidos, icon: Tag, color: "text-blue-600 bg-blue-100/80" },
-    { label: "Resgatados", value: stats.cuponsResgatados, icon: Check, color: "text-green-600 bg-green-100/80" },
-    { label: "Ativos", value: stats.cuponsAtivos, icon: Clock, color: "text-amber-600 bg-amber-100/80" },
-    { label: "Ganhos", value: `R$ ${stats.ganhos.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-600 bg-emerald-100/80" },
+    { label: "Emitidos", value: stats.cuponsEmitidos, icon: Tag, iconClass: "kpi-icon-blue" },
+    { label: "Resgatados", value: stats.cuponsResgatados, icon: Check, iconClass: "kpi-icon-green" },
+    { label: "Ativos", value: stats.cuponsAtivos, icon: Clock, iconClass: "kpi-icon-amber" },
+    { label: "Ganhos", value: `R$ ${stats.ganhos.toFixed(2)}`, icon: TrendingUp, iconClass: "kpi-icon-emerald" },
   ];
 
   const periods = [
@@ -474,28 +477,28 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Profile completeness card */}
+    <div className="space-y-5 animate-fade-in">
+      {/* ── Profile Completeness Card ── */}
       {!isComplete && (
-        <Card className="rounded-2xl border-primary/20 bg-primary/5 overflow-hidden">
+        <Card className="rounded-2xl border-0 overflow-hidden glow-primary bg-gradient-to-br from-primary/8 to-primary/3">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-bold text-sm">Complete seu perfil</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Para aparecer no app dos clientes</p>
               </div>
-              <div className="h-12 w-12 rounded-full border-4 border-primary/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">{percent}%</span>
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/20">
+                <span className="text-base font-bold text-primary">{percent}%</span>
               </div>
             </div>
             <Progress value={percent} className="h-2" />
             <div className="flex flex-wrap gap-1.5">
               {missingSteps.slice(0, 3).map(s => (
-                <Badge key={s.key} variant="outline" className="text-[10px]">{s.label}</Badge>
+                <Badge key={s.key} variant="outline" className="text-[10px] bg-background/60">{s.label}</Badge>
               ))}
-              {missingSteps.length > 3 && <Badge variant="outline" className="text-[10px]">+{missingSteps.length - 3}</Badge>}
+              {missingSteps.length > 3 && <Badge variant="outline" className="text-[10px] bg-background/60">+{missingSteps.length - 3}</Badge>}
             </div>
-            <Button onClick={onOpenWizard} className="w-full gap-2" size="sm">
+            <Button onClick={onOpenWizard} className="w-full gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70" size="sm">
               <ArrowRight className="h-4 w-4" /> Continuar configuração
             </Button>
           </CardContent>
@@ -507,14 +510,16 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
         <p className="text-xs text-muted-foreground mt-0.5">Visão geral do seu estabelecimento</p>
       </div>
 
-      {/* Period selector - scrollable pills */}
-      <div className="flex gap-1.5 bg-muted/60 rounded-xl p-1">
+      {/* ── Period Selector ── */}
+      <div className="flex gap-1 bg-muted/40 rounded-2xl p-1 border border-border/30">
         {periods.map(p => (
           <button
             key={p.key}
             onClick={() => setPeriod(p.key)}
-            className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-              period === p.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              period === p.key
+                ? "bg-background text-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {p.label}
@@ -524,65 +529,72 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
 
       {loading ? (
         <div className="grid grid-cols-2 gap-3">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
         </div>
       ) : (
         <>
+          {/* ── KPI Cards ── */}
           <div className="grid grid-cols-2 gap-3">
             {kpis.map(kpi => {
               const Icon = kpi.icon;
               return (
-                <Card key={kpi.label} className="rounded-2xl border-0 shadow-sm">
+                <Card key={kpi.label} className="rounded-2xl border-0 shadow-sm kpi-card-gradient hover-scale">
                   <CardContent className="p-4">
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.color}`}>
-                      <Icon className="h-3.5 w-3.5" />
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center mb-3 ${kpi.iconClass} text-white shadow-sm`}>
+                      <Icon className="h-4 w-4" />
                     </div>
-                    <p className="text-xl font-bold tracking-tight">{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{kpi.label}</p>
+                    <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 font-medium">{kpi.label}</p>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
 
-          {/* Secondary stats row */}
+          {/* ── Secondary Stats ── */}
           <div className="grid grid-cols-2 gap-3">
-            <Card className="rounded-2xl border-0 shadow-sm">
+            <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <X className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground font-medium">Inativos</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-muted/80">
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground font-medium">Inativos</span>
                 </div>
-                <p className="text-lg font-bold">{stats.cuponsInativos}</p>
+                <p className="text-xl font-bold">{stats.cuponsInativos}</p>
               </CardContent>
             </Card>
-            <Card className="rounded-2xl border-0 shadow-sm">
+            <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground font-medium">Com limite</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-muted/80">
+                    <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground font-medium">Com limite</span>
                 </div>
-                <p className="text-lg font-bold">{stats.cuponsEstourados}</p>
+                <p className="text-xl font-bold">{stats.cuponsEstourados}</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Emitter upgrade request card */}
           <EmitterUpgradeCard store={store} />
 
+          {/* ── Expiring Soon Card ── */}
           {stats.proximosVencer.length > 0 && (
-            <Card className="rounded-2xl border-amber-200 bg-amber-50/50 shadow-sm">
+            <Card className="rounded-2xl border-0 shadow-sm glow-amber bg-gradient-to-br from-warning/8 to-warning/3">
               <CardHeader className="pb-2 px-4 pt-4">
-                <CardTitle className="text-xs flex items-center gap-2 text-amber-800">
-                  <Clock className="h-3.5 w-3.5" />
-                  Vencendo em 7 dias
+                <CardTitle className="text-xs flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg kpi-icon-amber flex items-center justify-center text-white">
+                    <Clock className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-foreground font-semibold">Vencendo em 7 dias</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 space-y-2">
                 {stats.proximosVencer.map(o => (
-                  <div key={o.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2.5">
+                  <div key={o.id} className="flex items-center justify-between bg-background/80 rounded-xl px-3 py-2.5 border border-border/30">
                     <span className="text-xs font-medium truncate mr-2">{o.title}</span>
-                    <Badge variant="outline" className="text-amber-700 border-amber-300 text-[9px] shrink-0">
+                    <Badge variant="outline" className="text-warning border-warning/30 bg-warning/5 text-[9px] shrink-0">
                       {new Date(o.end_at).toLocaleDateString("pt-BR")}
                     </Badge>
                   </div>
@@ -596,6 +608,7 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
   );
 }
 
+/* ─── Coupons Tab ─── */
 function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateNew: () => void; onEdit: (offer: any) => void }) {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -625,24 +638,26 @@ function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateN
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">Cupons</h1>
           <p className="text-xs text-muted-foreground">Gerencie seus cupons</p>
         </div>
-        <Button onClick={onCreateNew} size="sm" className="gap-1.5 rounded-xl h-9">
+        <Button onClick={onCreateNew} size="sm" className="gap-1.5 rounded-xl h-9 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm">
           <Plus className="h-3.5 w-3.5" /> Criar
         </Button>
       </div>
 
       {loading ? (
         <div className="space-y-3">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+          {[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
         </div>
       ) : offers.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <Tag className="h-12 w-12 mx-auto mb-3 opacity-30" />
+          <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+            <Tag className="h-8 w-8 opacity-30" />
+          </div>
           <p className="font-semibold text-sm">Nenhum cupom criado</p>
           <p className="text-xs mt-1">Toque em "Criar" para começar</p>
         </div>
@@ -652,16 +667,16 @@ function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateN
             const st = statusLabel(offer.status);
             const canEdit = ["DRAFT", "ACTIVE"].includes(offer.status) && (!offer.end_at || new Date(offer.end_at) > new Date());
             return (
-              <Card key={offer.id} className="rounded-2xl border-0 shadow-sm active:scale-[0.98] transition-transform">
+              <Card key={offer.id} className="rounded-2xl border-0 shadow-sm kpi-card-gradient active:scale-[0.98] transition-all duration-150">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm truncate">{offer.title}</p>
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        <Badge variant={st.variant} className="text-[9px] h-5">{st.label}</Badge>
-                        {offer.coupon_category && <Badge variant="outline" className="text-[9px] h-5">{offer.coupon_category}</Badge>}
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        <Badge variant={st.variant} className="text-[9px] h-5 rounded-full">{st.label}</Badge>
+                        {offer.coupon_category && <Badge variant="outline" className="text-[9px] h-5 rounded-full">{offer.coupon_category}</Badge>}
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                      <p className="text-[11px] text-muted-foreground mt-2">
                         R$ {offer.value_rescue?.toFixed(2)} · mín. R$ {offer.min_purchase?.toFixed(2)}
                       </p>
                     </div>
@@ -687,6 +702,7 @@ function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateN
   );
 }
 
+/* ─── Empty State ─── */
 function StoreEmptyState({ userId }: { userId?: string }) {
   const navigate = useNavigate();
   const { signOut } = useAuth();
@@ -707,8 +723,8 @@ function StoreEmptyState({ userId }: { userId?: string }) {
   }, [userId]);
 
   const statusConfig: Record<string, { label: string; icon: typeof Clock; color: string }> = {
-    PENDING_APPROVAL: { label: "Em análise", icon: Clock, color: "text-amber-600" },
-    APPROVED: { label: "Aprovada", icon: CheckCircle2, color: "text-green-600" },
+    PENDING_APPROVAL: { label: "Em análise", icon: Clock, color: "text-warning" },
+    APPROVED: { label: "Aprovada", icon: CheckCircle2, color: "text-success" },
     REJECTED: { label: "Rejeitada", icon: AlertCircle, color: "text-destructive" },
     DRAFT: { label: "Rascunho", icon: ClipboardList, color: "text-muted-foreground" },
   };
@@ -720,9 +736,9 @@ function StoreEmptyState({ userId }: { userId?: string }) {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-5 pwa-safe-top pwa-safe-bottom">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 animate-fade-in">
         <div className="text-center space-y-3">
-          <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <div className="mx-auto h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10">
             <Store className="h-10 w-10 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Portal do Parceiro</h1>
@@ -745,15 +761,15 @@ function StoreEmptyState({ userId }: { userId?: string }) {
               const cfg = statusConfig[store.approval_status] || statusConfig.DRAFT;
               const Icon = cfg.icon;
               return (
-                <Card key={store.id} className="rounded-2xl border shadow-sm">
+                <Card key={store.id} className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
                   <CardContent className="p-4 flex items-center gap-4">
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-muted ${cfg.color}`}>
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-muted/60 ${cfg.color}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate">{store.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-[9px] h-4">
+                        <Badge variant="outline" className="text-[9px] h-4 rounded-full">
                           {store.store_type === "RECEPTORA" ? "Receptora" : store.store_type === "EMISSORA" ? "Emissora" : "Mista"}
                         </Badge>
                         <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
@@ -768,12 +784,14 @@ function StoreEmptyState({ userId }: { userId?: string }) {
             })}
 
             {pendingStores.some(s => s.approval_status === "PENDING_APPROVAL") && (
-              <Card className="rounded-2xl border-amber-200 bg-amber-50/50">
+              <Card className="rounded-2xl border-0 shadow-sm glow-amber bg-gradient-to-br from-warning/8 to-warning/3">
                 <CardContent className="p-4 flex gap-3">
-                  <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="h-9 w-9 rounded-lg kpi-icon-amber flex items-center justify-center text-white shrink-0">
+                    <Clock className="h-4 w-4" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-amber-900">Aguardando aprovação</p>
-                    <p className="text-xs text-amber-700 mt-0.5">
+                    <p className="text-sm font-medium">Aguardando aprovação</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Seu cadastro está sendo analisado. Você receberá acesso ao painel assim que for aprovado.
                     </p>
                   </div>
@@ -782,9 +800,11 @@ function StoreEmptyState({ userId }: { userId?: string }) {
             )}
           </div>
         ) : (
-          <Card className="rounded-2xl">
+          <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
             <CardContent className="p-6 text-center space-y-3">
-              <ClipboardList className="h-10 w-10 mx-auto text-muted-foreground/40" />
+              <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+                <ClipboardList className="h-7 w-7 text-muted-foreground/40" />
+              </div>
               <div>
                 <p className="font-semibold text-sm">Nenhum cadastro encontrado</p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -797,7 +817,7 @@ function StoreEmptyState({ userId }: { userId?: string }) {
 
         <div className="space-y-3">
           <Button
-            className="w-full gap-2 rounded-2xl h-12"
+            className="w-full gap-2 rounded-2xl h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
             size="lg"
             onClick={() => navigate("/register-store")}
           >
