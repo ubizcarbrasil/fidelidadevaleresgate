@@ -413,6 +413,11 @@ export default function BrandSectionsManager({ brandId, subscriptionPlan }: Bran
                   checked={section.is_enabled}
                   onCheckedChange={(checked) => toggleEnabled.mutate({ id: section.id, enabled: checked })}
                 />
+                {canEditStructure && (
+                <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
