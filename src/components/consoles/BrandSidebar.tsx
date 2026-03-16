@@ -96,7 +96,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Equipe & Acessos",
     items: [
-      { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
+      { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users, moduleKey: "users_management" },
       { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: Shield, moduleKey: "store_permissions" },
       { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye, moduleKey: "access_hub" },

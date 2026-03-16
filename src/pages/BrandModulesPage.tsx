@@ -10,15 +10,18 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
-  Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3,
+  Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
+  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList,
 } from "lucide-react";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
   core: { label: "Essencial", emoji: "🔧", description: "Funcionalidades fundamentais da plataforma" },
   comercial: { label: "Comercial", emoji: "🏪", description: "Gestão de parceiros, ofertas e catálogo" },
   fidelidade: { label: "Fidelidade & Pontos", emoji: "⭐", description: "Programa de pontos e regras de acúmulo" },
-  visual: { label: "Visual & Conteúdo", emoji: "🎨", description: "Personalização visual e páginas" },
-  engajamento: { label: "Engajamento", emoji: "📣", description: "Notificações e comunicação com clientes" },
+  visual: { label: "Menus de Personalização", emoji: "🎨", description: "Controla quais menus aparecem no painel do empreendedor" },
+  visual_theme: { label: "Customização do Tema", emoji: "🖌️", description: "Controle granular das seções do Editor de Tema da marca" },
+  governance: { label: "Governança", emoji: "🛡️", description: "Auditoria, permissões e gestão de acessos" },
+  engajamento: { label: "Engajamento", emoji: "📣", description: "Notificações, CRM e comunicação com clientes" },
   general: { label: "Geral", emoji: "📦", description: "Outros módulos" },
 };
 
@@ -39,6 +42,35 @@ const MODULE_ICONS: Record<string, any> = {
   home_sections: Layers,
   wallet: Coins,
   redemption_qr: BarChart3,
+  brand_theme: Palette,
+  page_builder: Layers,
+  icon_library: Image,
+  partner_landing: FileSpreadsheet,
+  profile_links: FileSpreadsheet,
+  offer_card_config: Tag,
+  app_icons: Image,
+  welcome_tour: Sparkles,
+  theme_colors: Palette,
+  theme_typography: Type,
+  theme_images: Image,
+  theme_texts: Type,
+  theme_layout: Layers,
+  theme_offer_cards: Tag,
+  users_management: Users,
+  approvals: Shield,
+  audit: ClipboardList,
+  access_hub: Shield,
+  store_permissions: Shield,
+  crm: TrendingUp,
+  guide_brand: Sparkles,
+  guide_emitter: Sparkles,
+  csv_import: FileSpreadsheet,
+  ganha_ganha: Coins,
+  domains: Globe,
+  sponsored: Sparkles,
+  machine_integration: Settings2,
+  api_keys: Settings2,
+  taxonomy: Settings2,
 };
 
 export default function BrandModulesPage() {
