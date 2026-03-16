@@ -298,7 +298,7 @@ export default function BrandForm() {
                                 onCheckedChange={() => handleToggleModule(def.id, isEnabled)}
                               />
                               <div>
-                                <span className="font-medium">{def.label}</span>
+                                <span className="font-medium">{def.name}</span>
                                 {isCore && <Badge variant="secondary" className="ml-2 text-xs">Core</Badge>}
                               </div>
                             </div>
