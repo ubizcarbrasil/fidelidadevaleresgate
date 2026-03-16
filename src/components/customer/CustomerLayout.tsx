@@ -105,11 +105,7 @@ const TAB_CONTENT: Record<Tab, React.FC<any>> = {
   profile: CustomerProfilePage,
 };
 
-const tabVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.15, ease: "easeIn" as const } },
-};
+// Removed heavy tab transition variants — using CSS animate-fade-in instead
 
 export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
@@ -302,14 +298,7 @@ export default function CustomerLayout() {
           className="flex-1 pb-24 overflow-y-auto"
           style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              variants={tabVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+          <div key={activeTab} className="animate-fade-in">
               {activeTab === "home" ? (
                 <CustomerHomePage
                   onOpenLedger={() => setLedgerOpen(true)}
@@ -322,8 +311,7 @@ export default function CustomerLayout() {
                   <ActivePage />
                 </Suspense>
               )}
-            </motion.div>
-          </AnimatePresence>
+          </div>
         </main>
 
         {/* Bottom Tab Bar — Dark premium */}

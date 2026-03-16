@@ -3,7 +3,7 @@ import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight, Coins, Loader2, MapPin } from "lucide-react";
+import { Coins } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
@@ -13,7 +13,6 @@ import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import { haptic } from "@/lib/haptics";
 import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
 
@@ -108,43 +107,42 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     return section ? section.enabled : true;
   };
 
-  const renderNativeSection = (key: string, delayBase: number) => {
+  const renderNativeSection = (key: string) => {
     if (!isNativeEnabled(key)) return null;
-    const delay = delayBase * 0.02 + 0.05;
 
     switch (key) {
       case "BANNERS":
         return (
-          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-3">
+          <div key="banners" className="mt-3 animate-fade-in">
             <HomeSectionsRenderer renderBannersOnly />
-          </motion.div>
+          </div>
         );
       case "CATEGORIES":
         return (
-          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="categories" className="mt-6 animate-fade-in">
             <SegmentNavSection
               onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
               onSeeMore={() => onOpenCategoryGrid?.()}
             />
-          </motion.div>
+          </div>
         );
       case "FOR_YOU":
         return (
-          <motion.div key="foryou" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="foryou" className="mt-6 animate-fade-in">
             <ForYouSection />
-          </motion.div>
+          </div>
         );
       case "EMISSORAS":
         return (
-          <motion.div key="emissoras" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="emissoras" className="mt-6 animate-fade-in">
             <EmissorasSection />
-          </motion.div>
+          </div>
         );
       case "ACHADINHOS":
         return (
-          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="achadinhos" className="mt-6 animate-fade-in">
             <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
-          </motion.div>
+          </div>
         );
       default:
         return null;
@@ -154,12 +152,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
   return (
     <div className="pb-4">
       {/* Hero Section: Greeting + Balance */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-4 pt-4 pb-1"
-      >
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-1 animate-fade-in">
         {/* Top row: Greeting + Balance badge */}
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -194,22 +187,15 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
             </button>
           )}
         </div>
-
-
-      </motion.div>
+      </div>
 
       {/* Render native sections in configured order */}
-      {nativeSections.map((ns: NativeSectionConfig, idx: number) => renderNativeSection(ns.key, idx))}
+      {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns.key))}
 
       {/* Dynamic CMS Sections */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
-        className="mt-6"
-      >
+      <div className="mt-6 animate-fade-in">
         <HomeSectionsRenderer skipBanners />
-      </motion.div>
+      </div>
 
       {/* Footer text */}
       {theme?.footer_text && (

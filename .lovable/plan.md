@@ -1,41 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Otimizar performance do app do cliente
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problemas identificados
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-1. **SectionBlock usa `useEffect` + `useState` ao invés de `useQuery`**: Cada seção CMS faz fetch independente com `useEffect`, sem cache nem deduplicação. Com 8 seções, são 8+ chamadas paralelas sem cache.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-2. **HomeSectionsRenderer é chamado DUAS vezes**: Uma para `renderBannersOnly` e outra para `skipBanners`. Cada chamada executa a query principal (seções + sponsored + ranking RPC) — totalizando 2x a mesma query pesada + 2x a RPC `get_recommended_offers`.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-3. **ForYouSection também chama `get_recommended_offers`**: Essa RPC é chamada 3 vezes no total (2x HomeSectionsRenderer + 1x ForYouSection).
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-4. **Excesso de animações `motion.div`**: Cada seção nativa é embrulhada em `motion.div` com `initial/animate`, e dentro do `HomeSectionsRenderer` cada seção também tem outro `motion.div`. Isso causa re-renders e layout thrashing.
-
-5. **`SectionBlock` dependency array instável**: `segmentFilterIds.join()` e `section` (objeto) como deps do `useEffect` causam re-fetches desnecessários.
-
-### Alterações propostas
-
-#### 1. Unificar chamada do HomeSectionsRenderer
-Renderizar uma única vez com prop para separar banners/seções internamente, eliminando a query duplicada.
-
-#### 2. Migrar SectionBlock de useEffect para useQuery
-Substituir o `useEffect` + `useState` por `useQuery` com queryKeys estáveis, ganhando cache automático e deduplicação.
-
-#### 3. Reduzir animações pesadas
-- Remover `motion.div` wrappers das seções nativas na Home (manter apenas o stagger nos cards internos)
-- Remover `AnimatePresence mode="wait"` da troca de tabs (usar transição CSS simples)
-- Usar `will-change: auto` ao invés de animações constantes
-
-#### 4. Cachear RPC get_recommended_offers
-Usar um único `useQuery` no nível superior e passar os IDs como prop, ao invés de chamar a RPC 3 vezes.
-
-#### 5. Estabilizar dependências do SectionBlock
-Usar `section.id` ao invés do objeto inteiro como dep. Memoizar `segmentFilterIds`.
-
-### Arquivos alterados
-- `src/components/HomeSectionsRenderer.tsx` — migrar SectionBlock para useQuery, estabilizar deps
-- `src/pages/customer/CustomerHomePage.tsx` — unificar HomeSectionsRenderer, remover motion wrappers das seções nativas
-- `src/components/customer/CustomerLayout.tsx` — simplificar transição de tabs
-- `src/components/customer/ForYouSection.tsx` — reusar cache de ranked offers
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
