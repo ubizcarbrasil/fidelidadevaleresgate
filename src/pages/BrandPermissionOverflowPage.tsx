@@ -318,7 +318,7 @@ export default function BrandPermissionOverflowPage() {
             )}
             {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
             {isViewingBranch && configs?.some(c => c.permission_key === perm.key && c.branch_id === activeBranchId) && (
-              <Badge className="text-[10px] bg-amber-500/10 text-amber-700 border-amber-300">customizado</Badge>
+              <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">customizado</Badge>
             )}
           </div>
           <span className="block text-[10px] font-mono text-muted-foreground">{perm.key}</span>
