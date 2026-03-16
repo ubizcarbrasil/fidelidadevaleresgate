@@ -10,7 +10,8 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
-  Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3,
+  Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
+  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList,
 } from "lucide-react";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
