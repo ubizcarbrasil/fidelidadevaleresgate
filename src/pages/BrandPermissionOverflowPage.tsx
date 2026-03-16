@@ -1,123 +1,75 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, ShieldCheck, ArrowRight, Building2, Store, Save, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
+import ManageGroupsDialog from "@/components/permissions/ManageGroupsDialog";
+
+/* ─── types ─── */
+interface PermissionRow {
+  id: string; key: string; module: string; description: string | null;
+  subgroup_id: string | null; display_name: string | null; order_index: number; is_active: boolean;
+}
+interface ConfigRow {
+  id: string; brand_id: string; permission_key: string;
+  allowed_for_brand: boolean; allowed_for_store: boolean;
+  branch_id: string | null; scope: string;
+}
+interface GroupRow { id: string; name: string; icon_name: string; order_index: number }
+interface SubgroupRow { id: string; group_id: string; name: string; order_index: number }
 
 const MODULE_LABELS: Record<string, string> = {
-  branches: "Cidades",
-  brands: "Marcas",
-  customers: "Clientes",
-  domains: "Domínios",
-  offers: "Ofertas",
-  redemptions: "Resgates",
-  stores: "Parceiros",
-  vouchers: "Cupons",
-  users: "Usuários",
-  reports: "Relatórios",
-  settings: "Configurações",
-  catalog: "Catálogo",
-  crm: "CRM",
-  campaigns: "Campanhas",
-  points: "Pontos",
-  notifications: "Notificações",
-  wallet: "Carteira",
-  banners: "Banners",
-  home_sections: "Seções da Home",
-  custom_pages: "Páginas",
-  page_builder: "Construtor de Páginas",
-  redemption_qr: "Resgate por QR",
-  points_rules: "Regras de Pontos",
-  earn_points_store: "Pontuação de Parceiros",
+  branches: "Cidades", brands: "Marcas", customers: "Clientes", domains: "Domínios",
+  offers: "Ofertas", redemptions: "Resgates", stores: "Parceiros", vouchers: "Cupons",
+  users: "Usuários", reports: "Relatórios", settings: "Configurações", catalog: "Catálogo",
+  crm: "CRM", campaigns: "Campanhas", points: "Pontos", notifications: "Notificações",
+  wallet: "Carteira", banners: "Banners", home_sections: "Seções da Home",
+  custom_pages: "Páginas", page_builder: "Construtor de Páginas", redemption_qr: "Resgate por QR",
+  points_rules: "Regras de Pontos", earn_points_store: "Pontuação de Parceiros",
   affiliate_deals: "Achadinhos",
 };
 
 const ACTION_LABELS: Record<string, string> = {
-  create: "Criar",
-  read: "Visualizar",
-  update: "Editar",
-  delete: "Excluir",
-  approve: "Aprovar",
-  manage: "Gerenciar",
-  export: "Exportar",
-  import: "Importar",
-  send: "Enviar",
-  redeem: "Resgatar",
-  config: "Configurar",
+  create: "Criar", read: "Visualizar", update: "Editar", delete: "Excluir",
+  approve: "Aprovar", manage: "Gerenciar", export: "Exportar", import: "Importar",
+  send: "Enviar", redeem: "Resgatar", config: "Configurar",
 };
 
-function friendlyModule(mod: string) {
-  return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1);
-}
-
+function friendlyModule(mod: string) { return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1); }
 function friendlyPermission(key: string) {
   const parts = key.split(".");
-  if (parts.length >= 2) {
-    const action = ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1];
-    return `${action} ${friendlyModule(parts[0])}`;
-  }
+  if (parts.length >= 2) return `${ACTION_LABELS[parts[parts.length - 1]] || parts[parts.length - 1]} ${friendlyModule(parts[0])}`;
   return key;
 }
 
-function getPermissionDisplay(permission: PermissionRow): { title: string; subtitle?: string } {
-  const fallbackTitle = friendlyPermission(permission.key);
-  const description = permission.description?.trim();
-
-  if (!description) return { title: fallbackTitle };
-
-  const technicalPattern = /\b[a-z_]+\.[a-z_]+\b/i;
-  const rawModulePattern = /\b(branches|brands|customers|domains|offers|redemptions|stores|vouchers|users|reports|settings|catalog|crm|campaigns|points|notifications)\b/i;
-
-  if (technicalPattern.test(description) || rawModulePattern.test(description)) {
-    return { title: fallbackTitle };
-  }
-
-  const normalizedDescription = description.charAt(0).toUpperCase() + description.slice(1);
-
-  if (normalizedDescription.toLowerCase() === fallbackTitle.toLowerCase()) {
-    return { title: fallbackTitle };
-  }
-
-  return { title: normalizedDescription, subtitle: fallbackTitle };
-}
-
-type Mode = "root-to-brand" | "brand-to-store";
-
-interface PermissionRow {
-  id: string;
-  key: string;
-  module: string;
-  description: string | null;
-}
-
-interface ConfigRow {
-  id: string;
-  brand_id: string;
-  permission_key: string;
-  allowed_for_brand: boolean;
-  allowed_for_store: boolean;
-}
-
+/* ─── component ─── */
 export default function BrandPermissionOverflowPage() {
   const qc = useQueryClient();
   const { consoleScope, currentBrandId } = useBrandGuard();
   const isRoot = consoleScope === "ROOT";
-  const mode: Mode = isRoot ? "root-to-brand" : "brand-to-store";
 
-  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [selectedBrandId, setSelectedBrandId] = useState("");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("__all__");
   const [saving, setSaving] = useState(false);
   const [localChanges, setLocalChanges] = useState<Record<string, Partial<ConfigRow>>>({});
+  const [editingDisplayName, setEditingDisplayName] = useState<string | null>(null);
+  const [tempDisplayName, setTempDisplayName] = useState("");
 
   const activeBrandId = isRoot ? selectedBrandId : currentBrandId;
+  const activeBranchId = selectedBranchId === "__all__" ? null : selectedBranchId;
 
-  // Load brands for ROOT selector
+  /* ─── queries ─── */
   const { data: brands } = useQuery({
     queryKey: ["brands-list-overflow"],
     queryFn: async () => {
@@ -128,108 +80,189 @@ export default function BrandPermissionOverflowPage() {
     enabled: isRoot,
   });
 
-  // Load all permissions
+  const { data: branches } = useQuery({
+    queryKey: ["branches-for-brand", activeBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("branches").select("id, name, city").eq("brand_id", activeBrandId!).eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!activeBrandId,
+  });
+
+  const { data: groups } = useQuery({
+    queryKey: queryKeys.permissionGroups.all,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("permission_groups").select("*").order("order_index");
+      if (error) throw error;
+      return data as GroupRow[];
+    },
+  });
+
+  const { data: subgroups } = useQuery({
+    queryKey: queryKeys.permissionSubgroups.all,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("permission_subgroups").select("*").order("order_index");
+      if (error) throw error;
+      return data as SubgroupRow[];
+    },
+  });
+
   const { data: permissions, isLoading: permsLoading } = useQuery({
     queryKey: ["permissions-all-overflow"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("permissions").select("*").order("module, key");
+      const { data, error } = await supabase.from("permissions").select("*").order("order_index, module, key");
       if (error) throw error;
       return data as PermissionRow[];
     },
   });
 
-  // Load config for selected brand
   const { data: configs, isLoading: configLoading } = useQuery({
-    queryKey: ["brand-permission-config", activeBrandId],
+    queryKey: queryKeys.permissionConfig.list(activeBrandId, activeBranchId),
     queryFn: async () => {
       if (!activeBrandId) return [];
-      const { data, error } = await supabase
-        .from("brand_permission_config")
-        .select("*")
-        .eq("brand_id", activeBrandId);
+      let q = supabase.from("brand_permission_config").select("*").eq("brand_id", activeBrandId);
+      if (activeBranchId) {
+        // Load both global and branch-specific
+        q = supabase.from("brand_permission_config").select("*").eq("brand_id", activeBrandId);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return data as ConfigRow[];
     },
     enabled: !!activeBrandId,
   });
 
-  // Build config map
+  /* ─── derived data ─── */
   const configMap = useMemo(() => {
     const map: Record<string, ConfigRow> = {};
-    configs?.forEach((c) => { map[c.permission_key] = c; });
+    // First load global configs
+    configs?.filter(c => !c.branch_id).forEach(c => { map[c.permission_key] = c; });
+    // Then overlay branch-specific if viewing a branch
+    if (activeBranchId) {
+      configs?.filter(c => c.branch_id === activeBranchId).forEach(c => { map[c.permission_key] = c; });
+    }
     return map;
-  }, [configs]);
+  }, [configs, activeBranchId]);
 
-  // Group permissions by module
-  const modules = useMemo(() => {
-    if (!permissions) return {};
-    return permissions.reduce((acc, p) => {
-      if (!acc[p.module]) acc[p.module] = [];
-      acc[p.module].push(p);
-      return acc;
-    }, {} as Record<string, PermissionRow[]>);
-  }, [permissions]);
+  // Build hierarchy: group → subgroup → permissions
+  const hierarchy = useMemo(() => {
+    if (!permissions) return { grouped: [] as any[], ungrouped: [] as PermissionRow[] };
 
-  const getEffectiveValue = (permKey: string, field: "allowed_for_brand" | "allowed_for_store"): boolean => {
+    const subgroupMap = new Map<string, SubgroupRow>();
+    subgroups?.forEach(s => subgroupMap.set(s.id, s));
+
+    const groupMap = new Map<string, GroupRow>();
+    groups?.forEach(g => groupMap.set(g.id, g));
+
+    // Permissions with subgroup_id
+    const assigned = permissions.filter(p => p.subgroup_id && subgroupMap.has(p.subgroup_id));
+    const ungrouped = permissions.filter(p => !p.subgroup_id || !subgroupMap.has(p.subgroup_id!));
+
+    // Build tree
+    const tree: Record<string, Record<string, PermissionRow[]>> = {};
+    assigned.forEach(p => {
+      const sg = subgroupMap.get(p.subgroup_id!)!;
+      if (!tree[sg.group_id]) tree[sg.group_id] = {};
+      if (!tree[sg.group_id][sg.id]) tree[sg.group_id][sg.id] = [];
+      tree[sg.group_id][sg.id].push(p);
+    });
+
+    const grouped = (groups || []).map(g => ({
+      group: g,
+      subgroups: Object.entries(tree[g.id] || {}).map(([sgId, perms]) => ({
+        subgroup: subgroupMap.get(sgId)!,
+        permissions: perms,
+      })).sort((a, b) => a.subgroup.order_index - b.subgroup.order_index),
+    })).filter(g => g.subgroups.length > 0 || true); // show all groups
+
+    // Also group ungrouped by module
+    const ungroupedByModule: Record<string, PermissionRow[]> = {};
+    ungrouped.forEach(p => {
+      if (!ungroupedByModule[p.module]) ungroupedByModule[p.module] = [];
+      ungroupedByModule[p.module].push(p);
+    });
+
+    return { grouped, ungrouped, ungroupedByModule };
+  }, [permissions, groups, subgroups]);
+
+  /* ─── helpers ─── */
+  const getEffectiveValue = useCallback((permKey: string, field: "allowed_for_brand" | "allowed_for_store"): boolean => {
     if (localChanges[permKey]?.[field] !== undefined) return localChanges[permKey][field]!;
     const existing = configMap[permKey];
     if (existing) return existing[field];
-    return field === "allowed_for_brand" ? true : false;
-  };
+    return field === "allowed_for_brand";
+  }, [localChanges, configMap]);
 
   const togglePermission = (permKey: string, field: "allowed_for_brand" | "allowed_for_store", value: boolean) => {
-    setLocalChanges((prev) => ({
-      ...prev,
-      [permKey]: { ...prev[permKey], [field]: value },
-    }));
+    setLocalChanges(prev => ({ ...prev, [permKey]: { ...prev[permKey], [field]: value } }));
   };
 
-  // Save all changes
+  const toggleBulk = (permKeys: string[], field: "allowed_for_brand" | "allowed_for_store", value: boolean) => {
+    setLocalChanges(prev => {
+      const next = { ...prev };
+      permKeys.forEach(k => { next[k] = { ...next[k], [field]: value }; });
+      return next;
+    });
+  };
+
+  const countActive = (perms: PermissionRow[], field: "allowed_for_brand" | "allowed_for_store") =>
+    perms.filter(p => getEffectiveValue(p.key, field)).length;
+
+  /* ─── save ─── */
   const handleSave = async () => {
     if (!activeBrandId) return;
     setSaving(true);
     try {
       const changedKeys = Object.keys(localChanges);
-      if (changedKeys.length === 0) {
-        toast.info("Nenhuma alteração para salvar.");
-        setSaving(false);
-        return;
-      }
+      if (changedKeys.length === 0) { toast.info("Nenhuma alteração."); setSaving(false); return; }
 
       for (const permKey of changedKeys) {
         const existing = configMap[permKey];
         const changes = localChanges[permKey];
+        const newBrand = changes.allowed_for_brand ?? existing?.allowed_for_brand ?? true;
+        const newStore = changes.allowed_for_store ?? existing?.allowed_for_store ?? false;
+        const finalStore = newBrand ? newStore : false;
 
-        const newAllowedForBrand = changes.allowed_for_brand ?? existing?.allowed_for_brand ?? true;
-        const newAllowedForStore = changes.allowed_for_store ?? existing?.allowed_for_store ?? false;
-
-        // If store is allowed but brand is not, auto-disable store
-        const finalAllowedForStore = newAllowedForBrand ? newAllowedForStore : false;
-
-        if (existing) {
-          const { error } = await supabase
-            .from("brand_permission_config")
-            .update({
-              ...(isRoot ? { allowed_for_brand: newAllowedForBrand } : {}),
-              allowed_for_store: finalAllowedForStore,
-            })
-            .eq("id", existing.id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from("brand_permission_config")
-            .insert({
+        // If editing a branch-specific config
+        if (activeBranchId) {
+          // Check if branch-specific row already exists
+          const branchConfig = configs?.find(c => c.permission_key === permKey && c.branch_id === activeBranchId);
+          if (branchConfig) {
+            await supabase.from("brand_permission_config").update({
+              ...(isRoot ? { allowed_for_brand: newBrand } : {}),
+              allowed_for_store: finalStore,
+            }).eq("id", branchConfig.id).throwOnError();
+          } else {
+            await supabase.from("brand_permission_config").insert({
               brand_id: activeBrandId,
               permission_key: permKey,
-              allowed_for_brand: newAllowedForBrand,
-              allowed_for_store: finalAllowedForStore,
-            });
-          if (error) throw error;
+              allowed_for_brand: newBrand,
+              allowed_for_store: finalStore,
+              branch_id: activeBranchId,
+              scope: "branch",
+            }).throwOnError();
+          }
+        } else {
+          if (existing) {
+            await supabase.from("brand_permission_config").update({
+              ...(isRoot ? { allowed_for_brand: newBrand } : {}),
+              allowed_for_store: finalStore,
+            }).eq("id", existing.id).throwOnError();
+          } else {
+            await supabase.from("brand_permission_config").insert({
+              brand_id: activeBrandId,
+              permission_key: permKey,
+              allowed_for_brand: newBrand,
+              allowed_for_store: finalStore,
+              scope: "brand",
+            }).throwOnError();
+          }
         }
       }
 
       setLocalChanges({});
-      qc.invalidateQueries({ queryKey: ["brand-permission-config", activeBrandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.permissionConfig.lists() });
       toast.success("Permissões salvas com sucesso!");
     } catch (err: any) {
       toast.error(err.message);
@@ -238,54 +271,119 @@ export default function BrandPermissionOverflowPage() {
     }
   };
 
-  // Initialize all permissions for a brand (ROOT only)
-  const initAllPerms = async () => {
-    if (!activeBrandId || !permissions) return;
-    setSaving(true);
+  const saveDisplayName = async (permId: string, newName: string) => {
     try {
-      const existing = new Set(configs?.map((c) => c.permission_key) || []);
-      const toInsert = permissions
-        .filter((p) => !existing.has(p.key))
-        .map((p) => ({
-          brand_id: activeBrandId,
-          permission_key: p.key,
-          allowed_for_brand: true,
-          allowed_for_store: false,
-        }));
-      if (toInsert.length > 0) {
-        const { error } = await supabase.from("brand_permission_config").insert(toInsert);
-        if (error) throw error;
-      }
-      qc.invalidateQueries({ queryKey: ["brand-permission-config", activeBrandId] });
-      toast.success(`${toInsert.length} permissões inicializadas!`);
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setSaving(false);
-    }
+      await supabase.from("permissions").update({ display_name: newName || null }).eq("id", permId).throwOnError();
+      qc.invalidateQueries({ queryKey: ["permissions-all-overflow"] });
+      toast.success("Nome atualizado!");
+    } catch (e: any) { toast.error(e.message); }
+    setEditingDisplayName(null);
   };
 
   const hasChanges = Object.keys(localChanges).length > 0;
+  const isViewingBranch = activeBranchId !== null;
+
+  /* ─── render permission item ─── */
+  const renderPermItem = (perm: PermissionRow) => {
+    const brandAllowed = getEffectiveValue(perm.key, "allowed_for_brand");
+    const storeAllowed = getEffectiveValue(perm.key, "allowed_for_store");
+    const hasLocalChange = localChanges[perm.key] !== undefined;
+    const displayName = perm.display_name || friendlyPermission(perm.key);
+    const isEditing = editingDisplayName === perm.id;
+
+    return (
+      <div
+        key={perm.id}
+        className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""}`}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <div className="flex items-center gap-1">
+                <Input value={tempDisplayName} onChange={e => setTempDisplayName(e.target.value)} className="h-7 text-sm w-48" />
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => saveDisplayName(perm.id, tempDisplayName)}>
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingDisplayName(null)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <span className="text-sm font-medium">{displayName}</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingDisplayName(perm.id); setTempDisplayName(perm.display_name || ""); }}>
+                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                </Button>
+              </>
+            )}
+            {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
+            {isViewingBranch && configs?.some(c => c.permission_key === perm.key && c.branch_id === activeBranchId) && (
+              <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">customizado</Badge>
+            )}
+          </div>
+          <span className="block text-[10px] font-mono text-muted-foreground">{perm.key}</span>
+        </div>
+        <div className="flex items-center gap-6 ml-4">
+          {isRoot && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Empreendedor</span>
+              <Switch checked={brandAllowed} onCheckedChange={v => togglePermission(perm.key, "allowed_for_brand", v)} />
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Parceiro</span>
+            <Switch checked={storeAllowed} disabled={!brandAllowed} onCheckedChange={v => togglePermission(perm.key, "allowed_for_store", v)} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* ─── render subgroup ─── */
+  const renderSubgroup = (sg: SubgroupRow, perms: PermissionRow[]) => {
+    const activeCount = countActive(perms, "allowed_for_brand");
+    const allOn = activeCount === perms.length;
+    const keys = perms.map(p => p.key);
+
+    return (
+      <Collapsible key={sg.id}>
+        <div className="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg">
+          <CollapsibleTrigger className="flex items-center gap-2 flex-1 text-left">
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]_&]:rotate-180" />
+            <span className="text-sm font-medium">{sg.name}</span>
+            <Badge variant="secondary" className="text-[10px]">{activeCount}/{perms.length}</Badge>
+          </CollapsibleTrigger>
+          {isRoot && (
+            <Switch
+              checked={allOn}
+              onCheckedChange={v => toggleBulk(keys, "allowed_for_brand", v)}
+              aria-label={`Toggle all ${sg.name}`}
+            />
+          )}
+        </div>
+        <CollapsibleContent>
+          <div className="space-y-2 pl-6 pt-2">
+            {perms.map(renderPermItem)}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
             {isRoot ? "Permissões por Empresa" : "Permissões dos Parceiros"}
           </h2>
           <p className="text-muted-foreground">
-            {isRoot
-              ? "Configure quais permissões cada empreendedor pode usar"
-              : "Configure quais permissões os parceiros (lojas) podem usar"}
+            {isRoot ? "Configure permissões hierárquicas por grupo, subgrupo e função" : "Configure permissões dos parceiros"}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {isRoot && activeBrandId && (
-            <Button variant="outline" size="sm" onClick={initAllPerms} disabled={saving}>
-              Inicializar Todas
-            </Button>
-          )}
+          {isRoot && <ManageGroupsDialog />}
           <Button onClick={handleSave} disabled={!hasChanges || saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             Salvar
@@ -297,116 +395,143 @@ export default function BrandPermissionOverflowPage() {
       <Card className="bg-muted/30">
         <CardContent className="py-3">
           <div className="flex items-center justify-center gap-3 text-sm">
-            <div className="flex items-center gap-1.5">
-              <Shield className="h-4 w-4 text-primary" />
-              <span className="font-medium">Domo de Ferro</span>
-            </div>
+            <div className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary" /><span className="font-medium">Domo de Ferro</span></div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <div className={`flex items-center gap-1.5 ${mode === "root-to-brand" ? "text-primary font-semibold" : ""}`}>
-              <Building2 className="h-4 w-4" />
-              <span>Empreendedor</span>
-            </div>
+            <div className={`flex items-center gap-1.5 ${isRoot ? "text-primary font-semibold" : ""}`}><Building2 className="h-4 w-4" /><span>Empreendedor</span></div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            <div className={`flex items-center gap-1.5 ${mode === "brand-to-store" ? "text-primary font-semibold" : ""}`}>
-              <Store className="h-4 w-4" />
-              <span>Parceiro</span>
-            </div>
+            <div className={`flex items-center gap-1.5 ${!isRoot ? "text-primary font-semibold" : ""}`}><Store className="h-4 w-4" /><span>Parceiro</span></div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Brand selector (ROOT only) */}
-      {isRoot && (
-        <Select value={selectedBrandId} onValueChange={(v) => { setSelectedBrandId(v); setLocalChanges({}); }}>
-          <SelectTrigger className="w-full max-w-sm">
-            <SelectValue placeholder="Selecione uma empresa..." />
-          </SelectTrigger>
-          <SelectContent>
-            {brands?.map((b) => (
-              <SelectItem key={b.id} value={b.id}>
-                {b.name} <span className="text-muted-foreground ml-1">({b.slug})</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      {/* Selectors */}
+      <div className="flex flex-wrap gap-3">
+        {isRoot && (
+          <Select value={selectedBrandId} onValueChange={v => { setSelectedBrandId(v); setSelectedBranchId("__all__"); setLocalChanges({}); }}>
+            <SelectTrigger className="w-full max-w-xs">
+              <SelectValue placeholder="Selecione uma empresa..." />
+            </SelectTrigger>
+            <SelectContent>
+              {brands?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
 
-      {!activeBrandId && (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            {isRoot ? "Selecione uma empresa para configurar suas permissões." : "Carregando..."}
+        {activeBrandId && (
+          <Select value={selectedBranchId} onValueChange={v => { setSelectedBranchId(v); setLocalChanges({}); }}>
+            <SelectTrigger className="w-full max-w-xs">
+              <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Cidade..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Padrão (todas as cidades)</SelectItem>
+              {branches?.map(b => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name} {b.city && <span className="text-muted-foreground ml-1">— {b.city}</span>}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {isViewingBranch && (
+        <Card className="border-accent bg-accent/10">
+          <CardContent className="py-3">
+            <p className="text-sm text-accent-foreground">
+              <MapPin className="h-4 w-4 inline mr-1" />
+              Visualizando permissões para <strong>{branches?.find(b => b.id === activeBranchId)?.name}</strong>.
+              Permissões herdam do padrão global e podem ser sobrescritas individualmente.
+            </p>
           </CardContent>
         </Card>
       )}
 
-      {activeBrandId && (permsLoading || configLoading) && (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-full" />)}
-        </div>
+      {!activeBrandId && (
+        <Card><CardContent className="py-12 text-center text-muted-foreground">Selecione uma empresa para configurar.</CardContent></Card>
       )}
 
-      {/* Permission modules */}
+      {activeBrandId && (permsLoading || configLoading) && (
+        <div className="space-y-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full" />)}</div>
+      )}
+
+      {/* Hierarchical permissions */}
       {activeBrandId && !permsLoading && !configLoading && (
         <div className="space-y-4">
-          {Object.entries(modules).map(([mod, perms]) => (
-            <Card key={mod}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Badge variant="outline">{friendlyModule(mod)}</Badge>
-                  <span className="text-muted-foreground font-normal">
-                    {perms.length} {perms.length > 1 ? "permissões" : "permissão"}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {perms.map((perm) => {
-                    const brandAllowed = getEffectiveValue(perm.key, "allowed_for_brand");
-                    const storeAllowed = getEffectiveValue(perm.key, "allowed_for_store");
-                    const hasLocalChange = localChanges[perm.key] !== undefined;
-                    const display = getPermissionDisplay(perm);
+          {/* Grouped permissions */}
+          {hierarchy.grouped.length > 0 && (
+            <Accordion type="multiple" className="space-y-3">
+              {hierarchy.grouped.map(({ group, subgroups: sgs }: { group: GroupRow; subgroups: { subgroup: SubgroupRow; permissions: PermissionRow[] }[] }) => {
+                const allPerms = sgs.flatMap((sg: { subgroup: SubgroupRow; permissions: PermissionRow[] }) => sg.permissions);
+                const activeCount = countActive(allPerms, "allowed_for_brand");
+                const allOn = allPerms.length > 0 && activeCount === allPerms.length;
+                const keys = allPerms.map((p: PermissionRow) => p.key);
 
-                    return (
-                      <div
-                        key={perm.id}
-                        className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""}`}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{display.title}</span>
-                            {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
-                          </div>
-                          {display.subtitle && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{display.subtitle}</p>
-                          )}
-
+                return (
+                  <AccordionItem key={group.id} value={group.id} className="border rounded-lg">
+                    <div className="flex items-center justify-between pr-4">
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{group.name}</span>
+                          <Badge variant="outline" className="text-[10px]">{activeCount}/{allPerms.length}</Badge>
                         </div>
-                        <div className="flex items-center gap-6 ml-4">
-                          {isRoot && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground whitespace-nowrap">Empreendedor</span>
-                              <Switch
-                                checked={brandAllowed}
-                                onCheckedChange={(v) => togglePermission(perm.key, "allowed_for_brand", v)}
-                              />
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">Parceiro</span>
-                            <Switch
-                              checked={storeAllowed}
-                              disabled={!brandAllowed}
-                              onCheckedChange={(v) => togglePermission(perm.key, "allowed_for_store", v)}
-                            />
-                          </div>
-                        </div>
+                      </AccordionTrigger>
+                      {isRoot && allPerms.length > 0 && (
+                        <Switch
+                          checked={allOn}
+                          onCheckedChange={v => toggleBulk(keys, "allowed_for_brand", v)}
+                          aria-label={`Toggle group ${group.name}`}
+                        />
+                      )}
+                    </div>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="space-y-3">
+                        {sgs.map(({ subgroup, permissions: perms }: { subgroup: SubgroupRow; permissions: PermissionRow[] }) => renderSubgroup(subgroup, perms))}
+                        {sgs.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            Nenhum subgrupo com permissões atribuídas.
+                          </p>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          )}
+
+          {/* Ungrouped permissions (by module) */}
+          {hierarchy.ungroupedByModule && Object.entries(hierarchy.ungroupedByModule).length > 0 && (
+            <>
+              <h3 className="text-sm font-semibold text-muted-foreground mt-6">Permissões não agrupadas</h3>
+              <Accordion type="multiple" className="space-y-3">
+                {Object.entries(hierarchy.ungroupedByModule).map(([mod, perms]) => {
+                  const activeCount = countActive(perms, "allowed_for_brand");
+                  const allOn = activeCount === perms.length;
+                  const keys = perms.map(p => p.key);
+
+                  return (
+                    <AccordionItem key={mod} value={`ungrouped-${mod}`} className="border rounded-lg">
+                      <div className="flex items-center justify-between pr-4">
+                        <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{friendlyModule(mod)}</Badge>
+                            <span className="text-xs text-muted-foreground">{activeCount}/{perms.length}</span>
+                          </div>
+                        </AccordionTrigger>
+                        {isRoot && (
+                          <Switch checked={allOn} onCheckedChange={v => toggleBulk(keys, "allowed_for_brand", v)} />
+                        )}
+                      </div>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="space-y-2">{perms.map(renderPermItem)}</div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </>
+          )}
         </div>
       )}
     </div>
