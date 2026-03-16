@@ -659,12 +659,9 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
         } : { WebkitOverflowScrolling: "touch" }}
       >
         {items.map((o: any, idx: number) => (
-          <motion.div
+          <div
             key={o.id}
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform animate-fade-in"
             style={{
               backgroundColor: "hsl(var(--card))",
               width: useMultiRow ? undefined : `${sizes.minW}px`,
