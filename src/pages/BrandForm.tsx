@@ -27,6 +27,7 @@ export default function BrandForm() {
   const navigate = useNavigate();
   const isEdit = !!id;
   const { isRootAdmin } = useBrandGuard();
+  const { isModuleEnabled } = useBrandModules();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
