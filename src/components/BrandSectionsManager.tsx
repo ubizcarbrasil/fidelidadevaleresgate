@@ -54,6 +54,12 @@ const ICON_SIZE_LABELS: Record<string, string> = {
   large: "Grande",
 };
 
+const DISPLAY_MODE_LABELS: Record<string, string> = {
+  carousel: "Carrossel",
+  grid: "Grade",
+  list: "Lista",
+};
+
 export default function BrandSectionsManager({ brandId, subscriptionPlan }: BrandSectionsManagerProps) {
   const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
   const canEditStructure = !isBasicPlan;
