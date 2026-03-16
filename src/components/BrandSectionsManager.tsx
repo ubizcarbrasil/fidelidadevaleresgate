@@ -350,6 +350,12 @@ export default function BrandSectionsManager({ brandId, subscriptionPlan }: Bran
             </ScrollArea>
           </DialogContent>
         </Dialog>
+        ) : (
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Lock className="h-3 w-3" />
+            Plano Básico
+          </Badge>
+        )}
       </div>
 
       {isLoading ? (
