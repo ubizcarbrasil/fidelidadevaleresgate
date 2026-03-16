@@ -364,13 +364,12 @@ export default function CustomerLayout() {
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
-                  <motion.div
-                    className="h-8 w-8 rounded-xl flex items-center justify-center"
-                    animate={{
+                  <div
+                    className="h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200"
+                    style={{
                       backgroundColor: isActive ? "hsl(var(--foreground) / 0.12)" : "transparent",
-                      scale: isActive ? 1.05 : 1,
+                      transform: isActive ? "scale(1.05)" : "scale(1)",
                     }}
-                    transition={{ duration: 0.2 }}
                   >
                     <AppIcon
                       iconKey={tab.iconKey}
