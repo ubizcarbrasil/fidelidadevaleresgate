@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -9,11 +9,12 @@ import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import { hslToCss } from "@/lib/utils";
 
-import ForYouSection from "@/components/customer/ForYouSection";
-import EmissorasSection from "@/components/customer/EmissorasSection";
-import AchadinhoSection from "@/components/customer/AchadinhoSection";
+const ForYouSection = lazy(() => import("@/components/customer/ForYouSection"));
+const EmissorasSection = lazy(() => import("@/components/customer/EmissorasSection"));
+const AchadinhoSection = lazy(() => import("@/components/customer/AchadinhoSection"));
 import { Skeleton } from "@/components/ui/skeleton";
 import { haptic } from "@/lib/haptics";
+import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
 import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
 
 const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
