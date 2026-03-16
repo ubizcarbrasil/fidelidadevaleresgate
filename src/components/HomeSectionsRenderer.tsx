@@ -828,7 +828,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
               )}
             </div>
             <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/30" />
-          </motion.div>
+          </div>
         );
       })}
     </div>
