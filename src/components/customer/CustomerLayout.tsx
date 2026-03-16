@@ -298,14 +298,7 @@ export default function CustomerLayout() {
           className="flex-1 pb-24 overflow-y-auto"
           style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              variants={tabVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+          <div key={activeTab} className="animate-fade-in">
               {activeTab === "home" ? (
                 <CustomerHomePage
                   onOpenLedger={() => setLedgerOpen(true)}
@@ -318,8 +311,7 @@ export default function CustomerLayout() {
                   <ActivePage />
                 </Suspense>
               )}
-            </motion.div>
-          </AnimatePresence>
+          </div>
         </main>
 
         {/* Bottom Tab Bar — Dark premium */}

@@ -279,8 +279,6 @@ interface SectionBlockProps {
 }
 
 function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHeading, brandBadgeConfig, sponsoredStoreIds, rankedOfferIds }: SectionBlockProps) {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const { openOffer, openStore, openSectionDetail } = useCustomerNav();
   const templateType = section.section_templates?.type;
   const schema = section.section_templates?.schema_json || {};
@@ -294,11 +292,14 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
   const cityFilterJson: string[] = (section as any).city_filter_json || [];
   const segmentFilterIds: string[] = section.segment_filter_ids || [];
 
-  useEffect(() => {
-    const source = section.brand_section_sources?.[0];
+  // Stable key for segment filter
+  const segmentKey = useMemo(() => segmentFilterIds.join(","), [segmentFilterIds]);
+  const cityKey = useMemo(() => cityFilterJson.join(","), [cityFilterJson]);
 
-    const fetchItems = async () => {
-      setLoading(true);
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ["section-block", section.id, branchId, filterMode, couponTypeFilter, segmentKey, cityKey],
+    queryFn: async () => {
+      const source = section.brand_section_sources?.[0];
 
       if (templateType === "BANNER_CAROUSEL") {
         const now = new Date().toISOString();
@@ -311,10 +312,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
         if (section.brand_id) query = query.eq("brand_id", section.brand_id);
         if (section.id) query = query.or(`brand_section_id.eq.${section.id},brand_section_id.is.null`);
         const { data } = await query;
-        const filtered = (data || []).filter(b => !b.end_at || new Date(b.end_at) > new Date());
-        setItems(filtered);
-        setLoading(false);
-        return;
+        return (data || []).filter((b: any) => !b.end_at || new Date(b.end_at) > new Date());
       }
 
       const inferredSourceType =
@@ -329,7 +327,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
         id: "inferred",
       } : null);
 
-      if (!effectiveSource) { setLoading(false); return; }
+      if (!effectiveSource) return [];
 
       if (templateType === "VOUCHERS_CARDS") {
         let query = supabase
@@ -340,10 +338,9 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
         const { data } = await query;
-        setItems(data || []);
+        return data || [];
       } else if (effectiveSource.source_type === "OFFERS" || templateType === "OFFERS_CAROUSEL" || templateType === "OFFERS_GRID" || templateType === "HIGHLIGHTS_WEEKLY") {
         const orderCol = filterMode === "most_redeemed" ? "likes_count" : "created_at";
-        const orderAsc = false;
 
         let segmentStoreIds: string[] | null = null;
         if (segmentFilterIds.length > 0) {
@@ -352,11 +349,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
             .select("id")
             .in("taxonomy_segment_id", segmentFilterIds);
           segmentStoreIds = segStores?.map(s => s.id) || [];
-          if (segmentStoreIds.length === 0) {
-            setItems([]);
-            setLoading(false);
-            return;
-          }
+          if (segmentStoreIds.length === 0) return [];
         }
 
         let query = supabase
@@ -364,18 +357,11 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           .select("*, stores(name, logo_url)")
           .eq("is_active", true)
           .eq("status", "ACTIVE")
-          .order(orderCol, { ascending: orderAsc })
+          .order(orderCol, { ascending: false })
           .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
-
-        if (segmentStoreIds) {
-          query = query.in("store_id", segmentStoreIds);
-        }
-
-        if (couponTypeFilter && couponTypeFilter !== "all") {
-          query = query.eq("coupon_type", couponTypeFilter);
-        }
-
+        if (segmentStoreIds) query = query.in("store_id", segmentStoreIds);
+        if (couponTypeFilter && couponTypeFilter !== "all") query = query.eq("coupon_type", couponTypeFilter);
         if (filterMode === "newest") {
           const since = new Date();
           since.setDate(since.getDate() - 14);
@@ -395,10 +381,9 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           });
         }
 
-        // Apply ranking boost then sponsored boost
         results = applyRankingBoost(results, rankedOfferIds);
         results = boostSponsored(results, sponsoredStoreIds, "store_id");
-        setItems(results);
+        return results;
       } else if (effectiveSource.source_type === "STORES") {
         let query = supabase
           .from("stores")
@@ -407,30 +392,17 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
           .order("name")
           .limit(effectiveSource.limit || 10);
         if (branchId) query = query.eq("branch_id", branchId);
-
-        if (segmentFilterIds.length > 0) {
-          query = query.in("taxonomy_segment_id", segmentFilterIds);
-        }
-
-        if (cityFilterJson.length > 0) {
-          query = (query as any).in("city", cityFilterJson);
-        }
+        if (segmentFilterIds.length > 0) query = query.in("taxonomy_segment_id", segmentFilterIds);
+        if (cityFilterJson.length > 0) query = (query as any).in("city", cityFilterJson);
 
         const { data } = await query;
         let results = data || [];
-
-        // min_stores_visible check removed — always show active sections
-
-        // Boost sponsored stores to top
         results = boostSponsored(results, sponsoredStoreIds, "id");
-        setItems(results);
-      } else {
-        setItems([]);
+        return results;
       }
-      setLoading(false);
-    };
-    fetchItems();
-  }, [section, branchId, templateType, filterMode, couponTypeFilter, cityFilterJson.length, minStoresVisible, segmentFilterIds.join()]);
+      return [];
+    },
+  });
 
   const handleCtaClick = useCallback(() => {
     if (items.length > 0) {

@@ -3,7 +3,7 @@ import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { ChevronRight, Coins, Loader2, MapPin } from "lucide-react";
+import { Coins } from "lucide-react";
 import { toast } from "sonner";
 import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
