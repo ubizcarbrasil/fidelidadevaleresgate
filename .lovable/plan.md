@@ -1,30 +1,25 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Criar conta root admin
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+O usuário não consegue fazer login — precisa de uma conta `root_admin` com email `alecio@ubizcar.com.br`.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Abordagem
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+1. **Ativar auto-confirm de email** para que a conta funcione imediatamente sem verificação
+2. **Criar Edge Function `create-root-admin`** que:
+   - Cria o usuário via Admin Auth API (`adminClient.auth.admin.createUser`)
+   - Atribui a role `root_admin` na tabela `user_roles`
+   - Retorna a senha gerada
+3. **Invocar a função** para criar a conta
+4. **Remover a função** após uso (segurança)
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+### Senha
+Será gerada uma senha temporária segura. Após o primeiro login, o usuário poderá alterá-la.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### Arquivos
+| Arquivo | Ação |
+|---------|------|
+| `supabase/functions/create-root-admin/index.ts` | Criar (temporário) |
+| Auth config |
