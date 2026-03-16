@@ -434,6 +434,11 @@ Deno.serve(async (req) => {
       primary_color,
       secondary_color,
       test_points = 1000,
+      enable_demo_stores = true,
+      enable_test_credits = true,
+      selected_sections,
+      admin_email: customAdminEmail,
+      admin_password: customAdminPassword,
     } = body;
 
     if (!company_name || !brand_slug || !city_name || !city_slug) {
@@ -516,8 +521,23 @@ Deno.serve(async (req) => {
     };
 
     // ─── 5. Admin test user ─────────────────────────────────────
-    const adminEmail = `teste-${emailPrefix}@teste.com`;
-    const adminUser = await getOrCreateUser(adminEmail, `Admin ${company_name}`);
+    const adminEmail = customAdminEmail || `teste-${emailPrefix}@teste.com`;
+    const adminPassword = customAdminPassword || "123456";
+    const adminUser = await (async () => {
+      if (customAdminEmail) {
+        const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email: adminEmail, password: adminPassword, email_confirm: true, user_metadata: { full_name: `Admin ${company_name}` },
+        });
+        if (created?.user) return created.user;
+        if (createErr?.message?.includes("already been registered")) {
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+          const existing = listData?.users?.find((u: any) => u.email === adminEmail);
+          if (existing) return existing;
+        }
+        throw new Error(`Admin user: ${createErr?.message}`);
+      }
+      return getOrCreateUser(adminEmail, `Admin ${company_name}`);
+    })();
     await supabaseAdmin.from("profiles").update({ brand_id: brand.id, tenant_id: tenant.id }).eq("id", adminUser.id);
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: adminUser.id, role: "brand_admin", brand_id: brand.id, tenant_id: tenant.id },
@@ -533,14 +553,16 @@ Deno.serve(async (req) => {
     if (existingCust) {
       customer = existingCust;
     } else {
+      const pointsToGive = enable_test_credits ? test_points : 0;
       const { data: newCust, error: custErr } = await supabaseAdmin
-        .from("customers").insert({ name: "Cliente Teste", user_id: customerUser.id, brand_id: brand.id, branch_id: branch.id, points_balance: test_points }).select("id").single();
+        .from("customers").insert({ name: "Cliente Teste", user_id: customerUser.id, brand_id: brand.id, branch_id: branch.id, points_balance: pointsToGive }).select("id").single();
       if (custErr) throw new Error(`Customer: ${custErr.message}`);
       customer = newCust;
-      await supabaseAdmin.from("points_ledger").insert({
+      if (enable_test_credits) { await supabaseAdmin.from("points_ledger").insert({
         customer_id: customer.id, brand_id: brand.id, branch_id: branch.id, points_amount: test_points,
         entry_type: "CREDIT", reference_type: "MANUAL", reason: "Crédito inicial de teste", created_by_user_id: callerUserId,
       });
+    }
     }
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: customerUser.id, role: "customer" },
@@ -582,25 +604,42 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 9. Apply default home template ─────────────────────────
+    // ─── 9. Apply default home template (8 seções padrão) ──────
     const { data: defaultTemplate } = await supabaseAdmin
       .from("home_template_library").select("id, template_payload_json")
       .eq("is_default", true).eq("is_active", true).limit(1).maybeSingle();
     if (defaultTemplate) {
       const payload = defaultTemplate.template_payload_json as any;
       if (payload?.sections && Array.isArray(payload.sections)) {
+        const selectedSet = Array.isArray(selected_sections) ? new Set(selected_sections as number[]) : null;
         for (let i = 0; i < payload.sections.length; i++) {
           const s = payload.sections[i];
-          await supabaseAdmin.from("brand_sections").insert({
+          const isEnabled = selectedSet ? selectedSet.has(i) : true;
+          const { data: newSection } = await supabaseAdmin.from("brand_sections").insert({
             brand_id: brand.id, template_id: s.template_id, title: s.title || null,
-            subtitle: s.subtitle || null, order_index: i, is_enabled: true, display_mode: s.display_mode || "carousel",
-          });
+            subtitle: s.subtitle || null, order_index: i, is_enabled: isEnabled,
+            display_mode: s.display_mode || "carousel",
+            rows_count: s.rows_count || 1, columns_count: s.columns_count || 4,
+            segment_filter_ids: s.segment_filter_ids || null,
+            visual_json: s.visual_json || {},
+          }).select("id").single();
+          // Create source for the section
+          if (newSection && s.source_type) {
+            await supabaseAdmin.from("brand_section_sources").insert({
+              brand_section_id: newSection.id,
+              source_type: s.source_type,
+              limit: s.source_limit || 12,
+            });
+          }
         }
       }
     }
 
-    // ─── 10. Create 40 demo stores with offers & catalogs ───────
+    // ─── 10. Create demo stores with offers & catalogs ─────────
     const log = createEdgeLogger("provision-brand");
+    if (!enable_demo_stores) {
+      log.info("Demo stores skipped (disabled by user)");
+    } else {
     log.info("Creating demo stores...");
     for (const demo of DEMO_STORES) {
       const storeSlug = `${demo.slug}-${emailPrefix}`;
@@ -672,6 +711,7 @@ Deno.serve(async (req) => {
       }
     }
     log.info("Demo stores created successfully", { count: DEMO_STORES.length });
+    } // end if enable_demo_stores
 
     // ─── 11. Store test accounts ────────────────────────────────
     const testAccounts = [

@@ -7,7 +7,7 @@ export function useBrandName(): string {
   return name;
 }
 
-export function useBrandInfo(): { name: string; logoUrl: string | null } {
+export function useBrandInfo(): { name: string; logoUrl: string | null; brandId: string | null } {
   const { roles } = useAuth();
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -30,5 +30,5 @@ export function useBrandInfo(): { name: string; logoUrl: string | null } {
       });
   }, [brandId]);
 
-  return { name, logoUrl };
+  return { name, logoUrl, brandId };
 }

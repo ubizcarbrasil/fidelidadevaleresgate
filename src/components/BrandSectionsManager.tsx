@@ -9,12 +9,13 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BrandSectionsManagerProps {
   brandId: string;
+  subscriptionPlan?: string | null;
 }
 
 const TEMPLATE_TYPE_LABELS: Record<string, string> = {
@@ -52,7 +53,9 @@ const ICON_SIZE_LABELS: Record<string, string> = {
   large: "Grande",
 };
 
-export default function BrandSectionsManager({ brandId }: BrandSectionsManagerProps) {
+export default function BrandSectionsManager({ brandId, subscriptionPlan }: BrandSectionsManagerProps) {
+  const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
+  const canEditStructure = !isBasicPlan;
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({
@@ -179,8 +182,13 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Seções da Home</h3>
-          <p className="text-sm text-muted-foreground">Configure as seções exibidas na página pública</p>
+          <p className="text-sm text-muted-foreground">
+            {isBasicPlan
+              ? "Reordene ou ative/desative as seções. Upgrade para criar novas."
+              : "Configure as seções exibidas na página pública"}
+          </p>
         </div>
+        {canEditStructure ? (
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-2" />Adicionar Seção</Button>
@@ -342,6 +350,12 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
             </ScrollArea>
           </DialogContent>
         </Dialog>
+        ) : (
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Lock className="h-3 w-3" />
+            Plano Básico
+          </Badge>
+        )}
       </div>
 
       {isLoading ? (
@@ -399,6 +413,11 @@ export default function BrandSectionsManager({ brandId }: BrandSectionsManagerPr
                   checked={section.is_enabled}
                   onCheckedChange={(checked) => toggleEnabled.mutate({ id: section.id, enabled: checked })}
                 />
+                {canEditStructure && (
+                <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>

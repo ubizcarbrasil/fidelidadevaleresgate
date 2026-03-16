@@ -272,7 +272,7 @@ export default function BrandForm() {
 
           {isEdit && id && (
             <TabsContent value="sections" className="mt-4">
-              <BrandSectionsManager brandId={id} />
+              <BrandSectionsManager brandId={id} subscriptionPlan={subscriptionPlan} />
             </TabsContent>
           )}
 
