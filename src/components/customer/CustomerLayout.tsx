@@ -10,7 +10,7 @@ import AchadinhoCategoryGridOverlay from "@/components/customer/AchadinhoCategor
 import AchadinhoDealsOverlay from "@/components/customer/AchadinhoDealsOverlay";
 import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
