@@ -12,7 +12,6 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss } from "@/lib/utils";
 import { useRankedOffers } from "@/hooks/useRankedOffers";
-import { motion } from "framer-motion";
 
 type Voucher = Tables<"vouchers">;
 
