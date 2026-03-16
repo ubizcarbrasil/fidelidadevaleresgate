@@ -553,11 +553,12 @@ Deno.serve(async (req) => {
     if (existingCust) {
       customer = existingCust;
     } else {
+      const pointsToGive = enable_test_credits ? test_points : 0;
       const { data: newCust, error: custErr } = await supabaseAdmin
-        .from("customers").insert({ name: "Cliente Teste", user_id: customerUser.id, brand_id: brand.id, branch_id: branch.id, points_balance: test_points }).select("id").single();
+        .from("customers").insert({ name: "Cliente Teste", user_id: customerUser.id, brand_id: brand.id, branch_id: branch.id, points_balance: pointsToGive }).select("id").single();
       if (custErr) throw new Error(`Customer: ${custErr.message}`);
       customer = newCust;
-      await supabaseAdmin.from("points_ledger").insert({
+      if (enable_test_credits) { await supabaseAdmin.from("points_ledger").insert({
         customer_id: customer.id, brand_id: brand.id, branch_id: branch.id, points_amount: test_points,
         entry_type: "CREDIT", reference_type: "MANUAL", reason: "Crédito inicial de teste", created_by_user_id: callerUserId,
       });
