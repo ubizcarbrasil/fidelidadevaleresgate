@@ -1026,7 +1026,7 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
                 )}
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
