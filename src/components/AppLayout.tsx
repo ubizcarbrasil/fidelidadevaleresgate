@@ -114,6 +114,13 @@ export default function AppLayout() {
           </main>
           <TrialExpiredBlocker />
           <ContextualHelpDrawer />
+          {showApiKeyOnboarding && brandId && (
+            <ApiKeyOnboardingDialog
+              open={showApiKeyOnboarding}
+              onDismiss={() => setShowApiKeyOnboarding(false)}
+              brandId={brandId}
+            />
+          )}
         </div>
       </div>
     </SidebarProvider>
