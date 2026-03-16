@@ -182,8 +182,13 @@ export default function BrandSectionsManager({ brandId, subscriptionPlan }: Bran
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Seções da Home</h3>
-          <p className="text-sm text-muted-foreground">Configure as seções exibidas na página pública</p>
+          <p className="text-sm text-muted-foreground">
+            {isBasicPlan
+              ? "Reordene ou ative/desative as seções. Upgrade para criar novas."
+              : "Configure as seções exibidas na página pública"}
+          </p>
         </div>
+        {canEditStructure ? (
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-2" />Adicionar Seção</Button>
