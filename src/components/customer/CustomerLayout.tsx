@@ -420,7 +420,7 @@ export default function CustomerLayout() {
               }}
             />
           </Suspense>
-        )
+        )}
 
         {/* Section Detail Overlay */}
         {sectionDetail && (
