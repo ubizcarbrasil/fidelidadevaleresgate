@@ -20,6 +20,7 @@ interface BrandThemeEditorProps {
   brandName?: string;
   offerCardConfig?: OfferCardConfig;
   onOfferCardConfigChange?: (config: OfferCardConfig) => void;
+  isModuleEnabled?: (key: string) => boolean;
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
