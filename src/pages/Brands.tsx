@@ -193,6 +193,9 @@ export default function Brands() {
                           <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}`)}>
                             <Pencil className="h-4 w-4 mr-2" />Editar
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}?tab=modules`)}>
+                            <Blocks className="h-4 w-4 mr-2" />Gerenciar Módulos
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openPasswordDialog(b.id, b.name)}>
                             <Key className="h-4 w-4 mr-2" />Redefinir Senha
                           </DropdownMenuItem>
