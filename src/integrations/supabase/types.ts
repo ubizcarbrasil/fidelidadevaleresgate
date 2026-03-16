@@ -535,31 +535,44 @@ export type Database = {
         Row: {
           allowed_for_brand: boolean
           allowed_for_store: boolean
+          branch_id: string | null
           brand_id: string
           created_at: string
           id: string
           permission_key: string
+          scope: string | null
           updated_at: string
         }
         Insert: {
           allowed_for_brand?: boolean
           allowed_for_store?: boolean
+          branch_id?: string | null
           brand_id: string
           created_at?: string
           id?: string
           permission_key: string
+          scope?: string | null
           updated_at?: string
         }
         Update: {
           allowed_for_brand?: boolean
           allowed_for_store?: boolean
+          branch_id?: string | null
           brand_id?: string
           created_at?: string
           id?: string
           permission_key?: string
+          scope?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "brand_permission_config_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "brand_permission_config_brand_id_fkey"
             columns: ["brand_id"]
@@ -2946,29 +2959,105 @@ export type Database = {
           },
         ]
       }
+      permission_groups: {
+        Row: {
+          created_at: string | null
+          icon_name: string | null
+          id: string
+          name: string
+          order_index: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          name: string
+          order_index?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          icon_name?: string | null
+          id?: string
+          name?: string
+          order_index?: number | null
+        }
+        Relationships: []
+      }
+      permission_subgroups: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          name: string
+          order_index: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          name: string
+          order_index?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          name?: string
+          order_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_subgroups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "permission_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           created_at: string
           description: string | null
+          display_name: string | null
           id: string
+          is_active: boolean | null
           key: string
           module: string
+          order_index: number | null
+          subgroup_id: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
+          display_name?: string | null
           id?: string
+          is_active?: boolean | null
           key: string
           module: string
+          order_index?: number | null
+          subgroup_id?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
+          display_name?: string | null
           id?: string
+          is_active?: boolean | null
           key?: string
           module?: string
+          order_index?: number | null
+          subgroup_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "permissions_subgroup_id_fkey"
+            columns: ["subgroup_id"]
+            isOneToOne: false
+            referencedRelation: "permission_subgroups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plan_module_templates: {
         Row: {
