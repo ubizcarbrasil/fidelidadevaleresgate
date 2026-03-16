@@ -41,12 +41,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
-    label: "Módulos & Funcionalidades",
-    items: [
-      { key: "sidebar.modulos", defaultTitle: "Gerenciar Módulos", url: "/brand-modules", icon: Blocks },
-    ],
-  },
-  {
     label: "Organização",
     items: [
       { key: "sidebar.empresas", defaultTitle: "Empresas", url: "/tenants", icon: Building2 },
@@ -59,7 +53,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
-    label: "Marca & Experiência",
+    label: "Personalização & Vitrine",
     items: [
       { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Image },
       { key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: Image },
@@ -89,7 +83,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck },
       { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText },
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket },
-      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet },
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
@@ -123,29 +116,36 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
-    label: "Inteligência de Clientes",
+    label: "Inteligência & Dados",
     items: [
       { key: "sidebar.crm", defaultTitle: "Inteligência CRM", url: "/crm", icon: TrendingUp },
+      { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
+      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ScrollText },
+      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet },
+      { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
     ],
   },
   {
-    label: "Configurações Avançadas",
+    label: "Integrações & API",
+    items: [
+      { key: "sidebar.api_keys", defaultTitle: "APIs & Integrações", url: "/api-keys", icon: Key },
+      { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
+      { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car },
+      { key: "sidebar.teste_webhook", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical },
+    ],
+  },
+  {
+    label: "Configurações",
     items: [
       { key: "sidebar.funcionalidades", defaultTitle: "Módulos", url: "/modules", icon: Blocks },
+      { key: "sidebar.modulos", defaultTitle: "Gerenciar Módulos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.permissoes_globais", defaultTitle: "Políticas de Acesso", url: "/permissions", icon: Shield },
       { key: "sidebar.secoes_home", defaultTitle: "Seções Iniciais", url: "/templates", icon: Layout },
       { key: "sidebar.modelos_home", defaultTitle: "Templates", url: "/home-templates", icon: LayoutList },
       { key: "sidebar.controle_recursos", defaultTitle: "Feature Flags", url: "/flags", icon: Flag },
       { key: "sidebar.atualizacoes", defaultTitle: "Novidades", url: "/releases", icon: Rocket },
-      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ScrollText },
-      { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
-      { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
       { key: "sidebar.kit_inicial", defaultTitle: "Starter Kit", url: "/starter-kit", icon: PackageSearch },
-      { key: "sidebar.teste_webhook", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical },
-      { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
-      { key: "sidebar.api_keys", defaultTitle: "APIs & Integrações", url: "/api-keys", icon: Key },
-      { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
       { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
       { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: Crown },
     ],
