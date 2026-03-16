@@ -563,6 +563,7 @@ Deno.serve(async (req) => {
         entry_type: "CREDIT", reference_type: "MANUAL", reason: "Crédito inicial de teste", created_by_user_id: callerUserId,
       });
     }
+    }
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: customerUser.id, role: "customer" },
       { onConflict: "user_id,role", ignoreDuplicates: true },
