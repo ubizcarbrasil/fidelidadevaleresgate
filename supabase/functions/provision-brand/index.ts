@@ -434,6 +434,11 @@ Deno.serve(async (req) => {
       primary_color,
       secondary_color,
       test_points = 1000,
+      enable_demo_stores = true,
+      enable_test_credits = true,
+      selected_sections,
+      admin_email: customAdminEmail,
+      admin_password: customAdminPassword,
     } = body;
 
     if (!company_name || !brand_slug || !city_name || !city_slug) {
