@@ -2,8 +2,8 @@ import {
   Store, MapPin, LayoutDashboard, LogOut, Globe, Palette, Layout, Users,
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag, Type,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
-  Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Target, Crown, UserX, Users2,
-  Contact, Layers3, Megaphone, PieChart, FileUp, ChevronRight, Car, FlaskConical, LayoutTemplate,
+  Coins, Sparkles, PackageSearch, BarChart3, Bell, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
+  ClipboardList, ChevronRight, Car, FlaskConical, LayoutTemplate,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
