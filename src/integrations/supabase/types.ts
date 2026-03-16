@@ -772,6 +772,65 @@ export type Database = {
           },
         ]
       }
+      brand_sub_permission_config: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string | null
+          id: string
+          is_allowed: boolean | null
+          sub_item_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          is_allowed?: boolean | null
+          sub_item_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          is_allowed?: boolean | null
+          sub_item_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sub_permission_config_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sub_permission_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sub_permission_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sub_permission_config_sub_item_id_fkey"
+            columns: ["sub_item_id"]
+            isOneToOne: false
+            referencedRelation: "permission_sub_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           brand_settings_json: Json | null
@@ -2982,6 +3041,41 @@ export type Database = {
           order_index?: number | null
         }
         Relationships: []
+      }
+      permission_sub_items: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          id: string
+          key: string
+          order_index: number | null
+          permission_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          id?: string
+          key: string
+          order_index?: number | null
+          permission_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          key?: string
+          order_index?: number | null
+          permission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_sub_items_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permission_subgroups: {
         Row: {

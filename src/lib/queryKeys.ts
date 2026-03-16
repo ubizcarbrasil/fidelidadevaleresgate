@@ -42,4 +42,6 @@ export const queryKeys = {
   permissionGroups: createKeys("permission-groups"),
   permissionSubgroups: createKeys("permission-subgroups"),
   permissionConfig: createKeys("permission-config"),
+  permissionSubItems: createKeys("permission-sub-items"),
+  brandSubPermConfig: createKeys("brand-sub-perm-config"),
 } as const;
