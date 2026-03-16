@@ -7,10 +7,11 @@ export function useBrandName(): string {
   return name;
 }
 
-export function useBrandInfo(): { name: string; logoUrl: string | null; brandId: string | null } {
+export function useBrandInfo(): { name: string; logoUrl: string | null; brandId: string | null; subscriptionPlan: string | null } {
   const { roles } = useAuth();
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
   const brandId = roles.find((r) => r.brand_id)?.brand_id ?? null;
 
@@ -18,11 +19,12 @@ export function useBrandInfo(): { name: string; logoUrl: string | null; brandId:
     if (!brandId) return;
     supabase
       .from("brands")
-      .select("name, brand_settings_json")
+      .select("name, brand_settings_json, subscription_plan")
       .eq("id", brandId)
       .single()
       .then(({ data }) => {
         if (data?.name) setName(data.name);
+        if (data?.subscription_plan) setSubscriptionPlan(data.subscription_plan);
         if (data?.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
           const settings = data.brand_settings_json as Record<string, any>;
           if (settings.logo_url) setLogoUrl(settings.logo_url);
@@ -30,5 +32,5 @@ export function useBrandInfo(): { name: string; logoUrl: string | null; brandId:
       });
   }, [brandId]);
 
-  return { name, logoUrl, brandId };
+  return { name, logoUrl, brandId, subscriptionPlan };
 }

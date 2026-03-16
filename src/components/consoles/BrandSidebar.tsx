@@ -200,6 +200,9 @@ function CollapsibleGroup({
   );
 }
 
+/** Module keys hidden on basic/free plans */
+const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library"];
+
 export function BrandSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -207,9 +210,11 @@ export function BrandSidebar() {
   const { user, signOut } = useAuth();
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
-  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
+  const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
   const badges = useSidebarBadges();
+
+  const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
 
   const resolvedGroups = groups.map(group => ({
     ...group,
@@ -220,7 +225,8 @@ export function BrandSidebar() {
         }
         return item;
       })
-      .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey)),
+      .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
+      .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? "")),
   }));
 
   return (
