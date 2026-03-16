@@ -362,8 +362,10 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Texts */}
+      {canShow("theme_texts") && (
+      /* Texts */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
