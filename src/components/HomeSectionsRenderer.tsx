@@ -696,7 +696,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
                 </span>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
