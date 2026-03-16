@@ -15,14 +15,16 @@ import {
 } from "lucide-react";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
-  core: { label: "Essencial", emoji: "🔧", description: "Funcionalidades fundamentais da plataforma" },
-  comercial: { label: "Comercial", emoji: "🏪", description: "Gestão de parceiros, ofertas e catálogo" },
-  fidelidade: { label: "Fidelidade & Pontos", emoji: "⭐", description: "Programa de pontos e regras de acúmulo" },
-  visual: { label: "Menus de Personalização", emoji: "🎨", description: "Controla quais menus aparecem no painel do empreendedor" },
-  visual_theme: { label: "Customização do Tema", emoji: "🖌️", description: "Controle granular das seções do Editor de Tema da marca" },
-  governance: { label: "Governança", emoji: "🛡️", description: "Auditoria, permissões e gestão de acessos" },
-  engajamento: { label: "Engajamento", emoji: "📣", description: "Notificações, CRM e comunicação com clientes" },
-  general: { label: "Geral", emoji: "📦", description: "Outros módulos" },
+  core:         { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
+  comercial:    { label: "Comercial",            emoji: "🏪", description: "Parceiros, ofertas e catálogo" },
+  fidelidade:   { label: "Fidelidade & Pontos",  emoji: "⭐", description: "Programa de pontos e cashback" },
+  visual:       { label: "Personalização",       emoji: "🎨", description: "Menus de aparência do painel" },
+  visual_theme: { label: "Customização do Tema", emoji: "🖌️", description: "Seções do Editor de Tema" },
+  governance:   { label: "Governança",           emoji: "🛡️", description: "Auditoria, permissões e acessos" },
+  engajamento:  { label: "Engajamento",          emoji: "📣", description: "CRM, guias e comunicação" },
+  dados:        { label: "Inteligência & Dados", emoji: "📊", description: "Relatórios e análise" },
+  integracoes:  { label: "Integrações & API",    emoji: "🔌", description: "APIs e sistemas externos" },
+  general:      { label: "Geral",                emoji: "📦", description: "Outros módulos" },
 };
 
 const MODULE_ICONS: Record<string, any> = {
