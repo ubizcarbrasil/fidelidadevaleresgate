@@ -377,7 +377,7 @@ export default function CustomerLayout() {
                       strokeWidth={isActive ? 2.2 : 1.6}
                       style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                     />
-                  </motion.div>
+                  </div>
                   <span
                     className="text-[10px] font-semibold transition-colors"
                     style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
