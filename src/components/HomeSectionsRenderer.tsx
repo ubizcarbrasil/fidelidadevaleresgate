@@ -981,12 +981,9 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
         } : { scrollSnapType: "x mandatory" }}
       >
         {items.map((o: any, idx: number) => (
-          <motion.div
+          <div
             key={o.id}
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: idx * 0.06 }}
-            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative animate-fade-in"
             style={{
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
