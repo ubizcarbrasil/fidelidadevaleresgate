@@ -391,24 +391,22 @@ export default function CustomerLayout() {
         </nav>
 
         {/* Offer Detail Overlay */}
-        <AnimatePresence>
-          {selectedOffer && (
-            <Suspense fallback={<TabSkeleton />}>
-              <CustomerOfferDetailPage
-                offer={selectedOffer as OfferWithStore}
-                onBack={() => setSelectedOffer(null)}
-                onOfferClick={(offer) => {
-                  setSelectedOffer(null);
-                  setTimeout(() => setSelectedOffer(offer), 150);
-                }}
-                onOpenStore={(store) => {
-                  setSelectedOffer(null);
-                  setTimeout(() => setSelectedStore(store), 150);
-                }}
-              />
-            </Suspense>
-          )}
-        </AnimatePresence>
+        {selectedOffer && (
+          <Suspense fallback={<TabSkeleton />}>
+            <CustomerOfferDetailPage
+              offer={selectedOffer as OfferWithStore}
+              onBack={() => setSelectedOffer(null)}
+              onOfferClick={(offer) => {
+                setSelectedOffer(null);
+                setTimeout(() => setSelectedOffer(offer), 150);
+              }}
+              onOpenStore={(store) => {
+                setSelectedOffer(null);
+                setTimeout(() => setSelectedStore(store), 150);
+              }}
+            />
+          </Suspense>
+        )
 
         {/* Store Detail Overlay */}
         <AnimatePresence>
