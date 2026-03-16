@@ -489,19 +489,17 @@ export default function CustomerLayout() {
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
 
         {/* Welcome Tour */}
-        <AnimatePresence>
-          {showTour && (
-            <WelcomeTour
-              primary={primary}
-              brandName={displayName}
-              customSlides={((brand?.brand_settings_json as any)?.welcome_tour_slides) || undefined}
-              onComplete={() => {
-                setShowTour(false);
-                if (customer) localStorage.setItem(`welcome_tour_${customer.id}`, "done");
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {showTour && (
+          <WelcomeTour
+            primary={primary}
+            brandName={displayName}
+            customSlides={((brand?.brand_settings_json as any)?.welcome_tour_slides) || undefined}
+            onComplete={() => {
+              setShowTour(false);
+              if (customer) localStorage.setItem(`welcome_tour_${customer.id}`, "done");
+            }}
+          />
+        )}
       </div>
     </CustomerNavContext.Provider>
   );
