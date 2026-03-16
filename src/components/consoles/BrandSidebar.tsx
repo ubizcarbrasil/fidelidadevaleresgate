@@ -62,7 +62,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Aprovações",
     items: [
       { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Upgrade", url: "/emitter-requests", icon: Zap, moduleKey: "earn_points_store" },
-      { key: "sidebar.aprovacao_lojas", defaultTitle: "Aprovar Parceiros", url: "/store-approvals", icon: ShieldCheck, moduleKey: "approvals" },
       { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: Shield, moduleKey: "earn_points_store" },
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
     ],

@@ -45,7 +45,7 @@ export function useSidebarBadges() {
       const result: Record<string, number> = {};
 
       if (storeApprovals.count && storeApprovals.count > 0) {
-        result["sidebar.aprovacao_lojas"] = storeApprovals.count;
+        result["sidebar.parceiros"] = storeApprovals.count;
       }
       if (ruleApprovals.count && ruleApprovals.count > 0) {
         result["sidebar.aprovar_regras"] = ruleApprovals.count;

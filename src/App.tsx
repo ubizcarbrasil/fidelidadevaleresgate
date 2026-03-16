@@ -58,7 +58,7 @@ const StorePointsRulePage = lazy(() => import("@/pages/StorePointsRulePage"));
 const ApproveStoreRulesPage = lazy(() => import("@/pages/ApproveStoreRulesPage"));
 const CustomerPreviewPage = lazy(() => import("@/pages/CustomerPreviewPage"));
 const StoreRegistrationWizard = lazy(() => import("@/pages/StoreRegistrationWizard"));
-const StoreApprovalsPage = lazy(() => import("@/pages/StoreApprovalsPage"));
+
 const StoreOwnerPanel = lazy(() => import("@/pages/StoreOwnerPanel"));
 const AffiliateDealsPage = lazy(() => import("@/pages/AffiliateDealsPage"));
 const AffiliateCategoriesPage = lazy(() => import("@/pages/AffiliateCategoriesPage"));
@@ -175,7 +175,7 @@ function AppRoutes() {
           <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
           <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
-          <Route path="store-approvals" element={<StoreApprovalsPage />} />
+          
           <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
           <Route path="affiliate-deals/import-mobile" element={<AchadinhosMobileImportPage />} />
           <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
