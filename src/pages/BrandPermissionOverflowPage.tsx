@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X } from "lucide-react";
+import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X, MoveRight } from "lucide-react";
 import { toast } from "sonner";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { queryKeys } from "@/lib/queryKeys";
@@ -28,6 +28,8 @@ interface ConfigRow {
 }
 interface GroupRow { id: string; name: string; icon_name: string; order_index: number }
 interface SubgroupRow { id: string; group_id: string; name: string; order_index: number }
+interface SubItemRow { id: string; permission_id: string; key: string; display_name: string; order_index: number }
+interface SubItemConfigRow { id: string; brand_id: string; sub_item_id: string; branch_id: string | null; is_allowed: boolean }
 
 const MODULE_LABELS: Record<string, string> = {
   branches: "Cidades", brands: "Marcas", customers: "Clientes", domains: "Domínios",
@@ -63,8 +65,10 @@ export default function BrandPermissionOverflowPage() {
   const [selectedBranchId, setSelectedBranchId] = useState<string>("__all__");
   const [saving, setSaving] = useState(false);
   const [localChanges, setLocalChanges] = useState<Record<string, Partial<ConfigRow>>>({});
+  const [localSubItemChanges, setLocalSubItemChanges] = useState<Record<string, boolean>>({});
   const [editingDisplayName, setEditingDisplayName] = useState<string | null>(null);
   const [tempDisplayName, setTempDisplayName] = useState("");
+  const [movingPermId, setMovingPermId] = useState<string | null>(null);
 
   const activeBrandId = isRoot ? selectedBrandId : currentBrandId;
   const activeBranchId = selectedBranchId === "__all__" ? null : selectedBranchId;
@@ -121,45 +125,84 @@ export default function BrandPermissionOverflowPage() {
     queryKey: queryKeys.permissionConfig.list(activeBrandId, activeBranchId),
     queryFn: async () => {
       if (!activeBrandId) return [];
-      let q = supabase.from("brand_permission_config").select("*").eq("brand_id", activeBrandId);
-      if (activeBranchId) {
-        // Load both global and branch-specific
-        q = supabase.from("brand_permission_config").select("*").eq("brand_id", activeBrandId);
-      }
-      const { data, error } = await q;
+      const { data, error } = await supabase.from("brand_permission_config").select("*").eq("brand_id", activeBrandId);
       if (error) throw error;
       return data as ConfigRow[];
     },
     enabled: !!activeBrandId,
   });
 
+  const { data: subItems } = useQuery({
+    queryKey: queryKeys.permissionSubItems.all,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("permission_sub_items").select("*").order("order_index");
+      if (error) throw error;
+      return data as SubItemRow[];
+    },
+  });
+
+  const { data: subItemConfigs } = useQuery({
+    queryKey: queryKeys.brandSubPermConfig.list(activeBrandId, activeBranchId),
+    queryFn: async () => {
+      if (!activeBrandId) return [];
+      const { data, error } = await supabase.from("brand_sub_permission_config").select("*").eq("brand_id", activeBrandId);
+      if (error) throw error;
+      return data as SubItemConfigRow[];
+    },
+    enabled: !!activeBrandId,
+  });
+
+  /* ─── mutations ─── */
+  const moveToSubgroup = useMutation({
+    mutationFn: async ({ permId, subgroupId }: { permId: string; subgroupId: string | null }) => {
+      const { error } = await supabase.from("permissions").update({ subgroup_id: subgroupId }).eq("id", permId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["permissions-all-overflow"] });
+      setMovingPermId(null);
+      toast.success("Permissão movida!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   /* ─── derived data ─── */
   const configMap = useMemo(() => {
     const map: Record<string, ConfigRow> = {};
-    // First load global configs
     configs?.filter(c => !c.branch_id).forEach(c => { map[c.permission_key] = c; });
-    // Then overlay branch-specific if viewing a branch
     if (activeBranchId) {
       configs?.filter(c => c.branch_id === activeBranchId).forEach(c => { map[c.permission_key] = c; });
     }
     return map;
   }, [configs, activeBranchId]);
 
-  // Build hierarchy: group → subgroup → permissions
+  const subItemConfigMap = useMemo(() => {
+    const map: Record<string, SubItemConfigRow> = {};
+    subItemConfigs?.filter(c => !c.branch_id).forEach(c => { map[c.sub_item_id] = c; });
+    if (activeBranchId) {
+      subItemConfigs?.filter(c => c.branch_id === activeBranchId).forEach(c => { map[c.sub_item_id] = c; });
+    }
+    return map;
+  }, [subItemConfigs, activeBranchId]);
+
+  const subItemsByPermission = useMemo(() => {
+    const map: Record<string, SubItemRow[]> = {};
+    subItems?.forEach(si => {
+      if (!map[si.permission_id]) map[si.permission_id] = [];
+      map[si.permission_id].push(si);
+    });
+    return map;
+  }, [subItems]);
+
   const hierarchy = useMemo(() => {
-    if (!permissions) return { grouped: [] as any[], ungrouped: [] as PermissionRow[] };
+    if (!permissions) return { grouped: [] as any[], ungrouped: [] as PermissionRow[], ungroupedByModule: {} as Record<string, PermissionRow[]> };
 
     const subgroupMap = new Map<string, SubgroupRow>();
     subgroups?.forEach(s => subgroupMap.set(s.id, s));
 
-    const groupMap = new Map<string, GroupRow>();
-    groups?.forEach(g => groupMap.set(g.id, g));
-
-    // Permissions with subgroup_id
     const assigned = permissions.filter(p => p.subgroup_id && subgroupMap.has(p.subgroup_id));
     const ungrouped = permissions.filter(p => !p.subgroup_id || !subgroupMap.has(p.subgroup_id!));
 
-    // Build tree
     const tree: Record<string, Record<string, PermissionRow[]>> = {};
     assigned.forEach(p => {
       const sg = subgroupMap.get(p.subgroup_id!)!;
@@ -174,9 +217,8 @@ export default function BrandPermissionOverflowPage() {
         subgroup: subgroupMap.get(sgId)!,
         permissions: perms,
       })).sort((a, b) => a.subgroup.order_index - b.subgroup.order_index),
-    })).filter(g => g.subgroups.length > 0 || true); // show all groups
+    }));
 
-    // Also group ungrouped by module
     const ungroupedByModule: Record<string, PermissionRow[]> = {};
     ungrouped.forEach(p => {
       if (!ungroupedByModule[p.module]) ungroupedByModule[p.module] = [];
@@ -186,6 +228,17 @@ export default function BrandPermissionOverflowPage() {
     return { grouped, ungrouped, ungroupedByModule };
   }, [permissions, groups, subgroups]);
 
+  // Build flat list of group > subgroup options for the move selector
+  const subgroupOptions = useMemo(() => {
+    const opts: { label: string; value: string }[] = [];
+    (groups || []).forEach(g => {
+      (subgroups || []).filter(s => s.group_id === g.id).forEach(s => {
+        opts.push({ label: `${g.name} › ${s.name}`, value: s.id });
+      });
+    });
+    return opts;
+  }, [groups, subgroups]);
+
   /* ─── helpers ─── */
   const getEffectiveValue = useCallback((permKey: string, field: "allowed_for_brand" | "allowed_for_store"): boolean => {
     if (localChanges[permKey]?.[field] !== undefined) return localChanges[permKey][field]!;
@@ -194,8 +247,19 @@ export default function BrandPermissionOverflowPage() {
     return field === "allowed_for_brand";
   }, [localChanges, configMap]);
 
+  const getSubItemValue = useCallback((subItemId: string): boolean => {
+    if (localSubItemChanges[subItemId] !== undefined) return localSubItemChanges[subItemId];
+    const existing = subItemConfigMap[subItemId];
+    if (existing) return existing.is_allowed;
+    return true;
+  }, [localSubItemChanges, subItemConfigMap]);
+
   const togglePermission = (permKey: string, field: "allowed_for_brand" | "allowed_for_store", value: boolean) => {
     setLocalChanges(prev => ({ ...prev, [permKey]: { ...prev[permKey], [field]: value } }));
+  };
+
+  const toggleSubItem = (subItemId: string, value: boolean) => {
+    setLocalSubItemChanges(prev => ({ ...prev, [subItemId]: value }));
   };
 
   const toggleBulk = (permKeys: string[], field: "allowed_for_brand" | "allowed_for_store", value: boolean) => {
@@ -215,8 +279,15 @@ export default function BrandPermissionOverflowPage() {
     setSaving(true);
     try {
       const changedKeys = Object.keys(localChanges);
-      if (changedKeys.length === 0) { toast.info("Nenhuma alteração."); setSaving(false); return; }
+      const changedSubItems = Object.keys(localSubItemChanges);
 
+      if (changedKeys.length === 0 && changedSubItems.length === 0) {
+        toast.info("Nenhuma alteração.");
+        setSaving(false);
+        return;
+      }
+
+      // Save permission config changes
       for (const permKey of changedKeys) {
         const existing = configMap[permKey];
         const changes = localChanges[permKey];
@@ -224,9 +295,7 @@ export default function BrandPermissionOverflowPage() {
         const newStore = changes.allowed_for_store ?? existing?.allowed_for_store ?? false;
         const finalStore = newBrand ? newStore : false;
 
-        // If editing a branch-specific config
         if (activeBranchId) {
-          // Check if branch-specific row already exists
           const branchConfig = configs?.find(c => c.permission_key === permKey && c.branch_id === activeBranchId);
           if (branchConfig) {
             await supabase.from("brand_permission_config").update({
@@ -261,8 +330,40 @@ export default function BrandPermissionOverflowPage() {
         }
       }
 
+      // Save sub-item config changes
+      for (const subItemId of changedSubItems) {
+        const existing = subItemConfigMap[subItemId];
+        const newValue = localSubItemChanges[subItemId];
+
+        if (activeBranchId) {
+          const branchConfig = subItemConfigs?.find(c => c.sub_item_id === subItemId && c.branch_id === activeBranchId);
+          if (branchConfig) {
+            await supabase.from("brand_sub_permission_config").update({ is_allowed: newValue }).eq("id", branchConfig.id).throwOnError();
+          } else {
+            await supabase.from("brand_sub_permission_config").insert({
+              brand_id: activeBrandId,
+              sub_item_id: subItemId,
+              branch_id: activeBranchId,
+              is_allowed: newValue,
+            }).throwOnError();
+          }
+        } else {
+          if (existing) {
+            await supabase.from("brand_sub_permission_config").update({ is_allowed: newValue }).eq("id", existing.id).throwOnError();
+          } else {
+            await supabase.from("brand_sub_permission_config").insert({
+              brand_id: activeBrandId,
+              sub_item_id: subItemId,
+              is_allowed: newValue,
+            }).throwOnError();
+          }
+        }
+      }
+
       setLocalChanges({});
+      setLocalSubItemChanges({});
       qc.invalidateQueries({ queryKey: queryKeys.permissionConfig.lists() });
+      qc.invalidateQueries({ queryKey: queryKeys.brandSubPermConfig.lists() });
       toast.success("Permissões salvas com sucesso!");
     } catch (err: any) {
       toast.error(err.message);
@@ -280,11 +381,69 @@ export default function BrandPermissionOverflowPage() {
     setEditingDisplayName(null);
   };
 
-  const hasChanges = Object.keys(localChanges).length > 0;
+  const hasChanges = Object.keys(localChanges).length > 0 || Object.keys(localSubItemChanges).length > 0;
   const isViewingBranch = activeBranchId !== null;
 
+  /* ─── render sub-items (subclass) ─── */
+  const renderSubItems = (permId: string, parentEnabled: boolean) => {
+    const items = subItemsByPermission[permId];
+    if (!items || items.length === 0) return null;
+
+    return (
+      <div className="ml-6 mt-2 space-y-1.5 border-l-2 border-muted pl-3">
+        {items.map(si => {
+          const isAllowed = getSubItemValue(si.id);
+          const hasChange = localSubItemChanges[si.id] !== undefined;
+          return (
+            <div key={si.id} className={`flex items-center justify-between rounded-md px-2 py-1.5 ${hasChange ? "bg-primary/5" : "bg-muted/20"}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">↳</span>
+                <span className="text-xs">{si.display_name}</span>
+                {hasChange && <Badge variant="secondary" className="text-[9px] px-1">mod</Badge>}
+              </div>
+              <Switch
+                checked={isAllowed}
+                disabled={!parentEnabled}
+                onCheckedChange={v => toggleSubItem(si.id, v)}
+                className="scale-75"
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  /* ─── render move-to-subgroup selector ─── */
+  const renderMoveSelector = (perm: PermissionRow) => {
+    if (movingPermId !== perm.id) {
+      return (
+        <Button variant="ghost" size="icon" className="h-6 w-6" title="Mover para subgrupo" onClick={() => setMovingPermId(perm.id)}>
+          <MoveRight className="h-3 w-3 text-muted-foreground" />
+        </Button>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+        <Select onValueChange={v => moveToSubgroup.mutate({ permId: perm.id, subgroupId: v })}>
+          <SelectTrigger className="h-7 text-xs w-44">
+            <SelectValue placeholder="Mover para..." />
+          </SelectTrigger>
+          <SelectContent>
+            {subgroupOptions.map(opt => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMovingPermId(null)}>
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  };
+
   /* ─── render permission item ─── */
-  const renderPermItem = (perm: PermissionRow) => {
+  const renderPermItem = (perm: PermissionRow, showMoveSelector = false) => {
     const brandAllowed = getEffectiveValue(perm.key, "allowed_for_brand");
     const storeAllowed = getEffectiveValue(perm.key, "allowed_for_store");
     const hasLocalChange = localChanges[perm.key] !== undefined;
@@ -292,49 +451,52 @@ export default function BrandPermissionOverflowPage() {
     const isEditing = editingDisplayName === perm.id;
 
     return (
-      <div
-        key={perm.id}
-        className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""}`}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <div className="flex items-center gap-1">
-                <Input value={tempDisplayName} onChange={e => setTempDisplayName(e.target.value)} className="h-7 text-sm w-48" />
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => saveDisplayName(perm.id, tempDisplayName)}>
-                  <Check className="h-3.5 w-3.5 text-primary" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingDisplayName(null)}>
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ) : (
-              <>
-                <span className="text-sm font-medium">{displayName}</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingDisplayName(perm.id); setTempDisplayName(perm.display_name || ""); }}>
-                  <Pencil className="h-3 w-3 text-muted-foreground" />
-                </Button>
-              </>
-            )}
-            {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
-            {isViewingBranch && configs?.some(c => c.permission_key === perm.key && c.branch_id === activeBranchId) && (
-              <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">customizado</Badge>
-            )}
-          </div>
-          <span className="block text-[10px] font-mono text-muted-foreground">{perm.key}</span>
-        </div>
-        <div className="flex items-center gap-6 ml-4">
-          {isRoot && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">Empreendedor</span>
-              <Switch checked={brandAllowed} onCheckedChange={v => togglePermission(perm.key, "allowed_for_brand", v)} />
+      <div key={perm.id}>
+        <div
+          className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""}`}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              {isEditing ? (
+                <div className="flex items-center gap-1">
+                  <Input value={tempDisplayName} onChange={e => setTempDisplayName(e.target.value)} className="h-7 text-sm w-48" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => saveDisplayName(perm.id, tempDisplayName)}>
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingDisplayName(null)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-sm font-medium">{displayName}</span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingDisplayName(perm.id); setTempDisplayName(perm.display_name || ""); }}>
+                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                  {showMoveSelector && isRoot && renderMoveSelector(perm)}
+                </>
+              )}
+              {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
+              {isViewingBranch && configs?.some(c => c.permission_key === perm.key && c.branch_id === activeBranchId) && (
+                <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">customizado</Badge>
+              )}
             </div>
-          )}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Parceiro</span>
-            <Switch checked={storeAllowed} disabled={!brandAllowed} onCheckedChange={v => togglePermission(perm.key, "allowed_for_store", v)} />
+            <span className="block text-[10px] font-mono text-muted-foreground">{perm.key}</span>
+          </div>
+          <div className="flex items-center gap-6 ml-4">
+            {isRoot && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Empreendedor</span>
+                <Switch checked={brandAllowed} onCheckedChange={v => togglePermission(perm.key, "allowed_for_brand", v)} />
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Parceiro</span>
+              <Switch checked={storeAllowed} disabled={!brandAllowed} onCheckedChange={v => togglePermission(perm.key, "allowed_for_store", v)} />
+            </div>
           </div>
         </div>
+        {renderSubItems(perm.id, brandAllowed)}
       </div>
     );
   };
@@ -363,7 +525,7 @@ export default function BrandPermissionOverflowPage() {
         </div>
         <CollapsibleContent>
           <div className="space-y-2 pl-6 pt-2">
-            {perms.map(renderPermItem)}
+            {perms.map(p => renderPermItem(p, false))}
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -407,7 +569,7 @@ export default function BrandPermissionOverflowPage() {
       {/* Selectors */}
       <div className="flex flex-wrap gap-3">
         {isRoot && (
-          <Select value={selectedBrandId} onValueChange={v => { setSelectedBrandId(v); setSelectedBranchId("__all__"); setLocalChanges({}); }}>
+          <Select value={selectedBrandId} onValueChange={v => { setSelectedBrandId(v); setSelectedBranchId("__all__"); setLocalChanges({}); setLocalSubItemChanges({}); }}>
             <SelectTrigger className="w-full max-w-xs">
               <SelectValue placeholder="Selecione uma empresa..." />
             </SelectTrigger>
@@ -418,7 +580,7 @@ export default function BrandPermissionOverflowPage() {
         )}
 
         {activeBrandId && (
-          <Select value={selectedBranchId} onValueChange={v => { setSelectedBranchId(v); setLocalChanges({}); }}>
+          <Select value={selectedBranchId} onValueChange={v => { setSelectedBranchId(v); setLocalChanges({}); setLocalSubItemChanges({}); }}>
             <SelectTrigger className="w-full max-w-xs">
               <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Cidade..." />
@@ -524,7 +686,7 @@ export default function BrandPermissionOverflowPage() {
                         )}
                       </div>
                       <AccordionContent className="px-4 pb-4">
-                        <div className="space-y-2">{perms.map(renderPermItem)}</div>
+                        <div className="space-y-2">{perms.map(p => renderPermItem(p, true))}</div>
                       </AccordionContent>
                     </AccordionItem>
                   );
