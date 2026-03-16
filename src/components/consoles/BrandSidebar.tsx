@@ -126,7 +126,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings" },
-      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
+      { key: "sidebar.subscription", defaultTitle: "Meu Plano", url: "/subscription", icon: Crown, moduleKey: "subscription" },
     ],
   },
 ];
@@ -201,7 +201,7 @@ function CollapsibleGroup({
 }
 
 /** Module keys hidden on basic/free plans */
-const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library"];
+const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library", "subscription"];
 
 export function BrandSidebar() {
   const { state } = useSidebar();
