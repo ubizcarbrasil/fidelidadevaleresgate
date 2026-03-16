@@ -6,12 +6,12 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign, Zap, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { motion } from "framer-motion";
 import OfferBadge from "@/components/customer/OfferBadge";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss } from "@/lib/utils";
+import { useRankedOffers } from "@/hooks/useRankedOffers";
 
 type Voucher = Tables<"vouchers">;
 
