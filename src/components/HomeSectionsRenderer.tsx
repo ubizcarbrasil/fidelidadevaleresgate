@@ -502,12 +502,9 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
           const txtColor = v.text_color || "#FFFFFF";
 
           return (
-            <motion.div
+            <div
               key={v.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden relative"
+              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden relative animate-fade-in"
               style={{ scrollSnapAlign: "start", background: bgGradient }}
             >
               <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-background" />
