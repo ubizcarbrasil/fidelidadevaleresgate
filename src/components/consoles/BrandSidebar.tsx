@@ -201,7 +201,7 @@ function CollapsibleGroup({
 }
 
 /** Module keys hidden on basic/free plans */
-const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library"];
+const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library", "subscription"];
 
 export function BrandSidebar() {
   const { state } = useSidebar();
