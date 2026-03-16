@@ -521,8 +521,23 @@ Deno.serve(async (req) => {
     };
 
     // ─── 5. Admin test user ─────────────────────────────────────
-    const adminEmail = `teste-${emailPrefix}@teste.com`;
-    const adminUser = await getOrCreateUser(adminEmail, `Admin ${company_name}`);
+    const adminEmail = customAdminEmail || `teste-${emailPrefix}@teste.com`;
+    const adminPassword = customAdminPassword || "123456";
+    const adminUser = await (async () => {
+      if (customAdminEmail) {
+        const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email: adminEmail, password: adminPassword, email_confirm: true, user_metadata: { full_name: `Admin ${company_name}` },
+        });
+        if (created?.user) return created.user;
+        if (createErr?.message?.includes("already been registered")) {
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+          const existing = listData?.users?.find((u: any) => u.email === adminEmail);
+          if (existing) return existing;
+        }
+        throw new Error(`Admin user: ${createErr?.message}`);
+      }
+      return getOrCreateUser(adminEmail, `Admin ${company_name}`);
+    })();
     await supabaseAdmin.from("profiles").update({ brand_id: brand.id, tenant_id: tenant.id }).eq("id", adminUser.id);
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: adminUser.id, role: "brand_admin", brand_id: brand.id, tenant_id: tenant.id },
