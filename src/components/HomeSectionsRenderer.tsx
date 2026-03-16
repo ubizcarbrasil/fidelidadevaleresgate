@@ -783,12 +783,9 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
         const isSponsored = sponsoredStoreIds?.has(b.id);
 
         return (
-          <motion.div
+          <div
             key={b.id}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+            className="rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform animate-fade-in"
             style={{ backgroundColor: "hsl(var(--card))" }}
             onClick={() => onStoreClick?.(b)}
           >
