@@ -41,6 +41,12 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    label: "Módulos & Funcionalidades",
+    items: [
+      { key: "sidebar.modulos", defaultTitle: "Gerenciar Módulos", url: "/brand-modules", icon: Blocks },
+    ],
+  },
+  {
     label: "Organização",
     items: [
       { key: "sidebar.empresas", defaultTitle: "Empresas", url: "/tenants", icon: Building2 },
