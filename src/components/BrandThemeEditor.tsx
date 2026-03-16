@@ -20,6 +20,7 @@ interface BrandThemeEditorProps {
   brandName?: string;
   offerCardConfig?: OfferCardConfig;
   onOfferCardConfigChange?: (config: OfferCardConfig) => void;
+  isModuleEnabled?: (key: string) => boolean;
 }
 
 const COLOR_FIELDS: { key: keyof NonNullable<BrandTheme["colors"]>; label: string }[] = [
@@ -117,7 +118,8 @@ const DARK_PRESETS: DarkPreset[] = [
   },
 ];
 
-export default function BrandThemeEditor({ value, onChange, brandId, brandName, offerCardConfig, onOfferCardConfigChange }: BrandThemeEditorProps) {
+export default function BrandThemeEditor({ value, onChange, brandId, brandName, offerCardConfig, onOfferCardConfigChange, isModuleEnabled }: BrandThemeEditorProps) {
+  const canShow = (key: string) => !isModuleEnabled || isModuleEnabled(key);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
   const update = (patch: Partial<BrandTheme>) => onChange({ ...value, ...patch });
@@ -168,7 +170,8 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
         </Sheet>
       </div>
       <div className="space-y-6">
-      {/* Colors */}
+      {canShow("theme_colors") && (
+      /* Colors */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -266,8 +269,10 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Typography */}
+      {canShow("theme_typography") && (
+      /* Typography */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -311,8 +316,10 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Images */}
+      {canShow("theme_images") && (
+      /* Images */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -355,8 +362,10 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Texts */}
+      {canShow("theme_texts") && (
+      /* Texts */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -392,15 +401,18 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Layout & Dimensions */}
+      {canShow("theme_layout") && (
       <LayoutDimensionsSection
         value={value.layout || {}}
         onChange={(layout) => update({ layout })}
       />
+      )}
 
       {/* Offer Card Config */}
-      {onOfferCardConfigChange && offerCardConfig && (
+      {canShow("theme_offer_cards") && onOfferCardConfigChange && offerCardConfig && (
         <OfferCardConfigSection
           value={offerCardConfig}
           onChange={onOfferCardConfigChange}

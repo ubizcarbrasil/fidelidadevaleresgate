@@ -20,12 +20,14 @@ import type { BrandTheme } from "@/hooks/useBrandTheme";
 import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandModules } from "@/hooks/useBrandModules";
 
 export default function BrandForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
   const { isRootAdmin } = useBrandGuard();
+  const { isModuleEnabled } = useBrandModules();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
@@ -261,7 +263,7 @@ export default function BrandForm() {
                 </CardContent>
               </Card>
             )}
-            <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} offerCardConfig={offerCardConfig} onOfferCardConfigChange={setOfferCardConfig} />
+            <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} offerCardConfig={offerCardConfig} onOfferCardConfigChange={setOfferCardConfig} isModuleEnabled={isModuleEnabled} />
           </TabsContent>
 
           {isEdit && id && (
