@@ -409,20 +409,18 @@ export default function CustomerLayout() {
         )
 
         {/* Store Detail Overlay */}
-        <AnimatePresence>
-          {selectedStore && (
-            <Suspense fallback={<TabSkeleton />}>
-              <CustomerStoreDetailPage
-                store={selectedStore as Tables<"stores">}
-                onBack={() => setSelectedStore(null)}
-                onOfferClick={(offer) => {
-                  setSelectedStore(null);
-                  setTimeout(() => setSelectedOffer(offer), 100);
-                }}
-              />
-            </Suspense>
-          )}
-        </AnimatePresence>
+        {selectedStore && (
+          <Suspense fallback={<TabSkeleton />}>
+            <CustomerStoreDetailPage
+              store={selectedStore as Tables<"stores">}
+              onBack={() => setSelectedStore(null)}
+              onOfferClick={(offer) => {
+                setSelectedStore(null);
+                setTimeout(() => setSelectedOffer(offer), 100);
+              }}
+            />
+          </Suspense>
+        )
 
         {/* Section Detail Overlay */}
         <AnimatePresence>
