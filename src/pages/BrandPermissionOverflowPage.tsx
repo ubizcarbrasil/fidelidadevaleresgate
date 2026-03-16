@@ -302,7 +302,7 @@ export default function BrandPermissionOverflowPage() {
               <div className="flex items-center gap-1">
                 <Input value={tempDisplayName} onChange={e => setTempDisplayName(e.target.value)} className="h-7 text-sm w-48" />
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => saveDisplayName(perm.id, tempDisplayName)}>
-                  <Check className="h-3.5 w-3.5 text-green-600" />
+                  <Check className="h-3.5 w-3.5 text-primary" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingDisplayName(null)}>
                   <X className="h-3.5 w-3.5" />
