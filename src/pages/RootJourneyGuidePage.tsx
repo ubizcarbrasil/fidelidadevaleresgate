@@ -150,12 +150,12 @@ const journeySteps: JourneyStep[] = [
     phaseColor: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
     title: "Cadastrar e Aprovar Parceiros",
     description: "Parceiros se cadastram publicamente e precisam de aprovação para operar.",
-    route: "/store-approvals",
+    route: "/stores",
     steps: [
       "O parceiro acessa a tela de login e clica em 'Quero ser parceiro'.",
       "Ele preenche o wizard de 4 etapas: Dados, Endereço, Mídia/Docs e Acesso.",
-      "A solicitação aparece em → Operações → Aprovação de Parceiros.",
-      "Revise os dados e clique em 'Aprovar' ou 'Rejeitar'.",
+      "Acesse → Gestão Comercial → Parceiros e filtre pela aba 'Pendentes'.",
+      "Clique em 'Revisar' para ver os dados e clique em 'Aprovar' ou 'Rejeitar'.",
       "Após aprovação, o parceiro acessa o Portal do Parceiro e pode criar ofertas.",
     ],
     tips: [
