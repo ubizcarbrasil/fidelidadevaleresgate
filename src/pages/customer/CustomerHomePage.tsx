@@ -130,7 +130,9 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       case "FOR_YOU":
         return (
           <div key="foryou" className="mt-6 animate-fade-in">
-            <ForYouSection />
+            <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl mx-4" />}>
+              <ForYouSection />
+            </Suspense>
           </div>
         );
       case "EMISSORAS":
