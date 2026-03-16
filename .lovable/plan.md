@@ -1,30 +1,43 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Corrigir exclusão de marcas e deletar as 10 inativas
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+A exclusão falha porque 12 tabelas têm FK para `brands` **sem** `ON DELETE CASCADE`:
+- `stores`, `offers`, `customers`, `redemptions`, `coupons`
+- `store_points_rules`, `store_type_requests`, `store_catalog_items`, `store_catalog_categories`
+- `catalog_cart_orders`, `machine_ride_notifications`
+- `profiles` (já tem SET NULL, ok)
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+A edge function `admin-brand-actions` tenta deletar apenas 11 tabelas e depois branches, mas não deleta stores, offers, customers, redemptions, etc. — que bloqueiam a deleção.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### Alterações
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+#### 1. Migration: adicionar ON DELETE CASCADE nas FKs faltantes
+```sql
+ALTER TABLE stores DROP CONSTRAINT stores_brand_id_fkey,
+  ADD CONSTRAINT stores_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE;
+-- Repetir para: offers, customers, redemptions, coupons, store_points_rules,
+-- store_type_requests, store_catalog_items, store_catalog_categories,
+-- catalog_cart_orders, machine_ride_notifications
+```
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+#### 2. Edge Function: atualizar lista de tabelas
+Em `admin-brand-actions/index.ts`, adicionar as tabelas faltantes na ordem correta de deleção (respeitar dependências):
+```
+redemptions, coupons, catalog_cart_orders, machine_ride_notifications,
+store_catalog_items, store_catalog_categories, store_points_rules,
+store_type_requests, offers, customers, stores
+```
+...antes de deletar branches e a marca.
+
+#### 3. Deletar as 10 marcas inativas
+Após deploy, executar a deleção das marcas:
+- Gina haline car, Soureino, Gina Car, Matheus MKT, Me leva resgata
+- Meu motorista, Pizzaria do Teste, Ubiz Resgata, Brand Premium, Marca Teste
+
+### Resultado
+- Exclusão de marcas funciona corretamente na interface
+- FK com CASCADE previne bloqueios futuros
+- 10 marcas inativas removidas
+
