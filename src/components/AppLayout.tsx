@@ -9,6 +9,7 @@ import { BrandSidebar } from "@/components/consoles/BrandSidebar";
 import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
+import { ApiKeyOnboardingDialog } from "@/components/ApiKeyOnboardingDialog";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { useEffect, useMemo, useState } from "react";
