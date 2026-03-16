@@ -25,6 +25,7 @@ import { useBrandModules } from "@/hooks/useBrandModules";
 export default function BrandForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEdit = !!id;
   const { isRootAdmin } = useBrandGuard();
   const { isModuleEnabled } = useBrandModules();
