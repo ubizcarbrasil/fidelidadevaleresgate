@@ -197,17 +197,12 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       </motion.div>
 
       {/* Render native sections in configured order */}
-      {nativeSections.map((ns: NativeSectionConfig, idx: number) => renderNativeSection(ns.key, idx))}
+      {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns.key))}
 
       {/* Dynamic CMS Sections */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.18, ease: "easeOut" as const }}
-        className="mt-6"
-      >
+      <div className="mt-6 animate-fade-in">
         <HomeSectionsRenderer skipBanners />
-      </motion.div>
+      </div>
 
       {/* Footer text */}
       {theme?.footer_text && (
