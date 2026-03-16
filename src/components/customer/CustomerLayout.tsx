@@ -441,13 +441,11 @@ export default function CustomerLayout() {
         <CustomerLedgerOverlay open={ledgerOpen} onBack={() => setLedgerOpen(false)} />
 
         {/* Emissoras List Overlay */}
-        <AnimatePresence>
-          {emissorasOpen && (
-            <Suspense fallback={<TabSkeleton />}>
-              <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
-            </Suspense>
-          )}
-        </AnimatePresence>
+        {emissorasOpen && (
+          <Suspense fallback={<TabSkeleton />}>
+            <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+          </Suspense>
+        )}
 
         {/* Category Grid Overlay */}
         <AnimatePresence>
