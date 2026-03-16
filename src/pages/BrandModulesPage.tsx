@@ -17,8 +17,10 @@ const CATEGORY_META: Record<string, { label: string; emoji: string; description:
   core: { label: "Essencial", emoji: "🔧", description: "Funcionalidades fundamentais da plataforma" },
   comercial: { label: "Comercial", emoji: "🏪", description: "Gestão de parceiros, ofertas e catálogo" },
   fidelidade: { label: "Fidelidade & Pontos", emoji: "⭐", description: "Programa de pontos e regras de acúmulo" },
-  visual: { label: "Visual & Conteúdo", emoji: "🎨", description: "Personalização visual e páginas" },
-  engajamento: { label: "Engajamento", emoji: "📣", description: "Notificações e comunicação com clientes" },
+  visual: { label: "Menus de Personalização", emoji: "🎨", description: "Controla quais menus aparecem no painel do empreendedor" },
+  visual_theme: { label: "Customização do Tema", emoji: "🖌️", description: "Controle granular das seções do Editor de Tema da marca" },
+  governance: { label: "Governança", emoji: "🛡️", description: "Auditoria, permissões e gestão de acessos" },
+  engajamento: { label: "Engajamento", emoji: "📣", description: "Notificações, CRM e comunicação com clientes" },
   general: { label: "Geral", emoji: "📦", description: "Outros módulos" },
 };
 
