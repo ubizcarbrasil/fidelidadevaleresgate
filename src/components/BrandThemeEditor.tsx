@@ -401,15 +401,18 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Layout & Dimensions */}
+      {canShow("theme_layout") && (
       <LayoutDimensionsSection
         value={value.layout || {}}
         onChange={(layout) => update({ layout })}
       />
+      )}
 
       {/* Offer Card Config */}
-      {onOfferCardConfigChange && offerCardConfig && (
+      {canShow("theme_offer_cards") && onOfferCardConfigChange && offerCardConfig && (
         <OfferCardConfigSection
           value={offerCardConfig}
           onChange={onOfferCardConfigChange}
