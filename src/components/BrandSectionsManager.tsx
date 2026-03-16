@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, ChevronUp, ChevronDown, Lock } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Trash2, ChevronUp, ChevronDown, Lock, Info } from "lucide-react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -51,6 +52,12 @@ const ICON_SIZE_LABELS: Record<string, string> = {
   small: "Pequeno",
   medium: "Médio",
   large: "Grande",
+};
+
+const DISPLAY_MODE_LABELS: Record<string, string> = {
+  carousel: "Carrossel",
+  grid: "Grade",
+  list: "Lista",
 };
 
 export default function BrandSectionsManager({ brandId, subscriptionPlan }: BrandSectionsManagerProps) {
@@ -392,16 +399,8 @@ export default function BrandSectionsManager({ brandId, subscriptionPlan }: Bran
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {section.brand_section_sources?.map((src: any) => (
-                      <Badge key={src.id} variant="secondary" className="text-xs">
-                        {SOURCE_TYPE_LABELS[src.source_type] || src.source_type} ({src.limit})
-                      </Badge>
-                    ))}
                     <Badge variant="secondary" className="text-xs">
-                      {section.rows_count}×{section.columns_count}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {ICON_SIZE_LABELS[section.icon_size] || section.icon_size}
+                      {DISPLAY_MODE_LABELS[section.display_mode] || section.display_mode}
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
                       {FILTER_MODE_LABELS[section.filter_mode] || section.filter_mode}
@@ -409,18 +408,59 @@ export default function BrandSectionsManager({ brandId, subscriptionPlan }: Bran
                   </div>
                 </div>
 
+                {/* Info popover */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="left" className="w-72 text-sm space-y-2">
+                    <p className="font-semibold text-foreground">Configuração da Seção</p>
+                    <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-muted-foreground">
+                      <span className="font-medium text-foreground">Template:</span>
+                      <span>{TEMPLATE_TYPE_LABELS[section.section_templates?.type] || section.section_templates?.type || "—"}</span>
+                      <span className="font-medium text-foreground">Exibição:</span>
+                      <span>{DISPLAY_MODE_LABELS[section.display_mode] || section.display_mode}</span>
+                      <span className="font-medium text-foreground">Filtro:</span>
+                      <span>{FILTER_MODE_LABELS[section.filter_mode] || section.filter_mode}</span>
+                      <span className="font-medium text-foreground">Layout:</span>
+                      <span>{section.rows_count} linhas × {section.columns_count} colunas</span>
+                      <span className="font-medium text-foreground">Ícone:</span>
+                      <span>{ICON_SIZE_LABELS[section.icon_size] || section.icon_size}</span>
+                      {section.brand_section_sources?.map((src: any) => (
+                        <>
+                          <span key={`lbl-${src.id}`} className="font-medium text-foreground">Fonte:</span>
+                          <span key={`val-${src.id}`}>{SOURCE_TYPE_LABELS[src.source_type] || src.source_type} (limite: {src.limit})</span>
+                        </>
+                      ))}
+                      {section.coupon_type_filter && (
+                        <>
+                          <span className="font-medium text-foreground">Tipo cupom:</span>
+                          <span>{section.coupon_type_filter}</span>
+                        </>
+                      )}
+                      {section.segment_filter_ids?.length > 0 && (
+                        <>
+                          <span className="font-medium text-foreground">Segmentos:</span>
+                          <span>{section.segment_filter_ids.length} filtro(s) aplicado(s)</span>
+                        </>
+                      )}
+                      <span className="font-medium text-foreground">Visibilidade:</span>
+                      <span>Mín. {section.min_stores_visible}{section.max_stores_visible ? ` / Máx. ${section.max_stores_visible}` : ""}</span>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 <Switch
                   checked={section.is_enabled}
                   onCheckedChange={(checked) => toggleEnabled.mutate({ id: section.id, enabled: checked })}
                 />
                 {canEditStructure && (
-                <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                  <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 )}
-                <Button variant="ghost" size="icon" onClick={() => deleteSection.mutate(section.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
               </CardContent>
             </Card>
           ))}

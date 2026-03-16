@@ -1,39 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Restringir sidebar do plano básico + Info de filtros nas seções
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problemas identificados
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-1. **"Editor de Páginas"** não deveria aparecer no plano básico — seções já são gerenciadas via "Aparência da Marca" > aba "Seções da Home"
-2. **"Biblioteca de Ícones"** não deveria aparecer no plano básico
-3. Falta um **botão de informação** em cada seção mostrando qual filtro/configuração foi aplicada (segmento, tipo de exibição, etc.)
-4. **Bug**: botão de excluir duplicado no `BrandSectionsManager.tsx` (linhas 416-423) — um condicional e outro incondicional
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-### Alterações
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-#### 1. `src/components/consoles/BrandSidebar.tsx`
-- Adicionar lógica para verificar o `subscription_plan` da marca (via `useBrandInfo` que já retorna dados da marca)
-- Ocultar os itens **"Editor de Páginas"** (`page_builder`) e **"Biblioteca de Ícones"** (`icon_library`) quando o plano for `basic`/`free`/`null`
-- Renomear "Assinatura" (atualmente `sidebar.subscription`) para label correto — o screenshot mostra que está com nome técnico
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-#### 2. `src/components/BrandSectionsManager.tsx`
-- **Adicionar botão de info (ℹ️)** em cada seção card que abre um popover/tooltip mostrando:
-  - Tipo do template (ex: "Carrossel de Ofertas")
-  - Modo de exibição (carousel/grid/list)
-  - Filtro aplicado (ex: "Mais recentes")
-  - Segmentos de taxonomia filtrados (se houver `segment_filter_ids`)
-  - Linhas × Colunas
-  - Tipo de cupom filtrado
-  - Limites de visibilidade
-- **Corrigir bug**: remover botão de delete duplicado (linha 421-423), manter apenas o condicional (416-420)
-
-#### 3. `src/hooks/useBrandName.ts`
-- Incluir `subscription_plan` no retorno do `useBrandInfo` para que o sidebar possa consultar o plano
-
-### Arquivos alterados
-| Arquivo | Ação |
-|---------|------|
-| `src/components/consoles/BrandSidebar.tsx` | Ocultar itens por plano |
-| `src/components/BrandSectionsManager.tsx` | Adicionar popover de info + fix delete duplicado |
-| `src/hooks/useBrandName.ts` | Retornar `subscription_plan` |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
