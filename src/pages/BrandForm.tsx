@@ -185,7 +185,10 @@ export default function BrandForm() {
     toast.success("Módulo atualizado!");
   };
 
-  const defaultTab = !isRootAdmin && isEdit ? "theme" : "general";
+  const tabFromUrl = searchParams.get("tab");
+  const defaultTab = tabFromUrl && ["general", "theme", "sections", "modules", "admin"].includes(tabFromUrl)
+    ? tabFromUrl
+    : (!isRootAdmin && isEdit ? "theme" : "general");
 
   return (
     <div className="space-y-6 max-w-5xl">
