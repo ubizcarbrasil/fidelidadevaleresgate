@@ -711,6 +711,7 @@ Deno.serve(async (req) => {
       }
     }
     log.info("Demo stores created successfully", { count: DEMO_STORES.length });
+    } // end if enable_demo_stores
 
     // ─── 11. Store test accounts ────────────────────────────────
     const testAccounts = [
