@@ -12,7 +12,6 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss } from "@/lib/utils";
 import { useRankedOffers } from "@/hooks/useRankedOffers";
-import { motion } from "framer-motion";
 
 type Voucher = Tables<"vouchers">;
 
@@ -502,12 +501,9 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
           const txtColor = v.text_color || "#FFFFFF";
 
           return (
-            <motion.div
+            <div
               key={v.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden relative"
+              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-2xl overflow-hidden relative animate-fade-in"
               style={{ scrollSnapAlign: "start", background: bgGradient }}
             >
               <div className="absolute left-0 top-[55%] -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-background" />
@@ -541,7 +537,7 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
                   PEGAR CUPOM
                 </button>
               </div>
-            </motion.div>
+            </div>
           );
         })}
         <div className="min-w-[16px] flex-shrink-0" />
@@ -575,12 +571,9 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
           const isSponsored = sponsoredStoreIds?.has(o.store_id);
 
           return (
-            <motion.div
+            <div
               key={o.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: idx * 0.04 }}
-              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform animate-fade-in"
               style={{
                 backgroundColor: "hsl(var(--card))",
                 scrollSnapAlign: "start",
@@ -637,7 +630,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                   </span>
                 )}
               </div>
-            </motion.div>
+            </div>
           );
         })}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
@@ -665,12 +658,9 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
         } : { WebkitOverflowScrolling: "touch" }}
       >
         {items.map((o: any, idx: number) => (
-          <motion.div
+          <div
             key={o.id}
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform animate-fade-in"
             style={{
               backgroundColor: "hsl(var(--card))",
               width: useMultiRow ? undefined : `${sizes.minW}px`,
@@ -705,7 +695,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
                 </span>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>
@@ -737,12 +727,9 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
         {items.map((b: any, idx: number) => {
           const isSponsored = sponsoredStoreIds?.has(b.id);
           return (
-          <motion.div
+          <div
             key={b.id}
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform animate-fade-in"
             style={{
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
@@ -775,7 +762,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
                 <p className="text-[10px] text-muted-foreground truncate mt-0.5">{b.category}</p>
               )}
             </div>
-          </motion.div>
+          </div>
         );
         })}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
@@ -795,12 +782,9 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
         const isSponsored = sponsoredStoreIds?.has(b.id);
 
         return (
-          <motion.div
+          <div
             key={b.id}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+            className="rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform animate-fade-in"
             style={{ backgroundColor: "hsl(var(--card))" }}
             onClick={() => onStoreClick?.(b)}
           >
@@ -843,7 +827,7 @@ function StoresList({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
               )}
             </div>
             <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/30" />
-          </motion.div>
+          </div>
         );
       })}
     </div>
@@ -996,12 +980,9 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
         } : { scrollSnapType: "x mandatory" }}
       >
         {items.map((o: any, idx: number) => (
-          <motion.div
+          <div
             key={o.id}
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: idx * 0.06 }}
-            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative"
+            className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform relative animate-fade-in"
             style={{
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
@@ -1044,7 +1025,7 @@ function HighlightsWeekly({ items, primary, cardBg, accent, fontHeading, fg, onO
                 )}
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
       </div>

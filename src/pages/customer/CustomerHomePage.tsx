@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -9,9 +9,9 @@ import HomeSectionsRenderer from "@/components/HomeSectionsRenderer";
 import SegmentNavSection from "@/components/customer/SegmentNavSection";
 import { hslToCss } from "@/lib/utils";
 
-import ForYouSection from "@/components/customer/ForYouSection";
-import EmissorasSection from "@/components/customer/EmissorasSection";
-import AchadinhoSection from "@/components/customer/AchadinhoSection";
+const ForYouSection = lazy(() => import("@/components/customer/ForYouSection"));
+const EmissorasSection = lazy(() => import("@/components/customer/EmissorasSection"));
+const AchadinhoSection = lazy(() => import("@/components/customer/AchadinhoSection"));
 import { Skeleton } from "@/components/ui/skeleton";
 import { haptic } from "@/lib/haptics";
 import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
@@ -129,19 +129,25 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       case "FOR_YOU":
         return (
           <div key="foryou" className="mt-6 animate-fade-in">
-            <ForYouSection />
+            <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl mx-4" />}>
+              <ForYouSection />
+            </Suspense>
           </div>
         );
       case "EMISSORAS":
         return (
           <div key="emissoras" className="mt-6 animate-fade-in">
-            <EmissorasSection />
+            <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl mx-4" />}>
+              <EmissorasSection />
+            </Suspense>
           </div>
         );
       case "ACHADINHOS":
         return (
           <div key="achadinhos" className="mt-6 animate-fade-in">
-            <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
+            <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl mx-4" />}>
+              <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
+            </Suspense>
           </div>
         );
       default:

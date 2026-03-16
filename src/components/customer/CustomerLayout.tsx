@@ -10,7 +10,7 @@ import AchadinhoCategoryGridOverlay from "@/components/customer/AchadinhoCategor
 import AchadinhoDealsOverlay from "@/components/customer/AchadinhoDealsOverlay";
 import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import CustomerHomePage from "@/pages/customer/CustomerHomePage";
 import CustomerSearchOverlay from "@/components/customer/CustomerSearchOverlay";
 import SectionDetailOverlay from "@/components/customer/SectionDetailOverlay";
@@ -391,54 +391,48 @@ export default function CustomerLayout() {
         </nav>
 
         {/* Offer Detail Overlay */}
-        <AnimatePresence>
-          {selectedOffer && (
-            <Suspense fallback={<TabSkeleton />}>
-              <CustomerOfferDetailPage
-                offer={selectedOffer as OfferWithStore}
-                onBack={() => setSelectedOffer(null)}
-                onOfferClick={(offer) => {
-                  setSelectedOffer(null);
-                  setTimeout(() => setSelectedOffer(offer), 150);
-                }}
-                onOpenStore={(store) => {
-                  setSelectedOffer(null);
-                  setTimeout(() => setSelectedStore(store), 150);
-                }}
-              />
-            </Suspense>
-          )}
-        </AnimatePresence>
+        {selectedOffer && (
+          <Suspense fallback={<TabSkeleton />}>
+            <CustomerOfferDetailPage
+              offer={selectedOffer as OfferWithStore}
+              onBack={() => setSelectedOffer(null)}
+              onOfferClick={(offer) => {
+                setSelectedOffer(null);
+                setTimeout(() => setSelectedOffer(offer), 150);
+              }}
+              onOpenStore={(store) => {
+                setSelectedOffer(null);
+                setTimeout(() => setSelectedStore(store), 150);
+              }}
+            />
+          </Suspense>
+        )}
 
         {/* Store Detail Overlay */}
-        <AnimatePresence>
-          {selectedStore && (
-            <Suspense fallback={<TabSkeleton />}>
-              <CustomerStoreDetailPage
-                store={selectedStore as Tables<"stores">}
-                onBack={() => setSelectedStore(null)}
-                onOfferClick={(offer) => {
-                  setSelectedStore(null);
-                  setTimeout(() => setSelectedOffer(offer), 100);
-                }}
-              />
-            </Suspense>
-          )}
-        </AnimatePresence>
+        {selectedStore && (
+          <Suspense fallback={<TabSkeleton />}>
+            <CustomerStoreDetailPage
+              store={selectedStore as Tables<"stores">}
+              onBack={() => setSelectedStore(null)}
+              onOfferClick={(offer) => {
+                setSelectedStore(null);
+                setTimeout(() => setSelectedOffer(offer), 100);
+              }}
+            />
+          </Suspense>
+        )}
 
         {/* Section Detail Overlay */}
-        <AnimatePresence>
-          {sectionDetail && (
-            <SectionDetailOverlay
-              section={sectionDetail.section}
-              items={sectionDetail.items}
-              onBack={() => setSectionDetail(null)}
-              primary={primary}
-              fg={fg}
-              fontHeading={fontHeading}
-            />
-          )}
-        </AnimatePresence>
+        {sectionDetail && (
+          <SectionDetailOverlay
+            section={sectionDetail.section}
+            items={sectionDetail.items}
+            onBack={() => setSectionDetail(null)}
+            primary={primary}
+            fg={fg}
+            fontHeading={fontHeading}
+          />
+        )}
 
         {/* Search Overlay */}
         <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
@@ -447,77 +441,65 @@ export default function CustomerLayout() {
         <CustomerLedgerOverlay open={ledgerOpen} onBack={() => setLedgerOpen(false)} />
 
         {/* Emissoras List Overlay */}
-        <AnimatePresence>
-          {emissorasOpen && (
-            <Suspense fallback={<TabSkeleton />}>
-              <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
-            </Suspense>
-          )}
-        </AnimatePresence>
+        {emissorasOpen && (
+          <Suspense fallback={<TabSkeleton />}>
+            <CustomerEmissorasPage onBack={() => setEmissorasOpen(false)} />
+          </Suspense>
+        )}
 
         {/* Category Grid Overlay */}
-        <AnimatePresence>
-          {categoryGridOpen && (
-            <CategoryGridOverlay
-              onBack={() => setCategoryGridOpen(false)}
-              onCategoryClick={(cat) => {
-                setCategoryGridOpen(false);
-                setSelectedCategory(cat);
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {categoryGridOpen && (
+          <CategoryGridOverlay
+            onBack={() => setCategoryGridOpen(false)}
+            onCategoryClick={(cat) => {
+              setCategoryGridOpen(false);
+              setSelectedCategory(cat);
+            }}
+          />
+        )}
 
         {/* Category Stores Overlay */}
-        <AnimatePresence>
-          {selectedCategory && (
-            <CategoryStoresOverlay
-              category={selectedCategory}
-              onBack={() => setSelectedCategory(null)}
-            />
-          )}
-        </AnimatePresence>
+        {selectedCategory && (
+          <CategoryStoresOverlay
+            category={selectedCategory}
+            onBack={() => setSelectedCategory(null)}
+          />
+        )}
 
         {/* Achadinhos Category Grid Overlay */}
-        <AnimatePresence>
-          {achadinhoCatGridOpen && (
-            <AchadinhoCategoryGridOverlay
-              onBack={() => setAchadinhoCatGridOpen(false)}
-              onCategoryClick={(cat) => {
-                setAchadinhoCatGridOpen(false);
-                setSelectedAchadinhoCat(cat);
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {achadinhoCatGridOpen && (
+          <AchadinhoCategoryGridOverlay
+            onBack={() => setAchadinhoCatGridOpen(false)}
+            onCategoryClick={(cat) => {
+              setAchadinhoCatGridOpen(false);
+              setSelectedAchadinhoCat(cat);
+            }}
+          />
+        )}
 
         {/* Achadinhos Deals Overlay */}
-        <AnimatePresence>
-          {selectedAchadinhoCat && (
-            <AchadinhoDealsOverlay
-              category={selectedAchadinhoCat}
-              onBack={() => setSelectedAchadinhoCat(null)}
-            />
-          )}
-        </AnimatePresence>
+        {selectedAchadinhoCat && (
+          <AchadinhoDealsOverlay
+            category={selectedAchadinhoCat}
+            onBack={() => setSelectedAchadinhoCat(null)}
+          />
+        )}
 
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
 
         {/* Welcome Tour */}
-        <AnimatePresence>
-          {showTour && (
-            <WelcomeTour
-              primary={primary}
-              brandName={displayName}
-              customSlides={((brand?.brand_settings_json as any)?.welcome_tour_slides) || undefined}
-              onComplete={() => {
-                setShowTour(false);
-                if (customer) localStorage.setItem(`welcome_tour_${customer.id}`, "done");
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {showTour && (
+          <WelcomeTour
+            primary={primary}
+            brandName={displayName}
+            customSlides={((brand?.brand_settings_json as any)?.welcome_tour_slides) || undefined}
+            onComplete={() => {
+              setShowTour(false);
+              if (customer) localStorage.setItem(`welcome_tour_${customer.id}`, "done");
+            }}
+          />
+        )}
       </div>
     </CustomerNavContext.Provider>
   );
