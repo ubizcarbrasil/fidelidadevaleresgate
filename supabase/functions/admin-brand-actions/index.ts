@@ -80,26 +80,62 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Delete dependent data in order (cascade should handle most, but be explicit)
+      // Delete dependent data in order — explicit cleanup before cascade
       const tables = [
+        // Deep dependents first
+        "redemptions",
+        "coupons",
+        "catalog_cart_orders",
+        "machine_ride_notifications",
+        "store_catalog_items",
+        "store_catalog_categories",
+        "store_points_rules",
+        "store_type_requests",
+        "customer_favorites",
+        "customer_favorite_stores",
+        "customer_click_events",
+        "points_ledger",
+        "earning_events",
+        "offers",
+        "customers",
+        "stores",
+        // Brand-level dependents
         "brand_modules",
         "brand_sections",
         "brand_permission_config",
+        "brand_sub_permission_config",
         "brand_api_keys",
         "brand_domains",
         "banner_schedules",
         "affiliate_deals",
         "affiliate_deal_categories",
+        "crm_campaign_logs",
+        "crm_campaigns",
+        "crm_events",
+        "crm_contacts",
         "crm_tiers",
         "crm_audiences",
         "custom_pages",
+        "ganha_ganha_store_fees",
+        "ganha_ganha_billing_events",
+        "ganha_ganha_config",
+        "icon_library",
+        "import_jobs",
+        "machine_ride_events",
+        "machine_rides",
+        "machine_integrations",
+        "menu_labels",
+        "partner_landing_config",
+        "points_rules",
+        "sponsored_placements",
+        "store_products",
       ];
 
       for (const table of tables) {
         await adminClient.from(table).delete().eq("brand_id", brand_id);
       }
 
-      // Delete branches (which cascades stores, offers, etc.)
+      // Delete branches (which cascades remaining branch-level data)
       await adminClient.from("branches").delete().eq("brand_id", brand_id);
 
       // Delete user_roles linked to this brand
