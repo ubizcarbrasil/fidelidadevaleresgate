@@ -604,19 +604,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 9. Apply default home template ─────────────────────────
+    // ─── 9. Apply default home template (8 seções padrão) ──────
     const { data: defaultTemplate } = await supabaseAdmin
       .from("home_template_library").select("id, template_payload_json")
       .eq("is_default", true).eq("is_active", true).limit(1).maybeSingle();
     if (defaultTemplate) {
       const payload = defaultTemplate.template_payload_json as any;
       if (payload?.sections && Array.isArray(payload.sections)) {
+        const selectedSet = Array.isArray(selected_sections) ? new Set(selected_sections as number[]) : null;
         for (let i = 0; i < payload.sections.length; i++) {
           const s = payload.sections[i];
-          await supabaseAdmin.from("brand_sections").insert({
+          const isEnabled = selectedSet ? selectedSet.has(i) : true;
+          const { data: newSection } = await supabaseAdmin.from("brand_sections").insert({
             brand_id: brand.id, template_id: s.template_id, title: s.title || null,
-            subtitle: s.subtitle || null, order_index: i, is_enabled: true, display_mode: s.display_mode || "carousel",
-          });
+            subtitle: s.subtitle || null, order_index: i, is_enabled: isEnabled,
+            display_mode: s.display_mode || "carousel",
+            rows_count: s.rows_count || 1, columns_count: s.columns_count || 4,
+            segment_filter_ids: s.segment_filter_ids || null,
+            visual_json: s.visual_json || {},
+          }).select("id").single();
+          // Create source for the section
+          if (newSection && s.source_type) {
+            await supabaseAdmin.from("brand_section_sources").insert({
+              brand_section_id: newSection.id,
+              source_type: s.source_type,
+              limit: s.source_limit || 12,
+            });
+          }
         }
       }
     }
