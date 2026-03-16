@@ -572,12 +572,9 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
           const isSponsored = sponsoredStoreIds?.has(o.store_id);
 
           return (
-            <motion.div
+            <div
               key={o.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: idx * 0.04 }}
-              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+              className="flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform animate-fade-in"
               style={{
                 backgroundColor: "hsl(var(--card))",
                 scrollSnapAlign: "start",
