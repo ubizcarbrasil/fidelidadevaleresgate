@@ -635,8 +635,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 10. Create 40 demo stores with offers & catalogs ───────
+    // ─── 10. Create demo stores with offers & catalogs ─────────
     const log = createEdgeLogger("provision-brand");
+    if (!enable_demo_stores) {
+      log.info("Demo stores skipped (disabled by user)");
+    } else {
     log.info("Creating demo stores...");
     for (const demo of DEMO_STORES) {
       const storeSlug = `${demo.slug}-${emailPrefix}`;
