@@ -538,7 +538,7 @@ function VoucherTickets({ items, primary, cardBg, accent, fontHeading, fg }: any
                   PEGAR CUPOM
                 </button>
               </div>
-            </motion.div>
+            </div>
           );
         })}
         <div className="min-w-[16px] flex-shrink-0" />
