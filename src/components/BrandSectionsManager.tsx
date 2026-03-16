@@ -53,7 +53,9 @@ const ICON_SIZE_LABELS: Record<string, string> = {
   large: "Grande",
 };
 
-export default function BrandSectionsManager({ brandId }: BrandSectionsManagerProps) {
+export default function BrandSectionsManager({ brandId, subscriptionPlan }: BrandSectionsManagerProps) {
+  const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
+  const canEditStructure = !isBasicPlan;
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({
