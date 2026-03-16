@@ -5,7 +5,6 @@ import { useCustomer } from "@/contexts/CustomerContext";
 import { ChevronRight, ExternalLink, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss, withAlpha } from "@/lib/utils";
@@ -40,14 +39,6 @@ function LucideIcon({ name, className, style }: { name: string; className?: stri
   const Icon = (icons as any)[resolved] || (icons as any)["Tag"];
   return <Icon className={className} style={style} />;
 }
-
-const containerVariants = {
-  animate: { transition: { staggerChildren: 0.05 } },
-};
-const cardVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-};
 
 interface AchadinhoSectionProps {
   onOpenAllCategories?: () => void;
@@ -230,13 +221,10 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       )}
 
       {/* Deals carousel */}
-      <motion.div
+      <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
         style={{ scrollSnapType: "x mandatory" }}
-        variants={containerVariants}
-        initial="initial"
-        animate="animate"
       >
         {filteredDeals.map((deal) => {
           const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
@@ -248,11 +236,9 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
           return (
-            <motion.div
+            <div
               key={deal.id}
-              variants={cardVariants}
-              whileTap={{ scale: 0.97 }}
-              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
+              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform"
               style={{
                 boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
                 scrollSnapAlign: "start",
@@ -304,11 +290,11 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           );
         })}
         <div className="min-w-[16px] flex-shrink-0" />
-      </motion.div>
+      </div>
     </section>
   );
 }

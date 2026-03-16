@@ -3,28 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
-import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp, Percent } from "lucide-react";
+import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp } from "lucide-react";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
 import SafeImage from "@/components/customer/SafeImage";
 import type { OfferWithStore } from "@/types/customer";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { hslToCss, withAlpha } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
   const { formatSubtitle } = useOfferCardConfig();
-  const [offers, setOffers] = useState<OfferWithStore[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [segments, setSegments] = useState<{ id: string; name: string }[]>([]);
 
-  // Sync external segment filter from context (e.g. from home category tap)
+  // Sync external segment filter from context
   useEffect(() => {
     if (activeSegmentFilter) {
       setSelectedSegmentId(activeSegmentFilter);
@@ -36,18 +34,19 @@ export default function CustomerOffersPage() {
   const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  // Load segments for stores with active offers in the branch
-  useEffect(() => {
-    if (!selectedBranch || !brand) return;
-    const fetchSegments = async () => {
+  // Load segments
+  const { data: segments = [] } = useQuery({
+    queryKey: queryKeys.stores.list(brand?.id, selectedBranch?.id, "offer-segments"),
+    enabled: !!brand && !!selectedBranch,
+    queryFn: async () => {
       const { data } = await supabase
         .from("stores")
         .select("taxonomy_segment_id, taxonomy_segments(id, name)")
-        .eq("branch_id", selectedBranch.id)
-        .eq("brand_id", brand.id)
+        .eq("branch_id", selectedBranch!.id)
+        .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .not("taxonomy_segment_id", "is", null);
-      if (!data) return;
+      if (!data) return [];
       const segMap = new Map<string, { id: string; name: string }>();
       for (const s of data) {
         const seg = s.taxonomy_segments as { id: string; name: string } | null;
@@ -55,10 +54,26 @@ export default function CustomerOffersPage() {
           segMap.set(seg.id, { id: seg.id, name: seg.name });
         }
       }
-      setSegments(Array.from(segMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
-    };
-    fetchSegments();
-  }, [selectedBranch, brand]);
+      return Array.from(segMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    },
+  });
+
+  // Load offers
+  const { data: offers = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.offers.list(brand?.id, selectedBranch?.id, "all-offers"),
+    enabled: !!brand && !!selectedBranch,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("offers")
+        .select("*, stores(name, logo_url, taxonomy_segment_id)")
+        .eq("branch_id", selectedBranch!.id)
+        .eq("brand_id", brand!.id)
+        .eq("status", "ACTIVE")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      return (data || []) as OfferWithStore[];
+    },
+  });
 
   const filtered = useMemo(() => {
     let result = offers;
@@ -75,24 +90,6 @@ export default function CustomerOffersPage() {
     }
     return result;
   }, [offers, selectedSegmentId, query]);
-
-  useEffect(() => {
-    if (!selectedBranch || !brand) return;
-    const fetchOffers = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("offers")
-        .select("*, stores(name, logo_url, taxonomy_segment_id)")
-        .eq("branch_id", selectedBranch.id)
-        .eq("brand_id", brand.id)
-        .eq("status", "ACTIVE")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      setOffers((data || []) as OfferWithStore[]);
-      setLoading(false);
-    };
-    fetchOffers();
-  }, [selectedBranch, brand]);
 
   if (loading) {
     return (
@@ -119,9 +116,7 @@ export default function CustomerOffersPage() {
   return (
     <div className="max-w-lg mx-auto px-5 py-4">
       {/* Search */}
-      <div
-        className="flex items-center gap-2.5 rounded-full px-4 py-2.5 mb-4 bg-muted"
-      >
+      <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 mb-4 bg-muted">
         <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <input
           type="text"
@@ -177,7 +172,6 @@ export default function CustomerOffersPage() {
         <div className="space-y-2.5">
           {filtered.map((offer, idx) => {
             const isNew = idx < 2;
-            const hasDiscount = Number(offer.discount_percent) > 0;
             const hasCashback = Number(offer.value_rescue) > 0;
             const daysLeft = offer.end_at
               ? Math.max(0, Math.ceil((new Date(offer.end_at).getTime() - Date.now()) / 86400000))
@@ -185,13 +179,9 @@ export default function CustomerOffersPage() {
             const isUrgent = daysLeft !== null && daysLeft <= 3;
 
             return (
-              <motion.div
+              <div
                 key={offer.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.04, duration: 0.3 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer relative"
+                className="flex gap-3 p-3 rounded-2xl bg-card cursor-pointer relative animate-fade-in active:scale-[0.98] transition-transform"
                 style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.05)" }}
                 onClick={() => openOffer(offer)}
               >
@@ -211,7 +201,6 @@ export default function CustomerOffersPage() {
                       </div>
                     }
                   />
-                  {/* Badges on image */}
                   <div className="absolute top-1 left-1 flex flex-col gap-0.5">
                     {isNew && (
                       <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md text-white" style={{ backgroundColor: primary }}>
@@ -228,7 +217,6 @@ export default function CustomerOffersPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                  {/* Store name */}
                   {offer.stores?.name && (
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <SafeImage
@@ -243,12 +231,10 @@ export default function CustomerOffersPage() {
                     </div>
                   )}
 
-                  {/* Title */}
                   <h3 className="font-bold text-sm leading-tight line-clamp-2" style={{ fontFamily: fontHeading }}>
                     {offer.title}
                   </h3>
 
-                  {/* Purpose badge + price */}
                   <div className="flex items-center gap-2 mt-auto flex-wrap">
                     <OfferPurposeBadge purpose={(offer as any).offer_purpose} />
                     {offer.coupon_type === "PRODUCT" && (() => {
@@ -271,10 +257,8 @@ export default function CustomerOffersPage() {
 
                 {/* Right side: likes + favorite */}
                 <div className="flex flex-col items-end justify-between flex-shrink-0 py-0.5">
-                  <motion.button
-                    whileTap={{ scale: 1.3 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 12 }}
-                    className="h-7 w-7 rounded-full flex items-center justify-center"
+                  <button
+                    className="h-7 w-7 rounded-full flex items-center justify-center active:scale-125 transition-transform"
                     style={{ backgroundColor: isFavorite(offer.id) ? withAlpha(primary, 0.12) : "hsl(var(--foreground) / 0.06)" }}
                     onClick={(e) => { e.stopPropagation(); toggleFavorite(offer.id); }}
                   >
@@ -283,7 +267,7 @@ export default function CustomerOffersPage() {
                       fill={isFavorite(offer.id) ? primary : "none"}
                       style={{ color: isFavorite(offer.id) ? primary : "hsl(var(--muted-foreground))" }}
                     />
-                  </motion.button>
+                  </button>
                   {offer.likes_count > 0 && (
                     <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                       <ThumbsUp className="h-2.5 w-2.5" />
@@ -291,7 +275,7 @@ export default function CustomerOffersPage() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

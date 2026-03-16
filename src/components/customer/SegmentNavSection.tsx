@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { icons, Store, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -29,11 +28,10 @@ function kebabToPascal(name: string): string {
 function CategoryIcon({ iconName, size }: { iconName: string | null; size: number }) {
   const isDark = document.documentElement.classList.contains("dark");
   const color = isDark ? "hsl(var(--vb-gold))" : "#FFFFFF";
-  const cls = `object-contain`;
   const style = { color, width: size, height: size };
   if (!iconName) return <Store style={style} />;
   if (iconName.startsWith("http")) {
-    return <img src={iconName} alt="" className={cls} style={{ width: size, height: size }} />;
+    return <img src={iconName} alt="" className="object-contain" style={{ width: size, height: size }} />;
   }
   const pascalName = kebabToPascal(iconName);
   const LucideIcon = (icons as Record<string, any>)[pascalName];
@@ -41,20 +39,11 @@ function CategoryIcon({ iconName, size }: { iconName: string | null; size: numbe
   return <LucideIcon style={style} />;
 }
 
-const containerVariants = {
-  animate: { transition: { staggerChildren: 0.03 } },
-};
-const itemVariants = {
-  initial: { opacity: 0, scale: 0.9 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.25 } },
-};
-
 export default function SegmentNavSection({ onSegmentClick, onSeeMore }: SegmentNavSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  // Read layout config from theme with defaults
   const layout = theme?.layout as any;
   const iconSize = layout?.category_icon_size ?? 64;
   const iconRadius = layout?.category_icon_radius ?? 16;
@@ -139,18 +128,11 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
 
       {/* Horizontal scroll */}
       <ScrollArea className="w-full">
-        <motion.div
-          className="flex gap-0 pb-2"
-          variants={containerVariants}
-          initial="initial"
-          animate="animate"
-        >
+        <div className="flex gap-0 pb-2 animate-fade-in">
           {categories.map((cat) => (
-            <motion.button
+            <button
               key={cat.id}
-              variants={itemVariants}
-              whileTap={{ scale: 0.92 }}
-              className="flex flex-col items-center gap-1.5 flex-shrink-0"
+              className="flex flex-col items-center gap-1.5 flex-shrink-0 active:scale-[0.92] transition-transform"
               style={{ width: iconSize + 24 }}
               onClick={() => onSegmentClick(cat.id, cat.name, cat.icon_name)}
             >
@@ -171,9 +153,9 @@ export default function SegmentNavSection({ onSegmentClick, onSeeMore }: Segment
               >
                 {cat.name}
               </span>
-            </motion.button>
+            </button>
           ))}
-        </motion.div>
+        </div>
         <ScrollBar orientation="horizontal" className="h-1" />
       </ScrollArea>
     </section>

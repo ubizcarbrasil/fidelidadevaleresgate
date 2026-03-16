@@ -220,7 +220,7 @@ export default function CustomerLayout() {
   }, [trackClick]);
 
   return (
-    <CustomerNavContext.Provider value={{ openOffer: handleOpenOffer, openStore: handleOpenStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
+    <CustomerNavContext.Provider value={{ ...navValue}>
       <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
         {/* Dark Premium Header */}
         <header

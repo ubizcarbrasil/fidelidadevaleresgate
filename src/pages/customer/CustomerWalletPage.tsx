@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -6,76 +6,60 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import EmptyState from "@/components/customer/EmptyState";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { hslToCss, withAlpha } from "@/lib/utils";
 
 type LedgerEntry = Tables<"points_ledger">;
 
-import { hslToCss, withAlpha } from "@/lib/utils";
-
 const PAGE_SIZE = 30;
-
-const cardStagger = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.06, duration: 0.3, ease: "easeOut" as const },
-  }),
-};
 
 export default function CustomerWalletPage() {
   const { customer, loading: customerLoading } = useCustomer();
   const { theme } = useBrand();
-  const [entries, setEntries] = useState<LedgerEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
-  const fg = hslToCss(theme?.colors?.foreground, "hsl(var(--foreground))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
-    if (!customer) return;
-    const from = pageNum * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+  // Fetch all pages up to current page
+  const { data: entries = [], isLoading: loading } = useQuery({
+    queryKey: ["customer-wallet-ledger", customer?.id, page],
+    enabled: !!customer,
+    queryFn: async () => {
+      const to = (page + 1) * PAGE_SIZE - 1;
+      const { data } = await supabase
+        .from("points_ledger")
+        .select("*")
+        .eq("customer_id", customer!.id)
+        .order("created_at", { ascending: false })
+        .range(0, to);
+      return (data || []) as LedgerEntry[];
+    },
+  });
 
-    const { data, count } = await supabase
-      .from("points_ledger")
-      .select("*", { count: "exact" })
-      .eq("customer_id", customer.id)
-      .order("created_at", { ascending: false })
-      .range(from, to);
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ["customer-wallet-count", customer?.id],
+    enabled: !!customer,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("points_ledger")
+        .select("*", { count: "exact", head: true })
+        .eq("customer_id", customer!.id);
+      return count || 0;
+    },
+  });
 
-    const results = (data || []) as LedgerEntry[];
-    const total = count || 0;
-    setHasMore(from + results.length < total);
+  const hasMore = entries.length < totalCount;
+  const [loadingMore, setLoadingMore] = useState(false);
 
-    if (append) {
-      setEntries((prev) => [...prev, ...results]);
-    } else {
-      setEntries(results);
-    }
-  }, [customer]);
-
-  useEffect(() => {
-    if (!customer) { setLoading(false); return; }
-    setLoading(true);
-    setPage(0);
-    fetchPage(0, false).then(() => setLoading(false));
-  }, [customer, fetchPage]);
-
-  const loadMore = async () => {
-    if (loadingMore || !hasMore) return;
+  const loadMore = useCallback(async () => {
     setLoadingMore(true);
-    const nextPage = page + 1;
-    setPage(nextPage);
-    await fetchPage(nextPage, true);
-    setLoadingMore(false);
-  };
+    setPage((p) => p + 1);
+    // React Query will refetch with new page
+    setTimeout(() => setLoadingMore(false), 300);
+  }, []);
 
   if (customerLoading) {
     return (
@@ -92,11 +76,8 @@ export default function CustomerWalletPage() {
       {/* Balance Cards */}
       {customer && (
         <div className="mb-7">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" as const }}
-            className="rounded-[20px] p-4 text-white relative overflow-hidden"
+          <div
+            className="rounded-[20px] p-4 text-white relative overflow-hidden animate-fade-in"
             style={{
               background: `linear-gradient(135deg, ${primary}, ${withAlpha(primary, 0.73)})`,
               boxShadow: `0 6px 24px -6px ${withAlpha(primary, 0.3)}`,
@@ -112,7 +93,7 @@ export default function CustomerWalletPage() {
                 {Number(customer.points_balance).toLocaleString("pt-BR")}
               </span>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
 
@@ -138,20 +119,15 @@ export default function CustomerWalletPage() {
         <EmptyState type="points" primary={primary} />
       ) : (
         <div className="space-y-2">
-          {entries.map((entry, idx) => {
+          {entries.map((entry) => {
             const isCredit = entry.entry_type === "CREDIT";
             const iconBg = isCredit ? "hsl(152 60% 54% / 0.12)" : "hsl(0 72% 56% / 0.10)";
             const iconColor = isCredit ? "hsl(152 60% 40%)" : "hsl(0 72% 51%)";
 
             return (
-              <motion.div
+              <div
                 key={entry.id}
-                custom={idx}
-                variants={cardStagger}
-                initial="hidden"
-                animate="visible"
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-3 rounded-[16px] bg-card p-3 transition-shadow hover:shadow-md"
+                className="flex items-center gap-3 rounded-[16px] bg-card p-3 transition-shadow hover:shadow-md animate-fade-in active:scale-[0.98]"
                 style={{ boxShadow: "0 1px 6px hsl(var(--foreground) / 0.03)" }}
               >
                 <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: iconBg }}>
@@ -172,7 +148,7 @@ export default function CustomerWalletPage() {
                 <span className="text-sm font-bold whitespace-nowrap" style={{ color: iconColor }}>
                   {isCredit ? "+" : "-"}{entry.points_amount} pts
                 </span>
-              </motion.div>
+              </div>
             );
           })}
 
