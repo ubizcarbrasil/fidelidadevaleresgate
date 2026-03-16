@@ -478,14 +478,12 @@ export default function CustomerLayout() {
         )}
 
         {/* Achadinhos Deals Overlay */}
-        <AnimatePresence>
-          {selectedAchadinhoCat && (
-            <AchadinhoDealsOverlay
-              category={selectedAchadinhoCat}
-              onBack={() => setSelectedAchadinhoCat(null)}
-            />
-          )}
-        </AnimatePresence>
+        {selectedAchadinhoCat && (
+          <AchadinhoDealsOverlay
+            category={selectedAchadinhoCat}
+            onBack={() => setSelectedAchadinhoCat(null)}
+          />
+        )}
 
         {/* Notification Drawer */}
         <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
