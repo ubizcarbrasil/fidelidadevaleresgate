@@ -170,7 +170,8 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
         </Sheet>
       </div>
       <div className="space-y-6">
-      {/* Colors */}
+      {canShow("theme_colors") && (
+      /* Colors */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
