@@ -423,18 +423,16 @@ export default function CustomerLayout() {
         )
 
         {/* Section Detail Overlay */}
-        <AnimatePresence>
-          {sectionDetail && (
-            <SectionDetailOverlay
-              section={sectionDetail.section}
-              items={sectionDetail.items}
-              onBack={() => setSectionDetail(null)}
-              primary={primary}
-              fg={fg}
-              fontHeading={fontHeading}
-            />
-          )}
-        </AnimatePresence>
+        {sectionDetail && (
+          <SectionDetailOverlay
+            section={sectionDetail.section}
+            items={sectionDetail.items}
+            onBack={() => setSectionDetail(null)}
+            primary={primary}
+            fg={fg}
+            fontHeading={fontHeading}
+          />
+        )}
 
         {/* Search Overlay */}
         <CustomerSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
