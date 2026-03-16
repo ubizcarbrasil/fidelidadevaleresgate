@@ -152,12 +152,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
   return (
     <div className="pb-4">
       {/* Hero Section: Greeting + Balance */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="max-w-lg mx-auto px-4 pt-4 pb-1"
-      >
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-1 animate-fade-in">
         {/* Top row: Greeting + Balance badge */}
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -192,9 +187,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
             </button>
           )}
         </div>
-
-
-      </motion.div>
+      </div>
 
       {/* Render native sections in configured order */}
       {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns.key))}
