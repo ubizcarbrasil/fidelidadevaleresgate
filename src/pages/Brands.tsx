@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown } from "lucide-react";
+import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown, Blocks } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -192,6 +192,9 @@ export default function Brands() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}`)}>
                             <Pencil className="h-4 w-4 mr-2" />Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}?tab=modules`)}>
+                            <Blocks className="h-4 w-4 mr-2" />Gerenciar Módulos
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openPasswordDialog(b.id, b.name)}>
                             <Key className="h-4 w-4 mr-2" />Redefinir Senha

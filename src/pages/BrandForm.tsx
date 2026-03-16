@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { useBrandModules } from "@/hooks/useBrandModules";
 export default function BrandForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEdit = !!id;
   const { isRootAdmin } = useBrandGuard();
   const { isModuleEnabled } = useBrandModules();
@@ -184,7 +185,10 @@ export default function BrandForm() {
     toast.success("Módulo atualizado!");
   };
 
-  const defaultTab = !isRootAdmin && isEdit ? "theme" : "general";
+  const tabFromUrl = searchParams.get("tab");
+  const defaultTab = tabFromUrl && ["general", "theme", "sections", "modules", "admin"].includes(tabFromUrl)
+    ? tabFromUrl
+    : (!isRootAdmin && isEdit ? "theme" : "general");
 
   return (
     <div className="space-y-6 max-w-5xl">
