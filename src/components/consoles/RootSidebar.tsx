@@ -41,6 +41,12 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    label: "Módulos & Funcionalidades",
+    items: [
+      { key: "sidebar.modulos", defaultTitle: "Gerenciar Módulos", url: "/brand-modules", icon: Blocks },
+    ],
+  },
+  {
     label: "Organização",
     items: [
       { key: "sidebar.empresas", defaultTitle: "Empresas", url: "/tenants", icon: Building2 },
@@ -113,7 +119,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Equipe & Acessos",
     items: [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
-      { key: "sidebar.modulos", defaultTitle: "Recursos Ativos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: ShieldCheck },
     ],
   },
