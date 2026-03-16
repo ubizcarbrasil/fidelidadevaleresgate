@@ -448,17 +448,15 @@ export default function CustomerLayout() {
         )}
 
         {/* Category Grid Overlay */}
-        <AnimatePresence>
-          {categoryGridOpen && (
-            <CategoryGridOverlay
-              onBack={() => setCategoryGridOpen(false)}
-              onCategoryClick={(cat) => {
-                setCategoryGridOpen(false);
-                setSelectedCategory(cat);
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {categoryGridOpen && (
+          <CategoryGridOverlay
+            onBack={() => setCategoryGridOpen(false)}
+            onCategoryClick={(cat) => {
+              setCategoryGridOpen(false);
+              setSelectedCategory(cat);
+            }}
+          />
+        )}
 
         {/* Category Stores Overlay */}
         <AnimatePresence>
