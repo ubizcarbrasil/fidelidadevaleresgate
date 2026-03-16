@@ -486,7 +486,7 @@ export default function BrandPermissionOverflowPage() {
                     </div>
                     <AccordionContent className="px-4 pb-4">
                       <div className="space-y-3">
-                        {sgs.map(({ subgroup, permissions: perms }) => renderSubgroup(subgroup, perms))}
+                        {sgs.map(({ subgroup, permissions: perms }: { subgroup: SubgroupRow; permissions: PermissionRow[] }) => renderSubgroup(subgroup, perms))}
                         {sgs.length === 0 && (
                           <p className="text-sm text-muted-foreground text-center py-4">
                             Nenhum subgrupo com permissões atribuídas.
