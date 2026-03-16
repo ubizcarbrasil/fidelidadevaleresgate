@@ -102,7 +102,7 @@ export default function BrandForm() {
     if (!id) return;
     setModulesLoading(true);
     const [{ data: defs }, { data: bm }] = await Promise.all([
-      supabase.from("module_definitions").select("*").order("order_index"),
+      supabase.from("module_definitions").select("*").order("name"),
       supabase.from("brand_modules").select("*").eq("brand_id", id),
     ]);
     setModuleDefs(defs || []);
