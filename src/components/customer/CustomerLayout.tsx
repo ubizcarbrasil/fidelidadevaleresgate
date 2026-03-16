@@ -459,14 +459,12 @@ export default function CustomerLayout() {
         )}
 
         {/* Category Stores Overlay */}
-        <AnimatePresence>
-          {selectedCategory && (
-            <CategoryStoresOverlay
-              category={selectedCategory}
-              onBack={() => setSelectedCategory(null)}
-            />
-          )}
-        </AnimatePresence>
+        {selectedCategory && (
+          <CategoryStoresOverlay
+            category={selectedCategory}
+            onBack={() => setSelectedCategory(null)}
+          />
+        )}
 
         {/* Achadinhos Category Grid Overlay */}
         <AnimatePresence>
