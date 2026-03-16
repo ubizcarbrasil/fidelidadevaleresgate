@@ -15,7 +15,6 @@ const AchadinhoSection = lazy(() => import("@/components/customer/AchadinhoSecti
 import { Skeleton } from "@/components/ui/skeleton";
 import { haptic } from "@/lib/haptics";
 import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
-import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
 
 const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
   { key: "BANNERS", label: "Banners", enabled: true, order: 0 },
