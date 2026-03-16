@@ -1,30 +1,23 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Garantir controle de seções do tema via módulos
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Situação atual
+O sistema **já está preparado** para controlar quais seções da "Aparência da Marca" o empreendedor pode ver. O `BrandThemeEditor` já usa `canShow("theme_colors")`, `canShow("theme_typography")`, etc., que consulta o `isModuleEnabled` baseado na tabela `brand_modules`.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+O ROOT já pode ativar/desativar esses módulos na aba "Módulos" da edição da marca.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### O que falta
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+**Os módulos de tema não estão sendo inseridos na `brand_modules` durante o provisionamento**, então algumas marcas ficam sem esses registros — e quando não há registro, o módulo fica **oculto** (comportamento padrão do `useBrandModules`).
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### Alterações
+
+#### 1. `supabase/functions/provision-brand/index.ts`
+- Após criar a marca, buscar todos os `module_definitions` com `is_active = true`
+- Inserir registros em `brand_modules` para cada um, com `is_enabled` baseado no plano:
+  - **basic/free**: ativar apenas `theme_colors`, `theme_images`, `theme_texts` (ocultar `theme_typography`, `theme_layout`, `theme_offer_cards`)
+  - **starter/profissional**: ativar todos
+
+#### 2. Corrigir marcas existentes (via INSERT data)
+- Inserir os `brand_modules` faltantes para as 12 marcas existentes, garantindo que todas tenham registros para
