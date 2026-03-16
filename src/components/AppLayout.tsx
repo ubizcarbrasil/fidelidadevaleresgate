@@ -31,8 +31,9 @@ const CONSOLE_TITLES: Record<string, string> = {
 
 export default function AppLayout() {
   const { consoleScope, isRootAdmin } = useBrandGuard();
-  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
+  const { name: brandName, logoUrl: brandLogoUrl, brandId } = useBrandInfo();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
+  const [showApiKeyOnboarding, setShowApiKeyOnboarding] = useState(false);
   const isImpersonating = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return isRootAdmin && !!params.get("brandId");
@@ -48,6 +49,22 @@ export default function AppLayout() {
         if (data?.value_json) setPlatformTheme(data.value_json);
       });
   }, []);
+
+  // Check API Key onboarding flag for brand_admin
+  useEffect(() => {
+    if (consoleScope !== "BRAND" || !brandId) return;
+    supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", brandId)
+      .single()
+      .then(({ data }) => {
+        const settings = data?.brand_settings_json as Record<string, any> | null;
+        if (settings && !settings.api_key_onboarding_seen) {
+          setShowApiKeyOnboarding(true);
+        }
+      });
+  }, [consoleScope, brandId]);
 
   useBrandTheme(platformTheme);
 
