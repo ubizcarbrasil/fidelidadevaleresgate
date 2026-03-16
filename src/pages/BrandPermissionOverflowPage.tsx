@@ -436,9 +436,9 @@ export default function BrandPermissionOverflowPage() {
       </div>
 
       {isViewingBranch && (
-        <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+        <Card className="border-accent bg-accent/10">
           <CardContent className="py-3">
-            <p className="text-sm text-amber-700 dark:text-amber-400">
+            <p className="text-sm text-accent-foreground">
               <MapPin className="h-4 w-4 inline mr-1" />
               Visualizando permissões para <strong>{branches?.find(b => b.id === activeBranchId)?.name}</strong>.
               Permissões herdam do padrão global e podem ser sobrescritas individualmente.
