@@ -126,7 +126,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings" },
-      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
+      { key: "sidebar.subscription", defaultTitle: "Meu Plano", url: "/subscription", icon: Crown, moduleKey: "subscription" },
     ],
   },
 ];
