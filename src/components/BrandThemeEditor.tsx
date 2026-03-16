@@ -269,8 +269,10 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Typography */}
+      {canShow("theme_typography") && (
+      /* Typography */
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
