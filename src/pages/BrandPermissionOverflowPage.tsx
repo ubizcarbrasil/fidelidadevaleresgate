@@ -461,11 +461,11 @@ export default function BrandPermissionOverflowPage() {
           {/* Grouped permissions */}
           {hierarchy.grouped.length > 0 && (
             <Accordion type="multiple" className="space-y-3">
-              {hierarchy.grouped.map(({ group, subgroups: sgs }) => {
-                const allPerms = sgs.flatMap(sg => sg.permissions);
+              {hierarchy.grouped.map(({ group, subgroups: sgs }: { group: GroupRow; subgroups: { subgroup: SubgroupRow; permissions: PermissionRow[] }[] }) => {
+                const allPerms = sgs.flatMap((sg: { subgroup: SubgroupRow; permissions: PermissionRow[] }) => sg.permissions);
                 const activeCount = countActive(allPerms, "allowed_for_brand");
                 const allOn = allPerms.length > 0 && activeCount === allPerms.length;
-                const keys = allPerms.map(p => p.key);
+                const keys = allPerms.map((p: PermissionRow) => p.key);
 
                 return (
                   <AccordionItem key={group.id} value={group.id} className="border rounded-lg">
