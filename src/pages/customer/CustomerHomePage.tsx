@@ -146,7 +146,9 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       case "ACHADINHOS":
         return (
           <div key="achadinhos" className="mt-6 animate-fade-in">
-            <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
+            <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl mx-4" />}>
+              <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
+            </Suspense>
           </div>
         );
       default:
