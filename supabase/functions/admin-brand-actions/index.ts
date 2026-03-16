@@ -135,6 +135,24 @@ Deno.serve(async (req) => {
         await adminClient.from(table).delete().eq("brand_id", brand_id);
       }
 
+      // Clear profile references to branches of this brand before deleting branches
+      const { data: branchIds } = await adminClient
+        .from("branches")
+        .select("id")
+        .eq("brand_id", brand_id);
+      if (branchIds?.length) {
+        const ids = branchIds.map((b: any) => b.id);
+        await adminClient
+          .from("profiles")
+          .update({ selected_branch_id: null })
+          .in("selected_branch_id", ids);
+      }
+      // Clear profile brand reference
+      await adminClient
+        .from("profiles")
+        .update({ brand_id: null })
+        .eq("brand_id", brand_id);
+
       // Delete branches (which cascades remaining branch-level data)
       await adminClient.from("branches").delete().eq("brand_id", brand_id);
 
