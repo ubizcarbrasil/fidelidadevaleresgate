@@ -763,7 +763,7 @@ function StoresGrid({ items, primary, cardBg, fontHeading, fg, onStoreClick, spo
                 <p className="text-[10px] text-muted-foreground truncate mt-0.5">{b.category}</p>
               )}
             </div>
-          </motion.div>
+          </div>
         );
         })}
         {!useMultiRow && <div className="min-w-[16px] flex-shrink-0" />}
