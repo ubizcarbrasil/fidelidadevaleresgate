@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.admin-brand-actions]
 verify_jwt = false
+
+[functions.create-root-admin]
+verify_jwt = false
