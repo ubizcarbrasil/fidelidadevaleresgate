@@ -467,17 +467,15 @@ export default function CustomerLayout() {
         )}
 
         {/* Achadinhos Category Grid Overlay */}
-        <AnimatePresence>
-          {achadinhoCatGridOpen && (
-            <AchadinhoCategoryGridOverlay
-              onBack={() => setAchadinhoCatGridOpen(false)}
-              onCategoryClick={(cat) => {
-                setAchadinhoCatGridOpen(false);
-                setSelectedAchadinhoCat(cat);
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {achadinhoCatGridOpen && (
+          <AchadinhoCategoryGridOverlay
+            onBack={() => setAchadinhoCatGridOpen(false)}
+            onCategoryClick={(cat) => {
+              setAchadinhoCatGridOpen(false);
+              setSelectedAchadinhoCat(cat);
+            }}
+          />
+        )}
 
         {/* Achadinhos Deals Overlay */}
         <AnimatePresence>
