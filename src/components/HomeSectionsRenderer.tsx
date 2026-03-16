@@ -148,12 +148,13 @@ function applyRankingBoost(items: any[], rankedIds: string[]): any[] {
 export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { data: rankedOfferIdsFromHook = [] } = useRankedOffers(30);
 
   const { data: fetchResult, isLoading: loading } = useQuery({
-    queryKey: ["home-sections", brand?.id, selectedBranch?.id, customer?.id],
+    queryKey: ["home-sections", brand?.id, selectedBranch?.id],
     enabled: !!brand,
     queryFn: async () => {
-      const [sectionsRes, sponsoredRes, rankedRes] = await Promise.all([
+      const [sectionsRes, sponsoredRes] = await Promise.all([
         supabase
           .from("brand_sections")
           .select("*, section_templates(key, name, type, schema_json), brand_section_sources(*)")
@@ -168,19 +169,10 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
           .eq("is_active", true)
           .gte("ends_at", new Date().toISOString())
           .lte("starts_at", new Date().toISOString()),
-        selectedBranch
-          ? supabase.rpc("get_recommended_offers", {
-              p_brand_id: brand!.id,
-              p_branch_id: selectedBranch.id,
-              p_customer_id: (customer?.id as string | undefined) ?? undefined,
-              p_limit: 30,
-            })
-          : Promise.resolve({ data: [] }),
       ]);
       return {
         sections: (sectionsRes.data as any) || [],
         sponsoredStoreIds: new Set((sponsoredRes.data || []).map((s: any) => s.store_id)) as Set<string>,
-        rankedOfferIds: ((rankedRes as any).data || []).map((r: any) => r.offer_id) as string[],
       };
     },
   });
