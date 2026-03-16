@@ -200,7 +200,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
 
   const sections: BrandSection[] = fetchResult?.sections || [];
   const sponsoredStoreIds = fetchResult?.sponsoredStoreIds || new Set<string>();
-  const rankedOfferIds = fetchResult?.rankedOfferIds || [];
+  const rankedOfferIds = rankedOfferIdsFromHook;
 
   if (loading) {
     return (
