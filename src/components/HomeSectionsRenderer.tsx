@@ -246,26 +246,20 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
 
   return (
     <div className="space-y-1">
-      {filteredSections.map((section, idx) => (
-        <motion.div
+      {filteredSections.map((section) => (
+        <SectionBlock
           key={section.id}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: idx * 0.06, ease: "easeOut" }}
-        >
-          <SectionBlock
-            section={section}
-            branchId={selectedBranch?.id}
-            primary={primary}
-            accent={accent}
-            fg={fg}
-            cardBg={cardBg}
-            fontHeading={fontHeading}
-            brandBadgeConfig={brandBadgeConfig}
-            sponsoredStoreIds={sponsoredStoreIds}
-            rankedOfferIds={rankedOfferIds}
-          />
-        </motion.div>
+          section={section}
+          branchId={selectedBranch?.id}
+          primary={primary}
+          accent={accent}
+          fg={fg}
+          cardBg={cardBg}
+          fontHeading={fontHeading}
+          brandBadgeConfig={brandBadgeConfig}
+          sponsoredStoreIds={sponsoredStoreIds}
+          rankedOfferIds={rankedOfferIds}
+        />
       ))}
     </div>
   );
