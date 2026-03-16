@@ -1,30 +1,40 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Aplicar as 8 seções padrão em todas as marcas
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Situação atual
+- **Urbano Norte** (8f76ce52): 13 seções (várias duplicadas e desorganizadas)
+- **Ubiz Resgata** (db15bd21): 4 seções apenas
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Ambas precisam ser substituídas pelas **8 seções padrão** do template "empreendedor-basico" já cadastrado no banco.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### O que será feito
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+#### 1. Limpar seções existentes
+Para cada marca:
+- Deletar `brand_section_sources` vinculadas
+- Deletar `brand_section_manual_items` vinculadas  
+- Deletar `brand_sections`
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+#### 2. Inserir as 8 seções padrão (para cada marca)
+Usando os dados do template "empreendedor-basico" (id: dc74065d):
+
+| # | Título | Template | Display | Rows | Filtros |
+|---|--------|----------|---------|------|---------|
+| 0 | Melhores Ofertas | OFFERS_CAROUSEL | carousel | 2 | todos |
+| 1 | Deu fome? Pague com pontos | STORES_GRID | carousel | 2 | segmentos food |
+| 2 | Food Pontos | OFFERS_CAROUSEL | carousel | 2 | segmentos food (imagem produto) |
+| 3 | Beleza e Saúde | STORES_GRID | carousel | 1 | segmentos beleza |
+| 4 | Serviços na Cidade | OFFERS_GRID | carousel | 1 | segmentos serviços |
+| 5 | Achadinhos | STORES_GRID | grid | 3 | todos (achadinhos) |
+| 6 | Lojas da Cidade | STORES_GRID | grid | 3 | todos |
+| 7 | Resgate na Cidade | STORES_GRID | grid | 3 | todos |
+
+Cada seção terá seu `brand_section_source` correspondente (OFFERS ou STORES).
+
+### Execução
+Operação de dados (INSERT/DELETE) via ferramenta de inserção — sem alteração de schema. Nenhuma mudança de código necessária.
+
+### Arquivos alterados
+Nenhum — apenas dados no banco.
+
