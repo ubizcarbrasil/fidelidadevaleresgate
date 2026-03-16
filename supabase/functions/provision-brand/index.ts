@@ -587,6 +587,9 @@ Deno.serve(async (req) => {
     );
 
     // ─── 8. Enable modules based on plan ──────────────────────
+    const { data: brandRow } = await supabaseAdmin
+      .from("brands").select("subscription_plan").eq("id", brand.id).single();
+    const subscription_plan = brandRow?.subscription_plan || "free";
     const BASIC_PLAN_ENABLED_KEYS = new Set([
       "theme_colors", "theme_images", "theme_texts",
       "stores", "offers", "redemption_qr", "wallet", "customers",
