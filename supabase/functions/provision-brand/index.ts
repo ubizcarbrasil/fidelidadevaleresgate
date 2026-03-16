@@ -586,9 +586,16 @@ Deno.serve(async (req) => {
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
 
-    // ─── 8. Enable ALL modules (not just core) ──────────────────
+    // ─── 8. Enable modules based on plan ──────────────────────
+    const BASIC_PLAN_ENABLED_KEYS = new Set([
+      "theme_colors", "theme_images", "theme_texts",
+      "stores", "offers", "redemption_qr", "wallet", "customers",
+      "home_sections", "brand_theme", "branches",
+      "guide_brand", "points", "points_rules",
+    ]);
+    const isBasicPlan = !subscription_plan || subscription_plan === "free" || subscription_plan === "basic";
     const { data: allMods } = await supabaseAdmin
-      .from("module_definitions").select("id").eq("is_active", true);
+      .from("module_definitions").select("id, key").eq("is_active", true);
     if (allMods && allMods.length > 0) {
       // Check existing to avoid duplicates
       const { data: existingMods } = await supabaseAdmin
@@ -598,7 +605,9 @@ Deno.serve(async (req) => {
       if (newMods.length > 0) {
         await supabaseAdmin.from("brand_modules").insert(
           newMods.map((m: any, i: number) => ({
-            brand_id: brand.id, module_definition_id: m.id, is_enabled: true, order_index: i,
+            brand_id: brand.id, module_definition_id: m.id,
+            is_enabled: isBasicPlan ? BASIC_PLAN_ENABLED_KEYS.has(m.key) : true,
+            order_index: i,
           })),
         );
       }
