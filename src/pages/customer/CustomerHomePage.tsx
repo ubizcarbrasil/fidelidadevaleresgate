@@ -13,7 +13,6 @@ import ForYouSection from "@/components/customer/ForYouSection";
 import EmissorasSection from "@/components/customer/EmissorasSection";
 import AchadinhoSection from "@/components/customer/AchadinhoSection";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import { haptic } from "@/lib/haptics";
 import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
 
