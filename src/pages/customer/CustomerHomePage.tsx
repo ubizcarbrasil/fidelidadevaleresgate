@@ -107,43 +107,42 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     return section ? section.enabled : true;
   };
 
-  const renderNativeSection = (key: string, delayBase: number) => {
+  const renderNativeSection = (key: string) => {
     if (!isNativeEnabled(key)) return null;
-    const delay = delayBase * 0.02 + 0.05;
 
     switch (key) {
       case "BANNERS":
         return (
-          <motion.div key="banners" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-3">
+          <div key="banners" className="mt-3 animate-fade-in">
             <HomeSectionsRenderer renderBannersOnly />
-          </motion.div>
+          </div>
         );
       case "CATEGORIES":
         return (
-          <motion.div key="categories" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="categories" className="mt-6 animate-fade-in">
             <SegmentNavSection
               onSegmentClick={(id, name, iconName) => handleCategoryClick(id, name, iconName)}
               onSeeMore={() => onOpenCategoryGrid?.()}
             />
-          </motion.div>
+          </div>
         );
       case "FOR_YOU":
         return (
-          <motion.div key="foryou" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="foryou" className="mt-6 animate-fade-in">
             <ForYouSection />
-          </motion.div>
+          </div>
         );
       case "EMISSORAS":
         return (
-          <motion.div key="emissoras" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="emissoras" className="mt-6 animate-fade-in">
             <EmissorasSection />
-          </motion.div>
+          </div>
         );
       case "ACHADINHOS":
         return (
-          <motion.div key="achadinhos" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay }} className="mt-6">
+          <div key="achadinhos" className="mt-6 animate-fade-in">
             <AchadinhoSection onOpenAllCategories={onOpenAchadinhoCategoryGrid} />
-          </motion.div>
+          </div>
         );
       default:
         return null;
