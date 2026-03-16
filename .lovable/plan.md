@@ -1,30 +1,49 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Unificar "Aprovar Parceiros" com "Parceiros"
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Ideia
+Eliminar a página separada `StoreApprovalsPage` e integrar a funcionalidade de aprovação diretamente na `StoresPage`, usando tabs ou filtros de status.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Como ficará
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+A página **Parceiros** (`StoresPage`) ganha:
+1. **Tabs de status** no topo: `Todos` | `Pendentes` | `Aprovados` | `Rejeitados`
+   - Tab "Pendentes" mostra badge com contagem (já disponível via `useSidebarBadges`)
+2. **Coluna `approval_status`** na tabela, com badges coloridos (amarelo/verde/vermelho)
+3. **Ações de aprovação inline**: ao clicar numa loja pendente, abre o mesmo Dialog de detalhes com botões Aprovar/Rejeitar
+4. Query atualizada para incluir `approval_status` e filtrar por tab selecionada
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+### Alterações
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+#### 1. `src/pages/StoresPage.tsx`
+- Adicionar state para tab de status (`ALL`, `PENDING_APPROVAL`, `APPROVED`, `REJECTED`)
+- Atualizar query para filtrar por `approval_status` quando tab não é "ALL"
+- Adicionar coluna de status na tabela com badges coloridos
+- Adicionar Dialog de detalhes/aprovação (reutilizar lógica do `StoreApprovalsPage`)
+- Incluir botões Aprovar/Rejeitar no dialog para lojas pendentes
+
+#### 2. `src/components/consoles/BrandSidebar.tsx`
+- Remover item `sidebar.aprovacao_lojas` do grupo "Aprovações"
+
+#### 3. `src/components/consoles/RootSidebar.tsx`
+- Remover item `sidebar.aprovacao_lojas` do grupo "Aprovações"
+
+#### 4. `src/components/consoles/BranchSidebar.tsx`
+- Remover item `sidebar.aprovacao_lojas`
+
+#### 5. `src/App.tsx`
+- Remover rota `/store-approvals` e import do `StoreApprovalsPage`
+
+#### 6. `src/pages/StoreApprovalsPage.tsx`
+- Pode ser deletado (código migrado para `StoresPage`)
+
+#### 7. Guias (`BrandJourneyGuidePage.tsx`, `RootJourneyGuidePage.tsx`)
+- Atualizar referências de `/store-approvals` para `/stores`
+
+#### 8. `src/hooks/useSidebarBadges.ts`
+- Atualizar badge key de `sidebar.aprovacao_lojas` para `sidebar.parceiros`
+
+### Resultado
+Um único menu **"Parceiros"** com visão completa: listagem + aprovação + gestão, sem precisar navegar entre duas páginas.
+
