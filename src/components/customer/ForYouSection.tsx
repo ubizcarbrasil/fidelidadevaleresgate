@@ -2,76 +2,54 @@ import { useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useBrand } from "@/contexts/BrandContext";
-import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { ChevronRight, ShoppingBag } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
-import { motion } from "framer-motion";
 import OfferBadge from "@/components/customer/OfferBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { hslToCss } from "@/lib/utils";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
+import { useRankedOffers } from "@/hooks/useRankedOffers";
 
-interface ScoredOffer { offer_id: string; score: number }
 type OfferWithStore = Tables<"offers"> & {
   stores: { name: string; logo_url: string | null } | null;
 };
 
-const containerVariants = {
-  animate: { transition: { staggerChildren: 0.04 } },
-};
-const cardVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.3 } },
-};
-
 export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
   const { formatSubtitle } = useOfferCardConfig();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: rankedIds = [] } = useRankedOffers(12);
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   const { data: offers = [], isLoading: loading } = useQuery({
-    queryKey: [...queryKeys.offers.list(brand?.id, selectedBranch?.id, "foryou"), customer?.id],
+    queryKey: [...queryKeys.offers.list(brand?.id, selectedBranch?.id, "foryou"), rankedIds.length > 0 ? "ranked" : "fallback"],
     enabled: !!brand && !!selectedBranch,
     queryFn: async () => {
-      // Use the scoring function for personalized recommendations
-      const { data: scored, error } = await supabase.rpc("get_recommended_offers", {
-        p_brand_id: brand!.id,
-        p_branch_id: selectedBranch!.id,
-        p_customer_id: customer?.id ?? undefined,
-        p_limit: 12,
-      });
-
-      if (error || !scored?.length) {
-        // Fallback: fetch top offers by likes
-        const { data } = await supabase
+      if (rankedIds.length > 0) {
+        const { data: fullOffers } = await supabase
           .from("offers")
           .select("*, stores(name, logo_url)")
-          .eq("branch_id", selectedBranch!.id)
-          .eq("brand_id", brand!.id)
-          .eq("is_active", true)
-          .eq("status", "ACTIVE")
-          .order("likes_count", { ascending: false })
-          .range(0, 11);
-        return (data || []) as OfferWithStore[];
+          .in("id", rankedIds.slice(0, 12));
+
+        const offerMap = new Map((fullOffers || []).map((o: OfferWithStore) => [o.id, o]));
+        return rankedIds.slice(0, 12).map((id: string) => offerMap.get(id)).filter(Boolean) as OfferWithStore[];
       }
 
-      // Fetch full offer data for the scored IDs (preserving score order)
-      const offerIds = scored.map((s: ScoredOffer) => s.offer_id);
-      const { data: fullOffers } = await supabase
+      // Fallback: fetch top offers by likes
+      const { data } = await supabase
         .from("offers")
         .select("*, stores(name, logo_url)")
-        .in("id", offerIds);
-
-      // Re-order by score
-      const offerMap = new Map((fullOffers || []).map((o: OfferWithStore) => [o.id, o]));
-      return offerIds.map((id: string) => offerMap.get(id)).filter(Boolean) as OfferWithStore[];
+        .eq("branch_id", selectedBranch!.id)
+        .eq("brand_id", brand!.id)
+        .eq("is_active", true)
+        .eq("status", "ACTIVE")
+        .order("likes_count", { ascending: false })
+        .range(0, 11);
+      return (data || []) as OfferWithStore[];
     },
   });
 
@@ -114,20 +92,15 @@ export default function ForYouSection() {
           </button>
         )}
       </div>
-      <motion.div
+      <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
         style={{ scrollSnapType: "x mandatory" }}
-        variants={containerVariants}
-        initial="initial"
-        animate="animate"
       >
         {offers.map((o) => (
-          <motion.div
+          <div
             key={o.id}
-            variants={cardVariants}
-            whileTap={{ scale: 0.97 }}
-            className="min-w-[170px] max-w-[190px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer"
+            className="min-w-[170px] max-w-[190px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
             style={{
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
@@ -180,10 +153,10 @@ export default function ForYouSection() {
                 </span>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
         <div className="min-w-[16px] flex-shrink-0" />
-      </motion.div>
+      </div>
     </section>
   );
 }

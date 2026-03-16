@@ -185,12 +185,12 @@ export default function CustomerLayout() {
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const fontBody = theme?.font_body ? `"${theme.font_body}", sans-serif` : "inherit";
   const displayName = theme?.display_name || brand?.name || "";
-  const navigateToOffersWithSegment = (segmentId: string) => {
+  const navigateToOffersWithSegment = useCallback((segmentId: string) => {
     setSegmentFilter(segmentId);
     setActiveTab("offers");
-  };
+  }, []);
 
-  const clearSegmentFilter = () => setSegmentFilter(null);
+  const clearSegmentFilter = useCallback(() => setSegmentFilter(null), []);
 
   const ActivePage = TAB_CONTENT[activeTab];
 
@@ -219,8 +219,27 @@ export default function CustomerLayout() {
     setSelectedStore(store);
   }, [trackClick]);
 
+  const handleOpenSectionDetail = useCallback((section: SectionDetail, items: SectionItem[]) => {
+    setSectionDetail({ section, items });
+  }, []);
+
+  const handleOpenEmissoras = useCallback(() => setEmissorasOpen(true), []);
+
+  const navValue = useMemo<CustomerNavContextType>(() => ({
+    openOffer: handleOpenOffer,
+    openStore: handleOpenStore,
+    openSectionDetail: handleOpenSectionDetail,
+    isFavorite,
+    toggleFavorite,
+    navigateToTab: setActiveTab,
+    navigateToOffersWithSegment,
+    activeSegmentFilter: segmentFilter,
+    clearSegmentFilter,
+    openEmissorasList: handleOpenEmissoras,
+  }), [handleOpenOffer, handleOpenStore, handleOpenSectionDetail, isFavorite, toggleFavorite, navigateToOffersWithSegment, segmentFilter, clearSegmentFilter, handleOpenEmissoras]);
+
   return (
-    <CustomerNavContext.Provider value={{ openOffer: handleOpenOffer, openStore: handleOpenStore, openSectionDetail: (section, items) => setSectionDetail({ section, items }), isFavorite, toggleFavorite, navigateToTab: setActiveTab, navigateToOffersWithSegment, activeSegmentFilter: segmentFilter, clearSegmentFilter, openEmissorasList: () => setEmissorasOpen(true) }}>
+    <CustomerNavContext.Provider value={navValue}>
       <div className="min-h-screen flex flex-col bg-background text-foreground" style={{ fontFamily: fontBody, overscrollBehavior: "none" }}>
         {/* Dark Premium Header */}
         <header
@@ -345,13 +364,12 @@ export default function CustomerLayout() {
                       transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     />
                   )}
-                  <motion.div
-                    className="h-8 w-8 rounded-xl flex items-center justify-center"
-                    animate={{
+                  <div
+                    className="h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200"
+                    style={{
                       backgroundColor: isActive ? "hsl(var(--foreground) / 0.12)" : "transparent",
-                      scale: isActive ? 1.05 : 1,
+                      transform: isActive ? "scale(1.05)" : "scale(1)",
                     }}
-                    transition={{ duration: 0.2 }}
                   >
                     <AppIcon
                       iconKey={tab.iconKey}
@@ -359,7 +377,7 @@ export default function CustomerLayout() {
                       strokeWidth={isActive ? 2.2 : 1.6}
                       style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
                     />
-                  </motion.div>
+                  </div>
                   <span
                     className="text-[10px] font-semibold transition-colors"
                     style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}

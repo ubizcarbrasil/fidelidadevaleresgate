@@ -11,20 +11,11 @@ import { Save, Loader2, ChevronRight, Moon, Sun, Heart, Tag, X, icons } from "lu
 import AppIcon from "@/components/customer/AppIcon";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
-import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { openLink } from "@/lib/openLink";
 import type { ProfileMenuItem } from "@/pages/ProfileLinksConfigPage";
 import { hslToCss, withAlpha } from "@/lib/utils";
-
-const sectionVariant = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.35, ease: "easeOut" as const },
-  }),
-};
+import { useQuery } from "@tanstack/react-query";
 
 export default function CustomerProfilePage() {
   const { user, signOut } = useAuth();
@@ -75,13 +66,7 @@ export default function CustomerProfilePage() {
       <h2 className="text-xl font-bold mb-6" style={{ fontFamily: fontHeading }}>Perfil</h2>
 
       {/* Avatar + Info */}
-      <motion.div
-        custom={0}
-        variants={sectionVariant}
-        initial="hidden"
-        animate="visible"
-        className="flex items-center gap-4 mb-7"
-      >
+      <div className="flex items-center gap-4 mb-7 animate-fade-in">
         <div
           className="h-16 w-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0"
           style={{
@@ -96,15 +81,11 @@ export default function CustomerProfilePage() {
           <p className="font-bold text-lg" style={{ fontFamily: fontHeading }}>{name || "Cliente"}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Edit Form Card */}
-      <motion.div
-        custom={1}
-        variants={sectionVariant}
-        initial="hidden"
-        animate="visible"
-        className="rounded-[20px] p-5 space-y-4 mb-5 bg-card"
+      <div
+        className="rounded-[20px] p-5 space-y-4 mb-5 bg-card animate-fade-in"
         style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
         <div>
@@ -123,16 +104,12 @@ export default function CustomerProfilePage() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
           Salvar alterações
         </Button>
-      </motion.div>
+      </div>
 
       {/* Branch Selector */}
       {branches.length > 1 && (
-        <motion.div
-          custom={2}
-          variants={sectionVariant}
-          initial="hidden"
-          animate="visible"
-          className="rounded-[20px] p-5 mb-5 bg-card"
+        <div
+          className="rounded-[20px] p-5 mb-5 bg-card animate-fade-in"
           style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
         >
           <div className="flex items-center gap-2 mb-3">
@@ -143,11 +120,10 @@ export default function CustomerProfilePage() {
             {branches.map((branch) => {
               const isSelected = selectedBranch?.id === branch.id;
               return (
-                <motion.button
+                <button
                   key={branch.id}
-                  whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedBranch(branch)}
-                  className={`w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between ${isSelected ? "" : "bg-muted"}`}
+                  className={`w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between active:scale-[0.97] ${isSelected ? "" : "bg-muted"}`}
                   style={{
                     backgroundColor: isSelected ? `${primary}10` : undefined,
                     border: isSelected ? `1.5px solid ${primary}40` : "1.5px solid transparent",
@@ -158,35 +134,28 @@ export default function CustomerProfilePage() {
                     {branch.city && <span className="ml-1.5 text-xs" style={{ color: `${fg}40` }}>· {branch.city}</span>}
                   </div>
                   {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                      className="h-5 w-5 rounded-full flex items-center justify-center"
+                    <div
+                      className="h-5 w-5 rounded-full flex items-center justify-center animate-scale-in"
                       style={{ backgroundColor: primary }}
                     >
                       <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                         <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                    </motion.div>
+                    </div>
                   )}
-                </motion.button>
+                </button>
               );
             })}
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Favorites Section */}
       <FavoritesSection customer={customer} primary={primary} fg={fg} fontHeading={fontHeading} />
 
       {/* Menu items */}
-      <motion.div
-        custom={3}
-        variants={sectionVariant}
-        initial="hidden"
-        animate="visible"
-        className="rounded-[20px] overflow-hidden bg-card mb-5"
+      <div
+        className="rounded-[20px] overflow-hidden bg-card mb-5 animate-fade-in"
         style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
         {/* Dark mode toggle */}
@@ -200,34 +169,27 @@ export default function CustomerProfilePage() {
             onOpenText={(title, content) => setTextOverlay({ title, content })}
           />
         ))}
-      </motion.div>
+      </div>
 
       {/* Text Content Overlay */}
-      <AnimatePresence>
-        {textOverlay && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-background"
-          >
-            <div className="max-w-lg mx-auto px-5 py-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>{textOverlay.title}</h2>
-                <button onClick={() => setTextOverlay(null)} className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                {textOverlay.content}
-              </div>
+      {textOverlay && (
+        <div className="fixed inset-0 z-[200] bg-background animate-fade-in">
+          <div className="max-w-lg mx-auto px-5 py-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>{textOverlay.title}</h2>
+              <button onClick={() => setTextOverlay(null)} className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+              {textOverlay.content}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Logout */}
-      <motion.div custom={4} variants={sectionVariant} initial="hidden" animate="visible">
+      <div className="animate-fade-in">
         <Button
           variant="outline"
           onClick={() => signOut()}
@@ -237,7 +199,7 @@ export default function CustomerProfilePage() {
           <AppIcon iconKey="profile_logout" className="h-4 w-4 mr-2" />
           Sair da conta
         </Button>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -267,10 +229,9 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
   }, []);
 
   return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
+    <button
       onClick={toggle}
-      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
+      className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors active:scale-[0.98]"
     >
       {isDark ? (
         <Sun className="h-4.5 w-4.5 text-muted-foreground" />
@@ -282,13 +243,12 @@ function DarkModeToggle({ primary, fg }: { primary: string; fg: string }) {
         className="relative h-7 w-12 rounded-full transition-colors duration-300"
         style={{ backgroundColor: isDark ? primary : "hsl(var(--muted-foreground) / 0.2)" }}
       >
-        <motion.div
-          className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm"
-          animate={{ left: isDark ? 22 : 2 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        <div
+          className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all duration-300"
+          style={{ left: isDark ? 22 : 2 }}
         />
       </div>
-    </motion.button>
+    </button>
   );
 }
 
@@ -304,30 +264,26 @@ interface FavoriteOffer {
 
 function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { id: string } | null; primary: string; fg: string; fontHeading: string }) {
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
-  const [favorites, setFavorites] = useState<FavoriteOffer[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!customer) { setLoading(false); return; }
-    const fetch = async () => {
-      setLoading(true);
+  const { data: favorites = [], isLoading: loading } = useQuery({
+    queryKey: ["customer-favorites", customer?.id],
+    enabled: !!customer,
+    queryFn: async () => {
       const { data } = await supabase
         .from("customer_favorites")
         .select("offer_id, offers(id, title, image_url, value_rescue, description, stores(name, logo_url))")
-        .eq("customer_id", customer.id)
+        .eq("customer_id", customer!.id)
         .order("created_at", { ascending: false });
-      setFavorites((data || []).map((d) => d.offers as unknown as FavoriteOffer).filter(Boolean));
-      setLoading(false);
-    };
-    fetch();
-  }, [customer]);
+      return (data || []).map((d) => d.offers as unknown as FavoriteOffer).filter(Boolean);
+    },
+  });
 
   if (loading) {
     return (
-      <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
+      <div className="rounded-[20px] p-5 mb-5 bg-card animate-fade-in" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
         <div className="flex items-center gap-2 mb-3">
           <Heart className="h-4 w-4" style={{ color: primary }} />
-        <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
+          <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
         </div>
         <div className="space-y-2">
           {[1, 2].map((i) => (
@@ -340,12 +296,12 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
             </div>
           ))}
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div custom={2.5} variants={sectionVariant} initial="hidden" animate="visible" className="rounded-[20px] p-5 mb-5 bg-card" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
+    <div className="rounded-[20px] p-5 mb-5 bg-card animate-fade-in" style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}>
       <div className="flex items-center gap-2 mb-3">
         <Heart className="h-4 w-4" style={{ color: primary }} />
         <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
@@ -365,11 +321,10 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
       ) : (
         <div className="space-y-1.5">
           {favorites.map((offer) => (
-            <motion.button
+            <button
               key={offer.id}
-              whileTap={{ scale: 0.97 }}
               onClick={() => openOffer(offer)}
-              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left active:scale-[0.97]"
             >
               <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: `${primary}08` }}>
                 {offer.image_url ? (
@@ -397,11 +352,11 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
               >
                 <Heart className="h-4 w-4" fill={primary} style={{ color: primary }} />
               </button>
-            </motion.button>
+            </button>
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
@@ -436,10 +391,9 @@ function ProfileMenuItemButton({
   return (
     <>
       <div style={{ borderBottom: isLast ? "none" : `1px solid ${fg}08` }} />
-      <motion.button
-        whileTap={{ scale: 0.98 }}
+      <button
         onClick={handleClick}
-        className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors active:scale-[0.98]"
       >
         {LucideIcon ? (
           <LucideIcon className="h-4.5 w-4.5 text-muted-foreground" />
@@ -448,7 +402,7 @@ function ProfileMenuItemButton({
         )}
         <span className="flex-1">{item.label}</span>
         <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-      </motion.button>
+      </button>
     </>
   );
 }

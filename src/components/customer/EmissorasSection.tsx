@@ -6,7 +6,6 @@ import { ChevronRight, Heart, Star } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import SafeImage from "@/components/customer/SafeImage";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
@@ -20,14 +19,6 @@ interface EmissoraStore {
   description: string | null;
   store_type: string;
 }
-
-const containerVariants = {
-  animate: { transition: { staggerChildren: 0.04 } },
-};
-const cardVariants = {
-  initial: { opacity: 0, scale: 0.92 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.25 } },
-};
 
 export default function EmissorasSection() {
   const { brand, selectedBranch, theme } = useBrand();
@@ -92,18 +83,14 @@ export default function EmissorasSection() {
       </div>
 
       {/* Horizontal scroll of cards */}
-      <motion.div
-        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+      <div
+        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
         style={{ WebkitOverflowScrolling: "touch" }}
-        variants={containerVariants}
-        initial="initial"
-        animate="animate"
       >
         {stores.map((store) => (
-          <motion.div
+          <div
             key={store.id}
-            variants={cardVariants}
-            className="flex-shrink-0 w-[140px] rounded-2xl overflow-hidden cursor-pointer relative group bg-card"
+            className="flex-shrink-0 w-[140px] rounded-2xl overflow-hidden cursor-pointer relative group bg-card active:scale-[0.97] transition-transform"
             style={{
               boxShadow: "0 1px 6px hsl(var(--foreground) / 0.08), 0 0 0 1px hsl(var(--foreground) / 0.03)",
             }}
@@ -160,12 +147,11 @@ export default function EmissorasSection() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
 
         {/* "Ver todos" trailing card */}
-        <motion.div
-          variants={cardVariants}
+        <div
           className="flex-shrink-0 w-[100px] rounded-2xl flex flex-col items-center justify-center cursor-pointer active:opacity-70 bg-muted border border-dashed border-border"
           onClick={() => openEmissorasList?.()}
         >
@@ -178,8 +164,8 @@ export default function EmissorasSection() {
           <span className="text-[10px] font-bold" style={{ color: primary }}>
             Ver todos
           </span>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </section>
   );
 }
