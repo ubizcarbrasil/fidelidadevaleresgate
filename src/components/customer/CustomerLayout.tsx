@@ -406,7 +406,7 @@ export default function CustomerLayout() {
               }}
             />
           </Suspense>
-        )
+        )}
 
         {/* Store Detail Overlay */}
         {selectedStore && (
