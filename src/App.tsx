@@ -58,7 +58,7 @@ const StorePointsRulePage = lazy(() => import("@/pages/StorePointsRulePage"));
 const ApproveStoreRulesPage = lazy(() => import("@/pages/ApproveStoreRulesPage"));
 const CustomerPreviewPage = lazy(() => import("@/pages/CustomerPreviewPage"));
 const StoreRegistrationWizard = lazy(() => import("@/pages/StoreRegistrationWizard"));
-const StoreApprovalsPage = lazy(() => import("@/pages/StoreApprovalsPage"));
+
 const StoreOwnerPanel = lazy(() => import("@/pages/StoreOwnerPanel"));
 const AffiliateDealsPage = lazy(() => import("@/pages/AffiliateDealsPage"));
 const AffiliateCategoriesPage = lazy(() => import("@/pages/AffiliateCategoriesPage"));
