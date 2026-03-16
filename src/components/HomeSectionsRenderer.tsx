@@ -412,7 +412,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
         banner_image_url: section.banner_image_url,
         banner_height: section.banner_height,
         templateType,
-      }, items);
+      }, items as any);
     }
   }, [items, section, templateType, openSectionDetail]);
 
