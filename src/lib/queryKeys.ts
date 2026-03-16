@@ -39,4 +39,7 @@ export const queryKeys = {
   brands: createKeys("brands"),
   branches: createKeys("branches"),
   dashboard: createKeys("dashboard"),
+  permissionGroups: createKeys("permission-groups"),
+  permissionSubgroups: createKeys("permission-subgroups"),
+  permissionConfig: createKeys("permission-config"),
 } as const;
