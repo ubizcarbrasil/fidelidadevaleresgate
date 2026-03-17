@@ -148,7 +148,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             {heroImage ? (
               <img src={heroImage} alt={heroTitle} className="h-full w-full object-contain" />
             ) : (
-              <Store className="h-12 w-12" style={{ color: `${fg}30` }} />
+              <Store className="h-12 w-12" style={{ color: brandAlpha(fg, 0.19) }} />
             )}
           </div>
           <p className="text-xl font-bold" style={{ color: fg, fontFamily: fontHeading }}>{heroTitle}</p>
