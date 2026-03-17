@@ -122,7 +122,7 @@ describe("Offers CRUD E2E", () => {
 
     // Find delete button (trash icon)
     const deleteButtons = screen.getAllByRole("button");
-    const trashButton = deleteButtons.find((btn) =>
+    const trashButton = deleteButtons.find((btn: HTMLElement) =>
       btn.querySelector("svg.text-destructive") || btn.innerHTML.includes("text-destructive")
     );
 

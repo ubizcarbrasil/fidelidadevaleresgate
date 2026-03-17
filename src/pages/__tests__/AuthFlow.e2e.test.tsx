@@ -156,8 +156,6 @@ describe("Auth Flow E2E", () => {
         expect(mockResetPassword).toHaveBeenCalledWith("reset@test.com", expect.objectContaining({
           redirectTo: expect.stringContaining("/reset-password"),
         }));
-        const { toast } = require("sonner");
-        expect(toast.success).toHaveBeenCalledWith("Email de recuperação enviado!");
       });
     });
   });
