@@ -853,7 +853,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       {offer.stores?.logo_url ? (
                         <img src={offer.stores.logo_url} alt={offer.stores?.name} className="h-12 w-12 rounded-2xl object-cover" />
                       ) : (
-                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
                           <Store className="h-6 w-6" style={{ color: primary }} />
                         </div>
                       )}
