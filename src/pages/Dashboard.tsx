@@ -754,8 +754,8 @@ export default function Dashboard() {
 
       {/* ── SECTION F + G: Tasks + Activity Feed ── */}
       <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
-        <TasksTable />
-        <ActivityFeed />
+        <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardTasksSection /></Suspense>
+        <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardActivityFeed /></Suspense>
       </div>
 
       {/* FAB */}
