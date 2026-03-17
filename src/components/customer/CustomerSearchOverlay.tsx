@@ -239,7 +239,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                 Cancelar
               </button>
             </div>
-            <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
+            <div className="h-px" style={{ backgroundColor: brandAlpha(fg, 0.03) }} />
 
             {/* Segment chips + active filter */}
             {(segments.length > 0 || selectedSegmentId) && (
