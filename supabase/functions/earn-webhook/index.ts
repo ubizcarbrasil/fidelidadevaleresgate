@@ -387,7 +387,7 @@ Deno.serve(async (req) => {
         customer_tier: "INICIANTE",
         ride_count: 0,
       })
-      .select("id, name, points_balance, money_balance, branch_id")
+      .select("id, name, points_balance, money_balance, branch_id, customer_tier")
       .single();
 
     if (createErr || !created) {
