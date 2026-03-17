@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus, Trash2, ShoppingBag, MessageCircle, Sparkles, User } from "lucide-react";
+import { brandAlpha } from "@/lib/utils";
 import { openLink } from "@/lib/openLink";
 
 export interface CartItem {
@@ -201,7 +202,7 @@ export default function CatalogCartDrawer({
         {pointsPerReal > 0 && (
           <div
             className="mx-4 mt-3 p-4 rounded-2xl text-center"
-            style={{ backgroundColor: `${primary}12` }}
+            style={{ backgroundColor: brandAlpha(primary, 0.07) }}
           >
             <div className="flex items-center justify-center gap-2 mb-1">
               <Sparkles className="h-5 w-5" style={{ color: primary }} />
@@ -209,7 +210,7 @@ export default function CatalogCartDrawer({
                 {pointsEstimate} pontos
               </span>
             </div>
-            <p className="text-xs" style={{ color: `${primary}90` }}>
+            <p className="text-xs" style={{ color: brandAlpha(primary, 0.56) }}>
               Você vai ganhar com este pedido!
             </p>
           </div>

@@ -18,7 +18,7 @@ import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
-import { hslToCss, withAlpha } from "@/lib/utils";
+import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 
 type Offer = Tables<"offers">;
 
@@ -308,12 +308,12 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               <>
                 {/* Store banner */}
                 <div className="relative">
-                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
                     <SafeImage
                       src={offer.stores?.logo_url}
                       alt={offer.stores?.name || "Loja"}
                       className="max-h-32 max-w-[80%] object-contain"
-                      fallback={<Store className="h-16 w-16" style={{ color: `${primary}30` }} />}
+                      fallback={<Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />}
                     />
                   </div>
                   <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
@@ -366,8 +366,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     alt={offer.title}
                     className="w-full h-72 object-cover"
                     fallback={
-                      <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                        <ShoppingBag className="h-20 w-20" style={{ color: `${primary}20` }} />
+                      <div className="w-full h-72 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.024) }}>
+                        <ShoppingBag className="h-20 w-20" style={{ color: brandAlpha(primary, 0.12) }} />
                       </div>
                     }
                   />
@@ -445,7 +445,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     )}
                     {hasWeekdayRestriction && (
                       <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+                        <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
                           <CalendarDays className="h-4 w-4" style={{ color: primary }} />
                         </div>
                         <div>
@@ -497,8 +497,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                             alt={sim.title}
                             className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
                             fallback={
-                              <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                              <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                                <ShoppingBag className="h-6 w-6" style={{ color: brandAlpha(primary, 0.19) }} />
                               </div>
                             }
                           />
@@ -528,8 +528,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   alt={offer.title}
                   className="w-full h-64 object-cover"
                   fallback={
-                    <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
-                      <ShoppingBag className="h-16 w-16" style={{ color: `${primary}30` }} />
+                    <div className="w-full h-64 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
+                      <ShoppingBag className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />
                     </div>
                   }
                 />
@@ -571,7 +571,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     {offer.stores.logo_url ? (
                       <img src={offer.stores.logo_url} alt={offer.stores.name} className="h-8 w-8 rounded-lg object-cover" />
                     ) : (
-                      <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
                         <Store className="h-4 w-4" style={{ color: primary }} />
                       </div>
                     )}
@@ -586,8 +586,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                 {/* Vale Resgate value highlight */}
                 {Number(offer.value_rescue) > 0 && (
-                  <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
-                    <div className="p-4" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
+                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : brandAlpha(primary, 0.19) }}>
+                     <div className="p-4" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : brandAlpha(primary, 0.024) }}>
                       {offer.coupon_type === "PRODUCT" ? (
                         <div>
                           <p className="text-xs font-medium mb-0.5 text-muted-foreground">Pague com Pontos</p>
@@ -619,7 +619,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       )}
                     </div>
                     {offer.end_at && (
-                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : `${primary}12`, color: isDark ? "hsl(var(--foreground))" : primary }}>
+                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : brandAlpha(primary, 0.07), color: isDark ? "hsl(var(--foreground))" : primary }}>
                         Válido até {new Date(offer.end_at).toLocaleDateString("pt-BR")}
                       </div>
                     )}
@@ -641,7 +641,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   )}
                   {hasWeekdayRestriction && (
                     <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+                      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
                         <CalendarDays className="h-4 w-4" style={{ color: primary }} />
                       </div>
                       <div>
@@ -700,9 +700,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                           alt={sim.title}
                           className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
                           fallback={
-                            <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                              <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
-                            </div>
+                             <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                               <ShoppingBag className="h-6 w-6" style={{ color: brandAlpha(primary, 0.19) }} />
+                             </div>
                           }
                         />
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -789,7 +789,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 setShowConfirm(true);
               }}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white shadow-lg"
-                style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${primary}40` }}>
+                style={{ backgroundColor: primary, boxShadow: `0 8px 24px ${brandAlpha(primary, 0.25)}` }}>
                 {Number(offer.value_rescue) > 0
                   ? `Resgatar ${Number(offer.value_rescue).toLocaleString("pt-BR")} pts`
                   : "Resgatar agora"}
@@ -853,7 +853,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       {offer.stores?.logo_url ? (
                         <img src={offer.stores.logo_url} alt={offer.stores?.name} className="h-12 w-12 rounded-2xl object-cover" />
                       ) : (
-                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
                           <Store className="h-6 w-6" style={{ color: primary }} />
                         </div>
                       )}
@@ -871,7 +871,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                     {/* Redemption type badge */}
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+                      <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.07) }}>
                         {offer.redemption_type === "ONLINE" ? <Globe className="h-4 w-4" style={{ color: primary }} /> :
                           offer.redemption_type === "WHATSAPP" ? <MessageCircle className="h-4 w-4" style={{ color: primary }} /> :
                             <MapPin className="h-4 w-4" style={{ color: primary }} />}
@@ -885,9 +885,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                     {/* Value card */}
                     {Number(offer.value_rescue) > 0 && (
-                      <div className="rounded-2xl p-4 mb-4 flex items-center gap-3" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
-                        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
-                          <span className="text-lg font-bold" style={{ color: primary }}>$</span>
+                       <div className="rounded-2xl p-4 mb-4 flex items-center gap-3" style={{ backgroundColor: brandAlpha(primary, 0.024), border: `1.5px solid ${brandAlpha(primary, 0.09)}` }}>
+                         <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.09) }}>
+                           <span className="text-lg font-bold" style={{ color: primary }}>$</span>
                         </div>
                         <div>
                           <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">PONTOS A RESGATAR</p>
@@ -1018,7 +1018,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 /* ── CPF STEP ── */
                 <div className="p-6">
                   <div className="text-center mb-5">
-                    <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+                    <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.07) }}>
                       <ShoppingBag className="h-7 w-7" style={{ color: primary }} />
                     </div>
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>
@@ -1056,7 +1056,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                         </span>
                       </div>
                       {/* Credit applied */}
-                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
+                      <div className="rounded-2xl p-3 flex justify-between items-center" style={{ backgroundColor: brandAlpha(primary, 0.024), border: `1.5px solid ${brandAlpha(primary, 0.09)}` }}>
                         <span className="text-sm text-muted-foreground">Desconto ({discountPctOffer}% em pontos)</span>
                         <span className="text-sm font-bold" style={{ color: primary }}>
                           - {creditAmountOffer.toLocaleString("pt-BR")} pts
@@ -1090,14 +1090,14 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       onChange={e => setCpf(formatCpf(e.target.value))}
                       placeholder="000.000.000-00"
                       className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                      style={{ borderColor: `${fg}15` }}
+                      style={{ borderColor: brandAlpha(fg, 0.09) }}
                       maxLength={14}
                     />
                   </div>
                   <div className="flex gap-3">
                     <button onClick={() => setRedemptionStep("terms")} disabled={redeeming}
                       className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
-                      style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
+                      style={{ backgroundColor: brandAlpha(fg, 0.03), color: brandAlpha(fg, 0.44) }}>
                       Voltar
                     </button>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
@@ -1122,12 +1122,12 @@ function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: React.Compon
   const iconColor = dark ? "hsl(var(--foreground))" : primary;
   return (
     <div className="flex items-start gap-3">
-      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: dark ? "hsl(var(--foreground) / 0.1)" : `${primary}10` }}>
+      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: dark ? "hsl(var(--foreground) / 0.1)" : brandAlpha(primary, 0.06) }}>
         <Icon className="h-4 w-4" style={{ color: iconColor }} />
       </div>
       <div>
         <p className="text-xs font-semibold">{label}</p>
-        <p className="text-xs" style={{ color: `${fg}50` }}>{value}</p>
+        <p className="text-xs" style={{ color: brandAlpha(fg, 0.31) }}>{value}</p>
       </div>
     </div>
   );
@@ -1136,7 +1136,7 @@ function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: React.Compon
 function TermsRuleItem({ icon, children, primary }: { icon: React.ReactNode; children: React.ReactNode; primary: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+      <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
         {icon}
       </div>
       <span className="text-sm" style={{ color: "hsl(var(--foreground) / 0.7)" }}>{children}</span>

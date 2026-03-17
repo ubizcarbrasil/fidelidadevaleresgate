@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { brandAlpha } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -70,7 +71,7 @@ export function CancelRedemptionButton({ redemptionId, token, onCanceled, fg }: 
         <button
           onClick={() => { setConfirming(false); setPinInput(""); }}
           className="flex-1 py-2 rounded-xl text-xs font-semibold"
-          style={{ backgroundColor: `${fg}10`, color: `${fg}70` }}
+           style={{ backgroundColor: brandAlpha(fg, 0.06), color: brandAlpha(fg, 0.44) }}
         >
           Cancelar
         </button>

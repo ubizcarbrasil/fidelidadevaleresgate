@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import CatalogCartDrawer, { type CartItem } from "./CatalogCartDrawer";
+import { brandAlpha } from "@/lib/utils";
 
 interface CatalogItem {
   id: string;
@@ -147,7 +148,7 @@ export default function StoreCatalogView({
   if (items.length === 0 && offers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${primary}10` }}>
+        <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
           <ShoppingBag className="h-8 w-8" style={{ color: primary }} />
         </div>
         <p className="font-semibold text-base">Catálogo em breve</p>
@@ -178,9 +179,9 @@ export default function StoreCatalogView({
                 {offer.image_url ? (
                   <img src={offer.image_url} alt={offer.title} className="w-full h-24 object-cover" />
                 ) : (
-                  <div className="w-full h-24 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                    <Tag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                  </div>
+                  <div className="w-full h-24 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                     <Tag className="h-8 w-8" style={{ color: brandAlpha(primary, 0.19) }} />
+                   </div>
                 )}
                 <div className="p-2.5">
                   <p className="text-xs font-semibold line-clamp-2" style={{ fontFamily: fontHeading }}>{offer.title}</p>
@@ -203,9 +204,9 @@ export default function StoreCatalogView({
       {pointsPerReal > 0 && (
         <div
           className="mx-4 mt-4 p-4 rounded-2xl flex items-center gap-3"
-          style={{ background: `linear-gradient(135deg, ${primary}20 0%, ${primary}08 100%)` }}
+          style={{ background: `linear-gradient(135deg, ${brandAlpha(primary, 0.12)} 0%, ${brandAlpha(primary, 0.03)} 100%)` }}
         >
-          <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}20` }}>
+          <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.12) }}>
             <Sparkles className="h-6 w-6" style={{ color: primary }} />
           </div>
           <div>
@@ -239,8 +240,8 @@ export default function StoreCatalogView({
             onClick={() => setActiveCategory(null)}
             className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors"
             style={{
-              backgroundColor: !activeCategory ? primary : `${primary}10`,
-              color: !activeCategory ? "white" : primary,
+              backgroundColor: !activeCategory ? primary : brandAlpha(primary, 0.06),
+               color: !activeCategory ? "white" : primary,
             }}
           >
             Todos
@@ -251,8 +252,8 @@ export default function StoreCatalogView({
               onClick={() => setActiveCategory(activeCategory === cat ? null : cat || null)}
               className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors"
               style={{
-                backgroundColor: activeCategory === cat ? primary : `${primary}10`,
-                color: activeCategory === cat ? "white" : primary,
+                backgroundColor: activeCategory === cat ? primary : brandAlpha(primary, 0.06),
+                 color: activeCategory === cat ? "white" : primary,
               }}
             >
               {cat}
@@ -289,9 +290,9 @@ export default function StoreCatalogView({
               {item.image_url ? (
                 <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover" />
               ) : (
-                <div className="w-full h-32 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                  <ShoppingBag className="h-10 w-10" style={{ color: `${primary}25` }} />
-                </div>
+                <div className="w-full h-32 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.024) }}>
+                   <ShoppingBag className="h-10 w-10" style={{ color: brandAlpha(primary, 0.15) }} />
+                 </div>
               )}
               <div className="p-3">
                 <p className="text-sm font-semibold line-clamp-2 leading-tight" style={{ fontFamily: fontHeading }}>
@@ -311,7 +312,7 @@ export default function StoreCatalogView({
                 {pts > 0 && (
                   <span
                     className="inline-flex items-center gap-1 text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: `${primary}12`, color: primary }}
+                    style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}
                   >
                     🎯 Ganhe {pts} pts
                   </span>
@@ -338,7 +339,7 @@ export default function StoreCatalogView({
                       addToCart(item, true);
                     }}
                     className="h-7 rounded-full px-2 flex items-center justify-center text-[9px] font-bold text-white shadow-lg"
-                    style={{ backgroundColor: `${primary}CC` }}
+                    style={{ backgroundColor: brandAlpha(primary, 0.8) }}
                     title="Adicionar meia"
                   >
                     ½

@@ -6,7 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { useDebounce } from "@/hooks/useDebounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 function kebabToPascal(name: string): string {
   return name.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
@@ -215,7 +215,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
               <div
                  className="flex-1 flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted"
                >
-                <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
+                <Search className="h-4 w-4 flex-shrink-0" style={{ color: brandAlpha(fg, 0.31) }} />
                 <input
                   ref={inputRef}
                   type="text"
@@ -227,7 +227,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                 />
                 {query && (
                   <button onClick={() => setQuery("")} className="p-0.5">
-                    <X className="h-4 w-4" style={{ color: `${fg}40` }} />
+                    <X className="h-4 w-4" style={{ color: brandAlpha(fg, 0.25) }} />
                   </button>
                 )}
               </div>
@@ -239,7 +239,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                 Cancelar
               </button>
             </div>
-            <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
+            <div className="h-px" style={{ backgroundColor: brandAlpha(fg, 0.03) }} />
 
             {/* Segment chips + active filter */}
             {(segments.length > 0 || selectedSegmentId) && (
@@ -260,8 +260,8 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     onClick={() => setSelectedSegmentId(seg.id)}
                     className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
                     style={{
-                      backgroundColor: `${fg}06`,
-                      color: `${fg}60`,
+                       backgroundColor: brandAlpha(fg, 0.024),
+                       color: brandAlpha(fg, 0.37),
                     }}
                   >
                     {seg.name}
@@ -291,9 +291,9 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
             {showSuggestions && (
               <div className="mb-4">
                 <div className="flex items-center gap-1.5 mb-2 px-1">
-                  <Sparkles className="h-3.5 w-3.5" style={{ color: `${fg}35` }} />
-                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: `${fg}35` }}>
-                    Sugestões
+                   <Sparkles className="h-3.5 w-3.5" style={{ color: brandAlpha(fg, 0.22) }} />
+                   <span className="text-xs font-bold uppercase tracking-wider" style={{ color: brandAlpha(fg, 0.22) }}>
+                     Sugestões
                   </span>
                 </div>
                 <div className="space-y-1">
@@ -306,13 +306,13 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     >
                       <div
                         className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${primary}10` }}
+                         style={{ backgroundColor: brandAlpha(primary, 0.06) }}
                       >
                         <SegmentIcon iconName={seg.icon_name} className="h-5 w-5" style={{ color: primary }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{seg.name}</p>
-                        <p className="text-xs" style={{ color: `${fg}45` }}>
+                        <p className="text-xs" style={{ color: brandAlpha(fg, 0.27) }}>
                           {seg.matchedTerm !== seg.name ? (
                             <>"{seg.matchedTerm}" · {seg.category_name}</>
                           ) : (
@@ -320,7 +320,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                           )}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: `${fg}20` }} />
+                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: brandAlpha(fg, 0.12) }} />
                     </button>
                   ))}
                 </div>
@@ -329,7 +329,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
             {!loading && hasQuery && !hasResults && suggestions.length === 0 && (
               <div className="text-center py-16 opacity-40">
-                <Search className="h-10 w-10 mx-auto mb-3" style={{ color: `${fg}30` }} />
+                <Search className="h-10 w-10 mx-auto mb-3" style={{ color: brandAlpha(fg, 0.19) }} />
                 <p className="font-medium text-sm">Nenhum resultado para "{debouncedQuery}"</p>
                 <p className="text-xs mt-1">Tente buscar por outro termo</p>
               </div>
@@ -344,7 +344,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
             {!loading && stores.length > 0 && (
               <div className="mb-5">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: `${fg}40` }}>
+                 <h3 className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: brandAlpha(fg, 0.25) }}>
                   Lojas
                 </h3>
                 <div className="space-y-1">
@@ -357,7 +357,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
-                        style={{ backgroundColor: `${primary}10` }}
+                         style={{ backgroundColor: brandAlpha(primary, 0.06) }}
                       >
                         {store.logo_url ? (
                           <img src={store.logo_url} alt={store.name} className="h-full w-full object-cover rounded-xl" />
@@ -367,11 +367,11 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{store.name}</p>
-                        <p className="text-xs truncate" style={{ color: `${fg}50` }}>
+                         <p className="text-xs truncate" style={{ color: brandAlpha(fg, 0.31) }}>
                           {(store.taxonomy_segments as any)?.name || store.category || ""}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: `${fg}25` }} />
+                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: brandAlpha(fg, 0.15) }} />
                     </button>
                   ))}
                 </div>
@@ -380,7 +380,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
             {!loading && offers.length > 0 && (
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: `${fg}40` }}>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: brandAlpha(fg, 0.25) }}>
                   Ofertas
                 </h3>
                 <div className="space-y-1">
@@ -393,7 +393,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
-                        style={{ backgroundColor: `${primary}10` }}
+                        style={{ backgroundColor: brandAlpha(primary, 0.06) }}
                       >
                         {offer.image_url ? (
                           <img src={offer.image_url} alt={offer.title} className="h-full w-full object-cover rounded-xl" />
@@ -404,11 +404,11 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{offer.title}</p>
                         {offer.stores?.name && (
-                          <p className="text-xs truncate" style={{ color: `${fg}50` }}>{offer.stores.name}</p>
+                          <p className="text-xs truncate" style={{ color: brandAlpha(fg, 0.31) }}>{offer.stores.name}</p>
                         )}
                       </div>
                       {Number(offer.value_rescue) > 0 && (
-                        <span className="text-xs font-bold shrink-0 px-2 py-1 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                        <span className="text-xs font-bold shrink-0 px-2 py-1 rounded-full" style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}>
                           {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                         </span>
                       )}

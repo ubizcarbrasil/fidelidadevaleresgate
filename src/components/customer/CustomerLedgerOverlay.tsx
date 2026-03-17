@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 type PeriodFilter = "7d" | "30d" | "90d" | "custom";
 type TypeFilter = "all" | "credits" | "debits" | "adjustments";
@@ -313,8 +313,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               <div className="max-w-lg mx-auto px-5 pb-3">
                 <div
                   className="rounded-2xl p-4 text-white"
-                  style={{
-                    background: `linear-gradient(135deg, ${primary} 0%, ${primary}bb 100%)`,
+                   style={{
+                     background: `linear-gradient(135deg, ${primary} 0%, ${brandAlpha(primary, 0.73)} 100%)`,
                   }}
                 >
                   <div className="flex items-center justify-between">
@@ -354,8 +354,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     onClick={() => setPeriod(f.key)}
                     className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
                     style={{
-                      backgroundColor: period === f.key ? primary : `${fg}08`,
-                      color: period === f.key ? "#fff" : `${fg}70`,
+                     backgroundColor: period === f.key ? primary : brandAlpha(fg, 0.03),
+                       color: period === f.key ? "#fff" : brandAlpha(fg, 0.44),
                     }}
                   >
                     {f.label}
@@ -373,9 +373,9 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     onClick={() => setTypeFilter(f.key)}
                     className="px-3 py-1 rounded-full text-[11px] font-medium transition-all"
                     style={{
-                      backgroundColor: typeFilter === f.key ? `${primary}18` : "transparent",
-                      color: typeFilter === f.key ? primary : `${fg}50`,
-                      border: `1px solid ${typeFilter === f.key ? `${primary}30` : `${fg}10`}`,
+                       backgroundColor: typeFilter === f.key ? brandAlpha(primary, 0.1) : "transparent",
+                       color: typeFilter === f.key ? primary : brandAlpha(fg, 0.31),
+                       border: `1px solid ${typeFilter === f.key ? brandAlpha(primary, 0.19) : brandAlpha(fg, 0.06)}`,
                     }}
                   >
                     {f.label}
@@ -433,7 +433,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               )}
             </AnimatePresence>
 
-            <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
+            <div className="h-px" style={{ backgroundColor: brandAlpha(fg, 0.03) }} />
           </header>
 
           {/* Entries */}
@@ -454,7 +454,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                 </div>
               ) : entries.length === 0 ? (
                 <div className="text-center py-16 opacity-40">
-                  <Coins className="h-10 w-10 mx-auto mb-3" style={{ color: `${fg}30` }} />
+                  <Coins className="h-10 w-10 mx-auto mb-3" style={{ color: brandAlpha(fg, 0.19) }} />
                   <p className="font-medium text-sm">Nenhuma movimentação</p>
                   <p className="text-xs mt-1">Suas transações aparecerão aqui</p>
                 </div>
@@ -462,7 +462,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                 <div className="space-y-4">
                   {Object.entries(grouped).map(([dateLabel, items]) => (
                     <div key={dateLabel}>
-                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2 px-1" style={{ color: `${fg}35` }}>
+                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2 px-1" style={{ color: brandAlpha(fg, 0.22) }}>
                         {dateLabel}
                       </p>
                       <div className="space-y-1.5">
@@ -498,7 +498,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                                 <p className="text-sm font-medium truncate" style={{ color: fg }}>
                                   {getReasonLabel(entry)}
                                 </p>
-                                <p className="text-[11px] truncate" style={{ color: `${fg}50` }}>
+                                <p className="text-[11px] truncate" style={{ color: brandAlpha(fg, 0.31) }}>
                                   {getSubtitle(entry)}
                                 </p>
                               </div>
@@ -512,7 +512,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                                   {isCredit ? "+" : "-"}{entry.points_amount} pts
                                 </span>
                                 {entry.money_amount > 0 && (
-                                  <p className="text-[10px]" style={{ color: `${fg}40` }}>
+                                  <p className="text-[10px]" style={{ color: brandAlpha(fg, 0.25) }}>
                                     R$ {Number(entry.money_amount).toFixed(2)}
                                   </p>
                                 )}
@@ -531,7 +531,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     </div>
                   )}
                   {!hasMore && entries.length > 0 && (
-                    <p className="text-center text-xs py-4" style={{ color: `${fg}30` }}>
+                    <p className="text-center text-xs py-4" style={{ color: brandAlpha(fg, 0.19) }}>
                       Fim do extrato
                     </p>
                   )}

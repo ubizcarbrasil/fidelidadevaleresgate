@@ -1,50 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Continuar correção dark mode — 7 arquivos restantes
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-Substituir todos os padrões `${primary}XX` e `${fg}XX` por `brandAlpha()` nos arquivos que ainda não foram corrigidos.
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Arquivos e alterações
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-| Arquivo | Ocorrências |
-|---------|-------------|
-| `src/pages/customer/CustomerOfferDetailPage.tsx` | ~30 — banners, fallbacks, borders, RuleRow, TermsRuleItem, CPF step |
-| `src/pages/customer/CustomerStoreDetailPage.tsx` | ~12 — category badge, orientações, FAQ, localização |
-| `src/pages/customer/CustomerRedemptionDetailPage.tsx` | ~18 — PIN section, RuleRow, DetailRow, cancel buttons |
-| `src/components/customer/CustomerSearchOverlay.tsx` | ~16 — search icon, segment chips, suggestions, store/offer rows |
-| `src/components/customer/CustomerLedgerOverlay.tsx` | ~14 — period/type filters, dividers, empty state, entries |
-| `src/components/customer/StoreCatalogView.tsx` | ~14 — empty state, offer cards, points banner, category chips, product cards |
-| `src/components/customer/CatalogCartDrawer.tsx` | 2 — points highlight bg e texto |
-| `src/components/customer/CancelRedemptionButton.tsx` | 2 — botão cancelar bg/color |
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-### Padrão de conversão
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-Mesma abordagem já aplicada nos 12 arquivos anteriores:
-- `${primary}06` → `brandAlpha(primary, 0.024)`
-- `${primary}08` → `brandAlpha(primary, 0.03)`
-- `${primary}10` → `brandAlpha(primary, 0.06)`
-- `${primary}12` → `brandAlpha(primary, 0.07)`
-- `${primary}15` → `brandAlpha(primary, 0.09)`
-- `${primary}18` → `brandAlpha(primary, 0.1)`
-- `${primary}20` → `brandAlpha(primary, 0.12)`
-- `${primary}25` → `brandAlpha(primary, 0.15)`
-- `${primary}30` → `brandAlpha(primary, 0.19)`
-- `${primary}40` → `brandAlpha(primary, 0.25)`
-- `${primary}90` → `brandAlpha(primary, 0.56)`
-- `${primary}CC` → `brandAlpha(primary, 0.8)`
-- `${fg}06` → `brandAlpha(fg, 0.024)`
-- `${fg}08` → `brandAlpha(fg, 0.03)`
-- `${fg}10` → `brandAlpha(fg, 0.06)`
-- `${fg}15` → `brandAlpha(fg, 0.09)`
-- `${fg}30` → `brandAlpha(fg, 0.19)`
-- `${fg}35` → `brandAlpha(fg, 0.22)`
-- `${fg}40` → `brandAlpha(fg, 0.25)`
-- `${fg}45` → `brandAlpha(fg, 0.27)`
-- `${fg}50` → `brandAlpha(fg, 0.31)`
-- `${fg}55` → `brandAlpha(fg, 0.33)`
-- `${fg}60` → `brandAlpha(fg, 0.37)`
-- `${fg}65` → `brandAlpha(fg, 0.4)`
-- `${fg}70` → `brandAlpha(fg, 0.44)`
-
-Cada arquivo receberá `import { brandAlpha } from "@/lib/utils"` (ou adicionado ao import existente). Nenhuma alteração de lógica — apenas expressões de cor.
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

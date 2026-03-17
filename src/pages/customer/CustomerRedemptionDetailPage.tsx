@@ -8,7 +8,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { RedemptionWithOffer, OfferInfo } from "@/types/customer";
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 interface Props {
   redemption: RedemptionWithOffer;
@@ -148,7 +148,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             {heroImage ? (
               <img src={heroImage} alt={heroTitle} className="h-full w-full object-contain" />
             ) : (
-              <Store className="h-12 w-12" style={{ color: `${fg}30` }} />
+              <Store className="h-12 w-12" style={{ color: brandAlpha(fg, 0.19) }} />
             )}
           </div>
           <p className="text-xl font-bold" style={{ color: fg, fontFamily: fontHeading }}>{heroTitle}</p>
@@ -158,13 +158,13 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         {/* Info cards row: CRÉDITO / VALIDADE / STATUS */}
         <div className="grid grid-cols-3 gap-2 px-5 py-4">
           <div className="rounded-2xl p-3 text-center bg-muted">
-            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>CRÉDITO</p>
+            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: brandAlpha(fg, 0.31) }}>CRÉDITO</p>
             <p className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
               {formatCurrency(Number(creditValue))}
             </p>
           </div>
           <div className="rounded-2xl p-3 text-center bg-muted">
-            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>VALIDADE</p>
+            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: brandAlpha(fg, 0.31) }}>VALIDADE</p>
             <p className="text-sm font-bold" style={{ color: fg, fontFamily: fontHeading }}>
               {redemption.expires_at
                 ? format(new Date(redemption.expires_at), "dd/MM/yyyy")
@@ -174,15 +174,15 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             </p>
           </div>
           <div className="rounded-2xl p-3 text-center bg-muted">
-            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>STATUS</p>
+            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: brandAlpha(fg, 0.31) }}>STATUS</p>
             <p className="text-sm font-bold" style={{ color: statusColor, fontFamily: fontHeading }}>{statusLabel}</p>
           </div>
         </div>
 
         {/* PIN section */}
         <div className="mx-5 rounded-2xl p-5 mb-4 bg-muted">
-          <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: `${fg}60` }}>COPIE SEU PIN</p>
-          <div className="flex items-center justify-between rounded-xl p-4" style={{ border: `2px dashed ${primary}40`, backgroundColor: `${primary}06` }}>
+          <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: brandAlpha(fg, 0.37) }}>COPIE SEU PIN</p>
+          <div className="flex items-center justify-between rounded-xl p-4" style={{ border: `2px dashed ${brandAlpha(primary, 0.25)}`, backgroundColor: brandAlpha(primary, 0.024) }}>
             <span className="text-3xl font-mono font-bold tracking-[0.3em]" style={{ color: primary }}>
               {redemption.token}
             </span>
@@ -195,7 +195,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
               Copiar
             </button>
           </div>
-          <p className="text-[11px] text-center mt-2" style={{ color: `${fg}50` }}>
+          <p className="text-[11px] text-center mt-2" style={{ color: brandAlpha(fg, 0.31) }}>
             Informe este PIN ao lojista para validar seu crédito
           </p>
         </div>
@@ -230,7 +230,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
                   <button
                     onClick={() => { setShowCancelConfirm(false); setCancelPin(""); }}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                    style={{ backgroundColor: `${fg}10`, color: `${fg}70` }}
+                    style={{ backgroundColor: brandAlpha(fg, 0.06), color: brandAlpha(fg, 0.44) }}
                   >
                     Cancelar
                   </button>
@@ -250,7 +250,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
         {hasActions && (
           <div className="mx-5 rounded-2xl p-5 mb-4 bg-amber-50 dark:bg-amber-950/30" style={{ border: "2px solid #FBBF24" }}>
-            <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: `${fg}60` }}>COMO RESGATAR</p>
+            <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: brandAlpha(fg, 0.37) }}>COMO RESGATAR</p>
             <div className="space-y-2">
               {store?.address && (
                 <ActionButton icon={<MapPin className="h-5 w-5" />} label="Ver Localização" bg="#FBBF24" color="#1F2937"
@@ -273,8 +273,8 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         )}
 
         {/* Rules section */}
-        <div className="mx-5 rounded-2xl p-5 mb-4 bg-card border" style={{ borderColor: `${fg}10` }}>
-          <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: `${fg}60` }}>REGRAS DE RESGATE</p>
+         <div className="mx-5 rounded-2xl p-5 mb-4 bg-card border" style={{ borderColor: brandAlpha(fg, 0.06) }}>
+           <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: brandAlpha(fg, 0.37) }}>REGRAS DE RESGATE</p>
           <div className="space-y-4">
             {(offer?.end_at || redemption.expires_at) && (
               <RuleRow icon={<Clock className="h-4 w-4" style={{ color: primary }} />} primary={primary} title="Validade">
@@ -303,7 +303,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
         {/* Order details */}
         <div className="mx-5 rounded-2xl p-5 mb-6 bg-muted">
-          <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: `${fg}60` }}>DETALHES DO PEDIDO</p>
+          <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: brandAlpha(fg, 0.37) }}>DETALHES DO PEDIDO</p>
           <div className="text-sm">
             <DetailRow label="Código do pedido" fg={fg}>
               <span className="font-mono font-semibold">
@@ -373,7 +373,7 @@ function ActionButton({ icon, label, bg, color, onClick }: {
 function RuleRow({ icon, children, primary, title }: { icon: React.ReactNode; children: React.ReactNode; primary: string; title: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}15` }}>
+      <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.09) }}>
         {icon}
       </div>
       <div>
@@ -386,9 +386,9 @@ function RuleRow({ icon, children, primary, title }: { icon: React.ReactNode; ch
 
 function DetailRow({ label, fg, children, noBorder }: { label: string; fg: string; children: React.ReactNode; noBorder?: boolean }) {
   return (
-    <div className={`flex justify-between items-center py-3 ${noBorder ? "" : "border-b"}`} style={{ borderColor: `${fg}10` }}>
-      <span style={{ color: `${fg}70` }}>{label}</span>
-      <span style={{ color: fg }}>{children}</span>
+    <div className={`flex justify-between items-center py-3 ${noBorder ? "" : "border-b"}`} style={{ borderColor: brandAlpha(fg, 0.06) }}>
+       <span style={{ color: brandAlpha(fg, 0.44) }}>{label}</span>
+       <span style={{ color: fg }}>{children}</span>
     </div>
   );
 }

@@ -29,7 +29,7 @@ interface Props {
 }
 
 // hslToCss imported below
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
@@ -105,13 +105,13 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           {store.points_per_real && (
             <p className="text-2xl font-black mb-2" style={{ fontFamily: fontHeading }}>
               {Number(store.points_per_real).toFixed(0)} {Number(store.points_per_real) === 1 ? "ponto" : "pontos"}{" "}
-              <span className="text-base font-medium" style={{ color: `${fg}60` }}>por R$ 1</span>
+              <span className="text-base font-medium" style={{ color: brandAlpha(fg, 0.37) }}>por R$ 1</span>
             </p>
           )}
           {store.category && (
             <span
               className="text-xs font-medium px-3 py-1 rounded-full mb-2"
-              style={{ backgroundColor: `${primary}12`, color: primary }}
+              style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}
             >
               {store.category}
             </span>
@@ -224,23 +224,23 @@ function StoreOrientations({ store, primary, fg, fontHeading }: {
       <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fontHeading }}>Orientações importantes</h2>
       {store.points_rule_text && (
         <div className="flex items-start gap-3 mb-4">
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+           <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
             <Tag className="h-5 w-5" style={{ color: primary }} />
           </div>
           <div>
             <p className="text-sm font-bold">Regra</p>
-            <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>{store.points_rule_text}</p>
+            <p className="text-sm mt-0.5" style={{ color: brandAlpha(fg, 0.4) }}>{store.points_rule_text}</p>
           </div>
         </div>
       )}
       {store.points_deadline_text && (
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
             <Calendar className="h-5 w-5" style={{ color: primary }} />
           </div>
           <div>
             <p className="text-sm font-bold">Prazo</p>
-            <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>{store.points_deadline_text}</p>
+            <p className="text-sm mt-0.5" style={{ color: brandAlpha(fg, 0.4) }}>{store.points_deadline_text}</p>
           </div>
         </div>
       )}
@@ -269,7 +269,7 @@ function StoreFAQ({ faqJson, primary, fg, fontHeading }: {
               <AccordionTrigger className="px-4 py-3.5 text-sm font-semibold text-left hover:no-underline">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4 text-sm" style={{ color: `${fg}65` }}>
+              <AccordionContent className="px-4 pb-4 text-sm" style={{ color: brandAlpha(fg, 0.4) }}>
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
@@ -340,8 +340,8 @@ function StoreLocationSection({ address, primary, fontHeading, fg }: { address: 
         </div>
         <div className="p-4">
           <p className="text-sm font-semibold">Endereço</p>
-          <p className="text-xs mt-0.5" style={{ color: `${fg}55` }}>{address}</p>
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm" style={{ backgroundColor: `${primary}12`, color: primary }}>
+          <p className="text-xs mt-0.5" style={{ color: brandAlpha(fg, 0.33) }}>{address}</p>
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm" style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}>
             Como chegar
           </a>
         </div>
