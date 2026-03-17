@@ -6,6 +6,7 @@ import SafeImage from "@/components/customer/SafeImage";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 import type { Tables } from "@/integrations/supabase/types";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
+import { brandAlpha } from "@/lib/utils";
 
 type Offer = Tables<"offers">;
 
@@ -48,9 +49,9 @@ export const StoreOfferCard = React.memo(function StoreOfferCard({
           fallback={
             <div
               className="w-28 h-28 flex-shrink-0 flex items-center justify-center"
-              style={{ backgroundColor: `${primary}06` }}
+              style={{ backgroundColor: brandAlpha(primary, 0.02) }}
             >
-              <ShoppingBag className="h-8 w-8" style={{ color: `${primary}30` }} />
+              <ShoppingBag className="h-8 w-8" style={{ color: brandAlpha(primary, 0.19) }} />
             </div>
           }
         />
@@ -120,7 +121,7 @@ export const StoreOffersList = React.memo(function StoreOffersList({
           Ofertas deste parceiro
         </h3>
         {!loading && (
-          <span className="text-xs" style={{ color: `${fg}40` }}>
+          <span className="text-xs" style={{ color: brandAlpha(fg, 0.25) }}>
             {offers.length} {offers.length === 1 ? "oferta" : "ofertas"}
           </span>
         )}
@@ -140,11 +141,11 @@ export const StoreOffersList = React.memo(function StoreOffersList({
         </div>
       ) : offers.length === 0 ? (
         <div className="text-center py-12 opacity-40">
-          <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}10` }}>
+          <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
             <Tag className="h-6 w-6" style={{ color: primary }} />
           </div>
           <p className="text-sm font-medium">Nenhuma oferta disponível</p>
-          <p className="text-xs mt-1" style={{ color: `${fg}40` }}>
+          <p className="text-xs mt-1" style={{ color: brandAlpha(fg, 0.25) }}>
             Fique de olho, novas ofertas podem surgir!
           </p>
         </div>

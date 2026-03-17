@@ -210,7 +210,7 @@ export default function CustomerRedemptionsPage() {
                 onClick={handleLoadMore}
                 disabled={loadingMore}
                 className="w-full py-3 rounded-2xl text-sm font-semibold"
-                style={{ backgroundColor: `${primary}15`, color: primary }}
+                style={{ backgroundColor: brandAlpha(primary, 0.08), color: primary }}
               >
                 {loadingMore ? "Carregando..." : "Carregar mais"}
               </button>
