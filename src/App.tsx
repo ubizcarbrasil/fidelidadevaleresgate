@@ -15,7 +15,7 @@ import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
-import RootJourneyGuidePage from "@/pages/RootJourneyGuidePage";
+const RootJourneyGuidePage = lazy(() => import("@/pages/RootJourneyGuidePage"));
 import { queryClient } from "@/lib/queryClient";
 import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
 const BrandJourneyGuidePage = lazy(() => import("@/pages/BrandJourneyGuidePage"));
