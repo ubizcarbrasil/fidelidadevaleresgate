@@ -231,12 +231,12 @@ export function BrandSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4 bg-gradient-to-b from-sidebar-accent/30 to-transparent">
         <div className="flex items-center gap-2">
           {brandLogoUrl ? (
-            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover logo-glow-ring" />
           ) : (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary logo-glow-ring">
               <Store className="h-4 w-4 text-sidebar-primary-foreground" />
             </div>
           )}
