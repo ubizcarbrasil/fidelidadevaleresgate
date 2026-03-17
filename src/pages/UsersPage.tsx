@@ -50,8 +50,11 @@ function BrandUsersView({ brandId }: { brandId: string }) {
   // Invite form state
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("branch_operator");
   const [inviteBranchId, setInviteBranchId] = useState("");
+  const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
 
   const { data: branches } = useQuery({
     queryKey: ["branches-select", brandId],
