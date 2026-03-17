@@ -1,30 +1,37 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Corrigir vínculo bidirecional CRM ↔ Customer na importação CSV
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+Na importação CRM, os customers são criados primeiro (batch), depois os crm_contacts são criados com `customer_id`. Porém o campo `crm_contact_id` no customer **nunca é preenchido** — o vínculo reverso está quebrado.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Correção
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+#### `src/pages/CsvImportPage.tsx` — Após inserir crm_contacts, atualizar customers com crm_contact_id
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Após a inserção dos `crm_contacts` (linha 543), buscar os IDs dos contatos recém-criados e fazer update nos customers correspondentes:
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+```typescript
+// Após inserir crm_contacts com sucesso, buscar IDs e vincular de volta
+if (!error && customerIds.some(id => id !== null)) {
+  const { data: insertedContacts } = await supabase
+    .from("crm_contacts")
+    .select("id, customer_id")
+    .in("customer_id", customerIds.filter(Boolean));
+  
+  if (insertedContacts) {
+    for (const contact of insertedContacts) {
+      if (contact.customer_id) {
+        await supabase
+          .from("customers")
+          .update({ crm_contact_id: contact.id })
+          .eq("id", contact.customer_id);
+      }
+    }
+  }
+}
+```
+
+### Arquivo a editar
+- `src/pages/CsvImportPage.tsx`: adicionar back-link `crm_contact_id` após inserção dos contatos CRM
+
