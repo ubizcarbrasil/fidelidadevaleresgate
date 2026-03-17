@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus, Trash2, ShoppingBag, MessageCircle, Sparkles, User } from "lucide-react";
+import { brandAlpha } from "@/lib/utils";
 import { openLink } from "@/lib/openLink";
 
 export interface CartItem {
