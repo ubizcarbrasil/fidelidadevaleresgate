@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     }
 
     const { plan_key } = await req.json();
-    if (!plan_key || !["free", "starter", "profissional"].includes(plan_key)) {
+    if (!plan_key || !["free", "starter", "profissional", "enterprise"].includes(plan_key)) {
       return new Response(JSON.stringify({ error: "Invalid plan_key" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -24,6 +24,7 @@ const PLANS = [
   { key: "free", label: "Free", icon: Zap, color: "text-muted-foreground" },
   { key: "starter", label: "Starter", icon: Rocket, color: "text-primary" },
   { key: "profissional", label: "Profissional", icon: Crown, color: "text-amber-500" },
+  { key: "enterprise", label: "Enterprise", icon: Crown, color: "text-violet-500" },
 ] as const;
 
 type PlanKey = (typeof PLANS)[number]["key"];
@@ -59,7 +60,7 @@ export default function PlanModuleTemplatesPage() {
   const { data: brandCounts } = useQuery({
     queryKey: ["brand-counts-by-plan"],
     queryFn: async () => {
-      const counts: Record<PlanKey, number> = { free: 0, starter: 0, profissional: 0 };
+      const counts: Record<PlanKey, number> = { free: 0, starter: 0, profissional: 0, enterprise: 0 };
       for (const plan of PLANS) {
         const { count, error } = await supabase
           .from("brands")
@@ -77,9 +78,9 @@ export default function PlanModuleTemplatesPage() {
     if (!modules || !templates) return;
     const m: Record<string, Record<PlanKey, boolean>> = {};
     for (const mod of modules) {
-      m[mod.id] = { free: false, starter: false, profissional: false };
+      m[mod.id] = { free: false, starter: false, profissional: false, enterprise: false };
       if (mod.is_core) {
-        m[mod.id] = { free: true, starter: true, profissional: true };
+        m[mod.id] = { free: true, starter: true, profissional: true, enterprise: true };
       }
     }
     for (const t of templates) {

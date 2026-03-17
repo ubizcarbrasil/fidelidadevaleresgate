@@ -1,12 +1,89 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, CheckCircle2, Zap, Crown, Loader2 } from "lucide-react";
+import { CreditCard, CheckCircle2, Zap, Crown, Loader2, Building2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+
+const PLANS = [
+  {
+    key: "starter",
+    label: "Starter",
+    price: "R$ 97",
+    icon: Zap,
+    color: "text-primary",
+    borderColor: "border-primary/30",
+    barColor: "bg-primary",
+    btnClass: "",
+    features: [
+      "1 cidade incluída",
+      "Até 50 parceiros",
+      "App personalizado com sua marca",
+      "Vitrine de ofertas e resgates",
+      "Cupons e Achadinhos",
+      "Relatórios básicos",
+      "Suporte por e-mail",
+    ],
+    excluded: [
+      "Programa de Pontos + Catálogo",
+      "Personalização completa (cores, ícones, páginas)",
+      "CRM + Notificações",
+      "Ganha-Ganha",
+    ],
+  },
+  {
+    key: "profissional",
+    label: "Profissional",
+    price: "R$ 197",
+    icon: Crown,
+    color: "text-amber-500",
+    borderColor: "border-amber-500/30",
+    barColor: "bg-amber-500",
+    btnClass: "bg-amber-500 hover:bg-amber-600",
+    popular: true,
+    features: [
+      "Cidades ilimitadas",
+      "Parceiros ilimitados",
+      "Tudo do Starter +",
+      "Programa de Pontos completo",
+      "Catálogo de produtos",
+      "Vouchers personalizados",
+      "Construtor de Páginas & Editor de Tema",
+      "CRM Estratégico + Notificações",
+      "Auditoria & Controle de Acessos",
+      "Suporte prioritário",
+    ],
+    excluded: [
+      "Ganha-Ganha (ecossistema compartilhado)",
+      "Domínio próprio",
+      "Patrocinados & Missões",
+    ],
+  },
+  {
+    key: "enterprise",
+    label: "Enterprise",
+    price: "R$ 397",
+    icon: Building2,
+    color: "text-violet-500",
+    borderColor: "border-violet-500/30",
+    barColor: "bg-violet-500",
+    btnClass: "bg-violet-500 hover:bg-violet-600",
+    features: [
+      "Tudo do Profissional +",
+      "Ganha-Ganha (ecossistema compartilhado de pontos)",
+      "Domínio próprio personalizado",
+      "Patrocinados (placements pagos)",
+      "Missões & Gamificação",
+      "Integração TaxiMachine (mobilidade)",
+      "Acesso irrestrito a todos os módulos",
+      "Suporte dedicado",
+    ],
+    excluded: [],
+  },
+];
 
 export default function SubscriptionPage() {
   const { currentBrandId } = useBrandGuard();
@@ -57,99 +134,66 @@ export default function SubscriptionPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Planos e Assinatura</h2>
         <p className="text-muted-foreground">Escolha o plano ideal para sua plataforma.</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-6">
-        {/* Starter Plan */}
-        <Card className="border-primary/30 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Starter
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <span className="text-3xl font-extrabold">R$ 97</span>
-              <span className="text-muted-foreground">/mês</span>
-            </div>
-            <ul className="space-y-2 text-sm">
-              {[
-                "1 cidade incluída",
-                "Até 50 parceiros",
-                "App personalizado com sua marca",
-                "Programa de pontos e resgates",
-                "Suporte por e-mail",
-              ].map((f) => (
-                <li key={f} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              className="w-full gap-2"
-              onClick={() => handleSubscribe("starter")}
-              disabled={!!loading}
-            >
-              {loading === "starter" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="h-4 w-4" />
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {PLANS.map((plan) => {
+          const Icon = plan.icon;
+          return (
+            <Card key={plan.key} className={`${plan.borderColor} relative overflow-hidden ${plan.popular ? "ring-2 ring-amber-500/50" : ""}`}>
+              <div className={`absolute top-0 left-0 right-0 h-1 ${plan.barColor}`} />
+              {plan.popular && (
+                <div className="absolute top-3 right-3">
+                  <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                    Popular
+                  </span>
+                </div>
               )}
-              Assinar Starter
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Pro Plan */}
-        <Card className="border-amber-500/30 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-amber-500" />
-              Profissional
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <span className="text-3xl font-extrabold">R$ 197</span>
-              <span className="text-muted-foreground">/mês</span>
-            </div>
-            <ul className="space-y-2 text-sm">
-              {[
-                "Cidades ilimitadas",
-                "Parceiros ilimitados",
-                "App personalizado com sua marca",
-                "Programa de pontos e resgates",
-                "Relatórios avançados",
-                "Suporte prioritário",
-              ].map((f) => (
-                <li key={f} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              className="w-full gap-2 bg-amber-500 hover:bg-amber-600"
-              onClick={() => handleSubscribe("profissional")}
-              disabled={!!loading}
-            >
-              {loading === "profissional" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="h-4 w-4" />
-              )}
-              Assinar Profissional
-            </Button>
-          </CardContent>
-        </Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon className={`h-5 w-5 ${plan.color}`} />
+                  {plan.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <span className="text-3xl font-extrabold">{plan.price}</span>
+                  <span className="text-muted-foreground">/mês</span>
+                </div>
+                <ul className="space-y-2 text-sm">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <CheckCircle2 className={`h-4 w-4 mt-0.5 ${plan.color} shrink-0`} />
+                      {f}
+                    </li>
+                  ))}
+                  {plan.excluded.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-muted-foreground/60">
+                      <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span className="line-through">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className={`w-full gap-2 ${plan.btnClass}`}
+                  onClick={() => handleSubscribe(plan.key)}
+                  disabled={!!loading}
+                >
+                  {loading === plan.key ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="h-4 w-4" />
+                  )}
+                  Assinar {plan.label}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
