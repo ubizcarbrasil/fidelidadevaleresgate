@@ -143,7 +143,9 @@ export default function OffersPage() {
                   <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id} className="w-full">Salvar</Button>
+              <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id || save.isPending} className="w-full">
+                {save.isPending ? "Salvando..." : "Salvar"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
