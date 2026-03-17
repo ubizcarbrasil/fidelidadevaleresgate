@@ -4525,6 +4525,48 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          excluded_features: string[] | null
+          features: string[] | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          label: string
+          plan_key: string
+          price_cents: number
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          excluded_features?: string[] | null
+          features?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          label: string
+          plan_key: string
+          price_cents: number
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          excluded_features?: string[] | null
+          features?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          label?: string
+          plan_key?: string
+          price_cents?: number
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       taxonomy_categories: {
         Row: {
           created_at: string

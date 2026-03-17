@@ -94,6 +94,7 @@ const MachineIntegrationPage = lazy(() => import("@/pages/MachineIntegrationPage
 const MachineWebhookTestPage = lazy(() => import("@/pages/MachineWebhookTestPage"));
 const OfferCardConfigPage = lazy(() => import("@/pages/OfferCardConfigPage"));
 const PlanModuleTemplatesPage = lazy(() => import("@/pages/PlanModuleTemplatesPage"));
+const SubscriptionPlansAdminPage = lazy(() => import("@/pages/SubscriptionPlansAdminPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -220,6 +221,7 @@ function AppRoutes() {
           <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
           <Route path="offer-card-config" element={<OfferCardConfigPage />} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
+          <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
