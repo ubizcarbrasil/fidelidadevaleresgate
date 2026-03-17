@@ -179,9 +179,9 @@ export default function StoreCatalogView({
                 {offer.image_url ? (
                   <img src={offer.image_url} alt={offer.title} className="w-full h-24 object-cover" />
                 ) : (
-                  <div className="w-full h-24 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
-                    <Tag className="h-8 w-8" style={{ color: `${primary}30` }} />
-                  </div>
+                  <div className="w-full h-24 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                     <Tag className="h-8 w-8" style={{ color: brandAlpha(primary, 0.19) }} />
+                   </div>
                 )}
                 <div className="p-2.5">
                   <p className="text-xs font-semibold line-clamp-2" style={{ fontFamily: fontHeading }}>{offer.title}</p>
