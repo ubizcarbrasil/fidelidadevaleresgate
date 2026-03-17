@@ -215,7 +215,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
               <div
                  className="flex-1 flex items-center gap-2.5 rounded-full px-4 py-2.5 bg-muted"
                >
-                <Search className="h-4 w-4 flex-shrink-0" style={{ color: `${fg}50` }} />
+                <Search className="h-4 w-4 flex-shrink-0" style={{ color: brandAlpha(fg, 0.31) }} />
                 <input
                   ref={inputRef}
                   type="text"
