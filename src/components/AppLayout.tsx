@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, Bell, ChevronDown, ChevronRight, LogOut, User, KeyRound } from "lucide-react";
 import { ContextBadge } from "@/components/ContextBadge";
 import BranchSelector from "@/components/BranchSelector";
-import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
