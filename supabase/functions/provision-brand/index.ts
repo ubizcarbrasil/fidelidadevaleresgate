@@ -594,9 +594,9 @@ Deno.serve(async (req) => {
       // Baseado no template UBIZ Resgata (24 módulos padrão)
       "affiliate_deals", "api_keys", "approvals", "banners", "brand_theme",
       "categories", "coupons", "crm", "custom_pages", "customers",
-      "home_sections", "machine_integration", "offers", "page_builder",
-      "partner_landing", "profile_links", "redemption_qr", "reports",
-      "stores", "taxonomy", "theme_images", "theme_texts",
+      "earn_points_store", "home_sections", "machine_integration", "offers",
+      "page_builder", "partner_landing", "profile_links", "redemption_qr",
+      "reports", "stores", "taxonomy", "theme_images", "theme_texts",
       "users_management", "wallet",
     ]);
     const isBasicPlan = !subscription_plan || subscription_plan === "free" || subscription_plan === "basic";
