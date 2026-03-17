@@ -768,14 +768,22 @@ export default function Dashboard() {
 
       {/* ── SECTION A: KPIs ── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" />
-        <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" />
-        <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" />
-        <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="primary" />
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" sparkData={recentRedemptions?.map(d => d.count)} />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" sparkData={recentEarnings?.map(d => d.count)} />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" sparkData={recentEarnings?.map(d => d.count)} />
+        </div>
+        <div className="animate-slide-up delay-4">
+          <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="violet" sparkData={recentRedemptions?.map(d => d.count)} />
+        </div>
       </div>
 
       {/* ── SECTION B + C: Chart + Ranking ── */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3 animate-slide-up delay-5">
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -791,7 +799,7 @@ export default function Dashboard() {
               <Skeleton className="h-[240px] w-full" />
             ) : (
               <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={combinedChart}>
+                <AreaChart data={combinedChart} style={{ cursor: "crosshair" }}>
                   <defs>
                     <linearGradient id="gradResgates" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.3} />
@@ -808,10 +816,12 @@ export default function Dashboard() {
                     contentStyle={{
                       borderRadius: 8,
                       border: "1px solid hsl(215 25% 27%)",
-                      background: "hsl(217 33% 17%)",
+                      background: "hsl(217 33% 17% / 0.95)",
+                      backdropFilter: "blur(12px)",
                       color: "hsl(210 40% 98%)",
                       fontSize: 12,
                     }}
+                    cursor={{ stroke: "hsl(217 91% 60% / 0.2)", strokeWidth: 1 }}
                   />
                   <Area type="monotone" dataKey="resgates" name="Resgates" stroke="hsl(217 91% 60%)" fill="url(#gradResgates)" strokeWidth={2} />
                   <Area type="monotone" dataKey="pontuacoes" name="Pontuações" stroke="hsl(142 71% 45%)" fill="url(#gradPontuacoes)" strokeWidth={2} />
@@ -824,13 +834,13 @@ export default function Dashboard() {
       </div>
 
       {/* ── SECTION D + E: Alerts + Heatmap ── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-6">
         <AlertsSection redemptionsPending={redemptionsPending} storeRulesPending={storeRulesPending} />
         <ActivityHeatmap chartData={recentRedemptions} />
       </div>
 
       {/* ── SECTION F + G: Tasks + Activity Feed ── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
         <TasksTable />
         <ActivityFeed />
       </div>
@@ -839,10 +849,10 @@ export default function Dashboard() {
       {currentBrandId && (
         <button
           onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
-          className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 shadow-lg hover:bg-primary/90 transition-colors"
+          className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 shadow-lg hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/20"
         >
-          <Smartphone className="h-5 w-5" />
-          <span className="hidden sm:inline text-sm font-semibold">App do Cliente</span>
+          <Smartphone className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs font-semibold">App do Cliente</span>
         </button>
       )}
     </div>
