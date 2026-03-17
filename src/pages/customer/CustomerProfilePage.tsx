@@ -70,9 +70,9 @@ export default function CustomerProfilePage() {
         <div
           className="h-16 w-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0"
           style={{
-            background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
+            background: `linear-gradient(135deg, ${primary}, ${brandAlpha(primary, 0.73)})`,
             color: "#fff",
-            boxShadow: `0 4px 16px -4px ${primary}50`,
+            boxShadow: `0 4px 16px -4px ${brandAlpha(primary, 0.31)}`,
           }}
         >
           {name ? name.charAt(0).toUpperCase() : <AppIcon iconKey="profile_user" className="h-7 w-7" />}
