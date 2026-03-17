@@ -327,15 +327,21 @@ function BrandUsersView({ brandId }: { brandId: string }) {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {brandUsers.map(u => (
-            <Card key={u.id}>
+          {brandUsers.map(u => {
+            const initials = (u.profile?.full_name || u.profile?.email || "U")
+              .split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+            return (
+            <Card key={u.id} className="gradient-border-top card-hover-lift">
               <CardContent className="pt-6 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{u.profile?.full_name || "Sem nome"}</p>
-                    <p className="text-sm text-muted-foreground truncate">{u.profile?.email || "—"}</p>
+                <div className="flex items-start gap-3">
+                  <div className="stat-icon-container h-10 w-10 shrink-0">
+                    <span className="text-xs font-bold text-primary">{initials}</span>
                   </div>
-                  <Badge variant="secondary" className="shrink-0 ml-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{u.profile?.full_name || "Sem nome"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.profile?.email || "—"}</p>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0 ml-2 glass-card">
                     {ROLE_LABELS[u.role as AppRole] || u.role}
                   </Badge>
                 </div>
