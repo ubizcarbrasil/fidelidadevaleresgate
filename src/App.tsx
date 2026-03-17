@@ -219,8 +219,8 @@ function AppRoutes() {
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
           <Route path="sponsored-placements" element={<RootGuard><SponsoredPlacementsPage /></RootGuard>} />
-          <Route path="machine-integration" element={<RootGuard><MachineIntegrationPage /></RootGuard>} />
-          <Route path="machine-webhook-test" element={<RootGuard><MachineWebhookTestPage /></RootGuard>} />
+          <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
+          <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
           <Route path="offer-card-config" element={<RootGuard><OfferCardConfigPage /></RootGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
