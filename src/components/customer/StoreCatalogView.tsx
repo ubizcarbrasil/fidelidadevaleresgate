@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import CatalogCartDrawer, { type CartItem } from "./CatalogCartDrawer";
+import { brandAlpha } from "@/lib/utils";
 
 interface CatalogItem {
   id: string;
