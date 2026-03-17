@@ -433,7 +433,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               )}
             </AnimatePresence>
 
-            <div className="h-px" style={{ backgroundColor: `${fg}08` }} />
+            <div className="h-px" style={{ backgroundColor: brandAlpha(fg, 0.03) }} />
           </header>
 
           {/* Entries */}
