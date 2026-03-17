@@ -242,7 +242,11 @@ export default function StoresPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum parceiro encontrado</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="py-0">
+                  <EmptyState type="generic" title="Nenhum parceiro encontrado" description="Cadastre uma loja parceira para começar." />
+                </TableCell></TableRow>
+              )}
               {data?.items?.map(s => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">
