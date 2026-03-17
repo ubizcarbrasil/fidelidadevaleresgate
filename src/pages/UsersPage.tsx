@@ -371,7 +371,8 @@ function BrandUsersView({ brandId }: { brandId: string }) {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 

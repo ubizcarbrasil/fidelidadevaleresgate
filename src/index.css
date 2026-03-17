@@ -205,15 +205,46 @@ html, body {
   border-radius: 0.5rem;
 }
 
-/* ── Partner Panel Glass & Gradient Utilities ── */
+/* ── Futuristic Design System ── */
+
+/* Keyframes */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 6px hsl(var(--primary) / 0.15); }
+  50% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* Glass effects */
 .glass-header {
   background: linear-gradient(
     135deg,
-    hsl(var(--primary) / 0.08) 0%,
-    hsl(var(--background) / 0.95) 100%
+    hsl(var(--primary) / 0.06) 0%,
+    hsl(var(--background) / 0.92) 100%
   );
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
+}
+
+.glass-card {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid hsl(var(--border) / 0.5);
 }
 
 .glass-nav {
@@ -222,6 +253,92 @@ html, body {
   -webkit-backdrop-filter: blur(28px) saturate(200%);
 }
 
+/* Gradient accents */
+.gradient-border-top {
+  position: relative;
+  overflow: hidden;
+}
+.gradient-border-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
+  background-size: 200% 100%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.gradient-line-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), hsl(var(--accent) / 0.3), transparent);
+}
+
+/* Stat icon containers */
+.stat-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05));
+  border: 1px solid hsl(var(--primary) / 0.2);
+  transition: all 0.3s ease;
+}
+
+.stat-icon-container:hover {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Glow ring for logo */
+.logo-glow-ring {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2), 0 0 12px hsl(var(--primary) / 0.15);
+  transition: box-shadow 0.3s ease;
+}
+.logo-glow-ring:hover {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.4), 0 0 20px hsl(var(--primary) / 0.3);
+}
+
+/* Sidebar enhancements */
+.sidebar-group-indicator {
+  position: relative;
+}
+.sidebar-group-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  border-radius: 1px;
+  background: hsl(var(--sidebar-primary) / 0.3);
+}
+
+.sidebar-item-active {
+  background: linear-gradient(90deg, hsl(var(--sidebar-primary) / 0.15), transparent) !important;
+  border-left: 2px solid hsl(var(--sidebar-primary));
+}
+
+/* Badge glow */
+.badge-glow {
+  box-shadow: 0 0 8px hsl(var(--destructive) / 0.3);
+}
+
+/* Card hover effects */
+.card-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -8px hsl(var(--primary) / 0.15);
+}
+
+/* Dot pulse */
+.dot-pulse {
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+/* KPI card utilities */
 .kpi-card-gradient {
   background: linear-gradient(
     135deg,

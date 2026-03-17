@@ -15,7 +15,11 @@ const CONFIG = {
 export function ContextBadge({ mode, brandName, impersonating }: ContextBadgeProps) {
   const { label, icon: Icon, className } = CONFIG[mode];
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold border shrink-0 glass-card ${className}`}>
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full rounded-full bg-current opacity-40 dot-pulse" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
+      </span>
       <Icon className="h-3 w-3" />
       <span>{label}</span>
       {impersonating && brandName && (

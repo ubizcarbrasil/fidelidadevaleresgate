@@ -659,9 +659,9 @@ export default function Dashboard() {
 
       {/* CRM Card */}
       {showBrand && !isRoot && (
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+        <Card className="border-primary/20 gradient-border-top card-hover-lift bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
           <CardContent className="flex items-center gap-4 py-5">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <div className="stat-icon-container h-12 w-12 shrink-0">
               <TrendingUp className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">

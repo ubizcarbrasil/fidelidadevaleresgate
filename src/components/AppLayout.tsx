@@ -86,7 +86,7 @@ export default function AppLayout() {
       <div className="min-h-screen flex w-full">
         <SidebarComponent />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center border-b px-3 sm:px-4 bg-card shrink-0">
+          <header className="h-14 flex items-center px-3 sm:px-4 glass-header shrink-0 relative">
             <SidebarTrigger className="mr-2 sm:mr-4" />
             {isImpersonating && (
               <Button
@@ -101,12 +101,13 @@ export default function AppLayout() {
               </Button>
             )}
             {brandLogoUrl && (
-              <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2" />
+              <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2 logo-glow-ring" />
             )}
             <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
             <div className="ml-auto shrink-0">
               <ContextBadge mode="admin" brandName={brandName || undefined} impersonating={isImpersonating} />
             </div>
+            <div className="absolute bottom-0 left-0 right-0 gradient-line-separator" />
           </header>
           <main className="flex-1 p-3 sm:p-6 overflow-auto">
             <TrialBanner />

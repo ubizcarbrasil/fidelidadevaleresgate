@@ -288,9 +288,16 @@ export function BrandSidebar() {
           );
         })}
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-3">
-        {!collapsed && (
-          <div className="mb-2 truncate text-xs text-sidebar-foreground/60">{user?.email}</div>
+      <SidebarFooter className="border-t border-sidebar-border p-3 bg-gradient-to-t from-sidebar-accent/20 to-transparent">
+        {!collapsed && user?.email && (
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-6 w-6 rounded-full bg-sidebar-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-sidebar-primary">
+                {user.email.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
+          </div>
         )}
         <Button
           variant="ghost"
