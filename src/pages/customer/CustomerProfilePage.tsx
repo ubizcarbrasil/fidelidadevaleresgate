@@ -326,7 +326,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
               onClick={() => openOffer(offer)}
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left active:scale-[0.97]"
             >
-              <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: `${primary}08` }}>
+              <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
                 {offer.image_url ? (
                   <img src={offer.image_url} alt={offer.title} className="h-full w-full object-cover" />
                 ) : (
