@@ -303,7 +303,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
         {/* Order details */}
         <div className="mx-5 rounded-2xl p-5 mb-6 bg-muted">
-          <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: `${fg}60` }}>DETALHES DO PEDIDO</p>
+          <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: brandAlpha(fg, 0.37) }}>DETALHES DO PEDIDO</p>
           <div className="text-sm">
             <DetailRow label="Código do pedido" fg={fg}>
               <span className="font-mono font-semibold">
