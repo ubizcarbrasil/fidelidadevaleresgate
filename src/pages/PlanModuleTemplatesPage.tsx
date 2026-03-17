@@ -78,7 +78,7 @@ export default function PlanModuleTemplatesPage() {
     if (!modules || !templates) return;
     const m: Record<string, Record<PlanKey, boolean>> = {};
     for (const mod of modules) {
-      m[mod.id] = { free: false, starter: false, profissional: false };
+      m[mod.id] = { free: false, starter: false, profissional: false, enterprise: false };
       if (mod.is_core) {
         m[mod.id] = { free: true, starter: true, profissional: true };
       }
