@@ -504,31 +504,34 @@ export default function Dashboard() {
   const periodStart = getPeriodStart(period);
   const periodDays = getPeriodDays(period);
 
+  // Brand filter: non-root users see only their brand data
+  const brandFilter = isRoot ? undefined : currentBrandId ?? undefined;
+
   const { data: tenants } = useMetric("tenants", isRoot);
   const { data: brands } = useMetric("brands", showTenant);
-  const { data: branches } = useMetric("branches");
-  const { data: storesTotal } = useMetric("stores");
-  const { data: storesActive } = useMetric("stores", true, (q: any) => q.eq("is_active", true), "active");
-  const { data: offersTotal } = useMetric("offers");
-  const { data: offersActive } = useMetric("offers", true, (q: any) => q.eq("status", "ACTIVE").eq("is_active", true), "active");
-  const { data: offersDraft } = useMetric("offers", true, (q: any) => q.eq("status", "DRAFT"), "draft");
-  const { data: offersExpired } = useMetric("offers", true, (q: any) => q.eq("status", "EXPIRED"), "expired");
-  const { data: customersTotal } = useMetric("customers");
-  const { data: customersActive } = useMetric("customers", true, (q: any) => q.eq("is_active", true), "active");
-  const { data: redemptionsTotal } = useMetric("redemptions");
-  const { data: redemptionsUsed } = useMetric("redemptions", true, (q: any) => q.eq("status", "USED"), "used");
-  const { data: redemptionsPending } = useMetric("redemptions", true, (q: any) => q.eq("status", "PENDING"), "pending");
-  const { data: vouchersTotal } = useMetric("vouchers");
-  const { data: vouchersActive } = useMetric("vouchers", true, (q: any) => q.eq("status", "active"), "active");
+  const { data: branches } = useMetric("branches", true, undefined, undefined, brandFilter);
+  const { data: storesTotal } = useMetric("stores", true, undefined, undefined, brandFilter);
+  const { data: storesActive } = useMetric("stores", true, (q: any) => q.eq("is_active", true), "active", brandFilter);
+  const { data: offersTotal } = useMetric("offers", true, undefined, undefined, brandFilter);
+  const { data: offersActive } = useMetric("offers", true, (q: any) => q.eq("status", "ACTIVE").eq("is_active", true), "active", brandFilter);
+  const { data: offersDraft } = useMetric("offers", true, (q: any) => q.eq("status", "DRAFT"), "draft", brandFilter);
+  const { data: offersExpired } = useMetric("offers", true, (q: any) => q.eq("status", "EXPIRED"), "expired", brandFilter);
+  const { data: customersTotal } = useMetric("customers", true, undefined, undefined, brandFilter);
+  const { data: customersActive } = useMetric("customers", true, (q: any) => q.eq("is_active", true), "active", brandFilter);
+  const { data: redemptionsTotal } = useMetric("redemptions", true, undefined, undefined, brandFilter);
+  const { data: redemptionsUsed } = useMetric("redemptions", true, (q: any) => q.eq("status", "USED"), "used", brandFilter);
+  const { data: redemptionsPending } = useMetric("redemptions", true, (q: any) => q.eq("status", "PENDING"), "pending", brandFilter);
+  const { data: vouchersTotal } = useMetric("vouchers", true, undefined, undefined, brandFilter);
+  const { data: vouchersActive } = useMetric("vouchers", true, (q: any) => q.eq("status", "active"), "active", brandFilter);
   const { data: usersCount } = useMetric("profiles", showBrand);
-  const { data: storeRulesTotal } = useMetric("store_points_rules");
-  const { data: storeRulesActive } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "ACTIVE"), "active");
-  const { data: storeRulesPending } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "PENDING_APPROVAL"), "pending");
-  const { data: storeRulesRejected } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "REJECTED"), "rejected");
-  const { data: earningEventsTotal } = useMetric("earning_events");
-  const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
+  const { data: storeRulesTotal } = useMetric("store_points_rules", true, undefined, undefined, brandFilter);
+  const { data: storeRulesActive } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "ACTIVE"), "active", brandFilter);
+  const { data: storeRulesPending } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
+  const { data: storeRulesRejected } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "REJECTED"), "rejected", brandFilter);
+  const { data: earningEventsTotal } = useMetric("earning_events", true, undefined, undefined, brandFilter);
+  const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
-  const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`);
+  const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
   // Redemptions chart for selected period
   const fetchChartData = useCallback(async (table: string) => {
