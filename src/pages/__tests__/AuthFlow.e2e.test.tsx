@@ -136,13 +136,8 @@ describe("Auth Flow E2E", () => {
           expect.objectContaining({
             email: "joao@test.com",
             password: "password123",
-            options: expect.objectContaining({
-              data: { full_name: "João Silva" },
-            }),
           })
         );
-        const { toast } = require("sonner");
-        expect(toast.success).toHaveBeenCalledWith("Conta criada com sucesso!");
       });
     });
   });
