@@ -243,7 +243,7 @@ export default function StoresPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
+              {isLoading && <TableRow><TableCell colSpan={7} className="p-0 border-0"><DataSkeleton variant="table-row" rows={5} /></TableCell></TableRow>}
               {!isLoading && data?.items?.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="py-0">
                   <EmptyState type="generic" title="Nenhum parceiro encontrado" description="Cadastre uma loja parceira para começar." />

@@ -292,7 +292,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Loading / Empty */}
-      {isLoading && <p className="text-center py-8 text-muted-foreground">Carregando...</p>}
+      {isLoading && (isMobile ? <DataSkeleton variant="card" rows={4} /> : <DataSkeleton variant="table-row" rows={5} />)}
       {!isLoading && data?.items?.length === 0 && <EmptyState type="generic" title="Nenhum cliente encontrado" description="Cadastre clientes ou aguarde o primeiro acesso." />}
 
       {/* Mobile: Card list */}
