@@ -122,7 +122,7 @@ export default function CustomerRedemptionsPage() {
     <>
       <div className="max-w-lg mx-auto pb-4">
         {/* Header with gradient */}
-        <div className="rounded-b-3xl px-5 pt-5 pb-6 mb-4" style={{ background: `linear-gradient(135deg, ${primary}, ${primary}dd)` }}>
+        <div className="rounded-b-3xl px-5 pt-5 pb-6 mb-4" style={{ background: `linear-gradient(135deg, ${primary}, ${brandAlpha(primary, 0.87)})` }}>
           <div className="flex items-center gap-3 mb-4">
             <h1 className="text-white text-xl font-bold" style={{ fontFamily: fontHeading }}>
               Meus Resgates
