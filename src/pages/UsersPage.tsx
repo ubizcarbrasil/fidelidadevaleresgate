@@ -169,13 +169,17 @@ function BrandUsersView({ brandId }: { brandId: string }) {
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
+      if (password && password.length < 6) throw new Error("Senha deve ter no mínimo 6 caracteres");
+      if (password && password !== confirmPassword) throw new Error("As senhas não coincidem");
       const { data, error } = await supabase.functions.invoke("invite-brand-user", {
         body: {
           email,
           full_name: fullName,
+          password: password || undefined,
           role: inviteRole,
           brand_id: brandId,
           branch_id: inviteBranchId || undefined,
+          permissions: Array.from(selectedPerms),
         },
       });
       if (error) throw error;
@@ -184,11 +188,10 @@ function BrandUsersView({ brandId }: { brandId: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["brand-team", brandId] });
-      toast.success("Usuário convidado com sucesso!");
+      toast.success("Acesso criado com sucesso!");
       setInviteOpen(false);
-      setEmail("");
-      setFullName("");
-      setInviteBranchId("");
+      setEmail(""); setFullName(""); setPassword(""); setConfirmPassword("");
+      setInviteBranchId(""); setSelectedPerms(new Set());
     },
     onError: (e: Error) => toast.error(e.message),
   });
