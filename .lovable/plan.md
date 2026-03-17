@@ -1,30 +1,40 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico e Plano
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### O que é a página "Regras de Fidelidade"
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Esta página permite ao **Administrador da Marca** configurar as regras base de acúmulo de pontos do programa de fidelidade. Ela define:
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+- **Pontos por R$1** — quantos pontos o cliente ganha a cada real gasto
+- **R$ por ponto** — quanto vale cada ponto em reais (para resgates)
+- **Compra mínima** — valor mínimo de compra para acumular pontos
+- **Limites anti-fraude** — máximo de pontos por compra, por cliente/dia e por loja/dia
+- **Exigir comprovante** — se o operador precisa informar código do recibo
+- **Regra customizada por loja** — se parceiros podem definir taxas próprias (dentro de limites)
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Em resumo, é a **configuração central do motor de pontuação** da marca.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+### Causa do Erro
+
+O crash `A <Select.Item /> must have a value prop that is not an empty string` ocorre na **linha 179** de `PointsRulesPage.tsx`:
+
+```tsx
+<SelectItem value="">Todas</SelectItem>
+```
+
+O componente Radix `Select.Item` não aceita string vazia como `value`. Quando a página renderiza o seletor de Branch, este item causa o crash imediato.
+
+### Correção
+
+Na linha 179 de `src/pages/PointsRulesPage.tsx`:
+- Trocar `value=""` por `value="__all__"` (sentinela)
+- No `onValueChange`, converter `"__all__"` de volta para `""` no estado do form
+
+**Arquivo:** `src/pages/PointsRulesPage.tsx`
+- Linha 176: Ajustar o `value` do Select para usar `form.branch_id || "__all__"`
+- Linha 176: No `onValueChange`, converter: `v => updateField("branch_id", v === "__all__" ? "" : v)`
+- Linha 179: Trocar `value=""` para `value="__all__"`
+
+Alteração mínima, apenas 3 linhas no mesmo bloco.
+
