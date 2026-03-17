@@ -29,22 +29,22 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 1",
     phaseIcon: Building2,
     phaseColor: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-    title: "Criar a Empresa (Tenant)",
-    description: "Cada empreendedor que contrata o SaaS é representado por uma Empresa.",
+    title: "Criar uma Empresa",
+    description: "Cada empreendedor que contrata a plataforma é representado por uma Empresa.",
     route: "/tenants/new",
     steps: [
-      "Acesse o menu lateral → Estrutura → Empresas.",
+      "No menu lateral, acesse Organização → Empresas.",
       "Clique em 'Nova Empresa'.",
       "Preencha o nome da empresa (ex: 'Grupo Vale Resgate Goiânia').",
       "Preencha o identificador (slug único, ex: 'vale-resgate-gyn').",
-      "Selecione o plano (Free, Starter, Pro ou Enterprise).",
+      "Selecione o plano desejado.",
       "Marque se a empresa deve iniciar ativa.",
       "Clique em 'Salvar'.",
     ],
     tips: [
-      "O identificador é usado internamente para organizar dados. Use letras minúsculas e hífens.",
+      "O identificador é usado internamente. Use letras minúsculas e hífens.",
       "Uma empresa pode ter várias marcas.",
-      "Se você usar o wizard da Fase 2 (Nova Empresa), o Tenant é criado automaticamente. Esta fase só é necessária se quiser criar Tenants avulsos.",
+      "Se usar o assistente da Fase 2 (Nova Marca), a Empresa é criada automaticamente.",
     ],
   },
   {
@@ -52,24 +52,23 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 2",
     phaseIcon: Rocket,
     phaseColor: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
-    title: "Provisionar Nova Marca (Wizard Automático)",
-    description: "O wizard cria automaticamente: Tenant, Marca, Cidade, Domínio e Usuários de teste — tudo de uma vez.",
+    title: "Criar Nova Marca (Assistente Automático)",
+    description: "O assistente cria automaticamente: Empresa, Marca, Cidade, Domínio e Usuários de teste.",
     route: "/provision-brand",
     steps: [
-      "Acesse o menu lateral → Estrutura → Nova Empresa.",
-      "Preencha o nome da empresa (ex: 'Vale Resgate Goiânia') — o slug é gerado automaticamente.",
+      "No menu lateral, acesse Organização → Nova Marca.",
+      "Preencha o nome da marca (ex: 'Vale Resgate Goiânia') — o slug é gerado automaticamente.",
       "Clique em 'Próximo'.",
       "Preencha o nome da primeira cidade (ex: 'Goiânia Centro') e o estado.",
       "Clique em 'Próximo'.",
       "(Opcional) Insira a URL do logo e escolha as cores primária e secundária.",
       "Defina os pontos iniciais do cliente de teste.",
-      "Clique em 'Revisar', confira os dados e clique em 'Criar Empresa'.",
+      "Clique em 'Revisar', confira os dados e clique em 'Criar Marca'.",
     ],
     tips: [
-      "Não é necessário criar o Tenant antes — o wizard já cria tudo automaticamente (Tenant + Marca + Cidade + Domínio).",
-      "O wizard cria automaticamente 3 contas de teste: Admin, Cliente (com pontos iniciais) e Parceiro. Senha padrão: 123456.",
-      "Um template de Home Page com seções de demonstração é aplicado automaticamente.",
-      "Após o provisionamento, você pode acessar o painel da marca com as credenciais de teste.",
+      "Não é necessário criar a Empresa antes — o assistente já cria tudo automaticamente.",
+      "São criadas 3 contas de teste: Administrador, Cliente (com pontos iniciais) e Parceiro. Senha padrão: 123456.",
+      "Um modelo de página inicial com seções de demonstração é aplicado automaticamente.",
     ],
   },
   {
@@ -77,21 +76,20 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 3",
     phaseIcon: Settings2,
     phaseColor: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-    title: "Configurar Kit Inicial da Plataforma",
-    description: "Defina os templates e configurações padrão aplicados a cada nova marca.",
+    title: "Configurar o Starter Kit",
+    description: "Defina as configurações padrão aplicadas a cada nova marca criada.",
     route: "/starter-kit",
     steps: [
-      "Acesse o menu lateral → Plataforma → Kit Inicial.",
-      "Defina o número de Seções Demo que serão criadas ao provisionar uma nova empresa.",
-      "Defina o número de Parceiros Demo que serão criados para popular a vitrine inicial.",
-      "Configure os Pontos Iniciais que o cliente teste receberá.",
-      "Selecione o Template de Home Padrão que será aplicado automaticamente nas novas empresas.",
+      "No menu lateral, acesse Configurações → Starter Kit.",
+      "Defina o número de seções de demonstração criadas ao provisionar uma nova marca.",
+      "Defina o número de parceiros de demonstração para popular a vitrine inicial.",
+      "Configure os pontos iniciais que o cliente teste receberá.",
+      "Selecione o modelo de página inicial padrão.",
       "Clique em 'Salvar Configuração'.",
     ],
     tips: [
-      "O Kit Inicial é aplicado toda vez que uma nova marca é provisionada pelo wizard.",
+      "O Starter Kit é aplicado toda vez que uma nova marca é criada pelo assistente.",
       "Você pode alterar o kit a qualquer momento — as mudanças valem para futuras marcas.",
-      "Se nenhum template for selecionado, o sistema usa o padrão interno.",
     ],
   },
   {
@@ -103,18 +101,15 @@ const journeySteps: JourneyStep[] = [
     description: "Controle quais funcionalidades cada marca pode usar.",
     route: "/modules",
     steps: [
-      "Acesse → Plataforma → Funcionalidades para cadastrar ou editar módulos globais (ex: Ofertas, Pontos, Catálogo).",
-      "Módulos marcados como 'Core' ficam sempre ativos e não podem ser desativados por marca.",
-      "Acesse → Usuários & Permissões → Módulos da Marca para ativar/desativar módulos específicos por marca.",
+      "Acesse Configurações → Módulos para cadastrar ou editar funcionalidades globais (ex: Ofertas, Pontos, Catálogo).",
+      "Módulos marcados como 'Essencial' ficam sempre ativos e não podem ser desativados por marca.",
+      "Acesse Configurações → Gerenciar Módulos para ativar/desativar módulos por marca.",
       "Selecione a marca desejada e ligue/desligue cada módulo conforme o plano contratado.",
-      "Acesse → Usuários & Permissões → Permissões por Empresa para controlar ações granulares.",
+      "Acesse Equipe & Acessos → Permissão de Parceiros para controlar ações detalhadas.",
       "Defina o que parceiros de cada marca podem fazer: criar ofertas, emitir pontos, editar perfil, etc.",
-      "Revise as permissões sempre que adicionar novos módulos ou parceiros.",
     ],
     tips: [
       "Módulos desativados escondem automaticamente os menus correspondentes no painel do empreendedor e dos parceiros.",
-      "O transbordo de permissões permite definir regras por nível hierárquico (Marca → Parceiro).",
-      "Módulos 'Core' garantem que funcionalidades essenciais nunca sejam desligadas acidentalmente.",
       "Configure permissões antes de aprovar parceiros para garantir que o acesso esteja correto desde o início.",
     ],
   },
@@ -123,24 +118,21 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 5",
     phaseIcon: MapPin,
     phaseColor: "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
-    title: "Gerenciar Cidades (Filiais)",
+    title: "Gerenciar Cidades",
     description: "Cidades representam as regiões onde a marca opera.",
     route: "/branches",
     steps: [
-      "Acesse → Estrutura → Cidades para ver todas as cidades da marca.",
-      "A cidade principal já foi criada pelo wizard. Para adicionar mais, clique em 'Nova Cidade'.",
+      "Acesse Organização → Cidades para ver todas as cidades da marca.",
+      "A cidade principal já foi criada pelo assistente. Para adicionar mais, clique em 'Nova Cidade'.",
       "Preencha: nome, slug, cidade, estado e fuso horário.",
-      "Informe latitude e longitude para ativar a detecção automática de proximidade no app do cliente.",
-      "Configure o raio de cobertura ou deixe o sistema usar a fórmula de Haversine para encontrar a cidade mais próxima.",
-      "Ative ou desative cidades conforme a operação do empreendedor — cidades inativas ficam ocultas no app.",
-      "Use 'Clonar Cidade' para duplicar todas as configurações (regras de pontos, parceiros, etc.) de uma cidade existente.",
-      "Revise as configurações avançadas em branch_settings_json para personalizar comportamentos por cidade.",
+      "Informe latitude e longitude para ativar a detecção automática de proximidade no app.",
+      "Ative ou desative cidades conforme a operação — cidades inativas ficam ocultas no app.",
+      "Use Organização → Duplicar Região para copiar todas as configurações de uma cidade existente.",
     ],
     tips: [
-      "Cada cidade pode ter suas próprias regras de pontos independentes da regra geral da marca.",
-      "A geolocalização (lat/lng) permite que o app do cliente detecte automaticamente a cidade mais próxima via GPS.",
-      "No app do cliente, as cidades são organizadas por Estado > Cidade — o termo 'Filial' não aparece para o usuário final.",
-      "Clonar uma cidade é ideal para expandir a operação para novas regiões mantendo as mesmas configurações.",
+      "Cada cidade pode ter suas próprias regras de pontos independentes.",
+      "A geolocalização permite que o app detecte automaticamente a cidade mais próxima via GPS.",
+      "Duplicar uma cidade é ideal para expandir para novas regiões mantendo as mesmas configurações.",
     ],
   },
   {
@@ -153,14 +145,14 @@ const journeySteps: JourneyStep[] = [
     route: "/stores",
     steps: [
       "O parceiro acessa a tela de login e clica em 'Quero ser parceiro'.",
-      "Ele preenche o wizard de 4 etapas: Dados, Endereço, Mídia/Docs e Acesso.",
-      "Acesse → Gestão Comercial → Parceiros e filtre pela aba 'Pendentes'.",
+      "Ele preenche o cadastro em 4 etapas: Dados, Endereço, Mídia/Documentos e Acesso.",
+      "Acesse Gestão Comercial → Parceiros e filtre pela aba 'Pendentes'.",
       "Clique em 'Revisar' para ver os dados e clique em 'Aprovar' ou 'Rejeitar'.",
-      "Após aprovação, o parceiro acessa o Portal do Parceiro e pode criar ofertas.",
+      "Após aprovação, o parceiro acessa o Painel do Parceiro e pode criar ofertas.",
     ],
     tips: [
-      "Parceiros aprovados recebem automaticamente o papel 'store_admin'.",
-      "Você pode importar parceiros em lote via → Operações → Importar Planilha.",
+      "Parceiros aprovados recebem automaticamente o papel de administrador da loja.",
+      "Você pode importar parceiros em lote via Inteligência & Dados → Importação de Dados.",
     ],
   },
   {
@@ -172,11 +164,11 @@ const journeySteps: JourneyStep[] = [
     description: "Ofertas são os descontos que os clientes resgatam nos parceiros.",
     route: "/offers",
     steps: [
-      "Acesse → Operações → Ofertas para ver todas as ofertas da marca.",
-      "Os parceiros criam ofertas pelo Portal do Parceiro (wizard passo a passo).",
+      "Acesse Gestão Comercial → Ofertas para ver todas as ofertas da marca.",
+      "Os parceiros criam ofertas pelo Painel do Parceiro (assistente passo a passo).",
       "Cada oferta define: título, descrição, valor de resgate, validade, limites de uso.",
       "Ofertas podem ser do tipo: Desconto %, Cashback, Brinde, Valor Fixo.",
-      "Monitore resgates em → Operações → Resgates.",
+      "Monitore resgates em Gestão Comercial → Resgates.",
     ],
   },
   {
@@ -184,19 +176,19 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 8",
     phaseIcon: Coins,
     phaseColor: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
-    title: "Configurar Programa de Pontos",
+    title: "Configurar o Programa de Fidelidade",
     description: "Defina como os clientes acumulam e usam pontos.",
     route: "/points-rules",
     steps: [
-      "Acesse → Programa de Pontos → Regras de Pontos.",
+      "Acesse Programa de Fidelidade → Regras de Fidelidade.",
       "Defina a taxa base: quantos pontos por R$1 gasto.",
       "Configure limites: máximo por compra, por dia (cliente) e por dia (parceiro).",
       "Defina o valor em dinheiro de cada ponto (ex: 1 ponto = R$0,01).",
       "Opcionalmente, permita que parceiros criem regras próprias (com ou sem aprovação).",
     ],
     tips: [
-      "Use → Programa de Pontos → Extrato para auditar todas as movimentações.",
-      "Regras personalizadas dos parceiros podem exigir aprovação do admin.",
+      "Use Programa de Fidelidade → Extrato de Fidelidade para auditar todas as movimentações.",
+      "Regras personalizadas dos parceiros podem exigir aprovação do administrador.",
     ],
   },
   {
@@ -204,13 +196,13 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 9",
     phaseIcon: Zap,
     phaseColor: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-    title: "Aprovar Solicitações de Emissor",
+    title: "Aprovar Solicitações de Upgrade",
     description: "Parceiros do tipo Receptora podem solicitar virar Emissores de pontos.",
     route: "/emitter-requests",
     steps: [
-      "O parceiro acessa o Portal e clica em 'Solicitar Ativação como Emissor'.",
+      "O parceiro acessa o Painel do Parceiro e clica em 'Solicitar Ativação como Emissor'.",
       "Ele escolhe o tipo desejado (Emissora ou Mista) e envia uma justificativa.",
-      "A solicitação aparece em → Operações → Solicitações de Emissor.",
+      "A solicitação aparece em Aprovações → Solicitações de Upgrade.",
       "Revise a justificativa e clique em 'Aprovar' ou 'Rejeitar'.",
       "Ao aprovar, o tipo do parceiro é atualizado automaticamente.",
     ],
@@ -224,14 +216,14 @@ const journeySteps: JourneyStep[] = [
     description: "Monte a tela inicial, banners e páginas personalizadas do aplicativo.",
     route: "/templates",
     steps: [
-      "Acesse → Plataforma → Seções da Home para configurar as seções da tela inicial.",
-      "Acesse → Identidade & Vitrine → Central de Propagandas para criar banners com agendamento.",
-      "Use o Construtor de Páginas para criar páginas personalizadas.",
-      "Configure ícones e categorias em → Galeria de Ícones.",
-      "Personalize os nomes dos menus em → Nomes e Rótulos.",
+      "Acesse Configurações → Seções Iniciais para configurar as seções da tela inicial.",
+      "Acesse Personalização & Vitrine → Mídia & Banners para criar banners com agendamento.",
+      "Use Personalização & Vitrine → Editor de Páginas para criar páginas personalizadas.",
+      "Configure ícones e categorias em Personalização & Vitrine → Biblioteca de Ícones.",
+      "Personalize os nomes dos menus em Personalização & Vitrine → Nomenclaturas.",
     ],
     tips: [
-      "Use → Plataforma → Modelos de Home para aplicar templates em massa para todas as marcas.",
+      "Use Configurações → Templates para aplicar modelos de página inicial em massa.",
     ],
   },
   {
@@ -243,11 +235,11 @@ const journeySteps: JourneyStep[] = [
     description: "Monitore a base de clientes, resgates e a saúde do negócio.",
     route: "/customers",
     steps: [
-      "Acesse → Operações → Clientes para ver a base de clientes.",
-      "Acesse → Operações → Resgates para acompanhar resgates em tempo real.",
-      "Use → Plataforma → Relatórios para análises consolidadas.",
-      "Acesse → Plataforma → Auditoria para rastrear todas as ações dos usuários.",
-      "Envie notificações push em → Operações → Enviar Notificação.",
+      "Acesse Gestão Comercial → Clientes para ver a base de clientes.",
+      "Acesse Gestão Comercial → Resgates para acompanhar resgates em tempo real.",
+      "Use Inteligência & Dados → Relatórios para análises consolidadas.",
+      "Acesse Inteligência & Dados → Auditoria para rastrear todas as ações dos usuários.",
+      "Envie notificações push em Gestão Comercial → Enviar Notificação.",
     ],
   },
   {
@@ -259,14 +251,14 @@ const journeySteps: JourneyStep[] = [
     description: "Teste como o cliente final vê o aplicativo da marca.",
     route: "/customer-preview",
     steps: [
-      "Acesse a rota /customer-preview no navegador.",
+      "Acesse Organização → Gestão de Acessos e clique em 'Visualizar App'.",
       "Selecione a cidade desejada.",
       "Navegue pela tela inicial, ofertas, carteira e perfil.",
       "Teste o fluxo de resgate: escolha uma oferta → gere o código de resgate.",
       "Verifique se as cores, logo e seções estão corretas.",
     ],
     tips: [
-      "Use as credenciais de teste criadas pelo wizard para testar como cliente.",
+      "Use as credenciais de teste criadas pelo assistente para testar como cliente.",
       "O app do cliente é um PWA — pode ser instalado no celular via 'Adicionar à Tela Inicial'.",
     ],
   },
@@ -282,11 +274,10 @@ export default function RootJourneyGuidePage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <PageHeader
-        title="Jornada Completa do ROOT"
+        title="Guia Completo — Central de Comando"
         description="Passo a passo para configurar e operar a plataforma do zero até a operação completa."
       />
 
-      {/* Summary overview */}
       <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10">
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
@@ -307,9 +298,7 @@ export default function RootJourneyGuidePage() {
         </CardContent>
       </Card>
 
-      {/* Timeline */}
       <div className="relative space-y-3">
-        {/* Vertical line */}
         <div className="absolute left-[22px] top-4 bottom-4 w-0.5 bg-border" />
 
         {journeySteps.map((step, index) => {
@@ -318,7 +307,6 @@ export default function RootJourneyGuidePage() {
 
           return (
             <div key={step.id} className="relative pl-12">
-              {/* Timeline dot */}
               <div className={`absolute left-2 top-4 h-[18px] w-[18px] rounded-full border-2 border-background flex items-center justify-center z-10 ${step.phaseColor}`}>
                 <span className="text-[9px] font-bold">{step.id}</span>
               </div>
@@ -353,7 +341,6 @@ export default function RootJourneyGuidePage() {
                   <CardContent className="px-4 pb-4 pt-0" onClick={(e) => e.stopPropagation()}>
                     <Separator className="mb-3" />
                     <div className="space-y-3">
-                      {/* Steps */}
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Passos</p>
                         <ol className="space-y-2">
@@ -368,7 +355,6 @@ export default function RootJourneyGuidePage() {
                         </ol>
                       </div>
 
-                      {/* Tips */}
                       {step.tips && step.tips.length > 0 && (
                         <div className="bg-muted/50 rounded-lg p-3">
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">💡 Dicas</p>
@@ -383,7 +369,6 @@ export default function RootJourneyGuidePage() {
                         </div>
                       )}
 
-                      {/* Route shortcut */}
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-xs text-muted-foreground font-mono">{step.route}</span>
                         <Button
