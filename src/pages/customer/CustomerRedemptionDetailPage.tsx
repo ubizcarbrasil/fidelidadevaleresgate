@@ -373,7 +373,7 @@ function ActionButton({ icon, label, bg, color, onClick }: {
 function RuleRow({ icon, children, primary, title }: { icon: React.ReactNode; children: React.ReactNode; primary: string; title: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}15` }}>
+      <div className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.09) }}>
         {icon}
       </div>
       <div>
