@@ -1,73 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Corrigir dados do painel — filtrar métricas por brand_id
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-O hook `useMetric` (linha 32-43 do `Dashboard.tsx`) faz `SELECT count(*)` nas tabelas **sem filtrar por `brand_id`**. Resultado: um admin de marca vê totais globais da plataforma inteira (183 parceiros, 229 ofertas, etc.) em vez dos dados apenas da sua marca.
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-### Solução
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-Refatorar o `useMetric` para aceitar `brandId` e aplicá-lo automaticamente. Todas as chamadas de métricas que operam em tabelas com coluna `brand_id` precisam receber o filtro.
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### Tabelas afetadas e filtros necessários
-
-| Tabela | Tem `brand_id` | Filtrar? |
-|--------|---------------|----------|
-| `tenants` | Não | Não (só ROOT vê) |
-| `brands` | Não (é a própria) | Não (só ROOT/TENANT) |
-| `branches` | Sim | Sim |
-| `stores` | Sim | Sim |
-| `offers` | Sim | Sim |
-| `customers` | Sim | Sim |
-| `redemptions` | Sim | Sim |
-| `vouchers` | Sim | Sim |
-| `earning_events` | Sim | Sim |
-| `store_points_rules` | Sim (via store → brand) | Sim, via join ou subquery |
-| `profiles` | Não diretamente | Manter sem filtro (RLS cuida) |
-
-### Alterações no código
-
-**Arquivo**: `src/pages/Dashboard.tsx`
-
-1. Modificar `useMetric` para aceitar um parâmetro `brandId` opcional e aplicar `.eq("brand_id", brandId)` quando fornecido.
-
-2. Atualizar todas as chamadas (linhas 506-528) para passar `currentBrandId` quando o usuário não for ROOT:
-
-```typescript
-function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
-  return useQuery({
-    queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
-    queryFn: async () => {
-      let q = (supabase.from as any)(table).select("*", { count: "exact", head: true });
-      if (brandId) q = q.eq("brand_id", brandId);
-      if (filter) q = filter(q);
-      const { count } = await q;
-      return count || 0;
-    },
-    enabled,
-  });
-}
-```
-
-3. Aplicar `brandId` nas chamadas:
-```typescript
-const brandFilter = isRoot ? undefined : currentBrandId;
-
-const { data: branches } = useMetric("branches", true, undefined, undefined, brandFilter);
-const { data: storesTotal } = useMetric("stores", true, undefined, undefined, brandFilter);
-const { data: storesActive } = useMetric("stores", true, (q) => q.eq("is_active", true), "active", brandFilter);
-// ... mesmo padrão para offers, customers, redemptions, vouchers, earning_events
-```
-
-4. Para `store_points_rules` (não tem `brand_id` diretamente), filtrar via subquery nos `store_id` da marca, ou deixar como está se RLS já cuida.
-
-5. Aplicar o mesmo filtro nos gráficos `fetchChartData` (linhas 533-549) — adicionar `.eq("brand_id", brandId)` quando não for ROOT.
-
-6. Incluir `brandFilter` na `queryKey` dos gráficos para evitar cache cruzado entre marcas.
-
-### Impacto
-- Corrige os números para refletir apenas os dados da marca do usuário logado
-- ROOT continua vendo dados globais
-- Sem impacto em performance (apenas adiciona um filtro WHERE já indexado)
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
