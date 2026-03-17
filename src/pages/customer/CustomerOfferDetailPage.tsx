@@ -1127,7 +1127,7 @@ function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: React.Compon
       </div>
       <div>
         <p className="text-xs font-semibold">{label}</p>
-        <p className="text-xs" style={{ color: `${fg}50` }}>{value}</p>
+        <p className="text-xs" style={{ color: brandAlpha(fg, 0.31) }}>{value}</p>
       </div>
     </div>
   );
