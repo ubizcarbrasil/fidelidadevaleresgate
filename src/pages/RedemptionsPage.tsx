@@ -40,7 +40,7 @@ export default function RedemptionsPage() {
         <p className="text-muted-foreground">Histórico de resgates por filial</p>
       </div>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por token..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar por token..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
         <CardContent className="p-0">
