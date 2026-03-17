@@ -498,7 +498,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                                 <p className="text-sm font-medium truncate" style={{ color: fg }}>
                                   {getReasonLabel(entry)}
                                 </p>
-                                <p className="text-[11px] truncate" style={{ color: `${fg}50` }}>
+                                <p className="text-[11px] truncate" style={{ color: brandAlpha(fg, 0.31) }}>
                                   {getSubtitle(entry)}
                                 </p>
                               </div>
