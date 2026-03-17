@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, ScrollText, UserCheck, RefreshCw } from "lucide-react";
+import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
