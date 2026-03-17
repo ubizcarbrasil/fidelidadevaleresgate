@@ -45,6 +45,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "affiliate_clicks_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "affiliate_clicks_deal_id_fkey"
             columns: ["deal_id"]
             isOneToOne: false
@@ -972,6 +979,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "catalog_cart_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "catalog_cart_orders_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -1170,6 +1184,13 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campaign_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1381,6 +1402,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "crm_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       crm_events: {
@@ -1437,6 +1465,13 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1627,6 +1662,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customer_click_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customer_favorite_stores: {
@@ -1654,6 +1696,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_favorite_stores_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1697,6 +1746,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_favorites_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1748,6 +1804,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1839,6 +1902,13 @@ export type Database = {
             referencedRelation: "crm_contacts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customers_crm_contact_id_fkey"
+            columns: ["crm_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       earning_events: {
@@ -1917,6 +1987,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "earning_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -2612,6 +2689,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "machine_ride_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       machine_rides: {
@@ -3300,6 +3384,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "points_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       points_rules: {
@@ -3495,6 +3586,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "push_subscriptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rate_limit_entries: {
@@ -3597,6 +3695,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -4306,6 +4411,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "store_reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "store_reviews_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
@@ -4981,6 +5093,340 @@ export type Database = {
       }
     }
     Views: {
+      audit_logs_safe: {
+        Row: {
+          action: string | null
+          actor_user_id: string | null
+          changes_json: Json | null
+          created_at: string | null
+          details_json: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string | null
+          scope_id: string | null
+          scope_type: string | null
+        }
+        Insert: {
+          action?: string | null
+          actor_user_id?: string | null
+          changes_json?: Json | null
+          created_at?: string | null
+          details_json?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string | null
+          scope_id?: string | null
+          scope_type?: string | null
+        }
+        Update: {
+          action?: string | null
+          actor_user_id?: string | null
+          changes_json?: Json | null
+          created_at?: string | null
+          details_json?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string | null
+          scope_id?: string | null
+          scope_type?: string | null
+        }
+        Relationships: []
+      }
+      brand_api_keys_safe: {
+        Row: {
+          api_key_prefix: string | null
+          brand_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          is_active: boolean | null
+          label: string | null
+          last_used_at: string | null
+        }
+        Insert: {
+          api_key_prefix?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          label?: string | null
+          last_used_at?: string | null
+        }
+        Update: {
+          api_key_prefix?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          label?: string | null
+          last_used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_api_keys_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_api_keys_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts_safe: {
+        Row: {
+          branch_id: string | null
+          brand_id: string | null
+          cpf_masked: string | null
+          created_at: string | null
+          customer_id: string | null
+          email_masked: string | null
+          external_id: string | null
+          first_ride_at: string | null
+          gender: string | null
+          id: string | null
+          is_active: boolean | null
+          last_ride_at: string | null
+          name: string | null
+          os_platform: string | null
+          phone_masked: string | null
+          ride_count: number | null
+          source: string | null
+          tags_json: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id?: string | null
+          cpf_masked?: never
+          created_at?: string | null
+          customer_id?: string | null
+          email_masked?: never
+          external_id?: string | null
+          first_ride_at?: string | null
+          gender?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_ride_at?: string | null
+          name?: string | null
+          os_platform?: string | null
+          phone_masked?: never
+          ride_count?: number | null
+          source?: string | null
+          tags_json?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string | null
+          cpf_masked?: never
+          created_at?: string | null
+          customer_id?: string | null
+          email_masked?: never
+          external_id?: string | null
+          first_ride_at?: string | null
+          gender?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_ride_at?: string | null
+          name?: string | null
+          os_platform?: string | null
+          phone_masked?: never
+          ride_count?: number | null
+          source?: string | null
+          tags_json?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers_safe: {
+        Row: {
+          branch_id: string | null
+          brand_id: string | null
+          created_at: string | null
+          crm_sync_status: string | null
+          customer_tier: string | null
+          id: string | null
+          is_active: boolean | null
+          money_balance: number | null
+          name: string | null
+          phone_masked: string | null
+          points_balance: number | null
+          ride_count: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          crm_sync_status?: string | null
+          customer_tier?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          money_balance?: number | null
+          name?: string | null
+          phone_masked?: never
+          points_balance?: number | null
+          ride_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          crm_sync_status?: string | null
+          customer_tier?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          money_balance?: number | null
+          name?: string | null
+          phone_masked?: never
+          points_balance?: number | null
+          ride_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles_safe: {
+        Row: {
+          avatar_url: string | null
+          branch_id: string | null
+          brand_id: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          selected_branch_id: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          selected_branch_id?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          selected_branch_id?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_selected_branch_id_fkey"
+            columns: ["selected_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_brands_safe: {
         Row: {
           created_at: string | null
@@ -5112,6 +5558,97 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redemptions_safe: {
+        Row: {
+          branch_id: string | null
+          brand_id: string | null
+          created_at: string | null
+          credit_value_applied: number | null
+          customer_id: string | null
+          expires_at: string | null
+          id: string | null
+          offer_id: string | null
+          offer_snapshot_json: Json | null
+          purchase_value: number | null
+          status: Database["public"]["Enums"]["redemption_status"] | null
+          token: string | null
+          used_at: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          credit_value_applied?: number | null
+          customer_id?: string | null
+          expires_at?: string | null
+          id?: string | null
+          offer_id?: string | null
+          offer_snapshot_json?: Json | null
+          purchase_value?: number | null
+          status?: Database["public"]["Enums"]["redemption_status"] | null
+          token?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string | null
+          created_at?: string | null
+          credit_value_applied?: number | null
+          customer_id?: string | null
+          expires_at?: string | null
+          id?: string | null
+          offer_id?: string | null
+          offer_snapshot_json?: Json | null
+          purchase_value?: number | null
+          status?: Database["public"]["Enums"]["redemption_status"] | null
+          token?: string | null
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
             referencedColumns: ["id"]
           },
         ]
