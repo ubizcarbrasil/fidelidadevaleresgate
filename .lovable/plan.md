@@ -1,30 +1,54 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+Entendi o problema. O botão **"Sincronizar CRM"** na página de Clientes faz o caminho **Clientes → CRM** (envia clientes com status PENDING para a tabela `crm_contacts`). Porém, você quer o caminho **inverso: CRM → Clientes** — ou seja, os contatos que você subiu no CRM devem aparecer como clientes no programa de fidelidade.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Estado atual no banco
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+- **Ubiz Resgata**: 2 clientes (`crm_sync_status = NONE`), **0 contatos CRM**
+- **Urbano Norte**: 7.659 contatos CRM, dos quais **7.657 não têm customer vinculado**
+- O botão "Sincronizar CRM" **só faz o sentido inverso** (customer → crm_contact) e apenas para status `PENDING`
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+### Causa raiz
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+Não existe funcionalidade de **importar contatos CRM como clientes**. O fluxo atual é unidirecional.
+
+---
+
+## Plano: Sincronização CRM → Clientes
+
+### 1. Adicionar lógica reversa no botão "Sincronizar CRM" (`CustomersPage.tsx`)
+
+Atualmente o `syncToCrmMutation` busca customers com `crm_sync_status = PENDING` e cria `crm_contacts`. Vamos adicionar uma **segunda etapa** que faz o inverso:
+
+1. Buscar `crm_contacts` da marca que **não possuem `customer_id`** (contatos órfãos)
+2. Para cada contato, criar um registro em `customers` com:
+   - `name`, `phone`, `cpf`, `email` do contato CRM
+   - `brand_id` e `branch_id` do contato (ou branch padrão da marca)
+   - `crm_contact_id` apontando para o contato
+   - `crm_sync_status = "SYNCED"`
+   - `customer_tier` calculado pelo `ride_count`
+3. Atualizar o `crm_contact` com o `customer_id` recém-criado (back-link)
+4. Exibir toast com contagem: "X contatos importados do CRM"
+
+### 2. Tratar contatos sem branch
+
+Contatos CRM podem ter `branch_id = null`. Nesse caso, usar a **primeira filial da marca** como fallback (já carregada na página via query de branches).
+
+### 3. Melhorar feedback do botão
+
+- Renomear o toast para indicar ambas as direções
+- Se não houver pendências em nenhum sentido, exibir "Tudo sincronizado!"
+
+### Arquivo alterado
+
+- `src/pages/CustomersPage.tsx` — mutation `syncToCrmMutation` (linhas 82-120)
+
+### Resultado esperado
+
+Ao clicar "Sincronizar CRM", o sistema:
+1. Envia customers `PENDING` → crm_contacts (existente)
+2. **Importa crm_contacts órfãos → customers** (novo)
+3. Ambas as tabelas ficam vinculadas via `customer_id` / `crm_contact_id`
+
