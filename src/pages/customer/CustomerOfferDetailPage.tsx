@@ -445,7 +445,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     )}
                     {hasWeekdayRestriction && (
                       <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+                        <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
                           <CalendarDays className="h-4 w-4" style={{ color: primary }} />
                         </div>
                         <div>
