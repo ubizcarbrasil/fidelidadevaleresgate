@@ -212,7 +212,7 @@ export default function GanhaGanhaStoreSummaryPage({ store: externalStore }: Pro
   if (isStandalone) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Resumo Cashback por Loja" subtitle="Consumo Ganha-Ganha por parceiro e período" />
+        <PageHeader title="Resumo Cashback por Loja" description="Consumo Ganha-Ganha por parceiro e período" />
         {content}
       </div>
     );
