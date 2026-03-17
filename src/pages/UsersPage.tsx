@@ -64,6 +64,69 @@ function BrandUsersView({ brandId }: { brandId: string }) {
     },
   });
 
+  const { data: allPermissions } = useQuery({
+    queryKey: ["permissions-all-invite"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("permissions")
+        .select("id, key, module, display_name, order_index")
+        .eq("is_active", true)
+        .order("module")
+        .order("order_index");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const MODULE_LABELS: Record<string, string> = {
+    customers: "Clientes", loyalty: "Fidelidade", offers: "Ofertas",
+    redemptions: "Resgates", reports: "Relatórios", settings: "Configurações",
+    stores: "Parceiros", users: "Usuários", vouchers: "Vouchers",
+    roles: "Papéis", branches: "Cidades",
+  };
+
+  const PERM_ACTION_LABELS: Record<string, string> = {
+    create: "Criar", read: "Visualizar", update: "Editar", delete: "Excluir",
+    approve: "Aprovar", assign: "Atribuir", revoke: "Revogar", redeem: "Resgatar",
+    cancel: "Cancelar", view: "Visualizar", invite: "Convidar", deactivate: "Desativar",
+    earn_points: "Pontuar",
+  };
+
+  const groupedPerms = useMemo(() => {
+    if (!allPermissions) return {};
+    const excluded = ["tenants", "brands", "domains"];
+    const filtered = allPermissions.filter(p => !excluded.includes(p.module));
+    const groups: Record<string, typeof filtered> = {};
+    for (const p of filtered) {
+      if (!groups[p.module]) groups[p.module] = [];
+      groups[p.module].push(p);
+    }
+    return groups;
+  }, [allPermissions]);
+
+  const togglePerm = (key: string) => {
+    setSelectedPerms(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleModule = (keys: string[]) => {
+    setSelectedPerms(prev => {
+      const next = new Set(prev);
+      const allChecked = keys.every(k => next.has(k));
+      if (allChecked) keys.forEach(k => next.delete(k));
+      else keys.forEach(k => next.add(k));
+      return next;
+    });
+  };
+
+  const getActionLabel = (key: string) => {
+    const action = key.split(".").pop() || key;
+    return PERM_ACTION_LABELS[action] || action;
+  };
+
   const { data: brandUsers, isLoading } = useQuery({
     queryKey: ["brand-team", brandId],
     queryFn: async () => {
