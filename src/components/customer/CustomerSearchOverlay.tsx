@@ -260,8 +260,8 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     onClick={() => setSelectedSegmentId(seg.id)}
                     className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
                     style={{
-                      backgroundColor: `${fg}06`,
-                      color: `${fg}60`,
+                       backgroundColor: brandAlpha(fg, 0.024),
+                       color: brandAlpha(fg, 0.37),
                     }}
                   >
                     {seg.name}
