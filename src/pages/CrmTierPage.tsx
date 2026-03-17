@@ -60,7 +60,7 @@ export default function CrmTierPage() {
                     <XAxis type="number" />
                     <YAxis type="category" dataKey="name" width={90} />
                     <Tooltip
-                      formatter={(value: number) => [value, "Contatos"]}
+                      formatter={(value: any) => [value, "Contatos"]}
                       contentStyle={{ borderRadius: "8px" }}
                     />
                     <Bar dataKey="count" radius={[0, 4, 4, 0]}>

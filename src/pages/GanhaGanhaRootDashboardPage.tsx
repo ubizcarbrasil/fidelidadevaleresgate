@@ -248,7 +248,7 @@ export default function GanhaGanhaRootDashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="month" className="text-xs fill-muted-foreground" tick={{ fontSize: 11 }} />
                 <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 11 }} tickFormatter={v => `R$${v}`} />
-                <Tooltip formatter={(v: number) => formatMoney(v)} />
+                <Tooltip formatter={(v: any) => formatMoney(Number(v))} />
                 <Legend />
                 <Area type="monotone" dataKey="Fat. Geração" stroke="hsl(var(--chart-1))" fill="url(#rootColorEarn)" strokeWidth={2} />
                 <Area type="monotone" dataKey="Fat. Resgate" stroke="hsl(var(--chart-2))" fill="url(#rootColorRedeem)" strokeWidth={2} />

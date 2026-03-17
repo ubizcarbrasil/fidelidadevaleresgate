@@ -916,8 +916,8 @@ function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; date
                   <Tooltip
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
                     labelFormatter={(v) => `Data: ${formatTick(v as string)}`}
-                    formatter={(value: number, name: string) => [
-                      name === "Faturamento R$" ? `R$ ${value.toFixed(2)}` : value,
+                    formatter={(value: any, name: any) => [
+                      name === "Faturamento R$" ? `R$ ${Number(value).toFixed(2)}` : value,
                       name,
                     ]}
                   />

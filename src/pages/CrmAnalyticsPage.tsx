@@ -133,7 +133,7 @@ export default function CrmAnalyticsPage() {
                     <BarChart data={tierDist}>
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={(v: number) => [v, "Contatos"]} />
+                      <Tooltip formatter={(v: any) => [v, "Contatos"]} />
                       <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                         {tierDist.map((t) => <Cell key={t.name} fill={t.color} />)}
                       </Bar>
