@@ -131,7 +131,7 @@ export default function CustomerProfilePage() {
                 >
                   <div>
                     <span className="font-semibold" style={{ color: isSelected ? primary : fg }}>{branch.name}</span>
-                    {branch.city && <span className="ml-1.5 text-xs" style={{ color: `${fg}40` }}>· {branch.city}</span>}
+                    {branch.city && <span className="ml-1.5 text-xs" style={{ color: brandAlpha(fg, 0.25) }}>· {branch.city}</span>}
                   </div>
                   {isSelected && (
                     <div
