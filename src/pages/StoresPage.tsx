@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Settings, Check, X, Eye, Clock, FileText, Store } from "lucide-react";
+import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -242,7 +243,11 @@ export default function StoresPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum parceiro encontrado</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="py-0">
+                  <EmptyState type="generic" title="Nenhum parceiro encontrado" description="Cadastre uma loja parceira para começar." />
+                </TableCell></TableRow>
+              )}
               {data?.items?.map(s => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">

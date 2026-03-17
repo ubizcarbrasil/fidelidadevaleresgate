@@ -36,11 +36,14 @@ function getPeriodDays(period: PeriodKey): number {
   return period === "today" ? 1 : period === "7d" ? 7 : 30;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase.from() requires dynamic table names here
+const fromTable = (table: string) => (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
+
 function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
   return useQuery({
     queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
     queryFn: async () => {
-      let q = (supabase.from as any)(table).select("*", { count: "exact", head: true });
+      let q = fromTable(table).select("*", { count: "exact", head: true });
       if (brandId) q = q.eq("brand_id", brandId);
       if (filter) q = filter(q);
       const { count } = await q;
@@ -155,8 +158,8 @@ function BrandQuickLinks() {
     enabled: !!currentBrandId,
   });
 
-  const settings = brand?.brand_settings_json as any;
-  const testAccounts = settings?.test_accounts as { email: string; role: string; is_active: boolean }[] | undefined;
+  const settings = brand?.brand_settings_json as Record<string, unknown> | null;
+  const testAccounts = (settings?.test_accounts ?? undefined) as { email: string; role: string; is_active: boolean }[] | undefined;
   const origin = window.location.origin;
   const customDomain = domain?.domain || domain?.subdomain || null;
   const productionUrl = customDomain ? `https://${customDomain.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}` : null;
@@ -540,25 +543,25 @@ export default function Dashboard() {
   const { data: brands } = useMetric("brands", showTenant);
   const { data: branches } = useMetric("branches", true, undefined, undefined, brandFilter);
   const { data: storesTotal } = useMetric("stores", true, undefined, undefined, brandFilter);
-  const { data: storesActive } = useMetric("stores", true, (q: any) => q.eq("is_active", true), "active", brandFilter);
+  const { data: storesActive } = useMetric("stores", true, (q) => q.eq("is_active", true), "active", brandFilter);
   const { data: offersTotal } = useMetric("offers", true, undefined, undefined, brandFilter);
-  const { data: offersActive } = useMetric("offers", true, (q: any) => q.eq("status", "ACTIVE").eq("is_active", true), "active", brandFilter);
+  const { data: offersActive } = useMetric("offers", true, (q) => q.eq("status", "ACTIVE").eq("is_active", true), "active", brandFilter);
   const { data: customersTotal } = useMetric("customers", true, undefined, undefined, brandFilter);
-  const { data: customersActive } = useMetric("customers", true, (q: any) => q.eq("is_active", true), "active", brandFilter);
+  const { data: customersActive } = useMetric("customers", true, (q) => q.eq("is_active", true), "active", brandFilter);
   const { data: redemptionsTotal } = useMetric("redemptions", true, undefined, undefined, brandFilter);
-  const { data: redemptionsPending } = useMetric("redemptions", true, (q: any) => q.eq("status", "PENDING"), "pending", brandFilter);
-  const { data: vouchersActive } = useMetric("vouchers", true, (q: any) => q.eq("status", "active"), "active", brandFilter);
+  const { data: redemptionsPending } = useMetric("redemptions", true, (q) => q.eq("status", "PENDING"), "pending", brandFilter);
+  const { data: vouchersActive } = useMetric("vouchers", true, (q) => q.eq("status", "active"), "active", brandFilter);
   const { data: vouchersTotal } = useMetric("vouchers", true, undefined, undefined, brandFilter);
   const { data: usersCount } = useMetric("profiles", showBrand);
-  const { data: storeRulesPending } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
+  const { data: storeRulesPending } = useMetric("store_points_rules", true, (q) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
   const { data: earningEventsTotal } = useMetric("earning_events", true, undefined, undefined, brandFilter);
-  const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
-  const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
+  const { data: earningEventsPeriod } = useMetric("earning_events", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
+  const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
   // Optimized: single query per table instead of N queries per day
   const fetchChartData = useCallback(async (table: string) => {
     const startDate = getPeriodStart(period);
-    let q = supabase.from(table as any).select("created_at").gte("created_at", startDate.toISOString());
+    let q = fromTable(table).select("created_at").gte("created_at", startDate.toISOString());
     if (brandFilter) q = q.eq("brand_id", brandFilter);
     q = q.order("created_at", { ascending: true }).limit(5000);
     const { data: rows } = await q;
@@ -571,7 +574,8 @@ export default function Dashboard() {
       countByDate[key] = 0;
     }
     for (const row of rows || []) {
-      const key = (row as any).created_at?.slice(0, 10);
+      const created = (row as Record<string, unknown>).created_at;
+      const key = typeof created === "string" ? created.slice(0, 10) : null;
       if (key && key in countByDate) countByDate[key]++;
     }
 

@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableControls } from "@/components/DataTableControls";
@@ -168,7 +169,11 @@ export default function OffersPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma oferta encontrada</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="py-0">
+                  <EmptyState type="offers" />
+                </TableCell></TableRow>
+              )}
               {data?.items?.map(o => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.title}</TableCell>

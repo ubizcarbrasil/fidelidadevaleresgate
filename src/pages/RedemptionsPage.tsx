@@ -9,6 +9,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import type { Database } from "@/integrations/supabase/types";
+import EmptyState from "@/components/customer/EmptyState";
 
 type RedemptionStatus = Database["public"]["Enums"]["redemption_status"];
 const STATUS_VARIANT: Record<RedemptionStatus, string> = { PENDING: "outline", USED: "default", EXPIRED: "secondary", CANCELED: "destructive" };
@@ -58,7 +59,11 @@ export default function RedemptionsPage() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum resgate encontrado</TableCell></TableRow>}
+              {!isLoading && data?.items?.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="py-0">
+                  <EmptyState type="redemptions" />
+                </TableCell></TableRow>
+              )}
               {data?.items?.map(r => (
                 <TableRow key={r.id}>
                   <TableCell className="text-xs whitespace-nowrap">{format(new Date(r.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
