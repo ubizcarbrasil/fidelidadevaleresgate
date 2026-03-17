@@ -158,7 +158,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         {/* Info cards row: CRÉDITO / VALIDADE / STATUS */}
         <div className="grid grid-cols-3 gap-2 px-5 py-4">
           <div className="rounded-2xl p-3 text-center bg-muted">
-            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>CRÉDITO</p>
+            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: brandAlpha(fg, 0.31) }}>CRÉDITO</p>
             <p className="text-sm font-bold" style={{ color: primary, fontFamily: fontHeading }}>
               {formatCurrency(Number(creditValue))}
             </p>
