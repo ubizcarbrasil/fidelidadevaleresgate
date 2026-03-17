@@ -155,7 +155,7 @@ function CollapsibleGroup({
   return (
     <Collapsible defaultOpen={hasActiveRoute} className="group/collapsible">
       <SidebarGroup className="py-0">
-        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors">
+        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors sidebar-group-indicator">
           <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           {!collapsed && <span>{label}</span>}
         </CollapsibleTrigger>
