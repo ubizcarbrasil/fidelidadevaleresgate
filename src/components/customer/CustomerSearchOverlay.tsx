@@ -291,9 +291,9 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
             {showSuggestions && (
               <div className="mb-4">
                 <div className="flex items-center gap-1.5 mb-2 px-1">
-                  <Sparkles className="h-3.5 w-3.5" style={{ color: `${fg}35` }} />
-                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: `${fg}35` }}>
-                    Sugestões
+                   <Sparkles className="h-3.5 w-3.5" style={{ color: brandAlpha(fg, 0.22) }} />
+                   <span className="text-xs font-bold uppercase tracking-wider" style={{ color: brandAlpha(fg, 0.22) }}>
+                     Sugestões
                   </span>
                 </div>
                 <div className="space-y-1">
