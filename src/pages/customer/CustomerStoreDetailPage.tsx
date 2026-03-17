@@ -105,7 +105,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           {store.points_per_real && (
             <p className="text-2xl font-black mb-2" style={{ fontFamily: fontHeading }}>
               {Number(store.points_per_real).toFixed(0)} {Number(store.points_per_real) === 1 ? "ponto" : "pontos"}{" "}
-              <span className="text-base font-medium" style={{ color: `${fg}60` }}>por R$ 1</span>
+              <span className="text-base font-medium" style={{ color: brandAlpha(fg, 0.37) }}>por R$ 1</span>
             </p>
           )}
           {store.category && (
