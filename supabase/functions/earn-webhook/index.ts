@@ -355,7 +355,7 @@ Deno.serve(async (req) => {
   let customer: any = null;
   const { data: existingCustomer, error: custErr } = await sb
     .from("customers")
-    .select("id, name, points_balance, money_balance, branch_id")
+    .select("id, name, points_balance, money_balance, branch_id, customer_tier")
     .eq("brand_id", brandId)
     .eq("cpf", cleanCpf)
     .eq("is_active", true)
