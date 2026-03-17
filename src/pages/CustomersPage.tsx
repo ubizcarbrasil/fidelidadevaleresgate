@@ -17,6 +17,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
+import DataSkeleton from "@/components/DataSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 
