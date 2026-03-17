@@ -497,8 +497,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                             alt={sim.title}
                             className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
                             fallback={
-                              <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}08` }}>
-                                <ShoppingBag className="h-6 w-6" style={{ color: `${primary}30` }} />
+                              <div className="h-14 w-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                                <ShoppingBag className="h-6 w-6" style={{ color: brandAlpha(primary, 0.19) }} />
                               </div>
                             }
                           />
