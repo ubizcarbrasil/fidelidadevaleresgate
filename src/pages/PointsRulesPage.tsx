@@ -173,10 +173,10 @@ export default function PointsRulesPage() {
               )}
               <div className="space-y-2">
                 <Label>Branch (opcional)</Label>
-                <Select value={form.branch_id} onValueChange={v => updateField("branch_id", v)}>
+                <Select value={form.branch_id || "__all__"} onValueChange={v => updateField("branch_id", v === "__all__" ? "" : v)}>
                   <SelectTrigger><SelectValue placeholder="Todas as filiais" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="__all__">Todas</SelectItem>
                     {branches?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
