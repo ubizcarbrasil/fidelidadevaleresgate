@@ -320,7 +320,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                           )}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: `${fg}20` }} />
+                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: brandAlpha(fg, 0.12) }} />
                     </button>
                   ))}
                 </div>
