@@ -273,8 +273,8 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         )}
 
         {/* Rules section */}
-        <div className="mx-5 rounded-2xl p-5 mb-4 bg-card border" style={{ borderColor: `${fg}10` }}>
-          <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: `${fg}60` }}>REGRAS DE RESGATE</p>
+         <div className="mx-5 rounded-2xl p-5 mb-4 bg-card border" style={{ borderColor: brandAlpha(fg, 0.06) }}>
+           <p className="text-[11px] font-bold tracking-wider mb-4" style={{ color: brandAlpha(fg, 0.37) }}>REGRAS DE RESGATE</p>
           <div className="space-y-4">
             {(offer?.end_at || redemption.expires_at) && (
               <RuleRow icon={<Clock className="h-4 w-4" style={{ color: primary }} />} primary={primary} title="Validade">
