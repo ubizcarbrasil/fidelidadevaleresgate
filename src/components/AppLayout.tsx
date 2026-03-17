@@ -10,6 +10,7 @@ import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import { ApiKeyOnboardingDialog } from "@/components/ApiKeyOnboardingDialog";
+import { CommandPalette } from "@/components/CommandPalette";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { useEffect, useMemo, useState, useRef } from "react";
