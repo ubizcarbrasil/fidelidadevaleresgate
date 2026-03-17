@@ -472,18 +472,24 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
 
 const StatCard = memo(function StatCard({ stat }: { stat: { title: string; value: any; sub?: string; icon: any; highlight?: boolean } }) {
   return (
-    <Card className={stat.highlight ? "border-primary/50 bg-primary/5" : ""}>
+    <Card className={`gradient-border-top card-hover-lift ${stat.highlight ? "border-primary/50" : ""}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-        <stat.icon className="h-5 w-5 text-primary" />
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.title}</CardTitle>
+        <div className="stat-icon-container h-10 w-10">
+          <stat.icon className="h-4 w-4 text-primary" />
+        </div>
       </CardHeader>
       <CardContent>
         {stat.value === undefined ? (
           <Skeleton className="h-9 w-20" />
         ) : (
-          <div className="text-3xl font-bold transition-all duration-300">{stat.value}</div>
+          <div className="text-3xl font-bold tracking-tight transition-all duration-300">{stat.value}</div>
         )}
-        {stat.sub && <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>}
+        {stat.sub && (
+          <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+            {stat.sub}
+          </span>
+        )}
       </CardContent>
     </Card>
   );
