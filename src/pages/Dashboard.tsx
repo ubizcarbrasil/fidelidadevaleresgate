@@ -36,13 +36,15 @@ function getPeriodDays(period: PeriodKey): number {
   return period === "today" ? 1 : period === "7d" ? 7 : 30;
 }
 
-function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
+type MetricTable = keyof Database["public"]["Tables"];
+
+function useMetric(table: MetricTable, enabled = true, filter?: (q: ReturnType<typeof supabase.from<MetricTable>>) => unknown, filterKey?: string, brandId?: string) {
   return useQuery({
     queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
     queryFn: async () => {
-      let q = (supabase.from as any)(table).select("*", { count: "exact", head: true });
+      let q = supabase.from(table).select("*", { count: "exact", head: true });
       if (brandId) q = q.eq("brand_id", brandId);
-      if (filter) q = filter(q);
+      if (filter) q = filter(q) as typeof q;
       const { count } = await q;
       return count || 0;
     },
