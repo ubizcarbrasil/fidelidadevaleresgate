@@ -60,7 +60,7 @@ export default function PlanModuleTemplatesPage() {
   const { data: brandCounts } = useQuery({
     queryKey: ["brand-counts-by-plan"],
     queryFn: async () => {
-      const counts: Record<PlanKey, number> = { free: 0, starter: 0, profissional: 0 };
+      const counts: Record<PlanKey, number> = { free: 0, starter: 0, profissional: 0, enterprise: 0 };
       for (const plan of PLANS) {
         const { count, error } = await supabase
           .from("brands")
