@@ -18,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, Bell, ChevronDown, ChevronRight, LogOut, User, KeyRound } from "lucide-react";
 import { ContextBadge } from "@/components/ContextBadge";
 import BranchSelector from "@/components/BranchSelector";
