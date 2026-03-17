@@ -1122,7 +1122,7 @@ function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: React.Compon
   const iconColor = dark ? "hsl(var(--foreground))" : primary;
   return (
     <div className="flex items-start gap-3">
-      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: dark ? "hsl(var(--foreground) / 0.1)" : `${primary}10` }}>
+      <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: dark ? "hsl(var(--foreground) / 0.1)" : brandAlpha(primary, 0.06) }}>
         <Icon className="h-4 w-4" style={{ color: iconColor }} />
       </div>
       <div>
