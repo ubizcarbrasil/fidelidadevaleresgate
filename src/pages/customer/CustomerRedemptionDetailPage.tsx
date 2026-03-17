@@ -386,9 +386,9 @@ function RuleRow({ icon, children, primary, title }: { icon: React.ReactNode; ch
 
 function DetailRow({ label, fg, children, noBorder }: { label: string; fg: string; children: React.ReactNode; noBorder?: boolean }) {
   return (
-    <div className={`flex justify-between items-center py-3 ${noBorder ? "" : "border-b"}`} style={{ borderColor: `${fg}10` }}>
-      <span style={{ color: `${fg}70` }}>{label}</span>
-      <span style={{ color: fg }}>{children}</span>
+    <div className={`flex justify-between items-center py-3 ${noBorder ? "" : "border-b"}`} style={{ borderColor: brandAlpha(fg, 0.06) }}>
+       <span style={{ color: brandAlpha(fg, 0.44) }}>{label}</span>
+       <span style={{ color: fg }}>{children}</span>
     </div>
   );
 }

@@ -339,7 +339,7 @@ export default function StoreCatalogView({
                       addToCart(item, true);
                     }}
                     className="h-7 rounded-full px-2 flex items-center justify-center text-[9px] font-bold text-white shadow-lg"
-                    style={{ backgroundColor: `${primary}CC` }}
+                    style={{ backgroundColor: brandAlpha(primary, 0.8) }}
                     title="Adicionar meia"
                   >
                     ½

@@ -408,7 +408,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                         )}
                       </div>
                       {Number(offer.value_rescue) > 0 && (
-                        <span className="text-xs font-bold shrink-0 px-2 py-1 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
+                        <span className="text-xs font-bold shrink-0 px-2 py-1 rounded-full" style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}>
                           {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
                         </span>
                       )}

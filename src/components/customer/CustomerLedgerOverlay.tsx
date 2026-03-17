@@ -531,7 +531,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     </div>
                   )}
                   {!hasMore && entries.length > 0 && (
-                    <p className="text-center text-xs py-4" style={{ color: `${fg}30` }}>
+                    <p className="text-center text-xs py-4" style={{ color: brandAlpha(fg, 0.19) }}>
                       Fim do extrato
                     </p>
                   )}

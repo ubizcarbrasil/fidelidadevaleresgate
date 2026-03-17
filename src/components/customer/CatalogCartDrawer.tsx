@@ -210,7 +210,7 @@ export default function CatalogCartDrawer({
                 {pointsEstimate} pontos
               </span>
             </div>
-            <p className="text-xs" style={{ color: `${primary}90` }}>
+            <p className="text-xs" style={{ color: brandAlpha(primary, 0.56) }}>
               Você vai ganhar com este pedido!
             </p>
           </div>

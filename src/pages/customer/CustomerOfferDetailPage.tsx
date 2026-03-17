@@ -1136,7 +1136,7 @@ function RuleRow({ icon: Icon, primary, fg, label, value }: { icon: React.Compon
 function TermsRuleItem({ icon, children, primary }: { icon: React.ReactNode; children: React.ReactNode; primary: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+      <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
         {icon}
       </div>
       <span className="text-sm" style={{ color: "hsl(var(--foreground) / 0.7)" }}>{children}</span>
