@@ -557,6 +557,25 @@ export default function CsvImportPage() {
           } else {
             result.success += batch.length;
           }
+
+          // Back-link: update customers with crm_contact_id
+          const validCustomerIds = customerIds.filter(Boolean);
+          if (validCustomerIds.length > 0) {
+            const { data: insertedContacts } = await supabase
+              .from("crm_contacts")
+              .select("id, customer_id")
+              .in("customer_id", validCustomerIds);
+            if (insertedContacts) {
+              for (const contact of insertedContacts) {
+                if (contact.customer_id) {
+                  await (supabase as any).from("customers").update({
+                    crm_contact_id: contact.id,
+                    crm_sync_status: "SYNCED",
+                  }).eq("id", contact.customer_id);
+                }
+              }
+            }
+          }
           setImportProgress({ current: Math.min(batchStart + BATCH_SIZE, rows.length), total: rows.length });
         }
       }
