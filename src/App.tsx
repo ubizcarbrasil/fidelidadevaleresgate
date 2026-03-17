@@ -212,7 +212,7 @@ function AppRoutes() {
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
           <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
           
-          <Route path="api-keys" element={<BrandApiKeysPage />} />
+          <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
