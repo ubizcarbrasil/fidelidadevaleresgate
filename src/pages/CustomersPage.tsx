@@ -291,7 +291,7 @@ export default function CustomersPage() {
 
       {/* Loading / Empty */}
       {isLoading && <p className="text-center py-8 text-muted-foreground">Carregando...</p>}
-      {!isLoading && data?.items?.length === 0 && <p className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</p>}
+      {!isLoading && data?.items?.length === 0 && <EmptyState type="generic" title="Nenhum cliente encontrado" description="Cadastre clientes ou aguarde o primeiro acesso." />}
 
       {/* Mobile: Card list */}
       {isMobile ? (
