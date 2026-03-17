@@ -373,9 +373,9 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     onClick={() => setTypeFilter(f.key)}
                     className="px-3 py-1 rounded-full text-[11px] font-medium transition-all"
                     style={{
-                      backgroundColor: typeFilter === f.key ? `${primary}18` : "transparent",
-                      color: typeFilter === f.key ? primary : `${fg}50`,
-                      border: `1px solid ${typeFilter === f.key ? `${primary}30` : `${fg}10`}`,
+                       backgroundColor: typeFilter === f.key ? brandAlpha(primary, 0.1) : "transparent",
+                       color: typeFilter === f.key ? primary : brandAlpha(fg, 0.31),
+                       border: `1px solid ${typeFilter === f.key ? brandAlpha(primary, 0.19) : brandAlpha(fg, 0.06)}`,
                     }}
                   >
                     {f.label}
