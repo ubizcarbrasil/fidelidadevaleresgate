@@ -251,7 +251,7 @@ export default function AppLayout() {
               brandId={brandId}
             />
           )}
-          
+          <CommandPalette />
         </div>
       </div>
     </SidebarProvider>
