@@ -1018,7 +1018,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 /* ── CPF STEP ── */
                 <div className="p-6">
                   <div className="text-center mb-5">
-                    <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+                    <div className="h-14 w-14 mx-auto mb-3 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.07) }}>
                       <ShoppingBag className="h-7 w-7" style={{ color: primary }} />
                     </div>
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: fontHeading }}>
