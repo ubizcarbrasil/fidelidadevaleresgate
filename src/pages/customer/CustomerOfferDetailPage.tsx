@@ -885,9 +885,9 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                     {/* Value card */}
                     {Number(offer.value_rescue) > 0 && (
-                      <div className="rounded-2xl p-4 mb-4 flex items-center gap-3" style={{ backgroundColor: `${primary}06`, border: `1.5px solid ${primary}15` }}>
-                        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
-                          <span className="text-lg font-bold" style={{ color: primary }}>$</span>
+                       <div className="rounded-2xl p-4 mb-4 flex items-center gap-3" style={{ backgroundColor: brandAlpha(primary, 0.024), border: `1.5px solid ${brandAlpha(primary, 0.09)}` }}>
+                         <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.09) }}>
+                           <span className="text-lg font-bold" style={{ color: primary }}>$</span>
                         </div>
                         <div>
                           <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">PONTOS A RESGATAR</p>
