@@ -269,7 +269,7 @@ function StoreFAQ({ faqJson, primary, fg, fontHeading }: {
               <AccordionTrigger className="px-4 py-3.5 text-sm font-semibold text-left hover:no-underline">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4 text-sm" style={{ color: `${fg}65` }}>
+              <AccordionContent className="px-4 pb-4 text-sm" style={{ color: brandAlpha(fg, 0.4) }}>
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
