@@ -586,8 +586,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                 {/* Vale Resgate value highlight */}
                 {Number(offer.value_rescue) > 0 && (
-                  <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : `${primary}30` }}>
-                    <div className="p-4" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : `${primary}06` }}>
+                   <div className="rounded-2xl overflow-hidden mb-4 border-2 border-dashed" style={{ borderColor: isDark ? "hsl(var(--foreground) / 0.2)" : brandAlpha(primary, 0.19) }}>
+                     <div className="p-4" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.04)" : brandAlpha(primary, 0.024) }}>
                       {offer.coupon_type === "PRODUCT" ? (
                         <div>
                           <p className="text-xs font-medium mb-0.5 text-muted-foreground">Pague com Pontos</p>
