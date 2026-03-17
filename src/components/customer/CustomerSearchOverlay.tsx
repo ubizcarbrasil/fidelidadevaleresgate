@@ -6,7 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { useDebounce } from "@/hooks/useDebounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 function kebabToPascal(name: string): string {
   return name.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
