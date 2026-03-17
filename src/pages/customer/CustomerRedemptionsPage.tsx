@@ -11,7 +11,7 @@ import { AnimatePresence } from "framer-motion";
 import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
 import { RedemptionCard } from "@/components/customer/RedemptionCard";
 import type { RedemptionWithOffer } from "@/types/customer";
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 type StatusFilter = "ALL" | "PENDING" | "USED" | "EXPIRED";
 
