@@ -394,6 +394,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── 7b. Seed default tier points rules (1pt per R$1) ──────
+    const TIER_KEYS = ["INICIANTE", "BRONZE", "PRATA", "OURO", "DIAMANTE", "LENDARIO", "GALATICO"];
+    await supabaseAdmin.from("tier_points_rules").insert(
+      TIER_KEYS.map((tier) => ({
+        brand_id: brand.id,
+        branch_id: branch.id,
+        tier,
+        points_per_real: 1,
+        is_active: true,
+      })),
+    );
+
     // ─── 8. Apply default home template ──────────────────────────
     const { data: defaultTemplate } = await supabaseAdmin
       .from("home_template_library").select("id, template_payload_json")
