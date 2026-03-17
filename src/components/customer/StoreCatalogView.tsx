@@ -290,9 +290,9 @@ export default function StoreCatalogView({
               {item.image_url ? (
                 <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover" />
               ) : (
-                <div className="w-full h-32 flex items-center justify-center" style={{ backgroundColor: `${primary}06` }}>
-                  <ShoppingBag className="h-10 w-10" style={{ color: `${primary}25` }} />
-                </div>
+                <div className="w-full h-32 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.024) }}>
+                   <ShoppingBag className="h-10 w-10" style={{ color: brandAlpha(primary, 0.15) }} />
+                 </div>
               )}
               <div className="p-3">
                 <p className="text-sm font-semibold line-clamp-2 leading-tight" style={{ fontFamily: fontHeading }}>
