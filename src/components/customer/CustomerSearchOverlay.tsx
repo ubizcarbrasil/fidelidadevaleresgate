@@ -393,7 +393,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
-                        style={{ backgroundColor: `${primary}10` }}
+                        style={{ backgroundColor: brandAlpha(primary, 0.06) }}
                       >
                         {offer.image_url ? (
                           <img src={offer.image_url} alt={offer.title} className="h-full w-full object-cover rounded-xl" />
