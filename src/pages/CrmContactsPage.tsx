@@ -142,7 +142,8 @@ export default function CrmContactsPage() {
                     <TableHead>Telefone</TableHead>
                     <TableHead>Origem</TableHead>
                     <TableHead>Corridas</TableHead>
-                    <TableHead>SO</TableHead>
+                    <TableHead>Tier</TableHead>
+                    <TableHead>Pontos</TableHead>
                     <TableHead>Última Corrida</TableHead>
                   </TableRow>
                 </TableHeader>
