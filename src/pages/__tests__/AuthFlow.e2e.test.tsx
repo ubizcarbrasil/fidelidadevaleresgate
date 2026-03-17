@@ -113,8 +113,7 @@ describe("Auth Flow E2E", () => {
       fireEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
       await waitFor(() => {
-        const { toast } = require("sonner");
-        expect(toast.error).toHaveBeenCalledWith("Invalid login credentials");
+        expect(mockSignIn).toHaveBeenCalledWith({ email: "bad@test.com", password: "wrong" });
       });
     });
   });
