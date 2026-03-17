@@ -227,7 +227,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                 />
                 {query && (
                   <button onClick={() => setQuery("")} className="p-0.5">
-                    <X className="h-4 w-4" style={{ color: `${fg}40` }} />
+                    <X className="h-4 w-4" style={{ color: brandAlpha(fg, 0.25) }} />
                   </button>
                 )}
               </div>
