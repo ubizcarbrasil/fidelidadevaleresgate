@@ -14,7 +14,7 @@ import { translateError } from "@/lib/translateError";
 import { Skeleton } from "@/components/ui/skeleton";
 import { openLink } from "@/lib/openLink";
 import type { ProfileMenuItem } from "@/pages/ProfileLinksConfigPage";
-import { hslToCss, withAlpha } from "@/lib/utils";
+import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 
 export default function CustomerProfilePage() {
