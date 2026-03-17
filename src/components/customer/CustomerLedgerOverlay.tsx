@@ -354,8 +354,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     onClick={() => setPeriod(f.key)}
                     className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
                     style={{
-                      backgroundColor: period === f.key ? primary : `${fg}08`,
-                      color: period === f.key ? "#fff" : `${fg}70`,
+                     backgroundColor: period === f.key ? primary : brandAlpha(fg, 0.03),
+                       color: period === f.key ? "#fff" : brandAlpha(fg, 0.44),
                     }}
                   >
                     {f.label}
