@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo, useMemo } from "react";
+import { useState, useEffect, useCallback, memo, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+const DashboardTasksSection = lazy(() => import("@/components/dashboard/TasksSection"));
+const DashboardActivityFeed = lazy(() => import("@/components/dashboard/ActivityFeed"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -515,107 +517,7 @@ function ActivityHeatmap({ chartData }: { chartData?: { label: string; count: nu
   );
 }
 
-/* ── Section F: Tasks Table ── */
-function TasksTable() {
-  const tasks = [
-    { task: "Revisar ofertas expiradas", responsible: "Admin", status: "Pendente" },
-    { task: "Aprovar novos parceiros", responsible: "Operações", status: "Em andamento" },
-    { task: "Atualizar banners de campanha", responsible: "Marketing", status: "Concluído" },
-    { task: "Configurar regras de pontuação", responsible: "Admin", status: "Pendente" },
-    { task: "Analisar relatório mensal", responsible: "Financeiro", status: "Em andamento" },
-  ];
-  const statusBadge: Record<string, string> = {
-    "Pendente": "saas-badge-warning",
-    "Em andamento": "saas-badge-info",
-    "Concluído": "saas-badge-success",
-  };
-  const statusIcon: Record<string, any> = {
-    "Pendente": Clock,
-    "Em andamento": Zap,
-    "Concluído": CheckCircle2,
-  };
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Tarefas</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2.5 text-xs font-medium text-muted-foreground">Tarefa</th>
-                <th className="text-left py-2.5 text-xs font-medium text-muted-foreground hidden sm:table-cell">Responsável</th>
-                <th className="text-right py-2.5 text-xs font-medium text-muted-foreground">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((t, i) => {
-                const StatusIcon = statusIcon[t.status] || Clock;
-                return (
-                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-accent/20 transition-colors">
-                    <td className="py-2.5 text-xs font-medium">{t.task}</td>
-                    <td className="py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{t.responsible}</td>
-                    <td className="py-2.5 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge[t.status]}`}>
-                        <StatusIcon className="h-3 w-3" />
-                        {t.status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/* ── Section G: Activity Feed with Timeline ── */
-function ActivityFeed() {
-  const eventColors: Record<string, string> = {
-    resgate: "bg-primary/15 text-primary",
-    cliente: "bg-success/15 text-success",
-    oferta: "bg-warning/15 text-warning",
-    parceiro: "bg-info/15 text-info",
-    relatorio: "bg-purple-500/15 text-purple-400",
-  };
-  const events = [
-    { text: "Novo resgate confirmado", time: "há 2 min", icon: ReceiptText, type: "resgate" },
-    { text: "Cliente cadastrado via app", time: "há 12 min", icon: UserCheck, type: "cliente" },
-    { text: "Oferta publicada: 15% OFF", time: "há 34 min", icon: Tag, type: "oferta" },
-    { text: "Parceiro aprovado: Pizzaria Central", time: "há 1h", icon: Store, type: "parceiro" },
-    { text: "Relatório mensal gerado", time: "há 2h", icon: TrendingUp, type: "relatorio" },
-  ];
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Atividade Recente</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-0">
-        {events.map((ev, i) => (
-          <div key={i} className="flex gap-3 relative">
-            {/* Timeline line */}
-            {i < events.length - 1 && (
-              <div className="absolute left-[13px] top-8 bottom-0 w-[2px] bg-border/40" />
-            )}
-            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 relative z-10 ${eventColors[ev.type] || "bg-accent/50 text-muted-foreground"}`}>
-              <ev.icon className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex-1 min-w-0 py-1.5 pb-3">
-              <p className="text-xs font-medium truncate">{ev.text}</p>
-              <span className="text-[10px] text-muted-foreground">{ev.time}</span>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
+/* TasksTable and ActivityFeed moved to src/components/dashboard/ */
 
 /* ── Main Dashboard ── */
 export default function Dashboard() {
@@ -653,21 +555,34 @@ export default function Dashboard() {
   const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
+  // Optimized: single query per table instead of N queries per day
   const fetchChartData = useCallback(async (table: string) => {
-    const days: { label: string; count: number }[] = [];
+    const startDate = getPeriodStart(period);
+    let q = supabase.from(table as any).select("created_at").gte("created_at", startDate.toISOString());
+    if (brandFilter) q = q.eq("brand_id", brandFilter);
+    q = q.order("created_at", { ascending: true }).limit(5000);
+    const { data: rows } = await q;
+
+    // Group by date on the client side (1 query instead of 30)
+    const countByDate: Record<string, number> = {};
     for (let i = periodDays - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const start = new Date(d); start.setHours(0, 0, 0, 0);
-      const end = new Date(d); end.setHours(23, 59, 59, 999);
-      let q = (supabase.from as any)(table).select("*", { count: "exact", head: true }).gte("created_at", start.toISOString()).lte("created_at", end.toISOString());
-      if (brandFilter) q = q.eq("brand_id", brandFilter);
-      const { count } = await q;
-      const fmt = periodDays <= 7 ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "") : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      days.push({ label: fmt, count: count || 0 });
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      countByDate[key] = 0;
     }
-    return days;
-  }, [periodDays, brandFilter]);
+    for (const row of rows || []) {
+      const key = (row as any).created_at?.slice(0, 10);
+      if (key && key in countByDate) countByDate[key]++;
+    }
+
+    return Object.entries(countByDate).map(([dateStr, count]) => {
+      const d = new Date(dateStr + "T12:00:00");
+      const fmt = periodDays <= 7
+        ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+        : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      return { label: fmt, count };
+    });
+  }, [period, periodDays, brandFilter]);
 
   const { data: recentRedemptions } = useQuery({
     queryKey: ["redemptions-chart", period, brandFilter ?? "global"],
@@ -841,8 +756,8 @@ export default function Dashboard() {
 
       {/* ── SECTION F + G: Tasks + Activity Feed ── */}
       <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
-        <TasksTable />
-        <ActivityFeed />
+        <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardTasksSection /></Suspense>
+        <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardActivityFeed /></Suspense>
       </div>
 
       {/* FAB */}

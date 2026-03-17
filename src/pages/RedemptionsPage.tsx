@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import type { Database } from "@/integrations/supabase/types";
 
 type RedemptionStatus = Database["public"]["Enums"]["redemption_status"];
@@ -17,14 +17,7 @@ const PAGE_SIZE = 20;
 
 export default function RedemptionsPage() {
   const { currentBrandId, isRootAdmin } = useBrandGuard();
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
-    return () => clearTimeout(t);
-  }, [search]);
+  const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
 
   const { data, isLoading } = useQuery({
     queryKey: ["redemptions", debouncedSearch, page, currentBrandId],
@@ -47,7 +40,7 @@ export default function RedemptionsPage() {
         <p className="text-muted-foreground">Histórico de resgates por filial</p>
       </div>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por token..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar por token..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
         <CardContent className="p-0">

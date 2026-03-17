@@ -15,7 +15,7 @@ import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
-import RootJourneyGuidePage from "@/pages/RootJourneyGuidePage";
+const RootJourneyGuidePage = lazy(() => import("@/pages/RootJourneyGuidePage"));
 import { queryClient } from "@/lib/queryClient";
 import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
 const BrandJourneyGuidePage = lazy(() => import("@/pages/BrandJourneyGuidePage"));
@@ -181,11 +181,11 @@ function AppRoutes() {
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
           <Route path="tier-points-rules" element={<ModuleGuard moduleKey="earn_points_store"><TierPointsRulesPage /></ModuleGuard>} />
           
-          <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
-          <Route path="affiliate-deals/import-mobile" element={<AchadinhosMobileImportPage />} />
-          <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
+          <Route path="affiliate-deals" element={<ModuleGuard moduleKey="achadinhos"><AffiliateDealsPage /></ModuleGuard>} />
+          <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="achadinhos"><AchadinhosMobileImportPage /></ModuleGuard>} />
+          <Route path="affiliate-categories" element={<ModuleGuard moduleKey="achadinhos"><AffiliateCategoriesPage /></ModuleGuard>} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
           <Route path="icon-library" element={<IconLibraryPage />} />
           <Route path="banner-manager" element={<BannerManagerPage />} />
@@ -212,12 +212,12 @@ function AppRoutes() {
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
           <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
           
-          <Route path="api-keys" element={<BrandApiKeysPage />} />
+          <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
-          <Route path="brand-settings" element={<BrandSettingsPage />} />
+          <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
           <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
           <Route path="machine-integration" element={<MachineIntegrationPage />} />
           <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />

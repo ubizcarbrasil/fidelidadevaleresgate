@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import type { Database } from "@/integrations/supabase/types";
@@ -35,14 +37,7 @@ export default function OffersPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
-    return () => clearTimeout(t);
-  }, [search]);
+  const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId && !form.brand_id) {
@@ -148,13 +143,15 @@ export default function OffersPage() {
                   <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id} className="w-full">Salvar</Button>
+              <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id || save.isPending} className="w-full">
+                {save.isPending ? "Salvando..." : "Salvar"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
         <CardContent className="p-0">
@@ -181,7 +178,21 @@ export default function OffersPage() {
                   <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{STATUS_LABELS[o.status as OfferStatus] || o.status}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove.mutate(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>Tem certeza que deseja excluir a oferta "{o.title}"? Esta ação não pode ser desfeita.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => remove.mutate(o.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}

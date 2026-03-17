@@ -17,6 +17,7 @@ import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 
 const PAGE_SIZE = 20;
 
@@ -30,9 +31,7 @@ export default function CustomersPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerForm>(emptyForm);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const [ledgerCustomer, setLedgerCustomer] = useState<any>(null);
   const [tierFilter, setTierFilter] = useState<string>("");
   const [crmFilter, setCrmFilter] = useState<string>("");
@@ -40,11 +39,6 @@ export default function CustomersPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkForm, setBulkForm] = useState({ name: "", cpf: "", phone: "" });
-
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
-    return () => clearTimeout(t);
-  }, [search]);
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId && !form.brand_id) {
@@ -273,7 +267,7 @@ export default function CustomersPage() {
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="w-full sm:flex-1 sm:min-w-[200px]">
-          <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+          <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
         </div>
         <div className="flex gap-2">
           <Select value={tierFilter} onValueChange={v => { setTierFilter(v === "all" ? "" : v); setPage(1); }}>
