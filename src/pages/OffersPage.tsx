@@ -18,6 +18,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type OfferStatus = Database["public"]["Enums"]["offer_status"];
 const STATUS_OPTIONS: OfferStatus[] = ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"];
+const STATUS_LABELS: Record<OfferStatus, string> = { DRAFT: "Rascunho", PENDING: "Pendente", APPROVED: "Aprovada", ACTIVE: "Ativa", EXPIRED: "Expirada" };
 const STATUS_COLORS: Record<OfferStatus, string> = { DRAFT: "secondary", PENDING: "outline", APPROVED: "default", ACTIVE: "default", EXPIRED: "destructive" } as any;
 
 const PAGE_SIZE = 20;
