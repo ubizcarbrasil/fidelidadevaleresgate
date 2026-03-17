@@ -223,7 +223,7 @@ export default function StoresPage() {
         </TabsList>
       </Tabs>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar parceiro por nome..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar parceiro por nome..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
         <CardContent className="p-0">
