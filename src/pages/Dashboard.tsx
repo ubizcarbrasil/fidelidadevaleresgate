@@ -36,15 +36,16 @@ function getPeriodDays(period: PeriodKey): number {
   return period === "today" ? 1 : period === "7d" ? 7 : 30;
 }
 
-type MetricTable = keyof Database["public"]["Tables"];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase.from() requires dynamic table names here
+const fromTable = (table: string) => (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
 
-function useMetric(table: MetricTable, enabled = true, filter?: (q: ReturnType<typeof supabase.from<MetricTable>>) => unknown, filterKey?: string, brandId?: string) {
+function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
   return useQuery({
     queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
     queryFn: async () => {
-      let q = supabase.from(table).select("*", { count: "exact", head: true });
+      let q = fromTable(table).select("*", { count: "exact", head: true });
       if (brandId) q = q.eq("brand_id", brandId);
-      if (filter) q = filter(q) as typeof q;
+      if (filter) q = filter(q);
       const { count } = await q;
       return count || 0;
     },
