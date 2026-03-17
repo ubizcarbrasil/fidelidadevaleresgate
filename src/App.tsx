@@ -194,22 +194,22 @@ function AppRoutes() {
           <Route path="page-builder-v2" element={<PageBuilderV2Page />} />
           <Route path="public-vouchers" element={<PublicVouchers />} />
           
-          <Route path="provision-brand" element={<ProvisionBrandWizard />} />
-          <Route path="brand-permissions" element={<BrandPermissionOverflowPage />} />
-          <Route path="taxonomy" element={<TaxonomyPage />} />
-          <Route path="starter-kit" element={<StarterKitConfigPage />} />
+          <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
+          <Route path="brand-permissions" element={<RootGuard><BrandPermissionOverflowPage /></RootGuard>} />
+          <Route path="taxonomy" element={<RootGuard><TaxonomyPage /></RootGuard>} />
+          <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
-          <Route path="root-journey" element={<RootJourneyGuidePage />} />
+          <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
           <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
-          <Route path="platform-theme" element={<PlatformThemePage />} />
-          <Route path="app-icons" element={<AppIconsConfigPage />} />
-          <Route path="welcome-tour" element={<WelcomeTourConfigPage />} />
-          <Route path="profile-links" element={<ProfileLinksConfigPage />} />
+          <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
+          <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
+          <Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
+          <Route path="profile-links" element={<RootGuard><ProfileLinksConfigPage /></RootGuard>} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
-          <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
+          <Route path="ganha-ganha-dashboard" element={<RootGuard><GanhaGanhaRootDashboardPage /></RootGuard>} />
           <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
           
           <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
