@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 type PeriodFilter = "7d" | "30d" | "90d" | "custom";
 type TypeFilter = "all" | "credits" | "debits" | "adjustments";
