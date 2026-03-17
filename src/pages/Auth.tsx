@@ -91,6 +91,7 @@ export default function Auth() {
             className="mx-auto h-16 w-16 rounded-2xl shadow-md"
           />
           <CardTitle className="text-2xl font-bold">{brandName || "Vale Resgate"}</CardTitle>
+          <span className="text-[10px] text-muted-foreground">beta v2.1 • Lovable</span>
           <CardDescription>
             {isForgot ? "Recuperar senha" : isLogin ? "Acesse sua conta" : "Crie sua conta"}
           </CardDescription>
