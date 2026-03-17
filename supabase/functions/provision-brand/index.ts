@@ -591,10 +591,13 @@ Deno.serve(async (req) => {
       .from("brands").select("subscription_plan").eq("id", brand.id).single();
     const subscription_plan = brandRow?.subscription_plan || "free";
     const BASIC_PLAN_ENABLED_KEYS = new Set([
-      "theme_colors", "theme_images", "theme_texts",
-      "stores", "offers", "redemption_qr", "wallet", "customers",
-      "home_sections", "brand_theme", "branches",
-      "guide_brand", "points", "points_rules",
+      // Baseado no template UBIZ Resgata (24 módulos padrão)
+      "affiliate_deals", "api_keys", "approvals", "banners", "brand_theme",
+      "categories", "coupons", "crm", "custom_pages", "customers",
+      "home_sections", "machine_integration", "offers", "page_builder",
+      "partner_landing", "profile_links", "redemption_qr", "reports",
+      "stores", "taxonomy", "theme_images", "theme_texts",
+      "users_management", "wallet",
     ]);
     const isBasicPlan = !subscription_plan || subscription_plan === "free" || subscription_plan === "basic";
     const { data: allMods } = await supabaseAdmin

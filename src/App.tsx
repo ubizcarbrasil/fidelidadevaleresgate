@@ -82,6 +82,7 @@ const GanhaGanhaConfigPage = lazy(() => import("@/pages/GanhaGanhaConfigPage"));
 const GanhaGanhaBillingPage = lazy(() => import("@/pages/GanhaGanhaBillingPage"));
 const GanhaGanhaRootDashboardPage = lazy(() => import("@/pages/GanhaGanhaRootDashboardPage"));
 const GanhaGanhaClosingReportsPage = lazy(() => import("@/pages/GanhaGanhaClosingReportsPage"));
+
 const BrandApiKeysPage = lazy(() => import("@/pages/BrandApiKeysPage"));
 const ApiDocsPage = lazy(() => import("@/pages/ApiDocsPage"));
 const TrialSignupPage = lazy(() => import("@/pages/TrialSignupPage"));
@@ -181,7 +182,7 @@ function AppRoutes() {
           <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ReportsPage />} />
-          <Route path="send-notification" element={<SendNotificationPage />} />
+          <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
           <Route path="icon-library" element={<IconLibraryPage />} />
           <Route path="banner-manager" element={<BannerManagerPage />} />
           <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
@@ -205,6 +206,7 @@ function AppRoutes() {
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
           <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
+          
           <Route path="api-keys" element={<BrandApiKeysPage />} />
           <Route path="api-docs" element={<ApiDocsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />

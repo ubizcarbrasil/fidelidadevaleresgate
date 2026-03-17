@@ -108,7 +108,7 @@ export default function StoreOwnerPanel() {
       setLoading(false);
     };
     fetchStore();
-  }, [user, overrideStoreId, isRootAdmin]);
+  }, [user, overrideStoreId, isRootAdmin, roles]);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
