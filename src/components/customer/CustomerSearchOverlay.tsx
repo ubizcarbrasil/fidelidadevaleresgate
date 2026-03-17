@@ -312,7 +312,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm" style={{ fontFamily: fontHeading }}>{seg.name}</p>
-                        <p className="text-xs" style={{ color: `${fg}45` }}>
+                        <p className="text-xs" style={{ color: brandAlpha(fg, 0.27) }}>
                           {seg.matchedTerm !== seg.name ? (
                             <>"{seg.matchedTerm}" · {seg.category_name}</>
                           ) : (
