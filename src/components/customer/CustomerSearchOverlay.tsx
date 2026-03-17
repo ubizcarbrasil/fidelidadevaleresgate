@@ -344,7 +344,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
             {!loading && stores.length > 0 && (
               <div className="mb-5">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: `${fg}40` }}>
+                 <h3 className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: brandAlpha(fg, 0.25) }}>
                   Lojas
                 </h3>
                 <div className="space-y-1">
