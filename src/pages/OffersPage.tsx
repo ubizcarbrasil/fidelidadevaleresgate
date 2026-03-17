@@ -37,14 +37,7 @@ export default function OffersPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
-    return () => clearTimeout(t);
-  }, [search]);
+  const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId && !form.brand_id) {
