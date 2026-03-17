@@ -148,7 +148,7 @@ export default function StoreCatalogView({
   if (items.length === 0 && offers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${primary}10` }}>
+        <div className="h-16 w-16 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
           <ShoppingBag className="h-8 w-8" style={{ color: primary }} />
         </div>
         <p className="font-semibold text-base">Catálogo em breve</p>
