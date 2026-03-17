@@ -454,7 +454,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                 </div>
               ) : entries.length === 0 ? (
                 <div className="text-center py-16 opacity-40">
-                  <Coins className="h-10 w-10 mx-auto mb-3" style={{ color: `${fg}30` }} />
+                  <Coins className="h-10 w-10 mx-auto mb-3" style={{ color: brandAlpha(fg, 0.19) }} />
                   <p className="font-medium text-sm">Nenhuma movimentação</p>
                   <p className="text-xs mt-1">Suas transações aparecerão aqui</p>
                 </div>
