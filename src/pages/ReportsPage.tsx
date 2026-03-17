@@ -881,7 +881,7 @@ function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; date
                       outerRadius={100}
                       paddingAngle={4}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }: any) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                     >
                       {statusDistribution.map((_, i) => (
                         <Cell key={i} fill={[CHART_COLORS[3], CHART_COLORS[4], CHART_COLORS[2]][i]} />
