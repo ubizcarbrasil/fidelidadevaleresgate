@@ -18,6 +18,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type OfferStatus = Database["public"]["Enums"]["offer_status"];
 const STATUS_OPTIONS: OfferStatus[] = ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"];
+const STATUS_LABELS: Record<OfferStatus, string> = { DRAFT: "Rascunho", PENDING: "Pendente", APPROVED: "Aprovada", ACTIVE: "Ativa", EXPIRED: "Expirada" };
 const STATUS_COLORS: Record<OfferStatus, string> = { DRAFT: "secondary", PENDING: "outline", APPROVED: "default", ACTIVE: "default", EXPIRED: "destructive" } as any;
 
 const PAGE_SIZE = 20;
@@ -144,7 +145,7 @@ export default function OffersPage() {
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as OfferStatus }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id} className="w-full">Salvar</Button>
@@ -177,7 +178,7 @@ export default function OffersPage() {
                   <TableCell>{(o.stores as any)?.name}</TableCell>
                   <TableCell>{(o.branches as any)?.name}</TableCell>
                   <TableCell>R$ {Number(o.value_rescue).toFixed(2)}</TableCell>
-                  <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{o.status}</Badge></TableCell>
+                  <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{STATUS_LABELS[o.status as OfferStatus] || o.status}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => remove.mutate(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
