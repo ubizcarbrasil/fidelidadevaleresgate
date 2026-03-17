@@ -574,14 +574,21 @@ function TasksTable() {
   );
 }
 
-/* ── Section G: Activity Feed ── */
+/* ── Section G: Activity Feed with Timeline ── */
 function ActivityFeed() {
+  const eventColors: Record<string, string> = {
+    resgate: "bg-primary/15 text-primary",
+    cliente: "bg-success/15 text-success",
+    oferta: "bg-warning/15 text-warning",
+    parceiro: "bg-info/15 text-info",
+    relatorio: "bg-purple-500/15 text-purple-400",
+  };
   const events = [
-    { text: "Novo resgate confirmado", time: "há 2 min", icon: ReceiptText },
-    { text: "Cliente cadastrado via app", time: "há 12 min", icon: UserCheck },
-    { text: "Oferta publicada: 15% OFF", time: "há 34 min", icon: Tag },
-    { text: "Parceiro aprovado: Pizzaria Central", time: "há 1h", icon: Store },
-    { text: "Relatório mensal gerado", time: "há 2h", icon: TrendingUp },
+    { text: "Novo resgate confirmado", time: "há 2 min", icon: ReceiptText, type: "resgate" },
+    { text: "Cliente cadastrado via app", time: "há 12 min", icon: UserCheck, type: "cliente" },
+    { text: "Oferta publicada: 15% OFF", time: "há 34 min", icon: Tag, type: "oferta" },
+    { text: "Parceiro aprovado: Pizzaria Central", time: "há 1h", icon: Store, type: "parceiro" },
+    { text: "Relatório mensal gerado", time: "há 2h", icon: TrendingUp, type: "relatorio" },
   ];
 
   return (
@@ -591,12 +598,18 @@ function ActivityFeed() {
       </CardHeader>
       <CardContent className="space-y-0">
         {events.map((ev, i) => (
-          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border/30 last:border-0">
-            <div className="h-7 w-7 rounded-lg bg-accent/50 flex items-center justify-center shrink-0">
-              <ev.icon className="h-3.5 w-3.5 text-muted-foreground" />
+          <div key={i} className="flex gap-3 relative">
+            {/* Timeline line */}
+            {i < events.length - 1 && (
+              <div className="absolute left-[13px] top-8 bottom-0 w-[2px] bg-border/40" />
+            )}
+            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 relative z-10 ${eventColors[ev.type] || "bg-accent/50 text-muted-foreground"}`}>
+              <ev.icon className="h-3.5 w-3.5" />
             </div>
-            <p className="text-xs flex-1 min-w-0 truncate">{ev.text}</p>
-            <span className="text-[10px] text-muted-foreground shrink-0">{ev.time}</span>
+            <div className="flex-1 min-w-0 py-1.5 pb-3">
+              <p className="text-xs font-medium truncate">{ev.text}</p>
+              <span className="text-[10px] text-muted-foreground">{ev.time}</span>
+            </div>
           </div>
         ))}
       </CardContent>
