@@ -367,7 +367,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{store.name}</p>
-                        <p className="text-xs truncate" style={{ color: `${fg}50` }}>
+                         <p className="text-xs truncate" style={{ color: brandAlpha(fg, 0.31) }}>
                           {(store.taxonomy_segments as any)?.name || store.category || ""}
                         </p>
                       </div>
