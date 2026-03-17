@@ -39,9 +39,7 @@ export default function StoresPage() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<StoreForm>(emptyForm);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const [statusTab, setStatusTab] = useState<StatusTab>("ALL");
 
   // Approval detail dialog
@@ -49,11 +47,6 @@ export default function StoresPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [processing, setProcessing] = useState(false);
   const [docs, setDocs] = useState<any[]>([]);
-
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
-    return () => clearTimeout(t);
-  }, [search]);
 
   // Auto-set brand_id for non-root users
   useEffect(() => {
