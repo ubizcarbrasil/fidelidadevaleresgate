@@ -26,6 +26,7 @@ const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: 
 export default function CustomersPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerForm>(emptyForm);
