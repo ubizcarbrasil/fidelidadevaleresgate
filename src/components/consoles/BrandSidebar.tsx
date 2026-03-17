@@ -183,7 +183,7 @@ function CollapsibleGroup({
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
                         {badgeCount && badgeCount > 0 && (
-                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
+                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold badge-glow">
                             {badgeCount > 99 ? "99+" : badgeCount}
                           </Badge>
                         )}
