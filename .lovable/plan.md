@@ -1,29 +1,24 @@
 
 
-## Plano: Importar contatos do CRM externo via CSV
+## Plano: Remover todos os dados da marca "Urbano Norte"
 
-A infraestrutura já está pronta. Não é necessário nenhuma alteração de código.
+### Contexto
+A marca **Urbano Norte** (`8f76ce52-d6c0-4c90-af67-79957e97e477`) possui:
+- 7.659 contatos CRM
+- 481 clientes
+- 50 ofertas
+- 41 lojas
+- 1 filial
 
-### Passo a passo operacional
+### Ação
+Chamar a Edge Function `admin-brand-actions` com `action: "delete_brand"` e o `brand_id` da Urbano Norte. Esta função já implementa a limpeza profunda de todas as tabelas dependentes (crm_contacts, customers, stores, offers, redemptions, branches, user_roles, etc.) antes de excluir a marca.
 
-1. **No CRM externo** (`valeresgatacrm.lovable.app`): exporte os 3.648 contatos como arquivo CSV. O CSV deve conter colunas como `Nome`, `Telefone`, `CPF`, `Email`, `Qtd. Corridas`, etc.
+Alternativamente, se o usuário não estiver logado como root_admin no preview, executar a exclusão diretamente via SQL nas tabelas dependentes na ordem correta e depois remover a marca.
 
-2. **Neste sistema**, acesse a página **Importação CSV** (menu lateral → Importação CSV)
+### Passos
+1. Deletar dados de todas as tabelas filhas que referenciam `brand_id = '8f76ce52-...'` (seguindo a mesma ordem da Edge Function `admin-brand-actions`)
+2. Limpar referências em `profiles` (selected_branch_id, brand_id)
+3. Deletar branches, user_roles e finalmente a marca
 
-3. Selecione o tipo de importação: **"Contatos CRM"** — os campos disponíveis para mapeamento são:
-   - Nome (obrigatório), Telefone, E-mail, CPF, Gênero, Sistema Operacional, Qtd. Corridas, Ativo Desde, Última Corrida, Origem, Tags, Ativo
-
-4. Faça o upload do CSV, mapeie as colunas do arquivo para os campos do sistema, e execute a importação
-
-5. Após a importação, vá à página **Clientes** e clique **"Sincronizar CRM"** — isso vai criar os registros de clientes a partir dos contatos CRM importados (lógica reversa já implementada)
-
-### Resultado
-
-- Os 3.648 contatos entram na tabela `crm_contacts` local
-- O botão "Sincronizar CRM" cria os `customers` correspondentes com tier calculado automaticamente
-- Ambas as tabelas ficam vinculadas via `customer_id` / `crm_contact_id`
-
-### Código necessário
-
-**Nenhum.** O motor de importação CSV já suporta o tipo "Contatos CRM" com todos os campos necessários, e a sincronização reversa CRM → Clientes já está implementada no botão "Sincronizar CRM".
+Nenhuma alteração de código é necessária — apenas operação de dados.
 
