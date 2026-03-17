@@ -164,11 +164,11 @@ function AppRoutes() {
           <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
           <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
           <Route path="templates" element={<RootGuard><SectionTemplatesPage /></RootGuard>} />
-          <Route path="modules" element={<ModuleDefinitionsPage />} />
+          <Route path="modules" element={<RootGuard><ModuleDefinitionsPage /></RootGuard>} />
           <Route path="permissions" element={<PermissionsPage />} />
-          <Route path="flags" element={<FeatureFlagsPage />} />
+          <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
           <Route path="audit" element={<AuditLogsPage />} />
-          <Route path="releases" element={<ReleasesPage />} />
+          <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
           <Route path="home-templates" element={<HomeTemplatesPage />} />
           <Route path="csv-import" element={<ModuleGuard moduleKey="stores"><CsvImportPage /></ModuleGuard>} />
           <Route path="clone-branch" element={<CloneBranchPage />} />
