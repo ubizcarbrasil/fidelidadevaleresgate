@@ -250,7 +250,7 @@ export default function AppLayout() {
               brandId={brandId}
             />
           )}
-          <ChangePasswordDialog open={showChangePassword} onOpenChange={setShowChangePassword} />
+          
         </div>
       </div>
     </SidebarProvider>
