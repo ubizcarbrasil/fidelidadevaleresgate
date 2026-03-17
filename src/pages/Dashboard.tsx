@@ -29,11 +29,12 @@ function getPeriodDays(period: PeriodKey): number {
   return period === "today" ? 1 : period === "7d" ? 7 : 30;
 }
 
-function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string) {
+function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
   return useQuery({
-    queryKey: [`${table}-count`, filterKey ?? "all"],
+    queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
     queryFn: async () => {
       let q = (supabase.from as any)(table).select("*", { count: "exact", head: true });
+      if (brandId) q = q.eq("brand_id", brandId);
       if (filter) q = filter(q);
       const { count } = await q;
       return count || 0;
