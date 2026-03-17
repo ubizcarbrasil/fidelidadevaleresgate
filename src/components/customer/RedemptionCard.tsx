@@ -3,6 +3,7 @@ import { Store, Info, DollarSign, CreditCard, Clock, AlertTriangle, MapPin, Phon
 import type { RedemptionWithOffer } from "@/types/customer";
 import { DetailInfoRow } from "./DetailInfoRow";
 import { CancelRedemptionButton } from "./CancelRedemptionButton";
+import { brandAlpha } from "@/lib/utils";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   PENDING: { label: "EMITIDO", className: "bg-warning/15 text-warning" },
@@ -68,7 +69,7 @@ function RedemptionCardInner({
         {store?.logo_url ? (
           <img src={store.logo_url} alt={store.name} className="h-11 w-11 rounded-xl object-cover" />
         ) : (
-          <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}15` }}>
+          <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.08) }}>
             <Store className="h-5 w-5" style={{ color: primary }} />
           </div>
         )}
@@ -97,7 +98,7 @@ function RedemptionCardInner({
         <div className="mx-4 mb-2">
           <div
             className="flex items-center gap-2 rounded-xl px-3 py-2.5"
-            style={{ backgroundColor: `${primary}12`, border: `1.5px solid ${primary}30` }}
+            style={{ backgroundColor: brandAlpha(primary, 0.07), border: `1.5px solid ${brandAlpha(primary, 0.19)}` }}
           >
             <DollarSign className="h-5 w-5 flex-shrink-0" style={{ color: primary }} />
             <div className="flex-1">
@@ -112,7 +113,7 @@ function RedemptionCardInner({
       <div className="px-4 pb-3">
         <div
           className="rounded-xl p-3 space-y-2 text-xs"
-          style={{ border: `1.5px solid ${primary}25`, backgroundColor: `${primary}04` }}
+          style={{ border: `1.5px solid ${brandAlpha(primary, 0.15)}`, backgroundColor: brandAlpha(primary, 0.02) }}
         >
           <div className="flex items-center gap-1.5 mb-1">
             <Info className="h-3.5 w-3.5" style={{ color: primary }} />

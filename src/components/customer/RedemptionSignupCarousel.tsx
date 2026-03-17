@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2, User, Mail, Phone, KeyRound, Lock, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
+import { brandAlpha } from "@/lib/utils";
 
 interface SignupData {
   cpf: string;
@@ -61,13 +62,11 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
 
   const canAdvance = [isValidCpf, isValidName, isValidEmail, isValidPhone, isValidOtp, isValidPassword][step];
 
-  // Step 4: skip real OTP — hardcoded 123456
   const handleSendOtp = async () => {
     toast({ title: "Código enviado!", description: "Use o código 123456" });
     goNext();
   };
 
-  // Step 5: verify OTP (hardcoded 123456 for now)
   const handleVerifyOtp = async () => {
     const code = data.otp.replace(/\D/g, "");
     if (code !== "123456") {
@@ -78,11 +77,9 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
     goNext();
   };
 
-  // Step 6: create account or sign in and complete
   const handleSetPassword = async () => {
     setLoading(true);
     try {
-      // Try signup first
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -95,7 +92,6 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
         },
       });
 
-      // If user already exists, sign in instead
       if (signUpError?.message?.includes("already registered") || signUpError?.message?.includes("already exists")) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: data.email,
@@ -106,8 +102,6 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
         throw signUpError;
       }
 
-      // Wait for the session to be fully established in the supabase client
-      // by polling getSession until we get a valid JWT
       let attempts = 0;
       while (attempts < 10) {
         const { data: sessionCheck } = await supabase.auth.getSession();
@@ -117,7 +111,6 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
       }
 
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
-      // Give React context time to update with new auth state
       setTimeout(() => onComplete(data.cpf), 2000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro inesperado";
@@ -153,7 +146,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
             className="h-1.5 rounded-full transition-all duration-300"
             style={{
               width: i === step ? 24 : 8,
-              backgroundColor: i === step ? primary : i < step ? primary : `${fg}15`,
+              backgroundColor: i === step ? primary : i < step ? primary : brandAlpha(fg, 0.08),
               opacity: i < step ? 0.5 : 1,
             }}
           />
@@ -162,11 +155,11 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
 
       {/* Step icon + label */}
       <div className="text-center mb-4">
-        <div className="h-12 w-12 mx-auto mb-2 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+        <div className="h-12 w-12 mx-auto mb-2 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.07) }}>
           <StepIcon className="h-6 w-6" style={{ color: primary }} />
         </div>
         <h3 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>{STEPS[step]}</h3>
-        <p className="text-xs mt-0.5" style={{ color: `${fg}50` }}>
+        <p className="text-xs mt-0.5" style={{ color: brandAlpha(fg, 0.31) }}>
           {["Informe seu CPF", "Como podemos te chamar?", "Para verificação da conta", "Seu número de contato", "Digite o código enviado por e-mail", "Crie uma senha segura"][step]}
         </p>
       </div>
@@ -189,7 +182,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("cpf", formatCpf(e.target.value))}
                 placeholder="000.000.000-00"
                 className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: `${fg}15` }}
+                style={{ borderColor: brandAlpha(fg, 0.08) }}
                 maxLength={14}
                 autoFocus
               />
@@ -200,7 +193,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("name", e.target.value)}
                 placeholder="Nome completo"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: `${fg}15` }}
+                style={{ borderColor: brandAlpha(fg, 0.08) }}
                 autoFocus
               />
             )}
@@ -210,7 +203,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("email", e.target.value)}
                 placeholder="seu@email.com"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: `${fg}15` }}
+                style={{ borderColor: brandAlpha(fg, 0.08) }}
                 autoFocus
               />
             )}
@@ -220,7 +213,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("phone", formatPhone(e.target.value))}
                 placeholder="(11) 99999-9999"
                 className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: `${fg}15` }}
+                style={{ borderColor: brandAlpha(fg, 0.08) }}
                 maxLength={15}
                 autoFocus
               />
@@ -231,7 +224,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("otp", e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
                 className="w-full text-center text-3xl font-mono tracking-[0.4em] px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: `${fg}15` }}
+                style={{ borderColor: brandAlpha(fg, 0.08) }}
                 maxLength={6}
                 autoFocus
               />
@@ -242,7 +235,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("password", e.target.value)}
                 placeholder="Mínimo 6 caracteres"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: `${fg}15` }}
+                style={{ borderColor: brandAlpha(fg, 0.08) }}
                 autoFocus
               />
             )}
@@ -256,7 +249,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
           onClick={step === 0 ? onCancel : goBack}
           disabled={loading}
           className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
-          style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}
+          style={{ backgroundColor: brandAlpha(fg, 0.03), color: brandAlpha(fg, 0.44) }}
         >
           {step === 0 ? "Cancelar" : "Voltar"}
         </button>

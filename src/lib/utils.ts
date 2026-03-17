@@ -22,3 +22,24 @@ export function withAlpha(hslColor: string, alpha: number): string {
   if (!inner) return hslColor;
   return `hsl(${inner} / ${alpha})`;
 }
+
+/** Apply alpha transparency to any color format (hex, hsl(), hsl(var(--xxx))).
+ *  Replaces the broken pattern `${color}XX` which fails when color is a CSS variable. */
+export function brandAlpha(color: string, alpha: number): string {
+  if (!color) return `hsl(var(--primary) / ${alpha})`;
+  // CSS variable: hsl(var(--xxx))
+  const varMatch = color.match(/hsl\(var\(([^)]+)\)\)/);
+  if (varMatch) return `hsl(var(${varMatch[1]}) / ${alpha})`;
+  // Standard hsl(): hsl(H S% L%)
+  const hslMatch = color.match(/hsl\((.+)\)/);
+  if (hslMatch) return `hsl(${hslMatch[1]} / ${alpha})`;
+  // Hex color
+  if (color.startsWith("#")) {
+    const hex = color.length === 4
+      ? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+      : color.slice(0, 7);
+    const a = Math.round(alpha * 255).toString(16).padStart(2, "0");
+    return hex + a;
+  }
+  return color;
+}

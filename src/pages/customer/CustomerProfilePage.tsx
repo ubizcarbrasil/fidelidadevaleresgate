@@ -14,7 +14,7 @@ import { translateError } from "@/lib/translateError";
 import { Skeleton } from "@/components/ui/skeleton";
 import { openLink } from "@/lib/openLink";
 import type { ProfileMenuItem } from "@/pages/ProfileLinksConfigPage";
-import { hslToCss, withAlpha } from "@/lib/utils";
+import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 
 export default function CustomerProfilePage() {
@@ -70,9 +70,9 @@ export default function CustomerProfilePage() {
         <div
           className="h-16 w-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0"
           style={{
-            background: `linear-gradient(135deg, ${primary}, ${primary}bb)`,
+            background: `linear-gradient(135deg, ${primary}, ${brandAlpha(primary, 0.73)})`,
             color: "#fff",
-            boxShadow: `0 4px 16px -4px ${primary}50`,
+            boxShadow: `0 4px 16px -4px ${brandAlpha(primary, 0.31)}`,
           }}
         >
           {name ? name.charAt(0).toUpperCase() : <AppIcon iconKey="profile_user" className="h-7 w-7" />}
@@ -125,13 +125,13 @@ export default function CustomerProfilePage() {
                   onClick={() => setSelectedBranch(branch)}
                   className={`w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between active:scale-[0.97] ${isSelected ? "" : "bg-muted"}`}
                   style={{
-                    backgroundColor: isSelected ? `${primary}10` : undefined,
-                    border: isSelected ? `1.5px solid ${primary}40` : "1.5px solid transparent",
+                    backgroundColor: isSelected ? brandAlpha(primary, 0.06) : undefined,
+                    border: isSelected ? `1.5px solid ${brandAlpha(primary, 0.25)}` : "1.5px solid transparent",
                   }}
                 >
                   <div>
                     <span className="font-semibold" style={{ color: isSelected ? primary : fg }}>{branch.name}</span>
-                    {branch.city && <span className="ml-1.5 text-xs" style={{ color: `${fg}40` }}>· {branch.city}</span>}
+                    {branch.city && <span className="ml-1.5 text-xs" style={{ color: brandAlpha(fg, 0.25) }}>· {branch.city}</span>}
                   </div>
                   {isSelected && (
                     <div
@@ -306,7 +306,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
         <Heart className="h-4 w-4" style={{ color: primary }} />
         <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
         {favorites.length > 0 && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}>
             {favorites.length}
           </span>
         )}
@@ -314,7 +314,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
 
       {favorites.length === 0 ? (
         <div className="text-center py-6 opacity-40">
-          <Heart className="h-8 w-8 mx-auto mb-2" style={{ color: `${fg}30` }} />
+          <Heart className="h-8 w-8 mx-auto mb-2" style={{ color: brandAlpha(fg, 0.19) }} />
           <p className="text-xs">Nenhuma oferta salva ainda</p>
           <p className="text-[10px] mt-0.5">Toque no ♥ nas ofertas para salvar aqui</p>
         </div>
@@ -326,12 +326,12 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
               onClick={() => openOffer(offer)}
               className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-left active:scale-[0.97]"
             >
-              <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: `${primary}08` }}>
+              <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
                 {offer.image_url ? (
                   <img src={offer.image_url} alt={offer.title} className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center">
-                    <Tag className="h-5 w-5" style={{ color: `${primary}40` }} />
+                    <Tag className="h-5 w-5" style={{ color: brandAlpha(primary, 0.25) }} />
                   </div>
                 )}
               </div>
@@ -390,7 +390,7 @@ function ProfileMenuItemButton({
 
   return (
     <>
-      <div style={{ borderBottom: isLast ? "none" : `1px solid ${fg}08` }} />
+      <div style={{ borderBottom: isLast ? "none" : `1px solid ${brandAlpha(fg, 0.03)}` }} />
       <button
         onClick={handleClick}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-left hover:bg-muted/50 transition-colors active:scale-[0.98]"
