@@ -78,7 +78,8 @@ export default function EmissorasSection() {
       </section>
     );
   }
-
+  // Hide section if multi_emitter module is not enabled or no stores
+  if (!isMultiEmitterEnabled || moduleLoading) return null;
   if (!stores.length) return null;
 
   return (
