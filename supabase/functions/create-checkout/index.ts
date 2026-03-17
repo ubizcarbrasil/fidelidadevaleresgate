@@ -8,16 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const PRICES: Record<string, number> = {
-  starter: 9700, // R$97 in centavos
-  profissional: 19700, // R$197 in centavos
-};
-
-const PRICE_NAMES: Record<string, string> = {
-  starter: "Starter — R$97/mês",
-  profissional: "Profissional — R$197/mês",
-};
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -43,12 +33,21 @@ Deno.serve(async (req) => {
 
     const { plan, brand_id } = await req.json();
     if (!plan || !brand_id) throw new Error("Missing plan or brand_id");
-    if (!PRICES[plan]) throw new Error("Invalid plan");
+
+    // Fetch plan pricing from database
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data: planData, error: planError } = await adminClient
+      .from("subscription_plans")
+      .select("plan_key, label, price_cents, is_active")
+      .eq("plan_key", plan)
+      .eq("is_active", true)
+      .single();
+
+    if (planError || !planData) throw new Error("Invalid or inactive plan");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Get or create Stripe customer
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: brand } = await adminClient
       .from("brands")
       .select("stripe_customer_id, name")
@@ -68,14 +67,13 @@ Deno.serve(async (req) => {
         });
         customerId = customer.id;
       }
-      // Save stripe_customer_id
       await adminClient
         .from("brands")
         .update({ stripe_customer_id: customerId })
         .eq("id", brand_id);
     }
 
-    // Create Checkout Session with inline price
+    // Create Checkout Session with price from DB
     const origin = req.headers.get("origin") || "https://fidelidadevaleresgate.lovable.app";
 
     const session = await stripe.checkout.sessions.create({
@@ -85,8 +83,8 @@ Deno.serve(async (req) => {
         {
           price_data: {
             currency: "brl",
-            product_data: { name: PRICE_NAMES[plan] },
-            unit_amount: PRICES[plan],
+            product_data: { name: `${planData.label} — R$${(planData.price_cents / 100).toFixed(0)}/mês` },
+            unit_amount: planData.price_cents,
             recurring: { interval: "month" },
           },
           quantity: 1,

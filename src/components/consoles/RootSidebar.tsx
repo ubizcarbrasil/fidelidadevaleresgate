@@ -147,6 +147,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
       { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
       { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: Crown },
+      { key: "sidebar.plan_pricing", defaultTitle: "Preços dos Planos", url: "/plan-pricing", icon: Crown },
     ],
   },
 ];
