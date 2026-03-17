@@ -434,9 +434,14 @@ function AlertsSection({ redemptionsPending, storeRulesPending }: { redemptionsP
       </CardHeader>
       <CardContent className="space-y-2">
         {alerts.map((alert) => (
-          <div key={alert.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-accent/30 border border-border">
-            <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 saas-badge-${alert.color}`}>
-              <alert.icon className="h-4 w-4" />
+          <div key={alert.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-accent/30 border border-border hover:border-destructive/30 transition-colors">
+            <div className="relative">
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 saas-badge-${alert.color}`}>
+                <alert.icon className="h-4 w-4" />
+              </div>
+              {alert.color === "destructive" && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-destructive dot-pulse" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium">{alert.label}</p>
