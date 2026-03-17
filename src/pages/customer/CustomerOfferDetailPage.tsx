@@ -1097,7 +1097,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                   <div className="flex gap-3">
                     <button onClick={() => setRedemptionStep("terms")} disabled={redeeming}
                       className="flex-1 py-3.5 rounded-2xl font-semibold text-sm"
-                      style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}>
+                      style={{ backgroundColor: brandAlpha(fg, 0.03), color: brandAlpha(fg, 0.44) }}>
                       Voltar
                     </button>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleRedeem}
