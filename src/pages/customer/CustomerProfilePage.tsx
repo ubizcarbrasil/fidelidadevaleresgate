@@ -125,8 +125,8 @@ export default function CustomerProfilePage() {
                   onClick={() => setSelectedBranch(branch)}
                   className={`w-full text-left rounded-xl px-4 py-3 text-sm transition-all flex items-center justify-between active:scale-[0.97] ${isSelected ? "" : "bg-muted"}`}
                   style={{
-                    backgroundColor: isSelected ? `${primary}10` : undefined,
-                    border: isSelected ? `1.5px solid ${primary}40` : "1.5px solid transparent",
+                    backgroundColor: isSelected ? brandAlpha(primary, 0.06) : undefined,
+                    border: isSelected ? `1.5px solid ${brandAlpha(primary, 0.25)}` : "1.5px solid transparent",
                   }}
                 >
                   <div>
