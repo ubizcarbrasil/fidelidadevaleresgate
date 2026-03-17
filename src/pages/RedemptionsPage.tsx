@@ -10,6 +10,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import type { Database } from "@/integrations/supabase/types";
 import EmptyState from "@/components/customer/EmptyState";
+import DataSkeleton from "@/components/DataSkeleton";
 
 type RedemptionStatus = Database["public"]["Enums"]["redemption_status"];
 const STATUS_VARIANT: Record<RedemptionStatus, string> = { PENDING: "outline", USED: "default", EXPIRED: "secondary", CANCELED: "destructive" };
