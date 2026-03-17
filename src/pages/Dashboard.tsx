@@ -157,8 +157,8 @@ function BrandQuickLinks() {
     enabled: !!currentBrandId,
   });
 
-  const settings = brand?.brand_settings_json as any;
-  const testAccounts = settings?.test_accounts as { email: string; role: string; is_active: boolean }[] | undefined;
+  const settings = brand?.brand_settings_json as Record<string, unknown> | null;
+  const testAccounts = (settings?.test_accounts ?? undefined) as { email: string; role: string; is_active: boolean }[] | undefined;
   const origin = window.location.origin;
   const customDomain = domain?.domain || domain?.subdomain || null;
   const productionUrl = customDomain ? `https://${customDomain.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}` : null;
