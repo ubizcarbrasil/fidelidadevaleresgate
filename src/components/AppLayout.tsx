@@ -220,9 +220,11 @@ export default function AppLayout() {
                   <p className="text-[10px] text-muted-foreground">{brandName || "Administrador"}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-xs gap-2" onClick={() => setShowChangePassword(true)}>
-                  <KeyRound className="h-3.5 w-3.5" /> Alterar Senha
-                </DropdownMenuItem>
+                <ChangePasswordDialog trigger={
+                  <DropdownMenuItem className="text-xs gap-2" onSelect={(e) => e.preventDefault()}>
+                    <KeyRound className="h-3.5 w-3.5" /> Alterar Senha
+                  </DropdownMenuItem>
+                } />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-xs gap-2 text-destructive" onClick={() => signOut()}>
                   <LogOut className="h-3.5 w-3.5" /> Sair
