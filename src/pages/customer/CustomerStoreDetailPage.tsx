@@ -240,7 +240,7 @@ function StoreOrientations({ store, primary, fg, fontHeading }: {
           </div>
           <div>
             <p className="text-sm font-bold">Prazo</p>
-            <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>{store.points_deadline_text}</p>
+            <p className="text-sm mt-0.5" style={{ color: brandAlpha(fg, 0.4) }}>{store.points_deadline_text}</p>
           </div>
         </div>
       )}
