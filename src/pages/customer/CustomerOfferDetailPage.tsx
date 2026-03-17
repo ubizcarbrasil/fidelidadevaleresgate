@@ -18,7 +18,7 @@ import { translateError } from "@/lib/translateError";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
-import { hslToCss, withAlpha } from "@/lib/utils";
+import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 
 type Offer = Tables<"offers">;
 
