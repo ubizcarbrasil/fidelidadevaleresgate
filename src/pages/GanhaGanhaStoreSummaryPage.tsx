@@ -1,15 +1,16 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Handshake, ArrowUpCircle, ArrowDownCircle, DollarSign, Loader2, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Handshake, ArrowUpCircle, ArrowDownCircle, DollarSign, Loader2, Settings, Store } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import PageHeader from "@/components/PageHeader";
 
 function formatMoney(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -20,26 +21,53 @@ function getCurrentMonth() {
 }
 
 interface Props {
-  store: any;
+  store?: any;
 }
 
-export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
+export default function GanhaGanhaStoreSummaryPage({ store: externalStore }: Props) {
   const { config: ggConfig, isLoading: ggLoading } = useGanhaGanhaConfig();
+  const { currentBrandId, consoleScope } = useBrandGuard();
+  const isStandalone = !externalStore;
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("all");
 
-  const { data: events, isLoading } = useQuery({
-    queryKey: ["gg-store-billing", store.id, periodMonth],
+  // Fetch stores list when standalone (Root/Brand viewing all stores)
+  const { data: stores, isLoading: storesLoading } = useQuery({
+    queryKey: ["gg-stores-list", currentBrandId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ganha_ganha_billing_events")
-        .select("*")
-        .eq("store_id", store.id)
-        .eq("period_month", periodMonth)
-        .order("created_at", { ascending: false });
+      let q = supabase
+        .from("stores")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+      if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
-    enabled: !!store.id,
+    enabled: isStandalone,
+  });
+
+  const effectiveStoreId = externalStore?.id || (selectedStoreId !== "all" ? selectedStoreId : null);
+
+  const { data: events, isLoading } = useQuery({
+    queryKey: ["gg-store-billing", effectiveStoreId || "all", periodMonth, currentBrandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("ganha_ganha_billing_events")
+        .select("*")
+        .eq("period_month", periodMonth)
+        .order("created_at", { ascending: false });
+      if (effectiveStoreId) {
+        q = q.eq("store_id", effectiveStoreId);
+      } else if (currentBrandId) {
+        q = q.eq("brand_id", currentBrandId);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+    enabled: isStandalone ? true : !!externalStore?.id,
   });
 
   const kpis = useMemo(() => {
@@ -55,7 +83,7 @@ export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
     };
   }, [events]);
 
-  if (isLoading || ggLoading) {
+  if (isLoading || ggLoading || storesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -84,21 +112,41 @@ export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
     { label: "Custo Total", value: formatMoney(kpis.total), icon: DollarSign, iconClass: "kpi-icon-violet" },
   ];
 
-  return (
+  const content = (
     <div className="space-y-5 animate-fade-in">
-      <div>
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg kpi-icon-violet flex items-center justify-center text-white">
-            <Handshake className="h-4 w-4" />
-          </div>
-          Meu Consumo Ganha-Ganha
-        </h2>
-        <p className="text-xs text-muted-foreground mt-1">Custos de uso do programa por período.</p>
-      </div>
+      {!isStandalone && (
+        <div>
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg kpi-icon-violet flex items-center justify-center text-white">
+              <Handshake className="h-4 w-4" />
+            </div>
+            Meu Consumo Ganha-Ganha
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">Custos de uso do programa por período.</p>
+        </div>
+      )}
 
-      <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Período</Label>
-        <Input type="month" value={periodMonth} onChange={e => setPeriodMonth(e.target.value)} className="w-44 rounded-xl" />
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Período</Label>
+          <Input type="month" value={periodMonth} onChange={e => setPeriodMonth(e.target.value)} className="w-44 rounded-xl" />
+        </div>
+        {isStandalone && stores && stores.length > 0 && (
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Loja</Label>
+            <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
+              <SelectTrigger className="w-56 rounded-xl">
+                <SelectValue placeholder="Todas as lojas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as lojas</SelectItem>
+                {stores.map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {/* ── KPI Cards ── */}
@@ -160,4 +208,15 @@ export default function GanhaGanhaStoreSummaryPage({ store }: Props) {
       </Card>
     </div>
   );
+
+  if (isStandalone) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Resumo Cashback por Loja" subtitle="Consumo Ganha-Ganha por parceiro e período" />
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 }
