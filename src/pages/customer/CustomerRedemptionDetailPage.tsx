@@ -182,7 +182,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
         {/* PIN section */}
         <div className="mx-5 rounded-2xl p-5 mb-4 bg-muted">
           <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: brandAlpha(fg, 0.37) }}>COPIE SEU PIN</p>
-          <div className="flex items-center justify-between rounded-xl p-4" style={{ border: `2px dashed ${primary}40`, backgroundColor: `${primary}06` }}>
+          <div className="flex items-center justify-between rounded-xl p-4" style={{ border: `2px dashed ${brandAlpha(primary, 0.25)}`, backgroundColor: brandAlpha(primary, 0.024) }}>
             <span className="text-3xl font-mono font-bold tracking-[0.3em]" style={{ color: primary }}>
               {redemption.token}
             </span>
