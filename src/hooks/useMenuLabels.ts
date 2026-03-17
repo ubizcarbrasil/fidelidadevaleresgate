@@ -35,6 +35,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.pontuar": "Pontuar",
     "sidebar.regras_pontos": "Regras de Fidelidade",
     "sidebar.regra_parceiro": "Regra de Pontos do Parceiro",
+    "sidebar.tier_pontos": "Pontuação por Tier",
     "sidebar.extrato_pontos": "Extrato de Fidelidade",
     "sidebar.gg_config": "Config. Cashback",
     "sidebar.gg_billing": "Financeiro Cashback",
