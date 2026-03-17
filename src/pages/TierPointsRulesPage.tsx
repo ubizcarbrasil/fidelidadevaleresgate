@@ -61,15 +61,11 @@ export default function TierPointsRulesPage() {
 
   const updateLocal = (tierKey: string, field: string, value: any) => {
     const current = mergedTiers.find(t => t.key === tierKey)!;
-    setLocalRules(prev => ({
-      ...prev,
-      [tierKey]: {
-        points_per_real: current.points_per_real,
-        is_active: current.is_active,
-        ...prev[tierKey],
-        [field]: value,
-      },
-    }));
+    const defaults = { points_per_real: current.points_per_real, is_active: current.is_active };
+    setLocalRules(prev => {
+      const existing = prev[tierKey] || defaults;
+      return { ...prev, [tierKey]: { ...existing, [field]: value } };
+    });
   };
 
   const saveMutation = useMutation({
