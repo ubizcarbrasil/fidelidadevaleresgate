@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import ImageUploadField from "@/components/ImageUploadField";
+import DataSkeleton from "@/components/DataSkeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
