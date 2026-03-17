@@ -1,30 +1,23 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Problema Identificado
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+A rota `/machine-integration` (Integração Mobilidade) está protegida com `RootGuard` no `App.tsx` (linha 222), o que significa que **somente root_admin** pode acessá-la. Porém, o `BrandSidebar` exibe esse item de menu para empreendedores (brand_admin) com o módulo `machine_integration` ativo — criando uma situação onde o menu aparece mas a página redireciona para `/`.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+O mesmo ocorre com `/machine-webhook-test` (linha 223).
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+## Plano
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+1. **Trocar `RootGuard` por `ModuleGuard`** nas rotas de integração de mobilidade no `App.tsx`:
+   - `/machine-integration`: de `RootGuard` para `ModuleGuard moduleKey="machine_integration"`
+   - `/machine-webhook-test`: de `RootGuard` para `ModuleGuard moduleKey="machine_integration"`
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+   Isso permitirá que qualquer usuário com o módulo `machine_integration` ativo na marca acesse essas páginas, mantendo a proteção por módulo.
+
+2. **Verificar o módulo `machine_integration`** no banco para confirmar que está ativo para a marca do usuário. Se não estiver, ativá-lo.
+
+### Impacto
+- Empreendedores com o módulo habilitado passarão a acessar a página normalmente
+- Root admins continuam tendo acesso (pois o `ModuleGuard` permite passagem para escopo ROOT)
+- Sem alteração visual ou de sidebar
+
