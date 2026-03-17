@@ -871,7 +871,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
 
                     {/* Redemption type badge */}
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primary}12` }}>
+                      <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.07) }}>
                         {offer.redemption_type === "ONLINE" ? <Globe className="h-4 w-4" style={{ color: primary }} /> :
                           offer.redemption_type === "WHATSAPP" ? <MessageCircle className="h-4 w-4" style={{ color: primary }} /> :
                             <MapPin className="h-4 w-4" style={{ color: primary }} />}
