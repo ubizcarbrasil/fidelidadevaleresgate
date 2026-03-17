@@ -366,7 +366,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   );
 }
 
-/* ── Section C: Ranking ── */
+/* ── Section C: Ranking with Medals ── */
 function RankingSection({ brandFilter }: { brandFilter?: string }) {
   const { data: topStores } = useQuery({
     queryKey: ["top-stores-ranking", brandFilter ?? "global"],
@@ -379,6 +379,8 @@ function RankingSection({ brandFilter }: { brandFilter?: string }) {
   });
   if (!topStores || topStores.length === 0) return null;
   const maxVal = topStores.length;
+  const medalClass = ["medal-gold", "medal-silver", "medal-bronze"];
+  const medalEmoji = ["🥇", "🥈", "🥉"];
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -389,7 +391,18 @@ function RankingSection({ brandFilter }: { brandFilter?: string }) {
           const pct = ((maxVal - i) / maxVal) * 100;
           return (
             <div key={store.id} className="flex items-center gap-3">
-              <span className="text-xs font-bold text-muted-foreground w-4 text-right">{i + 1}</span>
+              {i < 3 ? (
+                <span className={`text-sm w-5 text-center ${medalClass[i]}`}>{medalEmoji[i]}</span>
+              ) : (
+                <span className="text-xs font-bold text-muted-foreground w-5 text-center">{i + 1}</span>
+              )}
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.name} className="h-7 w-7 rounded-full object-cover ring-1 ring-border shrink-0" />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-accent flex items-center justify-center shrink-0">
+                  <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{store.name}</p>
                 <div className="mt-1 h-1.5 rounded-full bg-accent overflow-hidden">
