@@ -22,6 +22,7 @@ export interface RideData {
   passengerPhone: string | null;
   passengerEmail: string | null;
   driverName: string | null;
+  clienteId: string | null;
 }
 
 export type FetchRideResult =
