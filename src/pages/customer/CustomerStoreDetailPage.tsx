@@ -229,7 +229,7 @@ function StoreOrientations({ store, primary, fg, fontHeading }: {
           </div>
           <div>
             <p className="text-sm font-bold">Regra</p>
-            <p className="text-sm mt-0.5" style={{ color: `${fg}65` }}>{store.points_rule_text}</p>
+            <p className="text-sm mt-0.5" style={{ color: brandAlpha(fg, 0.4) }}>{store.points_rule_text}</p>
           </div>
         </div>
       )}
