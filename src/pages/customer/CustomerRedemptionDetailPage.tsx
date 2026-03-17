@@ -250,7 +250,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
 
         {hasActions && (
           <div className="mx-5 rounded-2xl p-5 mb-4 bg-amber-50 dark:bg-amber-950/30" style={{ border: "2px solid #FBBF24" }}>
-            <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: `${fg}60` }}>COMO RESGATAR</p>
+            <p className="text-[11px] font-bold tracking-wider mb-3" style={{ color: brandAlpha(fg, 0.37) }}>COMO RESGATAR</p>
             <div className="space-y-2">
               {store?.address && (
                 <ActionButton icon={<MapPin className="h-5 w-5" />} label="Ver Localização" bg="#FBBF24" color="#1F2937"
