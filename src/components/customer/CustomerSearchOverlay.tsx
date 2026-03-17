@@ -371,7 +371,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                           {(store.taxonomy_segments as any)?.name || store.category || ""}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: `${fg}25` }} />
+                      <ArrowRight className="h-4 w-4 shrink-0" style={{ color: brandAlpha(fg, 0.15) }} />
                     </button>
                   ))}
                 </div>
