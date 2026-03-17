@@ -224,7 +224,7 @@ function StoreOrientations({ store, primary, fg, fontHeading }: {
       <h2 className="text-lg font-bold mb-4" style={{ fontFamily: fontHeading }}>Orientações importantes</h2>
       {store.points_rule_text && (
         <div className="flex items-start gap-3 mb-4">
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}10` }}>
+           <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brandAlpha(primary, 0.06) }}>
             <Tag className="h-5 w-5" style={{ color: primary }} />
           </div>
           <div>
