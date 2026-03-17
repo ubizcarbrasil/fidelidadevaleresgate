@@ -74,7 +74,7 @@ export default function AppLayout() {
   const { user, signOut } = useAuth();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
   const [showApiKeyOnboarding, setShowApiKeyOnboarding] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
+  
   const bellRef = useRef<HTMLButtonElement>(null);
   const crumbs = useBreadcrumbs();
 
