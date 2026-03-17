@@ -357,7 +357,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     >
                       <div
                         className="h-11 w-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
-                        style={{ backgroundColor: `${primary}10` }}
+                         style={{ backgroundColor: brandAlpha(primary, 0.06) }}
                       >
                         {store.logo_url ? (
                           <img src={store.logo_url} alt={store.name} className="h-full w-full object-cover rounded-xl" />
