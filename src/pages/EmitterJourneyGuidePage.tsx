@@ -30,14 +30,14 @@ const journeySteps: JourneyStep[] = [
     phaseIcon: ShoppingBag,
     phaseColor: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
     title: "Entenda o que é ser Emissor",
-    description: "Saiba a diferença entre Receptora, Emissora e Mista antes de solicitar.",
+    description: "Saiba a diferença entre os tipos de parceiro antes de solicitar.",
     route: "/store-panel",
     steps: [
-      "Parceiros do tipo 'Receptora' apenas recebem resgates de cupons.",
+      "Parceiros do tipo 'Receptora' apenas recebem resgates de cupons dos clientes.",
       "Parceiros do tipo 'Emissora' podem pontuar clientes diretamente por compras realizadas.",
       "Parceiros do tipo 'Mista' fazem as duas coisas: recebem resgates e emitem pontos.",
       "Emissores participam do programa de fidelidade ativo, aumentando o engajamento dos clientes.",
-      "Antes de solicitar, verifique se o programa de pontos está ativo na sua marca.",
+      "Antes de solicitar, verifique se o programa de fidelidade está ativo na sua marca.",
     ],
     tips: [
       "A emissão de pontos é uma ferramenta poderosa para fidelizar clientes recorrentes.",
@@ -53,7 +53,7 @@ const journeySteps: JourneyStep[] = [
     description: "Envie uma solicitação para o administrador da marca aprovar.",
     route: "/store-panel",
     steps: [
-      "Acesse o Portal do Parceiro → aba 'Perfil' ou 'Início'.",
+      "Acesse o Painel do Parceiro → aba 'Perfil' ou 'Início'.",
       "Localize o card 'Tornar-se Emissor de Pontos'.",
       "Clique em 'Solicitar Ativação'.",
       "Escolha o tipo desejado: 'Mista' (resgata + emite) ou 'Emissora' (apenas emite).",
@@ -62,7 +62,7 @@ const journeySteps: JourneyStep[] = [
     ],
     tips: [
       "Uma justificativa bem escrita aumenta as chances de aprovação rápida.",
-      "Você pode acompanhar o status da solicitação diretamente no Portal do Parceiro.",
+      "Você pode acompanhar o andamento da solicitação diretamente no Painel do Parceiro.",
       "Se a solicitação for rejeitada, você pode enviar uma nova com justificativa atualizada.",
     ],
   },
@@ -71,14 +71,14 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 3",
     phaseIcon: ClipboardList,
     phaseColor: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-    title: "Acompanhar o Status da Solicitação",
+    title: "Acompanhar o Andamento da Solicitação",
     description: "Veja se sua solicitação está pendente, aprovada ou rejeitada.",
     route: "/store-panel",
     steps: [
-      "No Portal do Parceiro, o card de Emissor mostra o status atual.",
-      "Status 'Aguardando aprovação': o administrador ainda não analisou.",
-      "Status 'Aprovado': seu tipo foi alterado automaticamente. Você já pode emitir pontos!",
-      "Status 'Rejeitado': veja o motivo da rejeição e envie uma nova solicitação se desejar.",
+      "No Painel do Parceiro, o card de Emissor mostra o andamento atual.",
+      "Situação 'Aguardando aprovação': o administrador ainda não analisou.",
+      "Situação 'Aprovado': seu tipo foi alterado automaticamente. Você já pode emitir pontos!",
+      "Situação 'Rejeitado': veja o motivo e envie uma nova solicitação se desejar.",
     ],
     tips: [
       "O administrador pode levar até 48h para analisar, dependendo da marca.",
@@ -94,16 +94,16 @@ const journeySteps: JourneyStep[] = [
     description: "Defina quantos pontos seus clientes ganham por compra (se permitido pela marca).",
     route: "/store-panel",
     steps: [
-      "Após ser aprovado como Emissor, acesse o Portal do Parceiro → aba 'Pontos'.",
+      "Após ser aprovado como Emissor, acesse o Painel do Parceiro → aba 'Pontos'.",
       "Se o administrador permitir regras personalizadas, você verá o formulário de configuração.",
-      "Defina a taxa: quantos pontos por R$1 gasto (respeitando os limites mínimo e máximo da marca).",
+      "Defina a taxa: quantos pontos por R$1 gasto (respeitando os limites da marca).",
       "Preencha o valor de resgate por ponto, se aplicável.",
       "Salve a regra. Ela pode precisar de aprovação do administrador antes de entrar em vigor.",
     ],
     tips: [
-      "Se a marca não permitir regras personalizadas, a regra padrão da marca será aplicada automaticamente.",
-      "Regras que exigem aprovação ficam com status 'Pendente' até o administrador aprovar.",
-      "Você pode alterar sua regra a qualquer momento — cada alteração gera uma nova solicitação de aprovação.",
+      "Se a marca não permitir regras personalizadas, a regra padrão será aplicada automaticamente.",
+      "Regras que exigem aprovação ficam com situação 'Pendente' até o administrador aprovar.",
+      "Você pode alterar sua regra a qualquer momento — cada alteração gera uma nova solicitação.",
     ],
   },
   {
@@ -115,7 +115,7 @@ const journeySteps: JourneyStep[] = [
     description: "Emita pontos para clientes após uma compra realizada no estabelecimento.",
     route: "/store-panel",
     steps: [
-      "No Portal do Parceiro, acesse a aba 'Pontuar' ou use o Operador PDV.",
+      "No Painel do Parceiro, acesse a aba 'Pontuar' ou use o Caixa PDV.",
       "Busque o cliente pelo nome, telefone ou código.",
       "Informe o valor da compra realizada.",
       "O sistema calcula automaticamente os pontos com base na regra ativa.",
@@ -123,7 +123,7 @@ const journeySteps: JourneyStep[] = [
     ],
     tips: [
       "O cliente pode verificar o saldo de pontos no app, na seção 'Carteira'.",
-      "Cada emissão gera um registro no extrato de pontos para auditoria.",
+      "Cada emissão gera um registro no extrato de pontos para consulta.",
       "Se a marca exigir código de recibo, o campo aparecerá automaticamente.",
     ],
   },
@@ -132,19 +132,19 @@ const journeySteps: JourneyStep[] = [
     phase: "Fase 6",
     phaseIcon: ScanLine,
     phaseColor: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
-    title: "Usar o Operador de PDV",
+    title: "Usar o Caixa PDV",
     description: "Use a interface simplificada para pontuar clientes no caixa.",
     route: "/pdv",
     steps: [
-      "Acesse a rota /pdv ou use o menu 'Operador PDV' na sidebar.",
+      "Acesse o Caixa PDV pelo menu lateral ou pela rota /pdv.",
       "A tela é otimizada para uso rápido no ponto de venda.",
       "Busque o cliente pelo telefone ou QR code.",
       "Informe o valor da compra e confirme a pontuação.",
       "O cliente recebe os pontos instantaneamente.",
     ],
     tips: [
-      "O PDV funciona bem em tablets e celulares — ideal para balcões.",
-      "Treine sua equipe para usar o PDV: é simples e rápido.",
+      "O Caixa PDV funciona bem em tablets e celulares — ideal para balcões.",
+      "Treine sua equipe para usar o Caixa PDV: é simples e rápido.",
     ],
   },
   {
@@ -156,7 +156,7 @@ const journeySteps: JourneyStep[] = [
     description: "Monitore todas as emissões de pontos do seu estabelecimento.",
     route: "/store-panel",
     steps: [
-      "No Portal do Parceiro, acesse a aba 'Extrato'.",
+      "No Painel do Parceiro, acesse a aba 'Extrato'.",
       "Veja todas as emissões realizadas: data, cliente, valor da compra e pontos emitidos.",
       "Use os filtros para buscar por período ou cliente específico.",
       "Identifique padrões: quais clientes compram mais, quais dias têm mais movimento.",
@@ -175,7 +175,7 @@ const journeySteps: JourneyStep[] = [
     description: "Crie ofertas especiais para clientes que acumulam pontos no seu estabelecimento.",
     route: "/store-panel",
     steps: [
-      "No Portal do Parceiro, crie ofertas normalmente pelo wizard de cupons.",
+      "No Painel do Parceiro, crie ofertas normalmente pelo assistente de cupons.",
       "Considere criar ofertas exclusivas para clientes fiéis (ex: 'Ganhe 2x pontos às terças').",
       "Combine pontos + cupons para criar promoções irresistíveis.",
       "Monitore o impacto: ofertas + pontos geram mais retorno que cada um isolado.",
@@ -191,14 +191,14 @@ const journeySteps: JourneyStep[] = [
     phaseIcon: BarChart3,
     phaseColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
     title: "Analisar Resultados",
-    description: "Avalie o impacto do programa de pontos no seu negócio.",
+    description: "Avalie o impacto do programa de fidelidade no seu negócio.",
     route: "/store-panel",
     steps: [
       "Acesse o extrato para ver o volume total de pontos emitidos.",
       "Compare períodos: antes e depois da ativação como emissor.",
       "Identifique seus clientes mais fiéis (maiores acumuladores de pontos).",
       "Avalie se a taxa de pontos está adequada — ajuste se necessário.",
-      "Converse com o administrador da marca para sugestões e benchmarks.",
+      "Converse com o administrador da marca para sugestões e melhorias.",
     ],
     tips: [
       "Emissores ativos geralmente têm 30-50% mais recorrência de clientes.",
@@ -217,12 +217,12 @@ const journeySteps: JourneyStep[] = [
       "Sempre informe o cliente que ele está ganhando pontos — isso gera satisfação imediata.",
       "Coloque um aviso visível no estabelecimento: 'Aqui você acumula pontos!'.",
       "Treine todos os funcionários para pontuar clientes corretamente.",
-      "Monitore o extrato semanalmente para detectar anomalias.",
+      "Monitore o extrato semanalmente para detectar possíveis problemas.",
       "Mantenha contato com o administrador da marca para alinhamento estratégico.",
     ],
     tips: [
       "A transparência com o cliente é a chave: mostre o saldo de pontos sempre que possível.",
-      "Parceiros engajados no programa de pontos são prioridade para destaque na vitrine do app.",
+      "Parceiros engajados no programa de fidelidade são prioridade para destaque na vitrine do app.",
       "Quanto mais pontos seus clientes acumulam, mais eles voltam!",
     ],
   },
@@ -238,7 +238,7 @@ export default function EmitterJourneyGuidePage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <PageHeader
-        title="Jornada do Emissor de Pontos"
+        title="Guia do Emissor de Pontos"
         description="Passo a passo para parceiros se tornarem emissores de pontos e operarem o programa de fidelidade."
       />
 
@@ -249,7 +249,7 @@ export default function EmitterJourneyGuidePage() {
             <div>
               <h3 className="font-bold text-sm mb-1">Do Parceiro ao Emissor</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Esta jornada guia o parceiro desde o entendimento do programa de pontos até a operação completa como emissor.
+                Esta jornada guia o parceiro desde o entendimento do programa de fidelidade até a operação completa como emissor.
                 Siga as 10 fases para ativar, configurar e maximizar o programa de fidelidade no seu estabelecimento.
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
