@@ -462,7 +462,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                 <div className="space-y-4">
                   {Object.entries(grouped).map(([dateLabel, items]) => (
                     <div key={dateLabel}>
-                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2 px-1" style={{ color: `${fg}35` }}>
+                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2 px-1" style={{ color: brandAlpha(fg, 0.22) }}>
                         {dateLabel}
                       </p>
                       <div className="space-y-1.5">
