@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Shield, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -48,8 +50,11 @@ function BrandUsersView({ brandId }: { brandId: string }) {
   // Invite form state
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("branch_operator");
   const [inviteBranchId, setInviteBranchId] = useState("");
+  const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
 
   const { data: branches } = useQuery({
     queryKey: ["branches-select", brandId],
@@ -58,6 +63,69 @@ function BrandUsersView({ brandId }: { brandId: string }) {
       return data || [];
     },
   });
+
+  const { data: allPermissions } = useQuery({
+    queryKey: ["permissions-all-invite"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("permissions")
+        .select("id, key, module, display_name, order_index")
+        .eq("is_active", true)
+        .order("module")
+        .order("order_index");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const MODULE_LABELS: Record<string, string> = {
+    customers: "Clientes", loyalty: "Fidelidade", offers: "Ofertas",
+    redemptions: "Resgates", reports: "Relatórios", settings: "Configurações",
+    stores: "Parceiros", users: "Usuários", vouchers: "Vouchers",
+    roles: "Papéis", branches: "Cidades",
+  };
+
+  const PERM_ACTION_LABELS: Record<string, string> = {
+    create: "Criar", read: "Visualizar", update: "Editar", delete: "Excluir",
+    approve: "Aprovar", assign: "Atribuir", revoke: "Revogar", redeem: "Resgatar",
+    cancel: "Cancelar", view: "Visualizar", invite: "Convidar", deactivate: "Desativar",
+    earn_points: "Pontuar",
+  };
+
+  const groupedPerms = useMemo(() => {
+    if (!allPermissions) return {};
+    const excluded = ["tenants", "brands", "domains"];
+    const filtered = allPermissions.filter(p => !excluded.includes(p.module));
+    const groups: Record<string, typeof filtered> = {};
+    for (const p of filtered) {
+      if (!groups[p.module]) groups[p.module] = [];
+      groups[p.module].push(p);
+    }
+    return groups;
+  }, [allPermissions]);
+
+  const togglePerm = (key: string) => {
+    setSelectedPerms(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleModule = (keys: string[]) => {
+    setSelectedPerms(prev => {
+      const next = new Set(prev);
+      const allChecked = keys.every(k => next.has(k));
+      if (allChecked) keys.forEach(k => next.delete(k));
+      else keys.forEach(k => next.add(k));
+      return next;
+    });
+  };
+
+  const getActionLabel = (key: string) => {
+    const action = key.split(".").pop() || key;
+    return PERM_ACTION_LABELS[action] || action;
+  };
 
   const { data: brandUsers, isLoading } = useQuery({
     queryKey: ["brand-team", brandId],
@@ -101,13 +169,17 @@ function BrandUsersView({ brandId }: { brandId: string }) {
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
+      if (password && password.length < 6) throw new Error("Senha deve ter no mínimo 6 caracteres");
+      if (password && password !== confirmPassword) throw new Error("As senhas não coincidem");
       const { data, error } = await supabase.functions.invoke("invite-brand-user", {
         body: {
           email,
           full_name: fullName,
+          password: password || undefined,
           role: inviteRole,
           brand_id: brandId,
           branch_id: inviteBranchId || undefined,
+          permissions: Array.from(selectedPerms),
         },
       });
       if (error) throw error;
@@ -116,11 +188,10 @@ function BrandUsersView({ brandId }: { brandId: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["brand-team", brandId] });
-      toast.success("Usuário convidado com sucesso!");
+      toast.success("Acesso criado com sucesso!");
       setInviteOpen(false);
-      setEmail("");
-      setFullName("");
-      setInviteBranchId("");
+      setEmail(""); setFullName(""); setPassword(""); setConfirmPassword("");
+      setInviteBranchId(""); setSelectedPerms(new Set());
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -148,9 +219,9 @@ function BrandUsersView({ brandId }: { brandId: string }) {
           <DialogTrigger asChild>
             <Button><UserPlus className="h-4 w-4 mr-2" />Convidar Usuário</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Convidar Usuário</DialogTitle>
+              <DialogTitle>Criar Acesso</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -161,6 +232,19 @@ function BrandUsersView({ brandId }: { brandId: string }) {
                 <Label>E-mail</Label>
                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Senha</Label>
+                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 caracteres" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Confirmar Senha</Label>
+                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repetir senha" />
+                </div>
+              </div>
+              {password && confirmPassword && password !== confirmPassword && (
+                <p className="text-sm text-destructive">As senhas não coincidem</p>
+              )}
               <div className="space-y-2">
                 <Label>Função</Label>
                 <Select value={inviteRole} onValueChange={v => setInviteRole(v as AppRole)}>
@@ -183,13 +267,48 @@ function BrandUsersView({ brandId }: { brandId: string }) {
                   </Select>
                 </div>
               )}
+
+              <Separator />
+              <div>
+                <Label className="text-sm font-semibold">Permissões</Label>
+                <p className="text-xs text-muted-foreground mb-3">Selecione o que este usuário poderá acessar</p>
+                <div className="space-y-3 max-h-48 overflow-y-auto border rounded-md p-3">
+                  {Object.entries(groupedPerms).map(([module, perms]) => {
+                    const keys = perms.map(p => p.key);
+                    const allChecked = keys.every(k => selectedPerms.has(k));
+                    const someChecked = keys.some(k => selectedPerms.has(k));
+                    return (
+                      <div key={module}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Checkbox
+                            checked={allChecked}
+                            onCheckedChange={() => toggleModule(keys)}
+                          />
+                          <Label className="font-medium text-xs cursor-pointer" onClick={() => toggleModule(keys)}>
+                            {MODULE_LABELS[module] || module}
+                          </Label>
+                        </div>
+                        <div className="grid grid-cols-2 gap-0.5 pl-6">
+                          {perms.map(p => (
+                            <label key={p.key} className="flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
+                              <Checkbox checked={selectedPerms.has(p.key)} onCheckedChange={() => togglePerm(p.key)} />
+                              {p.display_name || getActionLabel(p.key)}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <Button
                 onClick={() => inviteMutation.mutate()}
-                disabled={!email || inviteMutation.isPending}
+                disabled={!email || !password || password.length < 6 || password !== confirmPassword || inviteMutation.isPending}
                 className="w-full"
               >
                 {inviteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Enviar Convite
+                Criar Acesso
               </Button>
             </div>
           </DialogContent>

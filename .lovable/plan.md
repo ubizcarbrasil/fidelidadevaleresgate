@@ -1,44 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Adicionar senha e permissões ao fluxo de convite
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema
-O dialog "Convidar Usuário" atual só pede nome, email, função e cidade. Faltam dois campos essenciais:
-1. **Senha de acesso** — atualmente gera senha aleatória (o usuário não consegue logar)
-2. **Seleção de permissões** — existe o `UserPermissionsDialog` separado, mas não é possível definir permissões na hora do convite
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Alterações
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-#### 1. Dialog de convite (`UsersPage.tsx` — `BrandUsersView`)
-Adicionar ao formulário de convite:
-- **Campo "Senha"** (type=password, min 6 caracteres)
-- **Campo "Confirmar Senha"**
-- **Checklist de permissões** inline (reutilizando a lógica de agrupamento por módulo do `UserPermissionsDialog`) — checkboxes agrupados por módulo com toggle "selecionar todos" por grupo
-- Enviar `password` e `permissions[]` no body da mutation
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-#### 2. Edge Function `invite-brand-user`
-- Aceitar campo `password` no body
-- Usar o password fornecido em `createUser()` em vez de `crypto.randomUUID()`
-- Manter fallback para senha aleatória se `password` não vier
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-#### 3. Resumo do fluxo
-```text
-Dialog "Convidar Usuário"
-├── Nome
-├── E-mail
-├── Senha / Confirmar Senha
-├── Função (branch_admin / branch_operator / operator_pdv)
-├── Cidade (opcional)
-├── ─── Permissões ───
-│   ├── [✓] Módulo X (selecionar todos)
-│   │   ├── [✓] Criar
-│   │   ├── [✓] Visualizar
-│   │   └── [ ] Excluir
-│   └── [✓] Módulo Y ...
-└── Botão "Criar Acesso"
-```
-
-### Arquivos
-- **Editar**: `src/pages/UsersPage.tsx` (adicionar campos de senha + checklist de permissões no dialog de convite)
-- **Editar**: `supabase/functions/invite-brand-user/index.ts` (aceitar `password` no body)
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
-    const { email, full_name, role, brand_id, branch_id, permissions } = body;
+    const { email, full_name, password, role, brand_id, branch_id, permissions } = body;
 
     if (!email || !role || !brand_id) {
       return new Response(JSON.stringify({ error: "email, role and brand_id are required" }), {
@@ -97,10 +97,10 @@ Deno.serve(async (req) => {
       logger.info("User already exists", { userId });
     } else {
       // Create new user with random password (they'll reset via email)
-      const tempPassword = crypto.randomUUID();
+      const userPassword = password && typeof password === "string" && password.length >= 6 ? password : crypto.randomUUID();
       const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
         email,
-        password: tempPassword,
+        password: userPassword,
         email_confirm: true,
         user_metadata: { full_name: full_name || "" },
       });
