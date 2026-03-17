@@ -81,15 +81,26 @@ export default function CustomersPage() {
 
   const syncToCrmMutation = useMutation({
     mutationFn: async () => {
-      // Get all PENDING customers for this brand
-      let q = supabase.from("customers").select("id, name, phone, cpf, email, brand_id, branch_id, ride_count").eq("crm_sync_status", "PENDING") as any;
-      if (currentBrandId) q = q.eq("brand_id", currentBrandId);
-      const { data: pendingCustomers, error } = await q.limit(200);
-      if (error) throw error;
-      if (!pendingCustomers?.length) throw new Error("Nenhum cliente pendente para sincronizar");
+      const brandId = currentBrandId;
+      if (!brandId) throw new Error("Marca não selecionada");
 
-      let synced = 0;
-      for (const cust of pendingCustomers) {
+      // Fallback branch for contacts without branch_id
+      const defaultBranch = branches?.[0];
+      if (!defaultBranch) throw new Error("Nenhuma filial cadastrada para esta marca");
+
+      let pushedCount = 0;
+      let importedCount = 0;
+
+      // ── 1. Push: customers PENDING → crm_contacts (existing logic) ──
+      const { data: pendingCustomers, error: pendErr } = await (supabase as any)
+        .from("customers")
+        .select("id, name, phone, cpf, email, brand_id, branch_id, ride_count")
+        .eq("crm_sync_status", "PENDING")
+        .eq("brand_id", brandId)
+        .limit(200);
+      if (pendErr) throw pendErr;
+
+      for (const cust of pendingCustomers || []) {
         const { data: contact } = await supabase.from("crm_contacts").insert({
           brand_id: cust.brand_id,
           branch_id: cust.branch_id,
@@ -107,14 +118,65 @@ export default function CustomersPage() {
             crm_contact_id: contact.id,
             crm_sync_status: "SYNCED",
           }).eq("id", cust.id);
-          synced++;
+          pushedCount++;
         }
       }
-      return synced;
+
+      // ── 2. Pull: crm_contacts órfãos → customers (NEW) ──
+      const { data: orphanContacts, error: orphErr } = await supabase
+        .from("crm_contacts")
+        .select("id, name, phone, cpf, email, brand_id, branch_id, ride_count")
+        .eq("brand_id", brandId)
+        .is("customer_id", null)
+        .eq("is_active", true)
+        .limit(500);
+      if (orphErr) throw orphErr;
+
+      const tierFromRides = (rides: number): string => {
+        if (rides >= 200) return "GALATICO";
+        if (rides >= 150) return "LENDARIO";
+        if (rides >= 100) return "DIAMANTE";
+        if (rides >= 50) return "OURO";
+        if (rides >= 20) return "PRATA";
+        if (rides >= 5) return "BRONZE";
+        return "INICIANTE";
+      };
+
+      for (const contact of orphanContacts || []) {
+        const branchId = contact.branch_id || defaultBranch.id;
+        const { data: newCust } = await (supabase as any).from("customers").insert({
+          name: contact.name || "Contato CRM",
+          phone: contact.phone || null,
+          cpf: contact.cpf || null,
+          email: contact.email || null,
+          brand_id: contact.brand_id,
+          branch_id: branchId,
+          crm_contact_id: contact.id,
+          crm_sync_status: "SYNCED",
+          ride_count: contact.ride_count || 0,
+          customer_tier: tierFromRides(contact.ride_count || 0),
+        }).select("id").single();
+
+        if (newCust) {
+          await (supabase as any).from("crm_contacts").update({
+            customer_id: newCust.id,
+          }).eq("id", contact.id);
+          importedCount++;
+        }
+      }
+
+      return { pushedCount, importedCount };
     },
-    onSuccess: (count) => {
+    onSuccess: ({ pushedCount, importedCount }) => {
       qc.invalidateQueries({ queryKey: ["customers"] });
-      toast.success(`${count} cliente(s) sincronizado(s) com o CRM!`);
+      if (pushedCount === 0 && importedCount === 0) {
+        toast.info("Tudo sincronizado! Nenhuma pendência encontrada.");
+      } else {
+        const parts: string[] = [];
+        if (pushedCount > 0) parts.push(`${pushedCount} enviado(s) ao CRM`);
+        if (importedCount > 0) parts.push(`${importedCount} importado(s) do CRM`);
+        toast.success(`Sincronização concluída: ${parts.join(", ")}`);
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
