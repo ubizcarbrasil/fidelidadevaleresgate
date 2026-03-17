@@ -619,7 +619,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       )}
                     </div>
                     {offer.end_at && (
-                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : `${primary}12`, color: isDark ? "hsl(var(--foreground))" : primary }}>
+                      <div className="px-4 py-2 text-center text-xs font-bold" style={{ backgroundColor: isDark ? "hsl(var(--foreground) / 0.08)" : brandAlpha(primary, 0.07), color: isDark ? "hsl(var(--foreground))" : primary }}>
                         Válido até {new Date(offer.end_at).toLocaleDateString("pt-BR")}
                       </div>
                     )}
