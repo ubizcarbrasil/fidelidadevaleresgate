@@ -181,9 +181,9 @@ function AppRoutes() {
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
           <Route path="tier-points-rules" element={<ModuleGuard moduleKey="earn_points_store"><TierPointsRulesPage /></ModuleGuard>} />
           
-          <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
-          <Route path="affiliate-deals/import-mobile" element={<AchadinhosMobileImportPage />} />
-          <Route path="affiliate-categories" element={<AffiliateCategoriesPage />} />
+          <Route path="affiliate-deals" element={<ModuleGuard moduleKey="achadinhos"><AffiliateDealsPage /></ModuleGuard>} />
+          <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="achadinhos"><AchadinhosMobileImportPage /></ModuleGuard>} />
+          <Route path="affiliate-categories" element={<ModuleGuard moduleKey="achadinhos"><AffiliateCategoriesPage /></ModuleGuard>} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
