@@ -230,7 +230,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
                   <button
                     onClick={() => { setShowCancelConfirm(false); setCancelPin(""); }}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                    style={{ backgroundColor: `${fg}10`, color: `${fg}70` }}
+                    style={{ backgroundColor: brandAlpha(fg, 0.06), color: brandAlpha(fg, 0.44) }}
                   >
                     Cancelar
                   </button>
