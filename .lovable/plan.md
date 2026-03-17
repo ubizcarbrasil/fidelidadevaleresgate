@@ -1,30 +1,20 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Habilitar módulo `users_management` para Ubiz Resgata
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+A marca **Ubiz Resgata** (`db15bd21...`) não possui registro na tabela `brand_modules` para o módulo `users_management` (definition id `937059aa...`), por isso o item "Usuários" não aparece no menu lateral.
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+### Solução
+1. **Migração SQL**: Inserir uma linha em `brand_modules` vinculando a marca Ubiz Resgata ao módulo `users_management` com `is_enabled = true`.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+```sql
+INSERT INTO brand_modules (brand_id, module_definition_id, is_enabled)
+VALUES ('db15bd21-9137-4965-a0fb-540d8e8b26f1', '937059aa-d18a-4d80-ba12-092978888c95', true)
+ON CONFLICT DO NOTHING;
+```
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+2. **Verificação**: Após a migração, o hook `useBrandModules` retornará `true` para `users_management`, e o item "Usuários" aparecerá no grupo "Equipe & Acessos" do sidebar.
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+Nenhuma alteração de código é necessária — apenas a inserção do dado no banco.
+
