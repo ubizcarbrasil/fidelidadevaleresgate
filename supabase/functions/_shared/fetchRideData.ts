@@ -22,6 +22,7 @@ export interface RideData {
   passengerPhone: string | null;
   passengerEmail: string | null;
   driverName: string | null;
+  clienteId: string | null;
 }
 
 export type FetchRideResult =
@@ -55,6 +56,7 @@ function parseRecibo(json: any): Omit<RideData, "source"> | null {
     passengerPhone: null,  // Recibo API does not return passenger phone
     passengerEmail: null,  // Recibo API does not return passenger email
     driverName: motoristaBlock.nome || null,
+    clienteId: clienteBlock.cliente_id || null,
   };
 }
 
@@ -87,9 +89,56 @@ function parseRequestV1(json: any): Omit<RideData, "source"> {
     passengerPhone: phone,
     passengerEmail: null, // V1 does not return email
     driverName: driver.name || null,
+    clienteId: null, // V1 does not return cliente_id
   };
 }
 
+/**
+ * Fetch complementary client details from TaxiMachine /api/integracao/cliente endpoint.
+ * Uses matrix (headquarters) credentials. Returns phone and email if available.
+ */
+export async function fetchClientDetails(
+  clienteId: string,
+  matrixHeaders: Record<string, string>
+): Promise<{ phone: string | null; email: string | null; cpf: string | null; name: string | null }> {
+  const url = `${API_BASE_URL}/api/integracao/cliente?id=${clienteId}`;
+  logger.info("Fetching client details", { clienteId, url });
+
+  try {
+    const res = await fetch(url, { headers: matrixHeaders });
+    if (!res.ok) {
+      const body = await res.text();
+      logger.warn("Client details fetch failed", { clienteId, status: res.status, body: body.slice(0, 300) });
+      return { phone: null, email: null, cpf: null, name: null };
+    }
+
+    const json = await res.json();
+    // Response: [{ success: true, response: [{ id, nome, email, telefone, cpf, ... }] }]
+    const item = Array.isArray(json) ? json[0] : json;
+    if (item?.success === false) {
+      logger.warn("Client details returned success=false", { clienteId });
+      return { phone: null, email: null, cpf: null, name: null };
+    }
+
+    const responseArr = item?.response;
+    const client = Array.isArray(responseArr) ? responseArr[0] : responseArr;
+    if (!client) {
+      logger.warn("Client details response empty", { clienteId });
+      return { phone: null, email: null, cpf: null, name: null };
+    }
+
+    const phone = client.telefone || null;
+    const email = client.email || null;
+    const rawCpf = (client.cpf || "").replace(/\D/g, "") || null;
+    const name = client.nome || null;
+
+    logger.info("Client details fetched", { clienteId, hasPhone: !!phone, hasEmail: !!email, hasCpf: !!rawCpf });
+    return { phone, email, cpf: rawCpf, name };
+  } catch (e) {
+    logger.warn("Client details fetch exception", { clienteId, error: String(e) });
+    return { phone: null, email: null, cpf: null, name: null };
+  }
+}
 export function buildApiHeaders(
   receiptApiKey: string,
   basicUser: string,
@@ -155,6 +204,23 @@ async function fetchReciboFirst(
   }
 
   if (reciboData) {
+    // Enrich with client details API if we have clienteId (phone + email)
+    if (reciboData.clienteId && (!reciboData.passengerPhone || !reciboData.passengerEmail)) {
+      const enrichHeaders = matrixHeaders ?? headers;
+      const clientDetails = await fetchClientDetails(reciboData.clienteId, enrichHeaders);
+      if (clientDetails.phone) reciboData.passengerPhone = clientDetails.phone;
+      if (clientDetails.email) reciboData.passengerEmail = clientDetails.email;
+      // Also enrich CPF and name if missing
+      if (!reciboData.passengerCpf && clientDetails.cpf) reciboData.passengerCpf = clientDetails.cpf;
+      if (!reciboData.passengerName && clientDetails.name) reciboData.passengerName = clientDetails.name;
+
+      if (clientDetails.phone || clientDetails.email) {
+        logger.info("Enriched from client API", { machineRideId, hasPhone: !!clientDetails.phone, hasEmail: !!clientDetails.email });
+        return { ok: true, data: { source: "recibo+v1", ...reciboData } };
+      }
+    }
+
+    // Fallback: try V1 for phone if still missing
     if (!reciboData.passengerPhone) {
       try {
         const v1Url = `${API_BASE_URL}/api/v1/request/${machineRideId}`;
