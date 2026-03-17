@@ -19,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+const DashboardTasksSection = lazy(() => import("@/components/dashboard/TasksSection"));
+const DashboardActivityFeed = lazy(() => import("@/components/dashboard/ActivityFeed"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
