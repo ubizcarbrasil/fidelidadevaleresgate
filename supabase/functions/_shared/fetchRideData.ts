@@ -89,9 +89,56 @@ function parseRequestV1(json: any): Omit<RideData, "source"> {
     passengerPhone: phone,
     passengerEmail: null, // V1 does not return email
     driverName: driver.name || null,
+    clienteId: null, // V1 does not return cliente_id
   };
 }
 
+/**
+ * Fetch complementary client details from TaxiMachine /api/integracao/cliente endpoint.
+ * Uses matrix (headquarters) credentials. Returns phone and email if available.
+ */
+export async function fetchClientDetails(
+  clienteId: string,
+  matrixHeaders: Record<string, string>
+): Promise<{ phone: string | null; email: string | null; cpf: string | null; name: string | null }> {
+  const url = `${API_BASE_URL}/api/integracao/cliente?id=${clienteId}`;
+  logger.info("Fetching client details", { clienteId, url });
+
+  try {
+    const res = await fetch(url, { headers: matrixHeaders });
+    if (!res.ok) {
+      const body = await res.text();
+      logger.warn("Client details fetch failed", { clienteId, status: res.status, body: body.slice(0, 300) });
+      return { phone: null, email: null, cpf: null, name: null };
+    }
+
+    const json = await res.json();
+    // Response: [{ success: true, response: [{ id, nome, email, telefone, cpf, ... }] }]
+    const item = Array.isArray(json) ? json[0] : json;
+    if (item?.success === false) {
+      logger.warn("Client details returned success=false", { clienteId });
+      return { phone: null, email: null, cpf: null, name: null };
+    }
+
+    const responseArr = item?.response;
+    const client = Array.isArray(responseArr) ? responseArr[0] : responseArr;
+    if (!client) {
+      logger.warn("Client details response empty", { clienteId });
+      return { phone: null, email: null, cpf: null, name: null };
+    }
+
+    const phone = client.telefone || null;
+    const email = client.email || null;
+    const rawCpf = (client.cpf || "").replace(/\D/g, "") || null;
+    const name = client.nome || null;
+
+    logger.info("Client details fetched", { clienteId, hasPhone: !!phone, hasEmail: !!email, hasCpf: !!rawCpf });
+    return { phone, email, cpf: rawCpf, name };
+  } catch (e) {
+    logger.warn("Client details fetch exception", { clienteId, error: String(e) });
+    return { phone: null, email: null, cpf: null, name: null };
+  }
+}
 export function buildApiHeaders(
   receiptApiKey: string,
   basicUser: string,
