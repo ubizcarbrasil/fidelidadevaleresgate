@@ -219,9 +219,9 @@ function BrandUsersView({ brandId }: { brandId: string }) {
           <DialogTrigger asChild>
             <Button><UserPlus className="h-4 w-4 mr-2" />Convidar Usuário</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Convidar Usuário</DialogTitle>
+              <DialogTitle>Criar Acesso</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -232,6 +232,19 @@ function BrandUsersView({ brandId }: { brandId: string }) {
                 <Label>E-mail</Label>
                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Senha</Label>
+                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 caracteres" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Confirmar Senha</Label>
+                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repetir senha" />
+                </div>
+              </div>
+              {password && confirmPassword && password !== confirmPassword && (
+                <p className="text-sm text-destructive">As senhas não coincidem</p>
+              )}
               <div className="space-y-2">
                 <Label>Função</Label>
                 <Select value={inviteRole} onValueChange={v => setInviteRole(v as AppRole)}>
@@ -254,13 +267,48 @@ function BrandUsersView({ brandId }: { brandId: string }) {
                   </Select>
                 </div>
               )}
+
+              <Separator />
+              <div>
+                <Label className="text-sm font-semibold">Permissões</Label>
+                <p className="text-xs text-muted-foreground mb-3">Selecione o que este usuário poderá acessar</p>
+                <div className="space-y-3 max-h-48 overflow-y-auto border rounded-md p-3">
+                  {Object.entries(groupedPerms).map(([module, perms]) => {
+                    const keys = perms.map(p => p.key);
+                    const allChecked = keys.every(k => selectedPerms.has(k));
+                    const someChecked = keys.some(k => selectedPerms.has(k));
+                    return (
+                      <div key={module}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Checkbox
+                            checked={allChecked}
+                            onCheckedChange={() => toggleModule(keys)}
+                          />
+                          <Label className="font-medium text-xs cursor-pointer" onClick={() => toggleModule(keys)}>
+                            {MODULE_LABELS[module] || module}
+                          </Label>
+                        </div>
+                        <div className="grid grid-cols-2 gap-0.5 pl-6">
+                          {perms.map(p => (
+                            <label key={p.key} className="flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
+                              <Checkbox checked={selectedPerms.has(p.key)} onCheckedChange={() => togglePerm(p.key)} />
+                              {p.display_name || getActionLabel(p.key)}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <Button
                 onClick={() => inviteMutation.mutate()}
-                disabled={!email || inviteMutation.isPending}
+                disabled={!email || !password || password.length < 6 || password !== confirmPassword || inviteMutation.isPending}
                 className="w-full"
               >
                 {inviteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Enviar Convite
+                Criar Acesso
               </Button>
             </div>
           </DialogContent>
