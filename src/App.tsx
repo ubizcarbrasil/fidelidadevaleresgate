@@ -164,11 +164,11 @@ function AppRoutes() {
           <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
           <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
           <Route path="templates" element={<RootGuard><SectionTemplatesPage /></RootGuard>} />
-          <Route path="modules" element={<ModuleDefinitionsPage />} />
+          <Route path="modules" element={<RootGuard><ModuleDefinitionsPage /></RootGuard>} />
           <Route path="permissions" element={<PermissionsPage />} />
-          <Route path="flags" element={<FeatureFlagsPage />} />
+          <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
           <Route path="audit" element={<AuditLogsPage />} />
-          <Route path="releases" element={<ReleasesPage />} />
+          <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
           <Route path="home-templates" element={<HomeTemplatesPage />} />
           <Route path="csv-import" element={<ModuleGuard moduleKey="stores"><CsvImportPage /></ModuleGuard>} />
           <Route path="clone-branch" element={<CloneBranchPage />} />
@@ -187,29 +187,29 @@ function AppRoutes() {
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
-          <Route path="icon-library" element={<IconLibraryPage />} />
+          <Route path="icon-library" element={<RootGuard><IconLibraryPage /></RootGuard>} />
           <Route path="banner-manager" element={<BannerManagerPage />} />
           <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
           <Route path="page-builder" element={<PageBuilderPage />} />
           <Route path="page-builder-v2" element={<PageBuilderV2Page />} />
           <Route path="public-vouchers" element={<PublicVouchers />} />
           
-          <Route path="provision-brand" element={<ProvisionBrandWizard />} />
-          <Route path="brand-permissions" element={<BrandPermissionOverflowPage />} />
-          <Route path="taxonomy" element={<TaxonomyPage />} />
-          <Route path="starter-kit" element={<StarterKitConfigPage />} />
+          <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
+          <Route path="brand-permissions" element={<RootGuard><BrandPermissionOverflowPage /></RootGuard>} />
+          <Route path="taxonomy" element={<RootGuard><TaxonomyPage /></RootGuard>} />
+          <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
-          <Route path="root-journey" element={<RootJourneyGuidePage />} />
+          <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
           <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
-          <Route path="platform-theme" element={<PlatformThemePage />} />
-          <Route path="app-icons" element={<AppIconsConfigPage />} />
-          <Route path="welcome-tour" element={<WelcomeTourConfigPage />} />
-          <Route path="profile-links" element={<ProfileLinksConfigPage />} />
+          <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
+          <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
+          <Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
+          <Route path="profile-links" element={<RootGuard><ProfileLinksConfigPage /></RootGuard>} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
-          <Route path="ganha-ganha-dashboard" element={<GanhaGanhaRootDashboardPage />} />
+          <Route path="ganha-ganha-dashboard" element={<RootGuard><GanhaGanhaRootDashboardPage /></RootGuard>} />
           <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
           
           <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
@@ -218,10 +218,10 @@ function AppRoutes() {
           <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
-          <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
-          <Route path="machine-integration" element={<MachineIntegrationPage />} />
-          <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
-          <Route path="offer-card-config" element={<OfferCardConfigPage />} />
+          <Route path="sponsored-placements" element={<RootGuard><SponsoredPlacementsPage /></RootGuard>} />
+          <Route path="machine-integration" element={<RootGuard><MachineIntegrationPage /></RootGuard>} />
+          <Route path="machine-webhook-test" element={<RootGuard><MachineWebhookTestPage /></RootGuard>} />
+          <Route path="offer-card-config" element={<RootGuard><OfferCardConfigPage /></RootGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
