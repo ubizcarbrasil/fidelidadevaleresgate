@@ -306,7 +306,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
         <Heart className="h-4 w-4" style={{ color: primary }} />
         <span className="text-sm font-bold text-muted-foreground">Meus Favoritos</span>
         {favorites.length > 0 && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${primary}12`, color: primary }}>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}>
             {favorites.length}
           </span>
         )}
