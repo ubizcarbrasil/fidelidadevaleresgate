@@ -299,6 +299,9 @@ async function processFinalized(
           name: customerDisplayName,
           points_balance: 0,
           money_balance: 0,
+          ride_count: 1,
+          customer_tier: "BRONZE",
+          crm_sync_status: "PENDING",
         })
         .select("id, branch_id, points_balance")
         .single();

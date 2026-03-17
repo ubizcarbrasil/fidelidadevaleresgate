@@ -1,4 +1,6 @@
 import { useState, useDeferredValue, memo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCrmContacts, useCrmContactEvents, useCrmContactStats, SOURCE_LABELS, SOURCE_COLORS } from "@/modules/crm";
-import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight, Coins } from "lucide-react";
+import { getTierInfo } from "@/lib/tierUtils";
 
 export default function CrmContactsPage() {
   const [search, setSearch] = useState("");
@@ -27,6 +30,18 @@ export default function CrmContactsPage() {
     os_platform: os || undefined,
     page,
   });
+
+  // Fetch linked customer data for displaying points
+  const contactIds = (data?.contacts || []).filter(c => c.customer_id).map(c => c.customer_id);
+  const { data: linkedCustomers } = useQuery({
+    queryKey: ["crm-linked-customers", contactIds],
+    enabled: contactIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("customers").select("id, points_balance, money_balance, customer_tier, ride_count").in("id", contactIds as string[]);
+      return data || [];
+    },
+  });
+  const customerMap = new Map((linkedCustomers || []).map(c => [c.id, c]));
   const { data: stats } = useCrmContactStats();
   const { data: events } = useCrmContactEvents(selectedContactId);
 
@@ -127,7 +142,8 @@ export default function CrmContactsPage() {
                     <TableHead>Telefone</TableHead>
                     <TableHead>Origem</TableHead>
                     <TableHead>Corridas</TableHead>
-                    <TableHead>SO</TableHead>
+                    <TableHead>Tier</TableHead>
+                    <TableHead>Pontos</TableHead>
                     <TableHead>Última Corrida</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -146,7 +162,20 @@ export default function CrmContactsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{c.ride_count || 0}</TableCell>
-                      <TableCell>{c.os_platform || "—"}</TableCell>
+                      <TableCell>
+                        {(() => {
+                          const cust = c.customer_id ? customerMap.get(c.customer_id) : null;
+                          if (!cust) return <span className="text-muted-foreground text-xs">—</span>;
+                          const tier = getTierInfo(cust.customer_tier || "INICIANTE");
+                          return <Badge variant="outline" className={`text-xs ${tier.color}`}>{tier.label}</Badge>;
+                        })()}
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const cust = c.customer_id ? customerMap.get(c.customer_id) : null;
+                          return cust ? <span className="font-medium">{cust.points_balance}</span> : <span className="text-muted-foreground text-xs">—</span>;
+                        })()}
+                      </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {c.last_ride_at ? new Date(c.last_ride_at).toLocaleDateString("pt-BR") : "—"}
                       </TableCell>
@@ -154,7 +183,7 @@ export default function CrmContactsPage() {
                   ))}
                   {contacts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         Nenhum contato encontrado
                       </TableCell>
                     </TableRow>

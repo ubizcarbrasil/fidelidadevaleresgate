@@ -10,11 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, ScrollText, UserCheck } from "lucide-react";
+import { Plus, Pencil, ScrollText, UserCheck, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 
 const PAGE_SIZE = 20;
 
@@ -31,8 +32,9 @@ export default function CustomersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [ledgerCustomer, setLedgerCustomer] = useState<any>(null);
+  const [tierFilter, setTierFilter] = useState<string>("");
+  const [crmFilter, setCrmFilter] = useState<string>("");
 
-  // Bulk identify state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkForm, setBulkForm] = useState({ name: "", cpf: "", phone: "" });
@@ -49,11 +51,13 @@ export default function CustomersPage() {
   }, [isRootAdmin, currentBrandId]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customers", debouncedSearch, page, currentBrandId],
+    queryKey: ["customers", debouncedSearch, page, currentBrandId, tierFilter, crmFilter],
     queryFn: async () => {
       let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,cpf.ilike.%${debouncedSearch}%`);
+      if (tierFilter) query = query.eq("customer_tier", tierFilter);
+      if (crmFilter) query = query.eq("crm_sync_status", crmFilter);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
@@ -75,37 +79,60 @@ export default function CustomersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const syncToCrmMutation = useMutation({
+    mutationFn: async () => {
+      // Get all PENDING customers for this brand
+      let q = supabase.from("customers").select("id, name, phone, cpf, email, brand_id, branch_id, ride_count").eq("crm_sync_status", "PENDING") as any;
+      if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data: pendingCustomers, error } = await q.limit(200);
+      if (error) throw error;
+      if (!pendingCustomers?.length) throw new Error("Nenhum cliente pendente para sincronizar");
+
+      let synced = 0;
+      for (const cust of pendingCustomers) {
+        const { data: contact } = await supabase.from("crm_contacts").insert({
+          brand_id: cust.brand_id,
+          branch_id: cust.branch_id,
+          customer_id: cust.id,
+          name: cust.name,
+          phone: cust.phone,
+          cpf: cust.cpf,
+          email: cust.email,
+          ride_count: cust.ride_count || 0,
+          source: "LOYALTY",
+        } as any).select("id").single();
+
+        if (contact) {
+          await (supabase as any).from("customers").update({
+            crm_contact_id: contact.id,
+            crm_sync_status: "SYNCED",
+          }).eq("id", cust.id);
+          synced++;
+        }
+      }
+      return synced;
+    },
+    onSuccess: (count) => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      toast.success(`${count} cliente(s) sincronizado(s) com o CRM!`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const closeDialog = () => { setOpen(false); setEditId(null); setForm(emptyForm); };
   const openEdit = (c: any) => { setEditId(c.id); setForm({ name: c.name, phone: c.phone || "", brand_id: c.brand_id, branch_id: c.branch_id, cpf: c.cpf || "", email: c.email || "" }); setOpen(true); };
 
-  // Bulk identify helpers
   const unidentifiedOnPage = data?.items?.filter((c: any) => c.name?.startsWith("Passageiro corrida #")) || [];
   const isUnidentified = (c: any) => c.name?.startsWith("Passageiro corrida #");
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+    setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
-
   const toggleSelectAll = () => {
     if (unidentifiedOnPage.length === 0) return;
     const allSelected = unidentifiedOnPage.every((c: any) => selectedIds.has(c.id));
-    if (allSelected) {
-      setSelectedIds(prev => {
-        const next = new Set(prev);
-        unidentifiedOnPage.forEach((c: any) => next.delete(c.id));
-        return next;
-      });
-    } else {
-      setSelectedIds(prev => {
-        const next = new Set(prev);
-        unidentifiedOnPage.forEach((c: any) => next.add(c.id));
-        return next;
-      });
-    }
+    if (allSelected) { setSelectedIds(prev => { const next = new Set(prev); unidentifiedOnPage.forEach((c: any) => next.delete(c.id)); return next; }); }
+    else { setSelectedIds(prev => { const next = new Set(prev); unidentifiedOnPage.forEach((c: any) => next.add(c.id)); return next; }); }
   };
 
   const bulkIdentifyMutation = useMutation({
@@ -117,22 +144,10 @@ export default function CustomersPage() {
       if (bulkForm.cpf.trim()) updates.cpf = bulkForm.cpf.trim();
       if (bulkForm.phone.trim()) updates.phone = bulkForm.phone.trim();
       if (Object.keys(updates).length === 0) throw new Error("Preencha pelo menos um campo");
-
-      // If only 1 selected, update directly
-      // For multiple, update each individually (Supabase .in() with update)
-      const { error } = await (supabase as any)
-        .from("customers")
-        .update(updates)
-        .in("id", ids);
+      const { error } = await (supabase as any).from("customers").update(updates).in("id", ids);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["customers"] });
-      toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`);
-      setSelectedIds(new Set());
-      setBulkOpen(false);
-      setBulkForm({ name: "", cpf: "", phone: "" });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`); setSelectedIds(new Set()); setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -144,10 +159,14 @@ export default function CustomersPage() {
           <p className="text-muted-foreground">Gerencie clientes por filial</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => syncToCrmMutation.mutate()} disabled={syncToCrmMutation.isPending}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncToCrmMutation.isPending ? "animate-spin" : ""}`} />
+            Sincronizar CRM
+          </Button>
           {selectedIds.size > 0 && (
             <Button variant="outline" onClick={() => setBulkOpen(true)}>
               <UserCheck className="h-4 w-4 mr-2" />
-              Identificar {selectedIds.size} selecionado(s)
+              Identificar {selectedIds.size}
             </Button>
           )}
           <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
@@ -186,7 +205,27 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex-1 min-w-[200px]">
+          <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+        </div>
+        <Select value={tierFilter} onValueChange={v => { setTierFilter(v === "all" ? "" : v); setPage(1); }}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Tier" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos Tiers</SelectItem>
+            {TIERS.map(t => <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={crmFilter} onValueChange={v => { setCrmFilter(v === "all" ? "" : v); setPage(1); }}>
+          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status CRM" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="SYNCED">Sincronizado</SelectItem>
+            <SelectItem value="PENDING">Pendente</SelectItem>
+            <SelectItem value="NONE">Sem CRM</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -195,18 +234,15 @@ export default function CustomersPage() {
               <TableRow>
                 <TableHead className="w-10">
                   {unidentifiedOnPage.length > 0 && (
-                    <Checkbox
-                      checked={unidentifiedOnPage.length > 0 && unidentifiedOnPage.every((c: any) => selectedIds.has(c.id))}
-                      onCheckedChange={toggleSelectAll}
-                    />
+                    <Checkbox checked={unidentifiedOnPage.length > 0 && unidentifiedOnPage.every((c: any) => selectedIds.has(c.id))} onCheckedChange={toggleSelectAll} />
                   )}
                 </TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead>Tier</TableHead>
+                <TableHead>CRM</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>CPF</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Marca</TableHead>
-                <TableHead>Filial</TableHead>
+                <TableHead>Corridas</TableHead>
                 <TableHead>Pontos</TableHead>
                 <TableHead>Saldo (R$)</TableHead>
                 <TableHead>Status</TableHead>
@@ -216,67 +252,56 @@ export default function CustomersPage() {
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
               {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
-              {data?.items?.map((c: any) => (
-                <TableRow key={c.id} className={isUnidentified(c) ? "bg-yellow-500/5" : ""}>
-                  <TableCell>
-                    {isUnidentified(c) && (
-                      <Checkbox
-                        checked={selectedIds.has(c.id)}
-                        onCheckedChange={() => toggleSelect(c.id)}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {c.name}
-                    {isUnidentified(c) && <Badge variant="outline" className="ml-2 text-xs border-yellow-400 text-yellow-700">Não identificado</Badge>}
-                  </TableCell>
-                  <TableCell>{c.phone || "—"}</TableCell>
-                  <TableCell>{c.cpf || "—"}</TableCell>
-                  <TableCell>{c.email || "—"}</TableCell>
-                  <TableCell>{(c.brands as any)?.name}</TableCell>
-                  <TableCell>{(c.branches as any)?.name}</TableCell>
-                  <TableCell>{c.points_balance}</TableCell>
-                  <TableCell>R$ {Number(c.money_balance).toFixed(2)}</TableCell>
-                  <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {data?.items?.map((c: any) => {
+                const tier = getTierInfo(c.customer_tier || "INICIANTE");
+                const crmStatus = CRM_SYNC_LABELS[c.crm_sync_status || "NONE"];
+                return (
+                  <TableRow key={c.id} className={isUnidentified(c) ? "bg-yellow-500/5" : ""}>
+                    <TableCell>
+                      {isUnidentified(c) && <Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} />}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {c.name}
+                      {isUnidentified(c) && <Badge variant="outline" className="ml-2 text-xs border-yellow-400 text-yellow-700">Não identificado</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`text-xs ${tier.color}`}>{tier.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {crmStatus.label && <Badge variant="outline" className={`text-xs ${crmStatus.color}`}>{crmStatus.label}</Badge>}
+                    </TableCell>
+                    <TableCell>{c.phone || "—"}</TableCell>
+                    <TableCell>{c.cpf || "—"}</TableCell>
+                    <TableCell>{c.ride_count || 0}</TableCell>
+                    <TableCell>{c.points_balance}</TableCell>
+                    <TableCell>R$ {Number(c.money_balance).toFixed(2)}</TableCell>
+                    <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      <CustomerLedgerDrawer
-        customer={ledgerCustomer}
-        open={!!ledgerCustomer}
-        onOpenChange={open => { if (!open) setLedgerCustomer(null); }}
-      />
+      <CustomerLedgerDrawer customer={ledgerCustomer} open={!!ledgerCustomer} onOpenChange={open => { if (!open) setLedgerCustomer(null); }} />
 
-      {/* ─── BULK IDENTIFY DIALOG ─── */}
       <Dialog open={bulkOpen} onOpenChange={v => { if (!v) { setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Identificar {selectedIds.size} cliente(s)</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Preencha os dados que deseja atualizar. Campos vazios serão ignorados.
-            {selectedIds.size === 1 && " Para um único cliente, preencha nome, CPF e telefone."}
-            {selectedIds.size > 1 && " Para múltiplos clientes, normalmente só o nome faz sentido (ex: mesmo passageiro em várias corridas)."}
-          </p>
+          <p className="text-sm text-muted-foreground">Preencha os dados que deseja atualizar. Campos vazios serão ignorados.</p>
           <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Nome</Label><Input value={bulkForm.name} onChange={e => setBulkForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>CPF</Label><Input value={bulkForm.cpf} onChange={e => setBulkForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
               <div className="space-y-2"><Label>Telefone</Label><Input value={bulkForm.phone} onChange={e => setBulkForm(f => ({ ...f, phone: e.target.value }))} placeholder="(00) 00000-0000" /></div>
             </div>
-            <Button
-              className="w-full"
-              disabled={!bulkForm.name.trim() && !bulkForm.cpf.trim() && !bulkForm.phone.trim()}
-              onClick={() => bulkIdentifyMutation.mutate()}
-            >
-              <UserCheck className="h-4 w-4 mr-2" />
-              Salvar identificação
+            <Button className="w-full" disabled={!bulkForm.name.trim() && !bulkForm.cpf.trim() && !bulkForm.phone.trim()} onClick={() => bulkIdentifyMutation.mutate()}>
+              <UserCheck className="h-4 w-4 mr-2" /> Salvar identificação
             </Button>
           </div>
         </DialogContent>

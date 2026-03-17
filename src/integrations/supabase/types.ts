@@ -1758,6 +1758,9 @@ export type Database = {
           brand_id: string
           cpf: string | null
           created_at: string
+          crm_contact_id: string | null
+          crm_sync_status: string | null
+          customer_tier: string | null
           email: string | null
           id: string
           is_active: boolean
@@ -1765,6 +1768,7 @@ export type Database = {
           name: string
           phone: string | null
           points_balance: number
+          ride_count: number | null
           updated_at: string
           user_id: string | null
         }
@@ -1773,6 +1777,9 @@ export type Database = {
           brand_id: string
           cpf?: string | null
           created_at?: string
+          crm_contact_id?: string | null
+          crm_sync_status?: string | null
+          customer_tier?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -1780,6 +1787,7 @@ export type Database = {
           name: string
           phone?: string | null
           points_balance?: number
+          ride_count?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1788,6 +1796,9 @@ export type Database = {
           brand_id?: string
           cpf?: string | null
           created_at?: string
+          crm_contact_id?: string | null
+          crm_sync_status?: string | null
+          customer_tier?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -1795,6 +1806,7 @@ export type Database = {
           name?: string
           phone?: string | null
           points_balance?: number
+          ride_count?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1818,6 +1830,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_crm_contact_id_fkey"
+            columns: ["crm_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -4682,6 +4701,61 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      tier_points_rules: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          points_per_real: number
+          tier: string
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          points_per_real?: number
+          tier: string
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          points_per_real?: number
+          tier?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tier_points_rules_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_permission_overrides: {
         Row: {

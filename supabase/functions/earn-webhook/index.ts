@@ -355,7 +355,7 @@ Deno.serve(async (req) => {
   let customer: any = null;
   const { data: existingCustomer, error: custErr } = await sb
     .from("customers")
-    .select("id, name, points_balance, money_balance, branch_id")
+    .select("id, name, points_balance, money_balance, branch_id, customer_tier")
     .eq("brand_id", brandId)
     .eq("cpf", cleanCpf)
     .eq("is_active", true)
@@ -383,8 +383,11 @@ Deno.serve(async (req) => {
         name: customerName,
         points_balance: 0,
         money_balance: 0,
+        crm_sync_status: "PENDING",
+        customer_tier: "INICIANTE",
+        ride_count: 0,
       })
-      .select("id, name, points_balance, money_balance, branch_id")
+      .select("id, name, points_balance, money_balance, branch_id, customer_tier")
       .single();
 
     if (createErr || !created) {
@@ -422,8 +425,23 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "No active points rule for this brand/branch", code: "NO_ACTIVE_RULE" }, 422);
   }
 
-  // 5b. Effective points per real
-  const effectivePointsPerReal = await getEffectivePointsPerReal(sb, rule, store_id);
+  // 5b. Effective points per real — check tier-based rule first
+  let effectivePointsPerReal = await getEffectivePointsPerReal(sb, rule, store_id);
+
+  // 5c. Tier-based override: if customer has a tier and there's a matching rule, use it
+  const customerTier = customer.customer_tier || "INICIANTE";
+  const { data: tierRule } = await sb
+    .from("tier_points_rules")
+    .select("points_per_real")
+    .eq("brand_id", brandId)
+    .eq("branch_id", store.branch_id)
+    .eq("tier", customerTier)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (tierRule) {
+    effectivePointsPerReal = Number(tierRule.points_per_real);
+  }
 
   // 6. Min purchase check
   if (purchase_value < Number(rule.min_purchase_to_earn)) {

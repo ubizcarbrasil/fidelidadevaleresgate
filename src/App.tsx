@@ -95,6 +95,7 @@ const MachineWebhookTestPage = lazy(() => import("@/pages/MachineWebhookTestPage
 const OfferCardConfigPage = lazy(() => import("@/pages/OfferCardConfigPage"));
 const PlanModuleTemplatesPage = lazy(() => import("@/pages/PlanModuleTemplatesPage"));
 const SubscriptionPlansAdminPage = lazy(() => import("@/pages/SubscriptionPlansAdminPage"));
+const TierPointsRulesPage = lazy(() => import("@/pages/TierPointsRulesPage"));
 
 const TaxonomyPage = lazy(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazy(() => import("@/pages/customer/CustomPage"));
@@ -178,6 +179,7 @@ function AppRoutes() {
           <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
           <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
+          <Route path="tier-points-rules" element={<ModuleGuard moduleKey="earn_points_store"><TierPointsRulesPage /></ModuleGuard>} />
           
           <Route path="affiliate-deals" element={<AffiliateDealsPage />} />
           <Route path="affiliate-deals/import-mobile" element={<AchadinhosMobileImportPage />} />
