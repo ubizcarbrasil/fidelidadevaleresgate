@@ -257,7 +257,7 @@ export default function CustomersPage() {
                     </Select>
                   </div>
                 </div>
-                <Button onClick={() => save.mutate()} disabled={!form.name || !form.brand_id || !form.branch_id} className="w-full">Salvar</Button>
+                <Button onClick={() => save.mutate()} disabled={!form.name || !form.brand_id || !form.branch_id || save.isPending} className="w-full">{save.isPending ? "Salvando..." : "Salvar"}</Button>
               </div>
             </DialogContent>
           </Dialog>

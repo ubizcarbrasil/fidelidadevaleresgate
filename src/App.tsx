@@ -218,10 +218,10 @@ function AppRoutes() {
           <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
-          <Route path="sponsored-placements" element={<SponsoredPlacementsPage />} />
-          <Route path="machine-integration" element={<MachineIntegrationPage />} />
-          <Route path="machine-webhook-test" element={<MachineWebhookTestPage />} />
-          <Route path="offer-card-config" element={<OfferCardConfigPage />} />
+          <Route path="sponsored-placements" element={<RootGuard><SponsoredPlacementsPage /></RootGuard>} />
+          <Route path="machine-integration" element={<RootGuard><MachineIntegrationPage /></RootGuard>} />
+          <Route path="machine-webhook-test" element={<RootGuard><MachineWebhookTestPage /></RootGuard>} />
+          <Route path="offer-card-config" element={<RootGuard><OfferCardConfigPage /></RootGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
