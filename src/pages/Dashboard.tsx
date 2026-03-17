@@ -1,14 +1,19 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck, ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn, Globe, AlertCircle, Eye, Smartphone, Search } from "lucide-react";
+import {
+  Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck,
+  ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn,
+  Globe, AlertCircle, Eye, Smartphone, Search, ArrowUpRight, ArrowDownRight,
+  Clock, CheckCircle2, AlertTriangle, Zap, Activity,
+} from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import { Input } from "@/components/ui/input";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -43,12 +48,8 @@ function useMetric(table: string, enabled = true, filter?: (q: any) => any, filt
   });
 }
 
-const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted-foreground))", "hsl(var(--destructive))"];
-
-/** Hook to subscribe to realtime changes and auto-invalidate queries */
 function useRealtimeRefresh() {
   const queryClient = useQueryClient();
-
   useEffect(() => {
     const channel = supabase
       .channel("dashboard-realtime")
@@ -67,109 +68,104 @@ function useRealtimeRefresh() {
         queryClient.invalidateQueries({ queryKey: ["offers-count"] });
       })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 }
 
+/* ── KPI Card ── */
+const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, color = "primary" }: {
+  title: string; value: any; sub?: string; icon: any; trend?: number; color?: string;
+}) {
+  const colorMap: Record<string, string> = {
+    primary: "text-primary bg-primary/10",
+    success: "text-success bg-success/10",
+    warning: "text-warning bg-warning/10",
+    destructive: "text-destructive bg-destructive/10",
+  };
+  const iconClasses = colorMap[color] || colorMap.primary;
+
+  return (
+    <Card className="saas-kpi overflow-hidden">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
+            {value === undefined ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
+            )}
+            <div className="flex items-center gap-2 mt-1">
+              {trend !== undefined && (
+                <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${trend >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {trend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {Math.abs(trend)}%
+                </span>
+              )}
+              {sub && <span className="text-[11px] text-muted-foreground">{sub}</span>}
+            </div>
+          </div>
+          <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${iconClasses}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
+/* ── Quick Links (existing logic preserved) ── */
 function BrandQuickLinks() {
   const { currentBrandId } = useBrandGuard();
-
   const { data: brand } = useQuery({
     queryKey: ["brand-quick-links", currentBrandId],
     queryFn: async () => {
       if (!currentBrandId) return null;
-      const { data } = await supabase
-        .from("brands")
-        .select("brand_settings_json, slug")
-        .eq("id", currentBrandId)
-        .single();
+      const { data } = await supabase.from("brands").select("brand_settings_json, slug").eq("id", currentBrandId).single();
       return data;
     },
     enabled: !!currentBrandId,
   });
-
   const { data: domain } = useQuery({
     queryKey: ["brand-domain", currentBrandId],
     queryFn: async () => {
       if (!currentBrandId) return null;
-      const { data } = await supabase
-        .from("brand_domains")
-        .select("domain, subdomain")
-        .eq("brand_id", currentBrandId)
-        .eq("is_primary", true)
-        .maybeSingle();
+      const { data } = await supabase.from("brand_domains").select("domain, subdomain").eq("brand_id", currentBrandId).eq("is_primary", true).maybeSingle();
       return data;
     },
     enabled: !!currentBrandId,
   });
 
   const settings = brand?.brand_settings_json as any;
-  const testAccounts = settings?.test_accounts as
-    | { email: string; role: string; is_active: boolean }[]
-    | undefined;
-
+  const testAccounts = settings?.test_accounts as { email: string; role: string; is_active: boolean }[] | undefined;
   const origin = window.location.origin;
   const customDomain = domain?.domain || domain?.subdomain || null;
-  const productionUrl = customDomain
-    ? `https://${customDomain.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}`
-    : null;
+  const productionUrl = customDomain ? `https://${customDomain.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}` : null;
 
-  const roleLabel: Record<string, string> = {
-    brand_admin: "Admin",
-    customer: "Cliente",
-    store_admin: "Parceiro",
-  };
-  const roleIcon: Record<string, string> = {
-    brand_admin: "🔑",
-    customer: "👤",
-    store_admin: "🏪",
-  };
-  const roleColor: Record<string, string> = {
-    brand_admin: "bg-primary/10 border-primary/20",
-    customer: "bg-green-500/10 border-green-500/20",
-    store_admin: "bg-amber-500/10 border-amber-500/20",
-  };
-
-  const copyText = (t: string) => {
-    navigator.clipboard.writeText(t);
-    toast.info("Copiado!");
-  };
-
-  const openExternal = (url: string) => {
-    const popup = window.open(url, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      window.location.href = url;
-    }
-  };
+  const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro" };
+  const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪" };
+  const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
+  const openExternal = (url: string) => { const popup = window.open(url, "_blank", "noopener,noreferrer"); if (!popup) window.location.href = url; };
 
   if (!brand) return null;
-
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
   const quickLinks = [
-    { label: "App do Cliente (PWA)", path: currentBrandId ? `/customer-preview?brandId=${currentBrandId}` : "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app como cliente" },
-    { label: "Cadastro de Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de cadastro para novos parceiros" },
-    { label: "Painel do Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Painel de gestão das lojas parceiras" },
+    { label: "App do Cliente", path: currentBrandId ? `/customer-preview?brandId=${currentBrandId}` : "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app" },
+    { label: "Cadastro Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros" },
+    { label: "Painel Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Gestão das lojas" },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Quick Links */}
+    <div className="space-y-3">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-primary" />
-              Links Úteis
+              <Link2 className="h-4 w-4 text-primary" /> Links Úteis
             </CardTitle>
             {productionUrl ? (
-              <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/30 text-amber-600">
-                <AlertCircle className="h-3 w-3" />
-                DNS pendente
-              </Badge>
+              <Badge variant="outline" className="text-[10px] gap-1 saas-badge-warning border-warning/30"><AlertCircle className="h-3 w-3" />DNS pendente</Badge>
             ) : (
               <Badge variant="secondary" className="text-[10px]">Sem domínio próprio</Badge>
             )}
@@ -181,14 +177,12 @@ function BrandQuickLinks() {
               const internalUrl = `${origin}${link.path}`;
               const prodUrl = productionUrl ? `${productionUrl}${link.prodPath === "/" ? "" : link.prodPath}` : null;
               return (
-                <div key={link.label} className="rounded-lg border p-3 space-y-2">
+                <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-2">
                     <link.icon className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">{link.label}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{link.description}</p>
-
-                  {/* Primary: internal link (works now) */}
                   <div className="flex gap-1">
                     <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => openExternal(internalUrl)}>
                       <ExternalLink className="h-3 w-3" /> Abrir
@@ -197,12 +191,10 @@ function BrandQuickLinks() {
                       <Copy className="h-3 w-3" />
                     </Button>
                   </div>
-
-                  {/* Secondary: production domain */}
                   {prodUrl && (
                     <div className="flex gap-1 items-center">
                       <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <code className="text-[10px] text-muted-foreground truncate flex-1" title={prodUrl}>{prodUrl}</code>
+                      <code className="text-[10px] text-muted-foreground truncate flex-1">{prodUrl}</code>
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => copyText(prodUrl)}>
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -212,47 +204,30 @@ function BrandQuickLinks() {
               );
             })}
           </div>
-          {productionUrl && (
-            <p className="text-[10px] text-muted-foreground mt-3">
-              ⚠️ O domínio de produção requer configuração DNS (A record → 185.158.133.1). Use os links internos acima enquanto o DNS não estiver ativo.
-            </p>
-          )}
         </CardContent>
       </Card>
-
-      {/* Test Accounts */}
       {hasTestAccounts && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <LogIn className="h-4 w-4 text-primary" />
-              Acessos Rápidos de Teste
+              <LogIn className="h-4 w-4 text-primary" /> Acessos de Teste
               <Badge variant="secondary" className="text-[10px] ml-auto">Senha: 123456</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-3">
-              {testAccounts!
-                .filter((a) => a.is_active)
-                .map((acc) => (
-                  <div key={acc.email} className={`rounded-lg border p-3 space-y-2 ${roleColor[acc.role] || ""}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{roleIcon[acc.role] || "👤"}</span>
-                      <span className="text-sm font-semibold">{roleLabel[acc.role] || acc.role}</span>
-                    </div>
-                    <code className="block text-xs truncate">{acc.email}</code>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-7 text-xs w-full gap-1"
-                      onClick={() => {
-                        copyText(`${acc.email} / 123456`);
-                      }}
-                    >
-                      <Copy className="h-3 w-3" /> Copiar credenciais
-                    </Button>
+              {testAccounts!.filter((a) => a.is_active).map((acc) => (
+                <div key={acc.email} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{roleIcon[acc.role] || "👤"}</span>
+                    <span className="text-sm font-semibold">{roleLabel[acc.role] || acc.role}</span>
                   </div>
-                ))}
+                  <code className="block text-xs truncate text-muted-foreground">{acc.email}</code>
+                  <Button variant="secondary" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => copyText(`${acc.email} / 123456`)}>
+                    <Copy className="h-3 w-3" /> Copiar
+                  </Button>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -263,27 +238,17 @@ function BrandQuickLinks() {
 
 function DemoStoresSection() {
   const { currentBrandId, currentBranchId } = useBrandGuard();
-
-  // Get first branch if currentBranchId is not available
   const { data: firstBranch } = useQuery({
     queryKey: ["first-branch-for-demo", currentBrandId],
     queryFn: async () => {
       if (!currentBrandId) return null;
-      const { data } = await supabase
-        .from("branches")
-        .select("id")
-        .eq("brand_id", currentBrandId)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
+      const { data } = await supabase.from("branches").select("id").eq("brand_id", currentBrandId).eq("is_active", true).limit(1).maybeSingle();
       return data;
     },
     enabled: !!currentBrandId && !currentBranchId,
   });
-
   const branchId = currentBranchId || firstBranch?.id;
   if (!currentBrandId || !branchId) return null;
-
   return <DemoStoresToggle brandId={currentBrandId} branchId={branchId} />;
 }
 
@@ -291,103 +256,50 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   const { currentBrandId } = useBrandGuard();
   const isRoot = consoleScope === "ROOT";
   const isBrand = ["BRAND", "TENANT"].includes(consoleScope);
-
   const [search, setSearch] = useState("");
 
   const { data: brands, isLoading: brandsLoading } = useQuery({
     queryKey: ["access-hub-brands"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("brands")
-        .select("id, name, slug, is_active")
-        .order("name");
-      return data || [];
-    },
+    queryFn: async () => { const { data } = await supabase.from("brands").select("id, name, slug, is_active").order("name"); return data || []; },
     enabled: isRoot,
   });
-
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ["access-hub-stores", currentBrandId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("stores")
-        .select("id, name, address, approval_status")
-        .eq("brand_id", currentBrandId!)
-        .order("name");
-      return data || [];
-    },
+    queryFn: async () => { const { data } = await supabase.from("stores").select("id, name, address, approval_status").eq("brand_id", currentBrandId!).order("name"); return data || []; },
     enabled: isBrand && !!currentBrandId,
   });
 
   if (!isRoot && !isBrand) return null;
 
   if (isRoot) {
-    const filtered = (brands || []).filter(
-      (b) =>
-        b.name.toLowerCase().includes(search.toLowerCase()) ||
-        b.slug.toLowerCase().includes(search.toLowerCase())
-    );
-
+    const filtered = (brands || []).filter((b) => b.name.toLowerCase().includes(search.toLowerCase()) || b.slug.toLowerCase().includes(search.toLowerCase()));
     return (
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              Painéis dos Empreendedores
-            </CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Empreendedores</CardTitle>
             <div className="relative w-48">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar marca..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-8 pl-8 text-xs"
-              />
+              <Input placeholder="Buscar marca..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs" />
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {brandsLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-10 w-full rounded-lg" />
-              ))}
-            </div>
+            <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}</div>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">Nenhuma marca encontrada.</p>
           ) : (
-            <div className="divide-y max-h-[320px] overflow-y-auto">
+            <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
               {filtered.map((brand) => (
                 <div key={brand.id} className="flex items-center justify-between py-2.5 gap-2">
                   <div className="min-w-0 flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Store className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium truncate">{brand.name}</p>
-                      <p className="text-xs text-muted-foreground">{brand.slug}</p>
-                    </div>
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Store className="h-4 w-4 text-primary" /></div>
+                    <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1"
-                      onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}
-                    >
-                      <Building2 className="h-3 w-3" />
-                      Painel Admin
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1"
-                      onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}
-                    >
-                      <Smartphone className="h-3 w-3" />
-                      App Cliente
-                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
                   </div>
                 </div>
               ))}
@@ -398,69 +310,36 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
     );
   }
 
-  // Brand scope
-  const filteredStores = (stores || []).filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
-
+  const filteredStores = (stores || []).filter((s) => s.name.toLowerCase().includes(search.toLowerCase()));
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Eye className="h-4 w-4 text-primary" />
-            Painéis dos Parceiros
-          </CardTitle>
+          <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Parceiros</CardTitle>
           <div className="flex gap-2 items-center">
             {currentBrandId && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs gap-1.5"
-                onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-                App do Cliente
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}>
+                <Smartphone className="h-3.5 w-3.5" />App do Cliente
               </Button>
             )}
             <div className="relative w-40">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar loja..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-8 pl-8 text-xs"
-              />
+              <Input placeholder="Buscar loja..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs" />
             </div>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {storesLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-10 w-full rounded-lg" />
-            ))}
-          </div>
+          <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}</div>
         ) : filteredStores.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">Nenhum parceiro encontrado.</p>
         ) : (
-          <div className="divide-y max-h-[320px] overflow-y-auto">
+          <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
             {filteredStores.map((store) => (
               <div key={store.id} className="flex items-center justify-between py-2.5 gap-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{store.name}</p>
-                  <p className="text-xs text-muted-foreground">{store.address || "—"}</p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs gap-1 shrink-0"
-                  onClick={() => window.open(`/store-panel?storeId=${store.id}`, "_blank")}
-                >
-                  <Eye className="h-3 w-3" />
-                  Ver Painel
-                </Button>
+                <div className="min-w-0"><p className="text-sm font-medium truncate">{store.name}</p><p className="text-xs text-muted-foreground">{store.address || "—"}</p></div>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => window.open(`/store-panel?storeId=${store.id}`, "_blank")}><Eye className="h-3 w-3" />Ver</Button>
               </div>
             ))}
           </div>
@@ -470,38 +349,228 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   );
 }
 
-const StatCard = memo(function StatCard({ stat }: { stat: { title: string; value: any; sub?: string; icon: any; highlight?: boolean } }) {
+/* ── Section C: Ranking ── */
+function RankingSection({ brandFilter }: { brandFilter?: string }) {
+  const { data: topStores } = useQuery({
+    queryKey: ["top-stores-ranking", brandFilter ?? "global"],
+    queryFn: async () => {
+      let q = supabase.from("stores").select("id, name, logo_url").eq("is_active", true);
+      if (brandFilter) q = q.eq("brand_id", brandFilter);
+      const { data } = await q.limit(6).order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+  if (!topStores || topStores.length === 0) return null;
+  const maxVal = topStores.length;
   return (
-    <Card className={`gradient-border-top card-hover-lift ${stat.highlight ? "border-primary/50" : ""}`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.title}</CardTitle>
-        <div className="stat-icon-container h-10 w-10">
-          <stat.icon className="h-4 w-4 text-primary" />
-        </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Top Parceiros</CardTitle>
       </CardHeader>
-      <CardContent>
-        {stat.value === undefined ? (
-          <Skeleton className="h-9 w-20" />
-        ) : (
-          <div className="text-3xl font-bold tracking-tight transition-all duration-300">{stat.value}</div>
-        )}
-        {stat.sub && (
-          <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-            {stat.sub}
-          </span>
-        )}
+      <CardContent className="space-y-3">
+        {topStores.map((store, i) => {
+          const pct = ((maxVal - i) / maxVal) * 100;
+          return (
+            <div key={store.id} className="flex items-center gap-3">
+              <span className="text-xs font-bold text-muted-foreground w-4 text-right">{i + 1}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{store.name}</p>
+                <div className="mt-1 h-1.5 rounded-full bg-accent overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
-});
+}
 
+/* ── Section D: Alerts ── */
+function AlertsSection({ redemptionsPending, storeRulesPending }: { redemptionsPending?: number; storeRulesPending?: number }) {
+  const alerts = useMemo(() => {
+    const list: { label: string; icon: any; color: string; count: number; action: string; href: string }[] = [];
+    if ((redemptionsPending ?? 0) > 0) list.push({ label: "Resgates pendentes", icon: ReceiptText, color: "destructive", count: redemptionsPending!, action: "Ver", href: "/redemptions" });
+    if ((storeRulesPending ?? 0) > 0) list.push({ label: "Regras aguardando aprovação", icon: AlertTriangle, color: "warning", count: storeRulesPending!, action: "Aprovar", href: "/approve-store-rules" });
+    return list;
+  }, [redemptionsPending, storeRulesPending]);
+
+  if (alerts.length === 0) return null;
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-warning" /> Alertas Operacionais</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {alerts.map((alert) => (
+          <div key={alert.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-accent/30 border border-border">
+            <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 saas-badge-${alert.color}`}>
+              <alert.icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium">{alert.label}</p>
+              <p className="text-[11px] text-muted-foreground">{alert.count} item{alert.count > 1 ? "s" : ""}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => window.location.href = alert.href}>
+              {alert.action}
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Section E: Activity Heatmap ── */
+function ActivityHeatmap({ chartData }: { chartData?: { label: string; count: number }[] }) {
+  if (!chartData || chartData.length === 0) return null;
+  const maxCount = Math.max(...chartData.map(d => d.count), 1);
+  const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+  // Fill 7x4 grid from chart data
+  const cells: { label: string; value: number }[] = [];
+  for (let w = 0; w < 4; w++) {
+    for (let d = 0; d < 7; d++) {
+      const idx = w * 7 + d;
+      const item = chartData[idx];
+      cells.push({ label: item?.label || "", value: item?.count || 0 });
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Mapa de Atividade</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1">
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {days.map(d => <span key={d} className="text-[9px] text-muted-foreground text-center">{d}</span>)}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {cells.slice(0, 28).map((cell, i) => {
+              const intensity = cell.value / maxCount;
+              const opacity = cell.value === 0 ? 0.08 : 0.15 + intensity * 0.85;
+              return (
+                <div
+                  key={i}
+                  className="heatmap-cell aspect-square"
+                  style={{ background: `hsl(217 91% 60% / ${opacity})` }}
+                  title={`${cell.label}: ${cell.value}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 mt-3 justify-end">
+          <span className="text-[9px] text-muted-foreground">Menos</span>
+          {[0.08, 0.25, 0.5, 0.75, 1].map((o, i) => (
+            <div key={i} className="h-2.5 w-2.5 rounded-sm" style={{ background: `hsl(217 91% 60% / ${o})` }} />
+          ))}
+          <span className="text-[9px] text-muted-foreground">Mais</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Section F: Tasks Table ── */
+function TasksTable() {
+  const tasks = [
+    { task: "Revisar ofertas expiradas", responsible: "Admin", status: "Pendente" },
+    { task: "Aprovar novos parceiros", responsible: "Operações", status: "Em andamento" },
+    { task: "Atualizar banners de campanha", responsible: "Marketing", status: "Concluído" },
+    { task: "Configurar regras de pontuação", responsible: "Admin", status: "Pendente" },
+    { task: "Analisar relatório mensal", responsible: "Financeiro", status: "Em andamento" },
+  ];
+  const statusBadge: Record<string, string> = {
+    "Pendente": "saas-badge-warning",
+    "Em andamento": "saas-badge-info",
+    "Concluído": "saas-badge-success",
+  };
+  const statusIcon: Record<string, any> = {
+    "Pendente": Clock,
+    "Em andamento": Zap,
+    "Concluído": CheckCircle2,
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Tarefas</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-2.5 text-xs font-medium text-muted-foreground">Tarefa</th>
+                <th className="text-left py-2.5 text-xs font-medium text-muted-foreground hidden sm:table-cell">Responsável</th>
+                <th className="text-right py-2.5 text-xs font-medium text-muted-foreground">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((t, i) => {
+                const StatusIcon = statusIcon[t.status] || Clock;
+                return (
+                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-accent/20 transition-colors">
+                    <td className="py-2.5 text-xs font-medium">{t.task}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{t.responsible}</td>
+                    <td className="py-2.5 text-right">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge[t.status]}`}>
+                        <StatusIcon className="h-3 w-3" />
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Section G: Activity Feed ── */
+function ActivityFeed() {
+  const events = [
+    { text: "Novo resgate confirmado", time: "há 2 min", icon: ReceiptText },
+    { text: "Cliente cadastrado via app", time: "há 12 min", icon: UserCheck },
+    { text: "Oferta publicada: 15% OFF", time: "há 34 min", icon: Tag },
+    { text: "Parceiro aprovado: Pizzaria Central", time: "há 1h", icon: Store },
+    { text: "Relatório mensal gerado", time: "há 2h", icon: TrendingUp },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Atividade Recente</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-0">
+        {events.map((ev, i) => (
+          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border/30 last:border-0">
+            <div className="h-7 w-7 rounded-lg bg-accent/50 flex items-center justify-center shrink-0">
+              <ev.icon className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+            <p className="text-xs flex-1 min-w-0 truncate">{ev.text}</p>
+            <span className="text-[10px] text-muted-foreground shrink-0">{ev.time}</span>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Main Dashboard ── */
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId } = useBrandGuard();
 
-  // Enable realtime refresh
   useRealtimeRefresh();
 
   const isRoot = consoleScope === "ROOT";
@@ -509,10 +578,9 @@ export default function Dashboard() {
   const showBrand = ["ROOT", "TENANT", "BRAND"].includes(consoleScope);
   const periodStart = getPeriodStart(period);
   const periodDays = getPeriodDays(period);
-
-  // Brand filter: non-root users see only their brand data
   const brandFilter = isRoot ? undefined : currentBrandId ?? undefined;
 
+  // All metrics
   const { data: tenants } = useMetric("tenants", isRoot);
   const { data: brands } = useMetric("brands", showTenant);
   const { data: branches } = useMetric("branches", true, undefined, undefined, brandFilter);
@@ -520,26 +588,18 @@ export default function Dashboard() {
   const { data: storesActive } = useMetric("stores", true, (q: any) => q.eq("is_active", true), "active", brandFilter);
   const { data: offersTotal } = useMetric("offers", true, undefined, undefined, brandFilter);
   const { data: offersActive } = useMetric("offers", true, (q: any) => q.eq("status", "ACTIVE").eq("is_active", true), "active", brandFilter);
-  const { data: offersDraft } = useMetric("offers", true, (q: any) => q.eq("status", "DRAFT"), "draft", brandFilter);
-  const { data: offersExpired } = useMetric("offers", true, (q: any) => q.eq("status", "EXPIRED"), "expired", brandFilter);
   const { data: customersTotal } = useMetric("customers", true, undefined, undefined, brandFilter);
   const { data: customersActive } = useMetric("customers", true, (q: any) => q.eq("is_active", true), "active", brandFilter);
   const { data: redemptionsTotal } = useMetric("redemptions", true, undefined, undefined, brandFilter);
-  const { data: redemptionsUsed } = useMetric("redemptions", true, (q: any) => q.eq("status", "USED"), "used", brandFilter);
   const { data: redemptionsPending } = useMetric("redemptions", true, (q: any) => q.eq("status", "PENDING"), "pending", brandFilter);
-  const { data: vouchersTotal } = useMetric("vouchers", true, undefined, undefined, brandFilter);
   const { data: vouchersActive } = useMetric("vouchers", true, (q: any) => q.eq("status", "active"), "active", brandFilter);
+  const { data: vouchersTotal } = useMetric("vouchers", true, undefined, undefined, brandFilter);
   const { data: usersCount } = useMetric("profiles", showBrand);
-  const { data: storeRulesTotal } = useMetric("store_points_rules", true, undefined, undefined, brandFilter);
-  const { data: storeRulesActive } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "ACTIVE"), "active", brandFilter);
   const { data: storeRulesPending } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
-  const { data: storeRulesRejected } = useMetric("store_points_rules", true, (q: any) => q.eq("status", "REJECTED"), "rejected", brandFilter);
   const { data: earningEventsTotal } = useMetric("earning_events", true, undefined, undefined, brandFilter);
   const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
-
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
-  // Redemptions chart for selected period
   const fetchChartData = useCallback(async (table: string) => {
     const days: { label: string; count: number }[] = [];
     for (let i = periodDays - 1; i >= 0; i--) {
@@ -547,15 +607,10 @@ export default function Dashboard() {
       d.setDate(d.getDate() - i);
       const start = new Date(d); start.setHours(0, 0, 0, 0);
       const end = new Date(d); end.setHours(23, 59, 59, 999);
-      let q = (supabase.from as any)(table)
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
+      let q = (supabase.from as any)(table).select("*", { count: "exact", head: true }).gte("created_at", start.toISOString()).lte("created_at", end.toISOString());
       if (brandFilter) q = q.eq("brand_id", brandFilter);
       const { count } = await q;
-      const fmt = periodDays <= 7
-        ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
-        : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      const fmt = periodDays <= 7 ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "") : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
       days.push({ label: fmt, count: count || 0 });
     }
     return days;
@@ -565,13 +620,21 @@ export default function Dashboard() {
     queryKey: ["redemptions-chart", period, brandFilter ?? "global"],
     queryFn: () => fetchChartData("redemptions"),
   });
-
   const { data: recentEarnings } = useQuery({
     queryKey: ["earnings-chart", period, brandFilter ?? "global"],
     queryFn: () => fetchChartData("earning_events"),
   });
 
-  // Early return AFTER all hooks
+  // Combined chart data
+  const combinedChart = useMemo(() => {
+    if (!recentRedemptions || !recentEarnings) return null;
+    return recentRedemptions.map((r, i) => ({
+      label: r.label,
+      resgates: r.count,
+      pontuacoes: recentEarnings[i]?.count || 0,
+    }));
+  }, [recentRedemptions, recentEarnings]);
+
   if (isRedirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -579,36 +642,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const offersPie = [
-    { name: "Ativas", value: offersActive ?? 0 },
-    { name: "Rascunho", value: offersDraft ?? 0 },
-    { name: "Expiradas", value: offersExpired ?? 0 },
-    { name: "Outras", value: Math.max(0, (offersTotal ?? 0) - (offersActive ?? 0) - (offersDraft ?? 0) - (offersExpired ?? 0)) },
-  ].filter(s => s.value > 0);
-
-  const storeRulesPie = [
-    { name: "Ativas", value: storeRulesActive ?? 0 },
-    { name: "Pendentes", value: storeRulesPending ?? 0 },
-    { name: "Rejeitadas", value: storeRulesRejected ?? 0 },
-  ].filter(s => s.value > 0);
-
-  const STORE_RULE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--destructive))"];
-  const allStats = [
-    { title: "Empresas", value: tenants, icon: Building2, scopes: ["ROOT"] },
-    { title: "Marcas", value: brands, icon: Store, scopes: ["ROOT", "TENANT"] },
-    { title: "Cidades", value: branches, icon: MapPin, scopes: ["ROOT", "TENANT", "BRAND"] },
-    { title: "Parceiros", value: storesTotal, sub: `${storesActive ?? 0} ativos`, icon: ShoppingBag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Ofertas Ativas", value: offersActive, sub: `${offersTotal ?? 0} total`, icon: Tag, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Clientes", value: customersTotal, sub: `${customersActive ?? 0} ativos`, icon: UserCheck, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Resgates no Período", value: redemptionsPeriod, sub: `${redemptionsTotal ?? 0} total`, icon: ReceiptText, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Cupons Ativos", value: vouchersActive, sub: `${vouchersTotal ?? 0} total`, icon: Ticket, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Pontuações no Período", value: earningEventsPeriod, sub: `${earningEventsTotal ?? 0} total`, icon: Coins, highlight: true, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Regras de Parceiro", value: storeRulesActive, sub: `${storeRulesTotal ?? 0} total · ${storeRulesPending ?? 0} pendentes`, icon: Store, scopes: ["ROOT", "TENANT", "BRAND", "BRANCH"] },
-    { title: "Usuários", value: usersCount, icon: Users, scopes: ["ROOT", "TENANT", "BRAND"] },
-  ];
-
-  const stats = allStats.filter(s => s.scopes.includes(consoleScope));
 
   const scopeLabels: Record<string, string> = {
     ROOT: "Visão geral da plataforma",
@@ -620,60 +653,58 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite"} 👋
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            {" · "}{scopeLabels[consoleScope]}
+          </p>
+        </div>
         <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">
-              {new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite"} 👋
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-              {" · "}{scopeLabels[consoleScope]}
-            </p>
-          </div>
-          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600 glass-card">
+          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-success/30 text-success">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-40 dot-pulse" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-40 dot-pulse" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
             </span>
             Tempo real
           </Badge>
+          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="7d">7 dias</SelectItem>
+              <SelectItem value="30d">30 dias</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="today">Hoje</SelectItem>
-            <SelectItem value="7d">7 dias</SelectItem>
-            <SelectItem value="30d">30 dias</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Quick Links & Test Accounts for Brand Admins */}
+      {/* Quick Links & Demo */}
       {showBrand && !isRoot && <BrandQuickLinks />}
-
-      {/* Demo Stores Toggle for Brand Admins */}
       {showBrand && !isRoot && <DemoStoresSection />}
 
-      {/* CRM Card */}
+      {/* CRM Banner */}
       {showBrand && !isRoot && (
-        <Card className="border-primary/20 gradient-border-top card-hover-lift bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
-          <CardContent className="flex items-center gap-4 py-5">
-            <div className="stat-icon-container h-12 w-12 shrink-0">
-              <TrendingUp className="h-6 w-6 text-primary" />
+        <Card className="border-primary/20 overflow-hidden">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-bold text-sm">CRM Estratégico</h3>
+                <h3 className="font-semibold text-sm">CRM Estratégico</h3>
                 <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
               </div>
-              <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais — tudo integrado ao seu programa de fidelidade.</p>
+              <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
             </div>
             <Button size="sm" className="shrink-0 gap-1.5" onClick={() => navigate("/crm")}>
-              <TrendingUp className="h-3.5 w-3.5" />
-              Abrir CRM
+              <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
             </Button>
           </CardContent>
         </Card>
@@ -682,158 +713,82 @@ export default function Dashboard() {
       {/* Access Hub */}
       <AccessHubSection consoleScope={consoleScope} />
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <StatCard key={stat.title} stat={stat} />
-        ))}
+      {/* ── SECTION A: KPIs ── */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" />
+        <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" />
+        <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" />
+        <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="primary" />
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Redemptions chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Resgates — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
+      {/* ── SECTION B + C: Chart + Ranking ── */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">Visão Geral</CardTitle>
+              <div className="flex items-center gap-4 text-[10px]">
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Resgates</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-success" /> Pontuações</span>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {!recentRedemptions ? (
-              <Skeleton className="h-[200px] w-full" />
+            {!combinedChart ? (
+              <Skeleton className="h-[240px] w-full" />
             ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={recentRedemptions}>
-                  <XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={30} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                  <Bar dataKey="count" name="Resgates" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={combinedChart}>
+                  <defs>
+                    <linearGradient id="gradResgates" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradPontuacoes" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(142 71% 45%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(142 71% 45%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(215 16% 65%)" }} tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(215 16% 65%)" }} tickLine={false} axisLine={false} width={30} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 8,
+                      border: "1px solid hsl(215 25% 27%)",
+                      background: "hsl(217 33% 17%)",
+                      color: "hsl(210 40% 98%)",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Area type="monotone" dataKey="resgates" name="Resgates" stroke="hsl(217 91% 60%)" fill="url(#gradResgates)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="pontuacoes" name="Pontuações" stroke="hsl(142 71% 45%)" fill="url(#gradPontuacoes)" strokeWidth={2} />
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
-
-        {/* Earnings chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Pontuações — {period === "today" ? "Hoje" : period === "7d" ? "Últimos 7 dias" : "Últimos 30 dias"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!recentEarnings ? (
-              <Skeleton className="h-[200px] w-full" />
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={recentEarnings}>
-                  <XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={30} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                  <Bar dataKey="count" name="Pontuações" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <RankingSection brandFilter={brandFilter} />
       </div>
 
-      {/* Pies */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Distribuição de Ofertas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {offersTotal === undefined ? (
-              <Skeleton className="h-[200px] w-full" />
-            ) : offersPie.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-16">Nenhuma oferta cadastrada</p>
-            ) : (
-              <div className="flex items-center justify-center gap-6">
-                <ResponsiveContainer width={160} height={160}>
-                  <PieChart>
-                    <Pie data={offersPie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2}>
-                      {offersPie.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-col gap-2 text-sm">
-                  {offersPie.map((s, i) => (
-                    <div key={s.name} className="flex items-center gap-2">
-                      <span className="h-3 w-3 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
-                      <span className="text-muted-foreground">{s.name}:</span>
-                      <span className="font-medium">{s.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Store rules pie chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Regras Personalizadas de Parceiro</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {storeRulesTotal === undefined ? (
-              <Skeleton className="h-[200px] w-full" />
-            ) : storeRulesPie.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-16">Nenhuma regra customizada cadastrada</p>
-            ) : (
-              <div className="flex items-center justify-center gap-6">
-                <ResponsiveContainer width={160} height={160}>
-                  <PieChart>
-                    <Pie data={storeRulesPie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2}>
-                      {storeRulesPie.map((_, i) => <Cell key={i} fill={STORE_RULE_COLORS[i % STORE_RULE_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-col gap-2 text-sm">
-                  {storeRulesPie.map((s, i) => (
-                    <div key={s.name} className="flex items-center gap-2">
-                      <span className="h-3 w-3 rounded-full" style={{ background: STORE_RULE_COLORS[i % STORE_RULE_COLORS.length] }} />
-                      <span className="text-muted-foreground">{s.name}:</span>
-                      <span className="font-medium">{s.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* ── SECTION D + E: Alerts + Heatmap ── */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AlertsSection redemptionsPending={redemptionsPending} storeRulesPending={storeRulesPending} />
+        <ActivityHeatmap chartData={recentRedemptions} />
       </div>
 
-      {/* Pending redemptions alert */}
-      {(redemptionsPending ?? 0) > 0 && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="flex items-center gap-3 py-4">
-            <ReceiptText className="h-5 w-5 text-destructive" />
-            <p className="text-sm font-medium">
-              {redemptionsPending} resgate{(redemptionsPending ?? 0) > 1 ? "s" : ""} pendente{(redemptionsPending ?? 0) > 1 ? "s" : ""} aguardando confirmação
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* ── SECTION F + G: Tasks + Activity Feed ── */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <TasksTable />
+        <ActivityFeed />
+      </div>
 
-      {/* Pending store rules alert */}
-      {(storeRulesPending ?? 0) > 0 && (
-        <Card className="border-accent/30 bg-accent/5">
-          <CardContent className="flex items-center gap-3 py-4">
-            <Store className="h-5 w-5 text-accent-foreground" />
-            <p className="text-sm font-medium">
-              {storeRulesPending} regra{(storeRulesPending ?? 0) > 1 ? "s" : ""} de parceiro pendente{(storeRulesPending ?? 0) > 1 ? "s" : ""} de aprovação
-            </p>
-          </CardContent>
-        </Card>
-      )}
-      {/* FAB – App do Cliente */}
+      {/* FAB */}
       {currentBrandId && (
         <button
           onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
           className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 shadow-lg hover:bg-primary/90 transition-colors"
         >
-          <Smartphone className="h-5 w-5 animate-pulse" />
+          <Smartphone className="h-5 w-5" />
           <span className="hidden sm:inline text-sm font-semibold">App do Cliente</span>
         </button>
       )}

@@ -155,8 +155,8 @@ function CollapsibleGroup({
   return (
     <Collapsible defaultOpen={hasActiveRoute} className="group/collapsible">
       <SidebarGroup className="py-0">
-        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors sidebar-group-indicator">
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
+          <ChevronRight className="h-3 w-3 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           {!collapsed && <span>{label}</span>}
         </CollapsibleTrigger>
         <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
@@ -164,21 +164,20 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
+                const isActive = location.pathname === item.url ||
+                  (item.url !== "/" && location.pathname.startsWith(item.url));
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       asChild
-                      isActive={
-                        location.pathname === item.url ||
-                        (item.url !== "/" && location.pathname.startsWith(item.url))
-                      }
+                      isActive={isActive}
                       tooltip={getLabel(item.key)}
                     >
                       <NavLink
                         to={item.url}
                         end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        className={`transition-colors rounded-md ${isActive ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
+                        activeClassName=""
                       >
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
@@ -200,7 +199,6 @@ function CollapsibleGroup({
   );
 }
 
-/** Module keys hidden on basic/free plans */
 const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library", "subscription"];
 
 export function BrandSidebar() {
@@ -229,26 +227,32 @@ export function BrandSidebar() {
       .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? "")),
   }));
 
+  const initials = user?.email
+    ? user.email.substring(0, 2).toUpperCase()
+    : "?";
+
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4 bg-gradient-to-b from-sidebar-accent/30 to-transparent">
-        <div className="flex items-center gap-2">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <div className="flex items-center gap-3">
           {brandLogoUrl ? (
-            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover logo-glow-ring" />
+            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-border" />
           ) : (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary logo-glow-ring">
-              <Store className="h-4 w-4 text-sidebar-primary-foreground" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15">
+              <Store className="h-4 w-4 text-primary" />
             </div>
           )}
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-foreground">{brandName || "Carregando..."}</span>
-              <span className="text-xs text-sidebar-foreground/60">Gestão Estratégica</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate">{brandName || "Carregando..."}</span>
+              <span className="text-[10px] text-muted-foreground">Gestão Estratégica</span>
             </div>
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent>
+
+      <SidebarContent className="px-2 py-2">
+        {/* Dashboard item */}
         <SidebarGroup className="pb-0">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -261,8 +265,8 @@ export function BrandSidebar() {
                   <NavLink
                     to="/"
                     end
-                    className="hover:bg-sidebar-accent/50"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    className={`transition-colors rounded-md ${location.pathname === '/' ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
+                    activeClassName=""
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
@@ -288,22 +292,24 @@ export function BrandSidebar() {
           );
         })}
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-3 bg-gradient-to-t from-sidebar-accent/20 to-transparent">
+
+      <SidebarFooter className="border-t border-sidebar-border p-3">
         {!collapsed && user?.email && (
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-6 w-6 rounded-full bg-sidebar-primary/20 flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-bold text-sidebar-primary">
-                {user.email.charAt(0).toUpperCase()}
-              </span>
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-primary">{initials}</span>
             </div>
-            <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="truncate text-xs font-medium text-foreground">{user.email.split("@")[0]}</span>
+              <span className="truncate text-[10px] text-muted-foreground">{user.email}</span>
+            </div>
           </div>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={signOut}
-          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+          className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/40"
         >
           <LogOut className="h-4 w-4 mr-2" />
           {!collapsed && "Sair"}

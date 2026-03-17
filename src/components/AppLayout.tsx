@@ -17,21 +17,15 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Search, Bell, ChevronDown } from "lucide-react";
 import { ContextBadge } from "@/components/ContextBadge";
-
-const CONSOLE_TITLES: Record<string, string> = {
-  ROOT: "Central de Comando",
-  TENANT: "Gestão Corporativa",
-  BRAND: "Gestão da Marca",
-  BRANCH: "Gestão Regional",
-  OPERATOR: "Terminal de Vendas",
-  STORE_ADMIN: "Meu Negócio",
-};
+import BranchSelector from "@/components/BranchSelector";
 
 export default function AppLayout() {
   const { consoleScope, isRootAdmin } = useBrandGuard();
   const { name: brandName, logoUrl: brandLogoUrl, brandId } = useBrandInfo();
+  const { user } = useAuth();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
   const [showApiKeyOnboarding, setShowApiKeyOnboarding] = useState(false);
   const isImpersonating = useMemo(() => {
@@ -50,7 +44,6 @@ export default function AppLayout() {
       });
   }, []);
 
-  // Check API Key onboarding flag for brand_admin
   useEffect(() => {
     if (consoleScope !== "BRAND" || !brandId) return;
     supabase
@@ -68,7 +61,6 @@ export default function AppLayout() {
 
   useBrandTheme(platformTheme);
 
-  // Parceiros usam o portal dedicado
   if (consoleScope === "STORE_ADMIN") {
     return <Navigate to="/store-panel" replace />;
   }
@@ -81,35 +73,71 @@ export default function AppLayout() {
     OPERATOR: OperatorSidebar,
   }[consoleScope];
 
+  const initials = user?.email
+    ? user.email.substring(0, 2).toUpperCase()
+    : "?";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <SidebarComponent />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center px-3 sm:px-4 glass-header shrink-0 relative">
-            <SidebarTrigger className="mr-2 sm:mr-4" />
+          {/* ── Premium Topbar ── */}
+          <header className="h-14 flex items-center gap-3 px-4 saas-topbar shrink-0 relative z-10">
+            <SidebarTrigger className="mr-1" />
+
             {isImpersonating && (
               <Button
                 size="sm"
                 variant="ghost"
-                className="gap-1 mr-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
+                className="gap-1 text-xs text-muted-foreground hover:text-foreground shrink-0"
                 onClick={() => { window.location.href = "/"; }}
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Voltar ao Painel Raiz</span>
-                <span className="sm:hidden">Raiz</span>
               </Button>
             )}
-            {brandLogoUrl && (
-              <img src={brandLogoUrl} alt={brandName} className="h-7 w-7 shrink-0 rounded-md object-cover mr-2 logo-glow-ring" />
-            )}
-            <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{brandName || "Plataforma"} — {CONSOLE_TITLES[consoleScope]}</h1>
-            <div className="ml-auto shrink-0">
+
+            {/* Search */}
+            <div className="relative hidden md:block w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                className="h-8 pl-9 text-xs bg-accent/50 border-border/50 focus:bg-accent"
+              />
+            </div>
+
+            <div className="flex-1" />
+
+            {/* Branch selector */}
+            <div className="hidden sm:block">
+              <BranchSelector />
+            </div>
+
+            {/* Notifications */}
+            <Button variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+            </Button>
+
+            {/* User avatar */}
+            <div className="flex items-center gap-2 pl-2 border-l border-border">
+              <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <span className="text-[10px] font-bold text-primary">{initials}</span>
+              </div>
+              <div className="hidden md:flex flex-col">
+                <span className="text-xs font-medium text-foreground truncate max-w-[120px]">{user?.email?.split("@")[0]}</span>
+                <span className="text-[10px] text-muted-foreground">{brandName || "Admin"}</span>
+              </div>
+              <ChevronDown className="h-3 w-3 text-muted-foreground hidden md:block" />
+            </div>
+
+            <div className="ml-auto shrink-0 md:hidden">
               <ContextBadge mode="admin" brandName={brandName || undefined} impersonating={isImpersonating} />
             </div>
-            <div className="absolute bottom-0 left-0 right-0 gradient-line-separator" />
           </header>
-          <main className="flex-1 p-3 sm:p-6 overflow-auto">
+
+          <main className="flex-1 p-4 sm:p-6 overflow-auto">
             <TrialBanner />
             <Outlet />
           </main>
