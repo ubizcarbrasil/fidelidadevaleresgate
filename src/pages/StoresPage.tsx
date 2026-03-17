@@ -201,7 +201,7 @@ export default function StoresPage() {
               </div>
               <div className="space-y-2"><Label>Endereço</Label><Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
               <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} /><Label>Ativo</Label></div>
-              <Button onClick={() => save.mutate()} disabled={!form.name || !form.slug || !form.brand_id || !form.branch_id} className="w-full">Salvar</Button>
+              <Button onClick={() => save.mutate()} disabled={!form.name || !form.slug || !form.brand_id || !form.branch_id || save.isPending} className="w-full">{save.isPending ? "Salvando..." : "Salvar"}</Button>
             </div>
           </DialogContent>
         </Dialog>
