@@ -111,7 +111,7 @@ export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }:
           {store.category && (
             <span
               className="text-xs font-medium px-3 py-1 rounded-full mb-2"
-              style={{ backgroundColor: `${primary}12`, color: primary }}
+              style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}
             >
               {store.category}
             </span>
