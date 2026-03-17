@@ -194,7 +194,6 @@ export default function OffersPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                   </TableCell>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
