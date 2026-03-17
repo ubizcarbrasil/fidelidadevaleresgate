@@ -340,7 +340,7 @@ function StoreLocationSection({ address, primary, fontHeading, fg }: { address: 
         </div>
         <div className="p-4">
           <p className="text-sm font-semibold">Endereço</p>
-          <p className="text-xs mt-0.5" style={{ color: `${fg}55` }}>{address}</p>
+          <p className="text-xs mt-0.5" style={{ color: brandAlpha(fg, 0.33) }}>{address}</p>
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm" style={{ backgroundColor: `${primary}12`, color: primary }}>
             Como chegar
           </a>
