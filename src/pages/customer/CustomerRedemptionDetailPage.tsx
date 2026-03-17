@@ -195,7 +195,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
               Copiar
             </button>
           </div>
-          <p className="text-[11px] text-center mt-2" style={{ color: `${fg}50` }}>
+          <p className="text-[11px] text-center mt-2" style={{ color: brandAlpha(fg, 0.31) }}>
             Informe este PIN ao lojista para validar seu crédito
           </p>
         </div>
