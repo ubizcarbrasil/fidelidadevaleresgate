@@ -56,6 +56,7 @@ function parseRecibo(json: any): Omit<RideData, "source"> | null {
     passengerPhone: null,  // Recibo API does not return passenger phone
     passengerEmail: null,  // Recibo API does not return passenger email
     driverName: motoristaBlock.nome || null,
+    clienteId: clienteBlock.cliente_id || null,
   };
 }
 
