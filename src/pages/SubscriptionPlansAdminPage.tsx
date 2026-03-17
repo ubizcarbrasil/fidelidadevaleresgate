@@ -92,7 +92,7 @@ export default function SubscriptionPlansAdminPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Preços dos Planos" subtitle="Edite os valores, features e configurações de cada plano de assinatura." />
+      <PageHeader title="Preços dos Planos" description="Edite os valores, features e configurações de cada plano de assinatura." />
 
       <div className="grid gap-6">
         {(plans ?? []).map((plan) => {
