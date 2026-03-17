@@ -12,7 +12,11 @@ export function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
   const isDark = typeof document !== "undefined"
     && document.documentElement.classList.contains("dark");
-  if (isDark && fallback) return fallback;
+  // In dark mode, always prefer the fallback CSS variable to prevent
+  // brand light-mode colors from leaking. When fallback is empty the caller
+  // is probing an optional color (e.g. secondary) — return empty so the
+  // next color in the cascade is used instead of a raw brand HSL value.
+  if (isDark) return fallback;
   return `hsl(${hsl})`;
 }
 
