@@ -9,6 +9,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import type { Database } from "@/integrations/supabase/types";
+import EmptyState from "@/components/customer/EmptyState";
 
 type RedemptionStatus = Database["public"]["Enums"]["redemption_status"];
 const STATUS_VARIANT: Record<RedemptionStatus, string> = { PENDING: "outline", USED: "default", EXPIRED: "secondary", CANCELED: "destructive" };
