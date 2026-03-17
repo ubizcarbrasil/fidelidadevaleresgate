@@ -623,11 +623,19 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Painel Principal</h2>
-            <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
+            <h2 className="text-2xl font-bold tracking-tight">
+              {new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite"} 👋
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {" · "}{scopeLabels[consoleScope]}
+            </p>
           </div>
-          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600">
-            <Radio className="h-3 w-3 animate-pulse" />
+          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600 glass-card">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-40 dot-pulse" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
             Tempo real
           </Badge>
         </div>
