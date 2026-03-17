@@ -204,9 +204,9 @@ export default function StoreCatalogView({
       {pointsPerReal > 0 && (
         <div
           className="mx-4 mt-4 p-4 rounded-2xl flex items-center gap-3"
-          style={{ background: `linear-gradient(135deg, ${primary}20 0%, ${primary}08 100%)` }}
+          style={{ background: `linear-gradient(135deg, ${brandAlpha(primary, 0.12)} 0%, ${brandAlpha(primary, 0.03)} 100%)` }}
         >
-          <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primary}20` }}>
+          <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.12) }}>
             <Sparkles className="h-6 w-6" style={{ color: primary }} />
           </div>
           <div>
