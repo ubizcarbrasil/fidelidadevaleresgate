@@ -329,7 +329,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
 
             {!loading && hasQuery && !hasResults && suggestions.length === 0 && (
               <div className="text-center py-16 opacity-40">
-                <Search className="h-10 w-10 mx-auto mb-3" style={{ color: `${fg}30` }} />
+                <Search className="h-10 w-10 mx-auto mb-3" style={{ color: brandAlpha(fg, 0.19) }} />
                 <p className="font-medium text-sm">Nenhum resultado para "{debouncedQuery}"</p>
                 <p className="text-xs mt-1">Tente buscar por outro termo</p>
               </div>
