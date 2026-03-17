@@ -24,6 +24,7 @@ const PLANS = [
   { key: "free", label: "Free", icon: Zap, color: "text-muted-foreground" },
   { key: "starter", label: "Starter", icon: Rocket, color: "text-primary" },
   { key: "profissional", label: "Profissional", icon: Crown, color: "text-amber-500" },
+  { key: "enterprise", label: "Enterprise", icon: Crown, color: "text-violet-500" },
 ] as const;
 
 type PlanKey = (typeof PLANS)[number]["key"];
