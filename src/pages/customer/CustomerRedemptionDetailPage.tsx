@@ -164,7 +164,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
             </p>
           </div>
           <div className="rounded-2xl p-3 text-center bg-muted">
-            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: `${fg}50` }}>VALIDADE</p>
+            <p className="text-[10px] font-semibold tracking-wider mb-1" style={{ color: brandAlpha(fg, 0.31) }}>VALIDADE</p>
             <p className="text-sm font-bold" style={{ color: fg, fontFamily: fontHeading }}>
               {redemption.expires_at
                 ? format(new Date(redemption.expires_at), "dd/MM/yyyy")
