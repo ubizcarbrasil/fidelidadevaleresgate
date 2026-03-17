@@ -541,25 +541,27 @@ export default function Dashboard() {
       d.setDate(d.getDate() - i);
       const start = new Date(d); start.setHours(0, 0, 0, 0);
       const end = new Date(d); end.setHours(23, 59, 59, 999);
-      const { count } = await (supabase.from as any)(table)
+      let q = (supabase.from as any)(table)
         .select("*", { count: "exact", head: true })
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString());
+      if (brandFilter) q = q.eq("brand_id", brandFilter);
+      const { count } = await q;
       const fmt = periodDays <= 7
         ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
         : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
       days.push({ label: fmt, count: count || 0 });
     }
     return days;
-  }, [periodDays]);
+  }, [periodDays, brandFilter]);
 
   const { data: recentRedemptions } = useQuery({
-    queryKey: ["redemptions-chart", period],
+    queryKey: ["redemptions-chart", period, brandFilter ?? "global"],
     queryFn: () => fetchChartData("redemptions"),
   });
 
   const { data: recentEarnings } = useQuery({
-    queryKey: ["earnings-chart", period],
+    queryKey: ["earnings-chart", period, brandFilter ?? "global"],
     queryFn: () => fetchChartData("earning_events"),
   });
 
