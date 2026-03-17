@@ -28,6 +28,18 @@ export default function CrmContactsPage() {
     os_platform: os || undefined,
     page,
   });
+
+  // Fetch linked customer data for displaying points
+  const contactIds = (data?.contacts || []).filter(c => c.customer_id).map(c => c.customer_id);
+  const { data: linkedCustomers } = useQuery({
+    queryKey: ["crm-linked-customers", contactIds],
+    enabled: contactIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("customers").select("id, points_balance, money_balance, customer_tier, ride_count").in("id", contactIds as string[]);
+      return data || [];
+    },
+  });
+  const customerMap = new Map((linkedCustomers || []).map(c => [c.id, c]));
   const { data: stats } = useCrmContactStats();
   const { data: events } = useCrmContactEvents(selectedContactId);
 
