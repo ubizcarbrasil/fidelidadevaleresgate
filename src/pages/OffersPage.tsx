@@ -178,7 +178,7 @@ export default function OffersPage() {
                   <TableCell>{(o.stores as any)?.name}</TableCell>
                   <TableCell>{(o.branches as any)?.name}</TableCell>
                   <TableCell>R$ {Number(o.value_rescue).toFixed(2)}</TableCell>
-                  <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{o.status}</Badge></TableCell>
+                  <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{STATUS_LABELS[o.status as OfferStatus] || o.status}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => remove.mutate(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
