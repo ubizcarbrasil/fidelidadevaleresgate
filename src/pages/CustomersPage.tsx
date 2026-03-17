@@ -17,6 +17,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
+import DataSkeleton from "@/components/DataSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 
@@ -291,7 +292,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Loading / Empty */}
-      {isLoading && <p className="text-center py-8 text-muted-foreground">Carregando...</p>}
+      {isLoading && (isMobile ? <DataSkeleton variant="card" rows={4} /> : <DataSkeleton variant="table-row" rows={5} />)}
       {!isLoading && data?.items?.length === 0 && <EmptyState type="generic" title="Nenhum cliente encontrado" description="Cadastre clientes ou aguarde o primeiro acesso." />}
 
       {/* Mobile: Card list */}

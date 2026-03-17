@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import DataSkeleton from "@/components/DataSkeleton";
 import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -154,57 +155,60 @@ export default function OffersPage() {
 
       <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Parceiro</TableHead>
-                <TableHead>Cidade</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="py-0">
-                  <EmptyState type="offers" />
-                </TableCell></TableRow>
-              )}
-              {data?.items?.map(o => (
-                <TableRow key={o.id}>
-                  <TableCell className="font-medium">{o.title}</TableCell>
-                  <TableCell>{(o.stores as any)?.name}</TableCell>
-                  <TableCell>{(o.branches as any)?.name}</TableCell>
-                  <TableCell>R$ {Number(o.value_rescue).toFixed(2)}</TableCell>
-                  <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{STATUS_LABELS[o.status as OfferStatus] || o.status}</Badge></TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                          <AlertDialogDescription>Tem certeza que deseja excluir a oferta "{o.title}"? Esta ação não pode ser desfeita.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => remove.mutate(o.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
+      {isLoading ? (
+        <DataSkeleton variant="table-row" rows={5} />
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Parceiro</TableHead>
+                  <TableHead>Cidade</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {data?.items?.length === 0 && (
+                  <TableRow><TableCell colSpan={6} className="py-0">
+                    <EmptyState type="offers" />
+                  </TableCell></TableRow>
+                )}
+                {data?.items?.map(o => (
+                  <TableRow key={o.id}>
+                    <TableCell className="font-medium">{o.title}</TableCell>
+                    <TableCell>{(o.stores as any)?.name}</TableCell>
+                    <TableCell>{(o.branches as any)?.name}</TableCell>
+                    <TableCell>R$ {Number(o.value_rescue).toFixed(2)}</TableCell>
+                    <TableCell><Badge variant={(STATUS_COLORS[o.status as OfferStatus] || "secondary") as any}>{STATUS_LABELS[o.status as OfferStatus] || o.status}</Badge></TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>Tem certeza que deseja excluir a oferta "{o.title}"? Esta ação não pode ser desfeita.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => remove.mutate(o.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

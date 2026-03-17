@@ -1,35 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Skeleton Loading nas Páginas CRUD
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### O que será feito
-Substituir os textos "Carregando..." por skeletons visuais usando o componente `DataSkeleton` já existente (`src/components/DataSkeleton.tsx`) nas 4 páginas CRUD admin.
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Alterações por arquivo
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**1. `src/pages/OffersPage.tsx`** (linha 171)
-- Substituir `<TableRow><TableCell colSpan={6}>Carregando...</TableCell></TableRow>` por `<DataSkeleton variant="table-row" rows={5} />` renderizado fora da `<Table>` (wrap com condição `isLoading` antes do `<Card>`)
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**2. `src/pages/StoresPage.tsx`** (linha 245)
-- Mesmo padrão: substituir texto loading por `<DataSkeleton variant="table-row" rows={5} />`
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**3. `src/pages/RedemptionsPage.tsx`** (linha 61)
-- Mesmo padrão: substituir texto loading por `<DataSkeleton variant="table-row" rows={5} />`
-
-**4. `src/pages/CustomersPage.tsx`** (linha 294)
-- Desktop: substituir `<p>Carregando...</p>` por `<DataSkeleton variant="table-row" rows={5} />`
-- Mobile: adicionar `<DataSkeleton variant="card" rows={4} />` como alternativa mobile quando `isMobile && isLoading`
-
-### Abordagem
-- Usar `DataSkeleton` já existente com `variant="table-row"` para tabelas desktop e `variant="card"` para cards mobile
-- Quando `isLoading`, renderizar o skeleton **no lugar** da tabela/lista inteira (evita skeleton dentro de `<TableBody>` que ficaria desalinhado)
-- Sem novos componentes — apenas importar e usar o `DataSkeleton` existente
-
-### Arquivos afetados
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/OffersPage.tsx` | Editar — skeleton no loading |
-| `src/pages/StoresPage.tsx` | Editar — skeleton no loading |
-| `src/pages/RedemptionsPage.tsx` | Editar — skeleton no loading |
-| `src/pages/CustomersPage.tsx` | Editar — skeleton table + card |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
