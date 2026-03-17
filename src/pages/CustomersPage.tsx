@@ -16,6 +16,11 @@ import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DataTableControls } from "@/components/DataTableControls";
+import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 
 const PAGE_SIZE = 20;
 
