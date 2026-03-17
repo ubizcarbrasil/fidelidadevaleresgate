@@ -653,21 +653,34 @@ export default function Dashboard() {
   const { data: earningEventsPeriod } = useMetric("earning_events", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q: any) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
+  // Optimized: single query per table instead of N queries per day
   const fetchChartData = useCallback(async (table: string) => {
-    const days: { label: string; count: number }[] = [];
+    const startDate = getPeriodStart(period);
+    let q = supabase.from(table as any).select("created_at").gte("created_at", startDate.toISOString());
+    if (brandFilter) q = q.eq("brand_id", brandFilter);
+    q = q.order("created_at", { ascending: true }).limit(5000);
+    const { data: rows } = await q;
+
+    // Group by date on the client side (1 query instead of 30)
+    const countByDate: Record<string, number> = {};
     for (let i = periodDays - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const start = new Date(d); start.setHours(0, 0, 0, 0);
-      const end = new Date(d); end.setHours(23, 59, 59, 999);
-      let q = (supabase.from as any)(table).select("*", { count: "exact", head: true }).gte("created_at", start.toISOString()).lte("created_at", end.toISOString());
-      if (brandFilter) q = q.eq("brand_id", brandFilter);
-      const { count } = await q;
-      const fmt = periodDays <= 7 ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "") : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      days.push({ label: fmt, count: count || 0 });
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      countByDate[key] = 0;
     }
-    return days;
-  }, [periodDays, brandFilter]);
+    for (const row of rows || []) {
+      const key = (row as any).created_at?.slice(0, 10);
+      if (key && key in countByDate) countByDate[key]++;
+    }
+
+    return Object.entries(countByDate).map(([dateStr, count]) => {
+      const d = new Date(dateStr + "T12:00:00");
+      const fmt = periodDays <= 7
+        ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+        : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      return { label: fmt, count };
+    });
+  }, [period, periodDays, brandFilter]);
 
   const { data: recentRedemptions } = useQuery({
     queryKey: ["redemptions-chart", period, brandFilter ?? "global"],
