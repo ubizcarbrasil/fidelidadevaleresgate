@@ -216,35 +216,36 @@ export default function CustomersPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Clientes</h2>
-          <p className="text-muted-foreground">Gerencie clientes por filial</p>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Clientes</h2>
+          <p className="text-sm text-muted-foreground">Gerencie clientes por filial</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => syncToCrmMutation.mutate()} disabled={syncToCrmMutation.isPending}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncToCrmMutation.isPending ? "animate-spin" : ""}`} />
-            Sincronizar CRM
+            <RefreshCw className={`h-4 w-4 mr-1 ${syncToCrmMutation.isPending ? "animate-spin" : ""}`} />
+            {isMobile ? "CRM" : "Sincronizar CRM"}
           </Button>
           {selectedIds.size > 0 && (
-            <Button variant="outline" onClick={() => setBulkOpen(true)}>
-              <UserCheck className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={() => setBulkOpen(true)}>
+              <UserCheck className="h-4 w-4 mr-1" />
               Identificar {selectedIds.size}
             </Button>
           )}
           <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Cliente</Button></DialogTrigger>
+            <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" />{isMobile ? "Novo" : "Novo Cliente"}</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{editId ? "Editar Cliente" : "Novo Cliente"}</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2"><Label>Telefone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
                   <div className="space-y-2"><Label>CPF</Label><Input value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
                 </div>
                 <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@exemplo.com" /></div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {isRootAdmin && (
                   <div className="space-y-2">
                     <Label>Marca</Label>
@@ -269,88 +270,133 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[200px]">
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="w-full sm:flex-1 sm:min-w-[200px]">
           <DataTableControls search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nome, telefone ou CPF..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
         </div>
-        <Select value={tierFilter} onValueChange={v => { setTierFilter(v === "all" ? "" : v); setPage(1); }}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Tier" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos Tiers</SelectItem>
-            {TIERS.map(t => <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={crmFilter} onValueChange={v => { setCrmFilter(v === "all" ? "" : v); setPage(1); }}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status CRM" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="SYNCED">Sincronizado</SelectItem>
-            <SelectItem value="PENDING">Pendente</SelectItem>
-            <SelectItem value="NONE">Sem CRM</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={tierFilter} onValueChange={v => { setTierFilter(v === "all" ? "" : v); setPage(1); }}>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder="Tier" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Tiers</SelectItem>
+              {TIERS.map(t => <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={crmFilter} onValueChange={v => { setCrmFilter(v === "all" ? "" : v); setPage(1); }}>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder="Status CRM" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="SYNCED">Sincronizado</SelectItem>
+              <SelectItem value="PENDING">Pendente</SelectItem>
+              <SelectItem value="NONE">Sem CRM</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  {unidentifiedOnPage.length > 0 && (
-                    <Checkbox checked={unidentifiedOnPage.length > 0 && unidentifiedOnPage.every((c: any) => selectedIds.has(c.id))} onCheckedChange={toggleSelectAll} />
-                  )}
-                </TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tier</TableHead>
-                <TableHead>CRM</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>CPF</TableHead>
-                <TableHead>Corridas</TableHead>
-                <TableHead>Pontos</TableHead>
-                <TableHead>Saldo (R$)</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && data?.items?.length === 0 && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>}
-              {data?.items?.map((c: any) => {
-                const tier = getTierInfo(c.customer_tier || "INICIANTE");
-                const crmStatus = CRM_SYNC_LABELS[c.crm_sync_status || "NONE"];
-                return (
-                  <TableRow key={c.id} className={isUnidentified(c) ? "bg-yellow-500/5" : ""}>
-                    <TableCell>
+      {/* Loading / Empty */}
+      {isLoading && <p className="text-center py-8 text-muted-foreground">Carregando...</p>}
+      {!isLoading && data?.items?.length === 0 && <p className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</p>}
+
+      {/* Mobile: Card list */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {data?.items?.map((c: any) => {
+            const tier = getTierInfo(c.customer_tier || "INICIANTE");
+            const crmStatus = CRM_SYNC_LABELS[c.crm_sync_status || "NONE"];
+            return (
+              <Card key={c.id} className={isUnidentified(c) ? "border-yellow-500/30" : ""}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {isUnidentified(c) && <Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} />}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {c.name}
-                      {isUnidentified(c) && <Badge variant="outline" className="ml-2 text-xs border-yellow-400 text-yellow-700">Não identificado</Badge>}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`text-xs ${tier.color}`}>{tier.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {crmStatus.label && <Badge variant="outline" className={`text-xs ${crmStatus.color}`}>{crmStatus.label}</Badge>}
-                    </TableCell>
-                    <TableCell>{c.phone || "—"}</TableCell>
-                    <TableCell>{c.cpf || "—"}</TableCell>
-                    <TableCell>{c.ride_count || 0}</TableCell>
-                    <TableCell>{c.points_balance}</TableCell>
-                    <TableCell>R$ {Number(c.money_balance).toFixed(2)}</TableCell>
-                    <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      <span className="font-medium truncate">{c.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className={`text-xs ${tier.color}`}>{tier.label}</Badge>
+                    {crmStatus.label && <Badge variant="outline" className={`text-xs ${crmStatus.color}`}>{crmStatus.label}</Badge>}
+                    <Badge variant={c.is_active ? "default" : "secondary"} className="text-xs">{c.is_active ? "Ativo" : "Inativo"}</Badge>
+                    {isUnidentified(c) && <Badge variant="outline" className="text-xs border-yellow-400 text-yellow-700">Não identificado</Badge>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span>Tel: {c.phone || "—"}</span>
+                    <span>CPF: {c.cpf || "—"}</span>
+                    <span>Corridas: {c.ride_count || 0}</span>
+                    <span>Pontos: {c.points_balance}</span>
+                    <span>Saldo: R$ {Number(c.money_balance).toFixed(2)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* Desktop: Table */
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    {unidentifiedOnPage.length > 0 && (
+                      <Checkbox checked={unidentifiedOnPage.length > 0 && unidentifiedOnPage.every((c: any) => selectedIds.has(c.id))} onCheckedChange={toggleSelectAll} />
+                    )}
+                  </TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Tier</TableHead>
+                  <TableHead>CRM</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>CPF</TableHead>
+                  <TableHead>Corridas</TableHead>
+                  <TableHead>Pontos</TableHead>
+                  <TableHead>Saldo (R$)</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.items?.map((c: any) => {
+                  const tier = getTierInfo(c.customer_tier || "INICIANTE");
+                  const crmStatus = CRM_SYNC_LABELS[c.crm_sync_status || "NONE"];
+                  return (
+                    <TableRow key={c.id} className={isUnidentified(c) ? "bg-yellow-500/5" : ""}>
+                      <TableCell>
+                        {isUnidentified(c) && <Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} />}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {c.name}
+                        {isUnidentified(c) && <Badge variant="outline" className="ml-2 text-xs border-yellow-400 text-yellow-700">Não identificado</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-xs ${tier.color}`}>{tier.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {crmStatus.label && <Badge variant="outline" className={`text-xs ${crmStatus.color}`}>{crmStatus.label}</Badge>}
+                      </TableCell>
+                      <TableCell>{c.phone || "—"}</TableCell>
+                      <TableCell>{c.cpf || "—"}</TableCell>
+                      <TableCell>{c.ride_count || 0}</TableCell>
+                      <TableCell>{c.points_balance}</TableCell>
+                      <TableCell>R$ {Number(c.money_balance).toFixed(2)}</TableCell>
+                      <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <CustomerLedgerDrawer customer={ledgerCustomer} open={!!ledgerCustomer} onOpenChange={open => { if (!open) setLedgerCustomer(null); }} />
 
@@ -360,7 +406,7 @@ export default function CustomersPage() {
           <p className="text-sm text-muted-foreground">Preencha os dados que deseja atualizar. Campos vazios serão ignorados.</p>
           <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Nome</Label><Input value={bulkForm.name} onChange={e => setBulkForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" /></div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2"><Label>CPF</Label><Input value={bulkForm.cpf} onChange={e => setBulkForm(f => ({ ...f, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
               <div className="space-y-2"><Label>Telefone</Label><Input value={bulkForm.phone} onChange={e => setBulkForm(f => ({ ...f, phone: e.target.value }))} placeholder="(00) 00000-0000" /></div>
             </div>
