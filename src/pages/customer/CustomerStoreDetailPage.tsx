@@ -29,7 +29,7 @@ interface Props {
 }
 
 // hslToCss imported below
-import { hslToCss } from "@/lib/utils";
+import { hslToCss, brandAlpha } from "@/lib/utils";
 
 export default function CustomerStoreDetailPage({ store, onBack, onOfferClick }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
