@@ -155,7 +155,7 @@ function CollapsibleGroup({
   return (
     <Collapsible defaultOpen={hasActiveRoute} className="group/collapsible">
       <SidebarGroup className="py-0">
-        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors">
+        <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors sidebar-group-indicator">
           <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           {!collapsed && <span>{label}</span>}
         </CollapsibleTrigger>
@@ -183,7 +183,7 @@ function CollapsibleGroup({
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
                         {badgeCount && badgeCount > 0 && (
-                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
+                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold badge-glow">
                             {badgeCount > 99 ? "99+" : badgeCount}
                           </Badge>
                         )}
@@ -231,12 +231,12 @@ export function BrandSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4 bg-gradient-to-b from-sidebar-accent/30 to-transparent">
         <div className="flex items-center gap-2">
           {brandLogoUrl ? (
-            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover logo-glow-ring" />
           ) : (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary logo-glow-ring">
               <Store className="h-4 w-4 text-sidebar-primary-foreground" />
             </div>
           )}
@@ -288,9 +288,16 @@ export function BrandSidebar() {
           );
         })}
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-3">
-        {!collapsed && (
-          <div className="mb-2 truncate text-xs text-sidebar-foreground/60">{user?.email}</div>
+      <SidebarFooter className="border-t border-sidebar-border p-3 bg-gradient-to-t from-sidebar-accent/20 to-transparent">
+        {!collapsed && user?.email && (
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-6 w-6 rounded-full bg-sidebar-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-sidebar-primary">
+                {user.email.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
+          </div>
         )}
         <Button
           variant="ghost"

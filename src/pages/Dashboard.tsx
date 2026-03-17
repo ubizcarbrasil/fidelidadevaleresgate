@@ -472,18 +472,24 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
 
 const StatCard = memo(function StatCard({ stat }: { stat: { title: string; value: any; sub?: string; icon: any; highlight?: boolean } }) {
   return (
-    <Card className={stat.highlight ? "border-primary/50 bg-primary/5" : ""}>
+    <Card className={`gradient-border-top card-hover-lift ${stat.highlight ? "border-primary/50" : ""}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-        <stat.icon className="h-5 w-5 text-primary" />
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.title}</CardTitle>
+        <div className="stat-icon-container h-10 w-10">
+          <stat.icon className="h-4 w-4 text-primary" />
+        </div>
       </CardHeader>
       <CardContent>
         {stat.value === undefined ? (
           <Skeleton className="h-9 w-20" />
         ) : (
-          <div className="text-3xl font-bold transition-all duration-300">{stat.value}</div>
+          <div className="text-3xl font-bold tracking-tight transition-all duration-300">{stat.value}</div>
         )}
-        {stat.sub && <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>}
+        {stat.sub && (
+          <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+            {stat.sub}
+          </span>
+        )}
       </CardContent>
     </Card>
   );
@@ -617,11 +623,19 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Painel Principal</h2>
-            <p className="text-muted-foreground">{scopeLabels[consoleScope]}</p>
+            <h2 className="text-2xl font-bold tracking-tight">
+              {new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite"} 👋
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {" · "}{scopeLabels[consoleScope]}
+            </p>
           </div>
-          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600">
-            <Radio className="h-3 w-3 animate-pulse" />
+          <Badge variant="outline" className="gap-1.5 text-xs font-normal border-green-500/30 text-green-600 glass-card">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-40 dot-pulse" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
             Tempo real
           </Badge>
         </div>
@@ -645,9 +659,9 @@ export default function Dashboard() {
 
       {/* CRM Card */}
       {showBrand && !isRoot && (
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+        <Card className="border-primary/20 gradient-border-top card-hover-lift bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
           <CardContent className="flex items-center gap-4 py-5">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <div className="stat-icon-container h-12 w-12 shrink-0">
               <TrendingUp className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
