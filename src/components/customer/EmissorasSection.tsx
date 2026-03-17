@@ -30,9 +30,24 @@ export default function EmissorasSection() {
   const primary = "hsl(var(--vb-highlight))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
+  // Check if multi_emitter module is enabled for this brand
+  const { data: isMultiEmitterEnabled = false, isLoading: moduleLoading } = useQuery({
+    queryKey: ["brand-module-multi-emitter", brand?.id],
+    enabled: !!brand?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brand_modules")
+        .select("is_enabled, module_definitions!inner(key)")
+        .eq("brand_id", brand!.id)
+        .eq("module_definitions.key", "multi_emitter")
+        .maybeSingle();
+      return data?.is_enabled ?? false;
+    },
+  });
+
   const { data: stores = [], isLoading: loading } = useQuery({
     queryKey: queryKeys.stores.list(brand?.id, selectedBranch?.id, "emissoras"),
-    enabled: !!brand && !!selectedBranch,
+    enabled: !!brand && !!selectedBranch && isMultiEmitterEnabled,
     queryFn: async () => {
       const { data } = await supabase
         .from("stores")
