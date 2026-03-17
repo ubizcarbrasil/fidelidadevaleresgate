@@ -80,7 +80,7 @@ export default function PlanModuleTemplatesPage() {
     for (const mod of modules) {
       m[mod.id] = { free: false, starter: false, profissional: false, enterprise: false };
       if (mod.is_core) {
-        m[mod.id] = { free: true, starter: true, profissional: true };
+        m[mod.id] = { free: true, starter: true, profissional: true, enterprise: true };
       }
     }
     for (const t of templates) {
