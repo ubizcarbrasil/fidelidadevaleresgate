@@ -145,7 +145,7 @@ export default function OffersPage() {
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as OfferStatus }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id} className="w-full">Salvar</Button>
