@@ -404,7 +404,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate" style={{ fontFamily: fontHeading }}>{offer.title}</p>
                         {offer.stores?.name && (
-                          <p className="text-xs truncate" style={{ color: `${fg}50` }}>{offer.stores.name}</p>
+                          <p className="text-xs truncate" style={{ color: brandAlpha(fg, 0.31) }}>{offer.stores.name}</p>
                         )}
                       </div>
                       {Number(offer.value_rescue) > 0 && (
