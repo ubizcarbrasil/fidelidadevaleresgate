@@ -3,6 +3,7 @@
  * Tests: login, signup, password reset, role-based redirect
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
+// @ts-expect-error — test-only imports resolved by vitest
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Auth from "../Auth";
