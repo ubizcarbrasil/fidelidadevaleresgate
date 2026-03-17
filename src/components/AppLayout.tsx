@@ -10,6 +10,7 @@ import { BranchSidebar } from "@/components/consoles/BranchSidebar";
 import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 import { ApiKeyOnboardingDialog } from "@/components/ApiKeyOnboardingDialog";
+import { CommandPalette } from "@/components/CommandPalette";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { useEffect, useMemo, useState, useRef } from "react";
@@ -17,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, Bell, ChevronDown, ChevronRight, LogOut, User, KeyRound } from "lucide-react";
 import { ContextBadge } from "@/components/ContextBadge";
 import BranchSelector from "@/components/BranchSelector";
@@ -175,17 +175,18 @@ export default function AppLayout() {
               </BreadcrumbList>
             </Breadcrumb>
 
-            {/* Search with Cmd+K hint */}
-            <div className="relative hidden lg:block w-64 ml-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar..."
-                className="h-8 pl-9 pr-12 text-xs bg-accent/50 border-border/50 focus:bg-accent"
-              />
-              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] text-muted-foreground/60 border border-border/60 rounded px-1.5 py-0.5 font-mono">
+            {/* Search trigger — opens Command Palette */}
+            <button
+              type="button"
+              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+              className="hidden lg:flex items-center gap-2 ml-auto w-64 h-8 px-3 text-xs text-muted-foreground bg-accent/50 border border-border/50 rounded-md hover:bg-accent transition-colors"
+            >
+              <Search className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 text-left">Buscar…</span>
+              <kbd className="text-[10px] text-muted-foreground/60 border border-border/60 rounded px-1.5 py-0.5 font-mono">
                 ⌘K
               </kbd>
-            </div>
+            </button>
 
             <div className="flex-1 lg:flex-none" />
 
@@ -250,7 +251,7 @@ export default function AppLayout() {
               brandId={brandId}
             />
           )}
-          
+          <CommandPalette />
         </div>
       </div>
     </SidebarProvider>
