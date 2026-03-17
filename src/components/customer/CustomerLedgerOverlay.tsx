@@ -512,7 +512,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                                   {isCredit ? "+" : "-"}{entry.points_amount} pts
                                 </span>
                                 {entry.money_amount > 0 && (
-                                  <p className="text-[10px]" style={{ color: `${fg}40` }}>
+                                  <p className="text-[10px]" style={{ color: brandAlpha(fg, 0.25) }}>
                                     R$ {Number(entry.money_amount).toFixed(2)}
                                   </p>
                                 )}
