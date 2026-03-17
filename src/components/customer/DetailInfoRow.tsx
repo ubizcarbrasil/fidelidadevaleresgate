@@ -1,4 +1,5 @@
 import React from "react";
+import { brandAlpha } from "@/lib/utils";
 
 interface DetailInfoRowProps {
   icon: React.ReactNode;
@@ -11,7 +12,7 @@ export function DetailInfoRow({ icon, children, primary }: DetailInfoRowProps) {
     <div className="flex items-start gap-2">
       <div
         className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-        style={{ backgroundColor: `${primary}10` }}
+        style={{ backgroundColor: brandAlpha(primary, 0.06) }}
       >
         {icon}
       </div>

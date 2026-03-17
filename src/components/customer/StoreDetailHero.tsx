@@ -3,6 +3,7 @@ import { ArrowLeft, Share2, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import SafeImage from "@/components/customer/SafeImage";
 import { Store as StoreIcon } from "lucide-react";
+import { brandAlpha } from "@/lib/utils";
 
 interface Props {
   storeName: string;
@@ -27,7 +28,7 @@ const StoreDetailHero = React.memo(function StoreDetailHero({
           backgroundSize: "cover",
           backgroundPosition: "center",
         } : {
-          background: `linear-gradient(135deg, ${primary}30 0%, ${primary}08 100%)`,
+          background: `linear-gradient(135deg, ${brandAlpha(primary, 0.19)} 0%, ${brandAlpha(primary, 0.03)} 100%)`,
         }}
       />
 
@@ -67,7 +68,7 @@ const StoreDetailHero = React.memo(function StoreDetailHero({
           fallback={
             <div
               className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-lg border-4 border-background"
-              style={{ backgroundColor: `${primary}15` }}
+              style={{ backgroundColor: brandAlpha(primary, 0.08) }}
             >
               <StoreIcon className="h-10 w-10" style={{ color: primary }} />
             </div>

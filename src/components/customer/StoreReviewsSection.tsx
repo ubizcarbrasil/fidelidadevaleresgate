@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { brandAlpha } from "@/lib/utils";
 
 interface Review {
   id: string;
@@ -118,7 +119,7 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
           style={{
             width: size,
             height: size,
-            color: s <= value ? "#FBBF24" : `${fg}20`,
+            color: s <= value ? "#FBBF24" : brandAlpha(fg, 0.13),
             fill: s <= value ? "#FBBF24" : "none",
           }}
           onClick={() => onChange?.(s)}
@@ -199,7 +200,7 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
         </div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-8 opacity-40">
-          <Star className="h-8 w-8 mx-auto mb-2" style={{ color: `${fg}30` }} />
+          <Star className="h-8 w-8 mx-auto mb-2" style={{ color: brandAlpha(fg, 0.19) }} />
           <p className="text-sm">Ainda não há avaliações</p>
           <p className="text-xs mt-1">Seja o primeiro a avaliar!</p>
         </div>
@@ -232,7 +233,7 @@ export default function StoreReviewsSection({ storeId, customerId, primary, font
                 <StarRating value={review.rating} size={14} />
               </div>
               {review.comment && (
-                <p className="text-xs mt-2 leading-relaxed" style={{ color: `${fg}65` }}>
+                <p className="text-xs mt-2 leading-relaxed" style={{ color: brandAlpha(fg, 0.40) }}>
                   {review.comment}
                 </p>
               )}

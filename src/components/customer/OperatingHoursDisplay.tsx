@@ -1,6 +1,7 @@
 import { Clock, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { brandAlpha } from "@/lib/utils";
 
 interface DayHours {
   day: string;
@@ -52,7 +53,7 @@ export default function OperatingHoursDisplay({ hours, primary, fg }: Props) {
       >
         <div
           className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${primary}10` }}
+          style={{ backgroundColor: brandAlpha(primary, 0.06) }}
         >
           <Clock className="h-4 w-4" style={{ color: primary }} />
         </div>
@@ -70,7 +71,7 @@ export default function OperatingHoursDisplay({ hours, primary, fg }: Props) {
             </span>
           </div>
           {today && today.is_open && (
-            <p className="text-[11px]" style={{ color: `${fg}55` }}>
+            <p className="text-[11px]" style={{ color: brandAlpha(fg, 0.33) }}>
               Hoje: {today.open} - {today.close}
             </p>
           )}
@@ -96,7 +97,7 @@ export default function OperatingHoursDisplay({ hours, primary, fg }: Props) {
                   className="flex items-center justify-between text-xs py-1"
                   style={{
                     fontWeight: h.day === currentDay ? 700 : 400,
-                    color: h.day === currentDay ? fg : `${fg}65`,
+                    color: h.day === currentDay ? fg : brandAlpha(fg, 0.40),
                   }}
                 >
                   <span>{h.day}</span>

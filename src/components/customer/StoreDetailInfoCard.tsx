@@ -1,6 +1,7 @@
 import React from "react";
 import { MapPin, MessageCircle, Phone, Instagram, Globe, Navigation } from "lucide-react";
 import OperatingHoursDisplay from "@/components/customer/OperatingHoursDisplay";
+import { brandAlpha } from "@/lib/utils";
 
 interface Props {
   store: {
@@ -29,19 +30,19 @@ const StoreDetailInfoCard = React.memo(function StoreDetailInfoCard({ store, pri
         <div className="flex items-start gap-3 mb-3">
           <div
             className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${primary}10` }}
+            style={{ backgroundColor: brandAlpha(primary, 0.06) }}
           >
             <MapPin className="h-4 w-4" style={{ color: primary }} />
           </div>
           <div>
             <p className="text-xs font-semibold">Endereço</p>
-            <p className="text-xs" style={{ color: `${fg}55` }}>{store.address}</p>
+            <p className="text-xs" style={{ color: brandAlpha(fg, 0.33) }}>{store.address}</p>
           </div>
         </div>
       )}
 
       {store.description && (
-        <p className="text-xs leading-relaxed mt-3" style={{ color: `${fg}65` }}>
+        <p className="text-xs leading-relaxed mt-3" style={{ color: brandAlpha(fg, 0.40) }}>
           {store.description}
         </p>
       )}
@@ -71,7 +72,7 @@ const StoreDetailInfoCard = React.memo(function StoreDetailInfoCard({ store, pri
           <a
             href={`tel:${store.whatsapp}`}
             className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
-            style={{ backgroundColor: `${fg}08`, color: `${fg}70` }}
+            style={{ backgroundColor: brandAlpha(fg, 0.03), color: brandAlpha(fg, 0.44) }}
           >
             <Phone className="h-4 w-4" />
             Ligar
@@ -95,7 +96,7 @@ const StoreDetailInfoCard = React.memo(function StoreDetailInfoCard({ store, pri
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 py-3 px-5 rounded-2xl font-semibold text-sm"
-            style={{ backgroundColor: `${primary}12`, color: primary }}
+            style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}
           >
             <Globe className="h-4 w-4" />
             Site

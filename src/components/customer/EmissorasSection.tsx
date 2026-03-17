@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
+import { brandAlpha } from "@/lib/utils";
 
 interface EmissoraStore {
   id: string;
@@ -138,7 +139,7 @@ export default function EmissorasSection() {
                 <div
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
                   style={{
-                    backgroundColor: `${primary}12`,
+                    backgroundColor: brandAlpha(primary, 0.07),
                     color: primary,
                   }}
                 >
@@ -157,7 +158,7 @@ export default function EmissorasSection() {
         >
           <div
             className="h-10 w-10 rounded-full flex items-center justify-center mb-2"
-            style={{ backgroundColor: `${primary}12` }}
+            style={{ backgroundColor: brandAlpha(primary, 0.07) }}
           >
             <ChevronRight className="h-5 w-5" style={{ color: primary }} />
           </div>
