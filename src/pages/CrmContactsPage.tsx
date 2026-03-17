@@ -162,7 +162,20 @@ export default function CrmContactsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{c.ride_count || 0}</TableCell>
-                      <TableCell>{c.os_platform || "—"}</TableCell>
+                      <TableCell>
+                        {(() => {
+                          const cust = c.customer_id ? customerMap.get(c.customer_id) : null;
+                          if (!cust) return <span className="text-muted-foreground text-xs">—</span>;
+                          const tier = getTierInfo(cust.customer_tier || "INICIANTE");
+                          return <Badge variant="outline" className={`text-xs ${tier.color}`}>{tier.label}</Badge>;
+                        })()}
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const cust = c.customer_id ? customerMap.get(c.customer_id) : null;
+                          return cust ? <span className="font-medium">{cust.points_balance}</span> : <span className="text-muted-foreground text-xs">—</span>;
+                        })()}
+                      </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {c.last_ride_at ? new Date(c.last_ride_at).toLocaleDateString("pt-BR") : "—"}
                       </TableCell>
