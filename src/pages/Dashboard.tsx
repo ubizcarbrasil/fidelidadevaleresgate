@@ -483,17 +483,22 @@ function ActivityHeatmap({ chartData }: { chartData?: { label: string; count: nu
           <div className="grid grid-cols-7 gap-1 mb-1">
             {days.map(d => <span key={d} className="text-[9px] text-muted-foreground text-center">{d}</span>)}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1.5">
             {cells.slice(0, 28).map((cell, i) => {
               const intensity = cell.value / maxCount;
               const opacity = cell.value === 0 ? 0.08 : 0.15 + intensity * 0.85;
               return (
                 <div
                   key={i}
-                  className="heatmap-cell aspect-square"
+                  className="heatmap-cell aspect-square rounded-md relative group cursor-default"
                   style={{ background: `hsl(217 91% 60% / ${opacity})` }}
-                  title={`${cell.label}: ${cell.value}`}
-                />
+                >
+                  {cell.value > 0 && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-popover border border-border text-[10px] text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                      {cell.label}: {cell.value}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
