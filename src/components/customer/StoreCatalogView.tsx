@@ -312,7 +312,7 @@ export default function StoreCatalogView({
                 {pts > 0 && (
                   <span
                     className="inline-flex items-center gap-1 text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: `${primary}12`, color: primary }}
+                    style={{ backgroundColor: brandAlpha(primary, 0.07), color: primary }}
                   >
                     🎯 Ganhe {pts} pts
                   </span>
