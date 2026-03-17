@@ -240,8 +240,8 @@ export default function StoreCatalogView({
             onClick={() => setActiveCategory(null)}
             className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors"
             style={{
-              backgroundColor: !activeCategory ? primary : `${primary}10`,
-              color: !activeCategory ? "white" : primary,
+              backgroundColor: !activeCategory ? primary : brandAlpha(primary, 0.06),
+               color: !activeCategory ? "white" : primary,
             }}
           >
             Todos
