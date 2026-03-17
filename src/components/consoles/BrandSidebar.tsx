@@ -154,6 +154,8 @@ function CollapsibleGroup({
 
   return (
     <Collapsible defaultOpen={hasActiveRoute} className="group/collapsible">
+      {/* Gradient separator between groups */}
+      <div className="gradient-separator mx-3" />
       <SidebarGroup className="py-0">
         <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
           <ChevronRight className="h-3 w-3 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -181,11 +183,9 @@ function CollapsibleGroup({
                       >
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
-                        {badgeCount && badgeCount > 0 && (
-                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold badge-glow">
-                            {badgeCount > 99 ? "99+" : badgeCount}
-                          </Badge>
-                        )}
+                        {badgeCount && badgeCount > 0 ? (
+                          <span className="ml-auto h-2 w-2 rounded-full bg-destructive shrink-0" title={`${badgeCount}`} />
+                        ) : null}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

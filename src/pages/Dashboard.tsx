@@ -72,22 +72,23 @@ function useRealtimeRefresh() {
   }, [queryClient]);
 }
 
-/* ── KPI Card ── */
-const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, color = "primary" }: {
-  title: string; value: any; sub?: string; icon: any; trend?: number; color?: string;
+/* ── KPI Card with Sparkline ── */
+const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, color = "primary", sparkData }: {
+  title: string; value: any; sub?: string; icon: any; trend?: number; color?: string; sparkData?: number[];
 }) {
-  const colorMap: Record<string, string> = {
-    primary: "text-primary bg-primary/10",
-    success: "text-success bg-success/10",
-    warning: "text-warning bg-warning/10",
-    destructive: "text-destructive bg-destructive/10",
+  const colorMap: Record<string, { text: string; bg: string; stroke: string }> = {
+    primary: { text: "text-primary", bg: "bg-primary/10", stroke: "hsl(217 91% 60%)" },
+    success: { text: "text-success", bg: "bg-success/10", stroke: "hsl(142 71% 45%)" },
+    warning: { text: "text-warning", bg: "bg-warning/10", stroke: "hsl(38 92% 50%)" },
+    destructive: { text: "text-destructive", bg: "bg-destructive/10", stroke: "hsl(0 84% 60%)" },
+    violet: { text: "text-purple-400", bg: "bg-purple-500/10", stroke: "hsl(270 60% 60%)" },
   };
-  const iconClasses = colorMap[color] || colorMap.primary;
+  const c = colorMap[color] || colorMap.primary;
 
   return (
-    <Card className="saas-kpi overflow-hidden">
+    <Card className="saas-kpi overflow-hidden relative">
       <CardContent className="p-5">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between relative z-10">
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
             {value === undefined ? (
@@ -105,10 +106,26 @@ const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, co
               {sub && <span className="text-[11px] text-muted-foreground">{sub}</span>}
             </div>
           </div>
-          <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${iconClasses}`}>
+          <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${c.text} ${c.bg}`}>
             <Icon className="h-5 w-5" />
           </div>
         </div>
+        {/* Sparkline */}
+        {sparkData && sparkData.length > 1 && (
+          <div className="absolute bottom-0 left-0 right-0 h-12 opacity-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={sparkData.map((v, i) => ({ v, i }))} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={c.stroke} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={c.stroke} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area type="monotone" dataKey="v" stroke={c.stroke} fill={`url(#spark-${color})`} strokeWidth={1.5} dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -349,7 +366,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   );
 }
 
-/* ── Section C: Ranking ── */
+/* ── Section C: Ranking with Medals ── */
 function RankingSection({ brandFilter }: { brandFilter?: string }) {
   const { data: topStores } = useQuery({
     queryKey: ["top-stores-ranking", brandFilter ?? "global"],
@@ -362,6 +379,8 @@ function RankingSection({ brandFilter }: { brandFilter?: string }) {
   });
   if (!topStores || topStores.length === 0) return null;
   const maxVal = topStores.length;
+  const medalClass = ["medal-gold", "medal-silver", "medal-bronze"];
+  const medalEmoji = ["🥇", "🥈", "🥉"];
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -372,7 +391,18 @@ function RankingSection({ brandFilter }: { brandFilter?: string }) {
           const pct = ((maxVal - i) / maxVal) * 100;
           return (
             <div key={store.id} className="flex items-center gap-3">
-              <span className="text-xs font-bold text-muted-foreground w-4 text-right">{i + 1}</span>
+              {i < 3 ? (
+                <span className={`text-sm w-5 text-center ${medalClass[i]}`}>{medalEmoji[i]}</span>
+              ) : (
+                <span className="text-xs font-bold text-muted-foreground w-5 text-center">{i + 1}</span>
+              )}
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.name} className="h-7 w-7 rounded-full object-cover ring-1 ring-border shrink-0" />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-accent flex items-center justify-center shrink-0">
+                  <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{store.name}</p>
                 <div className="mt-1 h-1.5 rounded-full bg-accent overflow-hidden">
@@ -404,9 +434,14 @@ function AlertsSection({ redemptionsPending, storeRulesPending }: { redemptionsP
       </CardHeader>
       <CardContent className="space-y-2">
         {alerts.map((alert) => (
-          <div key={alert.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-accent/30 border border-border">
-            <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 saas-badge-${alert.color}`}>
-              <alert.icon className="h-4 w-4" />
+          <div key={alert.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-accent/30 border border-border hover:border-destructive/30 transition-colors">
+            <div className="relative">
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 saas-badge-${alert.color}`}>
+                <alert.icon className="h-4 w-4" />
+              </div>
+              {alert.color === "destructive" && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-destructive dot-pulse" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium">{alert.label}</p>
@@ -448,17 +483,22 @@ function ActivityHeatmap({ chartData }: { chartData?: { label: string; count: nu
           <div className="grid grid-cols-7 gap-1 mb-1">
             {days.map(d => <span key={d} className="text-[9px] text-muted-foreground text-center">{d}</span>)}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1.5">
             {cells.slice(0, 28).map((cell, i) => {
               const intensity = cell.value / maxCount;
               const opacity = cell.value === 0 ? 0.08 : 0.15 + intensity * 0.85;
               return (
                 <div
                   key={i}
-                  className="heatmap-cell aspect-square"
+                  className="heatmap-cell aspect-square rounded-md relative group cursor-default"
                   style={{ background: `hsl(217 91% 60% / ${opacity})` }}
-                  title={`${cell.label}: ${cell.value}`}
-                />
+                >
+                  {cell.value > 0 && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-popover border border-border text-[10px] text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                      {cell.label}: {cell.value}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -534,14 +574,21 @@ function TasksTable() {
   );
 }
 
-/* ── Section G: Activity Feed ── */
+/* ── Section G: Activity Feed with Timeline ── */
 function ActivityFeed() {
+  const eventColors: Record<string, string> = {
+    resgate: "bg-primary/15 text-primary",
+    cliente: "bg-success/15 text-success",
+    oferta: "bg-warning/15 text-warning",
+    parceiro: "bg-info/15 text-info",
+    relatorio: "bg-purple-500/15 text-purple-400",
+  };
   const events = [
-    { text: "Novo resgate confirmado", time: "há 2 min", icon: ReceiptText },
-    { text: "Cliente cadastrado via app", time: "há 12 min", icon: UserCheck },
-    { text: "Oferta publicada: 15% OFF", time: "há 34 min", icon: Tag },
-    { text: "Parceiro aprovado: Pizzaria Central", time: "há 1h", icon: Store },
-    { text: "Relatório mensal gerado", time: "há 2h", icon: TrendingUp },
+    { text: "Novo resgate confirmado", time: "há 2 min", icon: ReceiptText, type: "resgate" },
+    { text: "Cliente cadastrado via app", time: "há 12 min", icon: UserCheck, type: "cliente" },
+    { text: "Oferta publicada: 15% OFF", time: "há 34 min", icon: Tag, type: "oferta" },
+    { text: "Parceiro aprovado: Pizzaria Central", time: "há 1h", icon: Store, type: "parceiro" },
+    { text: "Relatório mensal gerado", time: "há 2h", icon: TrendingUp, type: "relatorio" },
   ];
 
   return (
@@ -551,12 +598,18 @@ function ActivityFeed() {
       </CardHeader>
       <CardContent className="space-y-0">
         {events.map((ev, i) => (
-          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border/30 last:border-0">
-            <div className="h-7 w-7 rounded-lg bg-accent/50 flex items-center justify-center shrink-0">
-              <ev.icon className="h-3.5 w-3.5 text-muted-foreground" />
+          <div key={i} className="flex gap-3 relative">
+            {/* Timeline line */}
+            {i < events.length - 1 && (
+              <div className="absolute left-[13px] top-8 bottom-0 w-[2px] bg-border/40" />
+            )}
+            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 relative z-10 ${eventColors[ev.type] || "bg-accent/50 text-muted-foreground"}`}>
+              <ev.icon className="h-3.5 w-3.5" />
             </div>
-            <p className="text-xs flex-1 min-w-0 truncate">{ev.text}</p>
-            <span className="text-[10px] text-muted-foreground shrink-0">{ev.time}</span>
+            <div className="flex-1 min-w-0 py-1.5 pb-3">
+              <p className="text-xs font-medium truncate">{ev.text}</p>
+              <span className="text-[10px] text-muted-foreground">{ev.time}</span>
+            </div>
           </div>
         ))}
       </CardContent>
@@ -715,14 +768,22 @@ export default function Dashboard() {
 
       {/* ── SECTION A: KPIs ── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" />
-        <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" />
-        <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" />
-        <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="primary" />
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" sparkData={recentRedemptions?.map(d => d.count)} />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" sparkData={recentEarnings?.map(d => d.count)} />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" sparkData={recentEarnings?.map(d => d.count)} />
+        </div>
+        <div className="animate-slide-up delay-4">
+          <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="violet" sparkData={recentRedemptions?.map(d => d.count)} />
+        </div>
       </div>
 
       {/* ── SECTION B + C: Chart + Ranking ── */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3 animate-slide-up delay-5">
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -738,7 +799,7 @@ export default function Dashboard() {
               <Skeleton className="h-[240px] w-full" />
             ) : (
               <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={combinedChart}>
+                <AreaChart data={combinedChart} style={{ cursor: "crosshair" }}>
                   <defs>
                     <linearGradient id="gradResgates" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.3} />
@@ -755,10 +816,12 @@ export default function Dashboard() {
                     contentStyle={{
                       borderRadius: 8,
                       border: "1px solid hsl(215 25% 27%)",
-                      background: "hsl(217 33% 17%)",
+                      background: "hsl(217 33% 17% / 0.95)",
+                      backdropFilter: "blur(12px)",
                       color: "hsl(210 40% 98%)",
                       fontSize: 12,
                     }}
+                    cursor={{ stroke: "hsl(217 91% 60% / 0.2)", strokeWidth: 1 }}
                   />
                   <Area type="monotone" dataKey="resgates" name="Resgates" stroke="hsl(217 91% 60%)" fill="url(#gradResgates)" strokeWidth={2} />
                   <Area type="monotone" dataKey="pontuacoes" name="Pontuações" stroke="hsl(142 71% 45%)" fill="url(#gradPontuacoes)" strokeWidth={2} />
@@ -771,13 +834,13 @@ export default function Dashboard() {
       </div>
 
       {/* ── SECTION D + E: Alerts + Heatmap ── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-6">
         <AlertsSection redemptionsPending={redemptionsPending} storeRulesPending={storeRulesPending} />
         <ActivityHeatmap chartData={recentRedemptions} />
       </div>
 
       {/* ── SECTION F + G: Tasks + Activity Feed ── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
         <TasksTable />
         <ActivityFeed />
       </div>
@@ -786,10 +849,10 @@ export default function Dashboard() {
       {currentBrandId && (
         <button
           onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
-          className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 shadow-lg hover:bg-primary/90 transition-colors"
+          className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 shadow-lg hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/20"
         >
-          <Smartphone className="h-5 w-5" />
-          <span className="hidden sm:inline text-sm font-semibold">App do Cliente</span>
+          <Smartphone className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs font-semibold">App do Cliente</span>
         </button>
       )}
     </div>
