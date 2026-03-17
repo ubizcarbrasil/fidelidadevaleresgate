@@ -308,7 +308,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               <>
                 {/* Store banner */}
                 <div className="relative">
-                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: `${primary}08` }}>
+                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
                     <SafeImage
                       src={offer.stores?.logo_url}
                       alt={offer.stores?.name || "Loja"}
