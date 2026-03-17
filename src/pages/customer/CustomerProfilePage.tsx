@@ -314,7 +314,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
 
       {favorites.length === 0 ? (
         <div className="text-center py-6 opacity-40">
-          <Heart className="h-8 w-8 mx-auto mb-2" style={{ color: `${fg}30` }} />
+          <Heart className="h-8 w-8 mx-auto mb-2" style={{ color: brandAlpha(fg, 0.19) }} />
           <p className="text-xs">Nenhuma oferta salva ainda</p>
           <p className="text-[10px] mt-0.5">Toque no ♥ nas ofertas para salvar aqui</p>
         </div>
