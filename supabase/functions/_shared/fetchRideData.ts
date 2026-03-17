@@ -204,6 +204,23 @@ async function fetchReciboFirst(
   }
 
   if (reciboData) {
+    // Enrich with client details API if we have clienteId (phone + email)
+    if (reciboData.clienteId && (!reciboData.passengerPhone || !reciboData.passengerEmail)) {
+      const enrichHeaders = matrixHeaders ?? headers;
+      const clientDetails = await fetchClientDetails(reciboData.clienteId, enrichHeaders);
+      if (clientDetails.phone) reciboData.passengerPhone = clientDetails.phone;
+      if (clientDetails.email) reciboData.passengerEmail = clientDetails.email;
+      // Also enrich CPF and name if missing
+      if (!reciboData.passengerCpf && clientDetails.cpf) reciboData.passengerCpf = clientDetails.cpf;
+      if (!reciboData.passengerName && clientDetails.name) reciboData.passengerName = clientDetails.name;
+
+      if (clientDetails.phone || clientDetails.email) {
+        logger.info("Enriched from client API", { machineRideId, hasPhone: !!clientDetails.phone, hasEmail: !!clientDetails.email });
+        return { ok: true, data: { source: "recibo+v1", ...reciboData } };
+      }
+    }
+
+    // Fallback: try V1 for phone if still missing
     if (!reciboData.passengerPhone) {
       try {
         const v1Url = `${API_BASE_URL}/api/v1/request/${machineRideId}`;
