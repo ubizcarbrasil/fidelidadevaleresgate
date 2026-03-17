@@ -559,9 +559,9 @@ export default function Dashboard() {
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
   // Optimized: single query per table instead of N queries per day
-  const fetchChartData = useCallback(async (table: MetricTable) => {
+  const fetchChartData = useCallback(async (table: string) => {
     const startDate = getPeriodStart(period);
-    let q = supabase.from(table).select("created_at").gte("created_at", startDate.toISOString());
+    let q = fromTable(table).select("created_at").gte("created_at", startDate.toISOString());
     if (brandFilter) q = q.eq("brand_id", brandFilter);
     q = q.order("created_at", { ascending: true }).limit(5000);
     const { data: rows } = await q;
@@ -574,7 +574,8 @@ export default function Dashboard() {
       countByDate[key] = 0;
     }
     for (const row of rows || []) {
-      const key = (row as { created_at: string }).created_at?.slice(0, 10);
+      const created = (row as Record<string, unknown>).created_at;
+      const key = typeof created === "string" ? created.slice(0, 10) : null;
       if (key && key in countByDate) countByDate[key]++;
     }
 
