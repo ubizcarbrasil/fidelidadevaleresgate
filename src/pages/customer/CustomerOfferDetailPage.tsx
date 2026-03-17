@@ -313,7 +313,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       src={offer.stores?.logo_url}
                       alt={offer.stores?.name || "Loja"}
                       className="max-h-32 max-w-[80%] object-contain"
-                      fallback={<Store className="h-16 w-16" style={{ color: `${primary}30` }} />}
+                      fallback={<Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />}
                     />
                   </div>
                   <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
