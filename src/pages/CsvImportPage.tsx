@@ -509,12 +509,19 @@ export default function CsvImportPage() {
           // If branch selected, batch-create customers first
           let customerIds: (string | null)[] = batch.map(() => null);
           if (effectiveBranchId) {
-            const custPayloads = batch.map(row => ({
-              name: row.name.trim(), phone: row.phone?.trim() || null, cpf: row.cpf?.trim() || null,
-              brand_id: brandId, branch_id: effectiveBranchId,
-              is_active: row.is_active ? parseBool(row.is_active) : true,
-            }));
-            const { data: custInserted } = await supabase.from("customers").insert(custPayloads).select("id");
+            const custPayloads = batch.map(row => {
+              const rideCount = row.ride_count ? parseInt(row.ride_count, 10) || 0 : 0;
+              const tier = rideCount >= 501 ? "GALATICO" : rideCount >= 101 ? "LENDARIO" : rideCount >= 51 ? "DIAMANTE" : rideCount >= 31 ? "OURO" : rideCount >= 11 ? "PRATA" : rideCount >= 1 ? "BRONZE" : "INICIANTE";
+              return {
+                name: row.name.trim(), phone: row.phone?.trim() || null, cpf: row.cpf?.trim() || null,
+                brand_id: brandId, branch_id: effectiveBranchId,
+                is_active: row.is_active ? parseBool(row.is_active) : true,
+                ride_count: rideCount,
+                customer_tier: tier,
+                crm_sync_status: "SYNCED",
+              };
+            });
+            const { data: custInserted } = await supabase.from("customers").insert(custPayloads as any).select("id");
             if (custInserted) customerIds = custInserted.map(c => c.id);
           }
 

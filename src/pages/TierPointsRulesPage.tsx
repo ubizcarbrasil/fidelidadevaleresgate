@@ -60,9 +60,15 @@ export default function TierPointsRulesPage() {
   });
 
   const updateLocal = (tierKey: string, field: string, value: any) => {
+    const current = mergedTiers.find(t => t.key === tierKey)!;
     setLocalRules(prev => ({
       ...prev,
-      [tierKey]: { ...prev[tierKey], points_per_real: mergedTiers.find(t => t.key === tierKey)!.points_per_real, is_active: mergedTiers.find(t => t.key === tierKey)!.is_active, ...prev[tierKey], [field]: value },
+      [tierKey]: {
+        points_per_real: current.points_per_real,
+        is_active: current.is_active,
+        ...prev[tierKey],
+        [field]: value,
+      },
     }));
   };
 

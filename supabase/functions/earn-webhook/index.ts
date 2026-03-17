@@ -383,6 +383,9 @@ Deno.serve(async (req) => {
         name: customerName,
         points_balance: 0,
         money_balance: 0,
+        crm_sync_status: "PENDING",
+        customer_tier: "INICIANTE",
+        ride_count: 0,
       })
       .select("id, name, points_balance, money_balance, branch_id")
       .single();
