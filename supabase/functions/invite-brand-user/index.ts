@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
-    const { email, full_name, role, brand_id, branch_id, permissions } = body;
+    const { email, full_name, password, role, brand_id, branch_id, permissions } = body;
 
     if (!email || !role || !brand_id) {
       return new Response(JSON.stringify({ error: "email, role and brand_id are required" }), {
