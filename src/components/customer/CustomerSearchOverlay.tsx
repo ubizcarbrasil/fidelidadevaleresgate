@@ -306,7 +306,7 @@ export default function CustomerSearchOverlay({ open, onClose }: CustomerSearchO
                     >
                       <div
                         className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${primary}10` }}
+                         style={{ backgroundColor: brandAlpha(primary, 0.06) }}
                       >
                         <SegmentIcon iconName={seg.icon_name} className="h-5 w-5" style={{ color: primary }} />
                       </div>
