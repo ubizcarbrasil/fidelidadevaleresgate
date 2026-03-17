@@ -313,8 +313,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
               <div className="max-w-lg mx-auto px-5 pb-3">
                 <div
                   className="rounded-2xl p-4 text-white"
-                  style={{
-                    background: `linear-gradient(135deg, ${primary} 0%, ${primary}bb 100%)`,
+                   style={{
+                     background: `linear-gradient(135deg, ${primary} 0%, ${brandAlpha(primary, 0.73)} 100%)`,
                   }}
                 >
                   <div className="flex items-center justify-between">
