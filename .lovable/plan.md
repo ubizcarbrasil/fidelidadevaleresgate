@@ -1,25 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Filtrar módulos visíveis para o empreendedor
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema
-Hoje o `BrandModulesPage` mostra **todos** os `module_definitions` do catálogo, independente de quem está logado. O empreendedor vê módulos que o ROOT nunca habilitou para ele — e pode até tentar ativá-los.
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Solução
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**Arquivo:** `src/pages/BrandModulesPage.tsx`
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-Para o empreendedor (não-ROOT), filtrar o catálogo de módulos exibidos:
-- Mostrar apenas os `module_definitions` que possuem um registro em `brand_modules` para a marca dele (ou seja, módulos que o ROOT alocou)
-- O empreendedor pode ligar/desligar apenas esses módulos alocados
-- Módulos `is_core` continuam sempre visíveis e com switch desabilitado
-- O ROOT continua vendo o catálogo completo (comportamento atual)
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**Lógica:**
-```
-Se ROOT → mostra todos os module_definitions (sem filtro)
-Se Empreendedor → filtra definitions para mostrar apenas os que têm brand_modules row
-```
-
-Também ajustar o texto descritivo: para o empreendedor, trocar "Ative ou desative os módulos disponíveis para esta marca" por algo como "Gerencie as funcionalidades ativas do seu programa".
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

@@ -141,11 +141,20 @@ export default function BrandModulesPage() {
     return bm ? bm.is_enabled : false;
   };
 
-  const grouped = definitions?.reduce((acc, d) => {
+  // Filter definitions: non-ROOT users only see modules allocated to their brand
+  const visibleDefinitions = definitions?.filter(d => {
+    if (isRootAdmin) return true;
+    // Core modules always visible
+    if (d.is_core) return true;
+    // Only show if ROOT has allocated this module (has a brand_modules row)
+    return brandModules?.some(bm => bm.module_definition_id === d.id);
+  });
+
+  const grouped = visibleDefinitions?.reduce((acc, d) => {
     if (!acc[d.category]) acc[d.category] = [];
     acc[d.category].push(d);
     return acc;
-  }, {} as Record<string, typeof definitions>) || {};
+  }, {} as Record<string, typeof visibleDefinitions>) || {};
 
   // Sort categories: core first, then alphabetical
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
@@ -154,8 +163,8 @@ export default function BrandModulesPage() {
     return a.localeCompare(b);
   });
 
-  const enabledCount = definitions?.filter(d => isEnabled(d.id)).length || 0;
-  const totalCount = definitions?.length || 0;
+  const enabledCount = visibleDefinitions?.filter(d => isEnabled(d.id)).length || 0;
+  const totalCount = visibleDefinitions?.length || 0;
 
   if (isLoading) {
     return (
@@ -172,7 +181,11 @@ export default function BrandModulesPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2>
-        <p className="text-muted-foreground">Ative ou desative os módulos disponíveis para esta marca</p>
+        <p className="text-muted-foreground">
+          {isRootAdmin
+            ? "Ative ou desative os módulos disponíveis para esta marca"
+            : "Gerencie as funcionalidades ativas do seu programa"}
+        </p>
       </div>
 
       {isRootAdmin && (
