@@ -57,6 +57,7 @@ export default function CustomersPage() {
     },
     enabled: !!currentBrandId,
   });
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkForm, setBulkForm] = useState({ name: "", cpf: "", phone: "" });
 
   useEffect(() => {
