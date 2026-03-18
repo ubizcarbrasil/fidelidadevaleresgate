@@ -1,30 +1,39 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Plano: Unificar fluxo de cadastro do perfil da loja
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+### Problema
+Existem **dois fluxos duplicados** para preencher o perfil da loja:
+1. **StoreProfileWizard** — wizard passo a passo, aberto pelo card "Complete seu perfil" no dashboard
+2. **StoreProfileTab** — formulário completo na aba "Meu Perfil" do menu
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+Ambos pedem as mesmas informações (logo, banner, nome, segmento, endereço, galeria, horário). O parceiro acaba preenchendo tudo duas vezes.
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### Solução
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Tornar o wizard inteligente e eliminar a duplicidade:
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+**1. Wizard começa no primeiro passo pendente** (`StoreProfileWizard.tsx`)
+- Ao abrir, calcular quais passos já estão preenchidos usando `isStepValid`
+- Iniciar automaticamente no primeiro passo não preenchido (usar `firstMissingIndex` do hook `useStoreProfileCompleteness`)
+- Passos já preenchidos ficam marcados com check verde nos dots de navegação e podem ser revisitados clicando, mas não são obrigatórios
+- Permitir navegação livre (clicar em qualquer dot, não apenas nos anteriores)
+
+**2. Profile Tab mostra banner de completude** (`StoreProfileTab.tsx`)
+- Se perfil incompleto, exibir card no topo com progresso e botão "Continuar configuração" que abre o wizard no passo correto
+- O formulário completo continua disponível abaixo para edições pontuais (quem já completou tudo usa normalmente)
+
+**3. Dashboard passa step correto** (`StoreOwnerPanel.tsx`)
+- Passar `initialStep={firstMissingIndex}` do hook de completeness ao abrir o wizard
+- Recarregar dados da loja ao fechar o wizard (já faz reload)
+
+### Arquivos alterados
+- `src/components/store-owner/StoreProfileWizard.tsx` — lógica de skip, navegação livre, iniciar no passo pendente
+- `src/components/store-owner/StoreProfileTab.tsx` — banner de completude no topo
+- `src/pages/StoreOwnerPanel.tsx` — passar `initialStep` correto
+
+### Impacto
+- Zero mudança no banco de dados
+- Experiência unificada: parceiro preenche cada campo **uma única vez**
+- Ao retornar, vai direto para o que falta
+
