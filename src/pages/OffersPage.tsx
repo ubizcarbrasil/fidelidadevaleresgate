@@ -49,6 +49,7 @@ export default function OffersPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["offers", debouncedSearch, page, currentBrandId],
+    enabled: !!currentBrandId || isRootAdmin,
     queryFn: async () => {
       let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
