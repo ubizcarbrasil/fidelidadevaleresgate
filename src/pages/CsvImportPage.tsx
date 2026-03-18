@@ -808,6 +808,7 @@ export default function CsvImportPage() {
                     <SelectItem value="CUSTOMERS">Clientes</SelectItem>
                     <SelectItem value="CRM_CONTACTS">Contatos CRM</SelectItem>
                     <SelectItem value="COUPONS">Cupons / Vouchers</SelectItem>
+                    <SelectItem value="EARNING_EVENTS">Pontuação Manual</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
