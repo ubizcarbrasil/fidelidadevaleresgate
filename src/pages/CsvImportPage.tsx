@@ -103,6 +103,15 @@ const COUPON_FIELDS: TargetField[] = [
   { key: "status", label: "Status", required: false },
 ];
 
+const EARNING_EVENT_FIELDS: TargetField[] = [
+  { key: "name", label: "Nome", required: true },
+  { key: "cpf", label: "CPF", required: false },
+  { key: "email", label: "E-mail", required: false },
+  { key: "phone", label: "Telefone", required: false },
+  { key: "purchase_value", label: "Valor da Viagem", required: true },
+  { key: "created_at", label: "Data", required: false },
+];
+
 // ── Validation ──
 const WEEKDAY_MAP: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 interface ValidationError { row: number; field: string; message: string; }
