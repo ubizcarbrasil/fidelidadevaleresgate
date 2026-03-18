@@ -339,7 +339,15 @@ export default function StoreOwnerPanel() {
           )
         )}
         {activeTab === "resgate" && <StoreRedeemTab store={store} />}
-        {activeTab === "perfil" && <StoreProfileTab store={store} />}
+        {activeTab === "perfil" && (
+          <StoreProfileTab
+            store={store}
+            onOpenWizard={(stepIdx) => {
+              setShowProfileWizard(true);
+              setActiveTab("dashboard");
+            }}
+          />
+        )}
         {activeTab === "extrato" && <StoreExtratoTab store={store} />}
         {activeTab === "funcionarios" && <StoreEmployeesTab store={store} />}
         {activeTab === "catalogo" && isEmitter && <StoreCatalogTab store={store} />}
