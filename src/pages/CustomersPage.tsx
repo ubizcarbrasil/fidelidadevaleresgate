@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import { getTierInfo, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
+import { getTierInfo, getTierFromRideCount, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 import DataSkeleton from "@/components/DataSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
@@ -146,46 +146,51 @@ export default function CustomersPage() {
         }
       }
 
-      // ── 2. Pull: crm_contacts órfãos → customers (NEW) ──
-      const { data: orphanContacts, error: orphErr } = await supabase
-        .from("crm_contacts")
-        .select("id, name, phone, cpf, email, brand_id, branch_id, ride_count")
-        .eq("brand_id", brandId)
-        .is("customer_id", null)
-        .eq("is_active", true)
-        .limit(500);
-      if (orphErr) throw orphErr;
+      // ── 2. Pull: crm_contacts órfãos → customers (batched) ──
+      const BATCH_SIZE = 500;
+      let hasMore = true;
 
-      const tierFromRides = (rides: number): string => {
-        if (rides >= 200) return "GALATICO";
-        if (rides >= 150) return "LENDARIO";
-        if (rides >= 100) return "DIAMANTE";
-        if (rides >= 50) return "OURO";
-        if (rides >= 20) return "PRATA";
-        if (rides >= 5) return "BRONZE";
-        return "INICIANTE";
-      };
+      while (hasMore) {
+        const { data: orphanContacts, error: orphErr } = await supabase
+          .from("crm_contacts")
+          .select("id, name, phone, cpf, email, brand_id, branch_id, ride_count")
+          .eq("brand_id", brandId)
+          .is("customer_id", null)
+          .eq("is_active", true)
+          .limit(BATCH_SIZE);
+        if (orphErr) throw orphErr;
 
-      for (const contact of orphanContacts || []) {
-        const branchId = contact.branch_id || defaultBranch.id;
-        const { data: newCust } = await (supabase as any).from("customers").insert({
-          name: contact.name || "Contato CRM",
-          phone: contact.phone || null,
-          cpf: contact.cpf || null,
-          email: contact.email || null,
-          brand_id: contact.brand_id,
-          branch_id: branchId,
-          crm_contact_id: contact.id,
-          crm_sync_status: "SYNCED",
-          ride_count: contact.ride_count || 0,
-          customer_tier: tierFromRides(contact.ride_count || 0),
-        }).select("id").single();
+        if (!orphanContacts || orphanContacts.length === 0) {
+          hasMore = false;
+          break;
+        }
 
-        if (newCust) {
-          await (supabase as any).from("crm_contacts").update({
-            customer_id: newCust.id,
-          }).eq("id", contact.id);
-          importedCount++;
+        for (const contact of orphanContacts) {
+          const branchId = contact.branch_id || defaultBranch.id;
+          const rides = contact.ride_count || 0;
+          const { data: newCust } = await (supabase as any).from("customers").insert({
+            name: contact.name || "Contato CRM",
+            phone: contact.phone || null,
+            cpf: contact.cpf || null,
+            email: contact.email || null,
+            brand_id: contact.brand_id,
+            branch_id: branchId,
+            crm_contact_id: contact.id,
+            crm_sync_status: "SYNCED",
+            ride_count: rides,
+            customer_tier: getTierFromRideCount(rides),
+          }).select("id").single();
+
+          if (newCust) {
+            await (supabase as any).from("crm_contacts").update({
+              customer_id: newCust.id,
+            }).eq("id", contact.id);
+            importedCount++;
+          }
+        }
+
+        if (orphanContacts.length < BATCH_SIZE) {
+          hasMore = false;
         }
       }
 
