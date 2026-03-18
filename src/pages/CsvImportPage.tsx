@@ -239,6 +239,7 @@ export default function CsvImportPage() {
   const [brandId, setBrandId] = useState(currentBrandId || "");
   const [branchId, setBranchId] = useState(currentBranchId || "");
   const [autoCreateStores, setAutoCreateStores] = useState(true);
+  const [earningStoreId, setEarningStoreId] = useState("");
 
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: Record<string, string>[] } | null>(null);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
