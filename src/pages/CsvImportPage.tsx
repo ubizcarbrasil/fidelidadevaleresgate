@@ -269,6 +269,18 @@ export default function CsvImportPage() {
     enabled: !!brandId,
   });
 
+  // Stores for EARNING_EVENTS store selector
+  const { data: storesForEarning } = useQuery({
+    queryKey: ["stores-for-earning", brandId, branchId],
+    queryFn: async () => {
+      let q = supabase.from("stores").select("id, name").eq("brand_id", brandId).eq("is_active", true).order("name");
+      if (branchId) q = q.eq("branch_id", branchId);
+      const { data } = await q;
+      return data || [];
+    },
+    enabled: !!brandId && importType === "EARNING_EVENTS",
+  });
+
   const targetFields = getTargetFields(importType);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
