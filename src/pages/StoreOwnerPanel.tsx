@@ -315,6 +315,7 @@ export default function StoreOwnerPanel() {
           showProfileWizard ? (
             <StoreProfileWizard
               store={store}
+              initialStep={profileCompleteness.firstMissingIndex}
               onClose={() => setShowProfileWizard(false)}
               onComplete={() => { setShowProfileWizard(false); window.location.reload(); }}
             />

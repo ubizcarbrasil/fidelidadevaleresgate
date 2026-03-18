@@ -22,7 +22,7 @@ interface FaqItem {
   answer: string;
 }
 
-export default function StoreProfileTab({ store }: { store: any }) {
+export default function StoreProfileTab({ store, onOpenWizard }: { store: any; onOpenWizard?: (stepIdx?: number) => void }) {
   const [form, setForm] = useState({
     name: store.name || "",
     email: store.email || "",
