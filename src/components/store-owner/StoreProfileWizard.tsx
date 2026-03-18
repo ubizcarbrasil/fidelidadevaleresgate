@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,6 @@ interface Props {
 }
 
 export default function StoreProfileWizard({ store, initialStep = 0, onClose, onComplete }: Props) {
-  const [step, setStep] = useState(initialStep);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     logo_url: store.logo_url || "",
@@ -64,6 +63,32 @@ export default function StoreProfileWizard({ store, initialStep = 0, onClose, on
   });
   const [availableTags, setAvailableTags] = useState<{ id: string; name: string }[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
+
+  // Calculate which steps are already filled based on current form state
+  const stepFilledMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    map["logo"] = !!form.logo_url;
+    map["banner"] = !!form.banner_url;
+    map["basics"] = !!(form.name && form.description);
+    map["segment"] = !!form.taxonomy_segment_id;
+    map["contact"] = !!form.address;
+    map["gallery"] = form.gallery_urls.length > 0;
+    map["hours"] = form.operating_hours_json.length > 0;
+    map["review"] = Object.entries(map).every(([, v]) => v);
+    return map;
+  }, [form]);
+
+  // Find first missing step for smart start
+  const firstMissingIdx = useMemo(() => {
+    const idx = STEPS.findIndex(s => !stepFilledMap[s.key]);
+    return idx === -1 ? STEPS.length - 1 : idx;
+  }, [stepFilledMap]);
+
+  const [step, setStep] = useState(() => {
+    // Use initialStep if provided and valid, otherwise compute from missing
+    if (initialStep > 0) return initialStep;
+    return firstMissingIdx;
+  });
 
   const currentStep = STEPS[step];
   const progressPercent = Math.round(((step + 1) / STEPS.length) * 100);
@@ -171,18 +196,21 @@ export default function StoreProfileWizard({ store, initialStep = 0, onClose, on
       {/* Progress bar */}
       <Progress value={progressPercent} className="h-1.5 mb-6" />
 
-      {/* Step dots */}
+      {/* Step dots — free navigation, filled steps show check */}
       <div className="flex justify-center gap-1.5 mb-6">
-        {STEPS.map((s, i) => (
-          <button
-            key={s.key}
-            onClick={() => i <= step && setStep(i)}
-            disabled={i > step}
-            className={`h-2 rounded-full transition-all ${
-              i === step ? "w-6 bg-primary" : i < step ? "w-2 bg-primary/40 cursor-pointer" : "w-2 bg-muted"
-            }`}
-          />
-        ))}
+        {STEPS.map((s, i) => {
+          const filled = stepFilledMap[s.key];
+          return (
+            <button
+              key={s.key}
+              onClick={() => setStep(i)}
+              className={`h-2 rounded-full transition-all ${
+                i === step ? "w-6 bg-primary" : filled ? "w-2 bg-primary/60 cursor-pointer" : "w-2 bg-muted cursor-pointer"
+              }`}
+              title={s.title}
+            />
+          );
+        })}
       </div>
 
       {/* Step content */}

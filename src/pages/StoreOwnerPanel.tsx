@@ -195,6 +195,7 @@ export default function StoreOwnerPanel() {
     return <StoreEmptyState userId={user?.id} />;
   }
 
+  const profileCompleteness = useStoreProfileCompleteness(store);
   const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const filteredMoreItems = filteredMoreMenu.filter(item => {
@@ -314,6 +315,7 @@ export default function StoreOwnerPanel() {
           showProfileWizard ? (
             <StoreProfileWizard
               store={store}
+              initialStep={profileCompleteness.firstMissingIndex}
               onClose={() => setShowProfileWizard(false)}
               onComplete={() => { setShowProfileWizard(false); window.location.reload(); }}
             />
@@ -339,7 +341,15 @@ export default function StoreOwnerPanel() {
           )
         )}
         {activeTab === "resgate" && <StoreRedeemTab store={store} />}
-        {activeTab === "perfil" && <StoreProfileTab store={store} />}
+        {activeTab === "perfil" && (
+          <StoreProfileTab
+            store={store}
+            onOpenWizard={(stepIdx) => {
+              setShowProfileWizard(true);
+              setActiveTab("dashboard");
+            }}
+          />
+        )}
         {activeTab === "extrato" && <StoreExtratoTab store={store} />}
         {activeTab === "funcionarios" && <StoreEmployeesTab store={store} />}
         {activeTab === "catalogo" && isEmitter && <StoreCatalogTab store={store} />}
