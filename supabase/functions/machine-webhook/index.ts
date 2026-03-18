@@ -114,6 +114,25 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
   return null;
 }
 
+const TIER_THRESHOLDS = [
+  { key: "GALATICO", min: 501 },
+  { key: "LENDARIO", min: 101 },
+  { key: "DIAMANTE", min: 51 },
+  { key: "OURO", min: 31 },
+  { key: "PRATA", min: 11 },
+  { key: "BRONZE", min: 1 },
+  { key: "INICIANTE", min: 0 },
+] as const;
+
+function getTierFromRideCount(rideCount: number): string {
+  for (const t of TIER_THRESHOLDS) {
+    if (rideCount >= t.min) return t.key;
+  }
+  return "INICIANTE";
+}
+
+const CUSTOMER_SELECT = "id, branch_id, points_balance, name, phone, customer_tier, ride_count";
+
 async function findCustomerCascade(
   sb: ReturnType<typeof createClient>,
   brandId: string,
@@ -125,7 +144,7 @@ async function findCustomerCascade(
   if (cpf) {
     const { data } = await sb
       .from("customers")
-      .select("id, branch_id, points_balance, name, phone")
+      .select(CUSTOMER_SELECT)
       .eq("brand_id", brandId)
       .eq("cpf", cpf)
       .eq("is_active", true)
@@ -138,7 +157,7 @@ async function findCustomerCascade(
   if (phone) {
     const { data } = await sb
       .from("customers")
-      .select("id, branch_id, points_balance, name, phone")
+      .select(CUSTOMER_SELECT)
       .eq("brand_id", brandId)
       .eq("phone", phone)
       .eq("is_active", true)
@@ -151,7 +170,7 @@ async function findCustomerCascade(
   if (name) {
     const { data } = await sb
       .from("customers")
-      .select("id, branch_id, points_balance, name, phone")
+      .select(CUSTOMER_SELECT)
       .eq("brand_id", brandId)
       .eq("name", name)
       .eq("is_active", true)
@@ -161,6 +180,45 @@ async function findCustomerCascade(
   }
 
   return null;
+}
+
+async function resolveEffectivePointsPerReal(
+  sb: ReturnType<typeof createClient>,
+  brandId: string,
+  branchId: string | null,
+  customerTier: string
+): Promise<{ pointsPerReal: number; source: string }> {
+  // 1. Try tier-specific rule
+  if (branchId) {
+    const { data: tierRule } = await sb
+      .from("tier_points_rules")
+      .select("points_per_real")
+      .eq("brand_id", brandId)
+      .eq("branch_id", branchId)
+      .eq("tier", customerTier)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (tierRule) {
+      return { pointsPerReal: Number(tierRule.points_per_real), source: `tier_rule:${customerTier}` };
+    }
+  }
+
+  // 2. Fall back to brand points_rules
+  const { data: rules } = await sb
+    .from("points_rules")
+    .select("points_per_real")
+    .eq("brand_id", brandId)
+    .eq("is_active", true)
+    .or(branchId ? `branch_id.eq.${branchId},branch_id.is.null` : "branch_id.is.null")
+    .order("branch_id", { ascending: false, nullsFirst: false })
+    .limit(1);
+
+  if (rules?.[0]) {
+    return { pointsPerReal: Number(rules[0].points_per_real), source: "brand_rule" };
+  }
+
+  // 3. Absolute fallback
+  return { pointsPerReal: 1.0, source: "default_fallback" };
 }
 
 async function processFinalized(
