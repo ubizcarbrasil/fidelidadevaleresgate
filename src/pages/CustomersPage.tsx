@@ -66,6 +66,14 @@ export default function CustomersPage() {
     }
   }, [isRootAdmin, currentBrandId]);
 
+  // Auto-sync orphan CRM contacts on page load
+  useEffect(() => {
+    if (orphanCount && orphanCount > 0 && !autoSyncTriggered.current && !syncToCrmMutation.isPending) {
+      autoSyncTriggered.current = true;
+      syncToCrmMutation.mutate();
+    }
+  }, [orphanCount]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["customers", debouncedSearch, page, currentBrandId, tierFilter, crmFilter],
     queryFn: async () => {
