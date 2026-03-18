@@ -196,7 +196,7 @@ function AppRoutes() {
           
           <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
           <Route path="brand-permissions" element={<RootGuard><BrandPermissionOverflowPage /></RootGuard>} />
-          <Route path="taxonomy" element={<RootGuard><TaxonomyPage /></RootGuard>} />
+          <Route path="taxonomy" element={<ModuleGuard moduleKey="taxonomy"><TaxonomyPage /></ModuleGuard>} />
           <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
           <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
