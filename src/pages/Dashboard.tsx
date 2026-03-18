@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, memo, useMemo, lazy, Suspense } from 
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useBrandInfo } from "@/hooks/useBrandName";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck,
