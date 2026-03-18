@@ -855,6 +855,20 @@ export default function CsvImportPage() {
                 <Label htmlFor="auto-create">Criar lojas automaticamente se não existirem</Label>
               </div>
             )}
+            {importType === "EARNING_EVENTS" && (
+              <div className="space-y-2">
+                <Label>Loja responsável pela pontuação</Label>
+                <Select value={earningStoreId} onValueChange={setEarningStoreId} disabled={!branchId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a loja" /></SelectTrigger>
+                  <SelectContent>
+                    {storesForEarning?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {!earningStoreId && branchId && (
+                  <p className="text-xs text-muted-foreground">Selecione a loja que será vinculada aos eventos de pontuação.</p>
+                )}
+              </div>
+            )}
             {importType === "COUPONS" && (
               <Alert>
                 <AlertDescription>Códigos duplicados (no CSV ou já existentes) serão rejeitados. O campo "Campanha" vincula automaticamente à oferta pelo título.</AlertDescription>
