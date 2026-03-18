@@ -163,8 +163,8 @@ export default function BrandModulesPage() {
     return a.localeCompare(b);
   });
 
-  const enabledCount = definitions?.filter(d => isEnabled(d.id)).length || 0;
-  const totalCount = definitions?.length || 0;
+  const enabledCount = visibleDefinitions?.filter(d => isEnabled(d.id)).length || 0;
+  const totalCount = visibleDefinitions?.length || 0;
 
   if (isLoading) {
     return (
