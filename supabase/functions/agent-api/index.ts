@@ -381,6 +381,28 @@ async function listRedemptions(params: URLSearchParams) {
   return json(200, { ok: true, data: paginatedResult(data ?? [], limit) });
 }
 
+// ── Tier classification helper ──────────────────────────────────────────
+const DEFAULT_TIERS = [
+  { name: "INICIANTE", min_events: 0, max_events: 0 },
+  { name: "BRONZE", min_events: 1, max_events: 10 },
+  { name: "PRATA", min_events: 11, max_events: 30 },
+  { name: "OURO", min_events: 31, max_events: 50 },
+  { name: "DIAMANTE", min_events: 51, max_events: 100 },
+  { name: "LENDARIO", min_events: 101, max_events: 500 },
+  { name: "GALATICO", min_events: 501, max_events: null },
+];
+
+function classifyTier(rideCount: number, tiers: typeof DEFAULT_TIERS = DEFAULT_TIERS): string {
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (rideCount >= tiers[i].min_events) return tiers[i].name;
+  }
+  return "INICIANTE";
+}
+
+function getTierInfo(tierName: string, tiers: typeof DEFAULT_TIERS = DEFAULT_TIERS) {
+  return tiers.find((t) => t.name === tierName) ?? tiers[0];
+}
+
 // ── 12) GET /customers ──────────────────────────────────────────────────
 async function findCustomerByCpf(params: URLSearchParams) {
   const cpf = params.get("cpf");
@@ -389,12 +411,19 @@ async function findCustomerByCpf(params: URLSearchParams) {
   const sb = getSupabase();
   const { data, error } = await sb
     .from("customers")
-    .select("id,name,cpf,phone,points_balance,money_balance,brand_id,branch_id,is_active,created_at")
+    .select("id,name,cpf,phone,points_balance,money_balance,brand_id,branch_id,is_active,created_at,customer_tier,ride_count")
     .eq("cpf", cpf);
 
   if (error) return json(500, { ok: false, error: "Internal error", details: { message: error.message } });
   if (!data || data.length === 0) return json(404, { ok: false, error: "Not Found" });
-  return json(200, { ok: true, data: data.length === 1 ? data[0] : data });
+
+  // Enrich with tier_info
+  const enriched = data.map((c: any) => ({
+    ...c,
+    tier_info: getTierInfo(c.customer_tier ?? "INICIANTE"),
+  }));
+
+  return json(200, { ok: true, data: enriched.length === 1 ? enriched[0] : enriched });
 }
 
 // ── 13) GET /customers/:id/points-ledger ────────────────────────────────
@@ -411,6 +440,122 @@ async function getPointsLedger(customerId: string, params: URLSearchParams) {
   const { data, error } = await pq;
   if (error) return json(500, { ok: false, error: "Internal error", details: { message: error.message } });
   return json(200, { ok: true, data: paginatedResult(data ?? [], limit) });
+}
+
+// ── 16) GET /tiers ──────────────────────────────────────────────────────
+async function listTiers(params: URLSearchParams) {
+  const brandId = params.get("brand_id");
+  if (brandId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("crm_tiers")
+      .select("name,min_events,max_events,color,icon,order_index")
+      .eq("brand_id", brandId)
+      .order("order_index", { ascending: true });
+    if (error) return json(500, { ok: false, error: "Internal error", details: { message: error.message } });
+    if (data && data.length > 0) {
+      return json(200, { ok: true, data: { source: "custom", tiers: data } });
+    }
+  }
+  return json(200, { ok: true, data: { source: "default", tiers: DEFAULT_TIERS } });
+}
+
+// ── 17) GET /tiers/rules ────────────────────────────────────────────────
+async function listTierRules(params: URLSearchParams) {
+  const brandId = params.get("brand_id");
+  if (!brandId) return json(400, { ok: false, error: "Bad Request", details: { brand_id: "required" } });
+
+  const sb = getSupabase();
+  let query = sb
+    .from("tier_points_rules")
+    .select("*")
+    .eq("brand_id", brandId)
+    .eq("is_active", true);
+
+  const branchId = params.get("branch_id");
+  if (branchId) query = query.eq("branch_id", branchId);
+
+  const { data, error } = await query.order("tier");
+  if (error) return json(500, { ok: false, error: "Internal error", details: { message: error.message } });
+  return json(200, { ok: true, data: data ?? [] });
+}
+
+// ── 18) PATCH /customers/:id/tier ───────────────────────────────────────
+const VALID_TIERS = ["INICIANTE", "BRONZE", "PRATA", "OURO", "DIAMANTE", "LENDARIO", "GALATICO"];
+
+async function updateCustomerTier(customerId: string, body: any) {
+  const tier = (body.tier ?? "").toUpperCase();
+  if (!VALID_TIERS.includes(tier)) {
+    return json(400, { ok: false, error: "Bad Request", details: { tier: `must be one of: ${VALID_TIERS.join(", ")}` } });
+  }
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("customers")
+    .update({ customer_tier: tier })
+    .eq("id", customerId)
+    .select("id,name,cpf,customer_tier,ride_count")
+    .single();
+  if (error) return json(500, { ok: false, error: "Internal error", details: { message: error.message } });
+  if (!data) return json(404, { ok: false, error: "Not Found" });
+  return json(200, { ok: true, data: { ...data, tier_info: getTierInfo(tier) } });
+}
+
+// ── 19) POST /customers/classify ────────────────────────────────────────
+async function classifyCustomers(body: any) {
+  const brandId = body.brand_id;
+  if (!brandId) return json(400, { ok: false, error: "Bad Request", details: { brand_id: "required" } });
+
+  const sb = getSupabase();
+
+  // Load custom tiers if available
+  let tiers = DEFAULT_TIERS;
+  const { data: customTiers } = await sb
+    .from("crm_tiers")
+    .select("name,min_events,max_events")
+    .eq("brand_id", brandId)
+    .order("order_index", { ascending: true });
+  if (customTiers && customTiers.length > 0) tiers = customTiers as typeof DEFAULT_TIERS;
+
+  // Single customer or batch
+  let customerQuery = sb
+    .from("customers")
+    .select("id,ride_count,customer_tier")
+    .eq("brand_id", brandId)
+    .eq("is_active", true);
+
+  if (body.customer_id) {
+    customerQuery = customerQuery.eq("id", body.customer_id);
+  } else if (body.cpf) {
+    customerQuery = customerQuery.eq("cpf", body.cpf);
+  } else {
+    // batch: limit to 500 per call
+    customerQuery = customerQuery.limit(500);
+  }
+
+  const { data: customers, error: custErr } = await customerQuery;
+  if (custErr) return json(500, { ok: false, error: "Internal error", details: { message: custErr.message } });
+  if (!customers || customers.length === 0) return json(404, { ok: false, error: "Not Found", details: { message: "No customers found" } });
+
+  let updated = 0;
+  const results: { id: string; old_tier: string; new_tier: string }[] = [];
+
+  for (const c of customers) {
+    const newTier = classifyTier(c.ride_count ?? 0, tiers);
+    if (newTier !== c.customer_tier) {
+      await sb.from("customers").update({ customer_tier: newTier }).eq("id", c.id);
+      results.push({ id: c.id, old_tier: c.customer_tier ?? "INICIANTE", new_tier: newTier });
+      updated++;
+    }
+  }
+
+  return json(200, {
+    ok: true,
+    data: {
+      total_evaluated: customers.length,
+      total_updated: updated,
+      changes: results,
+    },
+  });
 }
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -497,6 +642,24 @@ Deno.serve(async (req) => {
       if (method === "GET" && segments.length === 1) return await findCustomerByCpf(params);
       if (method === "GET" && segments.length === 3 && segments[2] === "points-ledger") {
         return await getPointsLedger(segments[1], params);
+      }
+      // PATCH /customers/:id/tier
+      if (method === "PATCH" && segments.length === 3 && segments[2] === "tier") {
+        const body = await req.json();
+        return await updateCustomerTier(segments[1], body);
+      }
+      // POST /customers/classify
+      if (method === "POST" && segments.length === 2 && segments[1] === "classify") {
+        const body = await req.json();
+        return await classifyCustomers(body);
+      }
+    }
+
+    // ── tiers ─────────────────────────────────
+    if (segments[0] === "tiers") {
+      if (method === "GET" && segments.length === 1) return await listTiers(params);
+      if (method === "GET" && segments.length === 2 && segments[1] === "rules") {
+        return await listTierRules(params);
       }
     }
 
