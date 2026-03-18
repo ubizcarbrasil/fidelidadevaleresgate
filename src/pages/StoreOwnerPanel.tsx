@@ -648,6 +648,52 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
   );
 }
 
+/* ─── Recent Offers List ─── */
+function RecentOffersList({ storeId }: { storeId: string }) {
+  const { data: recentOffers = [] } = useQuery({
+    queryKey: ["store-offers-recent", storeId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("offers")
+        .select("id, title, status, is_active, created_at")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      return data || [];
+    },
+  });
+
+  const statusLabel = (s: string) => {
+    const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+      DRAFT: { label: "Rascunho", variant: "secondary" },
+      PENDING: { label: "Pendente", variant: "outline" },
+      APPROVED: { label: "Aprovado", variant: "default" },
+      ACTIVE: { label: "Ativo", variant: "default" },
+      EXPIRED: { label: "Expirado", variant: "destructive" },
+    };
+    return map[s] || { label: s, variant: "secondary" as const };
+  };
+
+  if (recentOffers.length === 0) return null;
+
+  return (
+    <>
+      {recentOffers.map(o => {
+        const st = statusLabel(o.status);
+        return (
+          <div key={o.id} className="flex items-center justify-between bg-background/80 rounded-xl px-3 py-2.5 border border-border/30">
+            <span className="text-xs font-medium truncate mr-2">{o.title}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant={st.variant} className="text-[9px] h-5 rounded-full">{st.label}</Badge>
+              <span className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR")}</span>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 /* ─── Coupons Tab ─── */
 function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateNew: () => void; onEdit: (offer: any) => void }) {
   const { data: offers = [], isLoading: loading } = useQuery({
