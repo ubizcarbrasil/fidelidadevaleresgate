@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,6 +68,7 @@ export default function StoreOwnerPanel() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
+  const qc = useQueryClient();
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
@@ -326,7 +328,7 @@ export default function StoreOwnerPanel() {
               branchId={store.branch_id}
               brandId={store.brand_id}
               editOffer={editingOffer}
-              onClose={() => { setShowWizard(false); setEditingOffer(null); }}
+              onClose={() => { setShowWizard(false); setEditingOffer(null); qc.invalidateQueries({ queryKey: ["store-offers", store.id] }); qc.invalidateQueries({ queryKey: ["store-dashboard-stats", store.id] }); }}
             />
           ) : (
             <StoreCouponsTab
@@ -600,6 +602,23 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
 
           <EmitterUpgradeCard store={store} />
 
+          {/* ── Recent Offers ── */}
+          {stats.cuponsEmitidos > 0 && (
+            <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
+              <CardHeader className="pb-2 px-4 pt-4">
+                <CardTitle className="text-xs flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg kpi-icon-blue flex items-center justify-center text-white">
+                    <Tag className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-foreground font-semibold">Últimas ofertas criadas</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 space-y-2">
+                <RecentOffersList storeId={store.id} />
+              </CardContent>
+            </Card>
+          )}
+
           {/* ── Expiring Soon Card ── */}
           {stats.proximosVencer.length > 0 && (
             <Card className="rounded-2xl border-0 shadow-sm glow-amber bg-gradient-to-br from-warning/8 to-warning/3">
@@ -629,23 +648,65 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
   );
 }
 
+/* ─── Recent Offers List ─── */
+function RecentOffersList({ storeId }: { storeId: string }) {
+  const { data: recentOffers = [] } = useQuery({
+    queryKey: ["store-offers-recent", storeId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("offers")
+        .select("id, title, status, is_active, created_at")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      return data || [];
+    },
+  });
+
+  const statusLabel = (s: string) => {
+    const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+      DRAFT: { label: "Rascunho", variant: "secondary" },
+      PENDING: { label: "Pendente", variant: "outline" },
+      APPROVED: { label: "Aprovado", variant: "default" },
+      ACTIVE: { label: "Ativo", variant: "default" },
+      EXPIRED: { label: "Expirado", variant: "destructive" },
+    };
+    return map[s] || { label: s, variant: "secondary" as const };
+  };
+
+  if (recentOffers.length === 0) return null;
+
+  return (
+    <>
+      {recentOffers.map(o => {
+        const st = statusLabel(o.status);
+        return (
+          <div key={o.id} className="flex items-center justify-between bg-background/80 rounded-xl px-3 py-2.5 border border-border/30">
+            <span className="text-xs font-medium truncate mr-2">{o.title}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant={st.variant} className="text-[9px] h-5 rounded-full">{st.label}</Badge>
+              <span className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR")}</span>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 /* ─── Coupons Tab ─── */
 function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateNew: () => void; onEdit: (offer: any) => void }) {
-  const [offers, setOffers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetch = async () => {
+  const { data: offers = [], isLoading: loading } = useQuery({
+    queryKey: ["store-offers", store.id],
+    queryFn: async () => {
       const { data } = await supabase
         .from("offers")
         .select("id, title, status, is_active, coupon_type, coupon_category, discount_percent, value_rescue, min_purchase, end_at, created_at, start_at, max_total_uses, max_uses_per_customer, interval_between_uses_days, redemption_branch_id, product_id, description, terms_version, terms_params_json, specific_days_json, scaled_values_json, requires_scheduling, scheduling_advance_hours, is_cumulative, redemption_type, allowed_weekdays")
         .eq("store_id", store.id)
         .order("created_at", { ascending: false });
-      setOffers(data || []);
-      setLoading(false);
-    };
-    fetch();
-  }, [store.id]);
+      return data || [];
+    },
+  });
 
   const statusLabel = (s: string) => {
     const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
