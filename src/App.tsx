@@ -205,7 +205,7 @@ function AppRoutes() {
           <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
           <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
           <Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
-          <Route path="profile-links" element={<RootGuard><ProfileLinksConfigPage /></RootGuard>} />
+          <Route path="profile-links" element={<ModuleGuard moduleKey="profile_links"><ProfileLinksConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
