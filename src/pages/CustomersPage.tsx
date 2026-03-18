@@ -40,7 +40,23 @@ export default function CustomersPage() {
   const [crmFilter, setCrmFilter] = useState<string>("");
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkOpen, setBulkOpen] = useState(false);
+  const autoSyncTriggered = useRef(false);
+
+  const { data: orphanCount } = useQuery({
+    queryKey: ["crm-orphan-count", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return 0;
+      const { count, error } = await supabase
+        .from("crm_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("brand_id", currentBrandId)
+        .is("customer_id", null)
+        .eq("is_active", true);
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: !!currentBrandId,
+  });
   const [bulkForm, setBulkForm] = useState({ name: "", cpf: "", phone: "" });
 
   useEffect(() => {
