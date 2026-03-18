@@ -1090,7 +1090,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                       onChange={e => setCpf(formatCpf(e.target.value))}
                       placeholder="000.000.000-00"
                       className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                      style={{ borderColor: brandAlpha(fg, 0.09) }}
+                      style={{ borderColor: brandAlpha(fg, 0.09), color: "#000", backgroundColor: "#fff" }}
                       maxLength={14}
                     />
                   </div>
