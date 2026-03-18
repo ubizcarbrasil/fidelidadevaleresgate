@@ -747,7 +747,7 @@ export default function CsvImportPage() {
   const errorRowNumbers = new Set(validationErrors.map(e => e.row));
 
   const TYPE_LABELS: Record<string, string> = {
-    STORES: "Lojas", OFFERS: "Ofertas", CUSTOMERS: "Clientes", CRM_CONTACTS: "Contatos CRM", COUPONS: "Cupons",
+    STORES: "Lojas", OFFERS: "Ofertas", CUSTOMERS: "Clientes", CRM_CONTACTS: "Contatos CRM", COUPONS: "Cupons", EARNING_EVENTS: "Pontuação Manual",
   };
 
   // ── Import history query ──
