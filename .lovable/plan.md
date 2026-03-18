@@ -1,27 +1,44 @@
 
+Diagnóstico
 
-## Diagnóstico
+- Pelos prints, você está olhando a página principal do empreendedor (dashboard). A logo da marca foi implementada na tela errada: hoje ela aparece em `BrandSettingsPage`, mas o pedido original foi “na página principal”.
+- Encontrei um problema estrutural de visibilidade: para a marca `Ubiz Resgata`, faltam registros em `brand_modules` para os módulos `brand_settings` e `csv_import`. Resultado:
+  - “Configurações” não aparece no menu.
+  - “Importação de Dados” não aparece no menu.
+  - a rota `/brand-settings` também fica bloqueada pelo `ModuleGuard`.
+- O CSV “Pontuação Manual” existe no código e aparece na UI de `CsvImportPage`, mas ainda há um bug funcional importante: o insert em `earning_events` usa `store_id: branchId`, porém `store_id` é obrigatório e referencia uma loja real (`stores.id`). Ou seja: mesmo liberando a tela, a importação manual ainda pode falhar.
+- O painel do parceiro já renderiza a logo da loja em `StoreOwnerPanel`, mas hoje o acesso real do lojista está frágil: quase todas as lojas dessa marca estão sem `owner_user_id`, então o fluxo de login do parceiro não é um caminho confiável para validar a feature.
 
-As três funcionalidades **já estão implementadas no código**:
+Plano
 
-1. **BrandSettingsPage** (linhas 89-97): Logo da marca usando `PlatformLogo` + `useBrandInfo`
-2. **StoreOwnerPanel → StoreOwnerDashboard** (linhas 522-534): Logo da loja com fallback para ícone `Store`
-3. **CsvImportPage** (linhas 106-113, 521+): Tipo `EARNING_EVENTS` com todos os 6 campos e lógica completa
+1. Corrigir o local da logo da marca
+- Arquivo: `src/pages/Dashboard.tsx`
+- Adicionar a logo da marca no header principal do dashboard (“Bom dia”), para aparecer exatamente na tela que você mostrou.
+- Usar `BrandContext`/`useBrand()` em vez de depender só de `useBrandInfo`, para funcionar melhor em todos os contextos.
 
-### Possível causa
+2. Corrigir a visibilidade de “Configurações” e “Importação de Dados”
+- Arquivos: `src/components/consoles/BrandSidebar.tsx`, `src/App.tsx`, possivelmente `src/hooks/useBrandModules.ts`
+- Ajustar o gating para marcas antigas:
+  - `brand-settings` não pode ficar invisível só porque a marca não recebeu o módulo novo.
+  - `/csv-import` e o item do menu precisam usar a mesma regra de acesso; hoje estão inconsistentes (`csv_import` no menu e `stores` na rota).
 
-Você está na rota `/index` (landing page) — **não** no painel do empreendedor nem no painel do lojista. Para ver as mudanças:
+3. Tratar o problema de legado em módulos
+- Backend/database: criar um backfill para inserir `brand_modules` faltantes em marcas antigas para novos `module_definitions`.
+- Isso evita repetir o mesmo bug com outras telas novas além de “Configurações” e “Importação de Dados”.
 
-- **Logo do empreendedor**: Faça login como `brand_admin` e acesse a página de Configurações/Métricas (BrandSettingsPage)
-- **Logo da loja**: Faça login como `store_admin` e acesse o Painel do Parceiro (StoreOwnerPanel) → aba "Início"
-- **Importação CSV**: Faça login como `brand_admin` e acesse a página de Importação CSV → selecione "Pontuação Manual" no dropdown
+4. Finalizar corretamente a “Pontuação Manual”
+- Arquivo: `src/pages/CsvImportPage.tsx`
+- Corrigir o fluxo para usar um `store_id` real.
+- Como o CSV pedido não tem coluna de loja, a solução mais segura é adicionar um seletor de loja na tela (ou tornar loja uma coluna opcional do CSV com fallback para um seletor).
+- Depois disso, manter o restante: localizar/criar cliente, calcular pontos pela regra ativa, lançar `earning_events`, `points_ledger` e atualizar saldo.
 
-### Plano
+5. Tornar o painel do parceiro validável de verdade
+- Arquivos: `src/pages/Dashboard.tsx` e/ou `src/pages/StoreOwnerPanel.tsx`
+- Melhorar o acesso de preview do empreendedor para abrir um parceiro específico com `storeId`.
+- Se necessário, revisar o vínculo de acesso do parceiro (`owner_user_id`) para que o lojista realmente veja o painel da própria loja.
 
-Não há alterações de código necessárias — as funcionalidades já estão no código. O que posso fazer:
+Detalhes técnicos
 
-1. **Verificar se o preview carregou a versão mais recente** — recarregar o preview
-2. **Testar via browser** navegando até as rotas corretas após login
-
-Se você confirmar que está logado e nas telas certas e ainda assim não vê as mudanças, posso investigar mais a fundo com as ferramentas de debug.
-
+- A migration `supabase/migrations/20260316013652_536efadf-713a-4afb-8490-51c4b2aca217.sql` criou os módulos `brand_settings` e `csv_import`, mas não fez backfill em `brand_modules` para marcas já existentes.
+- No banco, a marca `Ubiz Resgata` tem logo configurada e tem módulos como `stores` e `offers` ativos, mas não tem rows para `brand_settings` e `csv_import`, o que bate exatamente com o menu que aparece nos seus prints.
+- O item do parceiro já foi implementado visualmente, então ali o problema principal não é layout: é acesso/dados de vínculo da loja com usuário parceiro.
