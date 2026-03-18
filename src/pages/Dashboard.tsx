@@ -523,6 +523,35 @@ function ActivityHeatmap({ chartData }: { chartData?: { label: string; count: nu
 
 /* TasksTable and ActivityFeed moved to src/components/dashboard/ */
 
+/* ── Dashboard Header with Brand Logo ── */
+function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; scopeLabels: Record<string, string> }) {
+  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
+  const showBrandLogo = ["BRAND", "TENANT"].includes(consoleScope);
+  const greeting = new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite";
+
+  return (
+    <div className="flex items-center gap-3">
+      {showBrandLogo && brandLogoUrl ? (
+        <img src={brandLogoUrl} alt={brandName} className="h-10 w-10 rounded-xl object-cover ring-1 ring-border shrink-0" />
+      ) : showBrandLogo && brandName ? (
+        <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+          <span className="text-sm font-bold text-primary">{brandName.substring(0, 2).toUpperCase()}</span>
+        </div>
+      ) : null}
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {greeting} 👋
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {showBrandLogo && brandName ? `${brandName} · ` : ""}
+          {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          {" · "}{scopeLabels[consoleScope]}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Dashboard ── */
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");

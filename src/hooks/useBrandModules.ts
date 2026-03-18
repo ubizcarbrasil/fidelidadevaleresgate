@@ -19,15 +19,24 @@ export function useBrandModules() {
     enabled: !!currentBrandId && !isRoot,
   });
 
+  /** Modules that should always be visible even without a brand_modules row.
+   *  These are core/infrastructure modules that every brand needs access to. */
+  const ALWAYS_ON_MODULES = new Set([
+    "brand_settings", "csv_import", "subscription", "users_management",
+  ]);
+
   /** Returns true if the module is enabled for the current brand.
-   *  ROOT always sees everything. If no brand_modules row exists, module is hidden. */
+   *  ROOT always sees everything. If no brand_modules row exists, module is hidden
+   *  unless it's in the ALWAYS_ON list. */
   const isModuleEnabled = (moduleKey: string): boolean => {
     if (isRoot) return true;
     if (isLoading || !brandModules) return true; // show while loading
     const entry = brandModules.find(
       (bm: any) => (bm.module_definitions as any)?.key === moduleKey
     );
-    return entry ? entry.is_enabled : false;
+    if (entry) return entry.is_enabled;
+    // Legacy brands might not have rows for newer modules — allow core ones
+    return ALWAYS_ON_MODULES.has(moduleKey);
   };
 
   return { isModuleEnabled, isLoading };
