@@ -633,21 +633,17 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
 
 /* ─── Coupons Tab ─── */
 function StoreCouponsTab({ store, onCreateNew, onEdit }: { store: any; onCreateNew: () => void; onEdit: (offer: any) => void }) {
-  const [offers, setOffers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetch = async () => {
+  const { data: offers = [], isLoading: loading } = useQuery({
+    queryKey: ["store-offers", store.id],
+    queryFn: async () => {
       const { data } = await supabase
         .from("offers")
         .select("id, title, status, is_active, coupon_type, coupon_category, discount_percent, value_rescue, min_purchase, end_at, created_at, start_at, max_total_uses, max_uses_per_customer, interval_between_uses_days, redemption_branch_id, product_id, description, terms_version, terms_params_json, specific_days_json, scaled_values_json, requires_scheduling, scheduling_advance_hours, is_cumulative, redemption_type, allowed_weekdays")
         .eq("store_id", store.id)
         .order("created_at", { ascending: false });
-      setOffers(data || []);
-      setLoading(false);
-    };
-    fetch();
-  }, [store.id]);
+      return data || [];
+    },
+  });
 
   const statusLabel = (s: string) => {
     const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
