@@ -606,7 +606,7 @@ export default function CsvImportPage() {
 
             // Insert earning_event
             const { data: earningData, error: earningErr } = await supabase.from("earning_events").insert({
-              brand_id: brandId, branch_id: branchId, store_id: branchId,
+              brand_id: brandId, branch_id: branchId, store_id: earningStoreId,
               customer_id: customerId, purchase_value: purchaseValue,
               points_earned: points, money_earned: money,
               source: "IMPORT" as any, status: "APPROVED" as any,
