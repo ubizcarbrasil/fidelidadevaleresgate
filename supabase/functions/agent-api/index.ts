@@ -381,6 +381,28 @@ async function listRedemptions(params: URLSearchParams) {
   return json(200, { ok: true, data: paginatedResult(data ?? [], limit) });
 }
 
+// ── Tier classification helper ──────────────────────────────────────────
+const DEFAULT_TIERS = [
+  { name: "INICIANTE", min_events: 0, max_events: 0 },
+  { name: "BRONZE", min_events: 1, max_events: 10 },
+  { name: "PRATA", min_events: 11, max_events: 30 },
+  { name: "OURO", min_events: 31, max_events: 50 },
+  { name: "DIAMANTE", min_events: 51, max_events: 100 },
+  { name: "LENDARIO", min_events: 101, max_events: 500 },
+  { name: "GALATICO", min_events: 501, max_events: null },
+];
+
+function classifyTier(rideCount: number, tiers: typeof DEFAULT_TIERS = DEFAULT_TIERS): string {
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (rideCount >= tiers[i].min_events) return tiers[i].name;
+  }
+  return "INICIANTE";
+}
+
+function getTierInfo(tierName: string, tiers: typeof DEFAULT_TIERS = DEFAULT_TIERS) {
+  return tiers.find((t) => t.name === tierName) ?? tiers[0];
+}
+
 // ── 12) GET /customers ──────────────────────────────────────────────────
 async function findCustomerByCpf(params: URLSearchParams) {
   const cpf = params.get("cpf");
@@ -389,12 +411,19 @@ async function findCustomerByCpf(params: URLSearchParams) {
   const sb = getSupabase();
   const { data, error } = await sb
     .from("customers")
-    .select("id,name,cpf,phone,points_balance,money_balance,brand_id,branch_id,is_active,created_at")
+    .select("id,name,cpf,phone,points_balance,money_balance,brand_id,branch_id,is_active,created_at,customer_tier,ride_count")
     .eq("cpf", cpf);
 
   if (error) return json(500, { ok: false, error: "Internal error", details: { message: error.message } });
   if (!data || data.length === 0) return json(404, { ok: false, error: "Not Found" });
-  return json(200, { ok: true, data: data.length === 1 ? data[0] : data });
+
+  // Enrich with tier_info
+  const enriched = data.map((c: any) => ({
+    ...c,
+    tier_info: getTierInfo(c.customer_tier ?? "INICIANTE"),
+  }));
+
+  return json(200, { ok: true, data: enriched.length === 1 ? enriched[0] : enriched });
 }
 
 // ── 13) GET /customers/:id/points-ledger ────────────────────────────────
