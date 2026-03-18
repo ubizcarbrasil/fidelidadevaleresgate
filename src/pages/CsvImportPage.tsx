@@ -891,7 +891,7 @@ export default function CsvImportPage() {
                 type="file"
                 accept=".csv"
                 onChange={handleFileSelect}
-                disabled={!brandId || !branchId}
+                disabled={!brandId || !branchId || (importType === "EARNING_EVENTS" && !earningStoreId)}
                 className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer disabled:opacity-50"
               />
             </div>
