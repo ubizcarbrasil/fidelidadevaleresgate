@@ -196,18 +196,21 @@ export default function StoreProfileWizard({ store, initialStep = 0, onClose, on
       {/* Progress bar */}
       <Progress value={progressPercent} className="h-1.5 mb-6" />
 
-      {/* Step dots */}
+      {/* Step dots — free navigation, filled steps show check */}
       <div className="flex justify-center gap-1.5 mb-6">
-        {STEPS.map((s, i) => (
-          <button
-            key={s.key}
-            onClick={() => i <= step && setStep(i)}
-            disabled={i > step}
-            className={`h-2 rounded-full transition-all ${
-              i === step ? "w-6 bg-primary" : i < step ? "w-2 bg-primary/40 cursor-pointer" : "w-2 bg-muted"
-            }`}
-          />
-        ))}
+        {STEPS.map((s, i) => {
+          const filled = stepFilledMap[s.key];
+          return (
+            <button
+              key={s.key}
+              onClick={() => setStep(i)}
+              className={`h-2 rounded-full transition-all ${
+                i === step ? "w-6 bg-primary" : filled ? "w-2 bg-primary/60 cursor-pointer" : "w-2 bg-muted cursor-pointer"
+              }`}
+              title={s.title}
+            />
+          );
+        })}
       </div>
 
       {/* Step content */}
