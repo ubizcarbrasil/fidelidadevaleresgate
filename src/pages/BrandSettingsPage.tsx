@@ -55,6 +55,7 @@ export default function BrandSettingsPage() {
         storeCount: stores.count || 0,
         earningCount: (earnings.data || []).length,
         redemptionCount: redemptions.count || 0,
+        scoredRidesCount: scoredRides.count || 0,
         totalPoints,
         totalMoney,
         chartData,
