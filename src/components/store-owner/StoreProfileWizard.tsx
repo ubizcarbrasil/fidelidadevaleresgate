@@ -64,6 +64,32 @@ export default function StoreProfileWizard({ store, initialStep = 0, onClose, on
   const [availableTags, setAvailableTags] = useState<{ id: string; name: string }[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
 
+  // Calculate which steps are already filled based on current form state
+  const stepFilledMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    map["logo"] = !!form.logo_url;
+    map["banner"] = !!form.banner_url;
+    map["basics"] = !!(form.name && form.description);
+    map["segment"] = !!form.taxonomy_segment_id;
+    map["contact"] = !!form.address;
+    map["gallery"] = form.gallery_urls.length > 0;
+    map["hours"] = form.operating_hours_json.length > 0;
+    map["review"] = Object.entries(map).every(([, v]) => v);
+    return map;
+  }, [form]);
+
+  // Find first missing step for smart start
+  const firstMissingIdx = useMemo(() => {
+    const idx = STEPS.findIndex(s => !stepFilledMap[s.key]);
+    return idx === -1 ? STEPS.length - 1 : idx;
+  }, [stepFilledMap]);
+
+  const [step, setStep] = useState(() => {
+    // Use initialStep if provided and valid, otherwise compute from missing
+    if (initialStep > 0) return initialStep;
+    return firstMissingIdx;
+  });
+
   const currentStep = STEPS[step];
   const progressPercent = Math.round(((step + 1) / STEPS.length) * 100);
 
