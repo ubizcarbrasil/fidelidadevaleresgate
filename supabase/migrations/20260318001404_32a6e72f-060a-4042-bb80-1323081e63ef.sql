@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS crm_contacts_brand_id_customer_id_key ON public.crm_contacts (brand_id, customer_id) WHERE customer_id IS NOT NULL;

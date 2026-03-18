@@ -114,6 +114,25 @@ async function findIntegration(sb: ReturnType<typeof createClient>, req: Request
   return null;
 }
 
+const TIER_THRESHOLDS = [
+  { key: "GALATICO", min: 501 },
+  { key: "LENDARIO", min: 101 },
+  { key: "DIAMANTE", min: 51 },
+  { key: "OURO", min: 31 },
+  { key: "PRATA", min: 11 },
+  { key: "BRONZE", min: 1 },
+  { key: "INICIANTE", min: 0 },
+] as const;
+
+function getTierFromRideCount(rideCount: number): string {
+  for (const t of TIER_THRESHOLDS) {
+    if (rideCount >= t.min) return t.key;
+  }
+  return "INICIANTE";
+}
+
+const CUSTOMER_SELECT = "id, branch_id, points_balance, name, phone, customer_tier, ride_count";
+
 async function findCustomerCascade(
   sb: ReturnType<typeof createClient>,
   brandId: string,
@@ -125,7 +144,7 @@ async function findCustomerCascade(
   if (cpf) {
     const { data } = await sb
       .from("customers")
-      .select("id, branch_id, points_balance, name, phone")
+      .select(CUSTOMER_SELECT)
       .eq("brand_id", brandId)
       .eq("cpf", cpf)
       .eq("is_active", true)
@@ -138,7 +157,7 @@ async function findCustomerCascade(
   if (phone) {
     const { data } = await sb
       .from("customers")
-      .select("id, branch_id, points_balance, name, phone")
+      .select(CUSTOMER_SELECT)
       .eq("brand_id", brandId)
       .eq("phone", phone)
       .eq("is_active", true)
@@ -151,7 +170,7 @@ async function findCustomerCascade(
   if (name) {
     const { data } = await sb
       .from("customers")
-      .select("id, branch_id, points_balance, name, phone")
+      .select(CUSTOMER_SELECT)
       .eq("brand_id", brandId)
       .eq("name", name)
       .eq("is_active", true)
@@ -161,6 +180,45 @@ async function findCustomerCascade(
   }
 
   return null;
+}
+
+async function resolveEffectivePointsPerReal(
+  sb: ReturnType<typeof createClient>,
+  brandId: string,
+  branchId: string | null,
+  customerTier: string
+): Promise<{ pointsPerReal: number; source: string }> {
+  // 1. Try tier-specific rule
+  if (branchId) {
+    const { data: tierRule } = await sb
+      .from("tier_points_rules")
+      .select("points_per_real")
+      .eq("brand_id", brandId)
+      .eq("branch_id", branchId)
+      .eq("tier", customerTier)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (tierRule) {
+      return { pointsPerReal: Number(tierRule.points_per_real), source: `tier_rule:${customerTier}` };
+    }
+  }
+
+  // 2. Fall back to brand points_rules
+  const { data: rules } = await sb
+    .from("points_rules")
+    .select("points_per_real")
+    .eq("brand_id", brandId)
+    .eq("is_active", true)
+    .or(branchId ? `branch_id.eq.${branchId},branch_id.is.null` : "branch_id.is.null")
+    .order("branch_id", { ascending: false, nullsFirst: false })
+    .limit(1);
+
+  if (rules?.[0]) {
+    return { pointsPerReal: Number(rules[0].points_per_real), source: "brand_rule" };
+  }
+
+  // 3. Absolute fallback
+  return { pointsPerReal: 1.0, source: "default_fallback" };
 }
 
 async function processFinalized(
@@ -253,8 +311,6 @@ async function processFinalized(
     return { data: { message: "Ride has no value", machine_ride_id: machineRideId, points_credited: 0 } };
   }
 
-  const points = Math.floor(rideValue);
-
   // Resolve the branch to use for customer creation
   const customerBranchId = branchId || integration.branch_id;
 
@@ -271,6 +327,7 @@ async function processFinalized(
   // If not found, create a new customer
   let customerId: string | null = null;
   let pointsCredited = false;
+  let points = 0;
 
   if (!customer) {
     // Determine which branch to use
@@ -299,11 +356,11 @@ async function processFinalized(
           name: customerDisplayName,
           points_balance: 0,
           money_balance: 0,
-          ride_count: 1,
-          customer_tier: "BRONZE",
+          ride_count: 0,
+          customer_tier: "INICIANTE",
           crm_sync_status: "PENDING",
         })
-        .select("id, branch_id, points_balance")
+        .select(CUSTOMER_SELECT)
         .single();
 
       if (created) {
@@ -323,25 +380,65 @@ async function processFinalized(
     }
   }
 
-  if (customer && points > 0) {
+  if (customer) {
     customerId = customer.id;
-    await sb.from("points_ledger").insert({
+
+    // --- Tier-based points calculation ---
+    const customerTier = customer.customer_tier || "INICIANTE";
+    const { pointsPerReal, source: ruleSource } = await resolveEffectivePointsPerReal(
+      sb, brandId, customer.branch_id || branchId, customerTier
+    );
+    points = Math.floor(rideValue * pointsPerReal);
+    logger.info("Points calculated", { machineRideId, customerTier, pointsPerReal, ruleSource, rideValue, points });
+
+    if (points > 0) {
+      await sb.from("points_ledger").insert({
+        brand_id: brandId,
+        branch_id: customer.branch_id,
+        customer_id: customer.id,
+        entry_type: "CREDIT",
+        points_amount: points,
+        money_amount: rideValue,
+        reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)} (${customerTier} ×${pointsPerReal})`,
+        reference_type: "MACHINE_RIDE",
+      });
+
+      // Update points_balance, ride_count, and recalculate tier
+      const newRideCount = (customer.ride_count || 0) + 1;
+      const newTier = getTierFromRideCount(newRideCount);
+      await sb
+        .from("customers")
+        .update({
+          points_balance: (customer.points_balance || 0) + points,
+          ride_count: newRideCount,
+          customer_tier: newTier,
+        })
+        .eq("id", customer.id);
+
+      pointsCredited = true;
+    }
+
+    // --- Mirror to crm_contacts ---
+    const contactPayload: Record<string, unknown> = {
       brand_id: brandId,
-      branch_id: customer.branch_id,
+      branch_id: customer.branch_id || branchId,
       customer_id: customer.id,
-      entry_type: "CREDIT",
-      points_amount: points,
-      money_amount: rideValue,
-      reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
-      reference_type: "MACHINE_RIDE",
-    });
+      name: passengerName || customer.name || null,
+      phone: passengerPhone || customer.phone || null,
+      email: passengerEmail || null,
+      cpf: passengerCpf || null,
+      source: "MOBILITY_APP",
+      is_active: true,
+      ride_count: (customer.ride_count || 0) + 1,
+    };
+    // Remove null keys to avoid overwriting good data
+    Object.keys(contactPayload).forEach(k => { if (contactPayload[k] === null) delete contactPayload[k]; });
 
-    await sb
-      .from("customers")
-      .update({ points_balance: (customer.points_balance || 0) + points })
-      .eq("id", customer.id);
-
-    pointsCredited = true;
+    sb.from("crm_contacts")
+      .upsert(contactPayload, { onConflict: "brand_id,customer_id" })
+      .then(({ error }) => {
+        if (error) logger.error("crm_contacts upsert error", { error });
+      });
   }
 
   // Persist ride
