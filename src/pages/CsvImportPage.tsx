@@ -239,6 +239,7 @@ export default function CsvImportPage() {
   const [brandId, setBrandId] = useState(currentBrandId || "");
   const [branchId, setBranchId] = useState(currentBranchId || "");
   const [autoCreateStores, setAutoCreateStores] = useState(true);
+  const [earningStoreId, setEarningStoreId] = useState("");
 
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: Record<string, string>[] } | null>(null);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
@@ -266,6 +267,18 @@ export default function CsvImportPage() {
       return data || [];
     },
     enabled: !!brandId,
+  });
+
+  // Stores for EARNING_EVENTS store selector
+  const { data: storesForEarning } = useQuery({
+    queryKey: ["stores-for-earning", brandId, branchId],
+    queryFn: async () => {
+      let q = supabase.from("stores").select("id, name").eq("brand_id", brandId).eq("is_active", true).order("name");
+      if (branchId) q = q.eq("branch_id", branchId);
+      const { data } = await q;
+      return data || [];
+    },
+    enabled: !!brandId && importType === "EARNING_EVENTS",
   });
 
   const targetFields = getTargetFields(importType);
@@ -593,7 +606,7 @@ export default function CsvImportPage() {
 
             // Insert earning_event
             const { data: earningData, error: earningErr } = await supabase.from("earning_events").insert({
-              brand_id: brandId, branch_id: branchId, store_id: branchId,
+              brand_id: brandId, branch_id: branchId, store_id: earningStoreId,
               customer_id: customerId, purchase_value: purchaseValue,
               points_earned: points, money_earned: money,
               source: "IMPORT" as any, status: "APPROVED" as any,
@@ -842,6 +855,20 @@ export default function CsvImportPage() {
                 <Label htmlFor="auto-create">Criar lojas automaticamente se não existirem</Label>
               </div>
             )}
+            {importType === "EARNING_EVENTS" && (
+              <div className="space-y-2">
+                <Label>Loja responsável pela pontuação</Label>
+                <Select value={earningStoreId} onValueChange={setEarningStoreId} disabled={!branchId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a loja" /></SelectTrigger>
+                  <SelectContent>
+                    {storesForEarning?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {!earningStoreId && branchId && (
+                  <p className="text-xs text-muted-foreground">Selecione a loja que será vinculada aos eventos de pontuação.</p>
+                )}
+              </div>
+            )}
             {importType === "COUPONS" && (
               <Alert>
                 <AlertDescription>Códigos duplicados (no CSV ou já existentes) serão rejeitados. O campo "Campanha" vincula automaticamente à oferta pelo título.</AlertDescription>
@@ -864,7 +891,7 @@ export default function CsvImportPage() {
                 type="file"
                 accept=".csv"
                 onChange={handleFileSelect}
-                disabled={!brandId || !branchId}
+                disabled={!brandId || !branchId || (importType === "EARNING_EVENTS" && !earningStoreId)}
                 className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer disabled:opacity-50"
               />
             </div>
