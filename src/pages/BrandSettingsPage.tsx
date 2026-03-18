@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandInfo } from "@/hooks/useBrandName";
+import PlatformLogo from "@/components/PlatformLogo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings, Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag, Car } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -11,6 +13,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3
 
 export default function BrandSettingsPage() {
   const { currentBrandId } = useBrandGuard();
+  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["brand-settings-metrics", currentBrandId],
@@ -83,11 +86,14 @@ export default function BrandSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <Settings className="h-6 w-6" /> Configurações — Métricas Gerais
-        </h2>
-        <p className="text-muted-foreground">Visão consolidada dos últimos 30 dias da sua marca</p>
+      <div className="flex items-center gap-4">
+        <PlatformLogo src={brandLogoUrl} alt={brandName || "Marca"} className="h-14 w-14 rounded-xl" fallbackLabel={brandName?.slice(0, 2)?.toUpperCase() || "VR"} />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            {brandName || "Configurações"} — Métricas Gerais
+          </h2>
+          <p className="text-muted-foreground">Visão consolidada dos últimos 30 dias da sua marca</p>
+        </div>
       </div>
 
       {/* KPI Cards */}

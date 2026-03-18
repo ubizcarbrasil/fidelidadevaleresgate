@@ -1,63 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: 3 funcionalidades
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### 1. Logo da marca no painel do empreendedor (BrandSettingsPage)
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-**Arquivo:** `src/pages/BrandSettingsPage.tsx`
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-O painel do empreendedor (`BrandSettingsPage`) não exibe nenhuma logomarca atualmente. Vou adicionar o logo da marca no topo da página, usando o hook `useBrandInfo` que já existe em `src/hooks/useBrandName.ts`.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-- Importar `useBrandInfo` e `PlatformLogo`
-- Renderizar o logo ao lado do título "Configurações — Métricas Gerais"
-- Fallback para iniciais se não houver logo configurado
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### 2. Logo da loja no dashboard do parceiro (StoreOwnerPanel)
-
-**Arquivo:** `src/pages/StoreOwnerPanel.tsx`
-
-O header já exibe o logo da loja (linha 229-234), mas o dashboard interno (`StoreOwnerDashboard`) não tem logo. Vou adicionar o logo da loja no topo do dashboard (após o card de completude do perfil), junto ao nome da loja.
-
-- Na função `StoreOwnerDashboard`, exibir `store.logo_url` em destaque antes dos KPIs
-- Fallback para ícone `Store` se não houver logo
-
-### 3. Importação CSV para pontuar clientes manualmente
-
-**Arquivo:** `src/pages/CsvImportPage.tsx`
-
-Adicionar um novo tipo de importação `EARNING_EVENTS` ao motor CSV existente, com os campos solicitados:
-
-| Campo CSV | Campo destino | Obrigatório |
-|---|---|---|
-| Nome | name (busca cliente) | Sim |
-| CPF | cpf (busca cliente) | Não |
-| E-mail | email (busca cliente) | Não |
-| Telefone | phone (busca cliente) | Não |
-| Valor da viagem | purchase_value | Sim |
-| Data | created_at | Não |
-
-**Lógica de processamento:**
-1. Para cada linha, buscar o cliente na tabela `customers` por CPF, telefone ou nome
-2. Se não encontrar, criar o cliente automaticamente
-3. Buscar a regra de pontos ativa (`points_rules`) para calcular `points_earned` e `money_earned`
-4. Inserir `earning_event` com `source: 'CSV_IMPORT'` e `status: 'APPROVED'`
-5. Inserir entrada no `points_ledger` (CREDIT)
-6. Atualizar saldo do cliente (`points_balance`, `money_balance`)
-
-**Alterações no CsvImportPage:**
-- Adicionar `EARNING_EVENTS` ao tipo `ImportType`
-- Definir `EARNING_EVENT_FIELDS` com os 6 campos
-- Adicionar validação específica (valor numérico obrigatório, data válida)
-- Adicionar lógica de processamento no `importMutation`
-- Adicionar opção "Pontuação Manual" no seletor de tipo de importação
-
-**Obs:** O enum `earning_source` precisa suportar `'CSV_IMPORT'`. Se não existir, usaremos `'MANUAL'` ou o valor mais adequado já disponível no enum.
-
-### Arquivos alterados
-
-| Arquivo | Alteração |
-|---|---|
-| `src/pages/BrandSettingsPage.tsx` | Adicionar logo da marca no topo |
-| `src/pages/StoreOwnerPanel.tsx` | Adicionar logo da loja no dashboard |
-| `src/pages/CsvImportPage.tsx` | Novo tipo EARNING_EVENTS com processamento completo |
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
