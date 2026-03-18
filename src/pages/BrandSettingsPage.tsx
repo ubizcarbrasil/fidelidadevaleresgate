@@ -22,12 +22,13 @@ export default function BrandSettingsPage() {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const isoStart = thirtyDaysAgo.toISOString();
 
-      const [customers, stores, earnings, redemptions, ledger] = await Promise.all([
+      const [customers, stores, earnings, redemptions, ledger, scoredRides] = await Promise.all([
         supabase.from("customers").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).eq("is_active", true),
         supabase.from("stores").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).eq("is_active", true),
         supabase.from("earning_events").select("points_earned, money_earned, created_at").eq("brand_id", currentBrandId).eq("status", "APPROVED").gte("created_at", isoStart),
         supabase.from("redemptions").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).gte("created_at", isoStart),
         supabase.from("points_ledger").select("entry_type, points_amount, created_at").eq("brand_id", currentBrandId).gte("created_at", isoStart).limit(1000),
+        supabase.from("machine_rides").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).eq("ride_status", "FINALIZED").gt("points_credited", 0).gte("created_at", isoStart),
       ]);
 
       const totalPoints = (earnings.data || []).reduce((s, e) => s + (e.points_earned || 0), 0);
