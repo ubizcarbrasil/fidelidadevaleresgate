@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
-import { useBrandModules } from "@/hooks/useBrandModules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +60,6 @@ const MORE_MENU_ITEMS: { key: StoreOwnerTab; label: string; icon: typeof LayoutD
 
 export default function StoreOwnerPanel() {
   const { user, signOut, isRootAdmin, roles } = useAuth();
-  const { isModuleEnabled } = useBrandModules();
   const { brand, theme } = useBrand();
   const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
   const brandName = brand?.name || null;
@@ -78,6 +76,30 @@ export default function StoreOwnerPanel() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const notifPermissionRef = useRef<NotificationPermission>("default");
+
+  // Use store's brand_id to query modules (store_admin users may not have brand context)
+  const storeBrandId = store?.brand_id || brand?.id || null;
+  const { data: storeModules } = useQuery({
+    queryKey: ["brand-modules-active", storeBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brand_modules")
+        .select("module_definition_id, is_enabled, module_definitions!inner(key)")
+        .eq("brand_id", storeBrandId!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!storeBrandId,
+  });
+
+  const isModuleEnabled = useCallback((moduleKey: string): boolean => {
+    if (isRootAdmin) return true;
+    if (!storeModules) return false; // hide while loading instead of showing everything
+    const entry = storeModules.find(
+      (bm: any) => (bm.module_definitions as any)?.key === moduleKey
+    );
+    return entry ? entry.is_enabled : false;
+  }, [isRootAdmin, storeModules]);
 
   const filteredBottomTabs = useMemo(() =>
     BOTTOM_TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
