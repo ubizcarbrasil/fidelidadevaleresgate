@@ -6,16 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Loader2, Save, Image as ImageIcon, Video, Globe, Instagram,
   MapPin, MessageCircle, Tag, HelpCircle, Coins, Plus, Trash2,
-  Lock, Store, Mail, Phone, Camera, X,
+  Lock, Store, Mail, Phone, Camera, X, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import SegmentAutocomplete from "@/components/SegmentAutocomplete";
 import OperatingHoursEditor, { type DayHours } from "./OperatingHoursEditor";
 import ImageUploadField from "@/components/ImageUploadField";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import { useStoreProfileCompleteness } from "@/hooks/useStoreProfileCompleteness";
 
 interface FaqItem {
   question: string;
