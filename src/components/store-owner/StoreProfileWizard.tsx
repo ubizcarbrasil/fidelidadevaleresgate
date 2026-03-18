@@ -43,7 +43,6 @@ interface Props {
 }
 
 export default function StoreProfileWizard({ store, initialStep = 0, onClose, onComplete }: Props) {
-  const [step, setStep] = useState(initialStep);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     logo_url: store.logo_url || "",
