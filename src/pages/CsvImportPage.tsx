@@ -518,6 +518,109 @@ export default function CsvImportPage() {
 
           setImportProgress({ current: Math.min(batchStart + BATCH_SIZE, rows.length), total: rows.length });
         }
+      } else if (importType === "EARNING_EVENTS") {
+        // ── Pontuação Manual via CSV ──
+        // Fetch active points rule
+        const { data: rulesData } = await supabase
+          .from("points_rules")
+          .select("*")
+          .eq("brand_id", brandId)
+          .eq("is_active", true)
+          .order("branch_id", { ascending: false, nullsFirst: false })
+          .limit(1);
+        const rule = rulesData?.[0];
+        if (!rule) throw new Error("Nenhuma regra de pontos ativa encontrada para esta marca");
+
+        const pointsPerReal = rule.points_per_real || 1;
+        const moneyPerPoint = rule.money_per_point || 0;
+        const maxPointsPerPurchase = rule.max_points_per_purchase || 999999;
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          try {
+            const name = row.name?.trim();
+            const cpf = row.cpf?.trim() || null;
+            const phone = row.phone?.trim() || null;
+            const email = row.email?.trim() || null;
+            const purchaseValue = Number(row.purchase_value);
+            const eventDate = parseBrDate(row.created_at || "") || new Date().toISOString();
+
+            if (!name || isNaN(purchaseValue) || purchaseValue <= 0) {
+              result.errors.push({ row: i + 2, message: "Nome e valor da viagem são obrigatórios" });
+              result.skipped++;
+              setImportProgress(prev => ({ ...prev, current: i + 1 }));
+              continue;
+            }
+
+            // Find or create customer
+            let customerId: string | null = null;
+            if (cpf) {
+              const { data: found } = await supabase.from("customers").select("id, points_balance, money_balance").eq("brand_id", brandId).eq("cpf", cpf).limit(1);
+              if (found?.[0]) customerId = found[0].id;
+            }
+            if (!customerId && phone) {
+              const { data: found } = await supabase.from("customers").select("id, points_balance, money_balance").eq("brand_id", brandId).eq("phone", phone).limit(1);
+              if (found?.[0]) customerId = found[0].id;
+            }
+            if (!customerId && email) {
+              const { data: found } = await supabase.from("customers").select("id, points_balance, money_balance").eq("brand_id", brandId).eq("email", email).limit(1);
+              if (found?.[0]) customerId = found[0].id;
+            }
+
+            let currentPointsBalance = 0;
+            let currentMoneyBalance = 0;
+
+            if (!customerId) {
+              // Create customer
+              const { data: newCust, error: custErr } = await supabase.from("customers").insert({
+                name, cpf, phone, email: email || null,
+                brand_id: brandId, branch_id: branchId,
+                is_active: true, points_balance: 0, money_balance: 0,
+              }).select("id").single();
+              if (custErr) throw new Error(`Erro ao criar cliente "${name}": ${custErr.message}`);
+              customerId = newCust.id;
+            } else {
+              // Fetch current balance
+              const { data: custData } = await supabase.from("customers").select("points_balance, money_balance").eq("id", customerId).single();
+              currentPointsBalance = custData?.points_balance || 0;
+              currentMoneyBalance = custData?.money_balance || 0;
+            }
+
+            // Calculate points
+            let points = Math.floor(purchaseValue * pointsPerReal);
+            points = Math.min(points, maxPointsPerPurchase);
+            const money = points * moneyPerPoint;
+
+            // Insert earning_event
+            const { data: earningData, error: earningErr } = await supabase.from("earning_events").insert({
+              brand_id: brandId, branch_id: branchId, store_id: branchId,
+              customer_id: customerId, purchase_value: purchaseValue,
+              points_earned: points, money_earned: money,
+              source: "IMPORT" as any, status: "APPROVED" as any,
+              created_by_user_id: user.id, created_at: eventDate,
+              rule_snapshot_json: { points_per_real: pointsPerReal, money_per_point: moneyPerPoint, max_points_per_purchase: maxPointsPerPurchase } as any,
+            }).select("id").single();
+            if (earningErr) throw new Error(`Erro ao criar evento: ${earningErr.message}`);
+
+            // Insert ledger entry
+            await supabase.from("points_ledger").insert({
+              brand_id: brandId, branch_id: branchId, customer_id: customerId,
+              entry_type: "CREDIT" as any, points_amount: points, money_amount: money,
+              reason: `Importação CSV – R$ ${purchaseValue.toFixed(2)}`,
+              reference_type: "EARNING" as any, reference_id: earningData.id,
+              created_by_user_id: user.id,
+            });
+
+            // Update customer balance
+            await supabase.from("customers").update({
+              points_balance: currentPointsBalance + points,
+              money_balance: currentMoneyBalance + money,
+            }).eq("id", customerId);
+
+            result.success++;
+          } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }
+          setImportProgress(prev => ({ ...prev, current: i + 1 }));
+        }
       } else {
         // CRM_CONTACTS — batch insert
         for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
