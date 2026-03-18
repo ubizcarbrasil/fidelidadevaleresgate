@@ -1,30 +1,27 @@
 
-## Auditoria Enterprise — Vale Resgate (Completa)
 
-**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
+## Diagnóstico
 
-### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
-- ✅ RLS `rate_limit_entries` — política service_role adicionada
-- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
-- ✅ PII em vouchers anônimos — filtro adicionado
-- ✅ Token de sessão removido da URL do CRM iframe
-- ✅ Leaked password protection habilitado
+As três funcionalidades **já estão implementadas no código**:
 
-### Etapa 2 — Arquitetura ✅ AUDITADA
-- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
-- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
+1. **BrandSettingsPage** (linhas 89-97): Logo da marca usando `PlatformLogo` + `useBrandInfo`
+2. **StoreOwnerPanel → StoreOwnerDashboard** (linhas 522-534): Logo da loja com fallback para ícone `Store`
+3. **CsvImportPage** (linhas 106-113, 521+): Tipo `EARNING_EVENTS` com todos os 6 campos e lógica completa
 
-### Etapa 3 — Performance ✅ AUDITADA
-- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
-- ✅ Debounce 300ms em 10 páginas de busca
-- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
+### Possível causa
 
-### Etapa 4 — Testes ✅ AUDITADA
-- ✅ 95 testes existentes, todos passando
-- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
+Você está na rota `/index` (landing page) — **não** no painel do empreendedor nem no painel do lojista. Para ver as mudanças:
 
-### Etapa 5 — Documentos ✅ GERADOS
-- `AUDIT_REPORT.md` — Relatório completo com scores
-- `TECH_DEBT.md` — 13 débitos priorizados
-- `REMEDIATION_PLAN.md` — 3 fases com métricas
-- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
+- **Logo do empreendedor**: Faça login como `brand_admin` e acesse a página de Configurações/Métricas (BrandSettingsPage)
+- **Logo da loja**: Faça login como `store_admin` e acesse o Painel do Parceiro (StoreOwnerPanel) → aba "Início"
+- **Importação CSV**: Faça login como `brand_admin` e acesse a página de Importação CSV → selecione "Pontuação Manual" no dropdown
+
+### Plano
+
+Não há alterações de código necessárias — as funcionalidades já estão no código. O que posso fazer:
+
+1. **Verificar se o preview carregou a versão mais recente** — recarregar o preview
+2. **Testar via browser** navegando até as rotas corretas após login
+
+Se você confirmar que está logado e nas telas certas e ainda assim não vê as mudanças, posso investigar mais a fundo com as ferramentas de debug.
+
