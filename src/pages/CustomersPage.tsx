@@ -22,6 +22,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 
 const PAGE_SIZE = 20;
+const AUTO_SYNC_KEY = "crm_auto_sync_done";
 
 interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; cpf: string; email: string; }
 const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "", cpf: "", email: "" };
