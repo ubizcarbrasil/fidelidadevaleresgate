@@ -181,7 +181,11 @@ export default function BrandModulesPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2>
-        <p className="text-muted-foreground">Ative ou desative os módulos disponíveis para esta marca</p>
+        <p className="text-muted-foreground">
+          {isRootAdmin
+            ? "Ative ou desative os módulos disponíveis para esta marca"
+            : "Gerencie as funcionalidades ativas do seu programa"}
+        </p>
       </div>
 
       {isRootAdmin && (
