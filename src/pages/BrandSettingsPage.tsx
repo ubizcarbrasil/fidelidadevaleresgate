@@ -13,6 +13,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3
 
 export default function BrandSettingsPage() {
   const { currentBrandId } = useBrandGuard();
+  const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["brand-settings-metrics", currentBrandId],
