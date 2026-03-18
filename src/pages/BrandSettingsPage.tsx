@@ -77,6 +77,7 @@ export default function BrandSettingsPage() {
       { label: "Resgates (30d)", value: stats.redemptionCount, icon: ReceiptText, color: "text-primary" },
       { label: "Acúmulos (30d)", value: stats.earningCount, icon: TrendingUp, color: "text-primary" },
       { label: "R$ em pontos (30d)", value: `R$ ${stats.totalMoney.toFixed(2)}`, icon: ShoppingBag, color: "text-primary" },
+      { label: "Corridas pontuadas (30d)", value: stats.scoredRidesCount, icon: Car, color: "text-primary" },
     ];
   }, [stats]);
 
