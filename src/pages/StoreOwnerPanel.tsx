@@ -68,6 +68,7 @@ export default function StoreOwnerPanel() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const overrideStoreId = searchParams.get("storeId");
+  const qc = useQueryClient();
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StoreOwnerTab>("dashboard");
