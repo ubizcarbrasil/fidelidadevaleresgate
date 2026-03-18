@@ -134,7 +134,7 @@ function validateMappedRow(row: Record<string, string>, idx: number, importType:
   const errors: ValidationError[] = [];
   const rowNum = idx + 2;
 
-  if (importType === "STORES" || importType === "CUSTOMERS" || importType === "CRM_CONTACTS") {
+  if (importType === "STORES" || importType === "CUSTOMERS" || importType === "CRM_CONTACTS" || importType === "EARNING_EVENTS") {
     if (!row.name?.trim()) errors.push({ row: rowNum, field: "name", message: "Nome é obrigatório" });
   }
   if (importType === "OFFERS") {
@@ -157,6 +157,14 @@ function validateMappedRow(row: Record<string, string>, idx: number, importType:
     if (row.status?.trim()) {
       const st = row.status.trim().toUpperCase();
       if (!["ACTIVE", "INACTIVE", "EXPIRED"].includes(st)) errors.push({ row: rowNum, field: "status", message: "Status deve ser ACTIVE, INACTIVE ou EXPIRED" });
+    }
+  }
+  if (importType === "EARNING_EVENTS") {
+    if (!row.purchase_value?.trim() || isNaN(Number(row.purchase_value)) || Number(row.purchase_value) <= 0) {
+      errors.push({ row: rowNum, field: "purchase_value", message: "Valor da viagem deve ser numérico e positivo" });
+    }
+    if (row.created_at?.trim() && !parseBrDate(row.created_at)) {
+      errors.push({ row: rowNum, field: "created_at", message: "Data inválida" });
     }
   }
   if (importType === "CUSTOMERS") {
