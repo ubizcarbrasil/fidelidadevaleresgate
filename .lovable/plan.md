@@ -1,28 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Corrigir rotas bloqueadas no painel do empreendedor
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema identificado
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-Quatro páginas estão inacessíveis para o empreendedor, apesar de os módulos estarem habilitados no `brand_modules`. As causas são duas:
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-| Página | Rota | Problema |
-|---|---|---|
-| Achadinhos | `/affiliate-deals` | `ModuleGuard` usa `moduleKey="achadinhos"` mas a chave real no banco é `affiliate_deals` |
-| Categorias de Achadinhos | `/affiliate-categories` | Mesmo problema: `moduleKey="achadinhos"` vs `affiliate_deals` |
-| Import Mobile Achadinhos | `/affiliate-deals/import-mobile` | Mesmo problema |
-| Taxonomia | `/taxonomy` | Rota protegida com `RootGuard` em vez de `ModuleGuard` — bloqueia empreendedor |
-| Links do Perfil | `/profile-links` | Rota protegida com `RootGuard` em vez de `ModuleGuard` |
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-O sidebar do empreendedor (`BrandSidebar.tsx`) já usa as chaves corretas (`affiliate_deals`, `taxonomy`, `profile_links`), então os itens de menu aparecem — mas ao clicar, a rota redireciona para `/` por causa do guard errado.
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-### Solução
-
-**Arquivo:** `src/App.tsx`
-
-1. **Achadinhos** (3 rotas): Trocar `moduleKey="achadinhos"` por `moduleKey="affiliate_deals"`
-2. **Taxonomia**: Trocar `RootGuard` por `ModuleGuard moduleKey="taxonomy"`
-3. **Links do Perfil**: Trocar `RootGuard` por `ModuleGuard moduleKey="profile_links"`
-
-São 5 linhas alteradas, sem impacto em nenhuma outra funcionalidade. O ROOT continua acessando tudo porque `useBrandModules` retorna `true` para ROOT em todos os módulos.
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

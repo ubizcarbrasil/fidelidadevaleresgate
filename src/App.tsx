@@ -181,9 +181,9 @@ function AppRoutes() {
           <Route path="approve-store-rules" element={<ModuleGuard moduleKey="earn_points_store"><ApproveStoreRulesPage /></ModuleGuard>} />
           <Route path="tier-points-rules" element={<ModuleGuard moduleKey="earn_points_store"><TierPointsRulesPage /></ModuleGuard>} />
           
-          <Route path="affiliate-deals" element={<ModuleGuard moduleKey="achadinhos"><AffiliateDealsPage /></ModuleGuard>} />
-          <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="achadinhos"><AchadinhosMobileImportPage /></ModuleGuard>} />
-          <Route path="affiliate-categories" element={<ModuleGuard moduleKey="achadinhos"><AffiliateCategoriesPage /></ModuleGuard>} />
+          <Route path="affiliate-deals" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateDealsPage /></ModuleGuard>} />
+          <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="affiliate_deals"><AchadinhosMobileImportPage /></ModuleGuard>} />
+          <Route path="affiliate-categories" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateCategoriesPage /></ModuleGuard>} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
@@ -196,7 +196,7 @@ function AppRoutes() {
           
           <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
           <Route path="brand-permissions" element={<RootGuard><BrandPermissionOverflowPage /></RootGuard>} />
-          <Route path="taxonomy" element={<RootGuard><TaxonomyPage /></RootGuard>} />
+          <Route path="taxonomy" element={<ModuleGuard moduleKey="taxonomy"><TaxonomyPage /></ModuleGuard>} />
           <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
           <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
@@ -205,7 +205,7 @@ function AppRoutes() {
           <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
           <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
           <Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
-          <Route path="profile-links" element={<RootGuard><ProfileLinksConfigPage /></RootGuard>} />
+          <Route path="profile-links" element={<ModuleGuard moduleKey="profile_links"><ProfileLinksConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
           <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
