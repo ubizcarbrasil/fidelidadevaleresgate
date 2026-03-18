@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag } from "lucide-react";
+import { Settings, Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag, Car } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,12 +22,13 @@ export default function BrandSettingsPage() {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const isoStart = thirtyDaysAgo.toISOString();
 
-      const [customers, stores, earnings, redemptions, ledger] = await Promise.all([
+      const [customers, stores, earnings, redemptions, ledger, scoredRides] = await Promise.all([
         supabase.from("customers").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).eq("is_active", true),
         supabase.from("stores").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).eq("is_active", true),
         supabase.from("earning_events").select("points_earned, money_earned, created_at").eq("brand_id", currentBrandId).eq("status", "APPROVED").gte("created_at", isoStart),
         supabase.from("redemptions").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).gte("created_at", isoStart),
         supabase.from("points_ledger").select("entry_type, points_amount, created_at").eq("brand_id", currentBrandId).gte("created_at", isoStart).limit(1000),
+        supabase.from("machine_rides").select("id", { count: "exact", head: true }).eq("brand_id", currentBrandId).eq("ride_status", "FINALIZED").gt("points_credited", 0).gte("created_at", isoStart),
       ]);
 
       const totalPoints = (earnings.data || []).reduce((s, e) => s + (e.points_earned || 0), 0);
@@ -54,6 +55,7 @@ export default function BrandSettingsPage() {
         storeCount: stores.count || 0,
         earningCount: (earnings.data || []).length,
         redemptionCount: redemptions.count || 0,
+        scoredRidesCount: scoredRides.count || 0,
         totalPoints,
         totalMoney,
         chartData,
@@ -75,6 +77,7 @@ export default function BrandSettingsPage() {
       { label: "Resgates (30d)", value: stats.redemptionCount, icon: ReceiptText, color: "text-primary" },
       { label: "Acúmulos (30d)", value: stats.earningCount, icon: TrendingUp, color: "text-primary" },
       { label: "R$ em pontos (30d)", value: `R$ ${stats.totalMoney.toFixed(2)}`, icon: ShoppingBag, color: "text-primary" },
+      { label: "Corridas pontuadas (30d)", value: stats.scoredRidesCount, icon: Car, color: "text-primary" },
     ];
   }, [stats]);
 
