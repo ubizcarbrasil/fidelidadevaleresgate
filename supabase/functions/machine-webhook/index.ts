@@ -311,8 +311,6 @@ async function processFinalized(
     return { data: { message: "Ride has no value", machine_ride_id: machineRideId, points_credited: 0 } };
   }
 
-  const points = Math.floor(rideValue);
-
   // Resolve the branch to use for customer creation
   const customerBranchId = branchId || integration.branch_id;
 
@@ -329,6 +327,7 @@ async function processFinalized(
   // If not found, create a new customer
   let customerId: string | null = null;
   let pointsCredited = false;
+  let points = 0;
 
   if (!customer) {
     // Determine which branch to use
@@ -357,11 +356,11 @@ async function processFinalized(
           name: customerDisplayName,
           points_balance: 0,
           money_balance: 0,
-          ride_count: 1,
-          customer_tier: "BRONZE",
+          ride_count: 0,
+          customer_tier: "INICIANTE",
           crm_sync_status: "PENDING",
         })
-        .select("id, branch_id, points_balance")
+        .select(CUSTOMER_SELECT)
         .single();
 
       if (created) {
@@ -381,25 +380,65 @@ async function processFinalized(
     }
   }
 
-  if (customer && points > 0) {
+  if (customer) {
     customerId = customer.id;
-    await sb.from("points_ledger").insert({
+
+    // --- Tier-based points calculation ---
+    const customerTier = customer.customer_tier || "INICIANTE";
+    const { pointsPerReal, source: ruleSource } = await resolveEffectivePointsPerReal(
+      sb, brandId, customer.branch_id || branchId, customerTier
+    );
+    points = Math.floor(rideValue * pointsPerReal);
+    logger.info("Points calculated", { machineRideId, customerTier, pointsPerReal, ruleSource, rideValue, points });
+
+    if (points > 0) {
+      await sb.from("points_ledger").insert({
+        brand_id: brandId,
+        branch_id: customer.branch_id,
+        customer_id: customer.id,
+        entry_type: "CREDIT",
+        points_amount: points,
+        money_amount: rideValue,
+        reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)} (${customerTier} ×${pointsPerReal})`,
+        reference_type: "MACHINE_RIDE",
+      });
+
+      // Update points_balance, ride_count, and recalculate tier
+      const newRideCount = (customer.ride_count || 0) + 1;
+      const newTier = getTierFromRideCount(newRideCount);
+      await sb
+        .from("customers")
+        .update({
+          points_balance: (customer.points_balance || 0) + points,
+          ride_count: newRideCount,
+          customer_tier: newTier,
+        })
+        .eq("id", customer.id);
+
+      pointsCredited = true;
+    }
+
+    // --- Mirror to crm_contacts ---
+    const contactPayload: Record<string, unknown> = {
       brand_id: brandId,
-      branch_id: customer.branch_id,
+      branch_id: customer.branch_id || branchId,
       customer_id: customer.id,
-      entry_type: "CREDIT",
-      points_amount: points,
-      money_amount: rideValue,
-      reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)}`,
-      reference_type: "MACHINE_RIDE",
-    });
+      name: passengerName || customer.name || null,
+      phone: passengerPhone || customer.phone || null,
+      email: passengerEmail || null,
+      cpf: passengerCpf || null,
+      source: "MOBILITY_APP",
+      is_active: true,
+      ride_count: (customer.ride_count || 0) + 1,
+    };
+    // Remove null keys to avoid overwriting good data
+    Object.keys(contactPayload).forEach(k => { if (contactPayload[k] === null) delete contactPayload[k]; });
 
-    await sb
-      .from("customers")
-      .update({ points_balance: (customer.points_balance || 0) + points })
-      .eq("id", customer.id);
-
-    pointsCredited = true;
+    sb.from("crm_contacts")
+      .upsert(contactPayload, { onConflict: "brand_id,customer_id" })
+      .then(({ error }) => {
+        if (error) logger.error("crm_contacts upsert error", { error });
+      });
   }
 
   // Persist ride
