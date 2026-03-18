@@ -149,6 +149,8 @@ export default function StoreProfileTab({ store, onOpenWizard }: { store: any; o
     setForm(prev => ({ ...prev, faq_json: prev.faq_json.filter((_, i) => i !== index) }));
   };
 
+  const { percent, isComplete, missingSteps } = useStoreProfileCompleteness(store);
+
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-8">
       <div className="flex items-center justify-between">
@@ -157,6 +159,35 @@ export default function StoreProfileTab({ store, onOpenWizard }: { store: any; o
           <p className="text-sm text-muted-foreground">Configure o perfil público do seu estabelecimento</p>
         </div>
       </div>
+
+      {/* Completeness banner */}
+      {!isComplete && onOpenWizard && (
+        <Card className="rounded-2xl border-0 overflow-hidden bg-gradient-to-br from-primary/8 to-primary/3">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm">Perfil {percent}% completo</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {missingSteps.length} {missingSteps.length === 1 ? "item pendente" : "itens pendentes"}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/20">
+                <span className="text-sm font-bold text-primary">{percent}%</span>
+              </div>
+            </div>
+            <Progress value={percent} className="h-2" />
+            <div className="flex flex-wrap gap-1.5">
+              {missingSteps.slice(0, 3).map(s => (
+                <Badge key={s.key} variant="outline" className="text-[10px] bg-background/60">{s.label}</Badge>
+              ))}
+              {missingSteps.length > 3 && <Badge variant="outline" className="text-[10px] bg-background/60">+{missingSteps.length - 3}</Badge>}
+            </div>
+            <Button onClick={() => onOpenWizard()} className="w-full gap-2 rounded-xl" size="sm">
+              <ArrowRight className="h-4 w-4" /> Continuar configuração
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Logomarca */}
       <Card className="rounded-2xl">
