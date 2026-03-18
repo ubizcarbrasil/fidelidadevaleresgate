@@ -517,9 +517,18 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
         </Card>
       )}
 
-      <div>
-        <h1 className="text-xl font-bold">Painel Principal</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Visão geral do seu estabelecimento</p>
+      <div className="flex items-center gap-3">
+        {store.logo_url ? (
+          <img src={store.logo_url} alt={store.name} className="h-12 w-12 rounded-xl object-contain shrink-0 border border-border/30" />
+        ) : (
+          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Store className="h-6 w-6 text-primary" />
+          </div>
+        )}
+        <div>
+          <h1 className="text-xl font-bold">{store.name || "Painel Principal"}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Visão geral do seu estabelecimento</p>
+        </div>
       </div>
 
       {/* ── Period Selector ── */}

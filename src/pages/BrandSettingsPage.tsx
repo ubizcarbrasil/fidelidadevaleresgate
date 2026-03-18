@@ -86,11 +86,14 @@ export default function BrandSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <Settings className="h-6 w-6" /> Configurações — Métricas Gerais
-        </h2>
-        <p className="text-muted-foreground">Visão consolidada dos últimos 30 dias da sua marca</p>
+      <div className="flex items-center gap-4">
+        <PlatformLogo src={brandLogoUrl} alt={brandName || "Marca"} className="h-14 w-14 rounded-xl" fallbackLabel={brandName?.slice(0, 2)?.toUpperCase() || "VR"} />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            {brandName || "Configurações"} — Métricas Gerais
+          </h2>
+          <p className="text-muted-foreground">Visão consolidada dos últimos 30 dias da sua marca</p>
+        </div>
       </div>
 
       {/* KPI Cards */}
