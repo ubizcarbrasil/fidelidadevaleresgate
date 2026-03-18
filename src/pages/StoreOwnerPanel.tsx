@@ -195,6 +195,7 @@ export default function StoreOwnerPanel() {
     return <StoreEmptyState userId={user?.id} />;
   }
 
+  const profileCompleteness = useStoreProfileCompleteness(store);
   const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const filteredMoreItems = filteredMoreMenu.filter(item => {
