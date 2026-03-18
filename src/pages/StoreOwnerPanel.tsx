@@ -602,6 +602,23 @@ function StoreOwnerDashboard({ store, onOpenWizard }: { store: any; onOpenWizard
 
           <EmitterUpgradeCard store={store} />
 
+          {/* ── Recent Offers ── */}
+          {stats.cuponsEmitidos > 0 && (
+            <Card className="rounded-2xl border-0 shadow-sm kpi-card-gradient">
+              <CardHeader className="pb-2 px-4 pt-4">
+                <CardTitle className="text-xs flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg kpi-icon-blue flex items-center justify-center text-white">
+                    <Tag className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-foreground font-semibold">Últimas ofertas criadas</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 space-y-2">
+                <RecentOffersList storeId={store.id} />
+              </CardContent>
+            </Card>
+          )}
+
           {/* ── Expiring Soon Card ── */}
           {stats.proximosVencer.length > 0 && (
             <Card className="rounded-2xl border-0 shadow-sm glow-amber bg-gradient-to-br from-warning/8 to-warning/3">
