@@ -141,11 +141,20 @@ export default function BrandModulesPage() {
     return bm ? bm.is_enabled : false;
   };
 
-  const grouped = definitions?.reduce((acc, d) => {
+  // Filter definitions: non-ROOT users only see modules allocated to their brand
+  const visibleDefinitions = definitions?.filter(d => {
+    if (isRootAdmin) return true;
+    // Core modules always visible
+    if (d.is_core) return true;
+    // Only show if ROOT has allocated this module (has a brand_modules row)
+    return brandModules?.some(bm => bm.module_definition_id === d.id);
+  });
+
+  const grouped = visibleDefinitions?.reduce((acc, d) => {
     if (!acc[d.category]) acc[d.category] = [];
     acc[d.category].push(d);
     return acc;
-  }, {} as Record<string, typeof definitions>) || {};
+  }, {} as Record<string, typeof visibleDefinitions>) || {};
 
   // Sort categories: core first, then alphabetical
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
