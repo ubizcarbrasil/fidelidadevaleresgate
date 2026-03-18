@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 
 const PAGE_SIZE = 20;
+const AUTO_SYNC_KEY = "crm_auto_sync_done";
 
 interface CustomerForm { name: string; phone: string; brand_id: string; branch_id: string; cpf: string; email: string; }
 const emptyForm: CustomerForm = { name: "", phone: "", brand_id: "", branch_id: "", cpf: "", email: "" };
@@ -39,6 +40,23 @@ export default function CustomersPage() {
   const [crmFilter, setCrmFilter] = useState<string>("");
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const autoSyncTriggered = useRef(false);
+
+  const { data: orphanCount } = useQuery({
+    queryKey: ["crm-orphan-count", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return 0;
+      const { count, error } = await supabase
+        .from("crm_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("brand_id", currentBrandId)
+        .is("customer_id", null)
+        .eq("is_active", true);
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: !!currentBrandId,
+  });
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkForm, setBulkForm] = useState({ name: "", cpf: "", phone: "" });
 
@@ -47,6 +65,14 @@ export default function CustomersPage() {
       setForm(f => ({ ...f, brand_id: currentBrandId }));
     }
   }, [isRootAdmin, currentBrandId]);
+
+  // Auto-sync orphan CRM contacts on page load
+  useEffect(() => {
+    if (orphanCount && orphanCount > 0 && !autoSyncTriggered.current && !syncToCrmMutation.isPending) {
+      autoSyncTriggered.current = true;
+      syncToCrmMutation.mutate();
+    }
+  }, [orphanCount]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["customers", debouncedSearch, page, currentBrandId, tierFilter, crmFilter],

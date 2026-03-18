@@ -1,34 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Diagnóstico
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-Os contatos do CRM (`crm_contacts`) só aparecem na página de Clientes **após clicar no botão "Sincronizar CRM"**. Esse botão faz um "Pull" que importa contatos órfãos (`customer_id IS NULL`) do `crm_contacts` para a tabela `customers`. Sem clicar, eles ficam invisíveis.
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-## Plano: Sincronização automática ao carregar a página
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-Em vez de exigir clique manual, disparar a sincronização Pull automaticamente quando a página de Clientes carrega e existem contatos órfãos no CRM.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-### Alteração
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**Arquivo:** `src/pages/CustomersPage.tsx`
-
-1. **Adicionar query de contagem de órfãos** — Um `useQuery` leve que conta quantos `crm_contacts` com `customer_id IS NULL` existem para a marca atual.
-
-2. **Auto-sync via `useEffect`** — Quando a contagem de órfãos > 0, disparar automaticamente o `syncToCrmMutation` (a mesma lógica do botão CRM), com um flag para evitar re-execução em loop.
-
-3. **Feedback visual** — Mostrar um toast discreto informando quantos contatos foram importados automaticamente do CRM.
-
-### Fluxo resultante
-
-```text
-Página Clientes carrega
-  └─ Query: SELECT count(*) FROM crm_contacts WHERE customer_id IS NULL AND brand_id = X
-       ├─ 0 órfãos → nada acontece
-       └─ N órfãos → auto-sync
-            └─ Importa N contatos para customers
-            └─ Toast: "N contatos importados do CRM"
-            └─ Lista atualiza automaticamente
-```
-
-Nenhuma migração necessária. Alteração apenas no frontend.
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
