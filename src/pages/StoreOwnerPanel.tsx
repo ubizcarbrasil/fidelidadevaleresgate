@@ -327,7 +327,7 @@ export default function StoreOwnerPanel() {
               branchId={store.branch_id}
               brandId={store.brand_id}
               editOffer={editingOffer}
-              onClose={() => { setShowWizard(false); setEditingOffer(null); }}
+              onClose={() => { setShowWizard(false); setEditingOffer(null); qc.invalidateQueries({ queryKey: ["store-offers", store.id] }); qc.invalidateQueries({ queryKey: ["store-dashboard-stats", store.id] }); }}
             />
           ) : (
             <StoreCouponsTab
