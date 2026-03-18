@@ -202,6 +202,8 @@ export default function StoreOwnerPanel() {
     return () => { supabase.removeChannel(channel); };
   }, [store?.id]);
 
+  const profileCompleteness = useStoreProfileCompleteness(store);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background px-4 pt-6 pwa-safe-top space-y-4">
@@ -216,8 +218,6 @@ export default function StoreOwnerPanel() {
   if (!store) {
     return <StoreEmptyState userId={user?.id} />;
   }
-
-  const profileCompleteness = useStoreProfileCompleteness(store);
   const isAdminOverride = !!overrideStoreId && (isRootAdmin || roles.some(r => r.brand_id));
   const isEmitter = store.store_type === "EMISSORA" || store.store_type === "MISTA";
   const filteredMoreItems = filteredMoreMenu.filter(item => {
