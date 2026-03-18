@@ -215,7 +215,7 @@ function applyMapping(rows: Record<string, string>[], mapping: Record<string, st
   });
 }
 
-type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS" | "COUPONS";
+type ImportType = "STORES" | "OFFERS" | "CUSTOMERS" | "CRM_CONTACTS" | "COUPONS" | "EARNING_EVENTS";
 type Step = "config" | "mapping" | "preview" | "importing" | "done";
 
 function getTargetFields(importType: ImportType): TargetField[] {
@@ -225,6 +225,7 @@ function getTargetFields(importType: ImportType): TargetField[] {
     case "CUSTOMERS": return CUSTOMER_FIELDS;
     case "CRM_CONTACTS": return CRM_CONTACT_FIELDS;
     case "COUPONS": return COUPON_FIELDS;
+    case "EARNING_EVENTS": return EARNING_EVENT_FIELDS;
   }
 }
 
