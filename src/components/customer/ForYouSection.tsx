@@ -13,7 +13,7 @@ import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { useRankedOffers } from "@/hooks/useRankedOffers";
 
 type OfferWithStore = Tables<"offers"> & {
-  stores: { name: string; logo_url: string | null } | null;
+  stores: { name: string; logo_url: string | null; banner_url?: string | null } | null;
 };
 
 export default function ForYouSection() {
