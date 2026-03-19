@@ -46,7 +46,7 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
     if (error) throw error;
 
     return (data || []).map((r: Record<string, unknown>) => {
-      const offersData = r.offers as { title?: string; value_rescue?: number; min_purchase?: number; coupon_type?: string } | null;
+      const offersData = r.offers as { title?: string; value_rescue?: number; min_purchase?: number; coupon_type?: string; end_at?: string | null } | null;
       const customersData = r.customers as { name?: string } | null;
       const branchesData = r.branches as { name?: string } | null;
       return {
