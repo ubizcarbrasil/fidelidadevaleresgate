@@ -6,7 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 export type OfferRow = Tables<"offers">;
 
 export interface OfferWithStore extends OfferRow {
-  stores?: { name: string; logo_url: string | null; taxonomy_segment_id?: string | null } | null;
+  stores?: { name: string; logo_url: string | null; banner_url?: string | null; taxonomy_segment_id?: string | null } | null;
 }
 
 export interface StoreInfo {

@@ -151,7 +151,7 @@ function PageSectionBlock({ section, branchId, brandId, primary, fg, fontHeading
       if (source.source_type === "OFFERS" || templateType?.includes("OFFERS")) {
         const { data } = await supabase
           .from("offers")
-          .select("*, stores(name, logo_url)")
+          .select("*, stores(name, logo_url, banner_url)")
           .eq("is_active", true)
           .eq("status", "ACTIVE")
           .order("created_at", { ascending: false })

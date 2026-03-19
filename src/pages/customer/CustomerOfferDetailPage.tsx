@@ -536,7 +536,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               {/* Hero image */}
               <div className="relative">
                 <SafeImage
-                  src={offer.image_url}
+                  src={offer.image_url || offer.stores?.banner_url}
                   fallbackSrc={offer.stores?.logo_url}
                   alt={offer.title}
                   className="w-full h-64 object-cover"
