@@ -187,12 +187,10 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
             <span>·</span>
             <span className="font-mono">{maskCpf(redemption.customer_cpf)}</span>
           </div>
-          {redemption.customer_phone && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-              <Phone className="h-3 w-3" />
-              <span>{redemption.customer_phone}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+            <Phone className="h-3 w-3" />
+            <span>{redemption.customer_phone || <span className="italic text-muted-foreground/60">Não informado</span>}</span>
+          </div>
         </div>
         <div className="text-right shrink-0">
           <p className="text-sm font-bold">R$ {redemption.value_rescue.toFixed(2)}</p>
