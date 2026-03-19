@@ -346,7 +346,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
 
         let query = supabase
           .from("offers")
-          .select("*, stores(name, logo_url)")
+           .select("*, stores(name, logo_url, banner_url)")
           .eq("is_active", true)
           .eq("status", "ACTIVE")
           .order(orderCol, { ascending: false })
@@ -865,7 +865,7 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
     switch (linkType) {
       case "offer":
         if (targetId) {
-          const { data } = await supabase.from("offers").select("*, stores(name, logo_url)").eq("id", targetId).maybeSingle();
+          const { data } = await supabase.from("offers").select("*, stores(name, logo_url, banner_url)").eq("id", targetId).maybeSingle();
           if (data) openOffer(data);
         }
         break;

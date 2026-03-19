@@ -23,7 +23,7 @@ import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 type Offer = Tables<"offers">;
 
 interface OfferWithStore extends Offer {
-  stores?: { name: string; logo_url: string | null } | null;
+  stores?: { name: string; logo_url: string | null; banner_url?: string | null } | null;
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -66,7 +66,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
     const fetch = async () => {
       const { data } = await supabase
         .from("offers")
-        .select("*, stores(name, logo_url)")
+        .select("*, stores(name, logo_url, banner_url)")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("status", "ACTIVE")
@@ -308,14 +308,27 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               <>
                 {/* Store banner */}
                 <div className="relative">
-                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                  {offer.stores?.banner_url ? (
                     <SafeImage
-                      src={offer.stores?.logo_url}
+                      src={offer.stores.banner_url}
                       alt={offer.stores?.name || "Loja"}
-                      className="max-h-32 max-w-[80%] object-contain"
-                      fallback={<Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />}
+                      className="w-full h-48 object-cover"
+                      fallback={
+                        <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                          <Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />
+                        </div>
+                      }
                     />
-                  </div>
+                  ) : (
+                    <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                      <SafeImage
+                        src={offer.stores?.logo_url}
+                        alt={offer.stores?.name || "Loja"}
+                        className="max-h-32 max-w-[80%] object-contain"
+                        fallback={<Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />}
+                      />
+                    </div>
+                  )}
                   <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
@@ -523,7 +536,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               {/* Hero image */}
               <div className="relative">
                 <SafeImage
-                  src={offer.image_url}
+                  src={offer.image_url || offer.stores?.banner_url}
                   fallbackSrc={offer.stores?.logo_url}
                   alt={offer.title}
                   className="w-full h-64 object-cover"

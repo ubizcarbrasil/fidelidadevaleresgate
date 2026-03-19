@@ -13,7 +13,7 @@ import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { useRankedOffers } from "@/hooks/useRankedOffers";
 
 type OfferWithStore = Tables<"offers"> & {
-  stores: { name: string; logo_url: string | null } | null;
+  stores: { name: string; logo_url: string | null; banner_url?: string | null } | null;
 };
 
 export default function ForYouSection() {
@@ -32,7 +32,7 @@ export default function ForYouSection() {
       if (rankedIds.length > 0) {
         const { data: fullOffers } = await supabase
           .from("offers")
-          .select("*, stores(name, logo_url)")
+          .select("*, stores(name, logo_url, banner_url)")
           .in("id", rankedIds.slice(0, 12));
 
         const offerMap = new Map((fullOffers || []).map((o: OfferWithStore) => [o.id, o]));
@@ -42,7 +42,7 @@ export default function ForYouSection() {
       // Fallback: fetch top offers by likes
       const { data } = await supabase
         .from("offers")
-        .select("*, stores(name, logo_url)")
+        .select("*, stores(name, logo_url, banner_url)")
         .eq("branch_id", selectedBranch!.id)
         .eq("brand_id", brand!.id)
         .eq("is_active", true)

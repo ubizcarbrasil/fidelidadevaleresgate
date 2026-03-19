@@ -65,7 +65,7 @@ export default function CustomerOffersPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("offers")
-        .select("*, stores(name, logo_url, taxonomy_segment_id)")
+        .select("*, stores(name, logo_url, banner_url, taxonomy_segment_id)")
         .eq("branch_id", selectedBranch!.id)
         .eq("brand_id", brand!.id)
         .eq("status", "ACTIVE")
