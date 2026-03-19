@@ -1,29 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Mostrar dados completos dos clientes nos resgates do lojista
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema
-A aba "Resgates" do painel do lojista mostra apenas nome do cliente e CPF. Falta telefone, qual oferta resgatou (já tem parcialmente) e a validade da oferta.
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-### Solução
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-**Arquivo:** `src/components/store-owner/StoreRedeemTab.tsx`
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-1. Alterar a query para incluir `phone` dos clientes e `end_at` das ofertas:
-   - De: `customers(name)` → `customers(name, phone)`
-   - De: `offers!inner(title, value_rescue, min_purchase, store_id, coupon_type)` → adicionar `end_at`
-2. Mapear `customer_phone` e `offer_end_at` no objeto de retorno
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-**Arquivo:** `src/components/store-owner/RedemptionHistoryList.tsx`
-
-1. Adicionar `customer_phone` e `offer_end_at` ao tipo `PendingRedemption`
-2. No card pendente: exibir telefone do cliente abaixo do nome e validade da oferta nos detalhes
-3. Na lista de "Baixas Recentes": exibir telefone e oferta (já mostra oferta, adicionar telefone)
-
-### Campos exibidos por resgate
-- Nome do cliente
-- Telefone do cliente
-- Título da oferta resgatada
-- Validade da oferta (`end_at`)
-- Dados já existentes (PIN, crédito, compra mínima, etc.)
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs

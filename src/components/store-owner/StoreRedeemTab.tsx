@@ -37,7 +37,7 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
 
     const { data, error } = await supabase
       .from("redemptions")
-      .select("*, offers!inner(title, value_rescue, min_purchase, store_id, coupon_type), customers(name), branches(name)")
+      .select("*, offers!inner(title, value_rescue, min_purchase, store_id, coupon_type, end_at), customers(name, phone), branches(name)")
       .in("offer_id", offerIds)
       .in("status", ["PENDING", "USED"])
       .order("created_at", { ascending: false })
@@ -46,8 +46,8 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
     if (error) throw error;
 
     return (data || []).map((r: Record<string, unknown>) => {
-      const offersData = r.offers as { title?: string; value_rescue?: number; min_purchase?: number; coupon_type?: string } | null;
-      const customersData = r.customers as { name?: string } | null;
+      const offersData = r.offers as { title?: string; value_rescue?: number; min_purchase?: number; coupon_type?: string; end_at?: string | null } | null;
+      const customersData = r.customers as { name?: string; phone?: string | null } | null;
       const branchesData = r.branches as { name?: string } | null;
       return {
         id: r.id as string,
@@ -59,10 +59,12 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
         customer_cpf: (r.customer_cpf as string) || "",
         offer_title: offersData?.title || "",
         customer_name: customersData?.name || "—",
+        customer_phone: customersData?.phone || "",
         branch_name: branchesData?.name || "",
         value_rescue: Number(offersData?.value_rescue || 0),
         min_purchase: Number(offersData?.min_purchase || 0),
         coupon_type: offersData?.coupon_type || "STORE",
+        offer_end_at: offersData?.end_at || null,
         purchase_value: (r.purchase_value as number) || null,
         credit_value_applied: (r.credit_value_applied as number) || null,
       } satisfies PendingRedemption;

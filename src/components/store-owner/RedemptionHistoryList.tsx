@@ -7,8 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Loader2, Ticket, Clock, User, CreditCard, DollarSign, KeyRound } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle2, Loader2, Ticket, Clock, User, CreditCard, DollarSign, KeyRound, Phone, CalendarClock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useRedeemMutation } from "@/hooks/useRedeemMutation";
@@ -24,10 +23,12 @@ export interface PendingRedemption {
   customer_cpf: string;
   offer_title: string;
   customer_name: string;
+  customer_phone: string;
   branch_name: string;
   value_rescue: number;
   min_purchase: number;
   coupon_type: string;
+  offer_end_at: string | null;
   purchase_value: number | null;
   credit_value_applied: number | null;
 }
@@ -105,7 +106,14 @@ export default function RedemptionHistoryList({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{r.offer_title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {r.customer_name} · {r.used_at ? format(new Date(r.used_at), "dd/MM HH:mm", { locale: ptBR }) : "—"}
+                    {r.customer_name}
+                    {r.customer_phone && <> · <Phone className="inline h-3 w-3" /> {r.customer_phone}</>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.used_at ? format(new Date(r.used_at), "dd/MM HH:mm", { locale: ptBR }) : "—"}
+                    {r.offer_end_at && (
+                      <> · Validade: {format(new Date(r.offer_end_at), "dd/MM/yyyy", { locale: ptBR })}</>
+                    )}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -177,6 +185,12 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
             <span>·</span>
             <span className="font-mono">{maskCpf(redemption.customer_cpf)}</span>
           </div>
+          {redemption.customer_phone && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+              <Phone className="h-3 w-3" />
+              <span>{redemption.customer_phone}</span>
+            </div>
+          )}
         </div>
         <div className="text-right shrink-0">
           <p className="text-sm font-bold">R$ {redemption.value_rescue.toFixed(2)}</p>
@@ -212,6 +226,13 @@ const PendingRedemptionCard = React.memo(function PendingRedemptionCard({
               <span className="text-muted-foreground">Em:</span>
               <strong>{format(new Date(redemption.created_at), "dd/MM HH:mm", { locale: ptBR })}</strong>
             </div>
+            {redemption.offer_end_at && (
+              <div className="flex items-center gap-1.5 bg-background/60 rounded-lg p-2 col-span-2">
+                <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">Validade da oferta:</span>
+                <strong>{format(new Date(redemption.offer_end_at), "dd/MM/yyyy", { locale: ptBR })}</strong>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
