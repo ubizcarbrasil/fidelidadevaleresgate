@@ -1,27 +1,30 @@
 
+## Auditoria Enterprise — Vale Resgate (Completa)
 
-## Plano: Corrigir filtragem de módulos no console Branch Admin
+**Score Final: 71/100** | **Status: Condicionalmente Aprovado**
 
-### Problema
-O console "Gestão Regional" (Branch Admin) mostra **todos** os itens de menu, ignorando os módulos que o empreendedor ativou/desativou. Isso acontece porque:
+### Etapa 1 — Segurança & RLS ✅ CONCLUÍDA
+- ✅ RLS `rate_limit_entries` — política service_role adicionada
+- ✅ Políticas `true` em `affiliate_deal_categories` — substituídas por brand scope
+- ✅ PII em vouchers anônimos — filtro adicionado
+- ✅ Token de sessão removido da URL do CRM iframe
+- ✅ Leaked password protection habilitado
 
-1. O role `branch_admin` pode não ter `brand_id` preenchido na tabela `user_roles` (só tem `branch_id`)
-2. `useBrandGuard` retorna `currentBrandId = null`
-3. `useBrandModules` desabilita a query (pois `enabled: !!currentBrandId`)
-4. O fallback `if (!brandModules) return true` libera **tudo**
+### Etapa 2 — Arquitetura ✅ AUDITADA
+- ✅ Tipos duplicados auth consolidados (AuthContext → modules/auth/types)
+- ⚠️ strict: false, 1450+ any, zero React.memo (documentados em TECH_DEBT.md)
 
-### Solução
-Tornar o hook `useBrandModules` capaz de resolver o `brand_id` a partir do `branch_id` quando necessário.
+### Etapa 3 — Performance ✅ AUDITADA
+- ✅ Paginação server-side em pages principais (stores, offers, redemptions, customers)
+- ✅ Debounce 300ms em 10 páginas de busca
+- ⚠️ SW não registrado, listagens menores sem paginação (documentados)
 
-**Arquivo:** `src/hooks/useBrandModules.ts`
+### Etapa 4 — Testes ✅ AUDITADA
+- ✅ 95 testes existentes, todos passando
+- ❌ Cobertura <5%, zero E2E (documentados em REMEDIATION_PLAN.md)
 
-1. Importar `currentBranchId` do `useBrandGuard`
-2. Adicionar uma query auxiliar que busca `brand_id` na tabela `branches` quando `currentBrandId` é null mas `currentBranchId` existe
-3. Usar o `brand_id` resolvido (direto ou via branch) para a query principal de módulos
-4. Alterar o fallback: quando não há módulos carregados e **não é ROOT**, retornar `false` (esconder por padrão) em vez de `true`
-
-### Impacto
-- Corrige Branch Admin, Operator e qualquer papel que tenha apenas `branch_id` no role
-- Nenhuma alteração no banco de dados
-- Um único arquivo modificado
-
+### Etapa 5 — Documentos ✅ GERADOS
+- `AUDIT_REPORT.md` — Relatório completo com scores
+- `TECH_DEBT.md` — 13 débitos priorizados
+- `REMEDIATION_PLAN.md` — 3 fases com métricas
+- `ARCHITECTURE_DECISION_RECORD.md` — 9 ADRs
