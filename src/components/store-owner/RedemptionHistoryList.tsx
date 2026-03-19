@@ -107,13 +107,15 @@ export default function RedemptionHistoryList({
                   <p className="text-sm font-semibold truncate">{r.offer_title}</p>
                   <p className="text-xs text-muted-foreground">
                     {r.customer_name}
-                    {r.customer_phone && <> · <Phone className="inline h-3 w-3" /> {r.customer_phone}</>}
+                    {r.customer_phone
+                      ? <> · <Phone className="inline h-3 w-3" /> {r.customer_phone}</>
+                      : <> · <span className="italic text-muted-foreground/60">Tel. não informado</span></>}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {r.used_at ? format(new Date(r.used_at), "dd/MM HH:mm", { locale: ptBR }) : "—"}
-                    {r.offer_end_at && (
-                      <> · Validade: {format(new Date(r.offer_end_at), "dd/MM/yyyy", { locale: ptBR })}</>
-                    )}
+                    {r.offer_end_at
+                      ? <> · Validade: {format(new Date(r.offer_end_at), "dd/MM/yyyy", { locale: ptBR })}</>
+                      : <> · <span className="italic text-muted-foreground/60">Sem validade definida</span></>}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
