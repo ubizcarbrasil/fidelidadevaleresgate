@@ -1,13 +1,15 @@
+import { useEffect, useMemo } from "react";
 import { StoreVoucherData, OfferPurpose } from "../types";
 import { Label } from "@/components/ui/label";
 import { Coins, Gift, RefreshCw } from "lucide-react";
+import { useBrandModules } from "@/hooks/useBrandModules";
 
 interface Props {
   data: StoreVoucherData;
   update: (p: Partial<StoreVoucherData>) => void;
 }
 
-const purposes: { value: OfferPurpose; label: string; description: string; icon: typeof Coins; color: string }[] = [
+const ALL_PURPOSES: { value: OfferPurpose; label: string; description: string; icon: typeof Coins; color: string }[] = [
   {
     value: "EARN",
     label: "Ganhe Pontos",
@@ -32,6 +34,20 @@ const purposes: { value: OfferPurpose; label: string; description: string; icon:
 ];
 
 export default function StepPurpose({ data, update }: Props) {
+  const { isModuleEnabled } = useBrandModules();
+  const hasEmitter = isModuleEnabled("multi_emitter");
+
+  const purposes = useMemo(
+    () => hasEmitter ? ALL_PURPOSES : ALL_PURPOSES.filter((p) => p.value === "REDEEM"),
+    [hasEmitter],
+  );
+
+  // Auto-select when only one option
+  useEffect(() => {
+    if (purposes.length === 1 && data.offer_purpose !== purposes[0].value) {
+      update({ offer_purpose: purposes[0].value });
+    }
+  }, [purposes]);
   return (
     <div className="space-y-4">
       <Label className="text-base font-semibold">Finalidade da Oferta</Label>
