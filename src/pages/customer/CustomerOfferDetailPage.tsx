@@ -66,7 +66,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
     const fetch = async () => {
       const { data } = await supabase
         .from("offers")
-        .select("*, stores(name, logo_url)")
+        .select("*, stores(name, logo_url, banner_url)")
         .eq("branch_id", selectedBranch.id)
         .eq("brand_id", brand.id)
         .eq("status", "ACTIVE")
