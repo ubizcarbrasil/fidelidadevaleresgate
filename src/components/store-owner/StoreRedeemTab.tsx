@@ -37,7 +37,7 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
 
     const { data, error } = await supabase
       .from("redemptions")
-      .select("*, offers!inner(title, value_rescue, min_purchase, store_id, coupon_type), customers(name), branches(name)")
+      .select("*, offers!inner(title, value_rescue, min_purchase, store_id, coupon_type, end_at), customers(name, phone), branches(name)")
       .in("offer_id", offerIds)
       .in("status", ["PENDING", "USED"])
       .order("created_at", { ascending: false })
