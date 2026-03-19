@@ -32,7 +32,7 @@ export default function ForYouSection() {
       if (rankedIds.length > 0) {
         const { data: fullOffers } = await supabase
           .from("offers")
-          .select("*, stores(name, logo_url)")
+          .select("*, stores(name, logo_url, banner_url)")
           .in("id", rankedIds.slice(0, 12));
 
         const offerMap = new Map((fullOffers || []).map((o: OfferWithStore) => [o.id, o]));
