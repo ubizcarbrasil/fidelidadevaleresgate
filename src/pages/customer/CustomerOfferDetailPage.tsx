@@ -23,7 +23,7 @@ import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 type Offer = Tables<"offers">;
 
 interface OfferWithStore extends Offer {
-  stores?: { name: string; logo_url: string | null } | null;
+  stores?: { name: string; logo_url: string | null; banner_url?: string | null } | null;
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
