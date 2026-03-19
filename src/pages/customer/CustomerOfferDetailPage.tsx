@@ -308,14 +308,27 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
               <>
                 {/* Store banner */}
                 <div className="relative">
-                  <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                  {offer.stores?.banner_url ? (
                     <SafeImage
-                      src={offer.stores?.logo_url}
+                      src={offer.stores.banner_url}
                       alt={offer.stores?.name || "Loja"}
-                      className="max-h-32 max-w-[80%] object-contain"
-                      fallback={<Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />}
+                      className="w-full h-48 object-cover"
+                      fallback={
+                        <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                          <Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />
+                        </div>
+                      }
                     />
-                  </div>
+                  ) : (
+                    <div className="w-full h-48 flex items-center justify-center" style={{ backgroundColor: brandAlpha(primary, 0.03) }}>
+                      <SafeImage
+                        src={offer.stores?.logo_url}
+                        alt={offer.stores?.name || "Loja"}
+                        className="max-h-32 max-w-[80%] object-contain"
+                        fallback={<Store className="h-16 w-16" style={{ color: brandAlpha(primary, 0.19) }} />}
+                      />
+                    </div>
+                  )}
                   <button onClick={onBack} className="absolute top-4 left-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center shadow-md">
                     <ArrowLeft className="h-5 w-5 text-foreground" />
                   </button>
