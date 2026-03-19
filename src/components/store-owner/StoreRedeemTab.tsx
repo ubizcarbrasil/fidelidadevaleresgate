@@ -59,10 +59,12 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
         customer_cpf: (r.customer_cpf as string) || "",
         offer_title: offersData?.title || "",
         customer_name: customersData?.name || "—",
+        customer_phone: customersData?.phone || "",
         branch_name: branchesData?.name || "",
         value_rescue: Number(offersData?.value_rescue || 0),
         min_purchase: Number(offersData?.min_purchase || 0),
         coupon_type: offersData?.coupon_type || "STORE",
+        offer_end_at: offersData?.end_at || null,
         purchase_value: (r.purchase_value as number) || null,
         credit_value_applied: (r.credit_value_applied as number) || null,
       } satisfies PendingRedemption;
