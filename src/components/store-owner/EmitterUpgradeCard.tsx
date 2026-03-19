@@ -60,7 +60,10 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
     },
   });
 
-  // Don't show if already EMISSORA or MISTA
+  const { isModuleEnabled } = useBrandModules();
+
+  // Don't show if module not enabled or already EMISSORA/MISTA
+  if (!isModuleEnabled("multi_emitter")) return null;
   if (store.store_type !== "RECEPTORA") return null;
 
   const hasPending = pendingRequest?.status === "PENDING";
