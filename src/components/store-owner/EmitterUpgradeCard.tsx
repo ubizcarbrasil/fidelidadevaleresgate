@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useBrandModules } from "@/hooks/useBrandModules";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,10 @@ export default function EmitterUpgradeCard({ store, onUpgraded }: Props) {
     },
   });
 
-  // Don't show if already EMISSORA or MISTA
+  const { isModuleEnabled } = useBrandModules();
+
+  // Don't show if module not enabled or already EMISSORA/MISTA
+  if (!isModuleEnabled("multi_emitter")) return null;
   if (store.store_type !== "RECEPTORA") return null;
 
   const hasPending = pendingRequest?.status === "PENDING";
