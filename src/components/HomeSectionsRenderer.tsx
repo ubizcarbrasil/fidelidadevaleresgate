@@ -346,7 +346,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
 
         let query = supabase
           .from("offers")
-          .select("*, stores(name, logo_url)")
+           .select("*, stores(name, logo_url, banner_url)")
           .eq("is_active", true)
           .eq("status", "ACTIVE")
           .order(orderCol, { ascending: false })
