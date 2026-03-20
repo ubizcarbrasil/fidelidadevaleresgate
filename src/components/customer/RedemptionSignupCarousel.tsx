@@ -193,7 +193,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("name", e.target.value)}
                 placeholder="Nome completo"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 autoFocus
               />
             )}
