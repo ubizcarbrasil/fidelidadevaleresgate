@@ -224,7 +224,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("otp", e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
                 className="w-full text-center text-3xl font-mono tracking-[0.4em] px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 maxLength={6}
                 autoFocus
               />
