@@ -182,7 +182,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("cpf", formatCpf(e.target.value))}
                 placeholder="000.000.000-00"
                 className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 maxLength={14}
                 autoFocus
               />
@@ -193,7 +193,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("name", e.target.value)}
                 placeholder="Nome completo"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 autoFocus
               />
             )}
@@ -203,7 +203,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("email", e.target.value)}
                 placeholder="seu@email.com"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 autoFocus
               />
             )}
@@ -213,7 +213,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("phone", formatPhone(e.target.value))}
                 placeholder="(11) 99999-9999"
                 className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 maxLength={15}
                 autoFocus
               />
@@ -224,7 +224,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("otp", e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
                 className="w-full text-center text-3xl font-mono tracking-[0.4em] px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 maxLength={6}
                 autoFocus
               />
@@ -235,7 +235,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("password", e.target.value)}
                 placeholder="Mínimo 6 caracteres"
                 className="w-full text-center text-lg px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 autoFocus
               />
             )}
