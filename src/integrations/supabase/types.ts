@@ -5678,6 +5678,28 @@ export type Database = {
         Returns: boolean
       }
       rate_limit_cleanup: { Args: never; Returns: undefined }
+      rpc_get_store_owner_redemptions: {
+        Args: { p_page?: number; p_page_size?: number; p_store_id: string }
+        Returns: {
+          branch_name: string
+          coupon_type: string
+          created_at: string
+          credit_value_applied: number
+          customer_cpf: string
+          customer_name: string
+          customer_phone: string
+          expires_at: string
+          id: string
+          min_purchase: number
+          offer_end_at: string
+          offer_title: string
+          purchase_value: number
+          status: string
+          token: string
+          used_at: string
+          value_rescue: number
+        }[]
+      }
       seed_affiliate_categories: {
         Args: { p_brand_id: string }
         Returns: undefined
