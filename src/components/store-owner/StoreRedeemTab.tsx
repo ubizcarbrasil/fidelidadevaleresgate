@@ -1,12 +1,14 @@
 /**
- * Store owner redemption tab — refactored into sub-components.
- * Uses RedeemPinInput, RedemptionHistoryList and useRedeemMutation.
+ * Store owner redemption tab — uses RPC for reliable data fetching.
  */
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import RedeemPinInput from "./RedeemPinInput";
 import RedemptionHistoryList, { type PendingRedemption } from "./RedemptionHistoryList";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface StoreRedeemTabProps {
   store: {
@@ -21,58 +23,41 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
   const qc = useQueryClient();
   const [page, setPage] = useState(0);
   const [allItems, setAllItems] = useState<PendingRedemption[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchPage = useCallback(async (pageNum: number) => {
-    const { data: offers } = await supabase
-      .from("offers")
-      .select("id")
-      .eq("store_id", store.id);
-    const offerIds = (offers || []).map((o: { id: string }) => o.id);
-    if (!offerIds.length) return [];
-
-    const from = pageNum * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-
-    const { data, error } = await supabase
-      .from("redemptions")
-      .select("*, offers!inner(title, value_rescue, min_purchase, store_id, coupon_type, end_at), customers(name, phone), branches(name)")
-      .in("offer_id", offerIds)
-      .in("status", ["PENDING", "USED"])
-      .order("created_at", { ascending: false })
-      .range(from, to);
+    const { data, error } = await supabase.rpc("rpc_get_store_owner_redemptions", {
+      p_store_id: store.id,
+      p_page: pageNum,
+      p_page_size: PAGE_SIZE,
+    });
 
     if (error) throw error;
 
-    return (data || []).map((r: Record<string, unknown>) => {
-      const offersData = r.offers as { title?: string; value_rescue?: number; min_purchase?: number; coupon_type?: string; end_at?: string | null } | null;
-      const customersData = r.customers as { name?: string; phone?: string | null } | null;
-      const branchesData = r.branches as { name?: string } | null;
-      return {
-        id: r.id as string,
-        token: r.token as string,
-        status: r.status as string,
-        created_at: r.created_at as string,
-        used_at: (r.used_at as string) || null,
-        expires_at: (r.expires_at as string) || null,
-        customer_cpf: (r.customer_cpf as string) || "",
-        offer_title: offersData?.title || "",
-        customer_name: customersData?.name || "—",
-        customer_phone: customersData?.phone || "",
-        branch_name: branchesData?.name || "",
-        value_rescue: Number(offersData?.value_rescue || 0),
-        min_purchase: Number(offersData?.min_purchase || 0),
-        coupon_type: offersData?.coupon_type || "STORE",
-        offer_end_at: offersData?.end_at || null,
-        purchase_value: (r.purchase_value as number) || null,
-        credit_value_applied: (r.credit_value_applied as number) || null,
-      } satisfies PendingRedemption;
-    });
+    return ((data as any[]) || []).map((r): PendingRedemption => ({
+      id: r.id,
+      token: r.token,
+      status: r.status,
+      created_at: r.created_at,
+      used_at: r.used_at || null,
+      expires_at: r.expires_at || null,
+      customer_cpf: r.customer_cpf || "",
+      offer_title: r.offer_title || "",
+      customer_name: r.customer_name || "—",
+      customer_phone: r.customer_phone || "",
+      branch_name: r.branch_name || "",
+      value_rescue: Number(r.value_rescue || 0),
+      min_purchase: Number(r.min_purchase || 0),
+      coupon_type: r.coupon_type || "STORE",
+      offer_end_at: r.offer_end_at || null,
+      purchase_value: r.purchase_value != null ? Number(r.purchase_value) : null,
+      credit_value_applied: r.credit_value_applied != null ? Number(r.credit_value_applied) : null,
+    }));
   }, [store.id]);
 
   // Initial load
-  const { isLoading } = useQuery({
+  const { isLoading, isError, error, refetch } = useQuery({
     queryKey: ["store-pending-redemptions", store.id],
     queryFn: async () => {
       const items = await fetchPage(0);
@@ -97,12 +82,17 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
 
   const handleLoadMore = async () => {
     setLoadingMore(true);
-    const nextPage = page + 1;
-    const items = await fetchPage(nextPage);
-    setAllItems(prev => [...prev, ...items]);
-    setHasMore(items.length >= PAGE_SIZE);
-    setPage(nextPage);
-    setLoadingMore(false);
+    try {
+      const nextPage = page + 1;
+      const items = await fetchPage(nextPage);
+      setAllItems(prev => [...prev, ...items]);
+      setHasMore(items.length >= PAGE_SIZE);
+      setPage(nextPage);
+    } catch (e) {
+      console.error("Error loading more redemptions:", e);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleRefresh = () => {
@@ -116,15 +106,30 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
         <p className="text-sm text-muted-foreground">Veja resgates dos clientes e dê baixa</p>
       </div>
 
-      <RedemptionHistoryList
-        redemptions={allItems}
-        loading={isLoading}
-        storeId={store.id}
-        onRefresh={handleRefresh}
-        hasMore={hasMore}
-        onLoadMore={handleLoadMore}
-        loadingMore={loadingMore}
-      />
+      {isError ? (
+        <Card className="rounded-2xl border-destructive/30 bg-destructive/5">
+          <CardContent className="flex flex-col items-center gap-3 py-8">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-center text-muted-foreground">
+              Não foi possível carregar os resgates.
+              {error instanceof Error && <><br /><span className="text-xs">{error.message}</span></>}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="rounded-xl gap-2">
+              <RefreshCw className="h-4 w-4" /> Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <RedemptionHistoryList
+          redemptions={allItems}
+          loading={isLoading}
+          storeId={store.id}
+          onRefresh={handleRefresh}
+          hasMore={hasMore}
+          onLoadMore={handleLoadMore}
+          loadingMore={loadingMore}
+        />
+      )}
 
       <RedeemPinInput storeId={store.id} onConfirmed={handleRefresh} />
     </div>
