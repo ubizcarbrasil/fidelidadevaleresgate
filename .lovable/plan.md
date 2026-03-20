@@ -1,52 +1,46 @@
 
 
-## Plano: Restringir módulos do empreendedor apenas ao que afeta o app do cliente
+## Plano: Corrigir classificação dos módulos visíveis ao empreendedor
 
 ### Problema
-Hoje o empreendedor (Brand Admin) vê **todos** os módulos alocados à sua marca na página "Funcionalidades da Marca" e pode ativar/desativar qualquer um — incluindo módulos que controlam o **próprio painel administrativo** dele (auditoria, permissões, tema, integrações, etc.).
+A migração anterior marcou módulos administrativos como `customer_facing = true` — por exemplo: "Lojas", "Cidades", "Clientes", "Regras de Pontos", "Pontuar Cliente". Esses são ferramentas de gestão do painel, não funcionalidades que o cliente vê no app. O empreendedor continua vendo permissões que dizem respeito ao próprio painel, não ao app do cliente.
 
-Isso é uma violação de governança: o empreendedor estaria dando e tirando permissões de si mesmo, quando quem define o que ele pode acessar é exclusivamente o ROOT via plano.
+### O que corrigir
 
-O empreendedor só deveria controlar o que o **cliente final** vê no app.
+**1. Reclassificar módulos no banco**
 
-### Solução
+Módulos que devem deixar de ser `customer_facing`:
 
-**1. Adicionar campo `customer_facing` na tabela `module_definitions`**
-
-Novo campo booleano que marca se o módulo afeta a experiência do cliente ou se é recurso administrativo:
-
-- `customer_facing = true` → o empreendedor pode ativar/desativar (controla o que o cliente vê)
-- `customer_facing = false` → só o ROOT controla (recurso do painel admin)
-
-Classificação proposta:
-
-| Módulo | customer_facing |
+| Módulo | Motivo |
 |---|---|
-| Ofertas, Lojas, Clientes, Carteira, Home Sections, Resgate QR | ✅ (core do app) |
-| Catálogo, Vouchers, Cupons, Achadinhos, Patrocinados | ✅ (comercial) |
-| Pontos, Regras de Pontos, Pontuar Cliente, Multi-Emissor, Ganha-Ganha | ✅ (fidelidade) |
-| Notificações, Tour de Boas-Vindas, Missões | ✅ (engajamento cliente) |
-| Cidades | ✅ |
-| CRM, Guias, Relatórios, Taxonomia | ❌ (ferramenta admin) |
-| Auditoria, Permissões, Aprovações, Hub de Acesso | ❌ (governança admin) |
-| Tema, Tipografia, Imagens, Layout, Cards de Oferta | ❌ (visual admin) |
-| Page Builder, Ícones, Landing Page, Links Perfil, App Icons | ❌ (visual admin) |
-| Integrações, API Keys, Machine Integration | ❌ (admin) |
-| Configurações, Importação CSV, Domínios, Assinatura | ❌ (admin) |
+| `stores` | Gestão de parceiros (admin) |
+| `branches` | Gestão de cidades (admin) |
+| `customers` | Gestão de clientes (admin) |
+| `points_rules` | Configuração de regras (admin) |
+| `earn_points_store` | Operação do lojista (admin) |
 
-**2. Migração SQL**
-- Adicionar coluna `customer_facing boolean NOT NULL DEFAULT false` em `module_definitions`
-- UPDATE em massa classificando cada módulo
+Módulos que permanecem `customer_facing = true` (aparecem no app do cliente):
 
-**3. Atualizar `BrandModulesPage.tsx`**
-- Para o empreendedor (não ROOT): filtrar `visibleDefinitions` para mostrar apenas `customer_facing = true`
-- ROOT continua vendo tudo
-- Mudar o texto descritivo para: "Escolha quais funcionalidades seus clientes terão acesso no aplicativo"
+- Ofertas, Carteira, Home Sections, Resgate QR (core — sempre ligados)
+- Catálogo, Vouchers, Achadinhos, Patrocinados (comercial)
+- Pontos, Ganha-Ganha (fidelidade do cliente)
+- Notificações, Tour de Boas-Vindas (engajamento)
+- Banners, Páginas Custom (visual do app)
+
+**2. Esconder módulos core (não-toggleáveis) da vista do empreendedor**
+
+Módulos `is_core = true` estão sempre ligados e o Switch fica desabilitado. Mostrá-los é confuso — o empreendedor não pode alterá-los. Remover da lista para non-ROOT.
+
+**3. Ajustar filtro no frontend**
+
+Em `BrandModulesPage.tsx`, para non-ROOT:
+- Filtrar `customer_facing = true` (já faz)
+- Adicionar: excluir `is_core = true` (novo)
 
 ### Arquivos envolvidos
-- Nova migração SQL — adicionar e popular `customer_facing`
-- `src/pages/BrandModulesPage.tsx` — filtrar por `customer_facing` quando não for ROOT
+- Nova migração SQL — `UPDATE module_definitions SET customer_facing = false WHERE key IN (...)`
+- `src/pages/BrandModulesPage.tsx` — ajustar filtro para esconder core
 
 ### Resultado
-O empreendedor verá apenas módulos que afetam o app do cliente e poderá ativar/desativar somente esses. Módulos administrativos (governança, tema, integrações) ficam sob controle exclusivo do ROOT.
+O empreendedor verá apenas funcionalidades que afetam diretamente o que o cliente vê no app: ofertas, catálogo, pontos, vouchers, notificações, banners, etc. Nenhum módulo administrativo aparecerá.
 
