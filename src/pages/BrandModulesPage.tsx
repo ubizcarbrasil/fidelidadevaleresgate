@@ -144,9 +144,9 @@ export default function BrandModulesPage() {
   // Filter definitions: non-ROOT users only see modules allocated to their brand
   const visibleDefinitions = definitions?.filter(d => {
     if (isRootAdmin) return true;
-    // Core modules always visible
+    // Non-ROOT: only show customer-facing modules that were allocated
+    if (!(d as any).customer_facing) return false;
     if (d.is_core) return true;
-    // Only show if ROOT has allocated this module (has a brand_modules row)
     return brandModules?.some(bm => bm.module_definition_id === d.id);
   });
 
