@@ -213,7 +213,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
                 onChange={(e) => update("phone", formatPhone(e.target.value))}
                 placeholder="(11) 99999-9999"
                 className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
-                style={{ borderColor: brandAlpha(fg, 0.08) }}
+                style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
                 maxLength={15}
                 autoFocus
               />
