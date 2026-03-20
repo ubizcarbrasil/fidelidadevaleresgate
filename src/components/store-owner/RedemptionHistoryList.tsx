@@ -48,6 +48,7 @@ export default function RedemptionHistoryList({
 }: RedemptionHistoryListProps) {
   const pending = redemptions.filter(r => r.status === "PENDING");
   const used = redemptions.filter(r => r.status === "USED");
+  const expired = redemptions.filter(r => r.status === "EXPIRED");
 
   return (
     <>
@@ -123,6 +124,51 @@ export default function RedemptionHistoryList({
                   {r.purchase_value && (
                     <p className="text-[10px] text-muted-foreground">Compra: R$ {Number(r.purchase_value).toFixed(2)}</p>
                   )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Expired ── */}
+      {expired.length > 0 && (
+        <Card className="rounded-2xl border-0 shadow-sm bg-muted/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-muted-foreground/20 flex items-center justify-center text-muted-foreground">
+                <Clock className="h-4 w-4" />
+              </div>
+              <span>Expirados</span>
+              <Badge className="ml-auto bg-muted-foreground/10 text-muted-foreground border-0 text-xs rounded-full">
+                {expired.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {expired.slice(0, 10).map(r => (
+              <div key={r.id} className="flex items-center gap-3 rounded-xl bg-background/40 border border-border/20 p-3 opacity-60">
+                <div className="h-9 w-9 rounded-xl bg-muted-foreground/15 flex items-center justify-center text-muted-foreground shrink-0">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{r.offer_title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.customer_name}
+                    {r.customer_phone
+                      ? <> · <Phone className="inline h-3 w-3" /> {r.customer_phone}</>
+                      : <> · <span className="italic text-muted-foreground/60">Tel. não informado</span></>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Criado: {format(new Date(r.created_at), "dd/MM HH:mm", { locale: ptBR })}
+                    {r.offer_end_at
+                      ? <> · Validade: {format(new Date(r.offer_end_at), "dd/MM/yyyy", { locale: ptBR })}</>
+                      : <> · <span className="italic text-muted-foreground/60">Sem validade definida</span></>}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-bold text-muted-foreground">R$ {Number(r.value_rescue).toFixed(2)}</p>
+                  <p className="text-[10px] text-destructive font-semibold">EXPIRADO</p>
                 </div>
               </div>
             ))}
