@@ -1,32 +1,52 @@
 
 
-## Plano: Corrigir contraste dos inputs no modo escuro do carousel de resgate
+## Plano: Restringir módulos do empreendedor apenas ao que afeta o app do cliente
 
 ### Problema
-Os campos de entrada (CPF, Nome, Email, etc.) no `RedemptionSignupCarousel` não definem cor de texto nem fundo explicitamente. No modo escuro, o texto fica invisível porque herda a cor clara do tema enquanto o fundo permanece claro.
+Hoje o empreendedor (Brand Admin) vê **todos** os módulos alocados à sua marca na página "Funcionalidades da Marca" e pode ativar/desativar qualquer um — incluindo módulos que controlam o **próprio painel administrativo** dele (auditoria, permissões, tema, integrações, etc.).
+
+Isso é uma violação de governança: o empreendedor estaria dando e tirando permissões de si mesmo, quando quem define o que ele pode acessar é exclusivamente o ROOT via plano.
+
+O empreendedor só deveria controlar o que o **cliente final** vê no app.
 
 ### Solução
 
-**Arquivo:** `src/components/customer/RedemptionSignupCarousel.tsx`
+**1. Adicionar campo `customer_facing` na tabela `module_definitions`**
 
-Adicionar estilização de contraste fixo em todos os 6 inputs do carousel (linhas 180-240):
-- `color: '#000'` — texto sempre preto
-- `backgroundColor: '#fff'` — fundo sempre branco
+Novo campo booleano que marca se o módulo afeta a experiência do cliente ou se é recurso administrativo:
 
-Isso segue o padrão já documentado para inputs sensíveis no PWA (conforme regra existente de contraste fixo).
+- `customer_facing = true` → o empreendedor pode ativar/desativar (controla o que o cliente vê)
+- `customer_facing = false` → só o ROOT controla (recurso do painel admin)
 
-Exemplo da mudança para cada input:
-```tsx
-style={{ 
-  borderColor: brandAlpha(fg, 0.08),
-  color: '#000',
-  backgroundColor: '#fff',
-}}
-```
+Classificação proposta:
 
-### Sobre o erro "Nenhum cliente teste encontrado"
-Esse erro vem do `DemoStoresToggle` (botão de creditar pontos de teste) e não está relacionado ao login do cliente. É uma funcionalidade administrativa separada.
+| Módulo | customer_facing |
+|---|---|
+| Ofertas, Lojas, Clientes, Carteira, Home Sections, Resgate QR | ✅ (core do app) |
+| Catálogo, Vouchers, Cupons, Achadinhos, Patrocinados | ✅ (comercial) |
+| Pontos, Regras de Pontos, Pontuar Cliente, Multi-Emissor, Ganha-Ganha | ✅ (fidelidade) |
+| Notificações, Tour de Boas-Vindas, Missões | ✅ (engajamento cliente) |
+| Cidades | ✅ |
+| CRM, Guias, Relatórios, Taxonomia | ❌ (ferramenta admin) |
+| Auditoria, Permissões, Aprovações, Hub de Acesso | ❌ (governança admin) |
+| Tema, Tipografia, Imagens, Layout, Cards de Oferta | ❌ (visual admin) |
+| Page Builder, Ícones, Landing Page, Links Perfil, App Icons | ❌ (visual admin) |
+| Integrações, API Keys, Machine Integration | ❌ (admin) |
+| Configurações, Importação CSV, Domínios, Assinatura | ❌ (admin) |
 
-### Arquivos alterados
-- `src/components/customer/RedemptionSignupCarousel.tsx` — adicionar contraste fixo nos 6 inputs
+**2. Migração SQL**
+- Adicionar coluna `customer_facing boolean NOT NULL DEFAULT false` em `module_definitions`
+- UPDATE em massa classificando cada módulo
+
+**3. Atualizar `BrandModulesPage.tsx`**
+- Para o empreendedor (não ROOT): filtrar `visibleDefinitions` para mostrar apenas `customer_facing = true`
+- ROOT continua vendo tudo
+- Mudar o texto descritivo para: "Escolha quais funcionalidades seus clientes terão acesso no aplicativo"
+
+### Arquivos envolvidos
+- Nova migração SQL — adicionar e popular `customer_facing`
+- `src/pages/BrandModulesPage.tsx` — filtrar por `customer_facing` quando não for ROOT
+
+### Resultado
+O empreendedor verá apenas módulos que afetam o app do cliente e poderá ativar/desativar somente esses. Módulos administrativos (governança, tema, integrações) ficam sob controle exclusivo do ROOT.
 
