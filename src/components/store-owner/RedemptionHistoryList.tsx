@@ -48,6 +48,7 @@ export default function RedemptionHistoryList({
 }: RedemptionHistoryListProps) {
   const pending = redemptions.filter(r => r.status === "PENDING");
   const used = redemptions.filter(r => r.status === "USED");
+  const expired = redemptions.filter(r => r.status === "EXPIRED");
 
   return (
     <>
