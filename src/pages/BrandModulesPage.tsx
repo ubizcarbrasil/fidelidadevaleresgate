@@ -144,9 +144,9 @@ export default function BrandModulesPage() {
   // Filter definitions: non-ROOT users only see modules allocated to their brand
   const visibleDefinitions = definitions?.filter(d => {
     if (isRootAdmin) return true;
-    // Core modules always visible
+    // Non-ROOT: only show customer-facing modules that were allocated
+    if (!(d as any).customer_facing) return false;
     if (d.is_core) return true;
-    // Only show if ROOT has allocated this module (has a brand_modules row)
     return brandModules?.some(bm => bm.module_definition_id === d.id);
   });
 
@@ -180,11 +180,13 @@ export default function BrandModulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {isRootAdmin ? "Funcionalidades da Marca" : "Funcionalidades do App"}
+        </h2>
         <p className="text-muted-foreground">
           {isRootAdmin
             ? "Ative ou desative os módulos disponíveis para esta marca"
-            : "Gerencie as funcionalidades ativas do seu programa"}
+            : "Escolha quais funcionalidades seus clientes terão acesso no aplicativo"}
         </p>
       </div>
 
