@@ -268,29 +268,6 @@ export default function CustomerLayout() {
                 </span>
               </div>
               <div className="flex items-center gap-0.5">
-                <BranchPickerSheet />
-                <button
-                  onClick={() => setNotifOpen(true)}
-                  className="relative h-9 w-9 flex items-center justify-center rounded-xl transition-colors"
-                  style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
-                >
-                  <AppIcon iconKey="header_bell" className="h-5 w-5" strokeWidth={1.8} style={{ color: "hsl(var(--vb-highlight))" }} />
-                  {unreadCount > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                      style={{ backgroundColor: "hsl(var(--destructive))" }}
-                    >
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </button>
-                <button
-                  className="h-9 w-9 flex items-center justify-center rounded-xl transition-colors"
-                  style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
-                  onClick={() => setActiveTab("wallet")}
-                >
-                  <AppIcon iconKey="header_wallet" className="h-5 w-5" strokeWidth={1.8} style={{ color: "hsl(var(--vb-highlight))" }} />
-                </button>
               </div>
             </div>
 
