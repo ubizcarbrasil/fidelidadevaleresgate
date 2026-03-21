@@ -611,6 +611,33 @@ export default function AchadinhosMobileImportPage() {
                     </CardContent>
                     {editingId === p.id && (
                       <div className="px-3 pb-3 space-y-2 border-t pt-2" onClick={e => e.stopPropagation()}>
+                        {/* Product image upload */}
+                        <div className="flex items-center gap-3">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.title} className="h-20 w-20 rounded-lg object-cover border" />
+                          ) : (
+                            <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center border border-dashed">
+                              <Camera className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={uploadingImageId === p.id}
+                            onClick={() => {
+                              setUploadingImageId(p.id);
+                              productImageRef.current?.click();
+                            }}
+                          >
+                            {uploadingImageId === p.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="h-3.5 w-3.5" />
+                            )}
+                            {p.image_url ? "Trocar" : "Adicionar imagem"}
+                          </Button>
+                        </div>
                         <div>
                           <label className="text-xs text-muted-foreground">Título</label>
                           <Input value={p.title} onChange={e => updateProduct(p.id, "title", e.target.value)} />
