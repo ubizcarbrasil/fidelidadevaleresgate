@@ -214,13 +214,30 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           {logoUrl && (
             <img src={logoUrl} alt={brand.name} className="h-9 w-9 rounded-xl object-contain" />
           )}
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-              Marketplace
+              {marketplaceTitle}
             </h1>
             <p className="text-[10px] text-muted-foreground">
-              Ofertas exclusivas para motoristas parceiros
+              {marketplaceSubtitle}
             </p>
+          </div>
+        </div>
+        {/* Search */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Buscar produtos..."
+              className="pl-9 pr-9 h-9 rounded-xl bg-muted border-0 text-sm"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
           </div>
         </div>
       </div>
