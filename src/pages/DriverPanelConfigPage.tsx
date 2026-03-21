@@ -37,10 +37,6 @@ export default function DriverPanelConfigPage() {
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
 
-  const configuredBaseUrl = (brandSettings as any)?.driver_public_base_url as string | undefined;
-  const effectiveOrigin = configuredBaseUrl || window.location.origin;
-  const driverUrl = buildDriverUrl(effectiveOrigin, currentBrandId || "");
-
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],
     queryFn: async () => {
@@ -54,6 +50,10 @@ export default function DriverPanelConfigPage() {
     },
     enabled: !!currentBrandId,
   });
+
+  const configuredBaseUrl = brandSettings?.driver_public_base_url as string | undefined;
+  const effectiveOrigin = configuredBaseUrl || window.location.origin;
+  const driverUrl = buildDriverUrl(effectiveOrigin, currentBrandId || "");
 
   const showBanners = brandSettings?.driver_show_banners !== false;
   const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
