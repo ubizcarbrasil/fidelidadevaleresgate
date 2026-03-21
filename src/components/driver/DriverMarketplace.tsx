@@ -245,6 +245,27 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
+      {/* Search results */}
+      {debouncedSearch.trim() ? (
+        <div className="px-4 pt-4 pb-8">
+          <p className="text-xs text-muted-foreground mb-3">
+            {searchResults.length} resultado{searchResults.length !== 1 ? "s" : ""} para "{debouncedSearch}"
+          </p>
+          {searchResults.length === 0 ? (
+            <div className="text-center py-8">
+              <Search className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">Nenhum produto encontrado</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {searchResults.map((deal, idx) => (
+                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
       {/* Category carousel */}
       {categories.length > 0 && (
         <DriverCategoryCarousel
