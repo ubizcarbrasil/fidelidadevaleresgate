@@ -1,52 +1,60 @@
 
 
-## Plano: Configurar linhas e ordem por categoria no Painel do Motorista
+## Plano: Banners intercalados entre seções de categorias no Driver Panel
 
 ### O que será feito
 
-Adicionar na página de configuração (`DriverPanelConfigPage`) controles para cada categoria:
-- **Quantidade de linhas** (1-5): quantas fileiras horizontais de produtos a seção exibe antes do "Ver todos"
-- **Ordem de exibição**: campo numérico ou drag-and-drop para definir a posição da categoria
+1. **Permitir inserir banners entre seções de categorias** no marketplace do motorista
+2. **Gerenciar banners dedicados ao driver** na página de configuração (`DriverPanelConfigPage`)
+3. **Usar o mesmo aspect ratio / altura** dos banners do app do cliente (Achadinhos)
 
-O marketplace do motorista (`DriverMarketplace`) passará a respeitar essas configurações.
+### Como funciona
 
-### Onde armazenar
+Cada banner no `banner_schedules` já possui um campo `brand_section_id` (para vincular a uma seção) e `order_index`. Para o driver, usaremos uma abordagem similar: o admin associa um banner a uma **posição entre categorias** via `driver_category_layout`.
 
-No `brand_settings_json` do brand, campo `driver_category_layout`:
+No `brand_settings_json`, adicionaremos um campo `driver_interstitial_banners`:
 ```json
 {
-  "driver_category_layout": {
-    "<category_id>": { "rows": 2, "order": 0 },
-    "<category_id>": { "rows": 1, "order": 1 }
-  }
+  "driver_interstitial_banners": [
+    { "after_category_id": "<cat-id>", "banner_id": "<banner-id>" },
+    { "after_category_id": "__top__", "banner_id": "<banner-id>" }
+  ]
 }
 ```
 
-Sem migração de banco — usa o JSON flexível já existente.
+Alternativamente (mais simples e reutilizável): os banners criados diretamente na config do driver são salvos em `banner_schedules` com um campo de metadata indicando que são do driver. Usaremos o campo `link_type = "driver"` como filtro, ou simplesmente buscaremos todos os banners do brand e permitiremos posicioná-los.
 
-### Arquivos envolvidos
+**Abordagem escolhida**: Usar a mesma tabela `banner_schedules` com criação inline na config do driver. A posição (entre qual categoria) é salva no `brand_settings_json.driver_banner_positions`.
+
+### Implementação
 
 **1. `src/pages/DriverPanelConfigPage.tsx`**
-- Adicionar na lista de categorias: campo numérico "Linhas" (1-5) e campo numérico "Ordem"
-- Botões +/- para ajustar linhas
-- Input numérico para ordem
-- Mutation que salva no `brand_settings_json.driver_category_layout`
+- Adicionar seção "Banners entre seções" abaixo do toggle de banners do topo
+- Listar banners existentes do brand (de `banner_schedules`)
+- Botão "Adicionar Banner" que abre dialog com:
+  - Upload de imagem (usando `ImageUploadField`, aspect ratio 21:9 — mesmo do cliente)
+  - Título opcional
+  - Link opcional
+  - Seletor "Posicionar após categoria" (dropdown com categorias + opção "Topo")
+  - Datas início/fim
+- Cada banner na lista mostra: preview, posição, toggle ativo/inativo, botão excluir
+- Salvar `driver_banner_positions` no `brand_settings_json`: mapa `{ [banner_id]: { after_category: "<cat-id>" | "__top__" } }`
 
 **2. `src/components/driver/DriverMarketplace.tsx`**
-- Ler `driver_category_layout` do `brand_settings_json`
-- Ordenar categorias pelo `order` configurado (fallback: `order_index` original)
-- Limitar deals exibidos por categoria: `rows * itemsPerRow` (itemsPerRow calculado pelo viewport, ~2 cards por linha no mobile)
-- "Ver todos" aparece quando há mais deals que o limite
+- Buscar banners e suas posições do `brand_settings_json.driver_banner_positions`
+- Na renderização das seções de categorias, intercalar banners:
+  - Banners com `after_category = "__top__"` → renderizar antes da primeira categoria (após o carrossel de categorias)
+  - Banners com `after_category = "<cat-id>"` → renderizar logo após a seção daquela categoria
+- Banner usa `aspect-[21/9]` e `rounded-2xl` — mesmo visual do banner do app do cliente
+- Altura consistente com a da Central de Banners existente
 
-### Lógica de linhas no marketplace
+**3. `src/components/driver/DriverBannerCarousel.tsx`**
+- Sem mudanças — este continua sendo o carrossel do topo (controlado pelo toggle existente)
 
-Cada "linha" = 1 row horizontal de scroll com ~2-3 cards visíveis. Com múltiplas linhas, a seção mostra um grid de N linhas × cards ao invés de scroll horizontal único. Exemplo:
-- 1 linha = carrossel horizontal (comportamento atual)
-- 2+ linhas = grid com N linhas, cada uma scrollável ou grid estático cortado
+### Arquivos envolvidos
+- **Editar**: `src/pages/DriverPanelConfigPage.tsx` — adicionar seção de criação/gestão de banners intercalados + dialog de criação
+- **Editar**: `src/components/driver/DriverMarketplace.tsx` — renderizar banners entre seções baseado na config
 
-### Detalhes técnicos
-
-- Padrão se não configurado: 1 linha, ordem = `order_index` da tabela
-- Máximo 5 linhas por categoria
-- A ordem na config sobrescreve o `order_index` do banco apenas para o driver
+### Resultado
+O empreendedor pode criar banners na aba de configuração do driver, escolher após qual categoria cada banner aparece, e os motoristas veem banners intercalados entre as seções de produtos — com o mesmo tamanho visual dos banners do app do cliente.
 
