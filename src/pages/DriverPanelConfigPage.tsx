@@ -37,7 +37,15 @@ export default function DriverPanelConfigPage() {
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
 
-  const driverUrl = `${window.location.origin}/driver?brandId=${currentBrandId || ""}`;
+  const [driverUrl, setDriverUrl] = useState(`${window.location.origin}/driver?brandId=${currentBrandId || ""}`);
+
+  // Resolve public domain for link
+  useEffect(() => {
+    if (!currentBrandId) return;
+    getPublicOrigin(currentBrandId).then(origin => {
+      setDriverUrl(buildDriverUrl(origin, currentBrandId));
+    });
+  }, [currentBrandId]);
 
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],

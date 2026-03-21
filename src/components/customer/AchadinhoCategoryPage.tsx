@@ -155,12 +155,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
               </div>
             </div>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  const shareUrl = `${window.location.origin}/driver?brandId=${brand!.id}&categoryId=${category.id}`;
-                  navigator.share({ title: `${category.name} — Achadinhos`, url: shareUrl }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brand!.id, `${category.name} — Achadinhos`, { categoryId: category.id })}
               className="h-9 w-9 flex items-center justify-center rounded-xl"
               style={{ backgroundColor: "hsl(var(--muted))" }}
             >

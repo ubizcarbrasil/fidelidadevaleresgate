@@ -131,12 +131,7 @@ export default function AchadinhoDealDetail({
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  const shareUrl = `${window.location.origin}/driver?brandId=${brandId}&dealId=${deal.id}`;
-                  navigator.share({ title: deal.title, url: shareUrl }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brandId, deal.title, { dealId: deal.id })}
               className="h-9 w-9 flex items-center justify-center rounded-xl"
               style={{ backgroundColor: "hsl(var(--muted))" }}
             >

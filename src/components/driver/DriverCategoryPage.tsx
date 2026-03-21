@@ -102,11 +102,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
               </div>
             </div>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: `${category.name} — Achadinhos`, url: getPublicShareUrl(brandId, { categoryId: category.id }) }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brandId, `${category.name} — Achadinhos`, { categoryId: category.id })}
               className="h-9 w-9 flex items-center justify-center rounded-xl bg-muted"
             >
               <Share2 className="h-4.5 w-4.5 text-foreground" />

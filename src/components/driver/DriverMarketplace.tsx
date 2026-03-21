@@ -272,11 +272,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: marketplaceTitle, url: getPublicShareUrl(brand.id) }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brand.id, marketplaceTitle)}
               className="h-9 w-9 flex items-center justify-center rounded-xl"
               style={{ backgroundColor: "hsl(var(--muted))" }}
             >
