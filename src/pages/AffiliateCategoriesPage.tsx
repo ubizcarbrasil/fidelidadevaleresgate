@@ -270,7 +270,7 @@ export default function AffiliateCategoriesPage() {
           </div>
           <div className="flex items-center gap-4">
             <Button size="sm" onClick={() => saveCtaMutation.mutate()} disabled={saveCtaMutation.isPending}>
-              <Save className="h-4 w-4 mr-1" />Salvar CTA
+              <Save className="h-4 w-4 mr-1" />Salvar
             </Button>
             <div className="flex-1 flex justify-end">
               <button
