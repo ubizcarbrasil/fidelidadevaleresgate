@@ -402,6 +402,44 @@ export default function DriverPanelConfigPage() {
         </DialogContent>
       </Dialog>
 
+      {/* PWA Icon */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Identidade do App Instalável (PWA)
+          </CardTitle>
+          <CardDescription>
+            Defina o ícone que aparecerá na tela inicial quando o motorista instalar o app. Recomendado: PNG quadrado 512×512.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ImageUploadField
+            value={(brandSettings?.theme as any)?.pwa_icon_url || ""}
+            onChange={(url) => {
+              const currentTheme = (brandSettings?.theme as any) || {};
+              settingsMutation.mutate({ theme: { ...currentTheme, pwa_icon_url: url } });
+            }}
+            folder="pwa-icons"
+            label="Ícone do App (PWA)"
+            aspectRatio={1}
+            previewClassName="h-24 w-24 rounded-2xl object-cover"
+          />
+          {(brandSettings?.theme as any)?.pwa_icon_url && (
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <img
+                src={(brandSettings.theme as any).pwa_icon_url}
+                alt="PWA Icon preview"
+                className="h-12 w-12 rounded-xl object-cover"
+              />
+              <p className="text-xs text-muted-foreground">
+                Este ícone será usado na tela inicial do dispositivo quando o motorista instalar o Achadinhos.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Categorias */}
       <Card>
         <CardHeader>
