@@ -7,9 +7,10 @@ interface Props {
   highlight: string;
   fontHeading: string;
   idx: number;
+  onClickDeal?: (deal: AffiliateDeal) => void;
 }
 
-function DriverDealCardGridInner({ deal, highlight, fontHeading, idx }: Props) {
+function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, onClickDeal }: Props) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
   const priceStr = formatPrice(deal.price);
