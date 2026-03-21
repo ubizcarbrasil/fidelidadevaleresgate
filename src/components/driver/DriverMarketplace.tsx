@@ -358,7 +358,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                     style={{
                       gridTemplateRows: `repeat(${configuredRows}, 1fr)`,
                       gridAutoFlow: "column",
-                      gridAutoColumns: "minmax(160px, 180px)",
+                      gridAutoColumns: "170px",
                       scrollSnapType: "x mandatory",
                       touchAction: "pan-x",
                     }}

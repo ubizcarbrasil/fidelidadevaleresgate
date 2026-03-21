@@ -23,7 +23,7 @@ export default function DriverDealCardGrid({ deal, highlight, fontHeading, idx }
       transition={{ delay: idx * 0.03, duration: 0.25 }}
       whileTap={{ scale: 0.97 }}
       className="rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
-      style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)" }}
+      style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
       onClick={() => window.open(deal.affiliate_url, "_blank", "noopener,noreferrer")}
     >
       <div className="relative bg-muted/30">
