@@ -227,6 +227,7 @@ function AppRoutes() {
           <Route path="offer-card-config" element={<RootGuard><OfferCardConfigPage /></RootGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
+          {/* Driver panel configuration */}
           <Route path="driver-config" element={<DriverPanelConfigPage />} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
