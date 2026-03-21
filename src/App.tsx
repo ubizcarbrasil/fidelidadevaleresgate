@@ -261,6 +261,7 @@ function AppContent() {
 
   // Partner landing page is a public route that works regardless of white-label mode
   const isPartnerLanding = /^\/[^/]+\/parceiro\/?$/.test(location.pathname);
+  const isDriverPanel = location.pathname === "/driver" || location.pathname.startsWith("/driver/");
 
   if (isPartnerLanding) {
     return (
@@ -268,6 +269,14 @@ function AppContent() {
         <Routes>
           <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
         </Routes>
+      </Suspense>
+    );
+  }
+
+  if (isDriverPanel) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <DriverPanelPage />
       </Suspense>
     );
   }
