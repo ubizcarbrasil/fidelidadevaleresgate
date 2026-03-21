@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ArrowLeft, Search, X, ExternalLink, icons, Tag } from "lucide-react";
+import { ArrowLeft, Search, X, ExternalLink, icons, Tag, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -153,6 +153,17 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
                 </p>
               </div>
             </div>
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: `${category.name} — Achadinhos`, url: window.location.href }).catch(() => {});
+                }
+              }}
+              className="h-9 w-9 flex items-center justify-center rounded-xl"
+              style={{ backgroundColor: "hsl(var(--muted))" }}
+            >
+              <Share2 className="h-4.5 w-4.5 text-foreground" />
+            </button>
           </div>
           <div className="h-px" style={{ backgroundColor: "hsl(var(--border))" }} />
         </div>
