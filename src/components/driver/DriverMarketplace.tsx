@@ -354,7 +354,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                 {configuredRows === 1 ? (
                   <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
                     {visibleDeals.map(deal => (
-                      <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                      <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
                     ))}
                     <div className="min-w-[16px] flex-shrink-0" />
                   </div>
