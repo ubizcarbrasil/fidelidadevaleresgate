@@ -177,10 +177,12 @@ function BrandQuickLinks() {
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Link2 className="h-4 w-4 text-primary" /> Links Úteis
             </CardTitle>
-            {productionUrl ? (
-              <Badge variant="outline" className="text-[10px] gap-1 saas-badge-warning border-warning/30"><AlertCircle className="h-3 w-3" />DNS pendente</Badge>
+            {driverPublicBase ? (
+              <Badge variant="outline" className="text-[10px] gap-1">
+                <Globe className="h-3 w-3" /> URL configurada
+              </Badge>
             ) : (
-              <Badge variant="secondary" className="text-[10px]">Sem domínio próprio</Badge>
+              <Badge variant="secondary" className="text-[10px]">Usando domínio atual</Badge>
             )}
           </div>
         </CardHeader>
@@ -188,7 +190,8 @@ function BrandQuickLinks() {
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {quickLinks.map((link) => {
               const internalUrl = `${origin}${link.path}`;
-              const prodUrl = productionUrl ? `${productionUrl}${link.prodPath === "/" ? "" : link.prodPath}` : null;
+              const publicBase = driverPublicBase || origin;
+              const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
               return (
                 <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-2">

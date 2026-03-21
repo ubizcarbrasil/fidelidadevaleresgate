@@ -37,7 +37,7 @@ export default function DriverPanelConfigPage() {
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
 
-  const configuredBaseUrl = brandSettings?.driver_public_base_url as string | undefined;
+  const configuredBaseUrl = (brandSettings as any)?.driver_public_base_url as string | undefined;
   const effectiveOrigin = configuredBaseUrl || window.location.origin;
   const driverUrl = buildDriverUrl(effectiveOrigin, currentBrandId || "");
 
