@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, ExternalLink, icons, Tag, ArrowLeft, ShoppingBag } from "lucide-react";
+import { ChevronRight, ExternalLink, icons, Tag, ArrowLeft, ShoppingBag, LayoutGrid } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface AffiliateDeal {
+import DriverBannerCarousel from "./DriverBannerCarousel";
+import DriverCategoryCarousel from "./DriverCategoryCarousel";
+import DriverDealCard from "./DriverDealCard";
+import DriverDealCardGrid from "./DriverDealCardGrid";
+
+export interface AffiliateDeal {
   id: string;
   title: string;
   description: string | null;
@@ -19,7 +24,7 @@ interface AffiliateDeal {
   category_id: string | null;
 }
 
-interface DealCategory {
+export interface DealCategory {
   id: string;
   name: string;
   icon_name: string;
@@ -34,130 +39,29 @@ interface Props {
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 
-function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
+export function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
   const pascal = name.split("-").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("");
   const resolved = ICON_ALIASES[pascal] || pascal;
   const Icon = (icons as any)[resolved] || Tag;
   return <Icon className={className} style={style} />;
 }
 
-const formatPrice = (val: number | null | undefined) => {
+export const formatPrice = (val: number | null | undefined) => {
   if (val == null || val === 0) return null;
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-function DealCard({ deal, highlight, fontHeading }: { deal: AffiliateDeal; highlight: string; fontHeading: string }) {
-  const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
-  const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
-  const priceStr = formatPrice(deal.price);
-  const originalPriceStr = formatPrice(deal.original_price);
-  const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
-
-  const handleClick = () => {
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
-  };
-
-  return (
-    <div
-      className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform"
-      style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
-      onClick={handleClick}
-    >
-      <div className="relative bg-muted/30">
-        {deal.image_url ? (
-          <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
-        ) : (
-          <div className="w-full aspect-square flex items-center justify-center bg-muted/10">
-            <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
-          </div>
-        )}
-        {badgeText && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm" style={{ backgroundColor: highlight }}>
-            {badgeText}
-          </div>
-        )}
-        <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center overflow-hidden">
-          {deal.store_logo_url ? (
-            <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
-          ) : (
-            <ExternalLink className="h-3 w-3 text-muted-foreground" />
-          )}
-        </div>
-      </div>
-      <div className="p-3">
-        {deal.store_name && <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>}
-        <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
-        {(priceStr || originalPriceStr) && (
-          <div className="flex items-baseline gap-1.5">
-            {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
-            {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DealCardGrid({ deal, highlight, fontHeading, idx }: { deal: AffiliateDeal; highlight: string; fontHeading: string; idx: number }) {
-  const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
-  const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
-  const priceStr = formatPrice(deal.price);
-  const originalPriceStr = formatPrice(deal.original_price);
-  const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.03, duration: 0.25 }}
-      whileTap={{ scale: 0.97 }}
-      className="rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
-      style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)" }}
-      onClick={() => window.open(deal.affiliate_url, "_blank", "noopener,noreferrer")}
-    >
-      <div className="relative bg-muted/30">
-        {deal.image_url ? (
-          <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
-        ) : (
-          <div className="w-full aspect-square flex items-center justify-center bg-muted/10">
-            <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
-          </div>
-        )}
-        {badgeText && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm" style={{ backgroundColor: highlight }}>
-            {badgeText}
-          </div>
-        )}
-        <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center overflow-hidden">
-          {deal.store_logo_url ? (
-            <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
-          ) : (
-            <ExternalLink className="h-3 w-3 text-muted-foreground" />
-          )}
-        </div>
-      </div>
-      <div className="p-3">
-        {deal.store_name && <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>}
-        <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
-        {(priceStr || originalPriceStr) && (
-          <div className="flex items-baseline gap-1.5">
-            {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
-            {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
 export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
+  const showBanners = settings?.driver_show_banners !== false;
 
   const { data, isLoading } = useQuery({
     queryKey: ["driver-marketplace", brand.id, branch?.id],
@@ -184,11 +88,9 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
       const allDeals = (dealsRes.data as AffiliateDeal[]) || [];
       const allCats = (catsRes.data as DealCategory[]) || [];
 
-      // Only show categories that have deals
       const catIdsWithDeals = new Set(allDeals.map(d => d.category_id).filter(Boolean));
       const activeCats = allCats.filter(c => catIdsWithDeals.has(c.id));
 
-      // Group deals by category
       const dealsByCategory = new Map<string, AffiliateDeal[]>();
       const uncategorized: AffiliateDeal[] = [];
       for (const deal of allDeals) {
@@ -209,6 +111,14 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const uncategorized = data?.uncategorized || [];
 
+  const handleCategorySelect = (catId: string | null) => {
+    setSelectedCategoryId(catId);
+    if (catId) {
+      const el = sectionRefs.current.get(catId);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-6">
@@ -216,7 +126,11 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           <Skeleton className="h-10 w-10 rounded-xl" />
           <Skeleton className="h-6 w-40 rounded-lg" />
         </div>
-        {[1, 2, 3].map(i => (
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <div className="flex gap-3">
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-16 rounded-full flex-shrink-0" />)}
+        </div>
+        {[1, 2].map(i => (
           <div key={i}>
             <Skeleton className="h-5 w-32 rounded-lg mb-3" />
             <div className="flex gap-3 overflow-hidden">
@@ -264,6 +178,18 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
         </div>
       </div>
 
+      {/* Banners */}
+      {showBanners && <DriverBannerCarousel brandId={brand.id} />}
+
+      {/* Category carousel */}
+      {categories.length > 0 && (
+        <DriverCategoryCarousel
+          categories={categories}
+          selectedId={selectedCategoryId}
+          onSelect={handleCategorySelect}
+        />
+      )}
+
       {/* Category sections */}
       <div className="space-y-6 pt-4">
         {categories.map(cat => {
@@ -271,7 +197,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           if (!catDeals.length) return null;
 
           return (
-            <section key={cat.id}>
+            <section key={cat.id} ref={el => { if (el) sectionRefs.current.set(cat.id, el); }}>
               <div className="px-5 mb-3 flex items-end justify-between">
                 <div className="flex items-center gap-2">
                   <div
@@ -301,7 +227,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
               </div>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
                 {catDeals.map(deal => (
-                  <DealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                  <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
                 ))}
                 <div className="min-w-[16px] flex-shrink-0" />
               </div>
@@ -309,7 +235,6 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           );
         })}
 
-        {/* Uncategorized deals */}
         {uncategorized.length > 0 && (
           <section>
             <div className="px-5 mb-3">
@@ -319,7 +244,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
               {uncategorized.map(deal => (
-                <DealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
               ))}
               <div className="min-w-[16px] flex-shrink-0" />
             </div>
@@ -371,7 +296,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
               <div className="flex-1 overflow-y-auto pb-8">
                 <div className="max-w-lg mx-auto px-4 pt-4 grid grid-cols-2 gap-3">
                   {(dealsByCategory.get(openCategory.id) || []).map((deal, idx) => (
-                    <DealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
+                    <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
                   ))}
                 </div>
               </div>
