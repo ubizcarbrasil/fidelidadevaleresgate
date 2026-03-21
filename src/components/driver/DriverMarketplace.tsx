@@ -353,22 +353,32 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                     <div className="min-w-[16px] flex-shrink-0" />
                   </div>
                 ) : (
-                  <div
-                    className="grid gap-3 overflow-x-auto scrollbar-hide pb-1"
-                    style={{
-                      gridTemplateRows: `repeat(${configuredRows}, 1fr)`,
-                      gridAutoFlow: "column",
-                      gridAutoColumns: "170px",
-                      scrollSnapType: "x mandatory",
-                      touchAction: "pan-x",
-                      paddingLeft: "20px",
-                      paddingRight: "20px",
-                      scrollPaddingLeft: "20px",
-                    }}
-                  >
-                    {visibleDeals.map((deal, idx) => (
-                      <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
-                    ))}
+                  <div className="space-y-3">
+                    {Array.from({ length: configuredRows }).map((_, rowIndex) => {
+                      const itemsPerRow = Math.ceil(visibleDeals.length / configuredRows);
+                      const rowDeals = visibleDeals.slice(rowIndex * itemsPerRow, (rowIndex + 1) * itemsPerRow);
+                      if (!rowDeals.length) return null;
+                      return (
+                        <div
+                          key={rowIndex}
+                          className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
+                          style={{
+                            scrollSnapType: "x mandatory",
+                            touchAction: "pan-x",
+                            paddingLeft: "20px",
+                            paddingRight: "20px",
+                            scrollPaddingLeft: "20px",
+                          }}
+                        >
+                          {rowDeals.map((deal, idx) => (
+                            <div key={deal.id} className="flex-shrink-0" style={{ width: "170px", scrollSnapAlign: "start" }}>
+                              <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * itemsPerRow + idx} />
+                            </div>
+                          ))}
+                          <div className="min-w-[16px] flex-shrink-0" />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </section>
