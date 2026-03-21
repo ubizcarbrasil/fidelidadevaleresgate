@@ -378,11 +378,10 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Category sections with interstitial banners */}
       <div className="space-y-6 pt-4">
         {/* Top banners */}
-        {activeBanners
-          .filter(b => b.after_category_id === "__top__")
-          .map(b => (
-            <InterstitialBanner key={b.id} banner={b} />
-          ))}
+        {(() => {
+          const topBanners = activeBanners.filter(b => b.after_category_id === "__top__");
+          return topBanners.length > 0 ? <InterstitialBannerGroup banners={topBanners} /> : null;
+        })()}
 
         {categories.map(cat => {
           const allCatDeals = dealsByCategory.get(cat.id) || [];
