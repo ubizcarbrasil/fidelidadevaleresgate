@@ -74,6 +74,8 @@ export const formatPrice = (val: number | null | undefined) => {
 export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const highlight = "hsl(var(--primary))";
