@@ -687,18 +687,20 @@ export default function Dashboard() {
       {/* CRM Banner */}
       {showBrand && !isRoot && (
         <Card className="border-primary/20 overflow-hidden">
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-semibold text-sm">CRM Estratégico</h3>
-                <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="font-semibold text-sm">CRM Estratégico</h3>
+                  <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
+              </div>
             </div>
-            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => navigate("/crm")}>
+            <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
               <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
             </Button>
           </CardContent>
