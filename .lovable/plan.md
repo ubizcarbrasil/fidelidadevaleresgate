@@ -1,65 +1,40 @@
 
 
-## Plano: Corrigir URL de compartilhamento para usar domínio publicado
+## Plano: Ícone PWA configurável na página de configuração do Achadinhos + OG dinâmico
 
-### Problema
+### Situação atual
 
-Quando o admin compartilha o link do Achadinhos a partir do preview do Lovable, `window.location.origin` retorna `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app` — uma URL de preview que não é acessível publicamente. O link correto deveria usar `https://fidelidadevaleresgate.lovable.app`.
+- O campo `pwa_icon_url` já existe no **Editor de Tema da marca** (`BrandThemeEditor`), mas fica escondido entre muitas opções de tema
+- O `useBrandTheme` já aplica o ícone PWA dinâmicamente no `/driver`
+- **Porém**: na tela de configuração do Achadinhos (`DriverPanelConfigPage`) esse campo não aparece — o usuário não sabe onde configurar
+- O **preview de link** (OG image/title) ao compartilhar mostra "Vale Resgate — Painel Admin" porque os meta tags são estáticos no `index.html` e crawlers não executam JavaScript
 
-Como o campo `driver_public_base_url` provavelmente não está preenchido, o fallback cai em `window.location.origin`, que no preview é a URL errada.
+### O que vou implementar
 
-### Correção
+**1. Adicionar campo de ícone PWA na config do Achadinhos** (`DriverPanelConfigPage`)
+- Novo card "Identidade do App Instalável (PWA)" com upload de imagem
+- Salva em `brand_settings_json.theme.pwa_icon_url`
+- Recomendação visual: PNG quadrado 512×512
+- Preview do ícone atual
 
-**`src/lib/publicShareUrl.ts`** — melhorar o fallback
+**2. Atualizar meta tags OG dinamicamente no `/driver`** (`DriverPanelPage`)
+- Ao carregar a marca, atualizar `og:title`, `og:image`, `og:description` via JavaScript
+- Usar `pwa_icon_url` ou `logo_url` como `og:image`
+- Título: nome da marca + "Achadinhos"
+- Limitação: crawlers de redes sociais (WhatsApp, Telegram) geralmente não executam JS, então o preview pode não mudar. Para resolver isso de verdade, seria necessário um edge function que sirva HTML com OG tags dinâmicos (mencionarei como melhoria futura)
 
-Adicionar detecção automática de ambiente preview do Lovable. Se o origin contém `id-preview--` (padrão de preview URLs), substituir automaticamente pela URL publicada equivalente (`{slug}.lovable.app`).
+**3. (Bônus) Edge function para OG dinâmico** — criar uma edge function que sirva HTML com meta tags corretas quando o user-agent for um crawler
+- Isso garante que WhatsApp, Telegram, iMessage mostrem a imagem e título da marca
+- Porém, isso requer proxy/redirect no nível de servidor que não é trivial no setup atual
+- **Alternativa prática**: atualizar o `index.html` com meta tags genéricas melhores e instruir o usuário que o PWA instalado usará o ícone configurado
 
-Ordem de prioridade:
-1. `driver_public_base_url` configurado manualmente (já existe)
-2. Se estiver em preview Lovable, converter para URL publicada
-3. `window.location.origin` como último fallback
+### Arquivos
+- `src/pages/DriverPanelConfigPage.tsx` — adicionar card de upload do ícone PWA
+- `src/pages/DriverPanelPage.tsx` — atualizar OG meta tags dinamicamente
+- `index.html` — melhorar meta tags padrão (título e descrição mais genéricos)
 
-```typescript
-export async function getPublicOrigin(brandId: string): Promise<string> {
-  if (cachedBaseUrls[brandId]) return cachedBaseUrls[brandId];
-
-  // 1. Check configured URL
-  try {
-    const { data } = await supabase
-      .from("brands")
-      .select("brand_settings_json")
-      .eq("id", brandId)
-      .maybeSingle();
-    const settings = data?.brand_settings_json as Record<string, unknown> | null;
-    const configuredUrl = (settings?.driver_public_base_url as string)?.trim().replace(/\/+$/, "");
-    if (configuredUrl) {
-      cachedBaseUrls[brandId] = configuredUrl;
-      return configuredUrl;
-    }
-  } catch { /* fall through */ }
-
-  // 2. Detect Lovable preview and use published URL instead
-  let fallback = window.location.origin;
-  const previewMatch = fallback.match(/^https:\/\/id-preview--[^.]+\.lovable\.app$/);
-  if (previewMatch) {
-    fallback = "https://fidelidadevaleresgate.lovable.app";
-  }
-
-  cachedBaseUrls[brandId] = fallback;
-  return fallback;
-}
-```
-
-Porém, hardcodar o domínio publicado não é ideal para múltiplas marcas. Uma abordagem melhor é buscar o published URL do projeto via variável de ambiente ou configuração existente.
-
-**Abordagem recomendada**: Como o projeto tem `VITE_SUPABASE_URL` e `VITE_SUPABASE_PROJECT_ID` como env vars, mas não tem a published URL como env var, a solução mais robusta e imediata é:
-
-- Detectar se estamos em preview (`id-preview--` no origin)
-- Se sim, usar `https://fidelidadevaleresgate.lovable.app` como fallback fixo (este é o domínio publicado real do projeto)
-- Alternativamente, o admin pode simplesmente preencher o campo "URL Pública Oficial" na configuração do motorista com `https://fidelidadevaleresgate.lovable.app`
-
-A segunda opção é mais simples e já está implementada — basta configurar o campo. Mas vou implementar a detecção automática também para evitar esse problema recorrente.
-
-### Arquivo
-- `src/lib/publicShareUrl.ts`
+### Resultado
+- O ícone do PWA instalado será o que o admin configurar na tela do Achadinhos
+- O admin terá acesso direto ao upload do ícone sem precisar ir ao Editor de Tema
+- Meta tags OG serão atualizados via JS (funciona para alguns apps, não para todos os crawlers)
 
