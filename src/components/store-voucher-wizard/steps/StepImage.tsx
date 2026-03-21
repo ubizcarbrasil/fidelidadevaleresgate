@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePlus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { StoreVoucherData } from "../types";
+import ImageAiActions from "@/components/ImageAiActions";
 
 interface Props {
   data: StoreVoucherData;
