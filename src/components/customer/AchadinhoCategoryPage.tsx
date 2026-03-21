@@ -313,6 +313,19 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
             </div>
           </div>
         </div>
+
+        {selectedDeal && (
+          <AchadinhoDealDetail
+            deal={selectedDeal}
+            brandId={brand!.id}
+            branchId={selectedBranch?.id}
+            customerId={customer?.id}
+            theme={theme}
+            brandSettings={(brand as any)?.brand_settings_json}
+            onBack={() => setSelectedDeal(null)}
+            onSelectDeal={(d) => setSelectedDeal(d)}
+          />
+        )}
       </motion.div>
     </motion.div>
   );

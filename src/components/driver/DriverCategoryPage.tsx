@@ -245,6 +245,18 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
             </div>
           </div>
         </div>
+
+        {selectedDeal && (
+          <AchadinhoDealDetail
+            deal={selectedDeal}
+            brandId={brandId}
+            branchId={branchId}
+            theme={theme}
+            brandSettings={brandSettings}
+            onBack={() => setSelectedDeal(null)}
+            onSelectDeal={(d) => setSelectedDeal(d)}
+          />
+        )}
       </div>
     </div>
   );

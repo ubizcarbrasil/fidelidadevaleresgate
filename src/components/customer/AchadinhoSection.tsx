@@ -291,6 +291,19 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         })}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
+
+      {selectedDeal && (
+        <AchadinhoDealDetail
+          deal={selectedDeal}
+          brandId={brand!.id}
+          branchId={selectedBranch?.id}
+          customerId={customer?.id}
+          theme={theme}
+          brandSettings={(brand as any)?.brand_settings_json}
+          onBack={() => setSelectedDeal(null)}
+          onSelectDeal={(d) => setSelectedDeal(d)}
+        />
+      )}
     </section>
   );
 }
