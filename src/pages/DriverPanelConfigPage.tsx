@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical } from "lucide-react";
+import { getPublicOrigin, buildDriverUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageUploadField from "@/components/ImageUploadField";
