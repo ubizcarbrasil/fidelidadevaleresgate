@@ -218,15 +218,36 @@ export default function AffiliateCategoriesPage() {
         </Button>
       </div>
 
-      {/* CTA Config */}
+      {/* CTA & Banner Config */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Palette className="h-4 w-4" />
-            Botão CTA — Detalhe do Achadinho
+            Configurações — Detalhe do Achadinho
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
+          {/* Banner de fundo */}
+          <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <ImagePlus className="h-3.5 w-3.5" />
+              Banner de fundo da página de produto
+            </Label>
+            <p className="text-[11px] text-muted-foreground">Imagem exibida atrás da foto do produto. Proporção ideal: 16:9 (1200×675)</p>
+            <StorageImageUpload
+              value={detailBannerUrl}
+              onChange={setDetailBannerUrl}
+              label="Banner do produto"
+              folder="achadinho-banners"
+              aspectHint="Proporção ideal: 16:9 (1200×675)"
+            />
+            {detailBannerUrl && (
+              <ImageAiActions imageUrl={detailBannerUrl} onReplace={setDetailBannerUrl} context="banner" />
+            )}
+          </div>
+
+          {/* CTA config */}
+          <Label className="text-xs font-semibold">Botão CTA</Label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Texto do botão</Label>
