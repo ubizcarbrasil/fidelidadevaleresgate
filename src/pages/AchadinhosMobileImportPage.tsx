@@ -43,6 +43,11 @@ export default function AchadinhosMobileImportPage() {
   const [isScraping, setIsScraping] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState({ done: 0, total: 0 });
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const updateProduct = useCallback((id: string, field: keyof ProductItem, value: string | number | null) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+  }, []);
 
   // ── Scrape links ──
   const handleScrapeLinks = useCallback(async () => {
