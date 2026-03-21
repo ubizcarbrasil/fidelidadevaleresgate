@@ -1,38 +1,75 @@
 
 
-## Plano: Enriquecer produtos do fluxo "photo" com scraping dos links
+## Plano: Página de Categoria para Achadinhos (Cliente + Motorista)
 
-### Problema
+### O que será criado
 
-No fluxo "Print da Oferta", após associar os links aos produtos extraídos pela IA, o sistema vai direto para o review sem buscar a imagem do produto nos links. No fluxo de "colar links", o `scrape-product` já puxa `image_url`, `category_id`, etc. — mas o fluxo de foto não aproveita isso.
+Uma nova página dedicada para cada categoria de Achadinhos, acessada ao clicar "Ver todos". Layout inspirado no print de referência: header com nome da categoria, carrossel de banners, barra de busca, e listagem horizontal de produtos (imagem, título, descrição, preço, marketplace). Sem curtidas, sem cashback. Clique leva direto ao link do marketplace.
 
-### Solução
+Cada categoria poderá ter banners próprios configuráveis com as 3 opções de IA (redesenhar, ajustar tamanho, melhorar qualidade) via o componente `ImageAiActions` já existente.
 
-Após o usuário associar os links no step `photo-links`, fazer scraping de cada link (usando a mesma edge function `scrape-product`) para puxar a imagem e enriquecer os dados. Os campos extraídos pela IA (título, preço, descrição) são mantidos como prioridade; o scraping complementa apenas o que está faltando (imagem, categoria, loja).
+### Migração de banco
 
-### Implementação
+Adicionar tabela `affiliate_category_banners`:
+- `id`, `brand_id`, `category_id` (FK → affiliate_deal_categories), `image_url`, `title`, `link_url`, `order_index`, `is_active`, `created_at`
 
-**`src/pages/AchadinhosMobileImportPage.tsx`**
+RLS: acesso por brand_id do usuário autenticado.
 
-Alterar `handleAssociateLinks`:
+### Novos componentes
 
-1. Após parear links com produtos, iniciar scraping dos links em paralelo (batches de 5, igual ao fluxo de links)
-2. Mostrar loading com progresso ("Buscando imagens... 3/8")
-3. Para cada link scrapeado com sucesso, enriquecer o produto correspondente:
-   - `image_url`: usar do scrape se o produto não tiver
-   - `category_id` / `category_name`: usar do scrape se não tiver
-   - `store_name`: usar do scrape se estiver vazio
-   - Título, descrição, preço: manter os da IA (já extraídos do print)
-4. Após finalizar, ir para step "review" com produtos já enriquecidos
+**1. `src/components/customer/AchadinhoCategoryPage.tsx`**
+- Substituirá o overlay grid atual (`AchadinhoDealsOverlay`)
+- Layout:
+  - Header: seta voltar + ícone/nome da categoria + subtítulo com contagem
+  - Carrossel de banners (da tabela `affiliate_category_banners`)
+  - Barra de busca (filtra título/descrição/store_name)
+  - Lista de produtos em formato **horizontal** (como no print):
+    - Imagem quadrada à esquerda (~100px)
+    - Ao lado: nome do marketplace (pequeno, muted), título (2 linhas), preço em negrito, preço original riscado
+    - Sem curtidas, sem cashback
+    - Clique abre `affiliate_url`
 
-### Fluxo atualizado
+**2. `src/components/driver/DriverCategoryPage.tsx`**
+- Mesmo layout que o do cliente, mas usa o tema/estilo do DriverMarketplace
+- Substituirá o overlay inline atual (linhas 410-448 do DriverMarketplace)
+
+### Alterações em arquivos existentes
+
+**`src/components/customer/AchadinhoSection.tsx`**
+- "Ver todos" de cada categoria abre o novo `AchadinhoCategoryPage` (overlay full-screen) em vez do `AchadinhoDealsOverlay`
+
+**`src/components/customer/AchadinhoDealsOverlay.tsx`**
+- Refatorar para usar o novo layout de lista horizontal + banners + busca
+
+**`src/components/driver/DriverMarketplace.tsx`**
+- `setOpenCategory(cat)` abre o novo `DriverCategoryPage` em vez do overlay inline atual
+
+### Página de admin para banners de categoria
+
+**`src/pages/AffiliateCategoriesPage.tsx`**
+- Adicionar seção de banners dentro da edição de cada categoria
+- Upload de imagem com `StorageImageUpload` + `ImageAiActions` (3 opções de IA: redesenhar, ajustar, melhorar)
+- CRUD de banners por categoria
+
+### Visual do card de produto (lista horizontal)
 
 ```text
-Print → IA extrai texto → Cola links → Pareia link↔produto
-  ↓
-Scrape links (busca imagem + categoria) → Review com imagem preenchida
+┌──────────────────────────────────┐
+│ ┌────────┐  Marketplace Name     │
+│ │        │  Título do produto... │
+│ │  IMG   │  R$ 7.037,23          │
+│ │        │  R$ 9.000,00 (riscado)│
+│ └────────┘                       │
+├──────────────────────────────────┤
+│ ┌────────┐  ...                  │
 ```
 
-### Arquivo
-- `src/pages/AchadinhosMobileImportPage.tsx` — alterar `handleAssociateLinks` para incluir scraping
+### Arquivos envolvidos
+- Nova migração SQL (tabela `affiliate_category_banners`)
+- `src/components/customer/AchadinhoCategoryPage.tsx` — novo
+- `src/components/driver/DriverCategoryPage.tsx` — novo
+- `src/components/customer/AchadinhoDealsOverlay.tsx` — refatorar
+- `src/components/customer/AchadinhoSection.tsx` — apontar para nova página
+- `src/components/driver/DriverMarketplace.tsx` — apontar para nova página
+- `src/pages/AffiliateCategoriesPage.tsx` — admin de banners por categoria
 
