@@ -186,32 +186,35 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
-                const isDriverLink = item.url === "/driver-panel-link";
-
-                if (isDriverLink) {
-                  return (
-                    <SidebarMenuItem key={item.key}>
-                      <SidebarMenuButton tooltip={getLabel(item.key)}>
-                        <a
-                          href="/driver"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 w-full"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open("/driver", "_blank");
-                          }}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
-                          {!collapsed && <ExternalLink className="h-3 w-3 opacity-50" />}
-                        </a>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                }
 
                 return (
+                  <SidebarMenuItem key={item.key}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={
+                        location.pathname === item.url ||
+                        (item.url !== "/" && location.pathname.startsWith(item.url))
+                      }
+                      tooltip={getLabel(item.key)}
+                    >
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/"}
+                        className="hover:bg-sidebar-accent/50"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
+                        {badgeCount && badgeCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </Badge>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       asChild
