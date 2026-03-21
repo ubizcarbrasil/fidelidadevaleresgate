@@ -202,8 +202,14 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
       {/* Category sections */}
       <div className="space-y-6 pt-4">
         {categories.map(cat => {
-          const catDeals = dealsByCategory.get(cat.id) || [];
-          if (!catDeals.length) return null;
+          const allCatDeals = dealsByCategory.get(cat.id) || [];
+          if (!allCatDeals.length) return null;
+
+          const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+          const ITEMS_PER_ROW = 3;
+          const maxVisible = configuredRows * ITEMS_PER_ROW;
+          const visibleDeals = allCatDeals.slice(0, maxVisible);
+          const hasMore = allCatDeals.length > maxVisible;
 
           return (
             <section key={cat.id} ref={el => { if (el) sectionRefs.current.set(cat.id, el); }}>
@@ -220,11 +226,11 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                       {cat.name}
                     </h2>
                     <p className="text-[10px] text-muted-foreground">
-                      {catDeals.length} oferta{catDeals.length !== 1 ? "s" : ""}
+                      {allCatDeals.length} oferta{allCatDeals.length !== 1 ? "s" : ""}
                     </p>
                   </div>
                 </div>
-                {catDeals.length > 3 && (
+                {hasMore && (
                   <button
                     onClick={() => setOpenCategory(cat)}
                     className="text-xs font-semibold flex items-center gap-0.5 text-primary"
@@ -234,12 +240,20 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                   </button>
                 )}
               </div>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
-                {catDeals.map(deal => (
-                  <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
-                ))}
-                <div className="min-w-[16px] flex-shrink-0" />
-              </div>
+              {configuredRows === 1 ? (
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+                  {visibleDeals.map(deal => (
+                    <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                  ))}
+                  <div className="min-w-[16px] flex-shrink-0" />
+                </div>
+              ) : (
+                <div className="px-5 grid grid-cols-2 gap-3 pb-1">
+                  {visibleDeals.map((deal, idx) => (
+                    <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
+                  ))}
+                </div>
+              )}
             </section>
           );
         })}
