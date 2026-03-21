@@ -624,6 +624,16 @@ export default function AchadinhosMobileImportPage() {
                 <Badge variant="secondary">{products.length}</Badge>
               </div>
 
+              {isScraping && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Buscando imagens... {scrapeProgress.done}/{scrapeProgress.total}</span>
+                  </div>
+                  <Progress value={scrapeProgress.total > 0 ? (scrapeProgress.done / scrapeProgress.total) * 100 : 0} className="h-2" />
+                </div>
+              )}
+
               <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                 {products.map(p => (
                   <Card key={p.id} className={`overflow-hidden ${p._no_match ? "border-amber-400" : ""}`}>
