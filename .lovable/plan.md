@@ -1,76 +1,66 @@
 
 
-## Plano: Assistente de Imagem com IA em todos os pontos de upload
+## Plano: Painel do Motorista — Marketplace de Achadinhos sem login
 
 ### Visão geral
-Criar um componente `ImageAiEnhancer` que aparece como um painel de ações após o upload de qualquer imagem. Ele oferece 3 opções com IA:
-
-1. **Redesenhar** — Usa a imagem como referência e gera uma nova imagem do zero com maior qualidade
-2. **Ajustar tamanho** — Redimensiona/adapta a imagem ao tamanho ideal do contexto (banner, logo, produto)
-3. **Melhorar qualidade** — Aprimora nitidez, cores e diagramação mantendo a imagem original
+Criar uma nova rota pública `/driver` que exibe um marketplace completo de Achadinhos, acessível sem autenticação. O painel é um espelho do marketplace de afiliados existente, mas com layout de seções por categoria configurável.
 
 ### Arquitetura
 
 ```text
-Upload da imagem
-  → Preview aparece
-  → 3 botões de IA surgem abaixo:
-      [✨ Redesenhar]  [📐 Ajustar]  [🔍 Melhorar]
-  → Clique envia para Edge Function
-  → Edge Function chama Lovable AI (modelo de imagem)
-  → Resultado volta como nova imagem
-  → Usuário pode aceitar ou descartar
+URL: /driver?brandId=xxx[&branchId=yyy]
+  → Resolve marca e tema (sem login)
+  → Renderiza marketplace completo de Achadinhos
+  → Cada categoria = uma seção horizontal com N linhas
+  → Botão "Ver todos" abre grid da categoria
+  → Sem pontos, sem carteira, sem menu de cliente
 ```
 
 ### Implementação
 
-**1. Edge Function `enhance-image/index.ts`**
-- Recebe: `image_url`, `mode` (redesign | resize | enhance), `context` (banner | logo | product | offer)
-- Cada modo gera um prompt diferente para o modelo de imagem:
-  - `redesign`: "Use this image as reference. Create a professional, high-quality version..."
-  - `resize`: Usa canvas no backend para redimensionar ao tamanho ideal do contexto (ex: banner 1200×514, logo 512×512, produto 800×800)
-  - `enhance`: "Enhance this image: improve sharpness, color balance, lighting..."
-- Usa `google/gemini-3.1-flash-image-preview` para redesenhar e melhorar
-- Resize usa processamento direto (sem IA) com ajuste de proporção
-- Salva resultado no Storage `brand-assets` e retorna a URL pública
-- Trata erros 429/402 com mensagens claras
+**1. Nova página `src/pages/DriverPanelPage.tsx`**
+- Rota pública, sem `ProtectedRoute`
+- Resolve `brandId` da URL query param (mesmo padrão do `CustomerPreviewPage`)
+- Usa `BrandProviderOverride` para carregar tema e dados da marca
+- Renderiza componente `DriverMarketplace`
 
-**2. Componente `ImageAiActions.tsx`**
-- Props: `imageUrl`, `onReplace(newUrl)`, `context` (para saber dimensões ideais)
-- Mostra 3 botões com ícones quando há imagem
-- Ao clicar, abre dialog de loading com preview do resultado
-- Botões "Usar esta" / "Descartar"
-- Estado de processamento com animação
+**2. Novo componente `src/components/driver/DriverMarketplace.tsx`**
+- Busca todas as categorias ativas da marca com seus deals
+- Renderiza cada categoria como uma seção independente:
+  - Título da categoria com ícone
+  - Carrossel horizontal de deals (estilo existente do `AchadinhoSection`)
+  - Botão "Ver todos" que abre overlay de grid da categoria
+- Configuração de quantos itens por linha cada seção mostra (padrão: 1 linha de scroll)
+- Header simples com logo da marca e título "Marketplace"
 
-**3. Integrar nos componentes de upload existentes**
-- `ImageUploadField.tsx` — adicionar `ImageAiActions` abaixo do preview (usado em ~13 lugares: logo, favicon, banner, fundo, etc.)
-- `StepImage.tsx` (wizard de cupom do lojista) — adicionar após upload
-- `StorageImageUpload.tsx` (page builder) — adicionar após preview
-- Cada local passa o `context` adequado para dimensionamento correto
+**3. Overlay de categoria**
+- Reutiliza o `AchadinhoDealsOverlay` existente para mostrar grid completo ao clicar "Ver todos"
+- Adapta para funcionar sem `CustomerContext` (clicks de afiliado funcionam sem customer_id)
 
-**4. Mapa de dimensões por contexto**
+**4. Rota no `App.tsx`**
+- Adicionar `/driver` como rota pública (ao lado de `/landing`, `/customer-preview`)
+- Sem guard de autenticação
 
-| Contexto | Dimensão ideal |
-|---|---|
-| banner | 1200 × 514 |
-| logo | 512 × 512 |
-| favicon | 256 × 256 |
-| product / offer | 800 × 800 |
-| background | 1920 × 1080 |
-| gallery | 1080 × 1080 |
+**5. Configuração de seções (admin)**
+- Por ora, cada categoria existente em `affiliate_deal_categories` será automaticamente uma seção
+- A ordem segue `order_index` já existente
+- Futuramente pode-se criar tabela de configuração específica para layout do driver
+
+### Componentes reutilizados
+- Card de deal (mesmo visual do `AchadinhoSection`)
+- `AchadinhoDealsOverlay` (grid de categoria)
+- `AchadinhoCategoryGridOverlay` (grid de todas as categorias)
+- Ícones Lucide por categoria
+- Tema da marca via `BrandProviderOverride`
 
 ### Arquivos envolvidos
-- **Novo**: `supabase/functions/enhance-image/index.ts`
-- **Novo**: `src/components/ImageAiActions.tsx`
-- **Editar**: `src/components/ImageUploadField.tsx` — inserir `ImageAiActions`
-- **Editar**: `src/components/store-voucher-wizard/steps/StepImage.tsx` — inserir `ImageAiActions`
-- **Editar**: `src/components/page-builder/StorageImageUpload.tsx` — inserir `ImageAiActions`
+- **Novo**: `src/pages/DriverPanelPage.tsx` — página principal
+- **Novo**: `src/components/driver/DriverMarketplace.tsx` — marketplace por seções
+- **Editar**: `src/App.tsx` — adicionar rota `/driver`
 
-### Pré-requisitos
-- `LOVABLE_API_KEY` já está configurada ✅
-- Bucket `brand-assets` já é público ✅
-- Modelo `google/gemini-3.1-flash-image-preview` disponível ✅
+### Sem alteração de banco
+Não precisa de migração — usa as tabelas `affiliate_deals` e `affiliate_deal_categories` existentes. Os deals são públicos (sem RLS restritivo para leitura anônima).
 
 ### Resultado
-Em todo local do sistema onde o lojista ou empreendedor sobe uma imagem, ele terá 3 opções inteligentes para melhorar automaticamente a qualidade visual do seu conteúdo sem precisar de conhecimento em design.
+O motorista acessa `/driver?brandId=xxx`, vê o marketplace completo organizado por categorias, pode navegar entre seções e abrir cada categoria em tela cheia. Sem login, sem pontos, sem menus extras.
 
