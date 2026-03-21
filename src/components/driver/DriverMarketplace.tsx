@@ -233,6 +233,17 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                 {marketplaceTitle}
               </span>
             </div>
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: marketplaceTitle, url: window.location.href }).catch(() => {});
+                }
+              }}
+              className="h-9 w-9 flex items-center justify-center rounded-xl"
+              style={{ backgroundColor: "hsl(var(--muted))" }}
+            >
+              <Share2 className="h-4.5 w-4.5 text-foreground" />
+            </button>
           </div>
 
           {/* Search Bar — customer style */}
