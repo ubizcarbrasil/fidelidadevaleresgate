@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePlus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { StoreVoucherData } from "../types";
+import ImageAiActions from "@/components/ImageAiActions";
 
 interface Props {
   data: StoreVoucherData;
@@ -109,6 +110,7 @@ export default function StepImage({ data, update, storeId }: Props) {
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+          <ImageAiActions imageUrl={data.image_url} onReplace={(url) => update({ image_url: url })} context="offer" />
         </div>
       ) : (
         <button

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import ImageCropDialog from "@/components/ImageCropDialog";
+import ImageAiActions from "@/components/ImageAiActions";
 
 interface ImageUploadFieldProps {
   value: string;
@@ -13,6 +14,7 @@ interface ImageUploadFieldProps {
   accept?: string;
   previewClassName?: string;
   aspectRatio?: number;
+  aiContext?: "banner" | "logo" | "favicon" | "product" | "offer" | "background" | "gallery";
 }
 
 export default function ImageUploadField({
@@ -23,6 +25,7 @@ export default function ImageUploadField({
   accept = "image/png,image/jpeg,image/svg+xml,image/webp,image/x-icon",
   previewClassName = "h-12 object-contain",
   aspectRatio,
+  aiContext,
 }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -108,6 +111,9 @@ export default function ImageUploadField({
           </Button>
         </div>
       ) : null}
+      {value && aiContext && (
+        <ImageAiActions imageUrl={value} onReplace={onChange} context={aiContext} />
+      )}
       <div className="flex items-center gap-2">
         <Button
           type="button"
