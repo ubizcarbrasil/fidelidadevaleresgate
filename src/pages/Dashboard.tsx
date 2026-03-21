@@ -338,15 +338,15 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Parceiros</CardTitle>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center w-full sm:w-auto">
             {currentBrandId && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}>
                 <Smartphone className="h-3.5 w-3.5" />App do Cliente
               </Button>
             )}
-            <div className="relative w-40">
+            <div className="relative flex-1 sm:w-40 sm:flex-none">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input placeholder="Buscar loja..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs" />
             </div>
