@@ -40,12 +40,12 @@ interface Props {
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 
-export function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
+export const LucideIcon = React.memo(function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
   const pascal = name.split("-").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("");
   const resolved = ICON_ALIASES[pascal] || pascal;
   const Icon = (icons as any)[resolved] || Tag;
   return <Icon className={className} style={style} />;
-}
+});
 
 function InterstitialBanner({ banner }: { banner: { id: string; image_url: string; title: string; link_url: string } }) {
   return (
