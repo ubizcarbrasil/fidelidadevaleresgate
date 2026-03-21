@@ -50,6 +50,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [bannerIndex, setBannerIndex] = useState(0);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const highlight = "hsl(var(--vb-highlight))";
