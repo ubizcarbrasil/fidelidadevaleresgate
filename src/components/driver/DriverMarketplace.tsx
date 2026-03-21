@@ -462,9 +462,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                   </div>
                 )}
               </section>
-              {bannersAfter.map(b => (
-                <InterstitialBanner key={b.id} banner={b} />
-              ))}
+              {bannersAfter.length > 0 && <InterstitialBannerGroup banners={bannersAfter} />}
             </div>
           );
         })}
