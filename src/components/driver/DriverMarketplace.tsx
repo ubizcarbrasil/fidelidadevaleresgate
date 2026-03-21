@@ -62,6 +62,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
   const showBanners = settings?.driver_show_banners !== false;
+  const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
 
   const { data, isLoading } = useQuery({
     queryKey: ["driver-marketplace", brand.id, branch?.id],
