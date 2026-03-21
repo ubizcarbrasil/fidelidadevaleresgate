@@ -1,5 +1,5 @@
+import React from "react";
 import { ExternalLink, ShoppingBag } from "lucide-react";
-import { motion } from "framer-motion";
 import { formatPrice, type AffiliateDeal } from "./DriverMarketplace";
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   idx: number;
 }
 
-export default function DriverDealCardGrid({ deal, highlight, fontHeading, idx }: Props) {
+function DriverDealCardGridInner({ deal, highlight, fontHeading, idx }: Props) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
   const priceStr = formatPrice(deal.price);
@@ -17,12 +17,8 @@ export default function DriverDealCardGrid({ deal, highlight, fontHeading, idx }
   const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.03, duration: 0.25 }}
-      whileTap={{ scale: 0.97 }}
-      className="rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col"
+    <div
+      className="rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform animate-fade-in"
       style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
       onClick={() => window.open(deal.affiliate_url, "_blank", "noopener,noreferrer")}
     >
@@ -57,6 +53,9 @@ export default function DriverDealCardGrid({ deal, highlight, fontHeading, idx }
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
+
+const DriverDealCardGrid = React.memo(DriverDealCardGridInner);
+export default DriverDealCardGrid;

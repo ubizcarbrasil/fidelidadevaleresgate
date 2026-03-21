@@ -1,10 +1,9 @@
-import { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ArrowLeft, ShoppingBag, Search, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "@/hooks/useDebounce";
 
 import DriverBannerCarousel from "./DriverBannerCarousel";

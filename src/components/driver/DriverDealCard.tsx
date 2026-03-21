@@ -1,3 +1,4 @@
+import React from "react";
 import { ExternalLink, ShoppingBag } from "lucide-react";
 import { formatPrice, type AffiliateDeal } from "./DriverMarketplace";
 
@@ -7,7 +8,7 @@ interface Props {
   fontHeading: string;
 }
 
-export default function DriverDealCard({ deal, highlight, fontHeading }: Props) {
+function DriverDealCardInner({ deal, highlight, fontHeading }: Props) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
   const priceStr = formatPrice(deal.price);
@@ -54,3 +55,6 @@ export default function DriverDealCard({ deal, highlight, fontHeading }: Props) 
     </div>
   );
 }
+
+const DriverDealCard = React.memo(DriverDealCardInner);
+export default DriverDealCard;
