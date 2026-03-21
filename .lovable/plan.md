@@ -1,15 +1,18 @@
 
 
-## Diagnóstico: Tela branca
+## Problema
 
-Eu verifiquei o app no preview e ele está funcionando normalmente — a tela de login carrega sem erros. O código do `DriverMarketplace.tsx` também está sintaticamente correto, sem erro de build.
+`touchAction: "pan-x"` nos containers de scroll horizontal bloqueia completamente o scroll vertical quando o dedo toca em cima de um card. O browser interpreta que apenas gestos horizontais são permitidos, impedindo a página de rolar para baixo.
 
-A "tela branca" que você está vendo pode ser:
+## Solução
 
-1. **Cache do navegador** no seu celular — o app antigo está em cache e o novo ainda não carregou
-2. **Domínio publicado** com deploy pendente — se você está acessando pela URL publicada, pode precisar republicar
+Trocar `touchAction: "pan-x"` por `touchAction: "pan-x pan-y"` em todos os containers de scroll horizontal dos Achadinhos. Isso permite que o browser decida a direção do gesto (horizontal vs vertical) baseado no movimento do dedo.
 
-### Ações recomendadas
+### Arquivos e locais
 
-1. **Limpar cache e recarregar** — No celular, force o refresh (puxe para baixo ou limpe o cache do navegador)
-2. **Republicar o projeto** — Se está usando a URL publicada, republique para que as últ
+**`src/components/driver/DriverMarketplace.tsx`** — 3 locais:
+- Linha 349: modo 1 linha
+- Linha 367: modo multi-linha (cada row)
+- Linha 399: "Outras ofertas"
+
+**`src/components/customer
