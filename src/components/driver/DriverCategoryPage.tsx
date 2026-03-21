@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Search, X, ExternalLink, icons, Tag, Share2 } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
