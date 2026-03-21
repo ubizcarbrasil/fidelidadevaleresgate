@@ -364,6 +364,8 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           </section>
         )}
       </div>
+        </>
+      )}
 
       {/* Category overlay (Ver todos) */}
       <AnimatePresence>
