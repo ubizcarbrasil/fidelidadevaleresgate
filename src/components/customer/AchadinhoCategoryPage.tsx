@@ -104,10 +104,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
   }, [deals, debouncedSearch]);
 
   const handleClick = (deal: AffiliateDeal) => {
-    if (customer) {
-      supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customer.id }).then();
-    }
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+    setSelectedDeal(deal);
   };
 
   const formatPrice = (val: number | null | undefined) => {
