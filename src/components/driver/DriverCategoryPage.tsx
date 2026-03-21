@@ -26,10 +26,11 @@ interface CategoryBanner {
   link_url: string | null;
 }
 
-export default function DriverCategoryPage({ category, brandId, branchId, fontHeading, onBack }: Props) {
+export default function DriverCategoryPage({ category, brandId, branchId, fontHeading, brandSettings, theme, onBack }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [bannerIndex, setBannerIndex] = useState(0);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const highlight = "hsl(var(--primary))";
 
   const { data: deals, isLoading } = useQuery({
