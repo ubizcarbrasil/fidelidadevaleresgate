@@ -307,7 +307,7 @@ export default function CustomerLayout() {
         <main
           ref={mainRef}
           onScroll={handleScroll}
-          className="flex-1 pb-24 overflow-y-auto"
+          className="flex-1 pb-24 overflow-y-auto overflow-x-hidden"
           style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
         >
           <div key={activeTab} className="animate-fade-in">
