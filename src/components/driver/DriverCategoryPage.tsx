@@ -103,7 +103,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
             <button
               onClick={() => {
                 if (navigator.share) {
-                  navigator.share({ title: `${category.name} — Achadinhos`, url: window.location.href }).catch(() => {});
+                  navigator.share({ title: `${category.name} — Achadinhos`, url: getPublicShareUrl(brandId, { categoryId: category.id }) }).catch(() => {});
                 }
               }}
               className="h-9 w-9 flex items-center justify-center rounded-xl bg-muted"

@@ -247,7 +247,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             <button
               onClick={() => {
                 if (navigator.share) {
-                  navigator.share({ title: marketplaceTitle, url: window.location.href }).catch(() => {});
+                  navigator.share({ title: marketplaceTitle, url: getPublicShareUrl(brand.id) }).catch(() => {});
                 }
               }}
               className="h-9 w-9 flex items-center justify-center rounded-xl"

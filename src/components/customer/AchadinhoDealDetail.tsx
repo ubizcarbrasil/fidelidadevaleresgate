@@ -132,7 +132,8 @@ export default function AchadinhoDealDetail({
             <button
               onClick={() => {
                 if (navigator.share) {
-                  navigator.share({ title: deal.title, url: deal.affiliate_url }).catch(() => {});
+                  const shareUrl = `${window.location.origin}/driver?brandId=${brandId}&dealId=${deal.id}`;
+                  navigator.share({ title: deal.title, url: shareUrl }).catch(() => {});
                 }
               }}
               className="h-9 w-9 flex items-center justify-center rounded-xl"

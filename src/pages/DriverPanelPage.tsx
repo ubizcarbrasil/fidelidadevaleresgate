@@ -81,7 +81,7 @@ export default function DriverPanelPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <DriverMarketplace brand={brand} branch={branch} theme={theme} />
+      <DriverMarketplace brand={brand} branch={branch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
     </div>
   );
 }
