@@ -327,10 +327,10 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Logo</Label>
-              <p className="text-[10px] text-muted-foreground">Aparece no cabeçalho do app e ícone PWA</p>
+              <p className="text-[10px] text-muted-foreground">Aparece no cabeçalho do app</p>
               <ImageUploadField
                 value={value.logo_url || ""}
                 onChange={(url) => update({ logo_url: url || undefined })}
@@ -347,6 +347,17 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
                 folder={`${folder}/favicon`}
                 accept="image/png,image/x-icon,image/svg+xml"
                 previewClassName="h-8 w-8 object-contain"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Ícone do PWA</Label>
+              <p className="text-[10px] text-muted-foreground">Ícone ao instalar o app (512×512 PNG)</p>
+              <ImageUploadField
+                value={value.pwa_icon_url || ""}
+                onChange={(url) => update({ pwa_icon_url: url || undefined })}
+                folder={`${folder}/pwa-icon`}
+                accept="image/png"
+                previewClassName="h-10 w-10 object-contain"
               />
             </div>
           </div>

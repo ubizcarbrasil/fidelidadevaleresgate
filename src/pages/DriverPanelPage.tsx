@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import DriverMarketplace from "@/components/driver/DriverMarketplace";
+import { useBrandTheme } from "@/hooks/useBrandTheme";
 
 export default function DriverPanelPage() {
   const [searchParams] = useSearchParams();
@@ -59,6 +60,13 @@ export default function DriverPanelPage() {
     load();
   }, [brandId, branchId]);
 
+  // Extract theme from brand_settings_json and apply PWA manifest dynamically
+  const settings = brand?.brand_settings_json as any;
+  const theme = settings?.theme || null;
+
+  // Apply brand theme (CSS vars, fonts, PWA manifest, favicon)
+  useBrandTheme(theme);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -74,10 +82,6 @@ export default function DriverPanelPage() {
       </div>
     );
   }
-
-  // Extract theme from brand_settings_json
-  const settings = brand.brand_settings_json as any;
-  const theme = settings?.theme || null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">

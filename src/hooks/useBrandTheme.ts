@@ -167,7 +167,7 @@ export function useBrandTheme(settings: Json | null | undefined) {
     }
 
     // Dynamic PWA manifest with brand logo
-    const logoUrl = theme.logo_url;
+    const logoUrl = theme.pwa_icon_url || theme.logo_url;
     if (logoUrl) {
       const dynamicManifest = {
         name: theme.display_name || document.title,
