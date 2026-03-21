@@ -131,18 +131,18 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   });
 
   const rawCategories = data?.categories || [];
-  const categories = [...rawCategories].sort((a, b) => {
+  const categories = useMemo(() => [...rawCategories].sort((a, b) => {
     const oa = categoryLayout[a.id]?.order;
     const ob = categoryLayout[b.id]?.order;
     if (oa != null && ob != null) return oa - ob;
     if (oa != null) return -1;
     if (ob != null) return 1;
-    return 0; // keep original order_index from query
-  });
+    return 0;
+  }), [rawCategories, categoryLayout]);
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const uncategorized = data?.uncategorized || [];
   const allDeals = data?.allDeals || [];
-  const activeBanners = interstitialBanners.filter((b: any) => b.is_active && b.image_url);
+  const activeBanners = useMemo(() => interstitialBanners.filter((b: any) => b.is_active && b.image_url), [interstitialBanners]);
 
   const marketplaceTitle = settings?.driver_marketplace_title || "Marketplace";
   const marketplaceSubtitle = settings?.driver_marketplace_subtitle || "Ofertas exclusivas para motoristas parceiros";
