@@ -157,44 +157,6 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
 
   return (
     <div className="pb-4">
-      {/* Hero Section: Greeting + Balance */}
-      <div className="max-w-lg mx-auto px-4 pt-4 pb-1 animate-fade-in">
-        {/* Top row: Greeting + Balance badge */}
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h2
-              className="text-lg font-bold"
-              style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
-            >
-              {greeting},{" "}
-              <span style={{ color: "hsl(var(--vb-gold))" }}>{firstName}</span>
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Confira as melhores ofertas para você
-            </p>
-          </div>
-          {loading ? (
-            <Skeleton className="h-10 w-28 rounded-2xl" />
-          ) : (
-            <button
-              onClick={() => { haptic("light"); onOpenLedger?.(); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-2xl active:scale-95 transition-transform"
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--vb-gold)) 0%, hsl(var(--vb-gold) / 0.8) 100%)",
-              }}
-            >
-              <Coins className="h-4 w-4" style={{ color: "hsl(var(--vb-gold-foreground))" }} />
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] font-medium leading-none" style={{ color: "hsl(var(--vb-gold-foreground) / 0.7)" }}>Saldo</span>
-                <span className="text-sm font-bold leading-tight" style={{ color: "hsl(var(--vb-gold-foreground))" }}>
-                  {customer ? `${Number(customer.points_balance).toLocaleString("pt-BR")} pts` : "0 pts"}
-                </span>
-              </div>
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Render native sections in configured order */}
       {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns.key))}
 
