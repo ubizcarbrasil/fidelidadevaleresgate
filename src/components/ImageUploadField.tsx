@@ -110,6 +110,9 @@ export default function ImageUploadField({
           </Button>
         </div>
       ) : null}
+      {value && aiContext && (
+        <ImageAiActions imageUrl={value} onReplace={onChange} context={aiContext} />
+      )}
       <div className="flex items-center gap-2">
         <Button
           type="button"
