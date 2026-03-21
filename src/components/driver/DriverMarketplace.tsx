@@ -200,8 +200,15 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
         />
       )}
 
-      {/* Category sections */}
+      {/* Category sections with interstitial banners */}
       <div className="space-y-6 pt-4">
+        {/* Top banners */}
+        {activeBanners
+          .filter(b => b.after_category_id === "__top__")
+          .map(b => (
+            <InterstitialBanner key={b.id} banner={b} />
+          ))}
+
         {categories.map(cat => {
           const allCatDeals = dealsByCategory.get(cat.id) || [];
           if (!allCatDeals.length) return null;
@@ -212,50 +219,57 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           const visibleDeals = allCatDeals.slice(0, maxVisible);
           const hasMore = allCatDeals.length > maxVisible;
 
+          const bannersAfter = activeBanners.filter(b => b.after_category_id === cat.id);
+
           return (
-            <section key={cat.id} ref={el => { if (el) sectionRefs.current.set(cat.id, el); }}>
-              <div className="px-5 mb-3 flex items-end justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-7 w-7 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${cat.color}20` }}
-                  >
-                    <LucideIcon name={cat.icon_name} className="h-4 w-4" style={{ color: cat.color }} />
+            <div key={cat.id}>
+              <section ref={el => { if (el) sectionRefs.current.set(cat.id, el); }}>
+                <div className="px-5 mb-3 flex items-end justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-7 w-7 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${cat.color}20` }}
+                    >
+                      <LucideIcon name={cat.icon_name} className="h-4 w-4" style={{ color: cat.color }} />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-foreground" style={{ fontFamily: fontHeading }}>
+                        {cat.name}
+                      </h2>
+                      <p className="text-[10px] text-muted-foreground">
+                        {allCatDeals.length} oferta{allCatDeals.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-base font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-                      {cat.name}
-                    </h2>
-                    <p className="text-[10px] text-muted-foreground">
-                      {allCatDeals.length} oferta{allCatDeals.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
+                  {hasMore && (
+                    <button
+                      onClick={() => setOpenCategory(cat)}
+                      className="text-xs font-semibold flex items-center gap-0.5 text-primary"
+                    >
+                      Ver todos
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
-                {hasMore && (
-                  <button
-                    onClick={() => setOpenCategory(cat)}
-                    className="text-xs font-semibold flex items-center gap-0.5 text-primary"
-                  >
-                    Ver todos
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
+                {configuredRows === 1 ? (
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+                    {visibleDeals.map(deal => (
+                      <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                    ))}
+                    <div className="min-w-[16px] flex-shrink-0" />
+                  </div>
+                ) : (
+                  <div className="px-5 grid grid-cols-2 gap-3 pb-1">
+                    {visibleDeals.map((deal, idx) => (
+                      <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
+                    ))}
+                  </div>
                 )}
-              </div>
-              {configuredRows === 1 ? (
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
-                  {visibleDeals.map(deal => (
-                    <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
-                  ))}
-                  <div className="min-w-[16px] flex-shrink-0" />
-                </div>
-              ) : (
-                <div className="px-5 grid grid-cols-2 gap-3 pb-1">
-                  {visibleDeals.map((deal, idx) => (
-                    <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
-                  ))}
-                </div>
-              )}
-            </section>
+              </section>
+              {bannersAfter.map(b => (
+                <InterstitialBanner key={b.id} banner={b} />
+              ))}
+            </div>
           );
         })}
 
