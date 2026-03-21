@@ -66,6 +66,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.crm_analytics": "Analytics",
     "sidebar.crm_lost": "Clientes Perdidos",
     "sidebar.crm_potential": "Clientes Potenciais",
+    "sidebar.painel_motorista": "Painel do Motorista",
   },
   customer_app: {
     "app.ofertas": "Ofertas",

@@ -48,6 +48,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin },
       { key: "sidebar.clonar_cidade", defaultTitle: "Duplicar Região", url: "/clone-branch", icon: Copy },
       { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-panel-link", icon: Car },
       { key: "sidebar.provisionar_marca", defaultTitle: "Nova Marca", url: "/provision-brand", icon: Rocket },
       { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye },
     ],
@@ -185,6 +186,31 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
+                const isDriverLink = item.url === "/driver-panel-link";
+
+                if (isDriverLink) {
+                  return (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton tooltip={getLabel(item.key)}>
+                        <a
+                          href="/driver"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 w-full"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open("/driver", "_blank");
+                          }}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
+                          {!collapsed && <ExternalLink className="h-3 w-3 opacity-50" />}
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton

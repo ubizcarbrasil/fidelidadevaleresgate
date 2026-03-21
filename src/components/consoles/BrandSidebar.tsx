@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
   Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
-  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp,
+  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, ExternalLink,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -101,6 +101,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users, moduleKey: "users_management" },
       { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: Shield, moduleKey: "store_permissions" },
       { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye, moduleKey: "access_hub" },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-panel-link", icon: Car },
     ],
   },
   {
@@ -139,6 +140,7 @@ function CollapsibleGroup({
   location,
   getLabel,
   badges,
+  brandId,
 }: {
   label: string;
   items: MenuItem[];
@@ -146,6 +148,7 @@ function CollapsibleGroup({
   location: { pathname: string };
   getLabel: (key: string) => string;
   badges: Record<string, number>;
+  brandId?: string;
 }) {
   const hasActiveRoute = items.some(
     (item) =>
@@ -167,8 +170,33 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
-                const isActive = location.pathname === item.url ||
-                  (item.url !== "/" && location.pathname.startsWith(item.url));
+                const isDriverLink = item.url === "/driver-panel-link";
+                const isActive = !isDriverLink && (location.pathname === item.url ||
+                  (item.url !== "/" && location.pathname.startsWith(item.url)));
+                
+                if (isDriverLink) {
+                  return (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton tooltip={getLabel(item.key)}>
+                        <a
+                          href={`/driver?brandId=${brandId || ""}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 w-full text-muted-foreground hover:text-foreground"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(`/driver?brandId=${brandId || ""}`, "_blank");
+                          }}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
+                          {!collapsed && <ExternalLink className="h-3 w-3 opacity-50" />}
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
@@ -289,6 +317,7 @@ export function BrandSidebar() {
               location={location}
               getLabel={getLabel}
               badges={badges}
+              brandId={currentBrandId ?? undefined}
             />
           );
         })}
