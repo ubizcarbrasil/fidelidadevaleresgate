@@ -12,6 +12,7 @@ import { hslToCss, withAlpha } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import AppIcon from "@/components/customer/AppIcon";
 import SafeImage from "@/components/customer/SafeImage";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 function kebabToPascal(name: string): string {
