@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss, withAlpha } from "@/lib/utils";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 
 interface AffiliateDeal {
   id: string;
@@ -48,6 +49,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const catScrollRef = useRef<HTMLDivElement>(null);
 
@@ -98,14 +100,8 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     return deals.filter(d => d.category_id === selectedCat);
   }, [deals, selectedCat]);
 
-  const handleClick = async (deal: AffiliateDeal) => {
-    if (customer) {
-      supabase.from("affiliate_clicks").insert({
-        deal_id: deal.id,
-        customer_id: customer.id,
-      }).then();
-    }
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+  const handleClick = (deal: AffiliateDeal) => {
+    setSelectedDeal(deal);
   };
 
   const formatPrice = (val: number | null | undefined) => {
@@ -295,6 +291,19 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         })}
         <div className="min-w-[16px] flex-shrink-0" />
       </div>
+
+      {selectedDeal && (
+        <AchadinhoDealDetail
+          deal={selectedDeal}
+          brandId={brand!.id}
+          branchId={selectedBranch?.id}
+          customerId={customer?.id}
+          theme={theme}
+          brandSettings={(brand as any)?.brand_settings_json}
+          onBack={() => setSelectedDeal(null)}
+          onSelectDeal={(d) => setSelectedDeal(d as any)}
+        />
+      )}
     </section>
   );
 }

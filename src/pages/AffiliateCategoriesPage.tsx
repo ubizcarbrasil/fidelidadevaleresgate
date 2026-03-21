@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Save, X, GripVertical, Image as ImageIcon, icons } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, GripVertical, Image as ImageIcon, icons, Palette } from "lucide-react";
 import { toast } from "sonner";
 import StorageImageUpload from "@/components/page-builder/StorageImageUpload";
 
@@ -49,6 +49,41 @@ export default function AffiliateCategoriesPage() {
   const [editForm, setEditForm] = useState<Partial<Category> | null>(null);
   const [newForm, setNewForm] = useState<Partial<Category> | null>(null);
   const [bannerCatId, setBannerCatId] = useState<string | null>(null);
+
+  // CTA config
+  const { data: brandData } = useQuery({
+    queryKey: ["brand-cta-config", currentBrandId],
+    enabled: !!currentBrandId,
+    queryFn: async () => {
+      const { data } = await supabase.from("brands").select("brand_settings_json").eq("id", currentBrandId!).single();
+      return data?.brand_settings_json as any || {};
+    },
+  });
+
+  const ctaConfig = brandData?.achadinho_cta || {};
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaBgColor, setCtaBgColor] = useState("#F97316");
+  const [ctaTextColor, setCtaTextColor] = useState("#FFFFFF");
+
+  useEffect(() => {
+    if (ctaConfig.label) setCtaLabel(ctaConfig.label);
+    if (ctaConfig.bg_color) setCtaBgColor(ctaConfig.bg_color);
+    if (ctaConfig.text_color) setCtaTextColor(ctaConfig.text_color);
+  }, [brandData]);
+
+  const saveCtaMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentBrandId) throw new Error("Brand não identificada");
+      const settings = { ...(brandData || {}), achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor } };
+      const { error } = await supabase.from("brands").update({ brand_settings_json: settings }).eq("id", currentBrandId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brand-cta-config"] });
+      toast.success("CTA salvo!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["affiliate-categories", currentBrandId],
@@ -175,6 +210,51 @@ export default function AffiliateCategoriesPage() {
           <Plus className="h-4 w-4 mr-2" />Nova Categoria
         </Button>
       </div>
+
+      {/* CTA Config */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Botão CTA — Detalhe do Achadinho
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Texto do botão</Label>
+              <Input value={ctaLabel} onChange={e => setCtaLabel(e.target.value)} placeholder="Ir para oferta" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Cor de fundo</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={ctaBgColor} onChange={e => setCtaBgColor(e.target.value)} className="h-9 w-12 rounded border cursor-pointer" />
+                <Input value={ctaBgColor} onChange={e => setCtaBgColor(e.target.value)} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Cor do texto</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={ctaTextColor} onChange={e => setCtaTextColor(e.target.value)} className="h-9 w-12 rounded border cursor-pointer" />
+                <Input value={ctaTextColor} onChange={e => setCtaTextColor(e.target.value)} className="flex-1" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button size="sm" onClick={() => saveCtaMutation.mutate()} disabled={saveCtaMutation.isPending}>
+              <Save className="h-4 w-4 mr-1" />Salvar CTA
+            </Button>
+            <div className="flex-1 flex justify-end">
+              <button
+                className="px-6 py-2.5 rounded-xl text-sm font-bold"
+                style={{ backgroundColor: ctaBgColor, color: ctaTextColor }}
+              >
+                {ctaLabel || "Ir para oferta"}
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {newForm && renderForm(newForm, setNewForm, () => saveMutation.mutate(newForm), () => setNewForm(null))}
       {editId && editForm && renderForm(editForm, setEditForm, () => saveMutation.mutate({ ...editForm, id: editId }), () => { setEditId(null); setEditForm(null); })}

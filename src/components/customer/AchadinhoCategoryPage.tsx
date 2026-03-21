@@ -12,6 +12,7 @@ import { hslToCss, withAlpha } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import AppIcon from "@/components/customer/AppIcon";
 import SafeImage from "@/components/customer/SafeImage";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 function kebabToPascal(name: string): string {
@@ -49,6 +50,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [bannerIndex, setBannerIndex] = useState(0);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const highlight = "hsl(var(--vb-highlight))";
@@ -102,10 +104,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
   }, [deals, debouncedSearch]);
 
   const handleClick = (deal: AffiliateDeal) => {
-    if (customer) {
-      supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customer.id }).then();
-    }
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+    setSelectedDeal(deal);
   };
 
   const formatPrice = (val: number | null | undefined) => {
@@ -314,6 +313,19 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
             </div>
           </div>
         </div>
+
+        {selectedDeal && (
+          <AchadinhoDealDetail
+            deal={selectedDeal}
+            brandId={brand!.id}
+            branchId={selectedBranch?.id}
+            customerId={customer?.id}
+            theme={theme}
+            brandSettings={(brand as any)?.brand_settings_json}
+            onBack={() => setSelectedDeal(null)}
+            onSelectDeal={(d) => setSelectedDeal(d)}
+          />
+        )}
       </motion.div>
     </motion.div>
   );

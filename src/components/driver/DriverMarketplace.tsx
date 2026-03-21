@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X } from "lucide-react";
 import DriverCategoryPage from "./DriverCategoryPage";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -73,10 +74,15 @@ export const formatPrice = (val: number | null | undefined) => {
 
 export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+  const handleClickDeal = useCallback((deal: AffiliateDeal) => {
+    setSelectedDeal(deal);
+  }, []);
 
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
@@ -278,7 +284,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {searchResults.map((deal, idx) => (
-                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
+                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} onClickDeal={handleClickDeal} />
               ))}
             </div>
           )}
@@ -348,7 +354,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                 {configuredRows === 1 ? (
                   <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
                     {visibleDeals.map(deal => (
-                      <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                      <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
                     ))}
                     <div className="min-w-[16px] flex-shrink-0" />
                   </div>
@@ -372,7 +378,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                         >
                           {rowDeals.map((deal, idx) => (
                             <div key={deal.id} className="flex-shrink-0" style={{ width: "170px", scrollSnapAlign: "start" }}>
-                              <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * itemsPerRow + idx} />
+                              <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * itemsPerRow + idx} onClickDeal={handleClickDeal} />
                             </div>
                           ))}
                           <div className="min-w-[16px] flex-shrink-0" />
@@ -398,7 +404,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
               {uncategorized.map(deal => (
-                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
+                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
               ))}
               <div className="min-w-[16px] flex-shrink-0" />
             </div>
@@ -415,7 +421,22 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           brandId={brand.id}
           branchId={branch?.id || null}
           fontHeading={fontHeading}
+          brandSettings={brand.brand_settings_json}
+          theme={theme}
           onBack={() => setOpenCategory(null)}
+        />
+      )}
+
+      {/* Deal detail */}
+      {selectedDeal && (
+        <AchadinhoDealDetail
+          deal={selectedDeal}
+          brandId={brand.id}
+          branchId={branch?.id}
+          theme={theme}
+          brandSettings={brand.brand_settings_json}
+          onBack={() => setSelectedDeal(null)}
+          onSelectDeal={(d) => setSelectedDeal(d as any)}
         />
       )}
     </div>

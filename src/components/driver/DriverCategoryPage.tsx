@@ -7,12 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { AffiliateDeal, DealCategory } from "./DriverMarketplace";
 import { formatPrice, LucideIcon } from "./DriverMarketplace";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 
 interface Props {
   category: DealCategory;
   brandId: string;
   branchId: string | null;
   fontHeading: string;
+  brandSettings?: any;
+  theme?: any;
   onBack: () => void;
 }
 
@@ -23,10 +26,11 @@ interface CategoryBanner {
   link_url: string | null;
 }
 
-export default function DriverCategoryPage({ category, brandId, branchId, fontHeading, onBack }: Props) {
+export default function DriverCategoryPage({ category, brandId, branchId, fontHeading, brandSettings, theme, onBack }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [bannerIndex, setBannerIndex] = useState(0);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const highlight = "hsl(var(--primary))";
 
   const { data: deals, isLoading } = useQuery({
@@ -71,7 +75,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
   }, [deals, debouncedSearch]);
 
   const handleClick = (deal: AffiliateDeal) => {
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+    setSelectedDeal(deal);
   };
 
   return (
@@ -241,6 +245,18 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
             </div>
           </div>
         </div>
+
+        {selectedDeal && (
+          <AchadinhoDealDetail
+            deal={selectedDeal}
+            brandId={brandId}
+            branchId={branchId}
+            theme={theme}
+            brandSettings={brandSettings}
+            onBack={() => setSelectedDeal(null)}
+            onSelectDeal={(d) => setSelectedDeal(d as any)}
+          />
+        )}
       </div>
     </div>
   );
