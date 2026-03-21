@@ -8,7 +8,7 @@ import {
   Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck,
   ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn,
   Globe, AlertCircle, Eye, Smartphone, Search, ArrowUpRight, ArrowDownRight,
-  Clock, CheckCircle2, AlertTriangle, Zap, Activity,
+  Clock, CheckCircle2, AlertTriangle, Zap, Activity, Car,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import { Input } from "@/components/ui/input";
