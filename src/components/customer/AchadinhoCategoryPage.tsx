@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ArrowLeft, Search, X, ExternalLink, icons, Tag } from "lucide-react";
+import { ArrowLeft, Search, X, ExternalLink, icons, Tag, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
