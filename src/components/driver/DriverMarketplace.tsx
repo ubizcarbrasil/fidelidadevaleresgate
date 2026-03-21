@@ -58,24 +58,57 @@ export const LucideIcon = React.memo(function LucideIcon({ name, className, styl
   return <Icon className={className} style={style} />;
 });
 
-function InterstitialBanner({ banner }: { banner: { id: string; image_url: string; title: string; link_url: string } }) {
+function InterstitialBannerGroup({ banners }: { banners: Array<{ id: string; image_url: string; title: string; link_url: string }> }) {
+  const [current, setCurrent] = useState(0);
+  const count = banners.length;
+
+  useEffect(() => {
+    if (count <= 1) return;
+    const interval = setInterval(() => {
+      setCurrent(prev => (prev + 1) % count);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [count]);
+
+  useEffect(() => {
+    if (current >= count) setCurrent(0);
+  }, [count, current]);
+
+  if (!count) return null;
+
+  const banner = banners[current];
+
   return (
     <div className="px-5 pt-4">
       <div
-        className="rounded-2xl overflow-hidden cursor-pointer"
+        className="relative rounded-2xl overflow-hidden cursor-pointer"
+        style={{ touchAction: "pan-x pan-y" }}
         onClick={() => banner.link_url && window.open(banner.link_url, "_blank", "noopener,noreferrer")}
       >
         <img
           src={banner.image_url}
           alt={banner.title || "Banner"}
-          className="w-full aspect-[21/9] object-cover rounded-2xl"
+          className="w-full aspect-[21/9] object-cover"
           loading="lazy"
         />
+        {count > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {banners.map((_, i) => (
+              <div
+                key={i}
+                className="h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  width: i === current ? 16 : 6,
+                  backgroundColor: i === current ? "white" : "rgba(255,255,255,0.5)",
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
 export const formatPrice = (val: number | null | undefined) => {
   if (val == null || val === 0) return null;
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -345,11 +378,10 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Category sections with interstitial banners */}
       <div className="space-y-6 pt-4">
         {/* Top banners */}
-        {activeBanners
-          .filter(b => b.after_category_id === "__top__")
-          .map(b => (
-            <InterstitialBanner key={b.id} banner={b} />
-          ))}
+        {(() => {
+          const topBanners = activeBanners.filter(b => b.after_category_id === "__top__");
+          return topBanners.length > 0 ? <InterstitialBannerGroup banners={topBanners} /> : null;
+        })()}
 
         {categories.map(cat => {
           const allCatDeals = dealsByCategory.get(cat.id) || [];
@@ -430,9 +462,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                   </div>
                 )}
               </section>
-              {bannersAfter.map(b => (
-                <InterstitialBanner key={b.id} banner={b} />
-              ))}
+              {bannersAfter.length > 0 && <InterstitialBannerGroup banners={bannersAfter} />}
             </div>
           );
         })}
