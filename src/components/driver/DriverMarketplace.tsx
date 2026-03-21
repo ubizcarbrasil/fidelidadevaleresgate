@@ -120,6 +120,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   });
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const uncategorized = data?.uncategorized || [];
+  const activeBanners = interstitialBanners.filter((b: any) => b.is_active && b.image_url);
 
   const handleCategorySelect = (catId: string | null) => {
     setSelectedCategoryId(catId);
