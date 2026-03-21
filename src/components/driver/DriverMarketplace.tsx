@@ -46,6 +46,24 @@ export function LucideIcon({ name, className, style }: { name: string; className
   return <Icon className={className} style={style} />;
 }
 
+function InterstitialBanner({ banner }: { banner: { id: string; image_url: string; title: string; link_url: string } }) {
+  return (
+    <div className="px-5 pt-4">
+      <div
+        className="rounded-2xl overflow-hidden cursor-pointer"
+        onClick={() => banner.link_url && window.open(banner.link_url, "_blank", "noopener,noreferrer")}
+      >
+        <img
+          src={banner.image_url}
+          alt={banner.title || "Banner"}
+          className="w-full aspect-[21/9] object-cover rounded-2xl"
+          loading="lazy"
+        />
+      </div>
+    </div>
+  );
+}
+
 export const formatPrice = (val: number | null | undefined) => {
   if (val == null || val === 0) return null;
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
