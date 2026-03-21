@@ -1,44 +1,40 @@
 
 
-## Plano: Revisão e Otimização do DriverMarketplace
+## Plano: Permitir edição de título, preço e descrição na tela de review
 
-### Problemas identificados
+### O que muda
 
-1. **`DriverDealCardGrid` usa `motion.div` com animação staggered** — cada card importa framer-motion e calcula delay por índice. Em listas grandes isso é pesado e causa jank no scroll
-2. **`LucideIcon` recalcula o ícone a cada render** — faz split/map/join toda vez sem memoização
-3. **Overlay "Ver todos" carrega framer-motion `AnimatePresence` mesmo quando fechado** — peso desnecessário no bundle inicial
-4. **`DriverDealCard` não tem `React.memo`** — re-renderiza em qualquer mudança de estado do pai (busca, categoria selecionada)
-5. **Cálculos repetidos** dentro do `.map()` de categorias (itemsPerRow recalculado a cada row)
+Na etapa "review" do `AchadinhosMobileImportPage`, ao clicar no card do produto, ele expande mostrando campos editáveis para **título**, **descrição**, **preço** e **preço original**. O usuário corrige inline e o estado é atualizado antes de publicar.
 
-### Alterações
+### Implementação
 
-**`src/components/driver/DriverDealCardGrid.tsx`**
-- Remover `motion.div` — substituir por `div` com CSS `animation` (fadeIn via classe Tailwind `animate-in fade-in`)
-- Remover import de `framer-motion`
-- Usar `active:scale-[0.97] transition-transform` igual ao `DriverDealCard`
-- Envolver com `React.memo`
+**`src/pages/AchadinhosMobileImportPage.tsx`**
 
-**`src/components/driver/DriverDealCard.tsx`**
-- Envolver com `React.memo` para evitar re-renders desnecessários
+1. Adicionar estado `editingId` para controlar qual card está expandido
+2. Adicionar função `updateProduct(id, field, value)` que atualiza o produto no array `products`
+3. No step "review", ao clicar no card (exceto no X), alternar `editingId`
+4. Quando `editingId === p.id`, renderizar abaixo da linha atual:
+   - `Input` para título
+   - `Textarea` para descrição (2 linhas)
+   - Dois `Input type="number"` lado a lado: preço e preço original
+5. Cada campo usa `onBlur` ou `onChange` para chamar `updateProduct`
 
-**`src/components/driver/DriverMarketplace.tsx`**
-- Memoizar `LucideIcon` com `React.memo`
-- Memoizar `categories`, `activeBanners`, `dealsByCategory` com `useMemo`
-- Extrair cálculo de `itemsPerRow` para fora do loop de rows
-- Manter `AnimatePresence` apenas no overlay (já está correto, sem mudança necessária)
+### Visual esperado
 
-**`src/components/driver/DriverCategoryCarousel.tsx`**
-- Envolver com `React.memo`
+Card normal (fechado): igual ao atual — imagem, título, preço, botão X
 
-### Resultado esperado
-- Scroll mais fluido nos carrosseis
-- Menos re-renders ao digitar na busca ou selecionar categoria
-- Bundle levemente menor (remove framer-motion do card grid)
-- Mesmo visual e comportamento funcional
+Card expandido (ao tocar): mesma info + campos editáveis abaixo:
+```text
+┌─────────────────────────────────┐
+│ [img]  Smartwatch Original...  X│
+│        R$ 211,09  R$ 351,00     │
+│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│
+│  Título: [___________________]  │
+│  Descrição: [________________]  │
+│  Preço: [____]  Original:[____] │
+└─────────────────────────────────┘
+```
 
-### Arquivos
-- `src/components/driver/DriverDealCardGrid.tsx`
-- `src/components/driver/DriverDealCard.tsx`
-- `src/components/driver/DriverMarketplace.tsx`
-- `src/components/driver/DriverCategoryCarousel.tsx`
+### Arquivo
+- `src/pages/AchadinhosMobileImportPage.tsx`
 
