@@ -378,7 +378,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                         >
                           {rowDeals.map((deal, idx) => (
                             <div key={deal.id} className="flex-shrink-0" style={{ width: "170px", scrollSnapAlign: "start" }}>
-                              <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * itemsPerRow + idx} />
+                              <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * itemsPerRow + idx} onClickDeal={handleClickDeal} />
                             </div>
                           ))}
                           <div className="min-w-[16px] flex-shrink-0" />
