@@ -39,6 +39,7 @@ export interface BrandTheme {
   };
   logo_url?: string;
   favicon_url?: string;
+  pwa_icon_url?: string;
   font_heading?: string;
   font_body?: string;
   background_image_url?: string;
