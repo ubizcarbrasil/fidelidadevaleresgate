@@ -162,6 +162,32 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const allDeals = data?.allDeals || [];
   const activeBanners = useMemo(() => interstitialBanners.filter((b: any) => b.is_active && b.image_url), [interstitialBanners]);
 
+  // Deep-link support: auto-open category or deal from URL params
+  const [deepLinked, setDeepLinked] = useState(false);
+  useEffect(() => {
+    if (deepLinked || !data) return;
+    setDeepLinked(true);
+    if (initialDealId) {
+      const deal = allDeals.find(d => d.id === initialDealId);
+      if (deal) {
+        setSelectedDeal(deal);
+        return;
+      }
+      // If not in preloaded deals, fetch it
+      supabase
+        .from("affiliate_deals")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id")
+        .eq("id", initialDealId)
+        .single()
+        .then(({ data: d }) => { if (d) setSelectedDeal(d as AffiliateDeal); });
+      return;
+    }
+    if (initialCategoryId) {
+      const cat = categories.find(c => c.id === initialCategoryId);
+      if (cat) setOpenCategory(cat);
+    }
+  }, [data, deepLinked, initialDealId, initialCategoryId, allDeals, categories]);
+
   const marketplaceTitle = settings?.driver_marketplace_title || "Marketplace";
   const marketplaceSubtitle = settings?.driver_marketplace_subtitle || "Ofertas exclusivas para motoristas parceiros";
 
