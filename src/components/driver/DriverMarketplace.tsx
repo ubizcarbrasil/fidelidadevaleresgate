@@ -207,7 +207,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   }
 
   return (
-    <div className="max-w-lg mx-auto pb-8">
+    <div className="max-w-lg mx-auto pb-8 overflow-x-hidden">
       {/* Header — same style as customer app */}
       <header
         className="sticky top-0 z-10"
@@ -346,7 +346,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                   )}
                 </div>
                 {configuredRows === 1 ? (
-                  <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}>
                     {visibleDeals.map(deal => (
                       <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
                     ))}
@@ -374,7 +374,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                 Outras ofertas
               </h2>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory" }}>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}>
               {uncategorized.map(deal => (
                 <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} />
               ))}
