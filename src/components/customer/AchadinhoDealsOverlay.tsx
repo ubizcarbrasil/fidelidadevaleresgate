@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { ArrowLeft, ExternalLink, icons, Tag, Share2 } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
