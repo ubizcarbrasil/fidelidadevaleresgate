@@ -14,6 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_category_banners: {
+        Row: {
+          brand_id: string
+          category_id: string
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean
+          link_url: string | null
+          order_index: number
+          title: string | null
+        }
+        Insert: {
+          brand_id: string
+          category_id: string
+          created_at?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          link_url?: string | null
+          order_index?: number
+          title?: string | null
+        }
+        Update: {
+          brand_id?: string
+          category_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_url?: string | null
+          order_index?: number
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_category_banners_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_category_banners_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_category_banners_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deal_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_clicks: {
         Row: {
           clicked_at: string

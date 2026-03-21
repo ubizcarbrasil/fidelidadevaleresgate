@@ -7,7 +7,7 @@ import BranchPickerSheet from "@/components/customer/BranchPickerSheet";
 import NotificationDrawer from "@/components/customer/NotificationDrawer";
 import CategoryGridOverlay from "@/components/customer/CategoryGridOverlay";
 import AchadinhoCategoryGridOverlay from "@/components/customer/AchadinhoCategoryGridOverlay";
-import AchadinhoDealsOverlay from "@/components/customer/AchadinhoDealsOverlay";
+import AchadinhoCategoryPage from "@/components/customer/AchadinhoCategoryPage";
 import CategoryStoresOverlay from "@/components/customer/CategoryStoresOverlay";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { motion } from "framer-motion";
@@ -470,9 +470,9 @@ export default function CustomerLayout() {
           />
         )}
 
-        {/* Achadinhos Deals Overlay */}
+        {/* Achadinhos Category Page */}
         {selectedAchadinhoCat && (
-          <AchadinhoDealsOverlay
+          <AchadinhoCategoryPage
             category={selectedAchadinhoCat}
             onBack={() => setSelectedAchadinhoCat(null)}
           />

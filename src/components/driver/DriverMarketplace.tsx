@@ -1,7 +1,8 @@
 import React, { useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ArrowLeft, ShoppingBag, Search, X } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X } from "lucide-react";
+import DriverCategoryPage from "./DriverCategoryPage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -407,44 +408,15 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
         </>
       )}
 
-      {/* Category overlay (Ver todos) */}
+      {/* Category page (Ver todos) */}
       {openCategory && (
-        <div className="fixed inset-0 z-[60] flex flex-col bg-background animate-fade-in">
-          <div className="relative z-10 flex flex-col h-full animate-slide-in-right">
-            <div className="sticky top-0 z-10 bg-background">
-              <div className="max-w-lg mx-auto flex items-center gap-3 px-4 pt-4 pb-2">
-                <button
-                  onClick={() => setOpenCategory(null)}
-                  className="h-9 w-9 flex items-center justify-center rounded-xl bg-muted"
-                >
-                  <ArrowLeft className="h-5 w-5 text-foreground" />
-                </button>
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${openCategory.color}20` }}>
-                    <LucideIcon name={openCategory.icon_name} className="h-4.5 w-4.5" style={{ color: openCategory.color }} />
-                  </div>
-                  <div>
-                    <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-                      {openCategory.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground">
-                      {(dealsByCategory.get(openCategory.id) || []).length} oferta{(dealsByCategory.get(openCategory.id) || []).length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="h-px bg-border" />
-            </div>
-
-            <div className="flex-1 overflow-y-auto pb-8">
-              <div className="max-w-lg mx-auto px-4 pt-4 grid grid-cols-2 gap-3">
-                {(dealsByCategory.get(openCategory.id) || []).map((deal, idx) => (
-                  <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <DriverCategoryPage
+          category={openCategory}
+          brandId={brand.id}
+          branchId={branch?.id || null}
+          fontHeading={fontHeading}
+          onBack={() => setOpenCategory(null)}
+        />
       )}
     </div>
   );
