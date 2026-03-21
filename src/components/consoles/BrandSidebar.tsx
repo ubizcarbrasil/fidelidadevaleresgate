@@ -317,7 +317,7 @@ export function BrandSidebar() {
               location={location}
               getLabel={getLabel}
               badges={badges}
-              brandId={currentBrandId}
+              brandId={currentBrandId ?? undefined}
             />
           );
         })}
