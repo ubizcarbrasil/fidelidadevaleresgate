@@ -50,6 +50,41 @@ export default function AffiliateCategoriesPage() {
   const [newForm, setNewForm] = useState<Partial<Category> | null>(null);
   const [bannerCatId, setBannerCatId] = useState<string | null>(null);
 
+  // CTA config
+  const { data: brandData } = useQuery({
+    queryKey: ["brand-cta-config", currentBrandId],
+    enabled: !!currentBrandId,
+    queryFn: async () => {
+      const { data } = await supabase.from("brands").select("brand_settings_json").eq("id", currentBrandId!).single();
+      return data?.brand_settings_json as any || {};
+    },
+  });
+
+  const ctaConfig = brandData?.achadinho_cta || {};
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaBgColor, setCtaBgColor] = useState("#F97316");
+  const [ctaTextColor, setCtaTextColor] = useState("#FFFFFF");
+
+  useEffect(() => {
+    if (ctaConfig.label) setCtaLabel(ctaConfig.label);
+    if (ctaConfig.bg_color) setCtaBgColor(ctaConfig.bg_color);
+    if (ctaConfig.text_color) setCtaTextColor(ctaConfig.text_color);
+  }, [brandData]);
+
+  const saveCtaMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentBrandId) throw new Error("Brand não identificada");
+      const settings = { ...(brandData || {}), achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor } };
+      const { error } = await supabase.from("brands").update({ brand_settings_json: settings }).eq("id", currentBrandId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brand-cta-config"] });
+      toast.success("CTA salvo!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const { data: categories, isLoading } = useQuery({
     queryKey: ["affiliate-categories", currentBrandId],
     queryFn: async () => {
