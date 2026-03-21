@@ -67,6 +67,36 @@ export default function DriverPanelPage() {
   // Apply brand theme (CSS vars, fonts, PWA manifest, favicon)
   useBrandTheme(theme);
 
+  // Update OG meta tags dynamically for link previews
+  useEffect(() => {
+    if (!brand) return;
+    const brandName = brand.name || "Achadinhos";
+    const ogTitle = `${brandName} — Achadinhos`;
+    const ogDescription = `Ofertas exclusivas no marketplace ${brandName}`;
+    const ogImage = theme?.pwa_icon_url || theme?.logo_url || "";
+
+    const setMeta = (property: string, content: string) => {
+      if (!content) return;
+      let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(property.startsWith("og:") ? "property" : "name", property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    document.title = ogTitle;
+    setMeta("og:title", ogTitle);
+    setMeta("twitter:title", ogTitle);
+    setMeta("og:description", ogDescription);
+    setMeta("twitter:description", ogDescription);
+    if (ogImage) {
+      setMeta("og:image", ogImage);
+      setMeta("twitter:image", ogImage);
+    }
+  }, [brand, theme]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
