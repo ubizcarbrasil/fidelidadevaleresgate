@@ -412,7 +412,7 @@ export default function AchadinhosMobileImportPage() {
       {/* Hidden file inputs */}
       <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFile} />
       <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
-      <input ref={correctPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleCorrectViaPhoto} />
+      <input ref={productImageRef} type="file" accept="image/*" className="hidden" onChange={handleProductImageUpload} />
 
       {/* Content */}
       <div className="flex-1 px-4 pb-8 max-w-lg mx-auto w-full">
