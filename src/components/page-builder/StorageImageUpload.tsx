@@ -97,6 +97,10 @@ export default function StorageImageUpload({
         </div>
       )}
 
+      {value && (
+        <ImageAiActions imageUrl={value} onReplace={onChange} context="banner" />
+      )}
+
       {mode === "upload" ? (
         <div>
           <input
