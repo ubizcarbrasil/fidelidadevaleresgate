@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss, withAlpha } from "@/lib/utils";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 
 interface AffiliateDeal {
   id: string;
