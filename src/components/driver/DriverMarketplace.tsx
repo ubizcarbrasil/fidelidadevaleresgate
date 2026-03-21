@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2 } from "lucide-react";
@@ -38,7 +38,18 @@ interface Props {
   brand: { id: string; name: string; brand_settings_json?: any };
   branch: { id: string } | null;
   theme: any;
+  initialCategoryId?: string | null;
+  initialDealId?: string | null;
 }
+
+function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
+  const base = `${window.location.origin}/driver?brandId=${brandId}`;
+  if (opts?.dealId) return `${base}&dealId=${opts.dealId}`;
+  if (opts?.categoryId) return `${base}&categoryId=${opts.categoryId}`;
+  return base;
+}
+
+export { getPublicShareUrl };
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 
@@ -72,7 +83,7 @@ export const formatPrice = (val: number | null | undefined) => {
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-export default function DriverMarketplace({ brand, branch, theme }: Props) {
+export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -150,6 +161,32 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const uncategorized = data?.uncategorized || [];
   const allDeals = data?.allDeals || [];
   const activeBanners = useMemo(() => interstitialBanners.filter((b: any) => b.is_active && b.image_url), [interstitialBanners]);
+
+  // Deep-link support: auto-open category or deal from URL params
+  const [deepLinked, setDeepLinked] = useState(false);
+  useEffect(() => {
+    if (deepLinked || !data) return;
+    setDeepLinked(true);
+    if (initialDealId) {
+      const deal = allDeals.find(d => d.id === initialDealId);
+      if (deal) {
+        setSelectedDeal(deal);
+        return;
+      }
+      // If not in preloaded deals, fetch it
+      supabase
+        .from("affiliate_deals")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id")
+        .eq("id", initialDealId)
+        .single()
+        .then(({ data: d }) => { if (d) setSelectedDeal(d as AffiliateDeal); });
+      return;
+    }
+    if (initialCategoryId) {
+      const cat = categories.find(c => c.id === initialCategoryId);
+      if (cat) setOpenCategory(cat);
+    }
+  }, [data, deepLinked, initialDealId, initialCategoryId, allDeals, categories]);
 
   const marketplaceTitle = settings?.driver_marketplace_title || "Marketplace";
   const marketplaceSubtitle = settings?.driver_marketplace_subtitle || "Ofertas exclusivas para motoristas parceiros";
@@ -236,7 +273,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
             <button
               onClick={() => {
                 if (navigator.share) {
-                  navigator.share({ title: marketplaceTitle, url: window.location.href }).catch(() => {});
+                  navigator.share({ title: marketplaceTitle, url: getPublicShareUrl(brand.id) }).catch(() => {});
                 }
               }}
               className="h-9 w-9 flex items-center justify-center rounded-xl"

@@ -123,7 +123,8 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
             <button
               onClick={() => {
                 if (navigator.share) {
-                  navigator.share({ title: `${category.name} — Achadinhos`, url: window.location.href }).catch(() => {});
+                  const shareUrl = `${window.location.origin}/driver?brandId=${brand!.id}&categoryId=${category.id}`;
+                  navigator.share({ title: `${category.name} — Achadinhos`, url: shareUrl }).catch(() => {});
                 }
               }}
               className="h-9 w-9 flex items-center justify-center rounded-xl"

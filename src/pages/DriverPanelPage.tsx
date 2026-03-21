@@ -8,6 +8,8 @@ export default function DriverPanelPage() {
   const [searchParams] = useSearchParams();
   const brandId = searchParams.get("brandId");
   const branchId = searchParams.get("branchId") || null;
+  const initialCategoryId = searchParams.get("categoryId") || null;
+  const initialDealId = searchParams.get("dealId") || null;
 
   const [brand, setBrand] = useState<any>(null);
   const [branch, setBranch] = useState<any>(null);
@@ -79,7 +81,7 @@ export default function DriverPanelPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <DriverMarketplace brand={brand} branch={branch} theme={theme} />
+      <DriverMarketplace brand={brand} branch={branch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
     </div>
   );
 }
