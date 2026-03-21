@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { AffiliateDeal, DealCategory } from "./DriverMarketplace";
-import { formatPrice, LucideIcon } from "./DriverMarketplace";
+import { formatPrice, LucideIcon, getPublicShareUrl } from "./DriverMarketplace";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 
 interface Props {
