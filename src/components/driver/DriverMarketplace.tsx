@@ -370,7 +370,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
 
               <div className="flex-1 overflow-y-auto pb-8">
                 <div className="max-w-lg mx-auto px-4 pt-4 grid grid-cols-2 gap-3">
-                  {(dealsByCategory.get(openCategory.id) || []).map((deal: AffiliateDeal, idx: number) => (
+                  {(dealsByCategory.get(openCategory.id) || []).map((deal, idx) => (
                     <DealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
                   ))}
                 </div>

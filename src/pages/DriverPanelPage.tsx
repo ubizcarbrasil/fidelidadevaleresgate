@@ -11,7 +11,6 @@ export default function DriverPanelPage() {
 
   const [brand, setBrand] = useState<any>(null);
   const [branch, setBranch] = useState<any>(null);
-  const [theme, setTheme] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,22 +44,6 @@ export default function DriverPanelPage() {
         setBranch(br);
       }
 
-      // Load theme
-      if (b.default_theme_id) {
-        const { data: t } = await supabase
-          .from("brand_themes")
-          .select("*")
-          .eq("id", b.default_theme_id)
-          .single();
-        if (t) {
-          try {
-            setTheme(typeof t.theme_json === "string" ? JSON.parse(t.theme_json) : t.theme_json);
-          } catch {
-            setTheme(null);
-          }
-        }
-      }
-
       setLoading(false);
     };
     load();
@@ -81,6 +64,10 @@ export default function DriverPanelPage() {
       </div>
     );
   }
+
+  // Extract theme from brand_settings_json
+  const settings = brand.brand_settings_json as any;
+  const theme = settings?.theme || null;
 
   return (
     <div className="min-h-screen bg-background">
