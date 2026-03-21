@@ -1,31 +1,23 @@
 
-Problema identificado: o banner do topo do motorista ainda está diferente do app do cliente porque o componente do motorista usa um carrossel próprio, com layout diferente do banner do passageiro.
 
-O que está causando o erro:
-- No cliente, o banner usa um container único com `relative rounded-2xl overflow-hidden h-40`
-- A imagem ocupa `w-full h-full object-cover`
-- Os indicadores ficam sobrepostos dentro do banner
-- No motorista, o componente atual usa:
-  - `flex overflow-x-auto`
-  - cada slide com `min-w-full`
-  - imagem com `h-40` direto no `<img>`
-  - indicadores fora do banner
-- Esse formato deixa o encaixe mais frágil e visualmente diferente, principalmente com imagens largas como a da sua captura
+## Plano: Corrigir scroll horizontal do carrossel de Achadinhos
 
-O que vou ajustar:
-1. Trocar a implementação do `DriverBannerCarousel` para seguir o mesmo padrão visual do banner do cliente
-2. Renderizar apenas o banner ativo por vez, dentro de um container fixo `h-40 rounded-2xl overflow-hidden`
-3. Fazer a imagem ocupar o container inteiro com `w-full h-full object-cover`
-4. Colocar os indicadores dentro do banner, na parte inferior, igual ao cliente
-5. Manter autoplay e clique no link do banner
+### Problema
+O carrossel horizontal de deals na seção Achadinhos não rola para o lado. O container `<main>` no `CustomerLayout` tem `overflow-y-auto` sem definir `overflow-x`, e em dispositivos móveis WebKit o scroll horizontal de containers filhos pode ser "engolido" pelo scroll vertical do pai.
 
-Arquivos envolvidos:
-- `src/components/driver/DriverBannerCarousel.tsx`
+### Solução
 
-Resultado esperado:
-- o banner do topo vai ficar com o mesmo encaixe do app do cliente
-- sem “quebra” lateral ou sensação de imagem mal cortada
-- com altura, bordas e paginação visual iguais ao passageiro
+**1. `src/components/customer/CustomerLayout.tsx` (linha 310)**
+- Adicionar `overflow-x-hidden` ao `<main>` para que o scroll horizontal seja delegado explicitamente aos containers internos:
+  - De: `className="flex-1 pb-24 overflow-y-auto"`
+  - Para: `className="flex-1 pb-24 overflow-y-auto overflow-x-hidden"`
 
-Detalhe técnico:
-Hoje o driver está usando um “scroll carousel”; o cliente usa um “single active slide”. Para ficar igual ao app do cliente, o correto é o driver adotar a mesma estrutura do segundo modelo, e não apenas trocar classes de altura.
+**2. `src/components/customer/AchadinhoSection.tsx` (linha 146)**
+- Garantir que a `<section>` não tenha `max-w-lg` bloqueando overflow. Trocar `max-w-lg mx-auto` por `w-full max-w-lg mx-auto` (pode não ser necessário, mas garante).
+- Adicionar `touch-action: pan-x` no container de scroll dos deals (linha 224-228) para garantir que o gesto horizontal seja reconhecido no mobile:
+  - Adicionar `style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}`
+
+### Arquivos envolvidos
+- **Editar**: `src/components/customer/CustomerLayout.tsx` — adicionar `overflow-x-hidden` no main
+- **Editar**: `src/components/customer/AchadinhoSection.tsx` — adicionar `touchAction: "pan-x"` no container de scroll
+
