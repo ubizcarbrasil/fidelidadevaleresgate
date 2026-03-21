@@ -426,6 +426,19 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           onBack={() => setOpenCategory(null)}
         />
       )}
+
+      {/* Deal detail */}
+      {selectedDeal && (
+        <AchadinhoDealDetail
+          deal={selectedDeal}
+          brandId={brand.id}
+          branchId={branch?.id}
+          theme={theme}
+          brandSettings={brand.brand_settings_json}
+          onBack={() => setSelectedDeal(null)}
+          onSelectDeal={(d) => setSelectedDeal(d as any)}
+        />
+      )}
     </div>
   );
 }
