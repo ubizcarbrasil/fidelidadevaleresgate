@@ -177,7 +177,7 @@ function BrandQuickLinks() {
     { label: "App do Cliente", path: currentBrandId ? `/customer-preview?brandId=${currentBrandId}` : "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app" },
     { label: "Cadastro Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros" },
     { label: "Painel Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Gestão das lojas" },
-    { label: "Achadinho Motorista", path: "/driver", prodPath: "/driver", icon: Car, description: "Marketplace do motorista" },
+    { label: "Achadinho Motorista", path: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", prodPath: "/driver", icon: Car, description: "Marketplace do motorista" },
   ];
 
   return (
