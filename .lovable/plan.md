@@ -1,33 +1,23 @@
 
 
-## Plano: Limpar a Home — remover itens marcados com X
+## Plano: Reverter mudanças no app do cliente e aplicar no painel do motorista
 
-### O que remover (baseado nas imagens anotadas)
+### Problema
+As remoções (seletor de cidade, sino, carteira, saudação, saldo) foram aplicadas no app do cliente (`CustomerLayout.tsx` e `CustomerHomePage.tsx`), mas deveriam ter sido feitas no painel do motorista (`DriverMarketplace.tsx`).
 
-| Item | Localização | Ação |
-|---|---|---|
-| Seletor de cidade ("São João da B...") | Header (`CustomerLayout.tsx`) | Remover `BranchPickerSheet` |
-| Sino de notificações | Header (`CustomerLayout.tsx`) | Remover botão do sino |
-| Ícone da carteira | Header (`CustomerLayout.tsx`) | Remover botão da carteira |
-| Saudação + nome ("Boa noite, Visitante") | Home (`CustomerHomePage.tsx`) | Remover bloco de greeting |
-| Badge de saldo ("0 pts") | Home (`CustomerHomePage.tsx`) | Remover botão de saldo |
+### Ações
 
-### O que permanece
-- Logo + nome da marca no header
-- Barra de busca
-- Carrossel de banners
-- Carrossel de categorias (Achadinhos)
-- Seções For You, Emissoras, Achadinhos
-- Seções CMS dinâmicas
-- Bottom tab bar
+**1. Reverter `src/components/customer/CustomerLayout.tsx`**
+- Restaurar o `BranchPickerSheet`, botão do sino e botão da carteira no header
 
-### Arquivos envolvidos
+**2. Reverter `src/pages/customer/CustomerHomePage.tsx`**
+- Restaurar o bloco Hero Section com saudação e badge de saldo
 
-**1. `src/components/customer/CustomerLayout.tsx`**
-- Remover do header: `BranchPickerSheet`, botão do sino, botão da carteira
-- Manter: logo, nome, barra de busca
+**3. Ajustar `src/components/driver/DriverMarketplace.tsx`**
+- O painel do motorista já está limpo (sem pontos, sem carteira, sem sino) — ele foi criado assim desde o início
+- Confirmar que o header mostra apenas logo + título "Marketplace"
+- Nenhuma mudança necessária aqui
 
-**2. `src/pages/customer/CustomerHomePage.tsx`**
-- Remover o bloco "Hero Section" inteiro (greeting + saldo, linhas 160-196)
-- As seções nativas começam direto após o `<div className="pb-4">`
+### Resumo
+Reverter os dois arquivos do cliente ao estado anterior. O painel do motorista já está correto.
 
