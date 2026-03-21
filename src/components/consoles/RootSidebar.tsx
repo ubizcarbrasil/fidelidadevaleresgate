@@ -214,6 +214,7 @@ function CollapsibleGroup({
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>
