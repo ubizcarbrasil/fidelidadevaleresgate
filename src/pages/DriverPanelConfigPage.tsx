@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Copy, Check, Car, Sparkles } from "lucide-react";
+import { ExternalLink, Copy, Check, Car, Sparkles, Image } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -17,6 +17,38 @@ export default function DriverPanelConfigPage() {
   const [copied, setCopied] = useState(false);
 
   const driverUrl = `${window.location.origin}/driver?brandId=${currentBrandId || ""}`;
+
+  // Fetch brand settings for banner toggle
+  const { data: brandSettings } = useQuery({
+    queryKey: ["brand-settings-driver", currentBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", currentBrandId!)
+        .single();
+      if (error) throw error;
+      return (data?.brand_settings_json as any) || {};
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const showBanners = brandSettings?.driver_show_banners !== false;
+
+  const bannerToggleMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const updated = { ...brandSettings, driver_show_banners: enabled };
+      const { error } = await supabase
+        .from("brands")
+        .update({ brand_settings_json: updated })
+        .eq("id", currentBrandId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["brand-settings-driver", currentBrandId] });
+      toast({ title: "Configuração atualizada" });
+    },
+  });
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["affiliate-categories-driver", currentBrandId],
@@ -81,6 +113,29 @@ export default function DriverPanelConfigPage() {
             <ExternalLink className="h-4 w-4" />
             Abrir Painel do Motorista
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Banner toggle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Image className="h-5 w-5 text-primary" />
+            Banners
+          </CardTitle>
+          <CardDescription>Exiba banners promocionais no topo do marketplace do motorista.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <span className="font-medium text-sm">Exibir banners</span>
+              <p className="text-xs text-muted-foreground">Mostra os mesmos banners configurados na plataforma</p>
+            </div>
+            <Switch
+              checked={showBanners}
+              onCheckedChange={(checked) => bannerToggleMutation.mutate(checked)}
+            />
+          </div>
         </CardContent>
       </Card>
 
