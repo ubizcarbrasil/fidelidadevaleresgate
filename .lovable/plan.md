@@ -1,32 +1,33 @@
 
 
-## Plano: Banner do topo igual ao do passageiro + título editável + busca de produtos
+## Plano: Alinhar visual do painel do motorista com o app do cliente
 
-### 1. Banner do topo com mesmo tamanho do passageiro
+### Problema
+O painel do motorista (`DriverMarketplace`) não está com o mesmo visual do app do cliente. Pela screenshot, o banner ocupa quase toda a tela e o estilo geral não bate com o app do passageiro.
 
-**Arquivo**: `src/components/driver/DriverBannerCarousel.tsx`
-- Trocar `h-36` por `aspect-[21/9]` na imagem — mesmo aspect ratio usado nos banners intercalados e no `BannerManagerPage`
+### O que será feito
 
-### 2. Título "Marketplace" editável
+Ajustar o `DriverMarketplace` para ter a mesma estética do `CustomerLayout`:
 
-**Arquivo**: `src/components/driver/DriverMarketplace.tsx`
-- Ler `settings.driver_marketplace_title` do `brand_settings_json` (fallback: "Marketplace")
-- Ler `settings.driver_marketplace_subtitle` (fallback: "Ofertas exclusivas para motoristas parceiros")
+**1. Ativar dark mode no painel do motorista**
+- Na página `DriverPanelPage.tsx`, adicionar `useEffect` que ativa `dark` class no `documentElement` (igual ao `CustomerLayout`)
 
-**Arquivo**: `src/pages/DriverPanelConfigPage.tsx`
-- Adicionar campos de texto "Título do Marketplace" e "Subtítulo" na seção de configuração geral
-- Salvar em `brand_settings_json.driver_marketplace_title` e `driver_marketplace_subtitle`
+**2. Header idêntico ao do cliente**
+- Mesmo padding, mesmo estilo de logo + título (font-extrabold, 15px)
+- Busca com mesmo estilo: botão com fundo `muted`, ícone + placeholder "O que está procurando?"
+- Remover a busca com `<Input>` e usar o mesmo estilo de botão do cliente
 
-### 3. Barra de busca por produtos
+**3. Banner do topo com altura correta**
+- O `aspect-[21/9]` já está correto mas o container pode estar inflando. Adicionar `max-h-[200px]` como fallback para garantir que não fique gigante
 
-**Arquivo**: `src/components/driver/DriverMarketplace.tsx`
-- Adicionar input de busca com ícone de lupa no header (abaixo do título, estilo similar ao app do cliente)
-- Estado `searchTerm` com debounce
-- Quando ativo, filtrar `allDeals` pelo título/descrição e mostrar resultados em grid, ocultando as seções normais
-- Quando vazio, volta ao layout normal de categorias
+**4. Manter tudo que já funciona**
+- Carrossel de categorias
+- Seções de produtos com linhas configuráveis
+- Banners intercalados
+- Busca funcional (abrir overlay ou filtrar inline)
 
 ### Arquivos envolvidos
-- **Editar**: `src/components/driver/DriverBannerCarousel.tsx` — aspect ratio
-- **Editar**: `src/components/driver/DriverMarketplace.tsx` — título dinâmico + busca
-- **Editar**: `src/pages/DriverPanelConfigPage.tsx` — campos de título/subtítulo
+- **Editar**: `src/components/driver/DriverMarketplace.tsx` — header e busca no estilo do cliente
+- **Editar**: `src/pages/DriverPanelPage.tsx` — ativar dark mode
+- **Editar**: `src/components/driver/DriverBannerCarousel.tsx` — garantir altura máxima no banner
 
