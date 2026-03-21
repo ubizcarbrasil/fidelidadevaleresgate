@@ -149,21 +149,10 @@ function BrandQuickLinks() {
     },
     enabled: !!currentBrandId,
   });
-  const { data: domain } = useQuery({
-    queryKey: ["brand-domain", currentBrandId],
-    queryFn: async () => {
-      if (!currentBrandId) return null;
-      const { data } = await supabase.from("brand_domains").select("domain, subdomain").eq("brand_id", currentBrandId).eq("is_primary", true).maybeSingle();
-      return data;
-    },
-    enabled: !!currentBrandId,
-  });
-
   const settings = brand?.brand_settings_json as Record<string, unknown> | null;
   const testAccounts = (settings?.test_accounts ?? undefined) as { email: string; role: string; is_active: boolean }[] | undefined;
   const origin = window.location.origin;
-  const customDomain = domain?.domain || domain?.subdomain || null;
-  const productionUrl = customDomain ? `https://${customDomain.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}` : null;
+  const driverPublicBase = (settings?.driver_public_base_url as string) || null;
 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪" };
