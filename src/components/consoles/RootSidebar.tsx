@@ -48,6 +48,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin },
       { key: "sidebar.clonar_cidade", defaultTitle: "Duplicar Região", url: "/clone-branch", icon: Copy },
       { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-panel-link", icon: Car },
       { key: "sidebar.provisionar_marca", defaultTitle: "Nova Marca", url: "/provision-brand", icon: Rocket },
       { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye },
     ],
