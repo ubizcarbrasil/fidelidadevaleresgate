@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical } from "lucide-react";
-import { getPublicOrigin, buildDriverUrl } from "@/lib/publicShareUrl";
+import { buildDriverUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageUploadField from "@/components/ImageUploadField";
@@ -37,16 +37,6 @@ export default function DriverPanelConfigPage() {
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
 
-  const [driverUrl, setDriverUrl] = useState(`${window.location.origin}/driver?brandId=${currentBrandId || ""}`);
-
-  // Resolve public domain for link
-  useEffect(() => {
-    if (!currentBrandId) return;
-    getPublicOrigin(currentBrandId).then(origin => {
-      setDriverUrl(buildDriverUrl(origin, currentBrandId));
-    });
-  }, [currentBrandId]);
-
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],
     queryFn: async () => {
@@ -60,6 +50,10 @@ export default function DriverPanelConfigPage() {
     },
     enabled: !!currentBrandId,
   });
+
+  const configuredBaseUrl = brandSettings?.driver_public_base_url as string | undefined;
+  const effectiveOrigin = configuredBaseUrl || window.location.origin;
+  const driverUrl = buildDriverUrl(effectiveOrigin, currentBrandId || "");
 
   const showBanners = brandSettings?.driver_show_banners !== false;
   const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
@@ -195,6 +189,38 @@ export default function DriverPanelConfigPage() {
             <ExternalLink className="h-4 w-4" />
             Abrir Painel do Motorista
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* URL pública oficial */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ExternalLink className="h-5 w-5 text-primary" />
+            URL Pública Oficial
+          </CardTitle>
+          <CardDescription>
+            Defina a URL base usada nos links compartilhados. Se vazio, usa o domínio atual.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">URL base</label>
+            <Input
+              key={brandSettings?.driver_public_base_url ?? "__empty__"}
+              defaultValue={brandSettings?.driver_public_base_url || ""}
+              placeholder={window.location.origin}
+              onBlur={(e) => {
+                let val = e.target.value.trim().replace(/\/+$/, "");
+                if (val !== (brandSettings?.driver_public_base_url || "")) {
+                  settingsMutation.mutate({ driver_public_base_url: val || null });
+                }
+              }}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Ex: https://fidelidadevaleresgate.lovable.app
+            </p>
+          </div>
         </CardContent>
       </Card>
 

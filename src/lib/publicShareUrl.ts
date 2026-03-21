@@ -1,15 +1,39 @@
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+
+// Cache to avoid repeated queries during same session
+let cachedBaseUrls: Record<string, string> = {};
 
 /**
  * Returns the public origin for share URLs.
- * Uses current origin directly to avoid broken links from unconfigured domains.
+ * Checks brand_settings_json.driver_public_base_url first, falls back to window.location.origin.
  */
-export async function getPublicOrigin(_brandId: string): Promise<string> {
-  return window.location.origin;
+export async function getPublicOrigin(brandId: string): Promise<string> {
+  if (cachedBaseUrls[brandId]) return cachedBaseUrls[brandId];
+
+  try {
+    const { data } = await supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", brandId)
+      .maybeSingle();
+    const settings = data?.brand_settings_json as Record<string, unknown> | null;
+    const configuredUrl = (settings?.driver_public_base_url as string)?.trim().replace(/\/+$/, "");
+    if (configuredUrl) {
+      cachedBaseUrls[brandId] = configuredUrl;
+      return configuredUrl;
+    }
+  } catch {
+    // silently fall back
+  }
+
+  const fallback = window.location.origin;
+  cachedBaseUrls[brandId] = fallback;
+  return fallback;
 }
 
 /**
- * Builds a public /driver share URL synchronously using current origin as fallback.
+ * Builds a public /driver share URL.
  */
 export function buildDriverUrl(origin: string, brandId: string, opts?: { categoryId?: string; dealId?: string }) {
   const base = `${origin}/driver?brandId=${brandId}`;
@@ -30,11 +54,10 @@ export async function shareDriverUrl(brandId: string, title: string, opts?: { ca
       await navigator.share({ title, url });
       return;
     } catch (e: any) {
-      if (e?.name === "AbortError") return; // user cancelled
+      if (e?.name === "AbortError") return;
     }
   }
 
-  // Fallback: copy to clipboard
   try {
     await navigator.clipboard.writeText(url);
     toast({ title: "Link copiado!" });

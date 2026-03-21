@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspens
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2 } from "lucide-react";
-import { shareDriverUrl } from "@/lib/publicShareUrl";
+import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,10 +44,7 @@ interface Props {
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
-  const base = `${window.location.origin}/driver?brandId=${brandId}`;
-  if (opts?.dealId) return `${base}&dealId=${opts.dealId}`;
-  if (opts?.categoryId) return `${base}&categoryId=${opts.categoryId}`;
-  return base;
+  return buildDriverUrl(window.location.origin, brandId, opts);
 }
 
 export { getPublicShareUrl };
