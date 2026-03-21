@@ -470,9 +470,9 @@ export default function CustomerLayout() {
           />
         )}
 
-        {/* Achadinhos Deals Overlay */}
+        {/* Achadinhos Category Page */}
         {selectedAchadinhoCat && (
-          <AchadinhoDealsOverlay
+          <AchadinhoCategoryPage
             category={selectedAchadinhoCat}
             onBack={() => setSelectedAchadinhoCat(null)}
           />
