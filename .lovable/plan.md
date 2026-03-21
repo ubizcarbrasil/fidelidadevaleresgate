@@ -1,25 +1,61 @@
 
+Objetivo: fazer o link do Achadinhos abrir publicamente na web sem cair em domínio quebrado.
 
-## Plano: Corrigir link público e lentidão no compartilhamento
+Problema encontrado
+- Hoje existe um registro em `brand_domains` para `123456.valeresgate.com` vinculado à marca `db15bd21-9137-4965-a0fb-540d8e8b26f1`.
+- Esse domínio está sendo tratado como “público” em partes do admin, mas o DNS dele não está respondendo fora da aplicação.
+- Resultado: o sistema continua exibindo/copiando um link que parece oficial, porém quebra para terceiros.
+- O `/driver` em si já está público; o erro está no domínio usado no link.
 
-### Problema
+O que vou implementar
+1. Parar de usar `brand_domains` como fonte “confiável” do link público do Achadinhos
+- `is_primary`/`is_active` não garantem que o domínio exista de verdade na internet.
+- O app não deve mais divulgar automaticamente `123456.valeresgate.com` só porque há um registro salvo.
 
-A imagem mostra o Safari tentando abrir `123456.valeresgate.com` — esse domínio está cadastrado em `brand_domains` mas **não existe no DNS** (não aponta para nenhum servidor). O `getPublicOrigin` busca esse domínio e gera links quebrados.
+2. Criar uma URL pública oficial do Achadinhos, configurável pela marca
+- Adicionar no painel de configuração do motorista um campo como:
+  - “URL pública do Achadinhos”
+- Exemplo de valor:
+  - `https://fidelidadevaleresgate.lovable.app`
+  - ou, quando o DNS estiver pronto, `https://123456.valeresgate.com`
+- Essa URL será salva em `brand_settings_json` e passará a ser a única base usada para compartilhar/copiar/abrir.
 
-Além disso, a consulta assíncrona ao banco a cada clique de compartilhar causa lentidão perceptível.
+3. Centralizar toda a geração do link
+- Ajustar `src/lib/publicShareUrl.ts` para montar sempre:
+  - `URL_PUBLICA_OFICIAL/driver?brandId=...`
+  - com suporte a `dealId` e `categoryId`
+- Ordem de fallback:
+  1. URL pública configurada na marca
+  2. `window.location.origin`
 
-### Correção
+4. Corrigir todos os pontos que ainda exibem/copiam link errado
+- Dashboard
+- Configuração do Painel do Motorista
+- Botões de compartilhar de categoria/produto/marketplace
+- Assim todo lugar passa a entregar exatamente o mesmo link público.
 
-**`src/lib/publicShareUrl.ts`** — simplificar `getPublicOrigin`
+5. Remover o comportamento enganoso da Dashboard
+- A área “Links Úteis” hoje ainda monta `productionUrl` com `brand_domains`.
+- Vou trocar isso para usar a URL pública oficial configurada.
+- Também vou remover/ajustar o indicativo atual de domínio para não sugerir um endereço quebrado.
 
-Remover a consulta a `brand_domains` e usar `window.location.origin` diretamente. Quando o app estiver no domínio publicado (`fidelidadevaleresgate.lovable.app`), os links apontarão para lá — que funciona. Quando estiver no preview, apontará para o preview — que também funciona (o bypass `/driver` está ativo).
+Importante
+- Código não consegue “fazer existir” `123456.valeresgate.com` se o DNS não estiver configurado.
+- Então a correção terá dois efeitos:
+  - imediato: o sistema passa a compartilhar um link público funcional do Achadinhos
+  - opcional depois: quando o domínio próprio estiver realmente ativo, basta colocá-lo como URL pública oficial
 
-Isso resolve os dois problemas:
-1. Links param de apontar para domínios inexistentes
-2. Compartilhamento fica instantâneo (sem query ao banco)
-
-Quando os domínios customizados estiverem de fato configurados no DNS, a lógica de lookup pode ser reativada.
-
-### Arquivo
+Arquivos envolvidos
 - `src/lib/publicShareUrl.ts`
+- `src/pages/DriverPanelConfigPage.tsx`
+- `src/pages/Dashboard.tsx`
+- `src/components/driver/DriverMarketplace.tsx`
+- `src/components/driver/DriverCategoryPage.tsx`
+- `src/components/customer/AchadinhoDealDetail.tsx`
+- `src/components/customer/AchadinhoCategoryPage.tsx`
+- `src/components/customer/AchadinhoDealsOverlay.tsx`
 
+Resultado esperado
+- O Achadinhos passa a ter um link público estável e acessível por qualquer pessoa na web
+- O admin deixa de copiar/exibir `123456.valeresgate.com` enquanto ele estiver quebrado
+- Compartilhamentos passam a abrir corretamente o `/driver` público com `brandId`, `categoryId` e `dealId` quando houver
