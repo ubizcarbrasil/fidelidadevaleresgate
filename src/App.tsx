@@ -108,6 +108,7 @@ const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfig
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
+const DriverPanelConfigPage = lazy(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazy(() => import("@/pages/DriverPanelPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
@@ -226,6 +227,7 @@ function AppRoutes() {
           <Route path="offer-card-config" element={<RootGuard><OfferCardConfigPage /></RootGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
+          <Route path="driver-config" element={<DriverPanelConfigPage />} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
