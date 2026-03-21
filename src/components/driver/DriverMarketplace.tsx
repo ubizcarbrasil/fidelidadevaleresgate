@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, ExternalLink, icons, Tag, ArrowLeft, ShoppingBag, LayoutGrid } from "lucide-react";
+import { ChevronRight, icons, Tag, ArrowLeft, ShoppingBag, Search, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import DriverBannerCarousel from "./DriverBannerCarousel";
 import DriverCategoryCarousel from "./DriverCategoryCarousel";
@@ -72,6 +74,8 @@ export const formatPrice = (val: number | null | undefined) => {
 export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const highlight = "hsl(var(--primary))";
@@ -138,7 +142,21 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   });
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const uncategorized = data?.uncategorized || [];
+  const allDeals = data?.allDeals || [];
   const activeBanners = interstitialBanners.filter((b: any) => b.is_active && b.image_url);
+
+  const marketplaceTitle = settings?.driver_marketplace_title || "Marketplace";
+  const marketplaceSubtitle = settings?.driver_marketplace_subtitle || "Ofertas exclusivas para motoristas parceiros";
+
+  const searchResults = useMemo(() => {
+    if (!debouncedSearch.trim()) return [];
+    const q = debouncedSearch.toLowerCase();
+    return allDeals.filter(d =>
+      d.title.toLowerCase().includes(q) ||
+      d.description?.toLowerCase().includes(q) ||
+      d.store_name?.toLowerCase().includes(q)
+    );
+  }, [debouncedSearch, allDeals]);
 
   const handleCategorySelect = (catId: string | null) => {
     setSelectedCategoryId(catId);
@@ -196,13 +214,30 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           {logoUrl && (
             <img src={logoUrl} alt={brand.name} className="h-9 w-9 rounded-xl object-contain" />
           )}
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-              Marketplace
+              {marketplaceTitle}
             </h1>
             <p className="text-[10px] text-muted-foreground">
-              Ofertas exclusivas para motoristas parceiros
+              {marketplaceSubtitle}
             </p>
+          </div>
+        </div>
+        {/* Search */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Buscar produtos..."
+              className="pl-9 pr-9 h-9 rounded-xl bg-muted border-0 text-sm"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -210,6 +245,27 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
+      {/* Search results */}
+      {debouncedSearch.trim() ? (
+        <div className="px-4 pt-4 pb-8">
+          <p className="text-xs text-muted-foreground mb-3">
+            {searchResults.length} resultado{searchResults.length !== 1 ? "s" : ""} para "{debouncedSearch}"
+          </p>
+          {searchResults.length === 0 ? (
+            <div className="text-center py-8">
+              <Search className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">Nenhum produto encontrado</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {searchResults.map((deal, idx) => (
+                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
       {/* Category carousel */}
       {categories.length > 0 && (
         <DriverCategoryCarousel
@@ -308,6 +364,8 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           </section>
         )}
       </div>
+        </>
+      )}
 
       {/* Category overlay (Ver todos) */}
       <AnimatePresence>

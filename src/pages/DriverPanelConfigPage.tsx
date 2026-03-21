@@ -189,6 +189,42 @@ export default function DriverPanelConfigPage() {
         </CardContent>
       </Card>
 
+      {/* Título e subtítulo */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Título do Marketplace</CardTitle>
+          <CardDescription>Personalize o título e subtítulo exibidos no topo da tela do motorista.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Título</label>
+            <Input
+              defaultValue={brandSettings?.driver_marketplace_title || ""}
+              placeholder="Marketplace"
+              onBlur={(e) => {
+                const val = e.target.value.trim();
+                if (val !== (brandSettings?.driver_marketplace_title || "")) {
+                  settingsMutation.mutate({ driver_marketplace_title: val || null });
+                }
+              }}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Subtítulo</label>
+            <Input
+              defaultValue={brandSettings?.driver_marketplace_subtitle || ""}
+              placeholder="Ofertas exclusivas para motoristas parceiros"
+              onBlur={(e) => {
+                const val = e.target.value.trim();
+                if (val !== (brandSettings?.driver_marketplace_subtitle || "")) {
+                  settingsMutation.mutate({ driver_marketplace_subtitle: val || null });
+                }
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Banner toggle */}
       <Card>
         <CardHeader>
