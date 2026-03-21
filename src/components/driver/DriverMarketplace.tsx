@@ -207,7 +207,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   }
 
   return (
-    <div className="max-w-lg mx-auto pb-8">
+    <div className="max-w-lg mx-auto pb-8 overflow-x-hidden">
       {/* Header — same style as customer app */}
       <header
         className="sticky top-0 z-10"
