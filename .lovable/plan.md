@@ -1,17 +1,31 @@
 
+Problema identificado: o banner do topo do motorista ainda está diferente do app do cliente porque o componente do motorista usa um carrossel próprio, com layout diferente do banner do passageiro.
 
-## Plano: Corrigir encaixe do banner do topo no painel do motorista
+O que está causando o erro:
+- No cliente, o banner usa um container único com `relative rounded-2xl overflow-hidden h-40`
+- A imagem ocupa `w-full h-full object-cover`
+- Os indicadores ficam sobrepostos dentro do banner
+- No motorista, o componente atual usa:
+  - `flex overflow-x-auto`
+  - cada slide com `min-w-full`
+  - imagem com `h-40` direto no `<img>`
+  - indicadores fora do banner
+- Esse formato deixa o encaixe mais frágil e visualmente diferente, principalmente com imagens largas como a da sua captura
 
-### Problema
-O banner do topo no `DriverBannerCarousel` usa `aspect-[21/9] max-h-[200px]` que causa problemas de encaixe — a imagem fica mal dimensionada dependendo do tamanho da tela ou proporção da imagem original.
+O que vou ajustar:
+1. Trocar a implementação do `DriverBannerCarousel` para seguir o mesmo padrão visual do banner do cliente
+2. Renderizar apenas o banner ativo por vez, dentro de um container fixo `h-40 rounded-2xl overflow-hidden`
+3. Fazer a imagem ocupar o container inteiro com `w-full h-full object-cover`
+4. Colocar os indicadores dentro do banner, na parte inferior, igual ao cliente
+5. Manter autoplay e clique no link do banner
 
-### Solução
-Alinhar com o mesmo padrão do app do cliente (`HomeSectionsRenderer > BannerCarousel`), que usa **altura fixa** (`h-40` = 160px) com `object-cover` e `rounded-2xl`, garantindo encaixe consistente.
+Arquivos envolvidos:
+- `src/components/driver/DriverBannerCarousel.tsx`
 
-### Alteração
+Resultado esperado:
+- o banner do topo vai ficar com o mesmo encaixe do app do cliente
+- sem “quebra” lateral ou sensação de imagem mal cortada
+- com altura, bordas e paginação visual iguais ao passageiro
 
-**`src/components/driver/DriverBannerCarousel.tsx`**
-- Trocar `className="w-full aspect-[21/9] max-h-[200px] object-cover rounded-2xl"` por `className="w-full h-40 object-cover rounded-2xl"`
-- Isso replica exatamente o comportamento do banner do passageiro (altura "medium" = `h-40`)
-- O container já tem `rounded-2xl` e `overflow-hidden`, garantindo visual limpo
-
+Detalhe técnico:
+Hoje o driver está usando um “scroll carousel”; o cliente usa um “single active slide”. Para ficar igual ao app do cliente, o correto é o driver adotar a mesma estrutura do segundo modelo, e não apenas trocar classes de altura.
