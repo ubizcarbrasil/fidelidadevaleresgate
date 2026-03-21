@@ -44,10 +44,7 @@ interface Props {
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
-  const base = `${window.location.origin}/driver?brandId=${brandId}`;
-  if (opts?.dealId) return `${base}&dealId=${opts.dealId}`;
-  if (opts?.categoryId) return `${base}&categoryId=${opts.categoryId}`;
-  return base;
+  return buildDriverUrl(window.location.origin, brandId, opts);
 }
 
 export { getPublicShareUrl };
