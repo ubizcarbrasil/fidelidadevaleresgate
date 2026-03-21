@@ -301,7 +301,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           theme={theme}
           brandSettings={(brand as any)?.brand_settings_json}
           onBack={() => setSelectedDeal(null)}
-          onSelectDeal={(d) => setSelectedDeal(d)}
+          onSelectDeal={(d) => setSelectedDeal(d as any)}
         />
       )}
     </section>

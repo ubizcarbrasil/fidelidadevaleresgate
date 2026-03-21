@@ -254,7 +254,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
             theme={theme}
             brandSettings={brandSettings}
             onBack={() => setSelectedDeal(null)}
-            onSelectDeal={(d) => setSelectedDeal(d)}
+            onSelectDeal={(d) => setSelectedDeal(d as any)}
           />
         )}
       </div>
