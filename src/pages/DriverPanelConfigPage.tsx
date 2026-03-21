@@ -55,7 +55,7 @@ export default function DriverPanelConfigPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Painel do Motorista" subtitle="Configure o marketplace de achadinhos que os motoristas visualizam" />
+      <PageHeader title="Painel do Motorista" description="Configure o marketplace de achadinhos que os motoristas visualizam" />
 
       {/* Link de acesso */}
       <Card>
