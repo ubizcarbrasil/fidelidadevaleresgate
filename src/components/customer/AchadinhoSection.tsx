@@ -224,7 +224,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
-        style={{ scrollSnapType: "x mandatory" }}
+        style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}
       >
         {filteredDeals.map((deal) => {
           const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
