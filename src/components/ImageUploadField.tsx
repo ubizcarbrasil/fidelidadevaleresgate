@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import ImageCropDialog from "@/components/ImageCropDialog";
+import ImageAiActions from "@/components/ImageAiActions";
 
 interface ImageUploadFieldProps {
   value: string;
