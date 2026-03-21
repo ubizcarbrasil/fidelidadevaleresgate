@@ -39,6 +39,7 @@ export default function AchadinhosMobileImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const correctPhotoRef = useRef<HTMLInputElement>(null);
+  const productImageRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>("method");
   const [linksText, setLinksText] = useState("");
@@ -53,6 +54,7 @@ export default function AchadinhosMobileImportPage() {
   const [photoLinksText, setPhotoLinksText] = useState("");
   const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [flowSource, setFlowSource] = useState<"links" | "csv" | "photo">("links");
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
 
   const updateProduct = useCallback((id: string, field: keyof ProductItem, value: string | number | null) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
