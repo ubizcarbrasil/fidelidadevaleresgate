@@ -21,7 +21,7 @@ function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, onClickDea
     <div
       className="rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform animate-fade-in"
       style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
-      onClick={() => window.open(deal.affiliate_url, "_blank", "noopener,noreferrer")}
+      onClick={() => onClickDeal ? onClickDeal(deal) : window.open(deal.affiliate_url, "_blank", "noopener,noreferrer")}
     >
       <div className="relative bg-muted/30">
         {deal.image_url ? (
