@@ -142,7 +142,21 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
   });
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const uncategorized = data?.uncategorized || [];
+  const allDeals = data?.allDeals || [];
   const activeBanners = interstitialBanners.filter((b: any) => b.is_active && b.image_url);
+
+  const marketplaceTitle = settings?.driver_marketplace_title || "Marketplace";
+  const marketplaceSubtitle = settings?.driver_marketplace_subtitle || "Ofertas exclusivas para motoristas parceiros";
+
+  const searchResults = useMemo(() => {
+    if (!debouncedSearch.trim()) return [];
+    const q = debouncedSearch.toLowerCase();
+    return allDeals.filter(d =>
+      d.title.toLowerCase().includes(q) ||
+      d.description?.toLowerCase().includes(q) ||
+      d.store_name?.toLowerCase().includes(q)
+    );
+  }, [debouncedSearch, allDeals]);
 
   const handleCategorySelect = (catId: string | null) => {
     setSelectedCategoryId(catId);
