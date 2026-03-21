@@ -38,7 +38,18 @@ interface Props {
   brand: { id: string; name: string; brand_settings_json?: any };
   branch: { id: string } | null;
   theme: any;
+  initialCategoryId?: string | null;
+  initialDealId?: string | null;
 }
+
+function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
+  const base = `${window.location.origin}/driver?brandId=${brandId}`;
+  if (opts?.dealId) return `${base}&dealId=${opts.dealId}`;
+  if (opts?.categoryId) return `${base}&categoryId=${opts.categoryId}`;
+  return base;
+}
+
+export { getPublicShareUrl };
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 
