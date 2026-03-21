@@ -24,6 +24,7 @@ export default function ImageUploadField({
   accept = "image/png,image/jpeg,image/svg+xml,image/webp,image/x-icon",
   previewClassName = "h-12 object-contain",
   aspectRatio,
+  aiContext,
 }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
