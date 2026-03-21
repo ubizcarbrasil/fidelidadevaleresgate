@@ -62,7 +62,7 @@ export default function DriverBannerCarousel({ brandId }: { brandId: string }) {
             <img
               src={b.image_url}
               alt={b.title || "Banner"}
-              className="w-full aspect-[21/9] max-h-[200px] object-cover rounded-2xl"
+              className="w-full h-40 object-cover rounded-2xl"
               loading={i === 0 ? "eager" : "lazy"}
             />
           </div>
