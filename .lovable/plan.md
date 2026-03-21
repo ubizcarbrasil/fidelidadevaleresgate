@@ -1,23 +1,41 @@
 
 
-## Plano: Reverter mudanças no app do cliente e aplicar no painel do motorista
+## Plano: Adicionar banners ao painel do motorista + toggle na config
 
-### Problema
-As remoções (seletor de cidade, sino, carteira, saudação, saldo) foram aplicadas no app do cliente (`CustomerLayout.tsx` e `CustomerHomePage.tsx`), mas deveriam ter sido feitas no painel do motorista (`DriverMarketplace.tsx`).
+### O que será feito
 
-### Ações
+1. **Adicionar carrossel de banners no `DriverMarketplace.tsx`**
+   - Buscar banners da tabela `banner_schedules` (mesma fonte do app do cliente)
+   - Renderizar carrossel horizontal auto-scroll acima das seções de categorias
+   - Respeitar filtro de `brand_id` e datas ativas
 
-**1. Reverter `src/components/customer/CustomerLayout.tsx`**
-- Restaurar o `BranchPickerSheet`, botão do sino e botão da carteira no header
+2. **Adicionar carrossel de ícones de categoria no topo** (como na screenshot do Achadinhos)
+   - Mostrar círculos coloridos com ícones das categorias
+   - Botão "Todos" selecionado por padrão
+   - Ao clicar em categoria, filtra as seções abaixo (scroll para seção ou destaque)
 
-**2. Reverter `src/pages/customer/CustomerHomePage.tsx`**
-- Restaurar o bloco Hero Section com saudação e badge de saldo
+3. **Remover do driver**: saudação, pontos, seletor de cidade, sino, carteira (já está sem esses itens)
 
-**3. Ajustar `src/components/driver/DriverMarketplace.tsx`**
-- O painel do motorista já está limpo (sem pontos, sem carteira, sem sino) — ele foi criado assim desde o início
-- Confirmar que o header mostra apenas logo + título "Marketplace"
-- Nenhuma mudança necessária aqui
+4. **Adicionar toggle de banners no `DriverPanelConfigPage.tsx`**
+   - Switch "Exibir banners" que salva no `brand_settings_json` do brand (campo `driver_show_banners`)
+   - O `DriverMarketplace` verifica essa config antes de renderizar banners
 
-### Resumo
-Reverter os dois arquivos do cliente ao estado anterior. O painel do motorista já está correto.
+### Arquivos envolvidos
+- **Editar**: `src/components/driver/DriverMarketplace.tsx` — adicionar banners + carrossel de categorias no topo
+- **Editar**: `src/pages/DriverPanelConfigPage.tsx` — adicionar toggle de banners
+
+### Detalhes técnicos
+
+**Banners no DriverMarketplace:**
+- Query: `banner_schedules` filtrado por `brand_id`, `is_active=true`, `start_at <= now`, sem `end_at` expirado
+- Carrossel simples com auto-scroll (CSS scroll-snap)
+- Controlado por flag `driver_show_banners` em `brand_settings_json`
+
+**Carrossel de categorias:**
+- Reutilizar o mesmo visual do `AchadinhoSection` (círculos coloridos com ícones Lucide)
+- Botão "Todos" + cada categoria com deals
+- Ao clicar, faz scroll suave até a seção da categoria
+
+**Toggle na config:**
+- Usa mutation para atualizar `brands.brand_settings_json` com `{ ...existing, driver_show_banners: true/false }`
 
