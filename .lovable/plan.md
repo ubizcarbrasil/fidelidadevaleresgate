@@ -1,22 +1,21 @@
 
 
-## Plano: Adicionar link do Achadinho do Motorista nos Links Úteis
+## Plano: Corrigir link do Achadinho Motorista na Dashboard
 
-### O que será feito
+### Problema
 
-Adicionar um novo item no array `quickLinks` dentro de `BrandQuickLinks` no `src/pages/Dashboard.tsx`, apontando para o painel do motorista (`/driver`).
+O link "Achadinho Motorista" aponta para `/driver` sem o parâmetro `?brandId=`, mas a página `DriverPanelPage` exige esse parâmetro obrigatoriamente.
 
-### Implementação
+### Correção
 
-**`src/pages/Dashboard.tsx`** — linha ~180
+**`src/pages/Dashboard.tsx`** — linha 180
 
-Adicionar após "Painel Parceiro":
+Alterar o `path` de `/driver` para incluir o `brandId`, igual ao padrão já usado no "App do Cliente" (linha 177):
+
 ```typescript
-{ label: "Achadinho Motorista", path: "/driver", prodPath: "/driver", icon: Car, description: "Marketplace do motorista" },
+{ label: "Achadinho Motorista", path: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", prodPath: "/driver", icon: Car, description: "Marketplace do motorista" },
 ```
 
-Importar o ícone `Car` do lucide-react (já utilizado no projeto).
-
 ### Arquivo
-- `src/pages/Dashboard.tsx`
+- `src/pages/Dashboard.tsx` — linha 180
 
