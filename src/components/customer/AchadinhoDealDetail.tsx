@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Share2, Tag } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import SafeImage from "@/components/customer/SafeImage";
