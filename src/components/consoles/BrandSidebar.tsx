@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
   Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
-  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, ExternalLink,
+  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
