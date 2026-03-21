@@ -108,7 +108,15 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
     },
   });
 
-  const categories = data?.categories || [];
+  const rawCategories = data?.categories || [];
+  const categories = [...rawCategories].sort((a, b) => {
+    const oa = categoryLayout[a.id]?.order;
+    const ob = categoryLayout[b.id]?.order;
+    if (oa != null && ob != null) return oa - ob;
+    if (oa != null) return -1;
+    if (ob != null) return 1;
+    return 0; // keep original order_index from query
+  });
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const uncategorized = data?.uncategorized || [];
 
