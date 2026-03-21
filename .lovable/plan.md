@@ -1,49 +1,26 @@
 
-Diagnóstico
 
-Eu verifiquei o código e o problema não é mais o gesto de toque. No `DriverMarketplace`, o `touchAction: "pan-x"` já está aplicado nos containers horizontais.
+## Plano: Scroll por coluna (linha inteira) no carrossel multi-linha
 
-A causa real é outra:
-- o painel do motorista está com `driver_category_layout` configurado com `rows: 2` para as categorias
-- quando `configuredRows > 1`, o componente NÃO renderiza um carrossel
-- ele cai neste bloco:
-  `className="px-5 grid grid-cols-2 gap-3 pb-1"`
-- isso vira uma grade estática de 2 colunas, então não existe nada para “rolar para o lado”
+### Problema
+Hoje o grid horizontal com `gridAutoColumns: "minmax(160px, 180px)"` permite scroll livre pixel a pixel. O usuário quer que o scroll "encaixe" por coluna — ou seja, cada swipe avança uma coluna inteira (que contém N linhas de cards).
 
-Ou seja: o app está mostrando grade, não carrossel.
+### Solução
 
-Plano de correção
+**`src/components/driver/DriverMarketplace.tsx` (linhas 356-364)**
 
-1. Ajustar o modo multi-linha no `src/components/driver/DriverMarketplace.tsx`
-- trocar o branch `configuredRows > 1` de grade estática por uma grade horizontal rolável
-- seguir o mesmo padrão já usado no app do cliente em `HomeSectionsRenderer`:
-  - `overflow-x-auto`
-  - `display: grid`
-  - `gridTemplateRows: repeat(configuredRows, 1fr)`
-  - `gridAutoFlow: column`
-  - `gridAutoColumns` com largura fixa de card
-  - `scrollSnapType: "x mandatory"`
-  - `touchAction: "pan-x"`
+Adicionar `scrollSnapAlign: "start"` em cada card do grid para que o snap aconteça por coluna:
 
-2. Manter o comportamento atual de 1 linha
-- quando `configuredRows === 1`, continua usando o carrossel horizontal atual com `DriverDealCard`
+1. No container grid, manter `scrollSnapType: "x mandatory"` (já existe)
+2. Trocar `gridAutoColumns` para um valor fixo (`170px`) para consistência
+3. Envolver cada coluna de cards com snap — como o `gridAutoFlow: column` já agrupa por coluna, basta adicionar `scroll-snap-align: start` nos itens do grid
 
-3. Preservar a lógica de “Ver todos”
-- continuar limitando a prévia por categoria
-- manter o overlay “Ver todos” igual está hoje
+Na prática, passar uma prop ou style inline no `DriverDealCardGrid` para incluir `scrollSnapAlign: "start"` no wrapper do card.
 
-4. Garantir tamanho consistente dos cards no modo de 2+ linhas
-- usar largura fixa por coluna para que a grade realmente deslize horizontalmente
-- se necessário, ajustar o wrapper do `DriverDealCardGrid` para funcionar bem dentro do grid horizontal
+**`src/components/driver/DriverDealCardGrid.tsx`**
+- Adicionar `style={{ scrollSnapAlign: "start", ...existingStyle }}` no `<motion.div>` raiz
 
-5. Validar o resultado esperado
-- com `rows = 2`, a seção deve continuar em 2 linhas, mas agora deslizando para o lado
-- com `rows = 1`, deve continuar como carrossel tradicional
-- “Outras ofertas” e categorias com 1 linha não mudam
+### Arquivos
+- `src/components/driver/DriverMarketplace.tsx` — fixar `gridAutoColumns: "170px"`
+- `src/components/driver/DriverDealCardGrid.tsx` — adicionar `scrollSnapAlign: "start"`
 
-Arquivos envolvidos
-- `src/components/driver/DriverMarketplace.tsx`
-- possivelmente `src/components/driver/DriverDealCardGrid.tsx` se precisar fixar largura no modo multi-linha
-
-Detalhe importante
-Hoje existe um workaround administrativo: se na configuração do painel do motorista você colocar `Linhas = 1`, o carrossel lateral volta. Mas o ajuste correto é implementar o modo `2+ linhas` como carrossel horizontal em grade, igual ao padrão do app do cliente.
