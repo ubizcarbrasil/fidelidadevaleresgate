@@ -100,14 +100,8 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     return deals.filter(d => d.category_id === selectedCat);
   }, [deals, selectedCat]);
 
-  const handleClick = async (deal: AffiliateDeal) => {
-    if (customer) {
-      supabase.from("affiliate_clicks").insert({
-        deal_id: deal.id,
-        customer_id: customer.id,
-      }).then();
-    }
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+  const handleClick = (deal: AffiliateDeal) => {
+    setSelectedDeal(deal);
   };
 
   const formatPrice = (val: number | null | undefined) => {
