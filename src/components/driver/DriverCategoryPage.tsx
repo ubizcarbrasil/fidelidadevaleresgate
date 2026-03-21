@@ -14,6 +14,8 @@ interface Props {
   brandId: string;
   branchId: string | null;
   fontHeading: string;
+  brandSettings?: any;
+  theme?: any;
   onBack: () => void;
 }
 
