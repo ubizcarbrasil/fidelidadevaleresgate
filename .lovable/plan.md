@@ -1,23 +1,22 @@
 
 
-## Plano: Adicionar campo de banner de produto no admin
+## Plano: Adicionar link do Achadinho do Motorista nos Links Úteis
 
-### Problema
+### O que será feito
 
-O `AchadinhoDealDetail` lê `brandSettings.achadinho_detail_banner_url` para exibir o banner atrás da foto do produto, mas não existe campo no painel admin para fazer upload dessa imagem.
+Adicionar um novo item no array `quickLinks` dentro de `BrandQuickLinks` no `src/pages/Dashboard.tsx`, apontando para o painel do motorista (`/driver`).
 
 ### Implementação
 
-**`src/pages/AffiliateCategoriesPage.tsx`**
+**`src/pages/Dashboard.tsx`** — linha ~180
 
-Na seção de configuração do CTA (que já existe), adicionar logo acima:
+Adicionar após "Painel Parceiro":
+```typescript
+{ label: "Achadinho Motorista", path: "/driver", prodPath: "/driver", icon: Car, description: "Marketplace do motorista" },
+```
 
-1. Campo de upload de imagem usando `StorageImageUpload` com label "Banner da página de produto"
-2. Proporção sugerida: 16:9
-3. O valor salva em `brand_settings_json.achadinho_detail_banner_url`
-4. Incluir `ImageAiActions` para as 3 opções de IA (redesenhar, ajustar, melhorar)
-5. Ao salvar, persiste junto com o CTA no mesmo `brand_settings_json`
+Importar o ícone `Car` do lucide-react (já utilizado no projeto).
 
 ### Arquivo
-- `src/pages/AffiliateCategoriesPage.tsx` — adicionar campo de upload do banner na seção de configurações
+- `src/pages/Dashboard.tsx`
 
