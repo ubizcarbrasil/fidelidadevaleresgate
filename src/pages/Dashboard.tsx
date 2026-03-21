@@ -196,7 +196,7 @@ function BrandQuickLinks() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {quickLinks.map((link) => {
               const internalUrl = `${origin}${link.path}`;
               const prodUrl = productionUrl ? `${productionUrl}${link.prodPath === "/" ? "" : link.prodPath}` : null;
@@ -239,7 +239,7 @@ function BrandQuickLinks() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {testAccounts!.filter((a) => a.is_active).map((acc) => (
                 <div key={acc.email} className="rounded-lg border border-border p-3 space-y-2">
                   <div className="flex items-center gap-2">
@@ -300,9 +300,9 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
     return (
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Empreendedores</CardTitle>
-            <div className="relative w-48">
+            <div className="relative w-full sm:w-48">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input placeholder="Buscar marca..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs" />
             </div>
@@ -316,15 +316,15 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
           ) : (
             <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
               {filtered.map((brand) => (
-                <div key={brand.id} className="flex items-center justify-between py-2.5 gap-2">
-                  <div className="min-w-0 flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Store className="h-4 w-4 text-primary" /></div>
-                    <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
-                  </div>
+                <div key={brand.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 gap-2">
+                   <div className="min-w-0 flex items-center gap-2">
+                     <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Store className="h-4 w-4 text-primary" /></div>
+                     <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
+                   </div>
+                   <div className="flex gap-1.5 shrink-0">
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
+                   </div>
                 </div>
               ))}
             </div>
@@ -338,15 +338,15 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Parceiros</CardTitle>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center w-full sm:w-auto">
             {currentBrandId && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}>
                 <Smartphone className="h-3.5 w-3.5" />App do Cliente
               </Button>
             )}
-            <div className="relative w-40">
+            <div className="relative flex-1 sm:w-40 sm:flex-none">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input placeholder="Buscar loja..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs" />
             </div>
@@ -687,18 +687,20 @@ export default function Dashboard() {
       {/* CRM Banner */}
       {showBrand && !isRoot && (
         <Card className="border-primary/20 overflow-hidden">
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-semibold text-sm">CRM Estratégico</h3>
-                <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
-              <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="font-semibold text-sm">CRM Estratégico</h3>
+                  <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
+              </div>
             </div>
-            <Button size="sm" className="shrink-0 gap-1.5" onClick={() => navigate("/crm")}>
+            <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
               <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
             </Button>
           </CardContent>
@@ -709,7 +711,7 @@ export default function Dashboard() {
       <AccessHubSection consoleScope={consoleScope} />
 
       {/* ── SECTION A: KPIs ── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <div className="animate-slide-up delay-1">
           <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" sparkData={recentRedemptions?.map(d => d.count)} />
         </div>
