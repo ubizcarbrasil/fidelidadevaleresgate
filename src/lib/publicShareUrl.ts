@@ -1,38 +1,11 @@
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-let domainCache: Map<string, string | null> = new Map();
-
 /**
- * Fetches the primary public domain for a brand.
- * Caches result in memory to avoid repeated queries.
+ * Returns the public origin for share URLs.
+ * Uses current origin directly to avoid broken links from unconfigured domains.
  */
-export async function getPublicOrigin(brandId: string): Promise<string> {
-  if (domainCache.has(brandId)) {
-    const cached = domainCache.get(brandId);
-    return cached || window.location.origin;
-  }
-
-  try {
-    const { data } = await supabase
-      .from("brand_domains")
-      .select("domain, subdomain")
-      .eq("brand_id", brandId)
-      .eq("is_primary", true)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    const raw = data?.domain || data?.subdomain || null;
-    const origin = raw
-      ? `https://${raw.replace(/^https?:\/\//i, "").trim().replace(/\/$/, "")}`
-      : null;
-
-    domainCache.set(brandId, origin);
-    return origin || window.location.origin;
-  } catch {
-    domainCache.set(brandId, null);
-    return window.location.origin;
-  }
+export async function getPublicOrigin(_brandId: string): Promise<string> {
+  return window.location.origin;
 }
 
 /**
