@@ -7,9 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Copy, Check, Car, Sparkles, Image } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface CategoryLayout {
+  rows: number;
+  order: number;
+}
 
 export default function DriverPanelConfigPage() {
   const { currentBrandId } = useBrandGuard();
@@ -18,7 +24,6 @@ export default function DriverPanelConfigPage() {
 
   const driverUrl = `${window.location.origin}/driver?brandId=${currentBrandId || ""}`;
 
-  // Fetch brand settings for banner toggle
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],
     queryFn: async () => {
@@ -34,10 +39,11 @@ export default function DriverPanelConfigPage() {
   });
 
   const showBanners = brandSettings?.driver_show_banners !== false;
+  const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
 
-  const bannerToggleMutation = useMutation({
-    mutationFn: async (enabled: boolean) => {
-      const updated = { ...brandSettings, driver_show_banners: enabled };
+  const settingsMutation = useMutation({
+    mutationFn: async (patch: Record<string, any>) => {
+      const updated = { ...brandSettings, ...patch };
       const { error } = await supabase
         .from("brands")
         .update({ brand_settings_json: updated })
@@ -84,6 +90,18 @@ export default function DriverPanelConfigPage() {
     toast({ title: "Link copiado!" });
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const updateCategoryLayout = (catId: string, field: "rows" | "order", value: number) => {
+    const current = categoryLayout[catId] || { rows: 1, order: 0 };
+    const updated = {
+      ...categoryLayout,
+      [catId]: { ...current, [field]: value },
+    };
+    settingsMutation.mutate({ driver_category_layout: updated });
+  };
+
+  const getRows = (catId: string) => categoryLayout[catId]?.rows ?? 1;
+  const getOrder = (catId: string, fallback: number) => categoryLayout[catId]?.order ?? fallback;
 
   return (
     <div className="space-y-6">
@@ -133,7 +151,7 @@ export default function DriverPanelConfigPage() {
             </div>
             <Switch
               checked={showBanners}
-              onCheckedChange={(checked) => bannerToggleMutation.mutate(checked)}
+              onCheckedChange={(checked) => settingsMutation.mutate({ driver_show_banners: checked })}
             />
           </div>
         </CardContent>
@@ -146,32 +164,77 @@ export default function DriverPanelConfigPage() {
             <Sparkles className="h-5 w-5 text-primary" />
             Categorias Visíveis
           </CardTitle>
-          <CardDescription>Ative ou desative categorias de achadinhos que aparecem no marketplace do motorista.</CardDescription>
+          <CardDescription>Configure ativação, linhas exibidas e ordem de cada categoria.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
           ) : !categories?.length ? (
             <p className="text-sm text-muted-foreground">Nenhuma categoria encontrada. Crie categorias em Achadinhos primeiro.</p>
           ) : (
             <div className="space-y-2">
               {categories.map((cat) => (
-                <div key={cat.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                    <span className="font-medium text-sm">{cat.name}</span>
+                <div key={cat.id} className="rounded-lg border p-3 space-y-3">
+                  {/* Row 1: Name + Toggle */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                      <span className="font-medium text-sm">{cat.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px]">
+                        {cat.is_active ? "Ativa" : "Inativa"}
+                      </Badge>
+                      <Switch
+                        checked={cat.is_active}
+                        onCheckedChange={(checked) => toggleMutation.mutate({ id: cat.id, is_active: checked })}
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px]">
-                      {cat.is_active ? "Ativa" : "Inativa"}
-                    </Badge>
-                    <Switch
-                      checked={cat.is_active}
-                      onCheckedChange={(checked) => toggleMutation.mutate({ id: cat.id, is_active: checked })}
-                    />
-                  </div>
+
+                  {/* Row 2: Rows + Order controls */}
+                  {cat.is_active && (
+                    <div className="flex items-center gap-4 pl-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            disabled={getRows(cat.id) <= 1}
+                            onClick={() => updateCategoryLayout(cat.id, "rows", Math.max(1, getRows(cat.id) - 1))}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="text-sm font-medium w-6 text-center">{getRows(cat.id)}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            disabled={getRows(cat.id) >= 5}
+                            onClick={() => updateCategoryLayout(cat.id, "rows", Math.min(5, getRows(cat.id) + 1))}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">Ordem:</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={99}
+                          className="h-7 w-14 text-center text-sm"
+                          value={getOrder(cat.id, cat.order_index)}
+                          onChange={(e) => updateCategoryLayout(cat.id, "order", parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
