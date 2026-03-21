@@ -1,18 +1,33 @@
 
 
-## Diagnóstico: Rota `/driver-config` dá 404
+## Plano: Limpar a Home — remover itens marcados com X
 
-### Análise
-Verifiquei todos os pontos:
-- **Arquivo existe**: `src/pages/DriverPanelConfigPage.tsx` (128 linhas, exporta default)
-- **Import existe**: `lazy(() => import("@/pages/DriverPanelConfigPage"))` na linha 111 do App.tsx
-- **Rota registrada**: `<Route path="driver-config" element={<DriverPanelConfigPage />} />` na linha 230
-- **Sidebars apontam corretamente**: ambos usam `url: "/driver-config"`
+### O que remover (baseado nas imagens anotadas)
 
-Tudo está correto no código. O 404 é provavelmente um problema de cache do build — o servidor de desenvolvimento não recompilou após a criação do arquivo.
+| Item | Localização | Ação |
+|---|---|---|
+| Seletor de cidade ("São João da B...") | Header (`CustomerLayout.tsx`) | Remover `BranchPickerSheet` |
+| Sino de notificações | Header (`CustomerLayout.tsx`) | Remover botão do sino |
+| Ícone da carteira | Header (`CustomerLayout.tsx`) | Remover botão da carteira |
+| Saudação + nome ("Boa noite, Visitante") | Home (`CustomerHomePage.tsx`) | Remover bloco de greeting |
+| Badge de saldo ("0 pts") | Home (`CustomerHomePage.tsx`) | Remover botão de saldo |
 
-### Plano de correção
-Forçar uma rebuild tocando o arquivo `App.tsx` com uma mudança trivial (adicionar comentário ou espaço) para garantir que o Vite recompile e reconheça a rota. Nenhuma mudança lógica necessária.
+### O que permanece
+- Logo + nome da marca no header
+- Barra de busca
+- Carrossel de banners
+- Carrossel de categorias (Achadinhos)
+- Seções For You, Emissoras, Achadinhos
+- Seções CMS dinâmicas
+- Bottom tab bar
 
-**Arquivo**: `src/App.tsx` — adicionar comentário no bloco do driver-config para forçar rebuild
+### Arquivos envolvidos
+
+**1. `src/components/customer/CustomerLayout.tsx`**
+- Remover do header: `BranchPickerSheet`, botão do sino, botão da carteira
+- Manter: logo, nome, barra de busca
+
+**2. `src/pages/customer/CustomerHomePage.tsx`**
+- Remover o bloco "Hero Section" inteiro (greeting + saldo, linhas 160-196)
+- As seções nativas começam direto após o `<div className="pb-4">`
 
