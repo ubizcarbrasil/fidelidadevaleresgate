@@ -1,33 +1,29 @@
 
 
-## Plano: Alinhar visual do painel do motorista com o app do cliente
+## Plano: Restaurar itens removidos no app do cliente
 
 ### Problema
-O painel do motorista (`DriverMarketplace`) não está com o mesmo visual do app do cliente. Pela screenshot, o banner ocupa quase toda a tela e o estilo geral não bate com o app do passageiro.
+Na reversão anterior, os itens removidos do app do cliente não foram restaurados. O header e a home do passageiro continuam sem:
+- Seletor de cidade (BranchPickerSheet)
+- Botão do sino (notificações)
+- Botão da carteira
+- Saudação ("Boa noite, Visitante")
+- Badge de saldo ("0 pts")
 
 ### O que será feito
 
-Ajustar o `DriverMarketplace` para ter a mesma estética do `CustomerLayout`:
+**1. `src/components/customer/CustomerLayout.tsx` (header, linhas 270-271)**
+- O bloco de ações do header está vazio (`<div className="flex items-center gap-0.5"></div>`)
+- Restaurar: `BranchPickerSheet`, botão do sino com badge de unread, botão da carteira
+- Imports já existem no topo do arquivo (BranchPickerSheet, NotificationDrawer)
 
-**1. Ativar dark mode no painel do motorista**
-- Na página `DriverPanelPage.tsx`, adicionar `useEffect` que ativa `dark` class no `documentElement` (igual ao `CustomerLayout`)
-
-**2. Header idêntico ao do cliente**
-- Mesmo padding, mesmo estilo de logo + título (font-extrabold, 15px)
-- Busca com mesmo estilo: botão com fundo `muted`, ícone + placeholder "O que está procurando?"
-- Remover a busca com `<Input>` e usar o mesmo estilo de botão do cliente
-
-**3. Banner do topo com altura correta**
-- O `aspect-[21/9]` já está correto mas o container pode estar inflando. Adicionar `max-h-[200px]` como fallback para garantir que não fique gigante
-
-**4. Manter tudo que já funciona**
-- Carrossel de categorias
-- Seções de produtos com linhas configuráveis
-- Banners intercalados
-- Busca funcional (abrir overlay ou filtrar inline)
+**2. `src/pages/customer/CustomerHomePage.tsx` (hero section)**
+- Adicionar de volta o bloco hero antes das native sections (linha 159):
+  - Saudação dinâmica ("Bom dia/Boa tarde/Boa noite, [nome]")
+  - Badge de saldo de pontos com ícone Coins
+  - Estilo consistente com o tema da marca
 
 ### Arquivos envolvidos
-- **Editar**: `src/components/driver/DriverMarketplace.tsx` — header e busca no estilo do cliente
-- **Editar**: `src/pages/DriverPanelPage.tsx` — ativar dark mode
-- **Editar**: `src/components/driver/DriverBannerCarousel.tsx` — garantir altura máxima no banner
+- **Editar**: `src/components/customer/CustomerLayout.tsx` — restaurar ações do header
+- **Editar**: `src/pages/customer/CustomerHomePage.tsx` — restaurar hero section
 
