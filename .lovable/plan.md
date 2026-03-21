@@ -1,23 +1,23 @@
 
 
-## Plano: Corrigir scroll horizontal do carrossel de Achadinhos
+## Plano: Corrigir scroll horizontal dos Achadinhos no painel do motorista
 
 ### Problema
-O carrossel horizontal de deals na seção Achadinhos não rola para o lado. O container `<main>` no `CustomerLayout` tem `overflow-y-auto` sem definir `overflow-x`, e em dispositivos móveis WebKit o scroll horizontal de containers filhos pode ser "engolido" pelo scroll vertical do pai.
+O carrossel horizontal de deals no `DriverMarketplace` (linha 349) não rola no mobile porque falta `touchAction: "pan-x"` e o container pai `max-w-lg` pode estar cortando o overflow.
 
 ### Solução
 
-**1. `src/components/customer/CustomerLayout.tsx` (linha 310)**
-- Adicionar `overflow-x-hidden` ao `<main>` para que o scroll horizontal seja delegado explicitamente aos containers internos:
-  - De: `className="flex-1 pb-24 overflow-y-auto"`
-  - Para: `className="flex-1 pb-24 overflow-y-auto overflow-x-hidden"`
+**`src/components/driver/DriverMarketplace.tsx`**
 
-**2. `src/components/customer/AchadinhoSection.tsx` (linha 146)**
-- Garantir que a `<section>` não tenha `max-w-lg` bloqueando overflow. Trocar `max-w-lg mx-auto` por `w-full max-w-lg mx-auto` (pode não ser necessário, mas garante).
-- Adicionar `touch-action: pan-x` no container de scroll dos deals (linha 224-228) para garantir que o gesto horizontal seja reconhecido no mobile:
-  - Adicionar `style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}`
+1. **Linha 349** — Adicionar `touchAction: "pan-x"` no style do container de scroll horizontal:
+   - De: `style={{ scrollSnapType: "x mandatory" }}`
+   - Para: `style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}`
 
-### Arquivos envolvidos
-- **Editar**: `src/components/customer/CustomerLayout.tsx` — adicionar `overflow-x-hidden` no main
-- **Editar**: `src/components/customer/AchadinhoSection.tsx` — adicionar `touchAction: "pan-x"` no container de scroll
+2. **Linha ~207** — No container pai `<div className="max-w-lg mx-auto pb-8">`, adicionar `overflow-x-hidden` para que o overflow horizontal seja delegado aos containers internos:
+   - Para: `<div className="max-w-lg mx-auto pb-8 overflow-x-hidden">`
+
+3. **Linha ~375** (carrossel de "Outras ofertas" / uncategorized) — Mesmo fix: adicionar `touchAction: "pan-x"` no style do segundo container de scroll horizontal.
+
+### Arquivo envolvido
+- `src/components/driver/DriverMarketplace.tsx`
 
