@@ -192,6 +192,38 @@ export default function DriverPanelConfigPage() {
         </CardContent>
       </Card>
 
+      {/* URL pública oficial */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ExternalLink className="h-5 w-5 text-primary" />
+            URL Pública Oficial
+          </CardTitle>
+          <CardDescription>
+            Defina a URL base usada nos links compartilhados. Se vazio, usa o domínio atual.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">URL base</label>
+            <Input
+              key={brandSettings?.driver_public_base_url ?? "__empty__"}
+              defaultValue={brandSettings?.driver_public_base_url || ""}
+              placeholder={window.location.origin}
+              onBlur={(e) => {
+                let val = e.target.value.trim().replace(/\/+$/, "");
+                if (val !== (brandSettings?.driver_public_base_url || "")) {
+                  settingsMutation.mutate({ driver_public_base_url: val || null });
+                }
+              }}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Ex: https://fidelidadevaleresgate.lovable.app
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Título e subtítulo */}
       <Card>
         <CardHeader>
