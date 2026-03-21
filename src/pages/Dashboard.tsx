@@ -316,15 +316,15 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
           ) : (
             <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
               {filtered.map((brand) => (
-                <div key={brand.id} className="flex items-center justify-between py-2.5 gap-2">
-                  <div className="min-w-0 flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Store className="h-4 w-4 text-primary" /></div>
-                    <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
-                  </div>
+                <div key={brand.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 gap-2">
+                   <div className="min-w-0 flex items-center gap-2">
+                     <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Store className="h-4 w-4 text-primary" /></div>
+                     <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
+                   </div>
+                   <div className="flex gap-1.5 shrink-0">
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
+                   </div>
                 </div>
               ))}
             </div>
