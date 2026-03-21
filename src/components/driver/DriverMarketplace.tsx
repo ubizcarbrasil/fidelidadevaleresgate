@@ -354,13 +354,16 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                   </div>
                 ) : (
                   <div
-                    className="px-5 grid gap-3 overflow-x-auto scrollbar-hide pb-1"
+                    className="grid gap-3 overflow-x-auto scrollbar-hide pb-1"
                     style={{
                       gridTemplateRows: `repeat(${configuredRows}, 1fr)`,
                       gridAutoFlow: "column",
                       gridAutoColumns: "170px",
                       scrollSnapType: "x mandatory",
                       touchAction: "pan-x",
+                      paddingLeft: "20px",
+                      paddingRight: "20px",
+                      scrollPaddingLeft: "20px",
                     }}
                   >
                     {visibleDeals.map((deal, idx) => (
