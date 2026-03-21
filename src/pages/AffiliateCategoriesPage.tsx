@@ -76,13 +76,17 @@ export default function AffiliateCategoriesPage() {
   const saveCtaMutation = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Brand não identificada");
-      const settings = { ...(brandData || {}), achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor } };
+      const settings = {
+        ...(brandData || {}),
+        achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor },
+        achadinho_detail_banner_url: detailBannerUrl || null,
+      };
       const { error } = await supabase.from("brands").update({ brand_settings_json: settings }).eq("id", currentBrandId);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["brand-cta-config"] });
-      toast.success("CTA salvo!");
+      toast.success("Configurações salvas!");
     },
     onError: (e: Error) => toast.error(e.message),
   });
