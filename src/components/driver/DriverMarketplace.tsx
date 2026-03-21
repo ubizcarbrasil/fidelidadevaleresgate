@@ -157,13 +157,13 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
     );
   }, [debouncedSearch, allDeals]);
 
-  const handleCategorySelect = (catId: string | null) => {
+  const handleCategorySelect = useCallback((catId: string | null) => {
     setSelectedCategoryId(catId);
     if (catId) {
       const el = sectionRefs.current.get(catId);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  };
+  }, []);
 
   if (isLoading) {
     return (
