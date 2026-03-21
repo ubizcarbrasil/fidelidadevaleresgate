@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Save, X, GripVertical, Image as ImageIcon, icons, Palette } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, GripVertical, Image as ImageIcon, icons, Palette, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import StorageImageUpload from "@/components/page-builder/StorageImageUpload";
+import ImageAiActions from "@/components/ImageAiActions";
 
 function LucideIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
   const Icon = (icons as any)[name];
@@ -64,23 +65,29 @@ export default function AffiliateCategoriesPage() {
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaBgColor, setCtaBgColor] = useState("#F97316");
   const [ctaTextColor, setCtaTextColor] = useState("#FFFFFF");
+  const [detailBannerUrl, setDetailBannerUrl] = useState("");
 
   useEffect(() => {
     if (ctaConfig.label) setCtaLabel(ctaConfig.label);
     if (ctaConfig.bg_color) setCtaBgColor(ctaConfig.bg_color);
     if (ctaConfig.text_color) setCtaTextColor(ctaConfig.text_color);
+    if (brandData?.achadinho_detail_banner_url) setDetailBannerUrl(brandData.achadinho_detail_banner_url);
   }, [brandData]);
 
   const saveCtaMutation = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Brand não identificada");
-      const settings = { ...(brandData || {}), achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor } };
+      const settings = {
+        ...(brandData || {}),
+        achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor },
+        achadinho_detail_banner_url: detailBannerUrl || null,
+      };
       const { error } = await supabase.from("brands").update({ brand_settings_json: settings }).eq("id", currentBrandId);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["brand-cta-config"] });
-      toast.success("CTA salvo!");
+      toast.success("Configurações salvas!");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -211,15 +218,36 @@ export default function AffiliateCategoriesPage() {
         </Button>
       </div>
 
-      {/* CTA Config */}
+      {/* CTA & Banner Config */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Palette className="h-4 w-4" />
-            Botão CTA — Detalhe do Achadinho
+            Configurações — Detalhe do Achadinho
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
+          {/* Banner de fundo */}
+          <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <ImagePlus className="h-3.5 w-3.5" />
+              Banner de fundo da página de produto
+            </Label>
+            <p className="text-[11px] text-muted-foreground">Imagem exibida atrás da foto do produto. Proporção ideal: 16:9 (1200×675)</p>
+            <StorageImageUpload
+              value={detailBannerUrl}
+              onChange={setDetailBannerUrl}
+              label="Banner do produto"
+              folder="achadinho-banners"
+              aspectHint="Proporção ideal: 16:9 (1200×675)"
+            />
+            {detailBannerUrl && (
+              <ImageAiActions imageUrl={detailBannerUrl} onReplace={setDetailBannerUrl} context="banner" />
+            )}
+          </div>
+
+          {/* CTA config */}
+          <Label className="text-xs font-semibold">Botão CTA</Label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Texto do botão</Label>
@@ -242,7 +270,7 @@ export default function AffiliateCategoriesPage() {
           </div>
           <div className="flex items-center gap-4">
             <Button size="sm" onClick={() => saveCtaMutation.mutate()} disabled={saveCtaMutation.isPending}>
-              <Save className="h-4 w-4 mr-1" />Salvar CTA
+              <Save className="h-4 w-4 mr-1" />Salvar
             </Button>
             <div className="flex-1 flex justify-end">
               <button
