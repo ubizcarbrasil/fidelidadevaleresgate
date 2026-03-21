@@ -711,7 +711,7 @@ export default function Dashboard() {
       <AccessHubSection consoleScope={consoleScope} />
 
       {/* ── SECTION A: KPIs ── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <div className="animate-slide-up delay-1">
           <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" sparkData={recentRedemptions?.map(d => d.count)} />
         </div>
