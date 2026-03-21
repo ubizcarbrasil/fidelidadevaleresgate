@@ -49,6 +49,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const catScrollRef = useRef<HTMLDivElement>(null);
 
