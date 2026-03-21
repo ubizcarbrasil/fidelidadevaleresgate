@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspens
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2 } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import { Skeleton } from "@/components/ui/skeleton";
