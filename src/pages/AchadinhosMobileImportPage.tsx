@@ -39,6 +39,7 @@ export default function AchadinhosMobileImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const correctPhotoRef = useRef<HTMLInputElement>(null);
+  const productImageRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>("method");
   const [linksText, setLinksText] = useState("");
@@ -53,6 +54,7 @@ export default function AchadinhosMobileImportPage() {
   const [photoLinksText, setPhotoLinksText] = useState("");
   const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [flowSource, setFlowSource] = useState<"links" | "csv" | "photo">("links");
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
 
   const updateProduct = useCallback((id: string, field: keyof ProductItem, value: string | number | null) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
@@ -192,6 +194,39 @@ export default function AchadinhosMobileImportPage() {
     setCorrectingId(null);
     e.target.value = "";
   }, [correctingId, extractFromImage]);
+
+  // ── Upload product image ──
+  const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadingImageId) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingImageId(uploadingImageId);
+    const targetId = uploadingImageId;
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const filePath = `achadinhos/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("brand-assets").upload(filePath, file, { upsert: true });
+
+      if (error) {
+        toast.error("Erro no upload: " + error.message);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(filePath);
+      updateProduct(targetId, "image_url", urlData.publicUrl);
+      toast.success("Imagem adicionada!");
+    } catch {
+      toast.error("Erro ao enviar imagem.");
+    }
+    setUploadingImageId(null);
+    e.target.value = "";
+  }, [uploadingImageId, updateProduct]);
 
   // ── Scrape links ──
   const handleScrapeLinks = useCallback(async () => {
@@ -377,7 +412,7 @@ export default function AchadinhosMobileImportPage() {
       {/* Hidden file inputs */}
       <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFile} />
       <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
-      <input ref={correctPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleCorrectViaPhoto} />
+      <input ref={productImageRef} type="file" accept="image/*" className="hidden" onChange={handleProductImageUpload} />
 
       {/* Content */}
       <div className="flex-1 px-4 pb-8 max-w-lg mx-auto w-full">
@@ -576,6 +611,33 @@ export default function AchadinhosMobileImportPage() {
                     </CardContent>
                     {editingId === p.id && (
                       <div className="px-3 pb-3 space-y-2 border-t pt-2" onClick={e => e.stopPropagation()}>
+                        {/* Product image upload */}
+                        <div className="flex items-center gap-3">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.title} className="h-20 w-20 rounded-lg object-cover border" />
+                          ) : (
+                            <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center border border-dashed">
+                              <Camera className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={uploadingImageId === p.id}
+                            onClick={() => {
+                              setUploadingImageId(p.id);
+                              productImageRef.current?.click();
+                            }}
+                          >
+                            {uploadingImageId === p.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="h-3.5 w-3.5" />
+                            )}
+                            {p.image_url ? "Trocar" : "Adicionar imagem"}
+                          </Button>
+                        </div>
                         <div>
                           <label className="text-xs text-muted-foreground">Título</label>
                           <Input value={p.title} onChange={e => updateProduct(p.id, "title", e.target.value)} />
