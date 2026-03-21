@@ -609,7 +609,7 @@ export default function AchadinhosMobileImportPage() {
                 })()}
               </div>
 
-              <Button className="w-full h-12 text-base" onClick={handleAssociateLinks}>
+              <Button className="w-full h-12 text-base" onClick={handleAssociateLinks} disabled={isScraping}>
                 <Check className="h-5 w-5 mr-2" />
                 Associar Links e Revisar
               </Button>
