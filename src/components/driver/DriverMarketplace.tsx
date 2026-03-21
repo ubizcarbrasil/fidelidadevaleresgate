@@ -74,10 +74,15 @@ export const formatPrice = (val: number | null | undefined) => {
 
 export default function DriverMarketplace({ brand, branch, theme }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+
+  const handleClickDeal = useCallback((deal: AffiliateDeal) => {
+    setSelectedDeal(deal);
+  }, []);
 
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
