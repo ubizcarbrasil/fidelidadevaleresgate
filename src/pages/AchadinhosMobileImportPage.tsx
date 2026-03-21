@@ -195,6 +195,39 @@ export default function AchadinhosMobileImportPage() {
     e.target.value = "";
   }, [correctingId, extractFromImage]);
 
+  // ── Upload product image ──
+  const handleProductImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadingImageId) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingImageId(uploadingImageId);
+    const targetId = uploadingImageId;
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const filePath = `achadinhos/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("brand-assets").upload(filePath, file, { upsert: true });
+
+      if (error) {
+        toast.error("Erro no upload: " + error.message);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(filePath);
+      updateProduct(targetId, "image_url", urlData.publicUrl);
+      toast.success("Imagem adicionada!");
+    } catch {
+      toast.error("Erro ao enviar imagem.");
+    }
+    setUploadingImageId(null);
+    e.target.value = "";
+  }, [uploadingImageId, updateProduct]);
+
   // ── Scrape links ──
   const handleScrapeLinks = useCallback(async () => {
     const urls = linksText.split("\n").map(l => l.trim()).filter(l => l.length > 5);
