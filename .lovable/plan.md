@@ -1,61 +1,65 @@
 
-Objetivo: fazer o link do Achadinhos abrir publicamente na web sem cair em domínio quebrado.
 
-Problema encontrado
-- Hoje existe um registro em `brand_domains` para `123456.valeresgate.com` vinculado à marca `db15bd21-9137-4965-a0fb-540d8e8b26f1`.
-- Esse domínio está sendo tratado como “público” em partes do admin, mas o DNS dele não está respondendo fora da aplicação.
-- Resultado: o sistema continua exibindo/copiando um link que parece oficial, porém quebra para terceiros.
-- O `/driver` em si já está público; o erro está no domínio usado no link.
+## Plano: Corrigir URL de compartilhamento para usar domínio publicado
 
-O que vou implementar
-1. Parar de usar `brand_domains` como fonte “confiável” do link público do Achadinhos
-- `is_primary`/`is_active` não garantem que o domínio exista de verdade na internet.
-- O app não deve mais divulgar automaticamente `123456.valeresgate.com` só porque há um registro salvo.
+### Problema
 
-2. Criar uma URL pública oficial do Achadinhos, configurável pela marca
-- Adicionar no painel de configuração do motorista um campo como:
-  - “URL pública do Achadinhos”
-- Exemplo de valor:
-  - `https://fidelidadevaleresgate.lovable.app`
-  - ou, quando o DNS estiver pronto, `https://123456.valeresgate.com`
-- Essa URL será salva em `brand_settings_json` e passará a ser a única base usada para compartilhar/copiar/abrir.
+Quando o admin compartilha o link do Achadinhos a partir do preview do Lovable, `window.location.origin` retorna `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app` — uma URL de preview que não é acessível publicamente. O link correto deveria usar `https://fidelidadevaleresgate.lovable.app`.
 
-3. Centralizar toda a geração do link
-- Ajustar `src/lib/publicShareUrl.ts` para montar sempre:
-  - `URL_PUBLICA_OFICIAL/driver?brandId=...`
-  - com suporte a `dealId` e `categoryId`
-- Ordem de fallback:
-  1. URL pública configurada na marca
-  2. `window.location.origin`
+Como o campo `driver_public_base_url` provavelmente não está preenchido, o fallback cai em `window.location.origin`, que no preview é a URL errada.
 
-4. Corrigir todos os pontos que ainda exibem/copiam link errado
-- Dashboard
-- Configuração do Painel do Motorista
-- Botões de compartilhar de categoria/produto/marketplace
-- Assim todo lugar passa a entregar exatamente o mesmo link público.
+### Correção
 
-5. Remover o comportamento enganoso da Dashboard
-- A área “Links Úteis” hoje ainda monta `productionUrl` com `brand_domains`.
-- Vou trocar isso para usar a URL pública oficial configurada.
-- Também vou remover/ajustar o indicativo atual de domínio para não sugerir um endereço quebrado.
+**`src/lib/publicShareUrl.ts`** — melhorar o fallback
 
-Importante
-- Código não consegue “fazer existir” `123456.valeresgate.com` se o DNS não estiver configurado.
-- Então a correção terá dois efeitos:
-  - imediato: o sistema passa a compartilhar um link público funcional do Achadinhos
-  - opcional depois: quando o domínio próprio estiver realmente ativo, basta colocá-lo como URL pública oficial
+Adicionar detecção automática de ambiente preview do Lovable. Se o origin contém `id-preview--` (padrão de preview URLs), substituir automaticamente pela URL publicada equivalente (`{slug}.lovable.app`).
 
-Arquivos envolvidos
+Ordem de prioridade:
+1. `driver_public_base_url` configurado manualmente (já existe)
+2. Se estiver em preview Lovable, converter para URL publicada
+3. `window.location.origin` como último fallback
+
+```typescript
+export async function getPublicOrigin(brandId: string): Promise<string> {
+  if (cachedBaseUrls[brandId]) return cachedBaseUrls[brandId];
+
+  // 1. Check configured URL
+  try {
+    const { data } = await supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", brandId)
+      .maybeSingle();
+    const settings = data?.brand_settings_json as Record<string, unknown> | null;
+    const configuredUrl = (settings?.driver_public_base_url as string)?.trim().replace(/\/+$/, "");
+    if (configuredUrl) {
+      cachedBaseUrls[brandId] = configuredUrl;
+      return configuredUrl;
+    }
+  } catch { /* fall through */ }
+
+  // 2. Detect Lovable preview and use published URL instead
+  let fallback = window.location.origin;
+  const previewMatch = fallback.match(/^https:\/\/id-preview--[^.]+\.lovable\.app$/);
+  if (previewMatch) {
+    fallback = "https://fidelidadevaleresgate.lovable.app";
+  }
+
+  cachedBaseUrls[brandId] = fallback;
+  return fallback;
+}
+```
+
+Porém, hardcodar o domínio publicado não é ideal para múltiplas marcas. Uma abordagem melhor é buscar o published URL do projeto via variável de ambiente ou configuração existente.
+
+**Abordagem recomendada**: Como o projeto tem `VITE_SUPABASE_URL` e `VITE_SUPABASE_PROJECT_ID` como env vars, mas não tem a published URL como env var, a solução mais robusta e imediata é:
+
+- Detectar se estamos em preview (`id-preview--` no origin)
+- Se sim, usar `https://fidelidadevaleresgate.lovable.app` como fallback fixo (este é o domínio publicado real do projeto)
+- Alternativamente, o admin pode simplesmente preencher o campo "URL Pública Oficial" na configuração do motorista com `https://fidelidadevaleresgate.lovable.app`
+
+A segunda opção é mais simples e já está implementada — basta configurar o campo. Mas vou implementar a detecção automática também para evitar esse problema recorrente.
+
+### Arquivo
 - `src/lib/publicShareUrl.ts`
-- `src/pages/DriverPanelConfigPage.tsx`
-- `src/pages/Dashboard.tsx`
-- `src/components/driver/DriverMarketplace.tsx`
-- `src/components/driver/DriverCategoryPage.tsx`
-- `src/components/customer/AchadinhoDealDetail.tsx`
-- `src/components/customer/AchadinhoCategoryPage.tsx`
-- `src/components/customer/AchadinhoDealsOverlay.tsx`
 
-Resultado esperado
-- O Achadinhos passa a ter um link público estável e acessível por qualquer pessoa na web
-- O admin deixa de copiar/exibir `123456.valeresgate.com` enquanto ele estiver quebrado
-- Compartilhamentos passam a abrir corretamente o `/driver` público com `brandId`, `categoryId` e `dealId` quando houver
