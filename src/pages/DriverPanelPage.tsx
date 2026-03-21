@@ -14,6 +14,14 @@ export default function DriverPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Force dark mode like customer app
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, []);
+
   useEffect(() => {
     if (!brandId) {
       setError("Parâmetro brandId é obrigatório");
@@ -70,7 +78,7 @@ export default function DriverPanelPage() {
   const theme = settings?.theme || null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <DriverMarketplace brand={brand} branch={branch} theme={theme} />
     </div>
   );

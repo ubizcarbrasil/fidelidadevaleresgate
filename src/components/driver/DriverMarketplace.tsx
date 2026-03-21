@@ -208,39 +208,58 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
 
   return (
     <div className="max-w-lg mx-auto pb-8">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-3 px-4 py-3">
-          {logoUrl && (
-            <img src={logoUrl} alt={brand.name} className="h-9 w-9 rounded-xl object-contain" />
-          )}
-          <div className="flex-1">
-            <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-              {marketplaceTitle}
-            </h1>
-            <p className="text-[10px] text-muted-foreground">
-              {marketplaceSubtitle}
-            </p>
+      {/* Header — same style as customer app */}
+      <header
+        className="sticky top-0 z-10"
+        style={{ backgroundColor: "hsl(var(--background))" }}
+      >
+        <div className="px-4 pt-3 pb-0">
+          {/* Top row: Logo/Name */}
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2.5">
+              {logoUrl && (
+                <img src={logoUrl} alt={brand.name} className="h-8 w-8 object-contain rounded-lg" />
+              )}
+              <span
+                className="font-extrabold text-[15px] tracking-tight text-foreground"
+                style={{ fontFamily: fontHeading }}
+              >
+                {marketplaceTitle}
+              </span>
+            </div>
           </div>
-        </div>
-        {/* Search */}
-        <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Buscar produtos..."
-              className="pl-9 pr-9 h-9 rounded-xl bg-muted border-0 text-sm"
-            />
-            {searchTerm && (
+
+          {/* Search Bar — customer style */}
+          {searchTerm ? (
+            <div className="relative mb-3">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
+              <Input
+                autoFocus
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="O que está procurando?"
+                className="pl-10 pr-9 h-10 rounded-xl bg-muted border-0 text-sm"
+              />
               <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setSearchTerm(" ")}
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-2.5 text-left transition-shadow mb-3"
+              style={{ backgroundColor: "hsl(var(--muted))" }}
+            >
+              <Search className="h-4.5 w-4.5 flex-shrink-0 text-foreground/50" />
+              <span className="text-sm text-foreground/50">
+                O que está procurando?
+              </span>
+            </button>
+          )}
         </div>
-      </div>
+        {/* Bottom divider */}
+        <div className="h-px" style={{ backgroundColor: "hsl(var(--border))" }} />
+      </header>
 
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
