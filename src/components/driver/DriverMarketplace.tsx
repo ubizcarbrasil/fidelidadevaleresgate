@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2 } from "lucide-react";
