@@ -1,7 +1,8 @@
 import React, { useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ArrowLeft, ShoppingBag, Search, X } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X } from "lucide-react";
+import DriverCategoryPage from "./DriverCategoryPage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
