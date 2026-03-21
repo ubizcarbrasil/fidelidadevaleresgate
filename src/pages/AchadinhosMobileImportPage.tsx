@@ -123,7 +123,7 @@ export default function AchadinhosMobileImportPage() {
   }, [extractFromImage]);
 
   // ── Associate links with extracted products ──
-  const handleAssociateLinks = useCallback(() => {
+  const handleAssociateLinks = useCallback(async () => {
     const links = photoLinksText
       .split("\n")
       .map(l => l.trim())
@@ -158,8 +158,55 @@ export default function AchadinhosMobileImportPage() {
     }
 
     setProducts(result);
-    setStep("review");
-  }, [photoLinksText, extractedProducts]);
+
+    // Scrape links to enrich with images & categories
+    const itemsWithLinks = result.filter(p => p.affiliate_url && p.affiliate_url.length > 5);
+    if (itemsWithLinks.length > 0) {
+      setIsScraping(true);
+      setScrapeProgress({ done: 0, total: itemsWithLinks.length });
+      setStep("review");
+
+      const enriched = [...result];
+
+      for (let i = 0; i < itemsWithLinks.length; i += 5) {
+        const batch = itemsWithLinks.slice(i, i + 5);
+        const promises = batch.map(async (item) => {
+          try {
+            const { data } = await supabase.functions.invoke("scrape-product", {
+              body: { url: item.affiliate_url, brand_id: currentBrandId },
+            });
+            if (data?.success && data.product) {
+              return { id: item.id, product: data.product };
+            }
+          } catch { /* skip */ }
+          return null;
+        });
+
+        const batchResults = await Promise.all(promises);
+        batchResults.forEach(r => {
+          if (!r) return;
+          const idx = enriched.findIndex(p => p.id === r.id);
+          if (idx === -1) return;
+          const scraped = r.product;
+          enriched[idx] = {
+            ...enriched[idx],
+            image_url: enriched[idx].image_url || scraped.image_url || null,
+            category_id: enriched[idx].category_id || scraped.category_id || null,
+            category_name: enriched[idx].category_name || scraped.category_name || null,
+            store_name: enriched[idx].store_name || scraped.store_name || "",
+          };
+        });
+
+        setScrapeProgress({ done: Math.min(i + batch.length, itemsWithLinks.length), total: itemsWithLinks.length });
+        setProducts([...enriched]);
+      }
+
+      setIsScraping(false);
+      toast.success("Imagens e categorias buscadas dos links!");
+    } else {
+      setStep("review");
+    }
+  }, [photoLinksText, extractedProducts, currentBrandId]);
 
   // ── Correct single product via photo ──
   const handleCorrectViaPhoto = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
