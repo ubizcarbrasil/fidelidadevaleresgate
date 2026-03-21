@@ -8,19 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import ImageUploadField from "@/components/ImageUploadField";
 
 interface CategoryLayout {
   rows: number;
   order: number;
 }
 
+interface DriverBannerItem {
+  id: string;
+  image_url: string;
+  title: string;
+  link_url: string;
+  after_category_id: string; // "__top__" or category id
+  is_active: boolean;
+}
+
 export default function DriverPanelConfigPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
+  const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
 
   const driverUrl = `${window.location.origin}/driver?brandId=${currentBrandId || ""}`;
 
@@ -40,6 +54,7 @@ export default function DriverPanelConfigPage() {
 
   const showBanners = brandSettings?.driver_show_banners !== false;
   const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
+  const interstitialBanners: DriverBannerItem[] = brandSettings?.driver_interstitial_banners || [];
 
   const settingsMutation = useMutation({
     mutationFn: async (patch: Record<string, any>) => {
@@ -103,6 +118,46 @@ export default function DriverPanelConfigPage() {
   const getRows = (catId: string) => categoryLayout[catId]?.rows ?? 1;
   const getOrder = (catId: string, fallback: number) => categoryLayout[catId]?.order ?? fallback;
 
+  // Banner management
+  const addBanner = () => {
+    if (!newBanner.image_url) {
+      toast({ title: "Adicione uma imagem", variant: "destructive" });
+      return;
+    }
+    const banner: DriverBannerItem = {
+      id: crypto.randomUUID(),
+      image_url: newBanner.image_url,
+      title: newBanner.title,
+      link_url: newBanner.link_url,
+      after_category_id: newBanner.after_category_id,
+      is_active: true,
+    };
+    settingsMutation.mutate({ driver_interstitial_banners: [...interstitialBanners, banner] });
+    setNewBanner({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
+    setBannerDialogOpen(false);
+  };
+
+  const removeBanner = (id: string) => {
+    settingsMutation.mutate({ driver_interstitial_banners: interstitialBanners.filter(b => b.id !== id) });
+  };
+
+  const toggleBanner = (id: string, is_active: boolean) => {
+    settingsMutation.mutate({
+      driver_interstitial_banners: interstitialBanners.map(b => b.id === id ? { ...b, is_active } : b),
+    });
+  };
+
+  const updateBannerPosition = (id: string, after_category_id: string) => {
+    settingsMutation.mutate({
+      driver_interstitial_banners: interstitialBanners.map(b => b.id === id ? { ...b, after_category_id } : b),
+    });
+  };
+
+  const getCategoryName = (id: string) => {
+    if (id === "__top__") return "Topo (antes das categorias)";
+    return categories?.find(c => c.id === id)?.name || "Desconhecida";
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="Painel do Motorista" description="Configure o marketplace de achadinhos que os motoristas visualizam" />
@@ -139,14 +194,14 @@ export default function DriverPanelConfigPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Image className="h-5 w-5 text-primary" />
-            Banners
+            Banners do Topo
           </CardTitle>
           <CardDescription>Exiba banners promocionais no topo do marketplace do motorista.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <span className="font-medium text-sm">Exibir banners</span>
+              <span className="font-medium text-sm">Exibir banners do topo</span>
               <p className="text-xs text-muted-foreground">Mostra os mesmos banners configurados na plataforma</p>
             </div>
             <Switch
@@ -156,6 +211,125 @@ export default function DriverPanelConfigPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Interstitial banners */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <GripVertical className="h-5 w-5 text-primary" />
+            Banners entre Seções
+          </CardTitle>
+          <CardDescription>Insira banners promocionais entre as categorias de produtos.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {interstitialBanners.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum banner entre seções configurado.</p>
+          )}
+
+          {interstitialBanners.map((banner) => (
+            <div key={banner.id} className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-start gap-3">
+                <img
+                  src={banner.image_url}
+                  alt={banner.title || "Banner"}
+                  className="h-16 w-28 rounded-lg object-cover flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <p className="text-sm font-medium truncate">{banner.title || "Sem título"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Após: {getCategoryName(banner.after_category_id)}
+                  </p>
+                  <Select
+                    value={banner.after_category_id}
+                    onValueChange={(v) => updateBannerPosition(banner.id, v)}
+                  >
+                    <SelectTrigger className="h-7 text-xs w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__top__">Topo</SelectItem>
+                      {categories?.filter(c => c.is_active).map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Switch
+                    checked={banner.is_active}
+                    onCheckedChange={(checked) => toggleBanner(banner.id, checked)}
+                  />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeBanner(banner.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <Button variant="outline" className="w-full" onClick={() => setBannerDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Banner
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Add banner dialog */}
+      <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Banner entre Seções</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ImageUploadField
+              value={newBanner.image_url}
+              onChange={(url) => setNewBanner(prev => ({ ...prev, image_url: url }))}
+              folder="driver-banners"
+              label="Imagem do Banner"
+              aspectRatio={21 / 9}
+              aiContext="banner"
+              previewClassName="h-32 w-full object-cover rounded-xl"
+            />
+            <div>
+              <label className="text-sm font-medium">Título (opcional)</label>
+              <Input
+                value={newBanner.title}
+                onChange={(e) => setNewBanner(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Ex: Promoção especial"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Link (opcional)</label>
+              <Input
+                value={newBanner.link_url}
+                onChange={(e) => setNewBanner(prev => ({ ...prev, link_url: e.target.value }))}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Posição</label>
+              <Select
+                value={newBanner.after_category_id}
+                onValueChange={(v) => setNewBanner(prev => ({ ...prev, after_category_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__top__">Topo (antes das categorias)</SelectItem>
+                  {categories?.filter(c => c.is_active).map(c => (
+                    <SelectItem key={c.id} value={c.id}>Após: {c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBannerDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={addBanner} disabled={!newBanner.image_url}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Categorias */}
       <Card>
@@ -177,7 +351,6 @@ export default function DriverPanelConfigPage() {
             <div className="space-y-2">
               {categories.map((cat) => (
                 <div key={cat.id} className="rounded-lg border p-3 space-y-3">
-                  {/* Row 1: Name + Toggle */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
@@ -194,7 +367,6 @@ export default function DriverPanelConfigPage() {
                     </div>
                   </div>
 
-                  {/* Row 2: Rows + Order controls */}
                   {cat.is_active && (
                     <div className="flex items-center gap-4 pl-6">
                       <div className="flex items-center gap-2">
