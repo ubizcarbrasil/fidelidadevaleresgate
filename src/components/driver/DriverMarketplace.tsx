@@ -353,7 +353,16 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                     <div className="min-w-[16px] flex-shrink-0" />
                   </div>
                 ) : (
-                  <div className="px-5 grid grid-cols-2 gap-3 pb-1">
+                  <div
+                    className="px-5 grid gap-3 overflow-x-auto scrollbar-hide pb-1"
+                    style={{
+                      gridTemplateRows: `repeat(${configuredRows}, 1fr)`,
+                      gridAutoFlow: "column",
+                      gridAutoColumns: "minmax(160px, 180px)",
+                      scrollSnapType: "x mandatory",
+                      touchAction: "pan-x",
+                    }}
+                  >
                     {visibleDeals.map((deal, idx) => (
                       <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} />
                     ))}
