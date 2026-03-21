@@ -108,6 +108,7 @@ const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfig
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
+const DriverPanelConfigPage = lazy(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazy(() => import("@/pages/DriverPanelPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
