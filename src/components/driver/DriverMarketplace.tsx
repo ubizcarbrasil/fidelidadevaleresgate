@@ -415,6 +415,8 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
           brandId={brand.id}
           branchId={branch?.id || null}
           fontHeading={fontHeading}
+          brandSettings={brand.brand_settings_json}
+          theme={theme}
           onBack={() => setOpenCategory(null)}
         />
       )}
