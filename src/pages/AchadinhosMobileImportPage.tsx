@@ -43,6 +43,11 @@ export default function AchadinhosMobileImportPage() {
   const [isScraping, setIsScraping] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState({ done: 0, total: 0 });
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const updateProduct = useCallback((id: string, field: keyof ProductItem, value: string | number | null) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+  }, []);
 
   // ── Scrape links ──
   const handleScrapeLinks = useCallback(async () => {
@@ -389,7 +394,10 @@ export default function AchadinhosMobileImportPage() {
               <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                 {products.map(p => (
                   <Card key={p.id} className="overflow-hidden">
-                    <CardContent className="p-3 flex gap-3">
+                    <CardContent
+                      className="p-3 flex gap-3 cursor-pointer"
+                      onClick={() => setEditingId(prev => prev === p.id ? null : p.id)}
+                    >
                       {p.image_url ? (
                         <img
                           src={p.image_url}
@@ -423,11 +431,50 @@ export default function AchadinhosMobileImportPage() {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 self-start"
-                        onClick={() => removeProduct(p.id)}
+                        onClick={(e) => { e.stopPropagation(); removeProduct(p.id); }}
                       >
                         <X className="h-4 w-4" />
                       </Button>
                     </CardContent>
+                    {editingId === p.id && (
+                      <div className="px-3 pb-3 space-y-2 border-t pt-2" onClick={e => e.stopPropagation()}>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Título</label>
+                          <Input
+                            value={p.title}
+                            onChange={e => updateProduct(p.id, "title", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Descrição</label>
+                          <Textarea
+                            value={p.description}
+                            onChange={e => updateProduct(p.id, "description", e.target.value)}
+                            className="min-h-[60px]"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-xs text-muted-foreground">Preço</label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={p.price ?? ""}
+                              onChange={e => updateProduct(p.id, "price", e.target.value ? parseFloat(e.target.value) : null)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-muted-foreground">Preço original</label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={p.original_price ?? ""}
+                              onChange={e => updateProduct(p.id, "original_price", e.target.value ? parseFloat(e.target.value) : null)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </Card>
                 ))}
               </div>
