@@ -27,7 +27,12 @@ export async function getPublicOrigin(brandId: string): Promise<string> {
     // silently fall back
   }
 
-  const fallback = window.location.origin;
+  // Detect Lovable preview URLs and use published domain instead
+  let fallback = window.location.origin;
+  if (/^https:\/\/id-preview--[^.]+\.lovable\.app$/.test(fallback)) {
+    fallback = "https://fidelidadevaleresgate.lovable.app";
+  }
+
   cachedBaseUrls[brandId] = fallback;
   return fallback;
 }
