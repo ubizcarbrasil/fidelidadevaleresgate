@@ -64,11 +64,13 @@ export default function AffiliateCategoriesPage() {
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaBgColor, setCtaBgColor] = useState("#F97316");
   const [ctaTextColor, setCtaTextColor] = useState("#FFFFFF");
+  const [detailBannerUrl, setDetailBannerUrl] = useState("");
 
   useEffect(() => {
     if (ctaConfig.label) setCtaLabel(ctaConfig.label);
     if (ctaConfig.bg_color) setCtaBgColor(ctaConfig.bg_color);
     if (ctaConfig.text_color) setCtaTextColor(ctaConfig.text_color);
+    if (brandData?.achadinho_detail_banner_url) setDetailBannerUrl(brandData.achadinho_detail_banner_url);
   }, [brandData]);
 
   const saveCtaMutation = useMutation({
