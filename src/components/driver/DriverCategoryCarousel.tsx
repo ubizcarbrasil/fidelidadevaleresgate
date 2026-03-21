@@ -1,3 +1,4 @@
+import React from "react";
 import { LayoutGrid } from "lucide-react";
 import { LucideIcon, type DealCategory } from "./DriverMarketplace";
 
@@ -7,10 +8,9 @@ interface Props {
   onSelect: (id: string | null) => void;
 }
 
-export default function DriverCategoryCarousel({ categories, selectedId, onSelect }: Props) {
+function DriverCategoryCarouselInner({ categories, selectedId, onSelect }: Props) {
   return (
     <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pt-4 pb-1">
-      {/* "Todos" button */}
       <button
         onClick={() => onSelect(null)}
         className="flex flex-col items-center gap-1.5 flex-shrink-0"
@@ -61,3 +61,6 @@ export default function DriverCategoryCarousel({ categories, selectedId, onSelec
     </div>
   );
 }
+
+const DriverCategoryCarousel = React.memo(DriverCategoryCarouselInner);
+export default DriverCategoryCarousel;
