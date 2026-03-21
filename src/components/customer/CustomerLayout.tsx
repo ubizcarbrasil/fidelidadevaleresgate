@@ -268,6 +268,22 @@ export default function CustomerLayout() {
                 </span>
               </div>
               <div className="flex items-center gap-0.5">
+                <BranchPickerSheet />
+                <button
+                  onClick={() => setNotifOpen(true)}
+                  className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
+                >
+                  <AppIcon iconKey="header_bell" className="h-[18px] w-[18px] text-foreground/70" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setLedgerOpen(true)}
+                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
+                >
+                  <AppIcon iconKey="header_wallet" className="h-[18px] w-[18px] text-foreground/70" />
+                </button>
               </div>
             </div>
 

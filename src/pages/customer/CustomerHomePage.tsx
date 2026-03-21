@@ -157,6 +157,31 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
 
   return (
     <div className="pb-4">
+      {/* Hero: greeting + points */}
+      <div className="px-4 pt-4 pb-1 flex items-center justify-between">
+        <div>
+          <h1
+            className="text-lg font-extrabold leading-tight"
+            style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
+          >
+            {greeting}, {firstName} 👋
+          </h1>
+          {cityName ? (
+            <p className="text-xs text-muted-foreground mt-0.5">📍 {cityName}</p>
+          ) : null}
+        </div>
+        {customer && (
+          <button
+            onClick={() => onOpenLedger?.()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95"
+            style={{ backgroundColor: accent ? `${accent}20` : "hsl(var(--primary) / 0.1)", color: accent || "hsl(var(--primary))" }}
+          >
+            <Coins className="h-3.5 w-3.5" />
+            {customer.points_balance ?? 0} pts
+          </button>
+        )}
+      </div>
+
       {/* Render native sections in configured order */}
       {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns.key))}
 
