@@ -8,7 +8,7 @@ import {
   Building2, Store, MapPin, Users, Ticket, ShoppingBag, Tag, UserCheck,
   ReceiptText, Coins, TrendingUp, Radio, Link2, ExternalLink, Copy, LogIn,
   Globe, AlertCircle, Eye, Smartphone, Search, ArrowUpRight, ArrowDownRight,
-  Clock, CheckCircle2, AlertTriangle, Zap, Activity,
+  Clock, CheckCircle2, AlertTriangle, Zap, Activity, Car,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import { Input } from "@/components/ui/input";
@@ -177,6 +177,7 @@ function BrandQuickLinks() {
     { label: "App do Cliente", path: currentBrandId ? `/customer-preview?brandId=${currentBrandId}` : "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app" },
     { label: "Cadastro Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros" },
     { label: "Painel Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Gestão das lojas" },
+    { label: "Achadinho Motorista", path: "/driver", prodPath: "/driver", icon: Car, description: "Marketplace do motorista" },
   ];
 
   return (
