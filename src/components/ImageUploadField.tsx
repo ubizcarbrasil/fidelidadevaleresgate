@@ -13,6 +13,7 @@ interface ImageUploadFieldProps {
   accept?: string;
   previewClassName?: string;
   aspectRatio?: number;
+  aiContext?: "banner" | "logo" | "favicon" | "product" | "offer" | "background" | "gallery";
 }
 
 export default function ImageUploadField({
