@@ -75,7 +75,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
   }, [deals, debouncedSearch]);
 
   const handleClick = (deal: AffiliateDeal) => {
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+    setSelectedDeal(deal);
   };
 
   return (
