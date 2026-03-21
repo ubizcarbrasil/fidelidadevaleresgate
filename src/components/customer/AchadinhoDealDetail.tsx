@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Share2, Tag } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import SafeImage from "@/components/customer/SafeImage";
@@ -130,12 +131,7 @@ export default function AchadinhoDealDetail({
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  const shareUrl = `${window.location.origin}/driver?brandId=${brandId}&dealId=${deal.id}`;
-                  navigator.share({ title: deal.title, url: shareUrl }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brandId, deal.title, { dealId: deal.id })}
               className="h-9 w-9 flex items-center justify-center rounded-xl"
               style={{ backgroundColor: "hsl(var(--muted))" }}
             >

@@ -39,6 +39,7 @@ export interface BrandTheme {
   };
   logo_url?: string;
   favicon_url?: string;
+  pwa_icon_url?: string;
   font_heading?: string;
   font_body?: string;
   background_image_url?: string;
@@ -166,7 +167,7 @@ export function useBrandTheme(settings: Json | null | undefined) {
     }
 
     // Dynamic PWA manifest with brand logo
-    const logoUrl = theme.logo_url;
+    const logoUrl = theme.pwa_icon_url || theme.logo_url;
     if (logoUrl) {
       const dynamicManifest = {
         name: theme.display_name || document.title,

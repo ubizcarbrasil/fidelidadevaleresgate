@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Search, X, ExternalLink, icons, Tag, Share2 } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
@@ -101,11 +102,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
               </div>
             </div>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: `${category.name} — Achadinhos`, url: getPublicShareUrl(brandId, { categoryId: category.id }) }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brandId, `${category.name} — Achadinhos`, { categoryId: category.id })}
               className="h-9 w-9 flex items-center justify-center rounded-xl bg-muted"
             >
               <Share2 className="h-4.5 w-4.5 text-foreground" />

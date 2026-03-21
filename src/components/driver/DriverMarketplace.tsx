@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspens
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2 } from "lucide-react";
+import { shareDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -271,11 +272,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: marketplaceTitle, url: getPublicShareUrl(brand.id) }).catch(() => {});
-                }
-              }}
+              onClick={() => shareDriverUrl(brand.id, marketplaceTitle)}
               className="h-9 w-9 flex items-center justify-center rounded-xl"
               style={{ backgroundColor: "hsl(var(--muted))" }}
             >

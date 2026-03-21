@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical } from "lucide-react";
+import { getPublicOrigin, buildDriverUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageUploadField from "@/components/ImageUploadField";
@@ -36,7 +37,15 @@ export default function DriverPanelConfigPage() {
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
 
-  const driverUrl = `${window.location.origin}/driver?brandId=${currentBrandId || ""}`;
+  const [driverUrl, setDriverUrl] = useState(`${window.location.origin}/driver?brandId=${currentBrandId || ""}`);
+
+  // Resolve public domain for link
+  useEffect(() => {
+    if (!currentBrandId) return;
+    getPublicOrigin(currentBrandId).then(origin => {
+      setDriverUrl(buildDriverUrl(origin, currentBrandId));
+    });
+  }, [currentBrandId]);
 
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],
