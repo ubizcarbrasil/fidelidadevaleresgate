@@ -364,7 +364,7 @@ export default function DriverMarketplace({ brand, branch, theme }: Props) {
                           className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
                           style={{
                             scrollSnapType: "x mandatory",
-                            touchAction: "pan-x",
+                            touchAction: "pan-x pan-y",
                             paddingLeft: "20px",
                             paddingRight: "20px",
                             scrollPaddingLeft: "20px",
