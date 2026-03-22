@@ -1,28 +1,18 @@
 
 
-## Plano: Banners intersticiais em carrossel quando houver mais de 1 na mesma posição
+## Plano: Tornar a página Taxonomia responsiva para mobile
 
 ### Problema
-Quando múltiplos banners são configurados na mesma posição (ex: `__top__` ou após uma categoria), eles aparecem empilhados verticalmente, ocupando muito espaço. O esperado é que fiquem em carrossel automático, igual ao banner principal do topo.
+A página de Taxonomia (`TaxonomyPage.tsx`) usa layout `grid-cols-1 lg:grid-cols-4` que no mobile empilha corretamente, mas os controles internos não são otimizados para telas pequenas — o campo de busca tem largura fixa (`w-60`), botões de ação ficam escondidos atrás de `hover:opacity` (impossível em touch), e o painel de categorias ocupa muito espaço vertical.
 
-### Correção
+### Correção — `src/pages/TaxonomyPage.tsx`
 
-**`src/components/driver/DriverMarketplace.tsx`**
-
-Transformar o componente `InterstitialBanner` em `InterstitialBannerGroup` que recebe um array de banners:
-
-- Se houver **1 banner**: renderiza normalmente (imagem simples)
-- Se houver **2+ banners**: renderiza em carrossel com auto-advance (4s), dots indicadores e transição suave — mesmo padrão visual do `DriverBannerCarousel`
-
-Ajustar os dois pontos de uso:
-1. Banners `__top__` (linha ~348): agrupar e passar array
-2. Banners após categoria (linha ~433): agrupar `bannersAfter` e passar array
-
-### Detalhes técnicos
-- Reutilizar o padrão de slide único ativo com `useState(current)` + `setInterval` (igual ao `DriverBannerCarousel`)
-- Manter `aspect-[21/9]`, `rounded-2xl`, dots sobrepostos na parte inferior
-- `touch-action: pan-x pan-y` no container
+1. **Categorias em scroll horizontal no mobile**: no mobile, renderizar as categorias como chips/pills horizontais com scroll em vez de lista vertical longa
+2. **Busca responsiva**: trocar `w-60` por `w-full` no mobile
+3. **Botões de ação sempre visíveis no mobile**: remover `opacity-0 group-hover:opacity-100` em telas touch, usar `sm:opacity-0 sm:group-hover:opacity-100`
+4. **Header dos segmentos**: empilhar título e controles verticalmente no mobile (`flex-col` em telas pequenas)
+5. **Badges de aliases**: limitar a 4 no mobile para evitar overflow
 
 ### Arquivo
-- `src/components/driver/DriverMarketplace.tsx`
+- `src/pages/TaxonomyPage.tsx`
 
