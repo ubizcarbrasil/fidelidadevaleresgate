@@ -589,6 +589,65 @@ Deno.serve(async (req) => {
     }
     log.info("Demo stores created successfully", { count: DEMO_STORES.length });
 
+    // ─── Seed Affiliate Deals (Achadinhos) ─────────────────────
+    const { data: existingDeals } = await supabaseAdmin
+      .from("affiliate_deals").select("id").eq("brand_id", brand.id).limit(1);
+
+    if (!existingDeals?.length) {
+      await supabaseAdmin.rpc("seed_affiliate_categories", { p_brand_id: brand.id });
+
+      const { data: dealCategories } = await supabaseAdmin
+        .from("affiliate_deal_categories").select("id, name").eq("brand_id", brand.id);
+      const dealCatMap = new Map<string, string>();
+      for (const dc of (dealCategories || [])) {
+        dealCatMap.set(dc.name.toLowerCase(), dc.id);
+      }
+
+      const DEMO_DEALS = [
+        { title: "Fone Bluetooth JBL Tune 520BT", price: 199.90, original_price: 299.90, image_url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Fone sem fio com até 57h de bateria", badge_label: "-33%" },
+        { title: "Air Fryer Philips 4.1L", price: 349.90, original_price: 499.90, image_url: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Fritadeira sem óleo 1400W", badge_label: "-30%" },
+        { title: "Tênis Nike Revolution 6", price: 249.90, original_price: 399.90, image_url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop", category: "Esportes", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Tênis de corrida leve e confortável", badge_label: "-37%" },
+        { title: "Kit Skincare Facial Completo", price: 89.90, original_price: 149.90, image_url: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=300&fit=crop", category: "Beleza", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Sérum + hidratante + protetor solar", badge_label: "-40%" },
+        { title: "Smartwatch Xiaomi Band 8", price: 179.90, original_price: 249.90, image_url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Monitor cardíaco, SpO2 e 16 dias de bateria", badge_label: "-28%" },
+        { title: "Cafeteira Nespresso Essenza Mini", price: 399.90, original_price: 599.90, image_url: "https://images.unsplash.com/photo-1517256064527-9d164d25e6ac?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Cafeteira de cápsulas compacta 19 bar", badge_label: "-33%" },
+        { title: "Mochila Notebook Executiva", price: 129.90, original_price: 199.90, image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop", category: "Moda", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Mochila anti-furto com USB para notebook 15.6\"", badge_label: "-35%" },
+        { title: "Whey Protein Gold Standard 907g", price: 189.90, original_price: 279.90, image_url: "https://images.unsplash.com/photo-1593095948071-474c5cc2c4d8?w=400&h=300&fit=crop", category: "Esportes", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Whey Protein isolado sabor chocolate", badge_label: "-32%" },
+        { title: "Echo Dot 5ª Geração Alexa", price: 299.90, original_price: 449.90, image_url: "https://images.unsplash.com/photo-1543512214-318c7553f230?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Smart speaker com Alexa e som premium", badge_label: "-33%" },
+        { title: "Conjunto Panelas Antiaderente 5pcs", price: 199.90, original_price: 349.90, image_url: "https://images.unsplash.com/photo-1585664811087-47f65abbad64?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Conjunto de panelas com revestimento cerâmico", badge_label: "-43%" },
+        { title: "Óculos de Sol Ray-Ban Aviator", price: 449.90, original_price: 699.90, image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=300&fit=crop", category: "Moda", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Óculos clássico com lente degradê", badge_label: "-36%" },
+        { title: "Colchão Casal Molas Ensacadas", price: 1299.90, original_price: 1999.90, image_url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop", category: "Casa", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Colchão casal D33 com pillow top", badge_label: "-35%" },
+        { title: "Perfume Masculino Malbec Gold 100ml", price: 149.90, original_price: 219.90, image_url: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=300&fit=crop", category: "Beleza", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Fragrância amadeirada e sofisticada", badge_label: "-32%" },
+        { title: "Bicicleta Aro 29 Shimano 21v", price: 899.90, original_price: 1399.90, image_url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&h=300&fit=crop", category: "Esportes", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Mountain bike com quadro alumínio", badge_label: "-36%" },
+        { title: "Aspirador Robô Inteligente", price: 599.90, original_price: 899.90, image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop", category: "Casa", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Robô aspirador com mapeamento e app", badge_label: "-33%" },
+        { title: "Kindle Paperwhite 16GB", price: 549.90, original_price: 749.90, image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop", category: "Eletrônicos", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "E-reader com tela antirreflexo 6.8\"", badge_label: "-27%" },
+        { title: "Bolsa Feminina Couro Ecológico", price: 119.90, original_price: 189.90, image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop", category: "Moda", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Bolsa transversal média com alça ajustável", badge_label: "-37%" },
+        { title: "Cama Pet Ortopédica GG", price: 149.90, original_price: 229.90, image_url: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&h=300&fit=crop", category: "Pet", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Cama ortopédica para cães grandes", badge_label: "-35%" },
+        { title: "Luminária de Mesa LED Articulada", price: 79.90, original_price: 129.90, image_url: "https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=400&h=300&fit=crop", category: "Casa", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Luminária com 3 temperaturas de cor e dimmer", badge_label: "-38%" },
+        { title: "Kit Churrasco Inox 10 Peças", price: 89.90, original_price: 139.90, image_url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop", category: "Cozinha", store_name: "Mercado Livre", affiliate_url: "https://mercadolivre.com.br", description: "Conjunto de espetos, faca e tábua em inox", badge_label: "-36%" },
+      ];
+
+      for (let i = 0; i < DEMO_DEALS.length; i++) {
+        const deal = DEMO_DEALS[i];
+        const categoryId = dealCatMap.get(deal.category.toLowerCase()) || null;
+        await supabaseAdmin.from("affiliate_deals").insert({
+          brand_id: brand.id,
+          title: deal.title,
+          description: deal.description,
+          price: deal.price,
+          original_price: deal.original_price,
+          image_url: deal.image_url,
+          affiliate_url: deal.affiliate_url,
+          store_name: deal.store_name,
+          store_logo_url: "https://ui-avatars.com/api/?name=ML&background=FFE600&color=333&size=128&rounded=true&bold=true",
+          badge_label: deal.badge_label,
+          category_id: categoryId,
+          is_active: true,
+          order_index: i,
+        });
+      }
+      log.info("Created 20 affiliate deals for brand");
+    }
+
     // ─── 11. Save test accounts in brand settings ────────────────
     const testAccounts = [
       { email: owner_email, role: "brand_admin", is_active: true },
