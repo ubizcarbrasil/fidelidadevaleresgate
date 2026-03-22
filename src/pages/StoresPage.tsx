@@ -179,7 +179,7 @@ export default function StoresPage() {
                 <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Identificador</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
