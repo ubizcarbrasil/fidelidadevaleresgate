@@ -299,14 +299,25 @@ export default function DriverPanelConfigPage() {
 
           {interstitialBanners.map((banner) => (
             <div key={banner.id} className="rounded-lg border p-3 space-y-2">
-              <div className="flex items-start gap-3">
+              <div className="flex flex-col sm:flex-row items-start gap-3">
                 <img
                   src={banner.image_url}
                   alt={banner.title || "Banner"}
-                  className="h-16 w-28 rounded-lg object-cover flex-shrink-0"
+                  className="h-24 w-full sm:h-16 sm:w-28 rounded-lg object-cover flex-shrink-0"
                 />
-                <div className="flex-1 min-w-0 space-y-1">
-                  <p className="text-sm font-medium truncate">{banner.title || "Sem título"}</p>
+                <div className="flex-1 min-w-0 space-y-1 w-full">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium truncate">{banner.title || "Sem título"}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Switch
+                        checked={banner.is_active}
+                        onCheckedChange={(checked) => toggleBanner(banner.id, checked)}
+                      />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeBanner(banner.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Após: {getCategoryName(banner.after_category_id)}
                   </p>
@@ -314,7 +325,7 @@ export default function DriverPanelConfigPage() {
                     value={banner.after_category_id}
                     onValueChange={(v) => updateBannerPosition(banner.id, v)}
                   >
-                    <SelectTrigger className="h-7 text-xs w-48">
+                    <SelectTrigger className="h-7 text-xs w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -324,15 +335,6 @@ export default function DriverPanelConfigPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Switch
-                    checked={banner.is_active}
-                    onCheckedChange={(checked) => toggleBanner(banner.id, checked)}
-                  />
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeBanner(banner.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             </div>
