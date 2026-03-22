@@ -268,11 +268,11 @@ export default function AffiliateCategoriesPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Button size="sm" onClick={() => saveCtaMutation.mutate()} disabled={saveCtaMutation.isPending}>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Button size="sm" className="w-full sm:w-auto" onClick={() => saveCtaMutation.mutate()} disabled={saveCtaMutation.isPending}>
               <Save className="h-4 w-4 mr-1" />Salvar
             </Button>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-center sm:justify-end">
               <button
                 className="px-6 py-2.5 rounded-xl text-sm font-bold"
                 style={{ backgroundColor: ctaBgColor, color: ctaTextColor }}
