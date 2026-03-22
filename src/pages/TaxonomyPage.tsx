@@ -296,9 +296,35 @@ export default function TaxonomyPage() {
         </TabsList>
 
         <TabsContent value="segments" className="space-y-4 mt-4">
+          {/* Mobile: horizontal category chips */}
+          <div className="lg:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${!selectedCategory ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-border text-muted-foreground"}`}
+              >
+                Todas ({segments.length})
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5 ${selectedCategory === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-border text-muted-foreground"}`}
+                >
+                  <IconPreview name={cat.icon_name} className="h-3.5 w-3.5" />
+                  {cat.name}
+                  <Badge variant="secondary" className="text-[10px] ml-0.5 px-1 py-0">{segCountByCat(cat.id)}</Badge>
+                </button>
+              ))}
+              <button onClick={openNewCat} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-border text-muted-foreground">
+                <Plus className="h-3 w-3 inline mr-1" />Categoria
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Categories Panel */}
-            <Card className="lg:col-span-1">
+            {/* Categories Panel - desktop only */}
+            <Card className="lg:col-span-1 hidden lg:block">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">Categorias ({categories.length})</CardTitle>
