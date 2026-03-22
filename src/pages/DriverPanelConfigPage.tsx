@@ -176,15 +176,15 @@ export default function DriverPanelConfigPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
-            <code className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm truncate">{driverUrl}</code>
-            <Button variant="outline" size="icon" onClick={handleCopy}>
+            <code className="flex-1 rounded-md border bg-muted px-2 sm:px-3 py-2 text-xs sm:text-sm truncate min-w-0">{driverUrl}</code>
+            <Button variant="outline" size="icon" className="flex-shrink-0" onClick={handleCopy}>
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
           <Button
             onClick={() => window.open(driverUrl, "_blank")}
             disabled={!currentBrandId}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <ExternalLink className="h-4 w-4" />
             Abrir Painel do Motorista
