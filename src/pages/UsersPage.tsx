@@ -217,7 +217,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
         </div>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogTrigger asChild>
-            <Button><UserPlus className="h-4 w-4 mr-2" />Convidar Usuário</Button>
+            <Button className="w-full sm:w-auto"><UserPlus className="h-4 w-4 mr-2" />Convidar Usuário</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
