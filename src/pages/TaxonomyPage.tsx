@@ -366,22 +366,22 @@ export default function TaxonomyPage() {
             {/* Segments Panel */}
             <Card className="lg:col-span-3">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <CardTitle className="text-sm">
                     {selectedCategory ? getCategoryName(selectedCategory) : "Todos os Segmentos"} ({filteredSegments.length})
                   </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-none">
                       <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        placeholder="Buscar por nome, alias, keyword..."
+                        placeholder="Buscar..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 h-8 w-60 text-sm"
+                        className="pl-9 h-8 w-full sm:w-60 text-sm"
                       />
                     </div>
-                    <Button size="sm" onClick={openNewSeg}>
-                      <Plus className="h-4 w-4 mr-1" /> Segmento
+                    <Button size="sm" onClick={openNewSeg} className="shrink-0">
+                      <Plus className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Segmento</span>
                     </Button>
                   </div>
                 </div>
