@@ -462,13 +462,13 @@ export default function DriverPanelConfigPage() {
             <div className="space-y-2">
               {categories.map((cat) => (
                 <div key={cat.id} className="rounded-lg border p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                      <span className="font-medium text-sm">{cat.name}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                      <span className="font-medium text-sm truncate">{cat.name}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px]">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px] hidden sm:inline-flex">
                         {cat.is_active ? "Ativa" : "Inativa"}
                       </Badge>
                       <Switch
@@ -479,7 +479,7 @@ export default function DriverPanelConfigPage() {
                   </div>
 
                   {cat.is_active && (
-                    <div className="flex items-center gap-4 pl-6">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 pl-0 sm:pl-6">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
                         <div className="flex items-center gap-1">
