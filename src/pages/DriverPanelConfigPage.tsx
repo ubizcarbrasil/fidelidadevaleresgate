@@ -162,7 +162,7 @@ export default function DriverPanelConfigPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
       <PageHeader title="Painel do Motorista" description="Configure o marketplace de achadinhos que os motoristas visualizam" />
 
       {/* Link de acesso */}
@@ -176,15 +176,15 @@ export default function DriverPanelConfigPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
-            <code className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm truncate">{driverUrl}</code>
-            <Button variant="outline" size="icon" onClick={handleCopy}>
+            <code className="flex-1 rounded-md border bg-muted px-2 sm:px-3 py-2 text-xs sm:text-sm truncate min-w-0">{driverUrl}</code>
+            <Button variant="outline" size="icon" className="flex-shrink-0" onClick={handleCopy}>
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
           <Button
             onClick={() => window.open(driverUrl, "_blank")}
             disabled={!currentBrandId}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <ExternalLink className="h-4 w-4" />
             Abrir Painel do Motorista
@@ -299,14 +299,25 @@ export default function DriverPanelConfigPage() {
 
           {interstitialBanners.map((banner) => (
             <div key={banner.id} className="rounded-lg border p-3 space-y-2">
-              <div className="flex items-start gap-3">
+              <div className="flex flex-col sm:flex-row items-start gap-3">
                 <img
                   src={banner.image_url}
                   alt={banner.title || "Banner"}
-                  className="h-16 w-28 rounded-lg object-cover flex-shrink-0"
+                  className="h-24 w-full sm:h-16 sm:w-28 rounded-lg object-cover flex-shrink-0"
                 />
-                <div className="flex-1 min-w-0 space-y-1">
-                  <p className="text-sm font-medium truncate">{banner.title || "Sem título"}</p>
+                <div className="flex-1 min-w-0 space-y-1 w-full">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium truncate">{banner.title || "Sem título"}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Switch
+                        checked={banner.is_active}
+                        onCheckedChange={(checked) => toggleBanner(banner.id, checked)}
+                      />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeBanner(banner.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Após: {getCategoryName(banner.after_category_id)}
                   </p>
@@ -314,7 +325,7 @@ export default function DriverPanelConfigPage() {
                     value={banner.after_category_id}
                     onValueChange={(v) => updateBannerPosition(banner.id, v)}
                   >
-                    <SelectTrigger className="h-7 text-xs w-48">
+                    <SelectTrigger className="h-7 text-xs w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -324,15 +335,6 @@ export default function DriverPanelConfigPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Switch
-                    checked={banner.is_active}
-                    onCheckedChange={(checked) => toggleBanner(banner.id, checked)}
-                  />
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeBanner(banner.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             </div>
@@ -460,13 +462,13 @@ export default function DriverPanelConfigPage() {
             <div className="space-y-2">
               {categories.map((cat) => (
                 <div key={cat.id} className="rounded-lg border p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                      <span className="font-medium text-sm">{cat.name}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                      <span className="font-medium text-sm truncate">{cat.name}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px]">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px] hidden sm:inline-flex">
                         {cat.is_active ? "Ativa" : "Inativa"}
                       </Badge>
                       <Switch
@@ -477,7 +479,7 @@ export default function DriverPanelConfigPage() {
                   </div>
 
                   {cat.is_active && (
-                    <div className="flex items-center gap-4 pl-6">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 pl-0 sm:pl-6">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
                         <div className="flex items-center gap-1">
