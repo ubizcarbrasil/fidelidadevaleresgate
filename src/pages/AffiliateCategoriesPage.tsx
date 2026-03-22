@@ -291,25 +291,34 @@ export default function AffiliateCategoriesPage() {
         {isLoading && <p className="text-muted-foreground text-sm">Carregando...</p>}
         {(categories || []).map(cat => (
           <Card key={cat.id} className={!cat.is_active ? "opacity-50" : ""}>
-            <CardContent className="p-3 flex items-center gap-3">
-              <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${cat.color}20` }}>
-                <LucideIcon name={cat.icon_name} className="h-5 w-5" style={{ color: cat.color }} />
+            <CardContent className="p-3 space-y-2">
+              <div className="flex items-center gap-3">
+                <GripVertical className="hidden sm:block h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${cat.color}20` }}>
+                  <LucideIcon name={cat.icon_name} className="h-5 w-5" style={{ color: cat.color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{cat.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{(cat.keywords || []).join(", ") || "Sem palavras-chave"}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{cat.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{(cat.keywords || []).join(", ") || "Sem palavras-chave"}</p>
+              <div className="flex items-center justify-between gap-2 pt-1 border-t sm:border-0 sm:pt-0 sm:justify-end">
+                <div className="flex items-center gap-2">
+                  <Switch checked={cat.is_active} onCheckedChange={v => toggleActive(cat.id, v)} />
+                  <span className="text-xs text-muted-foreground sm:hidden">{cat.is_active ? "Ativo" : "Inativo"}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setBannerCatId(bannerCatId === cat.id ? null : cat.id)} title="Banners">
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditId(cat.id); setEditForm(cat); }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(cat.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setBannerCatId(bannerCatId === cat.id ? null : cat.id)} title="Banners">
-                <ImageIcon className="h-4 w-4" />
-              </Button>
-              <Switch checked={cat.is_active} onCheckedChange={v => toggleActive(cat.id, v)} />
-              <Button variant="ghost" size="icon" onClick={() => { setEditId(cat.id); setEditForm(cat); }}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(cat.id)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
             </CardContent>
             {bannerCatId === cat.id && currentBrandId && (
               <CategoryBannerManager brandId={currentBrandId} categoryId={cat.id} />
