@@ -152,10 +152,17 @@ export default function AffiliateCategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const toggleActive = async (id: string, active: boolean) => {
-    await supabase.from("affiliate_deal_categories").update({ is_active: active }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
-  };
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("affiliate_deal_categories").update({ is_active: active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ["affiliate-categories", currentBrandId] });
+      toast.success(active ? "Categoria ativada!" : "Categoria desativada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const renderForm = (form: Partial<Category>, setForm: (f: Partial<Category>) => void, onSave: () => void, onCancel: () => void) => (
     <Card className="border-primary">
