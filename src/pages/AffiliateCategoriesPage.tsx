@@ -152,10 +152,17 @@ export default function AffiliateCategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const toggleActive = async (id: string, active: boolean) => {
-    await supabase.from("affiliate_deal_categories").update({ is_active: active }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
-  };
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("affiliate_deal_categories").update({ is_active: active }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ["affiliate-categories", currentBrandId] });
+      toast.success(active ? "Categoria ativada!" : "Categoria desativada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const renderForm = (form: Partial<Category>, setForm: (f: Partial<Category>) => void, onSave: () => void, onCancel: () => void) => (
     <Card className="border-primary">
@@ -304,7 +311,11 @@ export default function AffiliateCategoriesPage() {
               </div>
               <div className="flex items-center justify-between gap-2 pt-1 border-t sm:border-0 sm:pt-0 sm:justify-end">
                 <div className="flex items-center gap-2">
-                  <Switch checked={cat.is_active} onCheckedChange={v => toggleActive(cat.id, v)} />
+                  <Switch
+                    checked={cat.is_active}
+                    onCheckedChange={v => toggleMutation.mutate({ id: cat.id, active: v })}
+                    disabled={toggleMutation.isPending}
+                  />
                   <span className="text-xs text-muted-foreground sm:hidden">{cat.is_active ? "Ativo" : "Inativo"}</span>
                 </div>
                 <div className="flex items-center gap-1">
