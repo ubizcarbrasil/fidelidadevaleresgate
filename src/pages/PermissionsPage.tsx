@@ -152,7 +152,7 @@ export default function PermissionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Permissões & Roles</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Permissões & Roles</h2>
           <p className="text-muted-foreground">Gerencie permissões da plataforma e vincule a roles</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>

@@ -97,19 +97,19 @@ export default function OffersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Ofertas</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Ofertas</h2>
           <p className="text-muted-foreground">Gerencie ofertas de resgate por cidade</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nova Oferta</Button></DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogTrigger asChild><Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" />Nova Oferta</Button></DialogTrigger>
+          <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
             <DialogHeader><DialogTitle>{editId ? "Editar Oferta" : "Nova Oferta"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2"><Label>Título</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
@@ -134,7 +134,7 @@ export default function OffersPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-2"><Label>Valor Resgate (R$)</Label><Input type="number" value={form.value_rescue} onChange={e => setForm(f => ({ ...f, value_rescue: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Compra Mín. (R$)</Label><Input type="number" value={form.min_purchase} onChange={e => setForm(f => ({ ...f, min_purchase: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Máx. Diário</Label><Input type="number" value={form.max_daily_redemptions} onChange={e => setForm(f => ({ ...f, max_daily_redemptions: e.target.value }))} placeholder="Ilimitado" /></div>

@@ -100,7 +100,7 @@ const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, co
             {value === undefined ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
+              <p className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{value}</p>
             )}
             <div className="flex items-center gap-2 mt-1">
               {trend !== undefined && (
@@ -532,7 +532,7 @@ function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; 
         </div>
       ) : null}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
           {greeting} 👋
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">

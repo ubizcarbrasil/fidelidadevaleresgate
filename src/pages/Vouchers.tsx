@@ -49,14 +49,14 @@ export default function Vouchers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Cupons</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Cupons</h2>
           <p className="text-muted-foreground">Gerencie os cupons de desconto</p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline"><Link to="/vouchers/redeem"><Search className="h-4 w-4 mr-2" />Resgatar</Link></Button>
-          <Button asChild><Link to="/vouchers/new"><Plus className="h-4 w-4 mr-2" />Novo Cupom</Link></Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button asChild variant="outline" className="flex-1 sm:flex-none"><Link to="/vouchers/redeem"><Search className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Resgatar</span></Link></Button>
+          <Button asChild className="flex-1 sm:flex-none"><Link to="/vouchers/new"><Plus className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Novo Cupom</span></Link></Button>
         </div>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por código..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />

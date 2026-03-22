@@ -150,12 +150,12 @@ export default function Brands() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Marcas</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Marcas</h2>
           <p className="text-muted-foreground">Gerencie as marcas das organizações</p>
         </div>
-        <Button asChild><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Marca</Link></Button>
+        <Button asChild className="w-full sm:w-auto"><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Marca</Link></Button>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome ou slug..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>

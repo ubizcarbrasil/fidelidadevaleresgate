@@ -537,7 +537,7 @@ export default function BrandPermissionOverflowPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
             {isRoot ? "Permissões por Empresa" : "Permissões dos Parceiros"}
           </h2>
           <p className="text-muted-foreground">

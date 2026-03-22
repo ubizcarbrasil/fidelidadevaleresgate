@@ -356,9 +356,9 @@ export default function AffiliateDealsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Achadinhos</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Achadinhos</h2>
           <p className="text-muted-foreground">Gerencie ofertas de afiliados do marketplace</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => navigate("/affiliate-deals/import-mobile")}>

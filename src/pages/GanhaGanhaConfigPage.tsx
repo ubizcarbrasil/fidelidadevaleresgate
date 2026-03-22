@@ -147,7 +147,7 @@ export default function GanhaGanhaConfigPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
           <Handshake className="h-6 w-6" /> Módulo Ganha-Ganha
         </h2>
         <p className="text-muted-foreground">

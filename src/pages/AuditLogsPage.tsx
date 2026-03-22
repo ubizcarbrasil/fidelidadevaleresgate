@@ -39,7 +39,7 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Auditoria Global</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Auditoria Global</h2>
         <p className="text-muted-foreground">Registro de ações na plataforma</p>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por ação ou entidade..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />

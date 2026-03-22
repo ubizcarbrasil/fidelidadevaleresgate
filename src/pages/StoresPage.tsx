@@ -154,14 +154,14 @@ export default function StoresPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Parceiros</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Parceiros</h2>
           <p className="text-muted-foreground">Gerencie e aprove os estabelecimentos parceiros</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) closeDialog(); else setOpen(true); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Parceiro</Button></DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogTrigger asChild><Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" />Novo Parceiro</Button></DialogTrigger>
+          <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
             <DialogHeader><DialogTitle>{editId ? "Editar Parceiro" : "Novo Parceiro"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -175,11 +175,11 @@ export default function StoresPage() {
                   previewClassName="h-16 w-16 rounded-xl object-cover"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Identificador</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
@@ -197,7 +197,7 @@ export default function StoresPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Categoria</Label><Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} /></div>
               </div>

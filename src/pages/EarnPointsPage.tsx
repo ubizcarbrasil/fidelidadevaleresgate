@@ -272,7 +272,7 @@ export default function EarnPointsPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2"><Coins className="h-6 w-6" /> Pontuar Cliente</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2"><Coins className="h-6 w-6" /> Pontuar Cliente</h2>
         <p className="text-muted-foreground">Registre pontos após uma compra</p>
       </div>
 

@@ -219,7 +219,7 @@ export default function HomeTemplatesPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
             <LayoutTemplate className="h-6 w-6" />
             Galeria de Templates de Home
           </h2>

@@ -38,8 +38,8 @@ export default function RedemptionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Resgates</h2>
-        <p className="text-muted-foreground">Histórico de resgates por filial</p>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Resgates</h2>
+        <p className="text-sm text-muted-foreground">Histórico de resgates por filial</p>
       </div>
 
       <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar por token..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />

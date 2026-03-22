@@ -110,7 +110,7 @@ export default function OperatorRedeemPage() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Validar Resgate</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Validar Resgate</h2>
         <p className="text-muted-foreground">Insira o PIN de 6 dígitos + CPF do cliente</p>
       </div>
 

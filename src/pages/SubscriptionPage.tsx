@@ -90,7 +90,7 @@ export default function SubscriptionPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Planos e Assinatura</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Planos e Assinatura</h2>
         <p className="text-muted-foreground">Escolha o plano ideal para sua plataforma.</p>
       </div>
 

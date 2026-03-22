@@ -129,7 +129,7 @@ export default function BrandDomains() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Domínios</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Domínios</h2>
           <p className="text-muted-foreground">Gerencie os domínios white-label das brands</p>
         </div>
         <Button onClick={openNew}>
