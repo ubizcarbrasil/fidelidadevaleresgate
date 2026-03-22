@@ -492,7 +492,7 @@ export default function TaxonomyPage() {
 
       {/* Segment Dialog */}
       <Dialog open={segDialog} onOpenChange={setSegDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>{editingSeg ? "Editar Segmento" : "Novo Segmento"}</DialogTitle>
           </DialogHeader>
