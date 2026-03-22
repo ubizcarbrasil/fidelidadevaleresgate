@@ -79,7 +79,7 @@ export default function PointsLedgerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2"><ScrollText className="h-6 w-6" /> Extrato de Pontos</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2"><ScrollText className="h-5 w-5 sm:h-6 sm:w-6" /> Extrato de Pontos</h2>
         <p className="text-muted-foreground">Histórico de créditos e débitos</p>
       </div>
 
