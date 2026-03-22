@@ -219,7 +219,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto"><UserPlus className="h-4 w-4 mr-2" />Convidar Usuário</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Acesso</DialogTitle>
             </DialogHeader>
