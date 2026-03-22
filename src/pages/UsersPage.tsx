@@ -210,7 +210,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Equipe & Acessos</h2>
           <p className="text-muted-foreground">Gerencie os usuários e suas permissões</p>
@@ -498,7 +498,7 @@ function RootUsersView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Usuários & Roles</h2>
           <p className="text-muted-foreground">Gerencie permissões dos usuários</p>

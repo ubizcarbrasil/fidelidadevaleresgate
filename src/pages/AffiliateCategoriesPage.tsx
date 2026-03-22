@@ -208,7 +208,7 @@ export default function AffiliateCategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Categorias de Achadinhos</h2>
           <p className="text-muted-foreground">Gerencie as categorias de produtos para filtros no app</p>

@@ -64,7 +64,7 @@ export default function SectionTemplatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Section Templates</h2>
           <p className="text-muted-foreground">Templates de seções para páginas de marca</p>
