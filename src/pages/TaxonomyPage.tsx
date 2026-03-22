@@ -420,20 +420,20 @@ export default function TaxonomyPage() {
                           )}
                           {seg.aliases.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
-                              {seg.aliases.slice(0, 8).map((a, i) => (
+                              {seg.aliases.slice(0, 4).map((a, i) => (
                                 <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
                                   {a}
                                 </Badge>
                               ))}
-                              {seg.aliases.length > 8 && (
+                              {seg.aliases.length > 4 && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  +{seg.aliases.length - 8}
+                                  +{seg.aliases.length - 4}
                                 </Badge>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                        <div className="flex sm:opacity-0 sm:group-hover:opacity-100 transition-opacity gap-1 shrink-0">
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditSeg(seg)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
