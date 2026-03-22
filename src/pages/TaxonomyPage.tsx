@@ -296,9 +296,35 @@ export default function TaxonomyPage() {
         </TabsList>
 
         <TabsContent value="segments" className="space-y-4 mt-4">
+          {/* Mobile: horizontal category chips */}
+          <div className="lg:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${!selectedCategory ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-border text-muted-foreground"}`}
+              >
+                Todas ({segments.length})
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5 ${selectedCategory === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-border text-muted-foreground"}`}
+                >
+                  <IconPreview name={cat.icon_name} className="h-3.5 w-3.5" />
+                  {cat.name}
+                  <Badge variant="secondary" className="text-[10px] ml-0.5 px-1 py-0">{segCountByCat(cat.id)}</Badge>
+                </button>
+              ))}
+              <button onClick={openNewCat} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-border text-muted-foreground">
+                <Plus className="h-3 w-3 inline mr-1" />Categoria
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Categories Panel */}
-            <Card className="lg:col-span-1">
+            {/* Categories Panel - desktop only */}
+            <Card className="lg:col-span-1 hidden lg:block">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">Categorias ({categories.length})</CardTitle>
@@ -340,22 +366,22 @@ export default function TaxonomyPage() {
             {/* Segments Panel */}
             <Card className="lg:col-span-3">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <CardTitle className="text-sm">
                     {selectedCategory ? getCategoryName(selectedCategory) : "Todos os Segmentos"} ({filteredSegments.length})
                   </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-none">
                       <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        placeholder="Buscar por nome, alias, keyword..."
+                        placeholder="Buscar..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 h-8 w-60 text-sm"
+                        className="pl-9 h-8 w-full sm:w-60 text-sm"
                       />
                     </div>
-                    <Button size="sm" onClick={openNewSeg}>
-                      <Plus className="h-4 w-4 mr-1" /> Segmento
+                    <Button size="sm" onClick={openNewSeg} className="shrink-0">
+                      <Plus className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Segmento</span>
                     </Button>
                   </div>
                 </div>
@@ -394,20 +420,20 @@ export default function TaxonomyPage() {
                           )}
                           {seg.aliases.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
-                              {seg.aliases.slice(0, 8).map((a, i) => (
+                              {seg.aliases.slice(0, 4).map((a, i) => (
                                 <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
                                   {a}
                                 </Badge>
                               ))}
-                              {seg.aliases.length > 8 && (
+                              {seg.aliases.length > 4 && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  +{seg.aliases.length - 8}
+                                  +{seg.aliases.length - 4}
                                 </Badge>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                        <div className="flex sm:opacity-0 sm:group-hover:opacity-100 transition-opacity gap-1 shrink-0">
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditSeg(seg)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
