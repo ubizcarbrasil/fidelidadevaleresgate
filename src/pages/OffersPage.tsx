@@ -134,7 +134,7 @@ export default function OffersPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-2"><Label>Valor Resgate (R$)</Label><Input type="number" value={form.value_rescue} onChange={e => setForm(f => ({ ...f, value_rescue: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Compra Mín. (R$)</Label><Input type="number" value={form.min_purchase} onChange={e => setForm(f => ({ ...f, min_purchase: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Máx. Diário</Label><Input type="number" value={form.max_daily_redemptions} onChange={e => setForm(f => ({ ...f, max_daily_redemptions: e.target.value }))} placeholder="Ilimitado" /></div>

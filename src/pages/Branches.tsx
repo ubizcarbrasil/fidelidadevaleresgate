@@ -45,12 +45,12 @@ export default function Branches() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-           <h2 className="text-2xl font-bold tracking-tight">Cidades</h2>
+           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Cidades</h2>
            <p className="text-muted-foreground">Gerencie as filiais/unidades</p>
          </div>
-         <Button asChild><Link to="/branches/new"><Plus className="h-4 w-4 mr-2" />Nova Cidade</Link></Button>
+         <Button asChild className="w-full sm:w-auto"><Link to="/branches/new"><Plus className="h-4 w-4 mr-2" />Nova Cidade</Link></Button>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome, slug ou cidade..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>

@@ -96,7 +96,7 @@ export default function CrmContactsPage() {
               />
             </div>
             <Select value={source} onValueChange={(v) => { setSource(v === "all" ? "" : v); setPage(0); }}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Origem" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Origem" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas origens</SelectItem>
                 <SelectItem value="MOBILITY_APP">App Mobilidade</SelectItem>
@@ -106,7 +106,7 @@ export default function CrmContactsPage() {
               </SelectContent>
             </Select>
             <Select value={gender} onValueChange={(v) => { setGender(v === "all" ? "" : v); setPage(0); }}>
-              <SelectTrigger className="w-[130px]"><SelectValue placeholder="Gênero" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Gênero" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="M">Masculino</SelectItem>
@@ -115,7 +115,7 @@ export default function CrmContactsPage() {
               </SelectContent>
             </Select>
             <Select value={os} onValueChange={(v) => { setOs(v === "all" ? "" : v); setPage(0); }}>
-              <SelectTrigger className="w-[130px]"><SelectValue placeholder="Sistema" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Sistema" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="iOS">iOS</SelectItem>

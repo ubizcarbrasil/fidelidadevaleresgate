@@ -83,9 +83,9 @@ export default function PointsLedgerPage() {
         <p className="text-muted-foreground">Histórico de créditos e débitos</p>
       </div>
 
-      <div className="flex gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:flex-wrap">
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos</SelectItem>
             <SelectItem value="CREDIT">Créditos (acúmulo)</SelectItem>
@@ -93,13 +93,13 @@ export default function PointsLedgerPage() {
           </SelectContent>
         </Select>
         <Select value={filterStoreId} onValueChange={setFilterStoreId}>
-          <SelectTrigger className="w-56"><SelectValue placeholder="Todos os parceiros" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="Todos os parceiros" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todos os parceiros</SelectItem>
             {stores?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Input placeholder="Buscar cliente..." value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} className="max-w-xs" />
+        <Input placeholder="Buscar cliente..." value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} className="w-full sm:max-w-xs" />
       </div>
 
       <Card>
