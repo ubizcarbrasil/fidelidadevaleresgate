@@ -408,42 +408,42 @@ export default function TaxonomyPage() {
                         key={seg.id}
                         className="group flex items-start gap-3 p-3 rounded-xl border hover:border-primary/30 transition-colors"
                       >
-                        <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
-                          <IconPreview name={seg.icon_name} className="h-5 w-5" />
+                        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
+                          <IconPreview name={seg.icon_name} className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                             <span className="font-medium text-sm">{seg.name}</span>
                             {!selectedCategory && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-[10px] sm:text-xs">
                                 {getCategoryName(seg.category_id)}
                               </Badge>
                             )}
                             {seg.icon_name && (
-                              <Badge variant="secondary" className="text-[10px] font-mono">
+                              <Badge variant="secondary" className="text-[10px] font-mono hidden sm:inline-flex">
                                 {seg.icon_name}
                               </Badge>
                             )}
                           </div>
                           {seg.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{seg.description}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{seg.description}</p>
                           )}
                           {seg.aliases.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
-                              {seg.aliases.slice(0, 4).map((a, i) => (
+                              {seg.aliases.slice(0, 3).map((a, i) => (
                                 <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
                                   {a}
                                 </Badge>
                               ))}
-                              {seg.aliases.length > 4 && (
+                              {seg.aliases.length > 3 && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  +{seg.aliases.length - 4}
+                                  +{seg.aliases.length - 3}
                                 </Badge>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="flex sm:opacity-0 sm:group-hover:opacity-100 transition-opacity gap-1 shrink-0">
+                        <div className="flex opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity gap-0.5 shrink-0">
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditSeg(seg)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
