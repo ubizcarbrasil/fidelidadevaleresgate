@@ -1,35 +1,55 @@
 
+## Plano: corrigir o toggle de ativação das categorias de ACHADINHOS
 
-## Plano: Achadinhos demo auto-populados + toggle na Dashboard
+### O que encontrei
+O problema não é só visual.
 
-### Situação atual
-- `provision-brand` e `provision-trial` criam lojas demo inline mas **não** criam affiliate deals (Achadinhos)
-- `seed-demo-stores` cria tanto lojas demo quanto 20 affiliate deals, mas só é chamado manualmente (botão "Ativar Lojas Teste") ou pelo `useAutoSeedDemo` (que verifica taxonomia, não affiliate deals)
-- O `DemoStoresToggle` na Dashboard só ativa/desativa lojas demo — não tem controle sobre os Achadinhos demo
+1. **O toggle hoje ignora erro de update**
+   - Em `src/pages/AffiliateCategoriesPage.tsx`, a função `toggleActive` faz:
+   - `update({ is_active: active }).eq("id", id)`
+   - mas **não verifica `error`** e nem mostra toast
+   - então, se a atualização falhar, a interface apenas “volta” e parece que não desativa
 
-### O que vou implementar
+2. **As categorias inativas somem da listagem por causa do RLS**
+   - A query da página faz `select("*").eq("brand_id", currentBrandId)`
+   - mas no backend a tabela `affiliate_deal_categories` só tem:
+     - leitura pública para `is_active = true`
+     - policies de `INSERT/UPDATE/DELETE` para admins da marca
+   - **não existe uma policy de SELECT autenticado para admins/root**
+   - resultado: ao desativar uma categoria, ela deixa de ser visível imediatamente para o admin, como se tivesse “sumido” ou como se a ação estivesse quebrada
 
-**1. Auto-seed de Achadinhos no provisionamento** — `provision-brand/index.ts` e `provision-trial/index.ts`
-- Após criar as lojas demo, chamar `seed_affiliate_categories` (RPC) e inserir os 20 `DEMO_AFFILIATE_DEALS` — mesmo código que já existe em `seed-demo-stores`
-- Extrair o array `DEMO_AFFILIATE_DEALS` para um bloco reutilizável dentro de cada function (edge functions não compartilham imports facilmente, então duplicar o array)
+### Correção proposta
 
-**2. Toggle de Achadinhos demo na Dashboard** — `DemoStoresToggle.tsx`
-- Adicionar uma seção separada "Achadinhos Teste" com:
-  - Contagem de deals demo ativos/total
-  - Switch para ativar/desativar todos (update `is_active` nos `affiliate_deals` onde `store_name = 'Mercado Livre'` e `brand_id` = current)
-- Manter visualmente dentro do mesmo card "Lojas Teste" existente
+#### 1. Corrigir o backend de leitura
+Criar uma migration para adicionar policy de leitura autenticada em `affiliate_deal_categories`:
 
-**3. Seed de Achadinhos no botão existente** — `seed-demo-stores/index.ts`
-- Já faz isso — nenhuma mudança necessária
+- **Brand admins/root** podem ver todas as categorias da própria marca, inclusive inativas
+- manter a leitura pública apenas para categorias ativas
 
-### Detalhes técnicos
+Isso resolve o comportamento de “não consigo desativar” porque a categoria continuará aparecendo como inativa no admin.
 
-- Para identificar deals demo: usar `store_name = 'Mercado Livre'` + brand_id (todos os demo deals usam este store_name)
-- O toggle desativa/ativa em batch via `.update({ is_active })` com filtro
-- No provisionamento, marcar `brand_settings_json.achadinhos_demo_seeded = true` para evitar re-seed
+#### 2. Corrigir o toggle na página
+Em `src/pages/AffiliateCategoriesPage.tsx`:
+
+- transformar `toggleActive` em uma mutation com tratamento de erro
+- validar `error` retornado pelo update
+- exibir:
+  - sucesso: “Categoria desativada/ativada”
+  - erro: mensagem real do backend
+- desabilitar temporariamente o switch enquanto a mutation roda, para evitar toques duplos
+
+#### 3. Melhorar feedback visual
+Ainda na página:
+
+- manter categorias inativas visíveis com opacidade reduzida
+- mostrar label clara “Ativo/Inativo” também fora do mobile, se necessário
+- garantir revalidação correta com `invalidateQueries(["affiliate-categories", currentBrandId])`
 
 ### Arquivos
-- `supabase/functions/provision-brand/index.ts` — adicionar seed de affiliate deals
-- `supabase/functions/provision-trial/index.ts` — adicionar seed de affiliate deals  
-- `src/components/DemoStoresToggle.tsx` — adicionar toggle de Achadinhos demo
+- `src/pages/AffiliateCategoriesPage.tsx`
+- `supabase/migrations/...` nova migration para policy de `SELECT` autenticado em `affiliate_deal_categories`
 
+### Detalhe técnico importante
+Hoje o banco mostra que a marca principal tem **16 categorias, todas ativas**. Isso bate com o sintoma: provavelmente ninguém consegue deixar uma categoria inativa de forma estável porque:
+- ou o update falha silenciosamente
+- ou, quando funciona, a categoria some da consulta por falta de policy de leitura autenticada para itens inativos
