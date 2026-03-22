@@ -213,7 +213,7 @@ export default function AffiliateCategoriesPage() {
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Categorias de Achadinhos</h2>
           <p className="text-muted-foreground">Gerencie as categorias de produtos para filtros no app</p>
         </div>
-        <Button onClick={() => setNewForm({ name: "", icon_name: "Tag", color: "#6366f1", keywords: [] })}>
+        <Button className="w-full sm:w-auto" onClick={() => setNewForm({ name: "", icon_name: "Tag", color: "#6366f1", keywords: [] })}>
           <Plus className="h-4 w-4 mr-2" />Nova Categoria
         </Button>
       </div>
