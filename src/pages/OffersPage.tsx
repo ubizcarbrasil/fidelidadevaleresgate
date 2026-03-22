@@ -109,7 +109,7 @@ export default function OffersPage() {
             <div className="space-y-4 pt-2">
               <div className="space-y-2"><Label>Título</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {isRootAdmin && (
                 <div className="space-y-2">
                   <Label>Marca</Label>
