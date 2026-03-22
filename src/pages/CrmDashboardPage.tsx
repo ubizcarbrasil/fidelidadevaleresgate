@@ -51,7 +51,7 @@ export default function CrmDashboardPage() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-3 mb-1">
-          <h2 className="text-2xl font-bold tracking-tight">CRM Estratégico</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">CRM Estratégico</h2>
           <Badge variant="secondary" className="gap-1 text-xs"><Sparkles className="h-3 w-3" /> Integrado</Badge>
         </div>
         <p className="text-muted-foreground text-sm">Diagnóstico completo da sua base de clientes com dados reais do programa de fidelidade.</p>

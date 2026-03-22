@@ -128,7 +128,7 @@ export default function StoreCatalogPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Catálogo de Lojas</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Catálogo de Lojas</h2>
           <p className="text-muted-foreground">Gerencie os itens do catálogo das lojas</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) closeDialog(); else setOpen(true); }}>

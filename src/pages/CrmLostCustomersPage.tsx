@@ -57,7 +57,7 @@ export default function CrmLostCustomersPage() {
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/crm")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
             <UserX className="h-6 w-6 text-destructive" /> Clientes Perdidos & Em Risco
           </h2>
           <p className="text-sm text-muted-foreground">{allInactive.length} clientes sem atividade recente</p>

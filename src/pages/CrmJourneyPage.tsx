@@ -29,7 +29,7 @@ export default function CrmJourneyPage() {
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/crm")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" /> Jornada do Cliente
           </h2>
           <p className="text-sm text-muted-foreground">Visualize o funil de engajamento da sua base</p>

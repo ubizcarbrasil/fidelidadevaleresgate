@@ -62,7 +62,7 @@ export default function ReleasesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Releases</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Releases</h2>
           <p className="text-muted-foreground">Publicações globais da plataforma</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>

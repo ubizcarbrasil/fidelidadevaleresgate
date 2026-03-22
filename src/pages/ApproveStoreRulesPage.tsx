@@ -79,7 +79,7 @@ export default function ApproveStoreRulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
           <ClipboardCheck className="h-6 w-6" /> Aprovar Regras de Parceiros
         </h2>
         <p className="text-muted-foreground">Gerencie as solicitações de regras personalizadas dos parceiros</p>

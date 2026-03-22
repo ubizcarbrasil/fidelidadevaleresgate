@@ -154,7 +154,7 @@ export default function PointsRulesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Regras de Pontuação</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Regras de Pontuação</h2>
           <p className="text-muted-foreground">Configure como os clientes acumulam pontos</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else openNew(); }}>

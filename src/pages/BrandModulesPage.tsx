@@ -169,7 +169,7 @@ export default function BrandModulesPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div><h2 className="text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2></div>
+        <div><h2 className="text-xl sm:text-2xl font-bold tracking-tight">Funcionalidades da Marca</h2></div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />)}
         </div>
@@ -180,7 +180,7 @@ export default function BrandModulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
           {isRootAdmin ? "Funcionalidades da Marca" : "Funcionalidades do App"}
         </h2>
         <p className="text-muted-foreground">

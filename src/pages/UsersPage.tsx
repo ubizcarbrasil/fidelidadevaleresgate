@@ -212,7 +212,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Equipe & Acessos</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Equipe & Acessos</h2>
           <p className="text-muted-foreground">Gerencie os usuários e suas permissões</p>
         </div>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
@@ -500,7 +500,7 @@ function RootUsersView() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Usuários & Roles</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Usuários & Roles</h2>
           <p className="text-muted-foreground">Gerencie permissões dos usuários</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>

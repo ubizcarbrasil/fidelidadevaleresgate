@@ -160,7 +160,7 @@ export default function ProvisionBrandWizard() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Nova Empresa</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Nova Empresa</h2>
         <p className="text-muted-foreground">Provisione uma nova empresa com tudo configurado.</p>
       </div>
 

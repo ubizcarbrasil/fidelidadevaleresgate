@@ -60,7 +60,7 @@ export default function SendNotificationPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Enviar Notificação</h2>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Enviar Notificação</h2>
         <p className="text-muted-foreground">Envie notificações para clientes da plataforma</p>
       </div>
 

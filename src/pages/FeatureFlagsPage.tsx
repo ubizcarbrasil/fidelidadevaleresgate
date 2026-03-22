@@ -68,7 +68,7 @@ export default function FeatureFlagsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-         <h2 className="text-2xl font-bold tracking-tight">Controle de Recursos</h2>
+         <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Controle de Recursos</h2>
           <p className="text-muted-foreground">Ative ou desative funcionalidades globais da plataforma</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>

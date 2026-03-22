@@ -123,7 +123,7 @@ export default function StorePointsRulePage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
           <Settings2 className="h-6 w-6" /> Minha Regra de Pontuação
         </h2>
         <p className="text-muted-foreground">Configure a taxa de pontos da sua loja</p>

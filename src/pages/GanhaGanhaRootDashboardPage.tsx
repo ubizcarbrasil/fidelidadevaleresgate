@@ -162,7 +162,7 @@ export default function GanhaGanhaRootDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
           <Handshake className="h-6 w-6" /> Dashboard Financeiro Ganha-Ganha
         </h2>
         <p className="text-muted-foreground">Visão consolidada do faturamento de todas as marcas com módulo GG ativo.</p>
