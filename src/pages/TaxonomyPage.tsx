@@ -296,8 +296,8 @@ export default function TaxonomyPage() {
         </TabsList>
 
         <TabsContent value="segments" className="space-y-4 mt-4">
-          {/* Mobile: horizontal category chips */}
-          <div className="lg:hidden">
+          {/* Mobile: horizontal category chips + manage button */}
+          <div className="lg:hidden space-y-2">
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               <button
                 onClick={() => setSelectedCategory(null)}
@@ -320,6 +320,16 @@ export default function TaxonomyPage() {
                 <Plus className="h-3 w-3 inline mr-1" />Categoria
               </button>
             </div>
+            {selectedCategory && (
+              <div className="flex gap-2 px-1">
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openEditCat(categories.find(c => c.id === selectedCategory)!)}>
+                  <Pencil className="h-3 w-3 mr-1" /> Editar
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs text-destructive" onClick={() => deleteCat(selectedCategory)}>
+                  <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -398,42 +408,42 @@ export default function TaxonomyPage() {
                         key={seg.id}
                         className="group flex items-start gap-3 p-3 rounded-xl border hover:border-primary/30 transition-colors"
                       >
-                        <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
-                          <IconPreview name={seg.icon_name} className="h-5 w-5" />
+                        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
+                          <IconPreview name={seg.icon_name} className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                             <span className="font-medium text-sm">{seg.name}</span>
                             {!selectedCategory && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-[10px] sm:text-xs">
                                 {getCategoryName(seg.category_id)}
                               </Badge>
                             )}
                             {seg.icon_name && (
-                              <Badge variant="secondary" className="text-[10px] font-mono">
+                              <Badge variant="secondary" className="text-[10px] font-mono hidden sm:inline-flex">
                                 {seg.icon_name}
                               </Badge>
                             )}
                           </div>
                           {seg.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{seg.description}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{seg.description}</p>
                           )}
                           {seg.aliases.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
-                              {seg.aliases.slice(0, 4).map((a, i) => (
+                              {seg.aliases.slice(0, 3).map((a, i) => (
                                 <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
                                   {a}
                                 </Badge>
                               ))}
-                              {seg.aliases.length > 4 && (
+                              {seg.aliases.length > 3 && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  +{seg.aliases.length - 4}
+                                  +{seg.aliases.length - 3}
                                 </Badge>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="flex sm:opacity-0 sm:group-hover:opacity-100 transition-opacity gap-1 shrink-0">
+                        <div className="flex opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity gap-0.5 shrink-0">
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEditSeg(seg)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -482,7 +492,7 @@ export default function TaxonomyPage() {
 
       {/* Segment Dialog */}
       <Dialog open={segDialog} onOpenChange={setSegDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>{editingSeg ? "Editar Segmento" : "Novo Segmento"}</DialogTitle>
           </DialogHeader>
@@ -556,7 +566,7 @@ function SynonymLogsTab() {
       <CardContent className="pt-6">
         <div className="space-y-2">
           {logs.map((log) => (
-            <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl border text-sm">
+            <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-xl border text-sm">
               <div className="flex-1 min-w-0">
                 <span className="font-medium">"{log.free_text}"</span>
                 {log.taxonomy_segments && (
@@ -565,12 +575,14 @@ function SynonymLogsTab() {
                   </span>
                 )}
               </div>
-              <Badge variant={log.was_accepted ? "default" : "secondary"} className="text-xs shrink-0">
-                {log.match_method || "—"} ({Math.round(log.match_score)}%)
-              </Badge>
-              <Badge variant={log.was_accepted ? "default" : "outline"} className="text-xs shrink-0">
-                {log.was_accepted ? "Aceito" : "Pendente"}
-              </Badge>
+              <div className="flex gap-1.5 shrink-0">
+                <Badge variant={log.was_accepted ? "default" : "secondary"} className="text-[10px] sm:text-xs shrink-0">
+                  {log.match_method || "—"} ({Math.round(log.match_score)}%)
+                </Badge>
+                <Badge variant={log.was_accepted ? "default" : "outline"} className="text-[10px] sm:text-xs shrink-0">
+                  {log.was_accepted ? "Aceito" : "Pendente"}
+                </Badge>
+              </div>
             </div>
           ))}
         </div>
