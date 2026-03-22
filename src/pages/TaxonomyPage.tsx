@@ -296,8 +296,8 @@ export default function TaxonomyPage() {
         </TabsList>
 
         <TabsContent value="segments" className="space-y-4 mt-4">
-          {/* Mobile: horizontal category chips */}
-          <div className="lg:hidden">
+          {/* Mobile: horizontal category chips + manage button */}
+          <div className="lg:hidden space-y-2">
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
               <button
                 onClick={() => setSelectedCategory(null)}
@@ -320,6 +320,16 @@ export default function TaxonomyPage() {
                 <Plus className="h-3 w-3 inline mr-1" />Categoria
               </button>
             </div>
+            {selectedCategory && (
+              <div className="flex gap-2 px-1">
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openEditCat(categories.find(c => c.id === selectedCategory)!)}>
+                  <Pencil className="h-3 w-3 mr-1" /> Editar
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs text-destructive" onClick={() => deleteCat(selectedCategory)}>
+                  <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
