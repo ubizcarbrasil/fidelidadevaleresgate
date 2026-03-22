@@ -311,7 +311,11 @@ export default function AffiliateCategoriesPage() {
               </div>
               <div className="flex items-center justify-between gap-2 pt-1 border-t sm:border-0 sm:pt-0 sm:justify-end">
                 <div className="flex items-center gap-2">
-                  <Switch checked={cat.is_active} onCheckedChange={v => toggleActive(cat.id, v)} />
+                  <Switch
+                    checked={cat.is_active}
+                    onCheckedChange={v => toggleMutation.mutate({ id: cat.id, active: v })}
+                    disabled={toggleMutation.isPending}
+                  />
                   <span className="text-xs text-muted-foreground sm:hidden">{cat.is_active ? "Ativo" : "Inativo"}</span>
                 </div>
                 <div className="flex items-center gap-1">
