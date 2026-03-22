@@ -566,7 +566,7 @@ function SynonymLogsTab() {
       <CardContent className="pt-6">
         <div className="space-y-2">
           {logs.map((log) => (
-            <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl border text-sm">
+            <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-xl border text-sm">
               <div className="flex-1 min-w-0">
                 <span className="font-medium">"{log.free_text}"</span>
                 {log.taxonomy_segments && (
@@ -575,12 +575,14 @@ function SynonymLogsTab() {
                   </span>
                 )}
               </div>
-              <Badge variant={log.was_accepted ? "default" : "secondary"} className="text-xs shrink-0">
-                {log.match_method || "—"} ({Math.round(log.match_score)}%)
-              </Badge>
-              <Badge variant={log.was_accepted ? "default" : "outline"} className="text-xs shrink-0">
-                {log.was_accepted ? "Aceito" : "Pendente"}
-              </Badge>
+              <div className="flex gap-1.5 shrink-0">
+                <Badge variant={log.was_accepted ? "default" : "secondary"} className="text-[10px] sm:text-xs shrink-0">
+                  {log.match_method || "—"} ({Math.round(log.match_score)}%)
+                </Badge>
+                <Badge variant={log.was_accepted ? "default" : "outline"} className="text-[10px] sm:text-xs shrink-0">
+                  {log.was_accepted ? "Aceito" : "Pendente"}
+                </Badge>
+              </div>
             </div>
           ))}
         </div>
