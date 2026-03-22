@@ -97,13 +97,13 @@ export default function OffersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Ofertas</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Ofertas</h2>
           <p className="text-muted-foreground">Gerencie ofertas de resgate por cidade</p>
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nova Oferta</Button></DialogTrigger>
+          <DialogTrigger asChild><Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" />Nova Oferta</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>{editId ? "Editar Oferta" : "Nova Oferta"}</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
