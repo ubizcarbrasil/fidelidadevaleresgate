@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Store, Coins, Rocket, Users } from "lucide-react";
+import { Loader2, Store, Coins, Rocket, ShoppingBag } from "lucide-react";
 
 interface DemoStoresToggleProps {
   brandId: string;
@@ -23,7 +23,6 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
   const { data: demoInfo, isLoading } = useQuery({
     queryKey: ["demo-stores-info", brandId],
     queryFn: async () => {
-      // Get brand slug
       const { data: brand } = await supabase
         .from("brands")
         .select("slug")
@@ -34,7 +33,6 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
 
       const suffix = brand.slug.replace(/[^a-z0-9]/g, "");
 
-      // Get all stores that match demo slug pattern
       const { data: stores } = await supabase
         .from("stores")
         .select("id, is_active, slug")
@@ -51,8 +49,29 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     enabled: !!brandId,
   });
 
+  // Count demo affiliate deals
+  const { data: dealsInfo, isLoading: dealsLoading } = useQuery({
+    queryKey: ["demo-deals-info", brandId],
+    queryFn: async () => {
+      const { data: deals } = await supabase
+        .from("affiliate_deals")
+        .select("id, is_active")
+        .eq("brand_id", brandId)
+        .eq("store_name", "Mercado Livre");
+
+      const demoDeals = deals || [];
+      return {
+        total: demoDeals.length,
+        active: demoDeals.filter((d) => d.is_active).length,
+      };
+    },
+    enabled: !!brandId,
+  });
+
   const hasDemoStores = (demoInfo?.total ?? 0) > 0;
   const demoActive = (demoInfo?.active ?? 0) > 0;
+  const hasDemoDeals = (dealsInfo?.total ?? 0) > 0;
+  const dealsActive = (dealsInfo?.active ?? 0) > 0;
 
   // Seed demo stores
   const handleSeed = async () => {
@@ -69,6 +88,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
         toast.success(`${data.creditedCustomers} cliente(s) teste receberam 1000 pontos!`);
       }
       queryClient.invalidateQueries({ queryKey: ["demo-stores-info"] });
+      queryClient.invalidateQueries({ queryKey: ["demo-deals-info"] });
       queryClient.invalidateQueries({ queryKey: ["stores"] });
     } catch (err: any) {
       toast.error("Erro ao criar parceiros demo", { description: err.message });
@@ -82,7 +102,6 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     mutationFn: async (activate: boolean) => {
       if (!demoInfo?.slug) return;
 
-      // Get demo store IDs
       const { data: stores } = await supabase
         .from("stores")
         .select("id")
@@ -93,7 +112,6 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
 
       const ids = stores.map((s) => s.id);
 
-      // Update in batches of 50
       for (let i = 0; i < ids.length; i += 50) {
         const batch = ids.slice(i, i + 50);
         const { error } = await supabase
@@ -111,6 +129,26 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     },
     onError: (err: any) => {
       toast.error("Erro ao alterar parceiros demo", { description: err.message });
+    },
+  });
+
+  // Toggle demo affiliate deals active/inactive
+  const toggleDealsMutation = useMutation({
+    mutationFn: async (activate: boolean) => {
+      const { error } = await supabase
+        .from("affiliate_deals")
+        .update({ is_active: activate })
+        .eq("brand_id", brandId)
+        .eq("store_name", "Mercado Livre");
+      if (error) throw error;
+    },
+    onSuccess: (_, activate) => {
+      toast.success(activate ? "Achadinhos demo ativados!" : "Achadinhos demo desativados!");
+      queryClient.invalidateQueries({ queryKey: ["demo-deals-info"] });
+      queryClient.invalidateQueries({ queryKey: ["affiliate-deals"] });
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao alterar achadinhos demo", { description: err.message });
     },
   });
 
@@ -167,7 +205,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     },
   });
 
-  if (isLoading) {
+  if (isLoading || dealsLoading) {
     return (
       <Card className={compact ? "border-primary/20" : ""}>
         <CardContent className="py-6 flex items-center justify-center">
@@ -182,52 +220,77 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
       <CardHeader className={compact ? "pb-2" : "pb-3"}>
         <CardTitle className="flex items-center gap-2 text-base">
           <Rocket className="h-4 w-4 text-primary" />
-          Lojas Teste
+          Dados de Teste
           {hasDemoStores && (
             <Badge variant={demoActive ? "default" : "secondary"} className="text-[10px] ml-auto">
-              {demoInfo!.active}/{demoInfo!.total} ativas
+              {demoInfo!.active}/{demoInfo!.total} lojas
             </Badge>
           )}
         </CardTitle>
         {!compact && (
           <CardDescription className="text-xs">
-            Ative lojas fictícias de diversos segmentos para demonstrar sua plataforma. Inclui fotos, ofertas e catálogo.
+            Ative lojas fictícias e achadinhos de diversos segmentos para demonstrar sua plataforma.
           </CardDescription>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {!hasDemoStores ? (
-          /* No demo stores yet — show seed button */
+        {!hasDemoStores && !hasDemoDeals ? (
+          /* No demo data yet — show seed button */
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Crie lojas demo de diversos segmentos (pizzaria, salão, barbearia, farmácia, supermercado, bar e mais) para testar sua plataforma.
+              Crie lojas demo, ofertas e achadinhos de diversos segmentos para testar sua plataforma.
             </p>
             <Button onClick={handleSeed} disabled={seeding} className="w-full gap-2">
               {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}
-              {seeding ? "Criando lojas teste..." : "Ativar Lojas Teste"}
+              {seeding ? "Criando dados teste..." : "Ativar Dados de Teste"}
             </Button>
           </div>
         ) : (
-          /* Demo stores exist — show toggle + credit */
+          /* Demo data exists — show toggles */
           <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg border bg-background p-3">
-              <div className="flex items-center gap-3">
-                <Store className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">
-                    {demoActive ? "Lojas teste ativas" : "Lojas teste desativadas"}
-                  </p>
-                <p className="text-xs text-muted-foreground">
-                    {demoInfo!.total} parceiros · taxonomia + seções CMS
-                  </p>
+            {/* Demo Stores Toggle */}
+            {hasDemoStores && (
+              <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+                <div className="flex items-center gap-3">
+                  <Store className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {demoActive ? "Lojas teste ativas" : "Lojas teste desativadas"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {demoInfo!.total} parceiros · taxonomia + seções CMS
+                    </p>
+                  </div>
                 </div>
+                <Switch
+                  checked={demoActive}
+                  onCheckedChange={(checked) => toggleMutation.mutate(checked)}
+                  disabled={toggleMutation.isPending}
+                />
               </div>
-              <Switch
-                checked={demoActive}
-                onCheckedChange={(checked) => toggleMutation.mutate(checked)}
-                disabled={toggleMutation.isPending}
-              />
-            </div>
+            )}
+
+            {/* Demo Achadinhos Toggle */}
+            {hasDemoDeals && (
+              <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+                <div className="flex items-center gap-3">
+                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {dealsActive ? "Achadinhos teste ativos" : "Achadinhos teste desativados"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {dealsInfo!.active}/{dealsInfo!.total} deals · Mercado Livre
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={dealsActive}
+                  onCheckedChange={(checked) => toggleDealsMutation.mutate(checked)}
+                  disabled={toggleDealsMutation.isPending}
+                />
+              </div>
+            )}
 
             <div className="flex gap-2">
               <Button
