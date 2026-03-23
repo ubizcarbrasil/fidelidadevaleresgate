@@ -110,6 +110,7 @@ const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
 const DriverPanelConfigPage = lazy(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazy(() => import("@/pages/DriverPanelPage"));
+const McpDashboardPage = lazy(() => import("@/pages/McpDashboardPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
@@ -135,6 +136,7 @@ function AppRoutes() {
         <Route path="/trial" element={<TrialSignupPage />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/driver" element={<DriverPanelPage />} />
+        <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
         <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
         <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
         <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
