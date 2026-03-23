@@ -1,596 +1,474 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Play, Server, ChevronRight } from "lucide-react";
+import {
+  Database,
+  Table2,
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Loader2,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Server,
+  RefreshCw,
+} from "lucide-react";
+import { toast } from "sonner";
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-interface ParamSchema {
-  type: "string" | "number" | "boolean";
-  description?: string;
-  default?: unknown;
+/* ─── types ─── */
+interface ColumnSchema {
+  column_name: string;
+  data_type: string;
+  is_nullable: string;
+  column_default: string | null;
 }
 
-interface ToolInputSchema {
-  type: "object";
-  required?: string[];
-  properties: Record<string, ParamSchema>;
+/* ─── MCP RPC helper ─── */
+async function mcpCall(method: string, params: Record<string, unknown> = {}) {
+  const { data, error } = await supabase.functions.invoke("mcp-server", {
+    body: { jsonrpc: "2.0", id: Date.now(), method, params },
+  });
+  if (error) throw new Error(error.message);
+  if (data?.result?.isError) throw new Error(data.result.content?.[0]?.text ?? "Erro");
+  return data?.result;
 }
 
-interface McpTool {
-  name: string;
-  description: string;
-  inputSchema: ToolInputSchema;
-  mockResponse: Record<string, unknown>;
+async function mcpTool(name: string, args: Record<string, unknown> = {}) {
+  const res = await mcpCall("tools/call", { name, arguments: args });
+  const text = res?.content?.[0]?.text;
+  return text ? JSON.parse(text) : res;
 }
 
-interface McpServer {
-  id: string;
-  name: string;
-  status: "connected" | "disconnected";
-  tools: McpTool[];
-}
-
-/* ------------------------------------------------------------------ */
-/*  Mock data                                                          */
-/* ------------------------------------------------------------------ */
-const MOCK_SERVERS: McpServer[] = [
-  {
-    id: "supabase",
-    name: "Supabase MCP",
-    status: "connected",
-    tools: [
-      {
-        name: "list_tables",
-        description: "List all tables in the public schema with row counts.",
-        inputSchema: {
-          type: "object",
-          required: ["schema"],
-          properties: {
-            schema: { type: "string", description: "Database schema name", default: "public" },
-            include_views: { type: "boolean", description: "Include views in results" },
-          },
-        },
-        mockResponse: {
-          tables: [
-            { name: "users", row_count: 1284 },
-            { name: "orders", row_count: 8472 },
-            { name: "products", row_count: 356 },
-          ],
-        },
-      },
-      {
-        name: "run_query",
-        description: "Execute a read-only SQL query against the database.",
-        inputSchema: {
-          type: "object",
-          required: ["sql"],
-          properties: {
-            sql: { type: "string", description: "SQL query to execute" },
-            limit: { type: "number", description: "Max rows to return" },
-          },
-        },
-        mockResponse: { rows: [{ id: 1, email: "user@example.com" }], row_count: 1 },
-      },
-      {
-        name: "create_migration",
-        description: "Generate a new database migration file.",
-        inputSchema: {
-          type: "object",
-          required: ["name", "sql"],
-          properties: {
-            name: { type: "string", description: "Migration name" },
-            sql: { type: "string", description: "SQL statements" },
-            dry_run: { type: "boolean", description: "Preview without applying" },
-          },
-        },
-        mockResponse: { migration_id: "20260323_add_column", status: "created", applied: false },
-      },
-    ],
-  },
-  {
-    id: "github",
-    name: "GitHub MCP",
-    status: "connected",
-    tools: [
-      {
-        name: "list_repos",
-        description: "List repositories for the authenticated user or organization.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            org: { type: "string", description: "Organization name (optional)" },
-            limit: { type: "number", description: "Max repos to return" },
-            include_private: { type: "boolean", description: "Include private repos" },
-          },
-        },
-        mockResponse: {
-          repos: [
-            { name: "frontend-app", stars: 142, language: "TypeScript" },
-            { name: "api-server", stars: 87, language: "Go" },
-          ],
-        },
-      },
-      {
-        name: "create_issue",
-        description: "Create a new issue in a repository.",
-        inputSchema: {
-          type: "object",
-          required: ["repo", "title"],
-          properties: {
-            repo: { type: "string", description: "Repository name (owner/repo)" },
-            title: { type: "string", description: "Issue title" },
-            body: { type: "string", description: "Issue body in Markdown" },
-          },
-        },
-        mockResponse: { issue_number: 47, url: "https://github.com/acme/app/issues/47", state: "open" },
-      },
-      {
-        name: "get_pull_request",
-        description: "Fetch details of a pull request.",
-        inputSchema: {
-          type: "object",
-          required: ["repo", "pr_number"],
-          properties: {
-            repo: { type: "string", description: "Repository name (owner/repo)" },
-            pr_number: { type: "number", description: "Pull request number" },
-          },
-        },
-        mockResponse: {
-          title: "feat: add dark mode",
-          state: "open",
-          additions: 342,
-          deletions: 28,
-          mergeable: true,
-        },
-      },
-      {
-        name: "search_code",
-        description: "Search for code across repositories.",
-        inputSchema: {
-          type: "object",
-          required: ["query"],
-          properties: {
-            query: { type: "string", description: "Search query" },
-            language: { type: "string", description: "Filter by language" },
-          },
-        },
-        mockResponse: {
-          total_count: 3,
-          items: [
-            { path: "src/utils.ts", repository: "acme/app", score: 0.95 },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: "notion",
-    name: "Notion MCP",
-    status: "disconnected",
-    tools: [
-      {
-        name: "search_pages",
-        description: "Search for pages and databases in the workspace.",
-        inputSchema: {
-          type: "object",
-          required: ["query"],
-          properties: {
-            query: { type: "string", description: "Search query" },
-            limit: { type: "number", description: "Max results" },
-          },
-        },
-        mockResponse: {
-          results: [
-            { id: "page-1", title: "Product Roadmap", type: "page" },
-            { id: "db-1", title: "Tasks", type: "database" },
-          ],
-        },
-      },
-      {
-        name: "read_page",
-        description: "Read the content of a Notion page.",
-        inputSchema: {
-          type: "object",
-          required: ["page_id"],
-          properties: {
-            page_id: { type: "string", description: "Notion page ID" },
-            include_children: { type: "boolean", description: "Include child blocks" },
-          },
-        },
-        mockResponse: {
-          id: "page-1",
-          title: "Product Roadmap",
-          content: "## Q1 Goals\n- Launch v2.0\n- Onboard 50 customers",
-          last_edited: "2026-03-20T14:30:00Z",
-        },
-      },
-      {
-        name: "create_page",
-        description: "Create a new page in a Notion database.",
-        inputSchema: {
-          type: "object",
-          required: ["database_id", "title"],
-          properties: {
-            database_id: { type: "string", description: "Parent database ID" },
-            title: { type: "string", description: "Page title" },
-            content: { type: "string", description: "Page content in Markdown" },
-          },
-        },
-        mockResponse: { id: "page-new", title: "New Page", url: "https://notion.so/page-new" },
-      },
-    ],
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  JSON syntax highlighter                                            */
-/* ------------------------------------------------------------------ */
+/* ─── JSON syntax highlight ─── */
 function highlightJson(json: string): string {
   return json
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"([^"]+)"(?=\s*:)/g, '<span class="text-blue-400">"$1"</span>')
-    .replace(/:\s*"([^"]*)"/g, ': <span class="text-emerald-400">"$1"</span>')
-    .replace(/:\s*(\d+\.?\d*)/g, ': <span class="text-orange-400">$1</span>')
-    .replace(/:\s*(true|false)/g, ': <span class="text-purple-400">$1</span>')
-    .replace(/:\s*(null)/g, ': <span class="text-gray-500">$1</span>');
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\\-]?\d+)?)/g,
+      (match) => {
+        let cls = "text-orange-400";
+        if (/^"/.test(match)) {
+          cls = /:$/.test(match) ? "text-sky-400" : "text-emerald-400";
+        } else if (/true|false/.test(match)) {
+          cls = "text-purple-400";
+        } else if (/null/.test(match)) {
+          cls = "text-gray-500";
+        }
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
-/* ------------------------------------------------------------------ */
+const PAGE_SIZE = 50;
 
-function ServerListItem({
-  server,
-  selected,
-  onSelect,
-}: {
-  server: McpServer;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-sm ${
-        selected
-          ? "bg-[#334155] text-white"
-          : "text-slate-300 hover:bg-[#1e293b]"
-      }`}
-    >
-      <span
-        className={`h-2.5 w-2.5 rounded-full shrink-0 ${
-          server.status === "connected" ? "bg-emerald-400" : "bg-gray-500"
-        }`}
-      />
-      <Server className="h-4 w-4 shrink-0 text-slate-400" />
-      <span className="truncate font-medium">{server.name}</span>
-      {selected && <ChevronRight className="h-4 w-4 ml-auto text-slate-400" />}
-    </button>
-  );
-}
-
-function ToolCard({
-  tool,
-  onRun,
-}: {
-  tool: McpTool;
-  onRun: () => void;
-}) {
-  const paramCount = Object.keys(tool.inputSchema.properties).length;
-  return (
-    <div className="bg-[#1e293b] border border-slate-700/50 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-transform">
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-white font-semibold text-base font-mono">{tool.name}</h3>
-        <Badge variant="outline" className="border-slate-600 text-slate-400 text-xs shrink-0">
-          {paramCount} param{paramCount !== 1 ? "s" : ""}
-        </Badge>
-      </div>
-      <p className="text-slate-400 text-sm leading-relaxed flex-1">{tool.description}</p>
-      <Button
-        size="sm"
-        onClick={onRun}
-        className="w-full bg-blue-600 hover:bg-blue-500 text-white mt-1"
-      >
-        <Play className="h-3.5 w-3.5 mr-1.5" />
-        Run
-      </Button>
-    </div>
-  );
-}
-
-function DynamicForm({
-  schema,
-  values,
-  onChange,
-}: {
-  schema: ToolInputSchema;
-  values: Record<string, unknown>;
-  onChange: (key: string, value: unknown) => void;
-}) {
-  const required = new Set(schema.required ?? []);
-
-  return (
-    <div className="flex flex-col gap-4">
-      {Object.entries(schema.properties).map(([key, param]) => {
-        const isRequired = required.has(key);
-        return (
-          <div key={key} className="flex flex-col gap-1.5">
-            <Label className="text-slate-300 text-sm flex items-center gap-2">
-              <span className="font-mono">{key}</span>
-              {!isRequired && (
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider">optional</span>
-              )}
-            </Label>
-            {param.description && (
-              <span className="text-xs text-slate-500">{param.description}</span>
-            )}
-            {param.type === "boolean" ? (
-              <div className="flex items-center gap-2 pt-1">
-                <Switch
-                  checked={Boolean(values[key])}
-                  onCheckedChange={(v) => onChange(key, v)}
-                />
-                <span className="text-xs text-slate-400">
-                  {values[key] ? "true" : "false"}
-                </span>
-              </div>
-            ) : param.type === "number" ? (
-              <Input
-                type="number"
-                value={values[key] !== undefined ? String(values[key]) : ""}
-                onChange={(e) => onChange(key, e.target.value ? Number(e.target.value) : undefined)}
-                placeholder={param.default !== undefined ? String(param.default) : ""}
-                className="bg-[#0f172a] border-slate-700 text-white placeholder:text-slate-600"
-              />
-            ) : (
-              <Input
-                type="text"
-                value={values[key] !== undefined ? String(values[key]) : ""}
-                onChange={(e) => onChange(key, e.target.value || undefined)}
-                placeholder={param.default !== undefined ? String(param.default) : ""}
-                className="bg-[#0f172a] border-slate-700 text-white placeholder:text-slate-600"
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function OutputPanel({ data }: { data: Record<string, unknown> }) {
-  const formatted = JSON.stringify(data, null, 2);
-  return (
-    <div className="bg-[#0f172a] border border-slate-700/50 rounded-lg p-4 overflow-x-auto">
-      <pre
-        className="text-sm font-mono leading-relaxed whitespace-pre-wrap break-words text-slate-300"
-        dangerouslySetInnerHTML={{ __html: highlightJson(formatted) }}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Main page                                                          */
-/* ------------------------------------------------------------------ */
 export default function McpDashboardPage() {
-  const [selectedServerId, setSelectedServerId] = useState(MOCK_SERVERS[0].id);
-  const [activeTool, setActiveTool] = useState<McpTool | null>(null);
+  const [tables, setTables] = useState<string[]>([]);
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [columns, setColumns] = useState<ColumnSchema[]>([]);
+  const [records, setRecords] = useState<Record<string, unknown>[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadingTables, setLoadingTables] = useState(true);
+
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Record<string, unknown> | null>(null);
   const [formValues, setFormValues] = useState<Record<string, unknown>>({});
-  const [executing, setExecuting] = useState(false);
-  const [output, setOutput] = useState<Record<string, unknown> | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const selectedServer = MOCK_SERVERS.find((s) => s.id === selectedServerId)!;
+  const [showMcpTools, setShowMcpTools] = useState(false);
+  const [mcpToolName, setMcpToolName] = useState("");
+  const [mcpToolArgs, setMcpToolArgs] = useState("{}");
+  const [mcpResult, setMcpResult] = useState<string | null>(null);
+  const [mcpRunning, setMcpRunning] = useState(false);
 
-  const handleSelectServer = useCallback((id: string) => {
-    setSelectedServerId(id);
-    setActiveTool(null);
-    setFormValues({});
-    setOutput(null);
+  const loadTables = useCallback(async () => {
+    setLoadingTables(true);
+    try {
+      const res = await mcpTool("list_tables");
+      setTables(res.tables ?? []);
+    } catch {
+      setTables(["cp_contacts", "cp_tasks", "cp_notes"]);
+    }
+    setLoadingTables(false);
   }, []);
 
-  const handleRunTool = useCallback((tool: McpTool) => {
-    setActiveTool(tool);
-    setFormValues({});
-    setOutput(null);
+  useEffect(() => { loadTables(); }, [loadTables]);
+
+  const loadSchema = useCallback(async (table: string) => {
+    try {
+      const res = await mcpTool("get_schema", { table });
+      setColumns(res.columns ?? []);
+    } catch {
+      setColumns([]);
+    }
   }, []);
 
-  const handleClosePanel = useCallback(() => {
-    setActiveTool(null);
-    setFormValues({});
-    setOutput(null);
+  const loadRecords = useCallback(async (table: string, pg: number) => {
+    setLoading(true);
+    try {
+      const res = await mcpTool("query_records", {
+        table,
+        limit: PAGE_SIZE,
+        offset: pg * PAGE_SIZE,
+      });
+      setRecords(res.records ?? []);
+      setTotalCount(res.count ?? 0);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      toast.error("Erro ao carregar registros: " + msg);
+      setRecords([]);
+    }
+    setLoading(false);
   }, []);
 
-  const handleExecute = useCallback(() => {
-    if (!activeTool) return;
-    setExecuting(true);
-    setOutput(null);
-    setTimeout(() => {
-      setOutput(activeTool.mockResponse);
-      setExecuting(false);
-    }, 1200);
-  }, [activeTool]);
+  const selectTable = useCallback(
+    (table: string) => {
+      setSelectedTable(table);
+      setPage(0);
+      setSearch("");
+      setPanelOpen(false);
+      setShowMcpTools(false);
+      loadSchema(table);
+      loadRecords(table, 0);
+    },
+    [loadSchema, loadRecords]
+  );
 
-  const handleFormChange = useCallback((key: string, value: unknown) => {
-    setFormValues((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  useEffect(() => {
+    if (selectedTable) loadRecords(selectedTable, page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  const editableColumns = columns.filter(
+    (c) => c.column_name !== "id" && c.column_name !== "created_at"
+  );
+
+  const openCreate = () => {
+    setEditingRecord(null);
+    const defaults: Record<string, unknown> = {};
+    editableColumns.forEach((c) => {
+      if (c.data_type === "boolean") defaults[c.column_name] = false;
+      else if (c.data_type === "ARRAY") defaults[c.column_name] = "";
+      else defaults[c.column_name] = "";
+    });
+    setFormValues(defaults);
+    setPanelOpen(true);
+  };
+
+  const openEdit = (record: Record<string, unknown>) => {
+    setEditingRecord(record);
+    const vals: Record<string, unknown> = {};
+    editableColumns.forEach((c) => {
+      const v = record[c.column_name];
+      if (Array.isArray(v)) vals[c.column_name] = v.join(", ");
+      else vals[c.column_name] = v ?? "";
+    });
+    setFormValues(vals);
+    setPanelOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedTable) return;
+    setSaving(true);
+    try {
+      const payload: Record<string, unknown> = {};
+      editableColumns.forEach((c) => {
+        const v = formValues[c.column_name];
+        if (c.data_type === "ARRAY" && typeof v === "string") {
+          payload[c.column_name] = v.split(",").map((s: string) => s.trim()).filter(Boolean);
+        } else if (["integer", "numeric", "bigint", "double precision", "smallint", "real"].includes(c.data_type)) {
+          payload[c.column_name] = v === "" ? null : Number(v);
+        } else if (c.data_type === "boolean") {
+          payload[c.column_name] = Boolean(v);
+        } else {
+          payload[c.column_name] = v === "" ? null : v;
+        }
+      });
+
+      if (editingRecord) {
+        await mcpTool("update_record", { table: selectedTable, id: editingRecord.id as string, data: payload });
+        toast.success("Registro atualizado");
+      } else {
+        await mcpTool("create_record", { table: selectedTable, data: payload });
+        toast.success("Registro criado");
+      }
+      setPanelOpen(false);
+      loadRecords(selectedTable, page);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      toast.error("Erro: " + msg);
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!selectedTable || !confirm("Excluir este registro?")) return;
+    try {
+      await mcpTool("delete_record", { table: selectedTable, id });
+      toast.success("Registro excluído");
+      loadRecords(selectedTable, page);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      toast.error("Erro: " + msg);
+    }
+  };
+
+  const runMcpTool = async () => {
+    setMcpRunning(true);
+    setMcpResult(null);
+    try {
+      const args = JSON.parse(mcpToolArgs);
+      const res = await mcpTool(mcpToolName, args);
+      setMcpResult(JSON.stringify(res, null, 2));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      setMcpResult(`Erro: ${msg}`);
+    }
+    setMcpRunning(false);
+  };
+
+  const filteredRecords = search
+    ? records.filter((r) =>
+        Object.values(r).some((v) =>
+          String(v ?? "").toLowerCase().includes(search.toLowerCase())
+        )
+      )
+    : records;
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const visibleColumns = columns.slice(0, 6);
 
   return (
-    <div className="flex h-screen w-full bg-[#0f172a] text-white overflow-hidden">
-      {/* ---- Mobile sidebar toggle ---- */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-[#1e293b] border border-slate-700 rounded-lg p-2"
-      >
-        <Server className="h-5 w-5 text-slate-300" />
-      </button>
-
-      {/* ---- Left sidebar ---- */}
-      <aside
-        className={`${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 fixed md:static z-40 h-full w-60 bg-[#0f172a] border-r border-slate-800 flex flex-col transition-transform`}
-      >
-        <div className="px-4 py-5 border-b border-slate-800">
-          <h1 className="text-lg font-bold text-white tracking-tight">MCP Explorer</h1>
-          <p className="text-xs text-slate-500 mt-1">Model Context Protocol</p>
+    <div className="flex h-screen bg-[#0f172a] text-white overflow-hidden">
+      {/* SIDEBAR */}
+      <aside className="w-60 flex-shrink-0 border-r border-white/10 flex flex-col bg-[#0f172a]">
+        <div className="p-4 border-b border-white/10 flex items-center gap-2">
+          <Server className="h-5 w-5 text-sky-400" />
+          <span className="font-semibold text-sm">Control Panel</span>
         </div>
-
-        <ScrollArea className="flex-1 px-2 py-3">
-          <div className="flex flex-col gap-1">
-            {MOCK_SERVERS.map((server) => (
-              <ServerListItem
-                key={server.id}
-                server={server}
-                selected={server.id === selectedServerId}
-                onSelect={() => {
-                  handleSelectServer(server.id);
-                  if (window.innerWidth < 768) setSidebarOpen(false);
-                }}
-              />
-            ))}
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            <p className="px-2 py-1 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Tabelas</p>
+            {loadingTables ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-gray-500" /></div>
+            ) : (
+              tables.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => selectTable(t)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                    selectedTable === t ? "bg-sky-500/20 text-sky-300" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <Table2 className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="truncate">{t}</span>
+                </button>
+              ))
+            )}
           </div>
-        </ScrollArea>
-
-        <div className="px-4 py-3 border-t border-slate-800">
-          <p className="text-[10px] text-slate-600 uppercase tracking-wider">
-            {MOCK_SERVERS.filter((s) => s.status === "connected").length} of{" "}
-            {MOCK_SERVERS.length} connected
-          </p>
-        </div>
-      </aside>
-
-      {/* ---- Overlay for mobile sidebar ---- */}
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-30 bg-black/50"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* ---- Main content ---- */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="shrink-0 px-4 sm:px-6 py-4 border-b border-slate-800 flex items-center gap-3">
-          <div className="md:hidden w-8" /> {/* spacer for mobile toggle */}
-          <div className="flex items-center gap-3">
-            <span
-              className={`h-3 w-3 rounded-full ${
-                selectedServer.status === "connected" ? "bg-emerald-400" : "bg-gray-500"
-              }`}
-            />
-            <h2 className="text-lg font-semibold">{selectedServer.name}</h2>
-            <Badge
-              variant="outline"
-              className={`text-xs ${
-                selectedServer.status === "connected"
-                  ? "border-emerald-600 text-emerald-400"
-                  : "border-gray-600 text-gray-400"
+          <div className="p-2 border-t border-white/10 mt-2">
+            <p className="px-2 py-1 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Ferramentas MCP</p>
+            <button
+              onClick={() => { setShowMcpTools(true); setSelectedTable(null); setPanelOpen(false); }}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                showMcpTools ? "bg-emerald-500/20 text-emerald-300" : "text-gray-400 hover:bg-white/5 hover:text-white"
               }`}
             >
-              {selectedServer.status}
-            </Badge>
+              <Database className="h-3.5 w-3.5" />
+              <span>Testar Ferramentas</span>
+            </button>
           </div>
-          <span className="ml-auto text-xs text-slate-500">
-            {selectedServer.tools.length} tool{selectedServer.tools.length !== 1 ? "s" : ""}
-          </span>
-        </header>
+        </ScrollArea>
+      </aside>
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Tool grid */}
-          <ScrollArea className="flex-1 p-4 sm:p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
-              {selectedServer.tools.map((tool) => (
-                <ToolCard
-                  key={tool.name}
-                  tool={tool}
-                  onRun={() => handleRunTool(tool)}
-                />
-              ))}
+      {/* MAIN */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {!selectedTable && !showMcpTools ? (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Selecione uma tabela na sidebar</p>
             </div>
-          </ScrollArea>
-
-          {/* ---- Right slide-in panel ---- */}
-          <div
-            className={`${
-              activeTool ? "translate-x-0" : "translate-x-full"
-            } fixed md:static right-0 top-0 h-full w-full sm:w-[380px] bg-[#1e293b] border-l border-slate-700 flex flex-col z-50 transition-transform duration-300 ease-in-out`}
-          >
-            {activeTool && (
-              <>
-                {/* Panel header */}
-                <div className="shrink-0 px-5 py-4 border-b border-slate-700 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold font-mono text-white">{activeTool.name}</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{activeTool.description}</p>
-                  </div>
-                  <button
-                    onClick={handleClosePanel}
-                    className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+          </div>
+        ) : showMcpTools ? (
+          <div className="flex-1 flex flex-col p-6 overflow-auto">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Database className="h-5 w-5 text-emerald-400" />
+              Testar Ferramentas MCP
+            </h2>
+            <div className="max-w-2xl space-y-4">
+              <div>
+                <Label className="text-gray-400 text-xs">Nome da ferramenta</Label>
+                <Input className="bg-[#1e293b] border-white/10 text-white mt-1" placeholder="ex: list_tables, query_records, get_schema" value={mcpToolName} onChange={(e) => setMcpToolName(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-gray-400 text-xs">Argumentos (JSON)</Label>
+                <textarea className="w-full mt-1 bg-[#1e293b] border border-white/10 rounded-md p-3 text-sm text-white font-mono min-h-[120px] focus:outline-none focus:ring-2 focus:ring-sky-500" value={mcpToolArgs} onChange={(e) => setMcpToolArgs(e.target.value)} />
+              </div>
+              <Button onClick={runMcpTool} disabled={!mcpToolName || mcpRunning} className="bg-emerald-600 hover:bg-emerald-700">
+                {mcpRunning && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Executar
+              </Button>
+              {mcpResult && (
+                <div className="mt-4">
+                  <Label className="text-gray-400 text-xs">Resultado</Label>
+                  <pre className="mt-1 bg-[#0c1222] border border-white/10 rounded-md p-4 text-xs font-mono overflow-auto max-h-[400px]" dangerouslySetInnerHTML={{ __html: highlightJson(mcpResult) }} />
                 </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Table header */}
+            <div className="p-4 border-b border-white/10 flex flex-wrap items-center gap-3">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Table2 className="h-5 w-5 text-sky-400" />
+                {selectedTable}
+              </h2>
+              <Badge variant="outline" className="border-white/20 text-gray-400 text-xs">{totalCount} registros</Badge>
+              <div className="flex-1" />
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input className="bg-[#1e293b] border-white/10 text-white pl-9 text-sm" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <Button size="sm" variant="ghost" className="text-gray-400 hover:text-white" onClick={() => selectedTable && loadRecords(selectedTable, page)}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button size="sm" className="bg-sky-600 hover:bg-sky-700" onClick={openCreate}>
+                <Plus className="h-4 w-4 mr-1" /> Novo
+              </Button>
+            </div>
 
-                {/* Panel body */}
-                <ScrollArea className="flex-1 px-5 py-4">
-                  <div className="flex flex-col gap-6">
-                    {/* Form */}
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
-                        Input Parameters
-                      </p>
-                      <DynamicForm
-                        schema={activeTool.inputSchema}
-                        values={formValues}
-                        onChange={handleFormChange}
-                      />
+            {/* Table body */}
+            <div className="flex-1 overflow-auto">
+              {loading ? (
+                <div className="flex justify-center items-center h-40"><Loader2 className="h-6 w-6 animate-spin text-gray-500" /></div>
+              ) : filteredRecords.length === 0 ? (
+                <div className="flex justify-center items-center h-40 text-gray-500 text-sm">Nenhum registro encontrado</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 text-gray-400 text-xs uppercase">
+                      {visibleColumns.map((c) => (
+                        <th key={c.column_name} className="px-4 py-3 text-left font-medium">{c.column_name}</th>
+                      ))}
+                      <th className="px-4 py-3 text-right font-medium w-24">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRecords.map((record, i) => (
+                      <tr key={(record.id as string) ?? i} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
+                        {visibleColumns.map((c) => {
+                          const v = record[c.column_name];
+                          const display = Array.isArray(v) ? v.join(", ") : v === null || v === undefined ? "—" : String(v);
+                          return (
+                            <td key={c.column_name} className="px-4 py-3 text-gray-300 max-w-[200px] truncate" title={display}>
+                              {display.length > 60 ? display.slice(0, 60) + "…" : display}
+                            </td>
+                          );
+                        })}
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button onClick={() => openEdit(record)} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-sky-400 transition-colors">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button onClick={() => handleDelete(record.id as string)} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-red-400 transition-colors">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Pagination */}
+            <div className="p-3 border-t border-white/10 flex items-center justify-between text-xs text-gray-500">
+              <span>Página {page + 1} de {totalPages}</span>
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-gray-400" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* SLIDE-IN PANEL */}
+        <div className={`absolute top-0 right-0 h-full w-[380px] bg-[#1e293b] border-l border-white/10 shadow-2xl transition-transform duration-300 flex flex-col z-50 ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <h3 className="font-semibold text-sm">{editingRecord ? "Editar Registro" : "Novo Registro"}</h3>
+            <button onClick={() => setPanelOpen(false)} className="p-1 rounded hover:bg-white/10 text-gray-400"><X className="h-4 w-4" /></button>
+          </div>
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {editableColumns.map((col) => {
+                const isOptional = col.is_nullable === "YES";
+                const key = col.column_name;
+                const value = formValues[key];
+
+                if (col.data_type === "boolean") {
+                  return (
+                    <div key={key} className="flex items-center justify-between">
+                      <Label className="text-gray-400 text-xs">{key} {isOptional && <span className="text-gray-600">(opcional)</span>}</Label>
+                      <Switch checked={Boolean(value)} onCheckedChange={(v) => setFormValues((prev) => ({ ...prev, [key]: v }))} />
                     </div>
+                  );
+                }
 
-                    {/* Execute */}
-                    <Button
-                      onClick={handleExecute}
-                      disabled={executing}
-                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
-                    >
-                      {executing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Executing…
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Execute
-                        </>
-                      )}
-                    </Button>
+                const isNumber = ["integer", "numeric", "bigint", "double precision", "smallint", "real"].includes(col.data_type);
+                const isDate = col.data_type === "date";
+                const isTextArea = col.data_type === "text" && (key.includes("content") || key.includes("description") || key.includes("notes") || key.includes("body"));
 
-                    {/* Output */}
-                    {output && (
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
-                          Response
-                        </p>
-                        <OutputPanel data={output} />
-                      </div>
+                return (
+                  <div key={key}>
+                    <Label className="text-gray-400 text-xs">
+                      {key} {isOptional && <span className="text-gray-600">(opcional)</span>}
+                      {col.data_type === "ARRAY" && <span className="text-gray-600 ml-1">(separar por vírgula)</span>}
+                    </Label>
+                    {isTextArea ? (
+                      <textarea
+                        className="w-full mt-1 bg-[#0f172a] border border-white/10 rounded-md p-2.5 text-sm text-white min-h-[80px] focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        value={String(value ?? "")}
+                        onChange={(e) => setFormValues((prev) => ({ ...prev, [key]: e.target.value }))}
+                      />
+                    ) : (
+                      <Input
+                        className="bg-[#0f172a] border-white/10 text-white mt-1"
+                        type={isNumber ? "number" : isDate ? "date" : "text"}
+                        value={String(value ?? "")}
+                        onChange={(e) => setFormValues((prev) => ({ ...prev, [key]: e.target.value }))}
+                      />
                     )}
                   </div>
-                </ScrollArea>
-              </>
-            )}
+                );
+              })}
+            </div>
+          </ScrollArea>
+          <div className="p-4 border-t border-white/10">
+            <Button className="w-full bg-sky-600 hover:bg-sky-700" onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {editingRecord ? "Atualizar" : "Criar"}
+            </Button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
