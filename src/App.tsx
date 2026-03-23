@@ -110,6 +110,7 @@ const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
 const DriverPanelConfigPage = lazy(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazy(() => import("@/pages/DriverPanelPage"));
+const McpDashboardPage = lazy(() => import("@/pages/McpDashboardPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
