@@ -35,6 +35,29 @@ function normalize(text: string): string {
 
 // ---------- Category matching ----------
 
+// Mapa de tradução: valores da API (inglês) → nomes das categorias no banco (português)
+const API_CATEGORY_MAP: Record<string, string[]> = {
+  home: ["casa"],
+  kitchen: ["cozinha"],
+  babies: ["bebe"],
+  sports: ["esportes"],
+  electronics: ["eletronicos"],
+  beauty: ["beleza"],
+  fashion: ["moda"],
+  pets: ["pet"],
+  automotive: ["automotivo"],
+  computers: ["eletronicos"],
+  phones: ["eletronicos"],
+  games: ["games"],
+  tools: ["ferramentas"],
+  bags: ["moda"],
+  books: ["livros"],
+  health: ["saude"],
+  stationery: ["papelaria"],
+  grocery: ["mercado"],
+  food: ["mercado"],
+};
+
 interface DealCategory {
   id: string;
   name: string;
@@ -49,18 +72,29 @@ function matchDealToCategory(
   storeName: string | null,
   categories: DealCategory[]
 ): string | null {
-  // 1. Prioridade máxima: match direto do campo "category" da API contra o nome da categoria
+  // 1. Prioridade máxima: tradução direta do campo "category" da API
   if (category) {
-    const normCat = normalize(category);
+    const normApiCat = normalize(category);
+    const mappedNames = API_CATEGORY_MAP[normApiCat];
+    if (mappedNames) {
+      for (const mappedName of mappedNames) {
+        for (const cat of categories) {
+          if (normalize(cat.name) === mappedName) {
+            return cat.id;
+          }
+        }
+      }
+    }
+    // Fallback: match direto do campo category contra o nome da categoria
     for (const cat of categories) {
-      if (normalize(cat.name) === normCat) {
+      if (normalize(cat.name) === normApiCat) {
         return cat.id;
       }
     }
-    // Match parcial: nome da categoria contido no campo category ou vice-versa
+    // Match parcial
     for (const cat of categories) {
       const normName = normalize(cat.name);
-      if (normCat.includes(normName) || normName.includes(normCat)) {
+      if (normApiCat.includes(normName) || normName.includes(normApiCat)) {
         return cat.id;
       }
     }
