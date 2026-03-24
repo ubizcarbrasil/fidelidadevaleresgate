@@ -55,7 +55,7 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
 
   // Strategy: find all anchor tags that link to /ubizresgata/p/XXX
   // Each one is a deal card
-  const cardRegex = /<a[^>]*href="(\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const cardRegex = /<a[^>]*href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let cardMatch;
 
   while ((cardMatch = cardRegex.exec(html)) !== null) {
