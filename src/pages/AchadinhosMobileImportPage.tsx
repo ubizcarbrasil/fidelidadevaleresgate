@@ -230,7 +230,7 @@ export default function AchadinhosMobileImportPage() {
         });
 
         setScrapeProgress({ done: Math.min(i + batch.length, itemsWithLinks.length), total: itemsWithLinks.length });
-        setProducts([...enriched]);
+        setProducts(autoCategorizar([...enriched]));
       }
 
       setIsScraping(false);
