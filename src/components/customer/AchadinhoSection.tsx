@@ -97,7 +97,10 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const filteredDeals = useMemo(() => {
     if (!selectedCat) return deals;
-    return deals.filter(d => d.category_id === selectedCat);
+    const catDeals = deals.filter(d => d.category_id === selectedCat);
+    // Se categoria tem menos de 6 ofertas, limitar a 3 (1 linha visual)
+    if (catDeals.length < 6) return catDeals.slice(0, 3);
+    return catDeals;
   }, [deals, selectedCat]);
 
   const handleClick = (deal: AffiliateDeal) => {
