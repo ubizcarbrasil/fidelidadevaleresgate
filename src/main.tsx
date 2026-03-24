@@ -54,6 +54,17 @@ async function clearPreviewPwaCache() {
   }
 }
 
+// Normalize /index or /index.html to / before React mounts (preview hosts open on /index)
+if (
+  typeof window !== "undefined" &&
+  (window.location.pathname === "/index" ||
+    window.location.pathname === "/index.html" ||
+    window.location.pathname === "/index/")
+) {
+  const newUrl = "/" + window.location.search + window.location.hash;
+  window.history.replaceState(null, "", newUrl);
+}
+
 void clearPreviewPwaCache();
 initErrorTracker();
 initWebVitals();
