@@ -321,6 +321,7 @@ Deno.serve(async (req) => {
                   original_price: deal.original_price,
                   image_url: deal.image_url,
                   badge_label: deal.badge_label,
+                  store_name: deal.store_name,
                   last_synced_at: new Date().toISOString(),
                   sync_status: "synced",
                   sync_error: null,
