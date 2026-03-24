@@ -23,11 +23,20 @@ interface Props {
 
 export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dupTarget, setDupTarget] = useState<{ dealId: string; catId: string } | null>(null);
+
+  const handleCreateBanner = (deal: any) => {
+    const params = new URLSearchParams();
+    if (deal.image_url) params.set("prefill_image", deal.image_url);
+    if (deal.origin_url) params.set("prefill_link", deal.origin_url);
+    if (deal.title) params.set("prefill_title", deal.title);
+    navigate(`/banner-manager?${params.toString()}`);
+  };
 
   const { data: deals, isLoading } = useQuery({
     queryKey: ["mirror-deals", brandId, refreshKey, statusFilter, search],
