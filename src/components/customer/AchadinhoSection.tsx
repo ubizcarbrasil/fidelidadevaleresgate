@@ -321,28 +321,48 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           {categories.map(cat => {
             const catDeals = deals.filter(d => d.category_id === cat.id);
             if (!catDeals.length) return null;
+            // Show ALL deals — only trim incomplete last row (3 per row minimum)
             const ITEMS_PER_ROW = 3;
-            const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
-            const maxFullRows = Math.floor(catDeals.length / ITEMS_PER_ROW);
-            const effectiveRows = Math.min(configuredRows, Math.max(1, maxFullRows));
-            const visibleDeals = catDeals.slice(0, effectiveRows * ITEMS_PER_ROW);
+            const totalFullRows = Math.max(1, Math.floor(catDeals.length / ITEMS_PER_ROW));
+            const visibleDeals = catDeals.slice(0, totalFullRows * ITEMS_PER_ROW);
             return (
               <div key={cat.id}>
-                <div className="px-5 mb-2 flex items-center gap-2">
-                  <div className="h-5 w-5 rounded flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
-                    <LucideIcon name={cat.icon_name} className="h-3 w-3" style={{ color: cat.color }} />
+                <div className="px-5 mb-2 flex items-end justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 rounded flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
+                      <LucideIcon name={cat.icon_name} className="h-3 w-3" style={{ color: cat.color }} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-foreground">{cat.name}</span>
+                      <p className="text-[10px] text-muted-foreground">{catDeals.length} oferta{catDeals.length !== 1 ? "s" : ""}</p>
+                    </div>
                   </div>
-                  <span className="text-xs font-bold text-foreground">{cat.name}</span>
-                  <span className="text-[10px] text-muted-foreground">({catDeals.length})</span>
+                  <button
+                    onClick={() => setSelectedCat(cat.id)}
+                    className="text-xs font-semibold flex items-center gap-0.5"
+                    style={{ color: highlight }}
+                  >
+                    Ver todos
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-                <div
-                  className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
-                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
-                >
-                  {visibleDeals.map((deal) => (
-                    <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
-                  ))}
-                  <div className="min-w-[16px] flex-shrink-0" />
+                <div className="space-y-3">
+                  {Array.from({ length: totalFullRows }).map((_, rowIndex) => {
+                    const rowDeals = visibleDeals.slice(rowIndex * ITEMS_PER_ROW, (rowIndex + 1) * ITEMS_PER_ROW);
+                    if (!rowDeals.length) return null;
+                    return (
+                      <div
+                        key={rowIndex}
+                        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                        style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                      >
+                        {rowDeals.map((deal) => (
+                          <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                        ))}
+                        <div className="min-w-[16px] flex-shrink-0" />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
