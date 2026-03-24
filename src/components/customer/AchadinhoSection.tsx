@@ -283,7 +283,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
             </span>
           </button>
 
-          {categories.map(cat => {
+          {viableCategories.map(cat => {
             const isActive = selectedCat === cat.id;
             return (
               <button
