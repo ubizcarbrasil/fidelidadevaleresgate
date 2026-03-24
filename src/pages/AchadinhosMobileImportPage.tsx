@@ -189,7 +189,7 @@ export default function AchadinhosMobileImportPage() {
       });
     }
 
-    setProducts(result);
+    setProducts(autoCategorizar(result));
 
     // Scrape links to enrich with images & categories
     const itemsWithLinks = result.filter(p => p.affiliate_url && p.affiliate_url.length > 5);
