@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Save, X, GripVertical, Image as ImageIcon, icons, Palette, ImagePlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, ChevronUp, ChevronDown, Image as ImageIcon, icons, Palette, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import StorageImageUpload from "@/components/page-builder/StorageImageUpload";
 import ImageAiActions from "@/components/ImageAiActions";
@@ -182,6 +182,32 @@ export default function AffiliateCategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: { id: string; order_index: number }[]) => {
+      for (const u of updates) {
+        const { error } = await supabase.from("affiliate_deal_categories").update({ order_index: u.order_index }).eq("id", u.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["affiliate-categories", currentBrandId] });
+      toast.success("Ordem atualizada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleReorder = (idx: number, direction: "up" | "down") => {
+    if (!categories) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= categories.length) return;
+    const a = categories[idx];
+    const b = categories[swapIdx];
+    reorderMutation.mutate([
+      { id: a.id, order_index: b.order_index },
+      { id: b.id, order_index: a.order_index },
+    ]);
+  };
+
   const renderForm = (form: Partial<Category>, setForm: (f: Partial<Category>) => void, onSave: () => void, onCancel: () => void) => (
     <Card className="border-primary">
       <CardContent className="p-4 space-y-3">
@@ -314,11 +340,30 @@ export default function AffiliateCategoriesPage() {
 
       <div className="grid gap-2">
         {isLoading && <p className="text-muted-foreground text-sm">Carregando...</p>}
-        {(categories || []).map(cat => (
+        {(categories || []).map((cat, idx) => (
           <Card key={cat.id} className={!cat.is_active ? "opacity-50" : ""}>
             <CardContent className="p-3 space-y-2">
               <div className="flex items-center gap-3">
-                <GripVertical className="hidden sm:block h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={idx === 0 || reorderMutation.isPending}
+                    onClick={() => handleReorder(idx, "up")}
+                  >
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={idx === (categories || []).length - 1 || reorderMutation.isPending}
+                    onClick={() => handleReorder(idx, "down")}
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
                 <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${cat.color}20` }}>
                   <LucideIcon name={cat.icon_name} className="h-5 w-5" style={{ color: cat.color }} />
                 </div>
