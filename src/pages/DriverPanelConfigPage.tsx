@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -15,6 +15,9 @@ import { buildDriverUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageUploadField from "@/components/ImageUploadField";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface CategoryLayout {
   rows: number;
@@ -28,6 +31,56 @@ interface DriverBannerItem {
   link_url: string;
   after_category_id: string; // "__top__" or category id
   is_active: boolean;
+}
+interface SortableCategoryItemProps {
+  cat: { id: string; name: string; color: string; is_active: boolean };
+  rows: number;
+  onToggle: (checked: boolean) => void;
+  onRowsChange: (rows: number) => void;
+}
+
+function SortableCategoryItem({ cat, rows, onToggle, onRowsChange }: SortableCategoryItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-lg border p-3 space-y-3 bg-background">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground flex-shrink-0">
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+          <span className="font-medium text-sm truncate">{cat.name}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px] hidden sm:inline-flex">
+            {cat.is_active ? "Ativa" : "Inativa"}
+          </Badge>
+          <Switch checked={cat.is_active} onCheckedChange={onToggle} />
+        </div>
+      </div>
+
+      {cat.is_active && (
+        <div className="flex items-center gap-2 pl-6 sm:pl-8">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" disabled={rows <= 1} onClick={() => onRowsChange(Math.max(1, rows - 1))}>
+              <Minus className="h-3 w-3" />
+            </Button>
+            <span className="text-sm font-medium w-6 text-center">{rows}</span>
+            <Button variant="outline" size="icon" className="h-7 w-7" disabled={rows >= 5} onClick={() => onRowsChange(Math.min(5, rows + 1))}>
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function DriverPanelConfigPage() {
@@ -119,7 +172,33 @@ export default function DriverPanelConfigPage() {
   };
 
   const getRows = (catId: string) => categoryLayout[catId]?.rows ?? 1;
-  const getOrder = (catId: string, fallback: number) => categoryLayout[catId]?.order ?? fallback;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => {
+      const oa = categoryLayout[a.id]?.order ?? a.order_index;
+      const ob = categoryLayout[b.id]?.order ?? b.order_index;
+      return oa - ob;
+    });
+  }, [categories, categoryLayout]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = sortedCategories.findIndex(c => c.id === active.id);
+    const newIndex = sortedCategories.findIndex(c => c.id === over.id);
+    const reordered = arrayMove(sortedCategories, oldIndex, newIndex);
+    const updatedLayout = { ...categoryLayout };
+    reordered.forEach((cat, index) => {
+      updatedLayout[cat.id] = { ...(updatedLayout[cat.id] || { rows: 1 }), order: index };
+    });
+    settingsMutation.mutate({ driver_category_layout: updatedLayout });
+  };
 
   // Banner management
   const addBanner = () => {
@@ -459,68 +538,21 @@ export default function DriverPanelConfigPage() {
           ) : !categories?.length ? (
             <p className="text-sm text-muted-foreground">Nenhuma categoria encontrada. Crie categorias em Achadinhos primeiro.</p>
           ) : (
-            <div className="space-y-2">
-              {categories.map((cat) => (
-                <div key={cat.id} className="rounded-lg border p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                      <span className="font-medium text-sm truncate">{cat.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px] hidden sm:inline-flex">
-                        {cat.is_active ? "Ativa" : "Inativa"}
-                      </Badge>
-                      <Switch
-                        checked={cat.is_active}
-                        onCheckedChange={(checked) => toggleMutation.mutate({ id: cat.id, is_active: checked })}
-                      />
-                    </div>
-                  </div>
-
-                  {cat.is_active && (
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 pl-0 sm:pl-6">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            disabled={getRows(cat.id) <= 1}
-                            onClick={() => updateCategoryLayout(cat.id, "rows", Math.max(1, getRows(cat.id) - 1))}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="text-sm font-medium w-6 text-center">{getRows(cat.id)}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            disabled={getRows(cat.id) >= 5}
-                            onClick={() => updateCategoryLayout(cat.id, "rows", Math.min(5, getRows(cat.id) + 1))}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">Ordem:</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={99}
-                          className="h-7 w-14 text-center text-sm"
-                          value={getOrder(cat.id, cat.order_index)}
-                          onChange={(e) => updateCategoryLayout(cat.id, "order", parseInt(e.target.value) || 0)}
-                        />
-                      </div>
-                    </div>
-                  )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={sortedCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {sortedCategories.map((cat) => (
+                    <SortableCategoryItem
+                      key={cat.id}
+                      cat={cat}
+                      rows={getRows(cat.id)}
+                      onToggle={(checked) => toggleMutation.mutate({ id: cat.id, is_active: checked })}
+                      onRowsChange={(rows) => updateCategoryLayout(cat.id, "rows", rows)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>
