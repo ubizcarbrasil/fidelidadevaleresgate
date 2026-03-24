@@ -328,11 +328,11 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
       {/* Deals — carrossel horizontal por categoria */}
       <div className="space-y-5 animate-fade-in">
-        {(selectedCat ? categories.filter(c => c.id === selectedCat) : categories).map(cat => {
+        {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
           const catDeals = deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
           const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
-          const effectiveRows = Math.min(configuredRows, catDeals.length);
+          const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(catDeals.length / MIN_PER_ROW)));
           const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
           const visibleDeals = catDeals.slice(0, visibleCount);
           return (
