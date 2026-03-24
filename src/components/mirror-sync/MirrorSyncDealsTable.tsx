@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Star, Zap, ExternalLink, ToggleLeft, ToggleRight, Copy, FolderSync, ImagePlus } from "lucide-react";
+import AiBannerDialog from "./AiBannerDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
