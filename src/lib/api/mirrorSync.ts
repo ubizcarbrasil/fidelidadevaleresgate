@@ -70,7 +70,7 @@ export async function fetchMirroredDeals(brandId: string, filters?: {
     .eq("brand_id", brandId)
     .eq("origin", "divulgador_inteligente")
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(1000);
 
   if (filters?.status === "active") query = query.eq("is_active", true);
   if (filters?.status === "inactive") query = query.eq("is_active", false);

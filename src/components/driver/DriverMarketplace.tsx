@@ -146,7 +146,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         .eq("is_active", true)
         .eq("visible_driver" as any, true)
         .order("order_index")
-        .limit(200);
+        .limit(1000);
       if (branch) {
         dealsQ = dealsQ.or(`branch_id.eq.${branch.id},branch_id.is.null`);
       }
