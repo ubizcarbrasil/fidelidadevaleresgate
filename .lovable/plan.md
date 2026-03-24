@@ -1,36 +1,33 @@
 
 
-## Drag-and-drop para ordenação de categorias no admin
+## Regras de exposição inteligente de categorias
 
-### O que muda
-Substituir o campo numérico de "Ordem" na seção "Categorias Visíveis" do `DriverPanelConfigPage` por drag-and-drop. O admin arrasta as categorias para reordenar e o valor `order` é calculado automaticamente pela posição.
+### Alterações em 2 arquivos
 
-### Implementação
+#### Lógica (igual nos dois arquivos)
 
-#### 1. Instalar `@dnd-kit/core` e `@dnd-kit/sortable`
-Biblioteca leve e moderna de drag-and-drop para React, sem dependências pesadas.
+**Constantes:**
+- `MIN_DEALS = 3` — mínimo para exibir categoria
+- `MIN_PER_ROW = 3` — mínimo de deals por linha
 
-#### 2. Refatorar a seção de categorias (`src/pages/DriverPanelConfigPage.tsx`)
+**No `useMemo` de categorias (substituir o sort atual):**
 
-- Ordenar as categorias pelo `order` atual do `categoryLayout` antes de renderizar.
-- Envolver a lista com `DndContext` + `SortableContext` do dnd-kit.
-- Cada item de categoria vira um componente `SortableItem` que usa `useSortable()`.
-- Adicionar um ícone de "grip" (arrastar) à esquerda de cada linha — o `GripVertical` já está importado no arquivo.
-- Remover o campo `Input type="number"` de ordem manual.
-- No `onDragEnd`, recalcular os valores de `order` baseado na nova posição e salvar tudo de uma vez via `settingsMutation.mutate({ driver_category_layout: updated })`.
+1. Contar deals por categoria
+2. Categorias com < 3 deals → removidas, seus deals vão para "Outras ofertas" via `overflowDealIds`
+3. Ordenação:
+   - Categorias com `order` definido no admin → posição fixa entre si
+   - Categorias sem `order` → depois das fixas, ordenadas por quantidade de deals (desc)
+4. `effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(dealCount / MIN_PER_ROW)))` — linha extra só se tiver ≥ 6 deals (2 linhas), ≥ 9 (3 linhas)
 
-#### 3. Lógica do `onDragEnd`
-```text
-1. Identificar item arrastado (active) e destino (over)
-2. Reordenar o array de categorias com arrayMove()
-3. Gerar novo categoryLayout com order = index da posição
-4. Salvar via settingsMutation
-```
+**Na seção "Outras ofertas":** incluir deals cujo `id` está em `overflowDealIds` (além dos já sem categoria)
 
-### Resultado
-- O admin arrasta categorias para cima/baixo para definir a ordem de exibição
-- O ícone de grip (`⠿`) aparece à esquerda de cada categoria
-- A ordem é salva automaticamente ao soltar
-- O campo numérico de ordem é removido (desnecessário com drag-and-drop)
-- Controle de "Linhas" e "Ativo/Inativo" permanecem inalterados
+#### 1. `src/components/customer/AchadinhoSection.tsx`
+- Linhas 163-172: substituir `useMemo` de `categories` pela lógica acima, retornando `{ viableCategories, overflowDealIds }`
+- Linha 314: trocar `effectiveRows` para usar `MIN_PER_ROW`
+- Linha 361: na seção uncategorized, incluir deals com `id` em `overflowDealIds`
+
+#### 2. `src/components/driver/DriverMarketplace.tsx`
+- Linhas 183-191: mesma substituição do `useMemo`
+- Linha 423: trocar `effectiveRows` para usar `MIN_PER_ROW`
+- Na seção uncategorized, incluir overflow deals
 
