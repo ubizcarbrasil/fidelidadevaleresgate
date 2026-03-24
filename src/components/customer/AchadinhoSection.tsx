@@ -132,7 +132,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
-        .limit(50);
+        .limit(500);
       if (selectedBranch) {
         dealsQuery = dealsQuery.or(`branch_id.eq.${selectedBranch.id},branch_id.is.null`);
       }
