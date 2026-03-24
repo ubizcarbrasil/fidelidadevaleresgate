@@ -58,6 +58,36 @@ export default function AchadinhosMobileImportPage() {
   const [flowSource, setFlowSource] = useState<"links" | "csv" | "photo">("links");
   const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
 
+  // ── Fetch categories for auto-suggestion ──
+  const { data: categoriasRaw } = useQuery({
+    queryKey: ["affiliate-categories", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return [];
+      const { data } = await supabase
+        .from("affiliate_deal_categories")
+        .select("id, name, keywords")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .order("order_index");
+      return (data || []) as CategoriaAchadinho[];
+    },
+    enabled: !!currentBrandId,
+  });
+  const categorias = useMemo(() => categoriasRaw || [], [categoriasRaw]);
+
+  // ── Auto-categorize products when entering review ──
+  const autoCategorizar = useCallback((items: ProductItem[]) => {
+    if (categorias.length === 0) return items;
+    return items.map(p => {
+      if (p.category_id) return p; // already has category (from scrape)
+      const sugestao = sugerirCategoria(p.title, p.description, null, p.store_name, categorias);
+      if (sugestao) {
+        return { ...p, category_id: sugestao.id, category_name: sugestao.name };
+      }
+      return p;
+    });
+  }, [categorias]);
+
   const updateProduct = useCallback((id: string, field: keyof ProductItem, value: string | number | null) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   }, []);
