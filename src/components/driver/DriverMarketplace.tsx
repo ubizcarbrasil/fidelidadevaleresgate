@@ -282,7 +282,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   }
 
   return (
-    <div className="max-w-lg mx-auto pb-8 overflow-x-hidden">
+    <div className="max-w-lg mx-auto pb-8" style={{ overflowX: "clip" }}>
       {/* Header — same style as customer app */}
       <header
         className="sticky top-0 z-10"
