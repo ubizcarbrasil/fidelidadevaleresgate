@@ -488,68 +488,21 @@ export default function DriverPanelConfigPage() {
           ) : !categories?.length ? (
             <p className="text-sm text-muted-foreground">Nenhuma categoria encontrada. Crie categorias em Achadinhos primeiro.</p>
           ) : (
-            <div className="space-y-2">
-              {categories.map((cat) => (
-                <div key={cat.id} className="rounded-lg border p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                      <span className="font-medium text-sm truncate">{cat.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px] hidden sm:inline-flex">
-                        {cat.is_active ? "Ativa" : "Inativa"}
-                      </Badge>
-                      <Switch
-                        checked={cat.is_active}
-                        onCheckedChange={(checked) => toggleMutation.mutate({ id: cat.id, is_active: checked })}
-                      />
-                    </div>
-                  </div>
-
-                  {cat.is_active && (
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 pl-0 sm:pl-6">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            disabled={getRows(cat.id) <= 1}
-                            onClick={() => updateCategoryLayout(cat.id, "rows", Math.max(1, getRows(cat.id) - 1))}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="text-sm font-medium w-6 text-center">{getRows(cat.id)}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            disabled={getRows(cat.id) >= 5}
-                            onClick={() => updateCategoryLayout(cat.id, "rows", Math.min(5, getRows(cat.id) + 1))}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">Ordem:</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={99}
-                          className="h-7 w-14 text-center text-sm"
-                          value={getOrder(cat.id, cat.order_index)}
-                          onChange={(e) => updateCategoryLayout(cat.id, "order", parseInt(e.target.value) || 0)}
-                        />
-                      </div>
-                    </div>
-                  )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={sortedCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {sortedCategories.map((cat) => (
+                    <SortableCategoryItem
+                      key={cat.id}
+                      cat={cat}
+                      rows={getRows(cat.id)}
+                      onToggle={(checked) => toggleMutation.mutate({ id: cat.id, is_active: checked })}
+                      onRowsChange={(rows) => updateCategoryLayout(cat.id, "rows", rows)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>
