@@ -108,6 +108,7 @@ const PartnerLandingConfigPage = lazy(() => import("@/pages/PartnerLandingConfig
 const AccessHubPage = lazy(() => import("@/pages/AccessHubPage"));
 const CrmEmbedPage = lazy(() => import("@/pages/CrmEmbedPage"));
 const AchadinhosMobileImportPage = lazy(() => import("@/pages/AchadinhosMobileImportPage"));
+const MirrorSyncPage = lazy(() => import("@/pages/MirrorSyncPage"));
 const DriverPanelConfigPage = lazy(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazy(() => import("@/pages/DriverPanelPage"));
 const McpDashboardPage = lazy(() => import("@/pages/McpDashboardPage"));
