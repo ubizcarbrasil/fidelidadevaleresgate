@@ -158,7 +158,18 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
   });
 
   const deals = data?.deals || [];
-  const categories = data?.categories || [];
+  const rawCategories = data?.categories || [];
+
+  // Apply admin-configured category order from brand_settings_json
+  const categoryLayout: Record<string, { rows?: number; order?: number }> = (brand as any)?.brand_settings_json?.driver_category_layout || {};
+  const categories = useMemo(() => [...rawCategories].sort((a, b) => {
+    const oa = categoryLayout[a.id]?.order;
+    const ob = categoryLayout[b.id]?.order;
+    if (oa != null && ob != null) return oa - ob;
+    if (oa != null) return -1;
+    if (ob != null) return 1;
+    return 0;
+  }), [rawCategories, categoryLayout]);
 
   const filteredDeals = useMemo(() => {
     if (!selectedCat) return deals;
