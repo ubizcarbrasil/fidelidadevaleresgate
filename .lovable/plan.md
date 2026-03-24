@@ -2,80 +2,42 @@
 
 ## Problema
 
-O parser da Edge Function `mirror-sync` falha na extração de preços para ~57% das ofertas (13 de 23). Duas causas:
+O scraper atual faz apenas 1 request para a URL principal (`/ubizresgata`), que mostra ~23 ofertas. O site tem 194 ofertas distribuídas por sub-páginas de lojas (Amazon, Shopee, Mercado Livre, Magalu). A coluna `extra_pages` já existe na tabela `mirror_sync_config` mas não é usada.
 
-1. **Regex com lazy match trunca o conteúdo do card**: `([\s\S]*?)<\/a>` captura o mínimo possível, parando em qualquer `</a>` interno antes de chegar à seção de preço. Os cards da seção Shopee têm estrutura HTML diferente dos cards de "Promoções do dia".
+## Plano
 
-2. **Dados antigos nunca são atualizados**: A re-sincronização compara `existing.price !== deal.price` → se ambos são `null`, resulta em `false` e o registro é ignorado. Os 13 registros importados antes da correção ficam permanentemente com preço null.
-
-**Evidência**: O markdown do site mostra que TODAS as 23 ofertas têm preço (ex: "Mala GRANDE" = R$ 149,90). Porém o re-sync retorna `total_skipped: 23, total_updated: 0`.
-
----
-
-## Plano de Correção
-
-### 1. Melhorar o parser na Edge Function
+### 1. Edge Function — scrape multi-página
 
 **Arquivo**: `supabase/functions/mirror-sync/index.ts`
 
-**A. Trocar regex de card** — de lazy para greedy com lookahead:
-```typescript
-// DE (lazy - trunca o card):
-/<a[^>]*href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi
-
-// PARA (greedy até o próximo </a> correto):
-/<a[^>]*href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]+?)<\/a>\s*(?=<a |<\/div|$)/gi
-```
-
-Ou abordagem alternativa mais robusta: capturar todo o bloco entre dois links de `/ubizresgata/p/`:
-```typescript
-// Encontra todos os hrefs de produto
-const hrefRegex = /href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"/gi;
-// Para cada href, captura o bloco HTML circundante entre ele e o próximo href
-```
-
-**B. Ativar debug mode temporário**: adicionar `console.log` com o cardHtml capturado para os cards sem preço, permitindo diagnóstico preciso.
-
-### 2. Forçar atualização de registros stale
-
-Na lógica de dedup, adicionar condição: se o registro existente tem `price IS NULL` e o novo parse também retorna `null`, marcar como `sync_error` em vez de skip. Ou melhor, **sempre atualizar** se o existente tem `sync_status = 'synced'` mas `price IS NULL`:
+Após carregar o config, construir lista de URLs e iterar sobre cada uma:
 
 ```typescript
-const needsUpdate =
-  existing.price !== deal.price ||
-  existing.image_url !== deal.image_url ||
-  existing.title !== deal.title ||
-  (existing.price === null && deal.price !== null) ||  // força update se antes era null
-  existing.badge_label === '100%';  // corrige badges errados
+const extraPages = config?.extra_pages || [];
+const defaultPages = [
+  "/promocoes-do-dia",
+  "/lojas/shopee",
+  "/lojas/mercadolivre", 
+  "/lojas/amazon",
+  "/lojas/magalu",
+];
+const pagePaths = extraPages.length > 0 ? extraPages : defaultPages;
+const urls = [originUrl, ...pagePaths.map(p => 
+  p.startsWith("http") ? p : `${originUrl}${p}`
+)];
 ```
 
-Wait — essa condição já é coberta por `existing.price !== deal.price` se deal.price não for null. O problema real é que o parser TAMBÉM retorna null. Então o fix 1 (parser) é o essencial.
+Mover o bloco de scrape+parse para um `for (const url of urls)` loop. Acumular todos os `parsedDeals` num array antes de processar inserts/updates. A deduplicação por slug já previne duplicatas entre páginas.
 
-### 3. Após fix do parser, limpar dados antigos
+### 2. UI de configuração — campo de URLs extras
 
-Rodar uma SQL migration ou usar o re-sync para forçar update dos registros antigos. Opção: deletar os registros com `badge_label = '100%'` e `price IS NULL` para que o próximo sync os recrie com dados corretos:
+**Arquivo**: `src/components/mirror-sync/MirrorSyncConfig.tsx`
 
-```sql
-DELETE FROM affiliate_deals 
-WHERE origin = 'divulgador_inteligente' 
-AND price IS NULL 
-AND badge_label = '100%';
-```
+Adicionar um `Textarea` para editar `extra_pages` (uma URL/path por linha). Valor default pré-populado com as sub-páginas padrão. Incluir no estado do form e no save.
 
-### 4. Redeploy + Re-sync
-
-Deploy da edge function corrigida e execução de nova sincronização.
+### 3. Redeploy da Edge Function
 
 ---
 
-## Resumo
-
-| Etapa | Ação |
-|-------|------|
-| 1 | Fix regex do parser para capturar conteúdo completo do card |
-| 2 | Limpar registros stale (price null + badge 100%) |
-| 3 | Redeploy edge function |
-| 4 | Re-sync para popular dados corretos |
-
-**1 arquivo alterado** (`supabase/functions/mirror-sync/index.ts`), 1 query SQL de limpeza.
+**2 arquivos alterados** + redeploy. Resultado esperado: de ~23 para ~194 ofertas.
 
