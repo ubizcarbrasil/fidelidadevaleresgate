@@ -1,30 +1,23 @@
 
 
-## Plano: Gerar novo AGENT_SECRET
+## Problema
 
-### O que vou fazer
-1. Gerar um token seguro (UUID v4 ou string aleatória de 64 caracteres)
-2. Salvar como secret `AGENT_SECRET` no projeto
-3. Informar o valor para você configurar no `.mcp.json`
+A rota `/welcome-tour` está protegida por `RootGuard` no `App.tsx` (linha 212), permitindo acesso apenas a administradores ROOT. Porém, o `BrandSidebar` exibe o link "Boas-Vindas" para empreendedores (Brand Admin), que ao clicar são bloqueados.
 
-### Valor gerado
-`mcp-agent-rwhh-2026-` + sufixo aleatório (será gerado na execução)
+## Solução
 
-### Configuração final no seu `.mcp.json`
-```json
-{
-  "mcpServers": {
-    "lovable-control-panel": {
-      "type": "http",
-      "url": "https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/mcp-server",
-      "headers": {
-        "Authorization": "Bearer NOVO_TOKEN_AQUI"
-      }
-    }
-  }
-}
+Trocar o guard de `RootGuard` para `ModuleGuard` com a chave `welcome_tour`, consistente com o que já está configurado no `BrandSidebar`.
+
+## Alteração
+
+**`src/App.tsx` — linha 212**
+```
+// DE:
+<Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
+
+// PARA:
+<Route path="welcome-tour" element={<ModuleGuard moduleKey="welcome_tour"><WelcomeTourConfigPage /></ModuleGuard>} />
 ```
 
-### Arquivo
-- Nenhum arquivo de código alterado — apenas o secret `AGENT_SECRET` será atualizado via ferramenta
+Apenas 1 linha alterada. Nenhuma outra mudança necessária.
 
