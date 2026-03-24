@@ -250,7 +250,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
             </p>
           </div>
         </div>
-        {categories.length > 0 && onOpenAllCategories && (
+        {viableCategories.length > 0 && onOpenAllCategories && (
           <button
             onClick={onOpenAllCategories}
             className="text-xs font-semibold flex items-center gap-0.5"
