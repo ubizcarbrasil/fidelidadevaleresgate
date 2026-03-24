@@ -33,9 +33,85 @@ function normalize(text: string): string {
     .trim();
 }
 
+// ---------- Vitrine page price scraping ----------
+
+interface VitrinePriceEntry {
+  uuid: string;
+  price: number | null;
+  originalPrice: number | null;
+}
+
+async function scrapeVitrinePrices(originUrl: string, sitename: string): Promise<Map<string, VitrinePriceEntry>> {
+  const priceMap = new Map<string, VitrinePriceEntry>();
+
+  const pagesToScrape = [
+    `${originUrl}/promocoes-do-dia`,
+  ];
+
+  for (const pageUrl of pagesToScrape) {
+    try {
+      console.log(`[Scrape] Fetching vitrine: ${pageUrl}`);
+      const res = await fetch(pageUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; MirrorSync/1.0)" },
+      });
+      if (!res.ok) {
+        console.warn(`[Scrape] ${pageUrl} returned ${res.status}`);
+        continue;
+      }
+      const html = await res.text();
+
+      // Extract product cards: each card links to /sitename/p/{uuid}
+      // Pattern: href="/sitename/p/{uuid}" ... price text nearby
+      // The HTML structure has <a> tags wrapping each card with href containing /p/UUID
+      // Inside, prices appear as "R$ X,XX" text
+
+      // Strategy: find all card links with UUID, then extract prices from the card HTML
+      const cardRegex = new RegExp(
+        `<a[^>]*href="[^"]*/${sitename}/p/([a-zA-Z0-9_-]+)"[^>]*>(.*?)</a>`,
+        "gs"
+      );
+
+      let match;
+      while ((match = cardRegex.exec(html)) !== null) {
+        const uuid = match[1];
+        const cardHtml = match[2];
+
+        // Extract all price patterns: R$ followed by digits
+        const priceMatches = cardHtml.match(/R\$[\s\u00a0]*[\d.,]+/g);
+        if (priceMatches && priceMatches.length > 0) {
+          const parsedPrices = priceMatches
+            .map((p) => cleanPrice(p))
+            .filter((p): p is number => p !== null && p > 0);
+
+          if (parsedPrices.length >= 2) {
+            // Two prices: higher is original, lower is current
+            const sorted = [...parsedPrices].sort((a, b) => b - a);
+            priceMap.set(uuid, {
+              uuid,
+              originalPrice: sorted[0],
+              price: sorted[1],
+            });
+          } else if (parsedPrices.length === 1) {
+            priceMap.set(uuid, {
+              uuid,
+              price: parsedPrices[0],
+              originalPrice: null,
+            });
+          }
+        }
+      }
+
+      console.log(`[Scrape] Extracted ${priceMap.size} prices from ${pageUrl}`);
+    } catch (e: any) {
+      console.error(`[Scrape] Error fetching ${pageUrl}: ${e.message}`);
+    }
+  }
+
+  return priceMap;
+}
+
 // ---------- Category matching ----------
 
-// Mapa de tradução: valores da API (inglês) → nomes das categorias no banco (português)
 const API_CATEGORY_MAP: Record<string, string[]> = {
   home: ["casa"],
   kitchen: ["cozinha"],
@@ -72,42 +148,32 @@ function matchDealToCategory(
   storeName: string | null,
   categories: DealCategory[]
 ): string | null {
-  // 1. Prioridade máxima: tradução direta do campo "category" da API
   if (category) {
     const normApiCat = normalize(category);
     const mappedNames = API_CATEGORY_MAP[normApiCat];
     if (mappedNames) {
       for (const mappedName of mappedNames) {
         for (const cat of categories) {
-          if (normalize(cat.name) === mappedName) {
-            return cat.id;
-          }
+          if (normalize(cat.name) === mappedName) return cat.id;
         }
       }
     }
-    // Fallback: match direto do campo category contra o nome da categoria
     for (const cat of categories) {
-      if (normalize(cat.name) === normApiCat) {
-        return cat.id;
-      }
+      if (normalize(cat.name) === normApiCat) return cat.id;
     }
-    // Match parcial
     for (const cat of categories) {
       const normName = normalize(cat.name);
-      if (normApiCat.includes(normName) || normName.includes(normApiCat)) {
-        return cat.id;
-      }
+      if (normApiCat.includes(normName) || normName.includes(normApiCat)) return cat.id;
     }
   }
 
-  // 2. Fallback: keyword scoring
   const text = normalize(
     [title, description, category, storeName].filter(Boolean).join(" ")
   );
 
   let bestCatId: string | null = null;
   let bestScore = 0;
-  const MIN_SCORE = 4; // score mínimo aumentado para evitar matches fracos
+  const MIN_SCORE = 4;
 
   for (const cat of categories) {
     let score = 0;
@@ -157,6 +223,10 @@ interface SyncResult {
   title: string;
   action: "created" | "updated" | "skipped" | "error";
   error?: string;
+  price_source?: string;
+  price_api?: number | null;
+  price_page?: number | null;
+  price_used?: number | null;
 }
 
 // ---------- Auto-categorization phase ----------
@@ -171,7 +241,6 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     deals_moved_to_variadas: 0,
   };
 
-  // 1. Load all categories (active + inactive)
   const { data: allCategories } = await supabase
     .from("affiliate_deal_categories")
     .select("id, name, keywords, is_active")
@@ -179,7 +248,6 @@ async function runAutoCategorization(supabase: any, brandId: string) {
 
   const categories: DealCategory[] = allCategories || [];
 
-  // 2. Load all active deals for this brand (mirrored)
   const { data: allDeals } = await supabase
     .from("affiliate_deals")
     .select("id, title, description, category, store_name, category_id, is_active")
@@ -189,11 +257,9 @@ async function runAutoCategorization(supabase: any, brandId: string) {
 
   const deals = allDeals || [];
 
-  // 3. Phase 3 — Recategorizar TODOS os deals (não apenas sem category_id)
-  const dealsToMatch = deals;
-  const categoryUpdates = new Map<string, string[]>(); // category_id -> deal_ids
+  const categoryUpdates = new Map<string, string[]>();
 
-  for (const deal of dealsToMatch) {
+  for (const deal of deals) {
     const matchedCatId = matchDealToCategory(
       deal.title,
       deal.description,
@@ -203,14 +269,11 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     );
     if (matchedCatId) {
       catStats.matched_by_keywords++;
-      if (!categoryUpdates.has(matchedCatId)) {
-        categoryUpdates.set(matchedCatId, []);
-      }
+      if (!categoryUpdates.has(matchedCatId)) categoryUpdates.set(matchedCatId, []);
       categoryUpdates.get(matchedCatId)!.push(deal.id);
     }
   }
 
-  // Batch update category_id for matched deals
   for (const [catId, dealIds] of categoryUpdates) {
     await supabase
       .from("affiliate_deals")
@@ -218,8 +281,6 @@ async function runAutoCategorization(supabase: any, brandId: string) {
       .in("id", dealIds);
   }
 
-  // 4. Phase 4 — Category lifecycle management
-  // Re-count deals per category after matching
   const { data: refreshedDeals } = await supabase
     .from("affiliate_deals")
     .select("id, category_id")
@@ -241,7 +302,6 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     }
   }
 
-  // Auto-activate inactive categories with 4+ deals
   for (const cat of categories) {
     const count = countByCategory.get(cat.id) || 0;
     if (!cat.is_active && count >= MIN_DEALS_PER_CATEGORY) {
@@ -253,9 +313,8 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     }
   }
 
-  // Auto-deactivate active categories with < 4 deals, move deals to uncategorized
   for (const cat of categories) {
-    if (cat.name === "Ofertas Variadas") continue; // never deactivate fallback
+    if (cat.name === "Ofertas Variadas") continue;
     const count = countByCategory.get(cat.id) || 0;
     if (cat.is_active && count < MIN_DEALS_PER_CATEGORY && count > 0) {
       await supabase
@@ -264,7 +323,6 @@ async function runAutoCategorization(supabase: any, brandId: string) {
         .eq("id", cat.id);
       catStats.categories_deactivated.push(cat.name);
 
-      // Move deals to uncategorized
       const idsToMove = dealsByCategory.get(cat.id) || [];
       if (idsToMove.length > 0) {
         await supabase
@@ -277,12 +335,10 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     }
   }
 
-  // 5. Ensure "Ofertas Variadas" exists
   let variadasId: string | null = null;
   const existing = categories.find((c) => c.name === "Ofertas Variadas");
   if (existing) {
     variadasId = existing.id;
-    // Make sure it's active
     if (!existing.is_active) {
       await supabase
         .from("affiliate_deal_categories")
@@ -290,7 +346,6 @@ async function runAutoCategorization(supabase: any, brandId: string) {
         .eq("id", existing.id);
     }
   } else {
-    // Get max order_index
     const maxOrder = categories.reduce((m, c) => Math.max(m, 0), 0);
     const { data: created } = await supabase
       .from("affiliate_deal_categories")
@@ -308,10 +363,8 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     variadasId = created?.id || null;
   }
 
-  // 6. Assign all uncategorized deals to "Ofertas Variadas"
   if (variadasId && uncategorized.length > 0) {
     catStats.sent_to_variadas = uncategorized.length;
-    // Batch in chunks of 100
     for (let i = 0; i < uncategorized.length; i += 100) {
       const chunk = uncategorized.slice(i, i + 100);
       await supabase
@@ -388,7 +441,14 @@ Deno.serve(async (req) => {
     const autoVisibleDriver = config?.auto_visible_driver !== false;
     const sitename = extractSitename(originUrl);
 
-    // ========== Fetch products from API ==========
+    // ========== Phase 1: Scrape vitrine page for real prices ==========
+    console.log("[Scrape] Starting vitrine price scraping...");
+    const scrapeStart = Date.now();
+    const vitrinePrices = await scrapeVitrinePrices(originUrl, sitename);
+    const scrapeDurationMs = Date.now() - scrapeStart;
+    console.log(`[Scrape] Got ${vitrinePrices.size} prices in ${scrapeDurationMs}ms`);
+
+    // ========== Phase 2: Fetch products from API ==========
     const apiUrl = `https://api.divulgadorinteligente.com/api/products?sitename=${sitename}&limit=500`;
     console.log(`[API] Fetching products from: ${apiUrl}`);
 
@@ -431,9 +491,50 @@ Deno.serve(async (req) => {
         sellerCounts[seller] = (sellerCounts[seller] || 0) + 1;
       }
 
+      // Price comparison diagnostics
+      const priceDiagnostics: any[] = [];
+      for (const p of products.slice(0, 30)) {
+        const uuid = p.attributes.uuid;
+        const priceApi = cleanPrice(p.attributes.price);
+        const originalPriceApi = cleanPrice(p.attributes.price_from);
+        const vitrineEntry = vitrinePrices.get(uuid);
+
+        const pricePage = vitrineEntry?.price ?? null;
+        const originalPricePage = vitrineEntry?.originalPrice ?? null;
+
+        // Determine which source to use
+        const priceUsed = pricePage ?? priceApi;
+        const originalPriceUsed = originalPricePage ?? originalPriceApi;
+        const source = pricePage !== null ? "vitrine" : "api";
+
+        const hasDivergence = priceApi !== null && pricePage !== null && Math.abs(priceApi - pricePage) > 0.02;
+
+        priceDiagnostics.push({
+          uuid,
+          title: p.attributes.title?.substring(0, 60),
+          seller: p.attributes.seller,
+          price_api: priceApi,
+          price_api_raw: p.attributes.price,
+          price_page: pricePage,
+          original_price_api: originalPriceApi,
+          original_price_page: originalPricePage,
+          price_used: priceUsed,
+          original_price_used: originalPriceUsed,
+          source,
+          has_divergence: hasDivergence,
+          is_new: !existingBySlug.has(uuid),
+        });
+      }
+
+      const divergentCount = priceDiagnostics.filter(d => d.has_divergence).length;
+
       const result = {
         success: true,
         mode: "diagnose",
+        scrape: {
+          vitrine_prices_found: vitrinePrices.size,
+          duration_ms: scrapeDurationMs,
+        },
         api: {
           url: apiUrl,
           total_products: products.length,
@@ -446,25 +547,11 @@ Deno.serve(async (req) => {
           new_to_import: newCount,
           existing_in_db_total: existingDeals?.length || 0,
         },
-        sample_products: products.slice(0, 15).map(p => ({
-          uuid: p.attributes.uuid,
-          title: p.attributes.title,
-          price: p.attributes.price,
-          price_from: p.attributes.price_from,
-          seller: p.attributes.seller,
-          coupon: p.attributes.coupon,
-          has_image: !!p.attributes.image,
-          is_new: !existingBySlug.has(p.attributes.uuid),
-        })),
-        new_products_sample: products
-          .filter(p => !existingBySlug.has(p.attributes.uuid))
-          .slice(0, 10)
-          .map(p => ({
-            uuid: p.attributes.uuid,
-            title: p.attributes.title,
-            seller: p.attributes.seller,
-            link: p.attributes.link?.substring(0, 80),
-          })),
+        price_diagnostics: {
+          total_compared: priceDiagnostics.length,
+          divergent_count: divergentCount,
+          items: priceDiagnostics,
+        },
       };
 
       return new Response(
@@ -478,6 +565,8 @@ Deno.serve(async (req) => {
     let updated = 0;
     let skipped = 0;
     let errors = 0;
+    let priceFromVitrine = 0;
+    let priceFromApi = 0;
     const syncResults: SyncResult[] = [];
 
     for (const product of products) {
@@ -489,8 +578,18 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const price = cleanPrice(attrs.price);
-      const originalPrice = cleanPrice(attrs.price_from);
+      // Price resolution: vitrine > API
+      const priceApi = cleanPrice(attrs.price);
+      const originalPriceApi = cleanPrice(attrs.price_from);
+      const vitrineEntry = vitrinePrices.get(slug);
+
+      const price = vitrineEntry?.price ?? priceApi;
+      const originalPrice = vitrineEntry?.originalPrice ?? originalPriceApi;
+      const priceSource = vitrineEntry?.price !== undefined && vitrineEntry?.price !== null ? "vitrine" : "api";
+
+      if (priceSource === "vitrine") priceFromVitrine++;
+      else priceFromApi++;
+
       const affiliateUrl = attrs.link || `${originUrl}/p/${slug}`;
       const badgeLabel = attrs.coupon ? `Cupom: ${attrs.coupon}` : null;
 
@@ -541,7 +640,10 @@ Deno.serve(async (req) => {
 
           if (error) throw error;
           updated++;
-          syncResults.push({ slug, title: attrs.title, action: "updated" });
+          syncResults.push({
+            slug, title: attrs.title, action: "updated",
+            price_source: priceSource, price_api: priceApi, price_page: vitrineEntry?.price ?? null, price_used: price,
+          });
         } else {
           const { error } = await supabase
             .from("affiliate_deals")
@@ -556,7 +658,10 @@ Deno.serve(async (req) => {
 
           if (error) throw error;
           persistedNew++;
-          syncResults.push({ slug, title: attrs.title, action: "created" });
+          syncResults.push({
+            slug, title: attrs.title, action: "created",
+            price_source: priceSource, price_api: priceApi, price_page: vitrineEntry?.price ?? null, price_used: price,
+          });
         }
       } catch (e: any) {
         errors++;
@@ -579,6 +684,10 @@ Deno.serve(async (req) => {
     // ========== Log the sync ==========
     const finishedAt = new Date().toISOString();
     const details = {
+      scrape: {
+        vitrine_prices_found: vitrinePrices.size,
+        duration_ms: scrapeDurationMs,
+      },
       api: {
         url: apiUrl,
         total_products: products.length,
@@ -596,8 +705,12 @@ Deno.serve(async (req) => {
         skipped,
         errors,
       },
+      price_sources: {
+        from_vitrine: priceFromVitrine,
+        from_api: priceFromApi,
+      },
       categorization: categorizationStats,
-      samples: syncResults.slice(0, 20),
+      samples: syncResults.slice(0, 30),
     };
 
     await supabase.from("mirror_sync_logs").insert({
@@ -613,7 +726,7 @@ Deno.serve(async (req) => {
       details,
     });
 
-    console.log(`[Sync] Done: ${persistedNew} new, ${updated} updated, ${skipped} skipped, ${errors} errors`);
+    console.log(`[Sync] Done: ${persistedNew} new, ${updated} updated, ${skipped} skipped, ${errors} errors | Prices: ${priceFromVitrine} vitrine, ${priceFromApi} api`);
 
     return new Response(
       JSON.stringify({
@@ -623,6 +736,11 @@ Deno.serve(async (req) => {
         updated,
         skipped,
         errors,
+        price_sources: {
+          from_vitrine: priceFromVitrine,
+          from_api: priceFromApi,
+          vitrine_prices_found: vitrinePrices.size,
+        },
         categorization: categorizationStats,
         duration_ms: Date.now() - apiStart,
       }),
