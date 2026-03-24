@@ -175,7 +175,7 @@ function AppRoutes() {
           <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
           <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
           <Route path="home-templates" element={<HomeTemplatesPage />} />
-          <Route path="csv-import" element={<ModuleGuard moduleKey="stores"><CsvImportPage /></ModuleGuard>} />
+          <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
           <Route path="clone-branch" element={<CloneBranchPage />} />
           <Route path="brand-modules" element={<BrandModulesPage />} />
           <Route path="pdv" element={<OperatorRedeemPage />} />
