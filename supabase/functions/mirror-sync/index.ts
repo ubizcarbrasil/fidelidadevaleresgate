@@ -341,6 +341,23 @@ Deno.serve(async (req) => {
               formats: ["html"],
               waitFor: 3000,
               onlyMainContent: false,
+              actions: [
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+                { type: "scroll", direction: "down" },
+                { type: "wait", milliseconds: 2000 },
+              ],
             }),
           });
 
