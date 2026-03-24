@@ -285,6 +285,9 @@ function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, form
               <TableCell>
                 <div className="flex gap-1">
                   <DuplicateButton dealId={deal.id} categories={categories} onDuplicate={onDuplicate} />
+                  <button onClick={() => onCreateBanner(deal)} className="p-1.5 rounded-md border" title="Criar Banner">
+                    <ImagePlus className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                  </button>
                   {deal.origin_url && (
                     <a href={deal.origin_url} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-foreground" />
