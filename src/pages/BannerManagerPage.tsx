@@ -41,8 +41,27 @@ const INITIAL_FORM = {
 export default function BannerManagerPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
+
+  // Auto-open dialog with prefill from query params
+  useEffect(() => {
+    const prefillImage = searchParams.get("prefill_image");
+    const prefillLink = searchParams.get("prefill_link");
+    const prefillTitle = searchParams.get("prefill_title");
+    if (prefillImage || prefillLink || prefillTitle) {
+      setForm({
+        ...INITIAL_FORM,
+        image_url: prefillImage || "",
+        link_url: prefillLink || "",
+        title: prefillTitle || "",
+        link_type: "external",
+      });
+      setDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch active brand_sections with template info
   const { data: sections } = useQuery({
