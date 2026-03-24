@@ -13,8 +13,13 @@ interface ModuleGuardProps {
 export default function ModuleGuard({ moduleKey, children }: ModuleGuardProps) {
   const { isModuleEnabled, isLoading } = useBrandModules();
 
-  // While loading, render nothing to avoid flash
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-[200px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   if (!isModuleEnabled(moduleKey)) {
     return <Navigate to="/" replace />;
