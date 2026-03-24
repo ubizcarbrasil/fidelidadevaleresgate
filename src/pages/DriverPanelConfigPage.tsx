@@ -122,7 +122,33 @@ export default function DriverPanelConfigPage() {
   };
 
   const getRows = (catId: string) => categoryLayout[catId]?.rows ?? 1;
-  const getOrder = (catId: string, fallback: number) => categoryLayout[catId]?.order ?? fallback;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => {
+      const oa = categoryLayout[a.id]?.order ?? a.order_index;
+      const ob = categoryLayout[b.id]?.order ?? b.order_index;
+      return oa - ob;
+    });
+  }, [categories, categoryLayout]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = sortedCategories.findIndex(c => c.id === active.id);
+    const newIndex = sortedCategories.findIndex(c => c.id === over.id);
+    const reordered = arrayMove(sortedCategories, oldIndex, newIndex);
+    const updatedLayout = { ...categoryLayout };
+    reordered.forEach((cat, index) => {
+      updatedLayout[cat.id] = { ...(updatedLayout[cat.id] || { rows: 1 }), order: index };
+    });
+    settingsMutation.mutate({ driver_category_layout: updatedLayout });
+  };
 
   // Banner management
   const addBanner = () => {
