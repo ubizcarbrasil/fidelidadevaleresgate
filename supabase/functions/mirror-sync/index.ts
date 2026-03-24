@@ -10,7 +10,7 @@ const corsHeaders = {
 
 function cleanPrice(raw: string | null | undefined): number | null {
   if (!raw) return null;
-  const cleaned = raw.replace(/[^\d,\.]/g, "").replace(",", ".");
+  const cleaned = raw.replace(/[^\d,\.]/g, "").replace(/\./g, "").replace(",", ".");
   const val = parseFloat(cleaned);
   return isNaN(val) ? null : val;
 }
