@@ -127,96 +127,6 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
   return deals;
 }
 
-// ---------- product detail page parser ----------
-
-function parseProductPage(html: string, url: string): ParsedDeal | null {
-  try {
-    const slug = extractSlug(url);
-
-    // Extract title from og:title or <title> or <h1>
-    let title = "";
-    const ogTitleMatch = html.match(/property="og:title"\s+content="([^"]+)"/i) ||
-                         html.match(/content="([^"]+)"\s+property="og:title"/i);
-    if (ogTitleMatch) {
-      title = ogTitleMatch[1];
-    } else {
-      const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      if (h1Match) title = h1Match[1].trim();
-      else {
-        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (titleMatch) title = titleMatch[1].trim();
-      }
-    }
-
-    // Extract image from og:image or first large img
-    let imageUrl: string | null = null;
-    const ogImgMatch = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
-                       html.match(/content="([^"]+)"\s+property="og:image"/i);
-    if (ogImgMatch) {
-      imageUrl = ogImgMatch[1];
-    } else {
-      const imgMatch = html.match(/<img[^>]*src="(https?:\/\/[^"]+(?:\.jpg|\.jpeg|\.png|\.webp)[^"]*)"/i);
-      if (imgMatch) imageUrl = imgMatch[1];
-    }
-
-    // Extract prices
-    const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
-    let priceMatch;
-    const rawPrices: number[] = [];
-    while ((priceMatch = priceRegex.exec(html)) !== null) {
-      const val = cleanPrice(priceMatch[1]);
-      if (val !== null && val > 0 && val < 100000) rawPrices.push(val);
-    }
-
-    // Deduplicate prices
-    const uniquePrices = [...new Set(rawPrices)].sort((a, b) => a - b);
-
-    let price: number | null = null;
-    let originalPrice: number | null = null;
-
-    if (uniquePrices.length >= 2) {
-      price = uniquePrices[0];
-      originalPrice = uniquePrices[uniquePrices.length - 1];
-      if (price === originalPrice) originalPrice = null;
-    } else if (uniquePrices.length === 1) {
-      price = uniquePrices[0];
-    }
-
-    // Extract discount badge
-    const discountMatch = html.match(/-(\d+)%/);
-    const badgeLabel = discountMatch ? `-${discountMatch[1]}%` : null;
-
-    // Extract store name from /lojas/XXX or og:site_name
-    let storeName: string | null = null;
-    const storeMatch = html.match(/\/lojas\/([^"\/\s?]+)/i);
-    if (storeMatch) {
-      storeName = decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-    } else {
-      const siteNameMatch = html.match(/property="og:site_name"\s+content="([^"]+)"/i);
-      if (siteNameMatch) storeName = siteNameMatch[1];
-    }
-
-    if (!title && !price && !imageUrl) return null;
-    if (!title) title = "Oferta sem título";
-
-    return {
-      title,
-      price,
-      original_price: originalPrice,
-      image_url: imageUrl,
-      affiliate_url: url,
-      badge_label: badgeLabel,
-      origin_external_id: slug,
-      origin_url: url,
-      raw_html: "",
-      store_name: storeName,
-    };
-  } catch (e) {
-    console.error("Error parsing product page:", e);
-    return null;
-  }
-}
-
 // ---------- main handler ----------
 
 Deno.serve(async (req) => {
@@ -326,10 +236,12 @@ Deno.serve(async (req) => {
       const allParsedDeals: ParsedDeal[] = [];
       const seenSlugs = new Set<string>();
 
-      // ========== PHASE 1: Scrape listing pages ==========
-      for (const url of urls) {
+      // ========== Scrape ALL listing pages in PARALLEL ==========
+      console.log(`Scraping ${urls.length} pages in parallel...`);
+
+      const scrapePromises = urls.map(async (url) => {
         try {
-          console.log(`Scraping listing: ${url}`);
+          console.log(`Starting scrape: ${url}`);
           const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
             method: "POST",
             headers: {
@@ -353,10 +265,6 @@ Deno.serve(async (req) => {
                 { type: "wait", milliseconds: 2000 },
                 { type: "scroll", direction: "down" },
                 { type: "wait", milliseconds: 2000 },
-                { type: "scroll", direction: "down" },
-                { type: "wait", milliseconds: 2000 },
-                { type: "scroll", direction: "down" },
-                { type: "wait", milliseconds: 2000 },
               ],
             }),
           });
@@ -365,131 +273,45 @@ Deno.serve(async (req) => {
 
           if (!scrapeResponse.ok) {
             console.error(`Firecrawl error for ${url}:`, JSON.stringify(scrapeData));
-            errorDetails.push({ phase: "scrape", url, error: scrapeData?.error || `HTTP ${scrapeResponse.status}` });
-            continue;
+            return { url, error: scrapeData?.error || `HTTP ${scrapeResponse.status}`, deals: [] };
           }
 
           const html = scrapeData?.data?.html || scrapeData?.html || "";
           if (!html) {
             console.warn(`No HTML returned for ${url}`);
-            continue;
+            return { url, deals: [] };
           }
 
           console.log(`HTML length for ${url}: ${html.length}`);
           const pageParsed = parseDealsFromHtml(html, baseUrl);
           console.log(`Parsed ${pageParsed.length} deals from ${url}`);
 
-          for (const deal of pageParsed) {
-            const dedupeKey = deal.origin_external_id || deal.affiliate_url;
-            if (!seenSlugs.has(dedupeKey)) {
-              seenSlugs.add(dedupeKey);
-              allParsedDeals.push(deal);
-            }
-          }
+          return { url, deals: pageParsed };
         } catch (urlError: any) {
           console.error(`Error scraping ${url}:`, urlError);
-          errorDetails.push({ phase: "scrape", url, error: urlError.message });
+          return { url, error: urlError.message, deals: [] };
         }
-      }
-
-      console.log(`Phase 1 (listings): ${allParsedDeals.length} unique deals from ${urls.length} pages`);
-
-      // ========== PHASE 2: Map API discovery ==========
-      let mapDiscoveredUrls: string[] = [];
-      try {
-        console.log(`Phase 2: Map API discovery for ${originUrl}`);
-        const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${firecrawlKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            url: originUrl,
-            search: "ubizresgata/p/",
-            limit: 500,
-            includeSubdomains: false,
-          }),
-        });
-
-        const mapData = await mapResponse.json();
-
-        if (mapResponse.ok) {
-          mapDiscoveredUrls = (mapData?.links || []).filter((link: string) =>
-            link.includes("/ubizresgata/p/") || link.includes("/p/")
-          );
-          console.log(`Map API discovered ${mapDiscoveredUrls.length} product URLs`);
-        } else {
-          console.error("Map API error:", JSON.stringify(mapData));
-          errorDetails.push({ phase: "map", error: mapData?.error || `HTTP ${mapResponse.status}` });
-        }
-      } catch (mapError: any) {
-        console.error("Map API error:", mapError);
-        errorDetails.push({ phase: "map", error: mapError.message });
-      }
-
-      // ========== PHASE 3: Scrape individual product pages for new slugs ==========
-      // Find slugs discovered by Map that we don't already have from listings
-      const newProductUrls = mapDiscoveredUrls.filter(url => {
-        const slug = extractSlug(url);
-        return slug && !seenSlugs.has(slug);
       });
 
-      console.log(`Phase 3: ${newProductUrls.length} new product URLs to scrape individually`);
+      const scrapeResults = await Promise.all(scrapePromises);
 
-      // Batch individual scrapes (limit concurrency to avoid rate limits)
-      const BATCH_SIZE = 5;
-      for (let i = 0; i < newProductUrls.length; i += BATCH_SIZE) {
-        const batch = newProductUrls.slice(i, i + BATCH_SIZE);
-        const batchResults = await Promise.allSettled(
-          batch.map(async (productUrl) => {
-            try {
-              const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${firecrawlKey}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  url: productUrl,
-                  formats: ["html"],
-                  waitFor: 2000,
-                  onlyMainContent: false,
-                }),
-              });
-
-              const scrapeData = await scrapeResp.json();
-              if (!scrapeResp.ok) {
-                console.error(`Product scrape error for ${productUrl}`);
-                return null;
-              }
-
-              const html = scrapeData?.data?.html || scrapeData?.html || "";
-              if (!html) return null;
-
-              return parseProductPage(html, productUrl);
-            } catch (e: any) {
-              console.error(`Error scraping product ${productUrl}:`, e);
-              return null;
-            }
-          })
-        );
-
-        for (const result of batchResults) {
-          if (result.status === "fulfilled" && result.value) {
-            const deal = result.value;
-            const dedupeKey = deal.origin_external_id || deal.affiliate_url;
-            if (!seenSlugs.has(dedupeKey)) {
-              seenSlugs.add(dedupeKey);
-              allParsedDeals.push(deal);
-            }
+      // Collect all deals with deduplication
+      for (const result of scrapeResults) {
+        if (result.error) {
+          errorDetails.push({ phase: "scrape", url: result.url, error: result.error });
+        }
+        for (const deal of result.deals) {
+          const dedupeKey = deal.origin_external_id || deal.affiliate_url;
+          if (!seenSlugs.has(dedupeKey)) {
+            seenSlugs.add(dedupeKey);
+            allParsedDeals.push(deal);
           }
         }
       }
 
       const parsedDeals = allParsedDeals;
       totalRead = parsedDeals.length;
-      console.log(`Total unique deals (listings + map): ${totalRead}`);
+      console.log(`Total unique deals: ${totalRead} from ${urls.length} pages`);
 
       // Load existing for deduplication
       const { data: existingDeals } = await supabase
