@@ -17,7 +17,7 @@ export default function MirrorSyncPage() {
   if (!currentBrandId) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Espelhamento de Ofertas"
         description="Importação automática de ofertas do Divulgador Inteligente para o Achadinhos"
@@ -26,10 +26,10 @@ export default function MirrorSyncPage() {
       <MirrorSyncKpis brandId={currentBrandId} refreshKey={refreshKey} onSyncDone={onSyncDone} />
 
       <Tabs defaultValue="deals" className="w-full">
-        <TabsList>
-          <TabsTrigger value="deals">Ofertas Importadas</TabsTrigger>
+        <TabsList className="w-full overflow-x-auto scrollbar-hide justify-start">
+          <TabsTrigger value="deals">Ofertas</TabsTrigger>
           <TabsTrigger value="logs">Histórico</TabsTrigger>
-          <TabsTrigger value="config">Configurações</TabsTrigger>
+          <TabsTrigger value="config">Config</TabsTrigger>
           <TabsTrigger value="debug">Debug</TabsTrigger>
         </TabsList>
 

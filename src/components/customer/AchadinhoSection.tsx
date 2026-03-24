@@ -41,6 +41,71 @@ function LucideIcon({ name, className, style }: { name: string; className?: stri
   return <Icon className={className} style={style} />;
 }
 
+interface DealCardProps {
+  deal: AffiliateDeal;
+  highlight: string;
+  primary: string;
+  fontHeading: string;
+  onClick: (deal: AffiliateDeal) => void;
+  formatPrice: (val: number | null | undefined) => string | null;
+  isCarousel?: boolean;
+}
+
+function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice, isCarousel }: DealCardProps) {
+  const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
+    : 0;
+  const priceStr = formatPrice(deal.price);
+  const originalPriceStr = formatPrice(deal.original_price);
+  const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
+
+  return (
+    <div
+      className={`rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform ${isCarousel ? "min-w-[160px] max-w-[180px] flex-shrink-0" : ""}`}
+      style={{
+        boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
+        ...(isCarousel ? { scrollSnapAlign: "start" } : {}),
+      }}
+      onClick={() => onClick(deal)}
+    >
+      <div className="relative bg-muted/30">
+        {deal.image_url ? (
+          <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
+        ) : (
+          <div className="w-full aspect-square flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
+            <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+          </div>
+        )}
+        {badgeText && (
+          <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm" style={{ backgroundColor: highlight }}>
+            {badgeText}
+          </div>
+        )}
+        <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center overflow-hidden">
+          {deal.store_logo_url ? (
+            <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
+          ) : (
+            <ExternalLink className="h-3 w-3 text-muted-foreground" />
+          )}
+        </div>
+      </div>
+      <div className="p-3">
+        {deal.store_name && (
+          <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
+        )}
+        <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
+        {(priceStr || originalPriceStr) && (
+          <div className="flex items-baseline gap-1.5">
+            {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
+            {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface AchadinhoSectionProps {
   onOpenAllCategories?: () => void;
 }
@@ -97,7 +162,10 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const filteredDeals = useMemo(() => {
     if (!selectedCat) return deals;
-    return deals.filter(d => d.category_id === selectedCat);
+    const catDeals = deals.filter(d => d.category_id === selectedCat);
+    // Se categoria tem menos de 6 ofertas, limitar a 3 (1 linha visual)
+    if (catDeals.length < 6) return catDeals.slice(0, 3);
+    return catDeals;
   }, [deals, selectedCat]);
 
   const handleClick = (deal: AffiliateDeal) => {
@@ -233,84 +301,29 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         </div>
       )}
 
-      {/* Deals carousel */}
-      <div
-        ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
-        style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
-      >
-        {filteredDeals.map((deal) => {
-          const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
-          const discountPercent = hasDiscount
-            ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
-            : 0;
-          const priceStr = formatPrice(deal.price);
-          const originalPriceStr = formatPrice(deal.original_price);
-          const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
-
-          return (
-            <div
-              key={deal.id}
-              className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform"
-              style={{
-                boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)",
-                scrollSnapAlign: "start",
-              }}
-              onClick={() => handleClick(deal)}
-            >
-              <div className="relative bg-muted/30">
-                {deal.image_url ? (
-                  <img
-                    src={deal.image_url}
-                    alt={deal.title}
-                    className="w-full aspect-square object-contain"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full aspect-square flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
-                    <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
-                  </div>
-                )}
-
-                {badgeText && (
-                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm" style={{ backgroundColor: highlight }}>
-                    {badgeText}
-                  </div>
-                )}
-
-                <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur flex items-center justify-center overflow-hidden">
-                  {deal.store_logo_url ? (
-                    <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
-                  ) : (
-                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-
-              <div className="p-3">
-                {deal.store_name && (
-                  <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
-                )}
-                <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
-                {(priceStr || originalPriceStr) && (
-                  <div className="flex items-baseline gap-1.5">
-                    {priceStr && (
-                      <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>
-                    )}
-                    {hasDiscount && originalPriceStr && (
-                      <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        <div className="min-w-[16px] flex-shrink-0" />
-      </div>
+      {/* Deals — grid vertical quando categoria selecionada, carrossel horizontal para "Todos" */}
+      {selectedCat ? (
+        <div className="grid grid-cols-2 gap-3 px-5 pb-1 animate-fade-in">
+          {filteredDeals.map((deal) => (
+            <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} />
+          ))}
+        </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
+          style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+        >
+          {filteredDeals.map((deal) => (
+            <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+          ))}
+          <div className="min-w-[16px] flex-shrink-0" />
+        </div>
+      )}
 
       {selectedDeal && (
         <AchadinhoDealDetail
+
           deal={selectedDeal}
           brandId={brand!.id}
           branchId={selectedBranch?.id}
