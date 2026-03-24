@@ -193,6 +193,13 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
           onCreateBanner={handleCreateBanner}
         />
       )}
+
+      <AiBannerDialog
+        open={!!bannerDeal}
+        onOpenChange={(open) => !open && setBannerDeal(null)}
+        deal={bannerDeal}
+        brandId={brandId}
+      />
     </div>
   );
 }
