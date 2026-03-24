@@ -2,42 +2,69 @@
 
 ## Problema
 
-O scraper atual faz apenas 1 request para a URL principal (`/ubizresgata`), que mostra ~23 ofertas. O site tem 194 ofertas distribuídas por sub-páginas de lojas (Amazon, Shopee, Mercado Livre, Magalu). A coluna `extra_pages` já existe na tabela `mirror_sync_config` mas não é usada.
+O site usa **scroll infinito** — cada página só renderiza ~20 ofertas inicialmente. O Firecrawl com `waitFor: 3000` captura apenas o primeiro lote visível. Com 6 URLs estamos pegando ~77 ofertas únicas das ~194 disponíveis.
 
-## Plano
+## Solução
 
-### 1. Edge Function — scrape multi-página
+Usar a **Firecrawl Map API** antes do scrape. O Map descobre todas as URLs do site sem precisar renderizar JavaScript — ele analisa o sitemap e links internos. Com isso, encontramos todos os links `/ubizresgata/p/SLUG` e depois fazemos scrape individual de cada produto, ou fazemos scrape apenas das páginas de listagem com scroll simulado mais longo.
+
+**Abordagem escolhida**: Map API para descobrir todas as URLs de produto → para cada URL descoberta, extrair o slug → para os slugs novos (não existentes no BD), fazer scrape individual da página do produto para pegar título, preço, imagem, loja.
+
+### Alterações
 
 **Arquivo**: `supabase/functions/mirror-sync/index.ts`
 
-Após carregar o config, construir lista de URLs e iterar sobre cada uma:
+#### Passo 1 — Fase de descoberta com Map API
+Antes do loop de scrape, chamar o Firecrawl Map para descobrir todas as URLs:
 
 ```typescript
-const extraPages = config?.extra_pages || [];
-const defaultPages = [
-  "/promocoes-do-dia",
-  "/lojas/shopee",
-  "/lojas/mercadolivre", 
-  "/lojas/amazon",
-  "/lojas/magalu",
-];
-const pagePaths = extraPages.length > 0 ? extraPages : defaultPages;
-const urls = [originUrl, ...pagePaths.map(p => 
-  p.startsWith("http") ? p : `${originUrl}${p}`
-)];
+// Discover all product URLs via Map API
+const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${firecrawlKey}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    url: originUrl,
+    search: "ubizresgata/p/",
+    limit: 500,
+    includeSubdomains: false,
+  }),
+});
+const mapData = await mapResponse.json();
+const allProductUrls: string[] = mapData?.links || [];
 ```
 
-Mover o bloco de scrape+parse para um `for (const url of urls)` loop. Acumular todos os `parsedDeals` num array antes de processar inserts/updates. A deduplicação por slug já previne duplicatas entre páginas.
+#### Passo 2 — Processar URLs descobertas
+Para cada URL de produto descoberta pelo Map:
+- Extrair o slug
+- Verificar se já existe no BD (por slug)
+- Se não existe, fazer scrape individual da página do produto
 
-### 2. UI de configuração — campo de URLs extras
+```typescript
+for (const productUrl of newProductUrls) {
+  // Scrape individual product page
+  const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    body: JSON.stringify({ url: productUrl, formats: ["html"], waitFor: 2000 }),
+    ...
+  });
+  // Parse title, price, image from product detail page
+}
+```
 
-**Arquivo**: `src/components/mirror-sync/MirrorSyncConfig.tsx`
+#### Passo 3 — Manter scrape de listagem como fallback
+Manter o loop atual de scrape de páginas de listagem para pegar os dados iniciais rapidamente. O Map + scrape individual complementa com as ofertas que o scroll infinito esconde.
 
-Adicionar um `Textarea` para editar `extra_pages` (uma URL/path por linha). Valor default pré-populado com as sub-páginas padrão. Incluir no estado do form e no save.
+#### Passo 4 — Parser para página individual de produto
+Adicionar uma função `parseProductPage(html, url)` que extrai dados de uma página de detalhe de produto (layout diferente da listagem).
 
-### 3. Redeploy da Edge Function
+### Resultado esperado
 
----
+- Map API descobre ~194 URLs de produto (1 credit)
+- Scrape das páginas de listagem pega ~77 ofertas com dados completos
+- Scrape individual apenas dos ~117 produtos restantes (novos)
+- Total: ~194 ofertas importadas
 
-**2 arquivos alterados** + redeploy. Resultado esperado: de ~23 para ~194 ofertas.
+**1 arquivo alterado** (`supabase/functions/mirror-sync/index.ts`) + redeploy.
 
