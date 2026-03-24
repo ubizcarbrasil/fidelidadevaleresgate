@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Link2, FileSpreadsheet, X, Check, Loader2, Download, Upload, Sparkles, Camera, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Link2, FileSpreadsheet, X, Check, Loader2, Download, Upload, Sparkles, Camera, AlertTriangle, Tag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { sugerirCategoria, type CategoriaAchadinho } from "@/lib/categorizadorAchadinhos";
 
 type Step = "method" | "links" | "csv" | "photo" | "photo-links" | "review" | "success";
 
@@ -55,6 +57,36 @@ export default function AchadinhosMobileImportPage() {
   const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [flowSource, setFlowSource] = useState<"links" | "csv" | "photo">("links");
   const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
+
+  // ── Fetch categories for auto-suggestion ──
+  const { data: categoriasRaw } = useQuery({
+    queryKey: ["affiliate-categories", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return [];
+      const { data } = await supabase
+        .from("affiliate_deal_categories")
+        .select("id, name, keywords")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .order("order_index");
+      return (data || []) as CategoriaAchadinho[];
+    },
+    enabled: !!currentBrandId,
+  });
+  const categorias = useMemo(() => categoriasRaw || [], [categoriasRaw]);
+
+  // ── Auto-categorize products when entering review ──
+  const autoCategorizar = useCallback((items: ProductItem[]) => {
+    if (categorias.length === 0) return items;
+    return items.map(p => {
+      if (p.category_id) return p; // already has category (from scrape)
+      const sugestao = sugerirCategoria(p.title, p.description, null, p.store_name, categorias);
+      if (sugestao) {
+        return { ...p, category_id: sugestao.id, category_name: sugestao.name };
+      }
+      return p;
+    });
+  }, [categorias]);
 
   const updateProduct = useCallback((id: string, field: keyof ProductItem, value: string | number | null) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
@@ -157,7 +189,7 @@ export default function AchadinhosMobileImportPage() {
       });
     }
 
-    setProducts(result);
+    setProducts(autoCategorizar(result));
 
     // Scrape links to enrich with images & categories
     const itemsWithLinks = result.filter(p => p.affiliate_url && p.affiliate_url.length > 5);
@@ -198,7 +230,7 @@ export default function AchadinhosMobileImportPage() {
         });
 
         setScrapeProgress({ done: Math.min(i + batch.length, itemsWithLinks.length), total: itemsWithLinks.length });
-        setProducts([...enriched]);
+        setProducts(autoCategorizar([...enriched]));
       }
 
       setIsScraping(false);
@@ -314,7 +346,7 @@ export default function AchadinhosMobileImportPage() {
       setScrapeProgress({ done: Math.min(i + batch.length, urls.length), total: urls.length });
     }
 
-    setProducts(results);
+    setProducts(autoCategorizar(results));
     setIsScraping(false);
     if (results.length === 0) {
       toast.error("Nenhum produto encontrado nos links.");
@@ -352,7 +384,7 @@ export default function AchadinhosMobileImportPage() {
           category_name: null,
         });
       }
-      setProducts(items);
+      setProducts(autoCategorizar(items));
       toast.success(`${items.length} produto(s) carregado(s) do CSV.`);
       setStep("review");
     };
@@ -660,6 +692,15 @@ export default function AchadinhosMobileImportPage() {
                           )}
                           {p._no_match && <Badge variant="outline" className="text-amber-600 border-amber-400 text-[10px]">Sem correspondência</Badge>}
                           {p._no_link && <Badge variant="outline" className="text-amber-600 border-amber-400 text-[10px]">Sem link</Badge>}
+                          {p.category_name && (
+                            <Badge variant="secondary" className="text-[10px] gap-0.5">
+                              <Tag className="h-2.5 w-2.5" />
+                              {p.category_name}
+                            </Badge>
+                          )}
+                          {!p.category_id && !p._no_match && (
+                            <Badge variant="outline" className="text-muted-foreground text-[10px]">Sem categoria</Badge>
+                          )}
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" className="shrink-0 self-start" onClick={(e) => { e.stopPropagation(); removeProduct(p.id); }}>
@@ -712,6 +753,30 @@ export default function AchadinhosMobileImportPage() {
                             <label className="text-xs text-muted-foreground">Preço original</label>
                             <Input type="number" step="0.01" value={p.original_price ?? ""} onChange={e => updateProduct(p.id, "original_price", e.target.value ? parseFloat(e.target.value) : null)} />
                           </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Categoria</label>
+                          <Select
+                            value={p.category_id || "none"}
+                            onValueChange={(val) => {
+                              const cat = categorias.find(c => c.id === val);
+                              setProducts(prev => prev.map(item =>
+                                item.id === p.id
+                                  ? { ...item, category_id: val === "none" ? null : val, category_name: cat?.name || null }
+                                  : item
+                              ));
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecionar categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sem categoria</SelectItem>
+                              {categorias.map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <label className="text-xs text-muted-foreground">Link de afiliado</label>
