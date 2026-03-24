@@ -160,16 +160,37 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
   const deals = data?.deals || [];
   const rawCategories = data?.categories || [];
 
-  // Apply admin-configured category order from brand_settings_json
+  const MIN_DEALS = 3;
+  const MIN_PER_ROW = 3;
+
   const categoryLayout: Record<string, { rows?: number; order?: number }> = (brand as any)?.brand_settings_json?.driver_category_layout || {};
-  const categories = useMemo(() => [...rawCategories].sort((a, b) => {
-    const oa = categoryLayout[a.id]?.order;
-    const ob = categoryLayout[b.id]?.order;
-    if (oa != null && ob != null) return oa - ob;
-    if (oa != null) return -1;
-    if (ob != null) return 1;
-    return 0;
-  }), [rawCategories, categoryLayout]);
+
+  const { viableCategories, overflowDealIds } = useMemo(() => {
+    const countMap = new Map<string, number>();
+    deals.forEach(d => { if (d.category_id) countMap.set(d.category_id, (countMap.get(d.category_id) || 0) + 1); });
+
+    const overflow = new Set<string>();
+    const viable = rawCategories.filter(cat => {
+      const count = countMap.get(cat.id) || 0;
+      if (count < MIN_DEALS) {
+        deals.filter(d => d.category_id === cat.id).forEach(d => overflow.add(d.id));
+        return false;
+      }
+      return true;
+    });
+
+    viable.sort((a, b) => {
+      const oa = categoryLayout[a.id]?.order;
+      const ob = categoryLayout[b.id]?.order;
+      const hasA = oa != null, hasB = ob != null;
+      if (hasA && hasB) return oa! - ob!;
+      if (hasA) return -1;
+      if (hasB) return 1;
+      return (countMap.get(b.id) || 0) - (countMap.get(a.id) || 0);
+    });
+
+    return { viableCategories: viable, overflowDealIds: overflow };
+  }, [rawCategories, deals, categoryLayout]);
 
 
   const handleClick = (deal: AffiliateDeal) => {
@@ -229,7 +250,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
             </p>
           </div>
         </div>
-        {categories.length > 0 && onOpenAllCategories && (
+        {viableCategories.length > 0 && onOpenAllCategories && (
           <button
             onClick={onOpenAllCategories}
             className="text-xs font-semibold flex items-center gap-0.5"
@@ -242,7 +263,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       </div>
 
       {/* Category pills */}
-      {categories.length > 0 && (
+      {viableCategories.length > 0 && (
         <div ref={catScrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-3">
           <button
             onClick={() => setSelectedCat(null)}
@@ -262,7 +283,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
             </span>
           </button>
 
-          {categories.map(cat => {
+          {viableCategories.map(cat => {
             const isActive = selectedCat === cat.id;
             return (
               <button
@@ -307,11 +328,11 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
       {/* Deals — carrossel horizontal por categoria */}
       <div className="space-y-5 animate-fade-in">
-        {(selectedCat ? categories.filter(c => c.id === selectedCat) : categories).map(cat => {
+        {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
           const catDeals = deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
           const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
-          const effectiveRows = Math.min(configuredRows, catDeals.length);
+          const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(catDeals.length / MIN_PER_ROW)));
           const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
           const visibleDeals = catDeals.slice(0, visibleCount);
           return (
@@ -358,7 +379,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         })}
         {/* Uncategorized deals */}
         {!selectedCat && (() => {
-          const uncatDeals = deals.filter(d => !d.category_id || !categories.some(c => c.id === d.category_id));
+          const uncatDeals = deals.filter(d => overflowDealIds.has(d.id) || !d.category_id || !viableCategories.some(c => c.id === d.category_id));
           if (!uncatDeals.length) return null;
           return (
             <div>
