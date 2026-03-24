@@ -39,6 +39,10 @@ export default function MirrorSyncPage() {
           <MirrorSyncDealsTable brandId={currentBrandId} refreshKey={refreshKey} />
         </TabsContent>
 
+        <TabsContent value="categorias">
+          <MirrorSyncCategoryDiag brandId={currentBrandId} refreshKey={refreshKey} />
+        </TabsContent>
+
         <TabsContent value="logs">
           <MirrorSyncLogs brandId={currentBrandId} refreshKey={refreshKey} />
         </TabsContent>
