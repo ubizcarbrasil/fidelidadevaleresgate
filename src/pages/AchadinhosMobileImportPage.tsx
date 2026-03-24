@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Link2, FileSpreadsheet, X, Check, Loader2, Download, Upload, Sparkles, Camera, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Link2, FileSpreadsheet, X, Check, Loader2, Download, Upload, Sparkles, Camera, AlertTriangle, Tag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { sugerirCategoria, type CategoriaAchadinho } from "@/lib/categorizadorAchadinhos";
 
 type Step = "method" | "links" | "csv" | "photo" | "photo-links" | "review" | "success";
 
