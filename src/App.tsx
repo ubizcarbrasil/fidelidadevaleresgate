@@ -220,7 +220,7 @@ function AppRoutes() {
           <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
           <Route path="api-docs" element={<ModuleGuard moduleKey="api_keys"><ApiDocsPage /></ModuleGuard>} />
           <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="partner-landing-config" element={<PartnerLandingConfigPage />} />
+          <Route path="partner-landing-config" element={<ModuleGuard moduleKey="partner_landing"><PartnerLandingConfigPage /></ModuleGuard>} />
           <Route path="access-hub" element={<AccessHubPage />} />
           <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
           <Route path="sponsored-placements" element={<RootGuard><SponsoredPlacementsPage /></RootGuard>} />
