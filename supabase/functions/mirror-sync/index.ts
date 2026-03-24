@@ -62,7 +62,7 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
     try {
       const href = cardMatch[1];
       const cardHtml = cardMatch[2];
-      const fullUrl = `${baseUrl}${href}`;
+      const fullUrl = href.startsWith("http") ? href : `${baseUrl}${href}`;
       const slug = extractSlug(href);
 
       // Extract image
