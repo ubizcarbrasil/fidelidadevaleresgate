@@ -171,10 +171,6 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     return 0;
   }), [rawCategories, categoryLayout]);
 
-  const filteredDeals = useMemo(() => {
-    if (!selectedCat) return deals;
-    return deals.filter(d => d.category_id === selectedCat);
-  }, [deals, selectedCat]);
 
   const handleClick = (deal: AffiliateDeal) => {
     setSelectedDeal(deal);
