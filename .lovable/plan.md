@@ -1,83 +1,74 @@
 
-Objetivo corrigido: a vitrine principal de Achadinhos não deve “abrir tudo para baixo”. Ela deve continuar com categorias empilhadas verticalmente, mas cada categoria precisa ter sua própria linha com rolagem horizontal para ver mais produtos sem depender de “Ver todos”.
 
-### Causa do problema
-Nas últimas alterações, a listagem principal foi convertida para grid:
-- `src/components/customer/AchadinhoSection.tsx` usa grid na home (`grid grid-cols-2`) e ainda troca para uma view vertical completa quando a categoria é selecionada.
-- `src/components/driver/DriverMarketplace.tsx` usa grid (`grid grid-cols-3`) dentro de cada categoria.
+## Aplicar ordem do admin e regra de linhas com scroll horizontal multi-row
 
-Isso contraria o padrão que você descreveu: navegar lateralmente dentro de cada linha da categoria.
+### Problema atual
+1. As categorias no scroll horizontal mostram TODOS os deals em uma única linha — ignorando a configuração "Linhas" do admin.
+2. A ordem das categorias precisa seguir exatamente o campo `order` do `driver_category_layout` (Casa=0, Eletrônicos=1, Ofertas Variadas=1, Moda=3, etc).
 
-### O que vou ajustar
+### Solução: Grid horizontal multi-row
 
-#### 1) Restaurar o comportamento horizontal por categoria na home do cliente
-**Arquivo:** `src/components/customer/AchadinhoSection.tsx`
+Usar `CSS Grid` com `grid-auto-flow: column` para criar múltiplas linhas que rolam horizontalmente juntas. Isso respeita tanto o scroll lateral quanto o número de linhas configurado.
 
-- Remover a lógica que troca a home para grid vertical quando `selectedCat` é escolhido.
-- Manter a home sempre agrupada por categoria.
-- Trocar cada bloco de ofertas da categoria para um carrossel horizontal:
-  - container com `flex gap-3 overflow-x-auto scrollbar-hide`
-  - `scrollSnapType: "x mandatory"`
-  - `touchAction: "pan-x pan-y"`
-- Reusar os cards em modo carrossel (`isCarousel`) para os itens ficarem em sequência lateral.
-- O clique na pill da categoria deixará de “abrir tudo para baixo”:
-  - vai apenas destacar a categoria e rolar até a seção correspondente, ou filtrar visualmente só a seção sem mudar o layout para grid vertical.
-- O botão **“Ver todos”** continua existindo para abrir a página completa da categoria.
+```text
+Linhas=1:  [card][card][card][card] →  (scroll horizontal, 1 linha)
 
-#### 2) Restaurar o comportamento horizontal por categoria no painel do motorista
-**Arquivo:** `src/components/driver/DriverMarketplace.tsx`
+Linhas=2:  [card][card][card][card] →
+           [card][card][card][card] →  (scroll horizontal, 2 linhas)
 
-- Substituir o grid atual de cada categoria (`grid grid-cols-3`) por uma linha horizontal com scroll lateral.
-- Usar `DriverDealCard` em vez de `DriverDealCardGrid` nas seções da home.
-- Remover o corte visual baseado em linhas cheias na home principal, porque agora o usuário verá todos os deals deslizando para o lado.
-- Manter a página “Ver todos” como visão completa da categoria.
+Linhas=3:  [card][card][card] →
+           [card][card][card] →
+           [card][card][card] →        (scroll horizontal, 3 linhas)
+```
 
-#### 3) Preservar a ordem correta definida no admin
-**Arquivos:**  
-- `src/components/customer/AchadinhoSection.tsx`
-- `src/components/driver/DriverMarketplace.tsx`
+### Regra de itens mínimos
+Para evitar colunas incompletas (a última coluna com menos itens que as outras):
+- `ITEMS_PER_COLUMN = configuredRows` (ex: 2 linhas = 2 itens por coluna)
+- `visibleCount = Math.floor(totalDeals / rows) * rows`
+- Se `totalDeals < rows`, exibe `totalDeals` (mínimo 1 linha)
 
-A ordenação por `brand_settings_json.driver_category_layout.order` já existe e será mantida. A correção aqui é não quebrar isso ao refatorar a renderização.
+### Alterações
 
-#### 4) Garantir gesto mobile correto
-**Arquivos afetados pelos containers horizontais**
-- adicionar `touchAction: "pan-x pan-y"` onde houver rolagem lateral:
-  - pills de categorias
-  - linhas horizontais de deals
-  - blocos “Outras ofertas”
+#### 1. `src/components/driver/DriverMarketplace.tsx` (linhas 421-429)
+Substituir o `flex` simples por grid multi-row:
+```typescript
+const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+const effectiveRows = Math.min(configuredRows, allCatDeals.length);
+const visibleCount = Math.floor(allCatDeals.length / effectiveRows) * effectiveRows || allCatDeals.length;
+const visibleDeals = allCatDeals.slice(0, visibleCount);
 
-Isso é importante para permitir:
-- rolar horizontalmente a linha da categoria
-- continuar conseguindo subir/descer a página quando o toque começa em cima do card
+// Container:
+<div
+  className="overflow-x-auto scrollbar-hide px-5 pb-1"
+  style={{
+    display: "grid",
+    gridTemplateRows: `repeat(${effectiveRows}, auto)`,
+    gridAutoFlow: "column",
+    gridAutoColumns: "minmax(160px, 180px)",
+    gap: "12px",
+    scrollSnapType: "x mandatory",
+    touchAction: "pan-x pan-y",
+  }}
+>
+```
 
-### O que não vou mudar
-- Não vou alterar a categorização dos produtos.
-- Não vou mexer na página completa da categoria (`Ver todos`), porque ela continua útil como visão detalhada.
-- Não há necessidade de mudança no banco.
+#### 2. `src/components/customer/AchadinhoSection.tsx` (linhas 334-342)
+Mesma lógica aplicada à view do cliente, usando `categoryLayout` para determinar linhas:
+```typescript
+const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+const effectiveRows = Math.min(configuredRows, catDeals.length);
+const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
+const visibleDeals = catDeals.slice(0, visibleCount);
+```
+
+#### 3. Ordem (já funciona, verificação)
+A ordenação por `categoryLayout[id].order` já existe em ambos os arquivos (linhas 184-191 do Driver, 165-172 do Customer). Verificar que os valores do admin (Casa=0, Eletrônicos=1, Ofertas Variadas=1, Moda=3) são refletidos corretamente — se duas categorias têm o mesmo `order`, desempatar pelo `order_index` do banco.
 
 ### Resultado esperado
-Na tela principal:
-- cada categoria aparece uma abaixo da outra;
-- cada categoria tem **uma linha horizontal própria**;
-- o usuário arrasta **para o lado** para ver mais ofertas daquela categoria;
-- a home não fica gigante com todos os produtos abertos;
-- a ordem das categorias continua seguindo o admin.
+- Casa (ordem 0, 2 linhas) aparece primeiro com 2 linhas de cards rolando horizontalmente
+- Eletrônicos (ordem 1, 3 linhas) com 3 linhas
+- Ofertas Variadas (ordem 1, 1 linha) com 1 linha
+- Moda (ordem 3, 3 linhas) com 3 linhas
+- Colunas incompletas são eliminadas automaticamente
+- Scroll horizontal funciona em cada seção independentemente
 
-### Detalhes técnicos
-Implementação esperada:
-- `AchadinhoSection.tsx`
-  - remover branch `selectedCat ? <grid vertical> : ...`
-  - usar refs por categoria para scroll até seção
-  - converter cada seção para `flex overflow-x-auto`
-- `DriverMarketplace.tsx`
-  - trocar `DriverDealCardGrid` por `DriverDealCard` nas seções principais
-  - remover `visibleDeals.slice(...)` na home principal
-  - cada seção vira uma faixa horizontal independente
-
-### Validação depois da implementação
-Vou considerar concluído quando, no celular:
-1. cada categoria puder ser rolada lateralmente;
-2. os produtos extras apareçam sem precisar abrir “Ver todos”;
-3. a página principal não cresça com todos os produtos empilhados;
-4. a ordem das categorias siga exatamente o padrão do admin;
-5. a rolagem vertical da página continue fluida mesmo começando o gesto sobre um card.
