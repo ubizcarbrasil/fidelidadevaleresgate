@@ -180,6 +180,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     },
   });
 
+  // Smart exposure rules: MIN_DEALS to show category, MIN_PER_ROW for row density
   const MIN_DEALS = 3;
   const MIN_PER_ROW = 3;
 
