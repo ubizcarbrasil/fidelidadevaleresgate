@@ -49,25 +49,41 @@ function matchDealToCategory(
   storeName: string | null,
   categories: DealCategory[]
 ): string | null {
+  // 1. Prioridade máxima: match direto do campo "category" da API contra o nome da categoria
+  if (category) {
+    const normCat = normalize(category);
+    for (const cat of categories) {
+      if (normalize(cat.name) === normCat) {
+        return cat.id;
+      }
+    }
+    // Match parcial: nome da categoria contido no campo category ou vice-versa
+    for (const cat of categories) {
+      const normName = normalize(cat.name);
+      if (normCat.includes(normName) || normName.includes(normCat)) {
+        return cat.id;
+      }
+    }
+  }
+
+  // 2. Fallback: keyword scoring
   const text = normalize(
     [title, description, category, storeName].filter(Boolean).join(" ")
   );
 
   let bestCatId: string | null = null;
   let bestScore = 0;
-  const MIN_SCORE = 3; // score mínimo para atribuir categoria
+  const MIN_SCORE = 4; // score mínimo aumentado para evitar matches fracos
 
   for (const cat of categories) {
     let score = 0;
     for (const kw of cat.keywords) {
       const nkw = normalize(kw);
       if (nkw.length === 0) continue;
-      // Word-boundary aware matching para evitar falsos positivos
-      // Ex: "pet" não deve dar match em "carpet" ou "competição"
       const escaped = nkw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(`(?:^|\\s|[^a-z0-9])${escaped}(?:$|\\s|[^a-z0-9])`, "i");
       if (regex.test(` ${text} `)) {
-        score += nkw.length; // longer keyword = higher weight
+        score += nkw.length;
       }
     }
     if (score > bestScore && score >= MIN_SCORE) {
