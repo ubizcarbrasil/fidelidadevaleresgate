@@ -310,6 +310,10 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         {(selectedCat ? categories.filter(c => c.id === selectedCat) : categories).map(cat => {
           const catDeals = deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
+          const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+          const effectiveRows = Math.min(configuredRows, catDeals.length);
+          const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
+          const visibleDeals = catDeals.slice(0, visibleCount);
           return (
             <div key={cat.id}>
               <div className="px-5 mb-2 flex items-end justify-between">
@@ -332,13 +336,20 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                 </button>
               </div>
               <div
-                className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
-                style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                className="overflow-x-auto scrollbar-hide px-5 pb-1"
+                style={{
+                  display: "grid",
+                  gridTemplateRows: `repeat(${effectiveRows}, auto)`,
+                  gridAutoFlow: "column",
+                  gridAutoColumns: "minmax(160px, 180px)",
+                  gap: "12px",
+                  scrollSnapType: "x mandatory",
+                  touchAction: "pan-x pan-y",
+                }}
               >
-                {catDeals.map((deal) => (
+                {visibleDeals.map((deal) => (
                   <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
                 ))}
-                <div className="min-w-[16px] flex-shrink-0" />
               </div>
             </div>
           );

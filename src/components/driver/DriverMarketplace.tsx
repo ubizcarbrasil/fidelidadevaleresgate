@@ -418,15 +418,30 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div
-                  className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
-                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
-                >
-                  {allCatDeals.map(deal => (
-                    <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
-                  ))}
-                  <div className="min-w-[16px] flex-shrink-0" />
-                </div>
+                {(() => {
+                  const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+                  const effectiveRows = Math.min(configuredRows, allCatDeals.length);
+                  const visibleCount = Math.floor(allCatDeals.length / effectiveRows) * effectiveRows || allCatDeals.length;
+                  const visibleDeals = allCatDeals.slice(0, visibleCount);
+                  return (
+                    <div
+                      className="overflow-x-auto scrollbar-hide px-5 pb-1"
+                      style={{
+                        display: "grid",
+                        gridTemplateRows: `repeat(${effectiveRows}, auto)`,
+                        gridAutoFlow: "column",
+                        gridAutoColumns: "minmax(160px, 180px)",
+                        gap: "12px",
+                        scrollSnapType: "x mandatory",
+                        touchAction: "pan-x pan-y",
+                      }}
+                    >
+                      {visibleDeals.map(deal => (
+                        <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
+                      ))}
+                    </div>
+                  );
+                })()}
               </section>
               {bannersAfter.length > 0 && <InterstitialBannerGroup banners={bannersAfter} />}
             </div>
