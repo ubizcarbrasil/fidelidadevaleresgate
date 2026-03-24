@@ -215,6 +215,21 @@ Deno.serve(async (req) => {
     const autoVisibleDriver = config?.auto_visible_driver !== false;
     const debugMode = config?.debug_mode === true;
 
+    // Build list of URLs to scrape (multi-page)
+    const defaultPages = [
+      "/promocoes-do-dia",
+      "/lojas/shopee",
+      "/lojas/mercadolivre",
+      "/lojas/amazon",
+      "/lojas/magalu",
+    ];
+    const extraPages: string[] = (config?.extra_pages as string[]) || [];
+    const pagePaths = extraPages.length > 0 ? extraPages : defaultPages;
+    const urls = [
+      originUrl,
+      ...pagePaths.map((p: string) => p.startsWith("http") ? p : `${originUrl}${p}`),
+    ];
+
     // Create log entry
     const { data: logEntry } = await supabase
       .from("mirror_sync_logs")
@@ -232,41 +247,63 @@ Deno.serve(async (req) => {
     const errorDetails: any[] = [];
 
     try {
-      // Scrape with Firecrawl
-      console.log("Scraping URL:", originUrl);
-      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${firecrawlKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: originUrl,
-          formats: ["html"],
-          waitFor: 3000,
-          onlyMainContent: false,
-        }),
-      });
-
-      const scrapeData = await scrapeResponse.json();
-
-      if (!scrapeResponse.ok) {
-        throw new Error(`Firecrawl error: ${JSON.stringify(scrapeData)}`);
-      }
-
-      const html = scrapeData?.data?.html || scrapeData?.html || "";
-      if (!html) {
-        throw new Error("No HTML returned from Firecrawl");
-      }
-
-      console.log("HTML length:", html.length);
-
-      // Parse deals
+      // Scrape all URLs and accumulate parsed deals
       const baseUrl = new URL(originUrl).origin;
-      const parsedDeals = parseDealsFromHtml(html, baseUrl);
-      totalRead = parsedDeals.length;
+      const allParsedDeals: ParsedDeal[] = [];
+      const seenSlugs = new Set<string>();
 
-      console.log(`Parsed ${parsedDeals.length} deals`);
+      for (const url of urls) {
+        try {
+          console.log(`Scraping URL: ${url}`);
+          const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${firecrawlKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url,
+              formats: ["html"],
+              waitFor: 3000,
+              onlyMainContent: false,
+            }),
+          });
+
+          const scrapeData = await scrapeResponse.json();
+
+          if (!scrapeResponse.ok) {
+            console.error(`Firecrawl error for ${url}:`, JSON.stringify(scrapeData));
+            errorDetails.push({ phase: "scrape", url, error: scrapeData?.error || `HTTP ${scrapeResponse.status}` });
+            continue;
+          }
+
+          const html = scrapeData?.data?.html || scrapeData?.html || "";
+          if (!html) {
+            console.warn(`No HTML returned for ${url}`);
+            continue;
+          }
+
+          console.log(`HTML length for ${url}: ${html.length}`);
+          const pageParsed = parseDealsFromHtml(html, baseUrl);
+          console.log(`Parsed ${pageParsed.length} deals from ${url}`);
+
+          // Deduplicate by slug across pages
+          for (const deal of pageParsed) {
+            const dedupeKey = deal.origin_external_id || deal.affiliate_url;
+            if (!seenSlugs.has(dedupeKey)) {
+              seenSlugs.add(dedupeKey);
+              allParsedDeals.push(deal);
+            }
+          }
+        } catch (urlError: any) {
+          console.error(`Error scraping ${url}:`, urlError);
+          errorDetails.push({ phase: "scrape", url, error: urlError.message });
+        }
+      }
+
+      const parsedDeals = allParsedDeals;
+      totalRead = parsedDeals.length;
+      console.log(`Total unique deals parsed from ${urls.length} pages: ${totalRead}`);
 
       // Load existing hashes for deduplication
       const { data: existingDeals } = await supabase
