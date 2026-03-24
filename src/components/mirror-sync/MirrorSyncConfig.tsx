@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { fetchSyncConfig, upsertSyncConfig } from "@/lib/api/mirrorSync";
 
@@ -21,6 +22,8 @@ export default function MirrorSyncConfig({ brandId }: Props) {
     queryFn: () => fetchSyncConfig(brandId),
   });
 
+  const defaultExtraPages = "/promocoes-do-dia\n/lojas/shopee\n/lojas/mercadolivre\n/lojas/amazon\n/lojas/magalu";
+
   const [form, setForm] = useState({
     origin_url: "https://www.divulgadorinteligente.com/ubizresgata",
     auto_sync_enabled: false,
@@ -31,12 +34,14 @@ export default function MirrorSyncConfig({ brandId }: Props) {
     debug_mode: false,
     auto_activate: true,
     auto_visible_driver: true,
+    extra_pages_text: defaultExtraPages,
   });
 
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (config) {
+      const pages = (config as any).extra_pages;
       setForm({
         origin_url: config.origin_url || form.origin_url,
         auto_sync_enabled: config.auto_sync_enabled ?? false,
@@ -47,6 +52,7 @@ export default function MirrorSyncConfig({ brandId }: Props) {
         debug_mode: config.debug_mode ?? false,
         auto_activate: config.auto_activate ?? true,
         auto_visible_driver: config.auto_visible_driver ?? true,
+        extra_pages_text: Array.isArray(pages) && pages.length > 0 ? pages.join("\n") : defaultExtraPages,
       });
     }
   }, [config]);
@@ -54,7 +60,11 @@ export default function MirrorSyncConfig({ brandId }: Props) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await upsertSyncConfig(brandId, form);
+      const extra_pages = form.extra_pages_text
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
+      await upsertSyncConfig(brandId, { ...form, extra_pages });
       queryClient.invalidateQueries({ queryKey: ["mirror-sync-config"] });
       toast.success("Configurações salvas!");
     } catch (e: any) {
@@ -75,6 +85,17 @@ export default function MirrorSyncConfig({ brandId }: Props) {
         <div className="space-y-2">
           <Label>URL da Origem</Label>
           <Input value={form.origin_url} onChange={(e) => setForm({ ...form, origin_url: e.target.value })} />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Sub-páginas para scrape</Label>
+          <p className="text-xs text-muted-foreground">Uma URL ou path relativo por linha. Ex: /lojas/shopee</p>
+          <Textarea
+            rows={6}
+            value={form.extra_pages_text}
+            onChange={(e) => setForm({ ...form, extra_pages_text: e.target.value })}
+            placeholder={"/promocoes-do-dia\n/lojas/shopee\n/lojas/mercadolivre"}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
