@@ -200,7 +200,7 @@ function AppRoutes() {
           <Route path="public-vouchers" element={<PublicVouchers />} />
           
           <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
-          <Route path="brand-permissions" element={<RootGuard><BrandPermissionOverflowPage /></RootGuard>} />
+          <Route path="brand-permissions" element={<ModuleGuard moduleKey="store_permissions"><BrandPermissionOverflowPage /></ModuleGuard>} />
           <Route path="taxonomy" element={<ModuleGuard moduleKey="taxonomy"><TaxonomyPage /></ModuleGuard>} />
           <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
           <Route path="emitter-requests" element={<EmitterRequestsPage />} />
