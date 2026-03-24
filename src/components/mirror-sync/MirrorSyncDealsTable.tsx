@@ -180,6 +180,7 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
           categories={categories || []}
           onRecategorize={(dealId, catId) => recategorizeMutation.mutate({ dealId, categoryId: catId })}
           onDuplicate={(dealId, catId) => duplicateMutation.mutate({ dealId, categoryId: catId })}
+          onCreateBanner={handleCreateBanner}
         />
       ) : (
         <DesktopTable
@@ -193,6 +194,7 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
           categories={categories || []}
           onRecategorize={(dealId, catId) => recategorizeMutation.mutate({ dealId, categoryId: catId })}
           onDuplicate={(dealId, catId) => duplicateMutation.mutate({ dealId, categoryId: catId })}
+          onCreateBanner={handleCreateBanner}
         />
       )}
     </div>
