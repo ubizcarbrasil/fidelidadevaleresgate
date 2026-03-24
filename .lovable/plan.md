@@ -1,45 +1,36 @@
 
 
-## Separar linhas de scroll independentes por categoria
+## Drag-and-drop para ordenação de categorias no admin
 
-### Problema
-O CSS Grid com `grid-auto-flow: column` faz todas as linhas de uma categoria rolarem juntas como um bloco único. O usuário quer que **cada linha role independentemente**.
+### O que muda
+Substituir o campo numérico de "Ordem" na seção "Categorias Visíveis" do `DriverPanelConfigPage` por drag-and-drop. O admin arrasta as categorias para reordenar e o valor `order` é calculado automaticamente pela posição.
 
-### Solução
-Substituir o grid multi-row por **múltiplos containers `flex` empilhados**, cada um com seu próprio `overflow-x-auto`. Quando uma categoria tem `rows=2`, renderiza 2 linhas separadas; `rows=3`, renderiza 3 linhas separadas. Cada linha rola de forma independente.
+### Implementação
 
+#### 1. Instalar `@dnd-kit/core` e `@dnd-kit/sortable`
+Biblioteca leve e moderna de drag-and-drop para React, sem dependências pesadas.
+
+#### 2. Refatorar a seção de categorias (`src/pages/DriverPanelConfigPage.tsx`)
+
+- Ordenar as categorias pelo `order` atual do `categoryLayout` antes de renderizar.
+- Envolver a lista com `DndContext` + `SortableContext` do dnd-kit.
+- Cada item de categoria vira um componente `SortableItem` que usa `useSortable()`.
+- Adicionar um ícone de "grip" (arrastar) à esquerda de cada linha — o `GripVertical` já está importado no arquivo.
+- Remover o campo `Input type="number"` de ordem manual.
+- No `onDragEnd`, recalcular os valores de `order` baseado na nova posição e salvar tudo de uma vez via `settingsMutation.mutate({ driver_category_layout: updated })`.
+
+#### 3. Lógica do `onDragEnd`
 ```text
-Categoria "Casa" (2 linhas):
-  Linha 1: [card A][card C][card E] →  (scroll independente)
-  Linha 2: [card B][card D][card F] →  (scroll independente)
-
-Categoria "Eletrônicos" (3 linhas):
-  Linha 1: [card A][card D][card G] →  (scroll independente)
-  Linha 2: [card B][card E][card H] →  (scroll independente)
-  Linha 3: [card C][card F][card I] →  (scroll independente)
+1. Identificar item arrastado (active) e destino (over)
+2. Reordenar o array de categorias com arrayMove()
+3. Gerar novo categoryLayout com order = index da posição
+4. Salvar via settingsMutation
 ```
-
-### Distribuição dos deals nas linhas
-Deals são distribuídos em round-robin (alternando entre linhas) para manter equilíbrio:
-```typescript
-const rows: AffiliateDeal[][] = Array.from({ length: effectiveRows }, () => []);
-visibleDeals.forEach((deal, i) => rows[i % effectiveRows].push(deal));
-```
-
-### Regra de colunas completas (mantida)
-- `visibleCount = Math.floor(total / effectiveRows) * effectiveRows`
-- Garante que todas as linhas tenham o mesmo número de cards
-
-### Arquivos alterados
-
-#### 1. `src/components/customer/AchadinhoSection.tsx` (linhas 338-353)
-Trocar o `div` com `display: grid` por um wrapper com múltiplos `div flex overflow-x-auto`, um por linha.
-
-#### 2. `src/components/driver/DriverMarketplace.tsx` (linhas 427-442)
-Mesma substituição: trocar o grid por múltiplas linhas flex independentes.
 
 ### Resultado
-- Cada linha de cada categoria rola horizontalmente de forma independente
-- A ordem e quantidade de linhas continuam respeitando o admin
-- Colunas incompletas continuam sendo eliminadas
+- O admin arrasta categorias para cima/baixo para definir a ordem de exibição
+- O ícone de grip (`⠿`) aparece à esquerda de cada categoria
+- A ordem é salva automaticamente ao soltar
+- O campo numérico de ordem é removido (desnecessário com drag-and-drop)
+- Controle de "Linhas" e "Ativo/Inativo" permanecem inalterados
 
