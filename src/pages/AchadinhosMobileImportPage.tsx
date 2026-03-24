@@ -755,6 +755,30 @@ export default function AchadinhosMobileImportPage() {
                           </div>
                         </div>
                         <div>
+                          <label className="text-xs text-muted-foreground">Categoria</label>
+                          <Select
+                            value={p.category_id || "none"}
+                            onValueChange={(val) => {
+                              const cat = categorias.find(c => c.id === val);
+                              setProducts(prev => prev.map(item =>
+                                item.id === p.id
+                                  ? { ...item, category_id: val === "none" ? null : val, category_name: cat?.name || null }
+                                  : item
+                              ));
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecionar categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sem categoria</SelectItem>
+                              {categorias.map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
                           <label className="text-xs text-muted-foreground">Link de afiliado</label>
                           <Input value={p.affiliate_url} onChange={e => updateProduct(p.id, "affiliate_url", e.target.value)} placeholder="https://..." />
                         </div>
