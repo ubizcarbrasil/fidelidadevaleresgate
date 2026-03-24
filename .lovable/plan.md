@@ -2,59 +2,37 @@
 
 ## Problema
 
-Cada página de listagem usa **scroll infinito** — o Firecrawl só captura os primeiros ~20 itens visíveis no carregamento inicial. O Map API também falhou (só encontrou 1 URL) porque o site não tem sitemap.xml.
+A Edge Function está dando **timeout** ("Failed to send a request to the Edge Function"). Com as ações de scroll adicionadas, cada página leva ~20s no Firecrawl. Com 6 páginas sequenciais + Map API + scrapes individuais, o tempo total ultrapassa o limite de 60s da Edge Function.
 
-**Evidência dos logs:**
-- `/promocoes-do-dia`: 32 deals (de ~60+)
-- `/lojas/shopee`: 20 deals (de ~50+)
-- `/lojas/mercadolivre`: 20 deals
-- `/lojas/amazon`: 20 deals
-- `/lojas/magalu`: 17 deals
-- Map API: apenas 1 URL descoberta
+**Evidência**: Logs anteriores (sem scroll) completaram em ~180s (já no limite). Com scroll, cada página agora leva muito mais tempo.
 
 ## Solução
 
-O Firecrawl suporta o parâmetro `actions` que permite executar ações no navegador **antes** de extrair o HTML. Vamos adicionar múltiplos ciclos de scroll+wait para forçar o carregamento de todo o conteúdo lazy-loaded.
+Duas mudanças na Edge Function:
 
-### Alteração
+### 1. Scrape em paralelo (não sequencial)
 
-**Arquivo**: `supabase/functions/mirror-sync/index.ts`
-
-Na chamada do Firecrawl scrape de cada página de listagem (Phase 1), adicionar ações de scroll:
+Trocar o `for...of` loop por `Promise.all` para fazer todas as 6 páginas simultaneamente. Reduz o tempo de 6×20s = 120s para ~20s (o tempo de UMA página).
 
 ```typescript
-body: JSON.stringify({
-  url,
-  formats: ["html"],
-  waitFor: 3000,
-  onlyMainContent: false,
-  actions: [
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-    { type: "scroll", direction: "down" },
-    { type: "wait", milliseconds: 2000 },
-  ],
-}),
+// DE: for (const url of urls) { await fetch(...) }
+// PARA:
+const scrapeResults = await Promise.all(
+  urls.map(url => fetch("https://api.firecrawl.dev/v1/scrape", { ... }).then(r => r.json()).catch(e => null))
+);
 ```
 
-Isso faz 7 scrolls com 2s de espera entre cada um (~16s por página), carregando todo o conteúdo do infinite scroll.
+### 2. Remover Map API + scrapes individuais
 
-### Resultado esperado
+A Phase 2 (Map) e Phase 3 (scrapes individuais) consomem tempo e retornaram 0 resultados extras. Removê-las. O scroll nas listagens + paralelismo já deve cobrir todas as ofertas.
 
-- Cada página vai retornar TODOS os itens em vez de apenas os primeiros ~20
-- De ~77 para ~194 ofertas importadas
-- Redeploy da edge function
+### 3. Reduzir scroll actions para 5 ciclos
 
-**1 arquivo alterado** + redeploy.
+7 scrolls é excessivo. 5 ciclos (10s) deve ser suficiente para ~50 itens por página.
+
+---
+
+**1 arquivo alterado** (`supabase/functions/mirror-sync/index.ts`) + redeploy.
+
+**Resultado esperado**: Execução em ~25s em vez de >120s. Sem timeout.
 
