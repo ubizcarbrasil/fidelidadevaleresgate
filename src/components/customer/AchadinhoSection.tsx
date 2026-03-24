@@ -309,7 +309,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         </div>
       )}
 
-      {/* Deals — grid vertical quando categoria selecionada, carrossel horizontal para "Todos" */}
+      {/* Deals — grid vertical quando categoria selecionada, carrossel horizontal por categoria para "Todos" */}
       {selectedCat ? (
         <div className="grid grid-cols-2 gap-3 px-5 pb-1 animate-fade-in">
           {filteredDeals.map((deal) => (
@@ -317,15 +317,57 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           ))}
         </div>
       ) : (
-        <div
-          ref={scrollRef}
-          className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1 animate-fade-in"
-          style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
-        >
-          {filteredDeals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
-          ))}
-          <div className="min-w-[16px] flex-shrink-0" />
+        <div className="space-y-5 animate-fade-in">
+          {categories.map(cat => {
+            const catDeals = deals.filter(d => d.category_id === cat.id);
+            if (!catDeals.length) return null;
+            const ITEMS_PER_ROW = 3;
+            const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+            const maxFullRows = Math.floor(catDeals.length / ITEMS_PER_ROW);
+            const effectiveRows = Math.min(configuredRows, Math.max(1, maxFullRows));
+            const visibleDeals = catDeals.slice(0, effectiveRows * ITEMS_PER_ROW);
+            return (
+              <div key={cat.id}>
+                <div className="px-5 mb-2 flex items-center gap-2">
+                  <div className="h-5 w-5 rounded flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
+                    <LucideIcon name={cat.icon_name} className="h-3 w-3" style={{ color: cat.color }} />
+                  </div>
+                  <span className="text-xs font-bold text-foreground">{cat.name}</span>
+                  <span className="text-[10px] text-muted-foreground">({catDeals.length})</span>
+                </div>
+                <div
+                  className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                >
+                  {visibleDeals.map((deal) => (
+                    <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                  ))}
+                  <div className="min-w-[16px] flex-shrink-0" />
+                </div>
+              </div>
+            );
+          })}
+          {/* Uncategorized deals */}
+          {(() => {
+            const uncatDeals = deals.filter(d => !d.category_id || !categories.some(c => c.id === d.category_id));
+            if (!uncatDeals.length) return null;
+            return (
+              <div>
+                <div className="px-5 mb-2">
+                  <span className="text-xs font-bold text-foreground">Outras ofertas</span>
+                </div>
+                <div
+                  className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                >
+                  {uncatDeals.map((deal) => (
+                    <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                  ))}
+                  <div className="min-w-[16px] flex-shrink-0" />
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
