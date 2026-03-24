@@ -182,6 +182,32 @@ export default function AffiliateCategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: { id: string; order_index: number }[]) => {
+      for (const u of updates) {
+        const { error } = await supabase.from("affiliate_deal_categories").update({ order_index: u.order_index }).eq("id", u.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["affiliate-categories", currentBrandId] });
+      toast.success("Ordem atualizada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleReorder = (idx: number, direction: "up" | "down") => {
+    if (!categories) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= categories.length) return;
+    const a = categories[idx];
+    const b = categories[swapIdx];
+    reorderMutation.mutate([
+      { id: a.id, order_index: b.order_index },
+      { id: b.id, order_index: a.order_index },
+    ]);
+  };
+
   const renderForm = (form: Partial<Category>, setForm: (f: Partial<Category>) => void, onSave: () => void, onCancel: () => void) => (
     <Card className="border-primary">
       <CardContent className="p-4 space-y-3">
