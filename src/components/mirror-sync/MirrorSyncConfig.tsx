@@ -41,6 +41,7 @@ export default function MirrorSyncConfig({ brandId }: Props) {
 
   useEffect(() => {
     if (config) {
+      const pages = (config as any).extra_pages;
       setForm({
         origin_url: config.origin_url || form.origin_url,
         auto_sync_enabled: config.auto_sync_enabled ?? false,
@@ -51,6 +52,7 @@ export default function MirrorSyncConfig({ brandId }: Props) {
         debug_mode: config.debug_mode ?? false,
         auto_activate: config.auto_activate ?? true,
         auto_visible_driver: config.auto_visible_driver ?? true,
+        extra_pages_text: Array.isArray(pages) && pages.length > 0 ? pages.join("\n") : defaultExtraPages,
       });
     }
   }, [config]);
