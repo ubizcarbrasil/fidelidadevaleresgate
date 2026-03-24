@@ -209,7 +209,7 @@ function AppRoutes() {
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
           <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
           <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
-          <Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
+          <Route path="welcome-tour" element={<ModuleGuard moduleKey="welcome_tour"><WelcomeTourConfigPage /></ModuleGuard>} />
           <Route path="profile-links" element={<ModuleGuard moduleKey="profile_links"><ProfileLinksConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
           <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
