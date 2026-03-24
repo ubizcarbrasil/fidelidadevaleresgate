@@ -354,6 +354,9 @@ function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, 
               <Star className={`h-3.5 w-3.5 ${deal.is_featured ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />
             </button>
             <DuplicateButton dealId={deal.id} categories={categories} onDuplicate={onDuplicate} />
+            <button onClick={() => onCreateBanner(deal)} className="p-1.5 rounded-md border" title="Criar Banner">
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+            </button>
             {deal.origin_url && (
               <a href={deal.origin_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md border">
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
