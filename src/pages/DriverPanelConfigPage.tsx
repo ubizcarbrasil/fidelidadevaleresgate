@@ -32,6 +32,56 @@ interface DriverBannerItem {
   after_category_id: string; // "__top__" or category id
   is_active: boolean;
 }
+interface SortableCategoryItemProps {
+  cat: { id: string; name: string; color: string; is_active: boolean };
+  rows: number;
+  onToggle: (checked: boolean) => void;
+  onRowsChange: (rows: number) => void;
+}
+
+function SortableCategoryItem({ cat, rows, onToggle, onRowsChange }: SortableCategoryItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-lg border p-3 space-y-3 bg-background">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground flex-shrink-0">
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+          <span className="font-medium text-sm truncate">{cat.name}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Badge variant={cat.is_active ? "default" : "secondary"} className="text-[10px] hidden sm:inline-flex">
+            {cat.is_active ? "Ativa" : "Inativa"}
+          </Badge>
+          <Switch checked={cat.is_active} onCheckedChange={onToggle} />
+        </div>
+      </div>
+
+      {cat.is_active && (
+        <div className="flex items-center gap-2 pl-6 sm:pl-8">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Linhas:</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" disabled={rows <= 1} onClick={() => onRowsChange(Math.max(1, rows - 1))}>
+              <Minus className="h-3 w-3" />
+            </Button>
+            <span className="text-sm font-medium w-6 text-center">{rows}</span>
+            <Button variant="outline" size="icon" className="h-7 w-7" disabled={rows >= 5} onClick={() => onRowsChange(Math.min(5, rows + 1))}>
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function DriverPanelConfigPage() {
   const { currentBrandId } = useBrandGuard();
