@@ -379,7 +379,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         })}
         {/* Uncategorized deals */}
         {!selectedCat && (() => {
-          const uncatDeals = deals.filter(d => !d.category_id || !categories.some(c => c.id === d.category_id));
+          const uncatDeals = deals.filter(d => overflowDealIds.has(d.id) || !d.category_id || !viableCategories.some(c => c.id === d.category_id));
           if (!uncatDeals.length) return null;
           return (
             <div>

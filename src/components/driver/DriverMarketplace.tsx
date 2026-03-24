@@ -441,7 +441,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                 </div>
                 {(() => {
                   const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
-                  const effectiveRows = Math.min(configuredRows, allCatDeals.length);
+                  const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(allCatDeals.length / MIN_PER_ROW)));
                   const visibleCount = Math.floor(allCatDeals.length / effectiveRows) * effectiveRows || allCatDeals.length;
                   const visibleDeals = allCatDeals.slice(0, visibleCount);
                   return (
