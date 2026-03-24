@@ -203,7 +203,7 @@ function AppRoutes() {
           <Route path="brand-permissions" element={<ModuleGuard moduleKey="store_permissions"><BrandPermissionOverflowPage /></ModuleGuard>} />
           <Route path="taxonomy" element={<ModuleGuard moduleKey="taxonomy"><TaxonomyPage /></ModuleGuard>} />
           <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
-          <Route path="emitter-requests" element={<EmitterRequestsPage />} />
+          <Route path="emitter-requests" element={<ModuleGuard moduleKey="multi_emitter"><EmitterRequestsPage /></ModuleGuard>} />
           <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
           <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
           <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
