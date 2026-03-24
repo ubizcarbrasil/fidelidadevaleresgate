@@ -160,16 +160,37 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
   const deals = data?.deals || [];
   const rawCategories = data?.categories || [];
 
-  // Apply admin-configured category order from brand_settings_json
+  const MIN_DEALS = 3;
+  const MIN_PER_ROW = 3;
+
   const categoryLayout: Record<string, { rows?: number; order?: number }> = (brand as any)?.brand_settings_json?.driver_category_layout || {};
-  const categories = useMemo(() => [...rawCategories].sort((a, b) => {
-    const oa = categoryLayout[a.id]?.order;
-    const ob = categoryLayout[b.id]?.order;
-    if (oa != null && ob != null) return oa - ob;
-    if (oa != null) return -1;
-    if (ob != null) return 1;
-    return 0;
-  }), [rawCategories, categoryLayout]);
+
+  const { viableCategories, overflowDealIds } = useMemo(() => {
+    const countMap = new Map<string, number>();
+    deals.forEach(d => { if (d.category_id) countMap.set(d.category_id, (countMap.get(d.category_id) || 0) + 1); });
+
+    const overflow = new Set<string>();
+    const viable = rawCategories.filter(cat => {
+      const count = countMap.get(cat.id) || 0;
+      if (count < MIN_DEALS) {
+        deals.filter(d => d.category_id === cat.id).forEach(d => overflow.add(d.id));
+        return false;
+      }
+      return true;
+    });
+
+    viable.sort((a, b) => {
+      const oa = categoryLayout[a.id]?.order;
+      const ob = categoryLayout[b.id]?.order;
+      const hasA = oa != null, hasB = ob != null;
+      if (hasA && hasB) return oa! - ob!;
+      if (hasA) return -1;
+      if (hasB) return 1;
+      return (countMap.get(b.id) || 0) - (countMap.get(a.id) || 0);
+    });
+
+    return { viableCategories: viable, overflowDealIds: overflow };
+  }, [rawCategories, deals, categoryLayout]);
 
 
   const handleClick = (deal: AffiliateDeal) => {
