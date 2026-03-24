@@ -183,7 +183,7 @@ export default function MirrorSyncDebug({ brandId, refreshKey }: Props) {
                       {details.phase2.samples.map((s: any, i: number) => (
                         <div key={i} className="flex items-center gap-2 text-[10px]">
                           {s.success ? (
-                            <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+                            <CheckCircle className="h-3 w-3 text-primary shrink-0" />
                           ) : (
                             <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
                           )}
