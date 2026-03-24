@@ -8,6 +8,14 @@ export async function triggerMirrorSync(brandId: string) {
   return data;
 }
 
+export async function runMirrorDiagnose(brandId: string) {
+  const { data, error } = await supabase.functions.invoke("mirror-sync", {
+    body: { brand_id: brandId, mode: "diagnose" },
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function fetchSyncLogs(brandId: string, limit = 20) {
   const { data, error } = await supabase
     .from("mirror_sync_logs")
