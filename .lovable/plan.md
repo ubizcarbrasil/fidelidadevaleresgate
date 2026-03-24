@@ -1,36 +1,75 @@
 
 
-## Problema
+## Auditoria de Rotas — Problemas Encontrados
 
-O `ImageCropDialog` usa `modal={false}` (linha 98 de `ImageCropDialog.tsx`), o que permite interação com o conteúdo por trás do diálogo. No mobile (430px), ao selecionar uma imagem para upload nos Achadinhos, o diálogo de recorte abre sem bloquear a tela — qualquer toque fora dele fecha o diálogo e pode causar navegação indesejada ou troca de aba, dando a impressão de que "fechou".
+Cruzei todas as rotas do `App.tsx` com os menus do `BrandSidebar`, `RootSidebar`, `BranchSidebar`, `TenantSidebar` e `OperatorSidebar`. Encontrei **16 inconsistências** organizadas em 3 categorias:
 
-Além disso, o `ImageUploadField` tem limite de 2MB, muito restritivo para fotos de produto (o componente de ofertas da loja permite 5MB).
+---
 
-## Alterações
+### A. Rotas com RootGuard que Brand Admin precisa acessar (4 itens)
 
-### 1. Corrigir `ImageCropDialog.tsx` — tornar modal verdadeiro
-**Linha 98**: Remover `modal={false}` para usar o padrão `modal={true}`, bloqueando interação com o fundo.
+Estas rotas estão bloqueadas para o Empreendedor mas aparecem no menu dele:
 
-```tsx
-// DE:
-<Dialog open={open} onOpenChange={(v) => !v && onCancel()} modal={false}>
+| Rota | Guard atual | Deveria ser |
+|------|-----------|-------------|
+| `/icon-library` | `RootGuard` | `ModuleGuard "icon_library"` |
+| `/offer-card-config` | `RootGuard` | `ModuleGuard "offer_card_config"` |
+| `/sponsored-placements` | `RootGuard` | `ModuleGuard "sponsored"` |
+| `/brand-permissions` | `RootGuard` | `ModuleGuard "store_permissions"` |
 
-// PARA:
-<Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
+---
+
+### B. Rotas sem nenhum guard (precisam de ModuleGuard) (8 itens)
+
+| Rota | ModuleKey esperado (do sidebar) |
+|------|-------------------------------|
+| `/banner-manager` | `banners` |
+| `/page-builder-v2` | `page_builder` |
+| `/pdv` | `earn_points_store` |
+| `/audit` | `audit` |
+| `/emitter-requests` | `multi_emitter` |
+| `/partner-landing-config` | `partner_landing` |
+| `/access-hub` | `access_hub` |
+| `/api-docs` | `api_keys` |
+
+---
+
+### C. ModuleKey divergente entre sidebar e rota (2 itens)
+
+| Rota | Guard na rota | ModuleKey no BrandSidebar |
+|------|--------------|--------------------------|
+| `/approve-store-rules` | `earn_points_store` | `multi_emitter` |
+| `/csv-import` | `stores` | `csv_import` |
+
+---
+
+### D. Rotas sem guard mas aceitáveis (sem mudança)
+
+- `/home-templates`, `/clone-branch`, `/brand-modules`, `/brand-journey`, `/emitter-journey`, `/driver-config`, `/subscription`, `/users`, `/permissions` — são rotas genéricas ou always-on, sem moduleKey no sidebar, acesso controlado pelo `useBrandGuard` no escopo.
+
+---
+
+### Alterações no `src/App.tsx`
+
+Todas as mudanças são trocar o wrapper da `<Route>`:
+
+```text
+Linha 175: audit         → ModuleGuard "audit"
+Linha 181: pdv           → ModuleGuard "earn_points_store"
+Linha 186: approve-rules → ModuleGuard "multi_emitter"
+Linha 178: csv-import    → ModuleGuard "csv_import"
+Linha 195: icon-library  → ModuleGuard "icon_library"
+Linha 196: banner-manager → ModuleGuard "banners"
+Linha 198: page-builder   → ModuleGuard "page_builder"  (manter sem guard, é legacy)
+Linha 199: page-builder-v2 → ModuleGuard "page_builder"
+Linha 203: brand-permissions → ModuleGuard "store_permissions"
+Linha 206: emitter-requests → ModuleGuard "multi_emitter"
+Linha 221: api-docs       → ModuleGuard "api_keys"
+Linha 223: partner-landing-config → ModuleGuard "partner_landing"
+Linha 224: access-hub     → ModuleGuard "access_hub"
+Linha 226: sponsored-placements → ModuleGuard "sponsored"
+Linha 229: offer-card-config → ModuleGuard "offer_card_config"
 ```
 
-### 2. Aumentar limite de upload em `ImageUploadField.tsx`
-**Linha 61**: Mudar o limite de 2MB para 5MB, consistente com outros componentes de upload.
-
-```tsx
-// DE:
-if (file.size > 2 * 1024 * 1024) {
-  toast.error("Arquivo muito grande. Máximo 2MB.");
-
-// PARA:
-if (file.size > 5 * 1024 * 1024) {
-  toast.error("Arquivo muito grande. Máximo 5MB.");
-```
-
-**2 arquivos, 2 linhas alteradas.**
+**15 linhas alteradas, 1 arquivo (`src/App.tsx`)**. Nenhuma mudança em sidebars ou outros componentes.
 
