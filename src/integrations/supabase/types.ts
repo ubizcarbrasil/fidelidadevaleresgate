@@ -180,16 +180,28 @@ export type Database = {
           click_count: number
           created_at: string
           description: string | null
+          first_imported_at: string | null
           id: string
           image_url: string | null
           is_active: boolean
+          is_featured: boolean | null
+          is_flash_promo: boolean | null
+          last_synced_at: string | null
           order_index: number
+          origin: string | null
+          origin_external_id: string | null
+          origin_hash: string | null
+          origin_url: string | null
           original_price: number | null
           price: number | null
+          raw_payload: Json | null
           store_logo_url: string | null
           store_name: string | null
+          sync_error: string | null
+          sync_status: string | null
           title: string
           updated_at: string
+          visible_driver: boolean | null
         }
         Insert: {
           affiliate_url: string
@@ -201,16 +213,28 @@ export type Database = {
           click_count?: number
           created_at?: string
           description?: string | null
+          first_imported_at?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean | null
+          is_flash_promo?: boolean | null
+          last_synced_at?: string | null
           order_index?: number
+          origin?: string | null
+          origin_external_id?: string | null
+          origin_hash?: string | null
+          origin_url?: string | null
           original_price?: number | null
           price?: number | null
+          raw_payload?: Json | null
           store_logo_url?: string | null
           store_name?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
           title: string
           updated_at?: string
+          visible_driver?: boolean | null
         }
         Update: {
           affiliate_url?: string
@@ -222,16 +246,28 @@ export type Database = {
           click_count?: number
           created_at?: string
           description?: string | null
+          first_imported_at?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean | null
+          is_flash_promo?: boolean | null
+          last_synced_at?: string | null
           order_index?: number
+          origin?: string | null
+          origin_external_id?: string | null
+          origin_hash?: string | null
+          origin_url?: string | null
           original_price?: number | null
           price?: number | null
+          raw_payload?: Json | null
           store_logo_url?: string | null
           store_name?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
           title?: string
           updated_at?: string
+          visible_driver?: boolean | null
         }
         Relationships: [
           {
@@ -2951,6 +2987,138 @@ export type Database = {
           },
           {
             foreignKeyName: "menu_labels_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mirror_sync_config: {
+        Row: {
+          auto_activate: boolean | null
+          auto_sync_enabled: boolean | null
+          auto_visible_driver: boolean | null
+          brand_id: string
+          created_at: string | null
+          debug_mode: boolean | null
+          extra_pages: string[] | null
+          id: string
+          max_offers_per_read: number | null
+          max_pages: number | null
+          origin_url: string
+          sync_interval_minutes: number | null
+          timeout_seconds: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_activate?: boolean | null
+          auto_sync_enabled?: boolean | null
+          auto_visible_driver?: boolean | null
+          brand_id: string
+          created_at?: string | null
+          debug_mode?: boolean | null
+          extra_pages?: string[] | null
+          id?: string
+          max_offers_per_read?: number | null
+          max_pages?: number | null
+          origin_url?: string
+          sync_interval_minutes?: number | null
+          timeout_seconds?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_activate?: boolean | null
+          auto_sync_enabled?: boolean | null
+          auto_visible_driver?: boolean | null
+          brand_id?: string
+          created_at?: string | null
+          debug_mode?: boolean | null
+          extra_pages?: string[] | null
+          id?: string
+          max_offers_per_read?: number | null
+          max_pages?: number | null
+          origin_url?: string
+          sync_interval_minutes?: number | null
+          timeout_seconds?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mirror_sync_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mirror_sync_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mirror_sync_logs: {
+        Row: {
+          brand_id: string
+          created_at: string | null
+          details: Json | null
+          finished_at: string | null
+          id: string
+          origin: string
+          started_at: string
+          status: string | null
+          summary: string | null
+          total_errors: number | null
+          total_new: number | null
+          total_read: number | null
+          total_skipped: number | null
+          total_updated: number | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string | null
+          details?: Json | null
+          finished_at?: string | null
+          id?: string
+          origin?: string
+          started_at?: string
+          status?: string | null
+          summary?: string | null
+          total_errors?: number | null
+          total_new?: number | null
+          total_read?: number | null
+          total_skipped?: number | null
+          total_updated?: number | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string | null
+          details?: Json | null
+          finished_at?: string | null
+          id?: string
+          origin?: string
+          started_at?: string
+          status?: string | null
+          summary?: string | null
+          total_errors?: number | null
+          total_new?: number | null
+          total_read?: number | null
+          total_skipped?: number | null
+          total_updated?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mirror_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mirror_sync_logs_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
