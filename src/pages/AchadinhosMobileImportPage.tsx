@@ -346,7 +346,7 @@ export default function AchadinhosMobileImportPage() {
       setScrapeProgress({ done: Math.min(i + batch.length, urls.length), total: urls.length });
     }
 
-    setProducts(results);
+    setProducts(autoCategorizar(results));
     setIsScraping(false);
     if (results.length === 0) {
       toast.error("Nenhum produto encontrado nos links.");
