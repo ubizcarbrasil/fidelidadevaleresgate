@@ -140,9 +140,10 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     queryFn: async () => {
       let dealsQ = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
+        .eq("visible_driver" as any, true)
         .order("order_index")
         .limit(200);
       if (branch) {
