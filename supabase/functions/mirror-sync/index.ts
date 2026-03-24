@@ -154,6 +154,37 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { brand_id } = body;
 
+    // Handle auto-sync from cron: sync all brands with auto_sync_enabled
+    if (brand_id === "auto") {
+      const { data: configs } = await supabase
+        .from("mirror_sync_config")
+        .select("brand_id")
+        .eq("auto_sync_enabled", true);
+
+      const results = [];
+      for (const cfg of configs || []) {
+        try {
+          // Re-invoke self for each brand
+          const res = await fetch(`${supabaseUrl}/functions/v1/mirror-sync`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({ brand_id: cfg.brand_id }),
+          });
+          const data = await res.json();
+          results.push({ brand_id: cfg.brand_id, ...data });
+        } catch (e: any) {
+          results.push({ brand_id: cfg.brand_id, error: e.message });
+        }
+      }
+      return new Response(
+        JSON.stringify({ success: true, auto_sync: true, results }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!brand_id) {
       return new Response(
         JSON.stringify({ success: false, error: "brand_id is required" }),
