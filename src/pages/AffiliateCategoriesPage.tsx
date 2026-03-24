@@ -152,6 +152,24 @@ export default function AffiliateCategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const resetDealsMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      if (!currentBrandId) throw new Error("Brand não identificada");
+      const { error } = await supabase
+        .from("affiliate_deals")
+        .delete()
+        .eq("brand_id", currentBrandId)
+        .eq("category_id", categoryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
+      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      toast.success("Ofertas da categoria excluídas com sucesso!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
       const { error } = await supabase.from("affiliate_deal_categories").update({ is_active: active }).eq("id", id);
