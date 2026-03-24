@@ -6,6 +6,7 @@ import MirrorSyncDealsTable from "@/components/mirror-sync/MirrorSyncDealsTable"
 import MirrorSyncLogs from "@/components/mirror-sync/MirrorSyncLogs";
 import MirrorSyncConfig from "@/components/mirror-sync/MirrorSyncConfig";
 import MirrorSyncDebug from "@/components/mirror-sync/MirrorSyncDebug";
+import MirrorSyncCategoryDiag from "@/components/mirror-sync/MirrorSyncCategoryDiag";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function MirrorSyncPage() {
@@ -28,6 +29,7 @@ export default function MirrorSyncPage() {
       <Tabs defaultValue="deals" className="w-full">
         <TabsList className="w-full overflow-x-auto scrollbar-hide justify-start">
           <TabsTrigger value="deals">Ofertas</TabsTrigger>
+          <TabsTrigger value="categorias">Categorias</TabsTrigger>
           <TabsTrigger value="logs">Histórico</TabsTrigger>
           <TabsTrigger value="config">Config</TabsTrigger>
           <TabsTrigger value="debug">Debug</TabsTrigger>
@@ -35,6 +37,10 @@ export default function MirrorSyncPage() {
 
         <TabsContent value="deals">
           <MirrorSyncDealsTable brandId={currentBrandId} refreshKey={refreshKey} />
+        </TabsContent>
+
+        <TabsContent value="categorias">
+          <MirrorSyncCategoryDiag brandId={currentBrandId} refreshKey={refreshKey} />
         </TabsContent>
 
         <TabsContent value="logs">
