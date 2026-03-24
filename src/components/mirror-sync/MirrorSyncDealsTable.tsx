@@ -304,7 +304,7 @@ function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, form
 }
 
 /* ─── Mobile Card List ─── */
-function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate }: Omit<TableProps, "toggleAll">) {
+function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate, onCreateBanner }: Omit<TableProps, "toggleAll">) {
   return (
     <div className="space-y-3">
       {deals.map((deal: any) => (
