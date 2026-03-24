@@ -99,3 +99,28 @@ export async function batchUpdateDeals(dealIds: string[], fields: Record<string,
     .in("id", dealIds);
   if (error) throw error;
 }
+
+export async function fetchCategories(brandId: string) {
+  const { data, error } = await supabase
+    .from("affiliate_deal_categories")
+    .select("id, name, icon_name, color, is_active")
+    .eq("brand_id", brandId)
+    .order("order_index");
+  if (error) throw error;
+  return data;
+}
+
+export async function duplicateDealToCategory(dealId: string, newCategoryId: string) {
+  const { data: original, error: fetchErr } = await supabase
+    .from("affiliate_deals")
+    .select("*")
+    .eq("id", dealId)
+    .single();
+  if (fetchErr) throw fetchErr;
+
+  const { id, created_at, updated_at, click_count, ...rest } = original;
+  const { error } = await supabase
+    .from("affiliate_deals")
+    .insert({ ...rest, category_id: newCategoryId, click_count: 0 });
+  if (error) throw error;
+}

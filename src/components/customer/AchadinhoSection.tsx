@@ -258,6 +258,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
       {selectedDeal && (
         <AchadinhoDealDetail
+
           deal={selectedDeal}
           brandId={brand!.id}
           branchId={selectedBranch?.id}

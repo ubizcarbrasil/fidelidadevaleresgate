@@ -139,8 +139,8 @@ async function runAutoCategorization(supabase: any, brandId: string) {
 
   const deals = allDeals || [];
 
-  // 3. Phase 3 — Keyword matching for deals without category_id
-  const dealsToMatch = deals.filter((d: any) => !d.category_id);
+  // 3. Phase 3 — Recategorizar TODOS os deals (não apenas sem category_id)
+  const dealsToMatch = deals;
   const categoryUpdates = new Map<string, string[]>(); // category_id -> deal_ids
 
   for (const deal of dealsToMatch) {
