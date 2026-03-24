@@ -29,6 +29,7 @@ export default function MirrorSyncPage() {
       <Tabs defaultValue="deals" className="w-full">
         <TabsList className="w-full overflow-x-auto scrollbar-hide justify-start">
           <TabsTrigger value="deals">Ofertas</TabsTrigger>
+          <TabsTrigger value="categorias">Categorias</TabsTrigger>
           <TabsTrigger value="logs">Histórico</TabsTrigger>
           <TabsTrigger value="config">Config</TabsTrigger>
           <TabsTrigger value="debug">Debug</TabsTrigger>
