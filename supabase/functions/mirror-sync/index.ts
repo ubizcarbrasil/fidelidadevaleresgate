@@ -8,21 +8,6 @@ const corsHeaders = {
 
 // ---------- helpers ----------
 
-function md5Hex(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const chr = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(16).padStart(8, "0");
-}
-
-function extractSlug(href: string): string | null {
-  const match = href.match(/\/p\/([A-Za-z0-9_-]+)/);
-  return match ? match[1] : null;
-}
-
 function cleanPrice(raw: string | null | undefined): number | null {
   if (!raw) return null;
   const cleaned = raw.replace(/[^\d,\.]/g, "").replace(",", ".");
@@ -30,339 +15,44 @@ function cleanPrice(raw: string | null | undefined): number | null {
   return isNaN(val) ? null : val;
 }
 
-function normalizeUrl(url: string): string {
+function extractSitename(originUrl: string): string {
   try {
-    const u = new URL(url);
-    u.search = "";
-    u.hash = "";
-    return u.toString().replace(/\/$/, "");
+    const u = new URL(originUrl);
+    const parts = u.pathname.split("/").filter(Boolean);
+    return parts[0] || "ubizresgata";
   } catch {
-    return url.split("?")[0].split("#")[0].replace(/\/$/, "");
+    return "ubizresgata";
   }
 }
 
-async function processInBatches<T, R>(items: T[], batchSize: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map(fn));
-    results.push(...batchResults);
-  }
-  return results;
+// ---------- API-based product fetching ----------
+
+interface ApiProduct {
+  id: number;
+  attributes: {
+    title: string;
+    image: string | null;
+    price: string | null;
+    price_from: string | null;
+    link: string | null;
+    uuid: string;
+    seller: string | null;
+    coupon: string | null;
+    free_shipping: boolean | null;
+    installment: string | null;
+    category: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+    description: string | null;
+    store_image: string | null;
+  };
 }
 
-// ---------- Phase 1: Link discovery from listing pages ----------
-
-interface DiscoveredLink {
-  url: string;
-  normalizedUrl: string;
-  slug: string | null;
-  sourcePageUrl: string;
-}
-
-interface PageDiscoveryResult {
-  url: string;
-  htmlLength: number;
-  linksFound: number;
-  cardsParsed: number;
-  discarded: number;
-  durationMs: number;
-  sampleTitles: string[];
-  sampleLinks: string[];
-  error?: string;
-  links: DiscoveredLink[];
-  cards: ParsedCard[];
-}
-
-interface ParsedCard {
-  title: string;
-  price: number | null;
-  originalPrice: number | null;
-  imageUrl: string | null;
-  affiliateUrl: string;
-  badgeLabel: string | null;
-  slug: string | null;
-  storeName: string | null;
-  rawHtml: string;
-}
-
-function discoverLinksFromHtml(html: string, baseUrl: string, sourcePageUrl: string): DiscoveredLink[] {
-  const links: DiscoveredLink[] = [];
-  const seen = new Set<string>();
-  
-  // Extract ALL hrefs containing /ubizresgata/p/ or /p/ patterns
-  const linkRegex = /href="([^"]*\/(?:ubizresgata\/)?p\/[A-Za-z0-9_-]+[^"]*)"/gi;
-  let match;
-  while ((match = linkRegex.exec(html)) !== null) {
-    let href = match[1];
-    if (!href.startsWith("http")) {
-      href = href.startsWith("/") ? `${baseUrl}${href}` : `${baseUrl}/${href}`;
-    }
-    const normalized = normalizeUrl(href);
-    if (!seen.has(normalized)) {
-      seen.add(normalized);
-      links.push({
-        url: href,
-        normalizedUrl: normalized,
-        slug: extractSlug(href),
-        sourcePageUrl,
-      });
-    }
-  }
-  return links;
-}
-
-function parseCardsFromHtml(html: string, baseUrl: string): ParsedCard[] {
-  const cards: ParsedCard[] = [];
-  const cardRegex = /<a[^>]*href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-  let cardMatch;
-
-  while ((cardMatch = cardRegex.exec(html)) !== null) {
-    try {
-      const href = cardMatch[1];
-      const cardHtml = cardMatch[2];
-      const fullUrl = href.startsWith("http") ? href : `${baseUrl}${href}`;
-      const slug = extractSlug(href);
-
-      const imgMatch = cardHtml.match(/<img[^>]*src="([^"]+)"[^>]*>/i);
-      const imageUrl = imgMatch ? imgMatch[1] : null;
-
-      const discountBadgeMatch = cardHtml.match(/>-(?:<!-- -->)?(\d+)(?:<!-- -->)?%</);
-      const badgeLabel = discountBadgeMatch ? `-${discountBadgeMatch[1]}%` : null;
-
-      const storeMatch = cardHtml.match(/\/lojas\/([^"\/\s]+)/i);
-      const storeName = storeMatch
-        ? decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-        : null;
-
-      const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
-      let priceMatch;
-      const rawPrices: number[] = [];
-      while ((priceMatch = priceRegex.exec(cardHtml)) !== null) {
-        const val = cleanPrice(priceMatch[1]);
-        if (val !== null && val > 0) rawPrices.push(val);
-      }
-
-      const textParts: string[] = [];
-      const textRegex = /<(?:p|span|div|h[1-6])[^>]*>([^<]{4,})<\/(?:p|span|div|h[1-6])>/gi;
-      let textMatch;
-      while ((textMatch = textRegex.exec(cardHtml)) !== null) {
-        const text = textMatch[1].trim();
-        if (text && !text.match(/R\$/) && !text.match(/^-?\d+%$/) && !text.match(/^\d+[.,]\d{2}$/)) {
-          textParts.push(text);
-        }
-      }
-
-      let title = "";
-      for (const part of textParts) {
-        if (part.length > title.length) title = part;
-      }
-
-      let price: number | null = null;
-      let originalPrice: number | null = null;
-      if (rawPrices.length >= 2) {
-        const sorted = [...rawPrices].sort((a, b) => a - b);
-        price = sorted[0];
-        originalPrice = sorted[sorted.length - 1];
-        if (price === originalPrice) originalPrice = null;
-      } else if (rawPrices.length === 1) {
-        price = rawPrices[0];
-      }
-
-      if (!title && !price && !imageUrl) continue;
-      if (!title) title = "Oferta sem título";
-
-      cards.push({
-        title,
-        price,
-        originalPrice,
-        imageUrl,
-        affiliateUrl: fullUrl,
-        badgeLabel,
-        slug,
-        storeName,
-        rawHtml: cardHtml.substring(0, 2000),
-      });
-    } catch (e) {
-      console.error("Error parsing card:", e);
-    }
-  }
-  return cards;
-}
-
-async function scrapeListingPage(url: string, firecrawlKey: string): Promise<PageDiscoveryResult> {
-  const startTime = Date.now();
-  try {
-    const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["html"],
-        waitFor: 3000,
-        onlyMainContent: false,
-        actions: [
-          { type: "wait", milliseconds: 2000 },
-          { type: "scroll", direction: "down" },
-          { type: "wait", milliseconds: 2000 },
-          { type: "scroll", direction: "down" },
-          { type: "wait", milliseconds: 2000 },
-          { type: "scroll", direction: "down" },
-          { type: "wait", milliseconds: 2000 },
-          { type: "scroll", direction: "down" },
-          { type: "wait", milliseconds: 2000 },
-          { type: "scroll", direction: "down" },
-          { type: "wait", milliseconds: 2000 },
-        ],
-      }),
-    });
-
-    const scrapeData = await scrapeResponse.json();
-    const durationMs = Date.now() - startTime;
-
-    if (!scrapeResponse.ok) {
-      return {
-        url, htmlLength: 0, linksFound: 0, cardsParsed: 0, discarded: 0,
-        durationMs, sampleTitles: [], sampleLinks: [], links: [], cards: [],
-        error: scrapeData?.error || `HTTP ${scrapeResponse.status}`,
-      };
-    }
-
-    const html = scrapeData?.data?.html || scrapeData?.html || "";
-    if (!html) {
-      return {
-        url, htmlLength: 0, linksFound: 0, cardsParsed: 0, discarded: 0,
-        durationMs, sampleTitles: [], sampleLinks: [], links: [], cards: [],
-        error: "No HTML returned",
-      };
-    }
-
-    const baseUrl = new URL(url).origin;
-    const links = discoverLinksFromHtml(html, baseUrl, url);
-    const cards = parseCardsFromHtml(html, baseUrl);
-
-    return {
-      url,
-      htmlLength: html.length,
-      linksFound: links.length,
-      cardsParsed: cards.length,
-      discarded: 0,
-      durationMs,
-      sampleTitles: cards.slice(0, 10).map(c => c.title),
-      sampleLinks: links.slice(0, 10).map(l => l.url),
-      links,
-      cards,
-      error: undefined,
-    };
-  } catch (e: any) {
-    return {
-      url, htmlLength: 0, linksFound: 0, cardsParsed: 0, discarded: 0,
-      durationMs: Date.now() - startTime, sampleTitles: [], sampleLinks: [],
-      links: [], cards: [], error: e.message,
-    };
-  }
-}
-
-// ---------- Phase 2: Individual product scrape ----------
-
-interface ProductDetail {
+interface SyncResult {
   slug: string;
-  url: string;
   title: string;
-  price: number | null;
-  originalPrice: number | null;
-  imageUrl: string | null;
-  storeName: string | null;
-  badgeLabel: string | null;
-  description: string | null;
-  success: boolean;
+  action: "created" | "updated" | "skipped" | "error";
   error?: string;
-}
-
-async function scrapeProductPage(url: string, slug: string, firecrawlKey: string): Promise<ProductDetail> {
-  try {
-    const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["html"],
-        waitFor: 2000,
-        onlyMainContent: false,
-      }),
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) {
-      return { slug, url, title: "", price: null, originalPrice: null, imageUrl: null, storeName: null, badgeLabel: null, description: null, success: false, error: data?.error || `HTTP ${resp.status}` };
-    }
-
-    const html = data?.data?.html || data?.html || "";
-    if (!html) {
-      return { slug, url, title: "", price: null, originalPrice: null, imageUrl: null, storeName: null, badgeLabel: null, description: null, success: false, error: "No HTML" };
-    }
-
-    // Extract title from og:title or h1
-    let title = "";
-    const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
-    if (ogTitleMatch) title = ogTitleMatch[1];
-    if (!title) {
-      const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      if (h1Match) title = h1Match[1].trim();
-    }
-
-    // Extract image from og:image
-    let imageUrl: string | null = null;
-    const ogImgMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
-    if (ogImgMatch) imageUrl = ogImgMatch[1];
-
-    // Extract prices
-    const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
-    let priceMatch;
-    const rawPrices: number[] = [];
-    while ((priceMatch = priceRegex.exec(html)) !== null) {
-      const val = cleanPrice(priceMatch[1]);
-      if (val !== null && val > 0 && val < 100000) rawPrices.push(val);
-    }
-
-    let price: number | null = null;
-    let originalPrice: number | null = null;
-    if (rawPrices.length >= 2) {
-      const sorted = [...new Set(rawPrices)].sort((a, b) => a - b);
-      price = sorted[0];
-      originalPrice = sorted[sorted.length - 1];
-      if (price === originalPrice) originalPrice = null;
-    } else if (rawPrices.length === 1) {
-      price = rawPrices[0];
-    }
-
-    // Extract store name
-    const storeMatch = html.match(/\/lojas\/([^"\/\s]+)/i);
-    const storeName = storeMatch
-      ? decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-      : null;
-
-    // Extract description from og:description
-    let description: string | null = null;
-    const ogDescMatch = html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]+)"/i);
-    if (ogDescMatch) description = ogDescMatch[1];
-
-    // Badge
-    const discountMatch = html.match(/>-(?:<!-- -->)?(\d+)(?:<!-- -->)?%</);
-    const badgeLabel = discountMatch ? `-${discountMatch[1]}%` : null;
-
-    if (!title) title = "Oferta sem título";
-
-    return { slug, url, title, price, originalPrice, imageUrl, storeName, badgeLabel, description, success: true };
-  } catch (e: any) {
-    return { slug, url, title: "", price: null, originalPrice: null, imageUrl: null, storeName: null, badgeLabel: null, description: null, success: false, error: e.message };
-  }
 }
 
 // ---------- main handler ----------
@@ -374,15 +64,6 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-
-  if (!firecrawlKey) {
-    return new Response(
-      JSON.stringify({ success: false, error: "FIRECRAWL_API_KEY not configured" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
@@ -424,6 +105,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    const startedAt = new Date().toISOString();
+
     // Load config
     const { data: config } = await supabase
       .from("mirror_sync_config")
@@ -434,331 +117,242 @@ Deno.serve(async (req) => {
     const originUrl = config?.origin_url || "https://www.divulgadorinteligente.com/ubizresgata";
     const autoActivate = config?.auto_activate !== false;
     const autoVisibleDriver = config?.auto_visible_driver !== false;
-    const debugMode = config?.debug_mode === true;
+    const sitename = extractSitename(originUrl);
 
-    const defaultPages = [
-      "/promocoes-do-dia",
-      "/lojas/shopee",
-      "/lojas/mercadolivre",
-      "/lojas/amazon",
-      "/lojas/magalu",
-    ];
-    const extraPages: string[] = (config?.extra_pages as string[]) || [];
-    const pagePaths = extraPages.length > 0 ? extraPages : defaultPages;
-    const urls = [
-      originUrl,
-      ...pagePaths.map((p: string) => p.startsWith("http") ? p : `${originUrl}${p}`),
-    ];
+    // ========== Fetch products from API ==========
+    const apiUrl = `https://api.divulgadorinteligente.com/api/products?sitename=${sitename}&limit=500`;
+    console.log(`[API] Fetching products from: ${apiUrl}`);
 
-    // ========== PHASE 1: Discovery ==========
-    console.log(`[Phase 1] Scraping ${urls.length} listing pages in parallel batches of 3...`);
+    const apiStart = Date.now();
+    const apiResponse = await fetch(apiUrl);
+    const apiDurationMs = Date.now() - apiStart;
 
-    const pageResults = await processInBatches(urls, 3, (url) => scrapeListingPage(url, firecrawlKey));
-
-    // Collect all unique links and cards
-    const allLinks = new Map<string, DiscoveredLink>(); // normalized URL -> link
-    const allCards = new Map<string, ParsedCard>(); // slug or normalized URL -> card
-    let duplicatesCrossPage = 0;
-
-    const pagesDigest = pageResults.map(pr => ({
-      url: pr.url,
-      html_length: pr.htmlLength,
-      links_found: pr.linksFound,
-      cards_parsed: pr.cardsParsed,
-      discarded: pr.discarded,
-      duration_ms: pr.durationMs,
-      sample_titles: pr.sampleTitles,
-      sample_links: pr.sampleLinks,
-      error: pr.error || null,
-    }));
-
-    for (const pr of pageResults) {
-      for (const link of pr.links) {
-        if (allLinks.has(link.normalizedUrl)) {
-          duplicatesCrossPage++;
-        } else {
-          allLinks.set(link.normalizedUrl, link);
-        }
-      }
-      for (const card of pr.cards) {
-        const key = card.slug || normalizeUrl(card.affiliateUrl);
-        if (!allCards.has(key)) {
-          allCards.set(key, card);
-        }
-      }
+    if (!apiResponse.ok) {
+      const errText = await apiResponse.text();
+      throw new Error(`API returned ${apiResponse.status}: ${errText.substring(0, 200)}`);
     }
 
-    const totalLinksRaw = pageResults.reduce((s, pr) => s + pr.linksFound, 0);
-    const uniqueLinks = allLinks.size;
+    const apiData = await apiResponse.json();
+    const products: ApiProduct[] = apiData?.data || [];
 
-    console.log(`[Phase 1] Total raw links: ${totalLinksRaw}, Unique: ${uniqueLinks}, Cards: ${allCards.size}`);
+    console.log(`[API] Fetched ${products.length} products in ${apiDurationMs}ms`);
 
-    // Load existing deals for deduplication
+    // ========== Load existing deals for deduplication ==========
     const { data: existingDeals } = await supabase
       .from("affiliate_deals")
-      .select("id, origin_hash, origin_external_id, affiliate_url, title, price, image_url")
+      .select("id, origin_external_id, affiliate_url, title, price, image_url")
       .eq("brand_id", brand_id)
       .eq("origin", "divulgador_inteligente");
 
     const existingBySlug = new Map<string, any>();
-    const existingByUrl = new Map<string, any>();
-    for (const d of existingDeals || []) {
-      if (d.origin_external_id) existingBySlug.set(d.origin_external_id, d);
-      if (d.affiliate_url) existingByUrl.set(normalizeUrl(d.affiliate_url), d);
-    }
-
-    // Determine which links are new (not in DB)
-    const newLinks: DiscoveredLink[] = [];
-    let alreadyInDb = 0;
-    for (const [normUrl, link] of allLinks) {
-      const slug = link.slug;
-      if ((slug && existingBySlug.has(slug)) || existingByUrl.has(normUrl)) {
-        alreadyInDb++;
-      } else {
-        newLinks.push(link);
+    for (const deal of existingDeals || []) {
+      if (deal.origin_external_id) {
+        existingBySlug.set(deal.origin_external_id, deal);
       }
     }
 
-    const discoveryDigest = {
-      total_links_raw: totalLinksRaw,
-      unique_links: uniqueLinks,
-      unique_cards: allCards.size,
-      duplicates_cross_page: duplicatesCrossPage,
-      already_in_db: alreadyInDb,
-      new_to_scrape: newLinks.length,
-    };
-
-    console.log(`[Phase 1] Already in DB: ${alreadyInDb}, New to scrape: ${newLinks.length}`);
-
-    // ========== DIAGNOSE MODE: Return discovery report only ==========
+    // ========== Diagnose mode ==========
     if (isDiagnose) {
-      const report = {
+      const newCount = products.filter(p => !existingBySlug.has(p.attributes.uuid)).length;
+      const existingCount = products.filter(p => existingBySlug.has(p.attributes.uuid)).length;
+
+      // Sample of sellers
+      const sellerCounts: Record<string, number> = {};
+      for (const p of products) {
+        const seller = p.attributes.seller || "unknown";
+        sellerCounts[seller] = (sellerCounts[seller] || 0) + 1;
+      }
+
+      const result = {
         success: true,
         mode: "diagnose",
-        pages: pagesDigest,
-        discovery: discoveryDigest,
-        new_links_sample: newLinks.slice(0, 20).map(l => ({ url: l.url, slug: l.slug })),
-        existing_count: existingDeals?.length || 0,
+        api: {
+          url: apiUrl,
+          total_products: products.length,
+          duration_ms: apiDurationMs,
+          sellers: sellerCounts,
+        },
+        discovery: {
+          total_from_api: products.length,
+          already_in_db: existingCount,
+          new_to_import: newCount,
+          existing_in_db_total: existingDeals?.length || 0,
+        },
+        sample_products: products.slice(0, 15).map(p => ({
+          uuid: p.attributes.uuid,
+          title: p.attributes.title,
+          price: p.attributes.price,
+          price_from: p.attributes.price_from,
+          seller: p.attributes.seller,
+          coupon: p.attributes.coupon,
+          has_image: !!p.attributes.image,
+          is_new: !existingBySlug.has(p.attributes.uuid),
+        })),
+        new_products_sample: products
+          .filter(p => !existingBySlug.has(p.attributes.uuid))
+          .slice(0, 10)
+          .map(p => ({
+            uuid: p.attributes.uuid,
+            title: p.attributes.title,
+            seller: p.attributes.seller,
+            link: p.attributes.link?.substring(0, 80),
+          })),
       };
-      return new Response(JSON.stringify(report), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+      return new Response(
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // ========== SYNC MODE ==========
-    const logEntry = await supabase
-      .from("mirror_sync_logs")
-      .insert({ brand_id, origin: "divulgador_inteligente", status: "running" })
-      .select("id")
-      .single();
-    const logId = logEntry.data?.id;
+    // ========== Sync mode: upsert products ==========
+    let persistedNew = 0;
+    let updated = 0;
+    let skipped = 0;
+    let errors = 0;
+    const syncResults: SyncResult[] = [];
 
-    let totalNew = 0;
-    let totalUpdated = 0;
-    let totalSkipped = 0;
-    let totalErrors = 0;
-    const errorDetails: any[] = [];
+    for (const product of products) {
+      const attrs = product.attributes;
+      const slug = attrs.uuid;
 
-    // Get default category
-    const { data: defaultCat } = await supabase
-      .from("affiliate_deal_categories")
-      .select("id")
-      .eq("brand_id", brand_id)
-      .eq("is_active", true)
-      .order("order_index")
-      .limit(1)
-      .single();
+      if (!slug || !attrs.title) {
+        skipped++;
+        continue;
+      }
 
-    // --- Update existing deals from card data ---
-    for (const [key, card] of allCards) {
+      const price = cleanPrice(attrs.price);
+      const originalPrice = cleanPrice(attrs.price_from);
+      const affiliateUrl = attrs.link || `${originUrl}/p/${slug}`;
+      const badgeLabel = attrs.coupon ? `Cupom: ${attrs.coupon}` : null;
+
+      const dealData: Record<string, any> = {
+        brand_id,
+        title: attrs.title,
+        image_url: attrs.image || null,
+        price,
+        original_price: originalPrice,
+        affiliate_url: affiliateUrl,
+        origin: "divulgador_inteligente",
+        origin_external_id: slug,
+        origin_url: `${originUrl}/p/${slug}`,
+        store_name: attrs.seller || null,
+        store_logo_url: attrs.store_image || null,
+        badge_label: badgeLabel,
+        category: attrs.category || null,
+        description: attrs.description || null,
+        last_synced_at: new Date().toISOString(),
+        sync_status: "ok",
+        sync_error: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const existing = existingBySlug.get(slug);
+
       try {
-        const slug = card.slug;
-        const normUrl = normalizeUrl(card.affiliateUrl);
-        const existing = (slug && existingBySlug.get(slug)) || existingByUrl.get(normUrl);
-
         if (existing) {
-          const needsUpdate =
-            existing.price !== card.price ||
-            existing.image_url !== card.imageUrl ||
-            existing.title !== card.title;
+          // Update existing — only update fields that might have changed
+          const { error } = await supabase
+            .from("affiliate_deals")
+            .update({
+              title: dealData.title,
+              image_url: dealData.image_url,
+              price: dealData.price,
+              original_price: dealData.original_price,
+              affiliate_url: dealData.affiliate_url,
+              store_name: dealData.store_name,
+              store_logo_url: dealData.store_logo_url,
+              badge_label: dealData.badge_label,
+              category: dealData.category,
+              description: dealData.description,
+              last_synced_at: dealData.last_synced_at,
+              sync_status: "ok",
+              sync_error: null,
+              updated_at: dealData.updated_at,
+            })
+            .eq("id", existing.id);
 
-          if (needsUpdate) {
-            await supabase
-              .from("affiliate_deals")
-              .update({
-                title: card.title,
-                price: card.price,
-                original_price: card.originalPrice,
-                image_url: card.imageUrl,
-                badge_label: card.badgeLabel,
-                store_name: card.storeName,
-                last_synced_at: new Date().toISOString(),
-                sync_status: "synced",
-                sync_error: null,
-                ...(debugMode ? { raw_payload: { html: card.rawHtml } } : {}),
-              })
-              .eq("id", existing.id);
-            totalUpdated++;
-          } else {
-            await supabase
-              .from("affiliate_deals")
-              .update({ last_synced_at: new Date().toISOString(), sync_status: "synced" })
-              .eq("id", existing.id);
-            totalSkipped++;
-          }
+          if (error) throw error;
+          updated++;
+          syncResults.push({ slug, title: attrs.title, action: "updated" });
+        } else {
+          // Insert new
+          const { error } = await supabase
+            .from("affiliate_deals")
+            .insert({
+              ...dealData,
+              is_active: autoActivate,
+              visible_driver: autoVisibleDriver,
+              click_count: 0,
+              order_index: 0,
+              first_imported_at: new Date().toISOString(),
+            });
+
+          if (error) throw error;
+          persistedNew++;
+          syncResults.push({ slug, title: attrs.title, action: "created" });
         }
       } catch (e: any) {
-        totalErrors++;
-        errorDetails.push({ phase: "update_existing", title: card.title, error: e.message });
+        errors++;
+        syncResults.push({ slug, title: attrs.title, action: "error", error: e.message });
+        console.error(`[Sync] Error for ${slug}: ${e.message}`);
       }
     }
 
-    // --- Phase 2: Scrape new products individually ---
-    console.log(`[Phase 2] Scraping ${newLinks.length} new products in batches of 5...`);
-
-    const phase2Results: ProductDetail[] = [];
-
-    if (newLinks.length > 0) {
-      const products = await processInBatches(newLinks, 5, (link) =>
-        scrapeProductPage(link.url, link.slug || extractSlug(link.url) || md5Hex(link.url), firecrawlKey)
-      );
-      phase2Results.push(...products);
-
-      // Also insert new items found from cards that aren't in DB
-      for (const [key, card] of allCards) {
-        const slug = card.slug;
-        const normUrl = normalizeUrl(card.affiliateUrl);
-        const existing = (slug && existingBySlug.get(slug)) || existingByUrl.get(normUrl);
-        if (!existing) {
-          // This card is new, insert it
-          try {
-            const hash = md5Hex(`${card.affiliateUrl}`);
-            const now = new Date().toISOString();
-            await supabase.from("affiliate_deals").insert({
-              brand_id,
-              title: card.title,
-              description: card.title,
-              price: card.price,
-              original_price: card.originalPrice,
-              image_url: card.imageUrl,
-              affiliate_url: card.affiliateUrl,
-              badge_label: card.badgeLabel,
-              store_name: card.storeName,
-              is_active: autoActivate,
-              origin: "divulgador_inteligente",
-              origin_external_id: card.slug,
-              origin_url: card.affiliateUrl,
-              origin_hash: hash,
-              visible_driver: autoVisibleDriver,
-              sync_status: "synced",
-              first_imported_at: now,
-              last_synced_at: now,
-              category_id: defaultCat?.id || null,
-              order_index: 0,
-              ...(debugMode ? { raw_payload: { html: card.rawHtml } } : {}),
-            });
-            totalNew++;
-            // Mark as existing to avoid duplicate insert from phase2
-            if (card.slug) existingBySlug.set(card.slug, { id: "new" });
-            existingByUrl.set(normUrl, { id: "new" });
-          } catch (e: any) {
-            totalErrors++;
-            errorDetails.push({ phase: "insert_from_card", title: card.title, error: e.message });
-          }
-        }
-      }
-
-      // Insert products from phase 2 that are truly new
-      for (const product of products) {
-        if (!product.success || !product.title) continue;
-        const normUrl = normalizeUrl(product.url);
-        if (existingBySlug.has(product.slug || "") || existingByUrl.has(normUrl)) continue;
-
-        try {
-          const hash = md5Hex(product.url);
-          const now = new Date().toISOString();
-          await supabase.from("affiliate_deals").insert({
-            brand_id,
-            title: product.title,
-            description: product.description || product.title,
-            price: product.price,
-            original_price: product.originalPrice,
-            image_url: product.imageUrl,
-            affiliate_url: product.url,
-            badge_label: product.badgeLabel,
-            store_name: product.storeName,
-            is_active: autoActivate,
-            origin: "divulgador_inteligente",
-            origin_external_id: product.slug,
-            origin_url: product.url,
-            origin_hash: hash,
-            visible_driver: autoVisibleDriver,
-            sync_status: "synced",
-            first_imported_at: now,
-            last_synced_at: now,
-            category_id: defaultCat?.id || null,
-            order_index: 0,
-          });
-          totalNew++;
-          if (product.slug) existingBySlug.set(product.slug, { id: "new" });
-          existingByUrl.set(normUrl, { id: "new" });
-        } catch (e: any) {
-          totalErrors++;
-          errorDetails.push({ phase: "insert_from_phase2", title: product.title, slug: product.slug, error: e.message });
-        }
-      }
-    }
-
-    const totalRead = allCards.size + phase2Results.filter(p => p.success).length;
-
-    const phase2Digest = {
-      scraped: phase2Results.length,
-      parsed_ok: phase2Results.filter(p => p.success).length,
-      parse_failed: phase2Results.filter(p => !p.success).length,
-      samples: phase2Results.slice(0, 5).map(p => ({ slug: p.slug, title: p.title, success: p.success, error: p.error })),
-    };
-
-    const dedupAudit = {
-      by_url: duplicatesCrossPage,
-      already_in_db: alreadyInDb,
-      new_discovered: newLinks.length,
-    };
-
+    // ========== Log the sync ==========
+    const finishedAt = new Date().toISOString();
     const details = {
-      pages: pagesDigest,
-      discovery: discoveryDigest,
-      dedup_audit: dedupAudit,
-      phase2: phase2Digest,
-      totals: { total_read: totalRead, persisted_new: totalNew, updated: totalUpdated, skipped: totalSkipped, errors: totalErrors },
+      api: {
+        url: apiUrl,
+        total_products: products.length,
+        duration_ms: apiDurationMs,
+      },
+      discovery: {
+        total_from_api: products.length,
+        already_in_db: existingBySlug.size,
+        new_to_import: products.length - existingBySlug.size,
+      },
+      totals: {
+        total_read: products.length,
+        persisted_new: persistedNew,
+        updated,
+        skipped,
+        errors,
+      },
+      samples: syncResults.slice(0, 20),
     };
 
-    // Update log
-    const summary = `Lidos: ${totalRead} | Novos: ${totalNew} | Atualizados: ${totalUpdated} | Ignorados: ${totalSkipped} | Erros: ${totalErrors}`;
-    if (logId) {
-      await supabase
-        .from("mirror_sync_logs")
-        .update({
-          finished_at: new Date().toISOString(),
-          total_read: totalRead,
-          total_new: totalNew,
-          total_updated: totalUpdated,
-          total_skipped: totalSkipped,
-          total_errors: totalErrors,
-          status: totalErrors > 0 && totalNew === 0 && totalUpdated === 0 ? "error" : "success",
-          summary,
-          details,
-        })
-        .eq("id", logId);
-    }
+    await supabase.from("mirror_sync_logs").insert({
+      brand_id,
+      started_at: startedAt,
+      finished_at: finishedAt,
+      status: errors > 0 ? "partial" : "success",
+      total_read: products.length,
+      total_persisted: persistedNew + updated,
+      new_count: persistedNew,
+      updated_count: updated,
+      error_count: errors,
+      details,
+    });
+
+    console.log(`[Sync] Done: ${persistedNew} new, ${updated} updated, ${skipped} skipped, ${errors} errors`);
 
     return new Response(
-      JSON.stringify({ success: true, summary, details }),
+      JSON.stringify({
+        success: true,
+        total_from_api: products.length,
+        persisted_new: persistedNew,
+        updated,
+        skipped,
+        errors,
+        duration_ms: Date.now() - apiStart,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("Mirror sync error:", error);
+  } catch (e: any) {
+    console.error("[mirror-sync] Fatal error:", e.message);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: e.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
