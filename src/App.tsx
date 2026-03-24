@@ -196,7 +196,7 @@ function AppRoutes() {
           <Route path="banner-manager" element={<ModuleGuard moduleKey="banners"><BannerManagerPage /></ModuleGuard>} />
           <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
           <Route path="page-builder" element={<PageBuilderPage />} />
-          <Route path="page-builder-v2" element={<PageBuilderV2Page />} />
+          <Route path="page-builder-v2" element={<ModuleGuard moduleKey="page_builder"><PageBuilderV2Page /></ModuleGuard>} />
           <Route path="public-vouchers" element={<PublicVouchers />} />
           
           <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
