@@ -30,13 +30,7 @@ function cleanPrice(raw: string | null | undefined): number | null {
   return isNaN(val) ? null : val;
 }
 
-function extractDiscount(text: string | null | undefined): string | null {
-  if (!text) return null;
-  const match = text.match(/-?\d+%/);
-  return match ? match[0] : null;
-}
-
-// ---------- parser ----------
+// ---------- listing page parser ----------
 
 interface ParsedDeal {
   title: string;
@@ -64,21 +58,17 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
       const fullUrl = href.startsWith("http") ? href : `${baseUrl}${href}`;
       const slug = extractSlug(href);
 
-      // Extract image
       const imgMatch = cardHtml.match(/<img[^>]*src="([^"]+)"[^>]*>/i);
       const imageUrl = imgMatch ? imgMatch[1] : null;
 
-      // Extract discount badge — match both >-33%< and >-<!-- -->33<!-- -->%< patterns
       const discountBadgeMatch = cardHtml.match(/>-(?:<!-- -->)?(\d+)(?:<!-- -->)?%</);
       const badgeLabel = discountBadgeMatch ? `-${discountBadgeMatch[1]}%` : null;
 
-      // Extract store name from /lojas/XXX links
       const storeMatch = cardHtml.match(/\/lojas\/([^"\/\s]+)/i);
       const storeName = storeMatch
         ? decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
         : null;
 
-      // Extract prices directly via R$ pattern (handles &nbsp; and regular spaces)
       const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
       let priceMatch;
       const rawPrices: number[] = [];
@@ -87,7 +77,6 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
         if (val !== null && val > 0) rawPrices.push(val);
       }
 
-      // Extract title from text content (p, span, div, h1-6)
       const textParts: string[] = [];
       const textRegex = /<(?:p|span|div|h[1-6])[^>]*>([^<]{4,})<\/(?:p|span|div|h[1-6])>/gi;
       let textMatch;
@@ -98,18 +87,15 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
         }
       }
 
-      // Title = longest non-price text
       let title = "";
       for (const part of textParts) {
         if (part.length > title.length) title = part;
       }
 
-      // Determine price and original_price from extracted R$ values
       let price: number | null = null;
       let originalPrice: number | null = null;
 
       if (rawPrices.length >= 2) {
-        // Sort: smaller = current price, larger = original
         const sorted = [...rawPrices].sort((a, b) => a - b);
         price = sorted[0];
         originalPrice = sorted[sorted.length - 1];
@@ -141,6 +127,96 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
   return deals;
 }
 
+// ---------- product detail page parser ----------
+
+function parseProductPage(html: string, url: string): ParsedDeal | null {
+  try {
+    const slug = extractSlug(url);
+
+    // Extract title from og:title or <title> or <h1>
+    let title = "";
+    const ogTitleMatch = html.match(/property="og:title"\s+content="([^"]+)"/i) ||
+                         html.match(/content="([^"]+)"\s+property="og:title"/i);
+    if (ogTitleMatch) {
+      title = ogTitleMatch[1];
+    } else {
+      const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+      if (h1Match) title = h1Match[1].trim();
+      else {
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (titleMatch) title = titleMatch[1].trim();
+      }
+    }
+
+    // Extract image from og:image or first large img
+    let imageUrl: string | null = null;
+    const ogImgMatch = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
+                       html.match(/content="([^"]+)"\s+property="og:image"/i);
+    if (ogImgMatch) {
+      imageUrl = ogImgMatch[1];
+    } else {
+      const imgMatch = html.match(/<img[^>]*src="(https?:\/\/[^"]+(?:\.jpg|\.jpeg|\.png|\.webp)[^"]*)"/i);
+      if (imgMatch) imageUrl = imgMatch[1];
+    }
+
+    // Extract prices
+    const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
+    let priceMatch;
+    const rawPrices: number[] = [];
+    while ((priceMatch = priceRegex.exec(html)) !== null) {
+      const val = cleanPrice(priceMatch[1]);
+      if (val !== null && val > 0 && val < 100000) rawPrices.push(val);
+    }
+
+    // Deduplicate prices
+    const uniquePrices = [...new Set(rawPrices)].sort((a, b) => a - b);
+
+    let price: number | null = null;
+    let originalPrice: number | null = null;
+
+    if (uniquePrices.length >= 2) {
+      price = uniquePrices[0];
+      originalPrice = uniquePrices[uniquePrices.length - 1];
+      if (price === originalPrice) originalPrice = null;
+    } else if (uniquePrices.length === 1) {
+      price = uniquePrices[0];
+    }
+
+    // Extract discount badge
+    const discountMatch = html.match(/-(\d+)%/);
+    const badgeLabel = discountMatch ? `-${discountMatch[1]}%` : null;
+
+    // Extract store name from /lojas/XXX or og:site_name
+    let storeName: string | null = null;
+    const storeMatch = html.match(/\/lojas\/([^"\/\s?]+)/i);
+    if (storeMatch) {
+      storeName = decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    } else {
+      const siteNameMatch = html.match(/property="og:site_name"\s+content="([^"]+)"/i);
+      if (siteNameMatch) storeName = siteNameMatch[1];
+    }
+
+    if (!title && !price && !imageUrl) return null;
+    if (!title) title = "Oferta sem título";
+
+    return {
+      title,
+      price,
+      original_price: originalPrice,
+      image_url: imageUrl,
+      affiliate_url: url,
+      badge_label: badgeLabel,
+      origin_external_id: slug,
+      origin_url: url,
+      raw_html: "",
+      store_name: storeName,
+    };
+  } catch (e) {
+    console.error("Error parsing product page:", e);
+    return null;
+  }
+}
+
 // ---------- main handler ----------
 
 Deno.serve(async (req) => {
@@ -165,7 +241,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { brand_id } = body;
 
-    // Handle auto-sync from cron: sync all brands with auto_sync_enabled
+    // Handle auto-sync from cron
     if (brand_id === "auto") {
       const { data: configs } = await supabase
         .from("mirror_sync_config")
@@ -175,7 +251,6 @@ Deno.serve(async (req) => {
       const results = [];
       for (const cfg of configs || []) {
         try {
-          // Re-invoke self for each brand
           const res = await fetch(`${supabaseUrl}/functions/v1/mirror-sync`, {
             method: "POST",
             headers: {
@@ -247,14 +322,14 @@ Deno.serve(async (req) => {
     const errorDetails: any[] = [];
 
     try {
-      // Scrape all URLs and accumulate parsed deals
       const baseUrl = new URL(originUrl).origin;
       const allParsedDeals: ParsedDeal[] = [];
       const seenSlugs = new Set<string>();
 
+      // ========== PHASE 1: Scrape listing pages ==========
       for (const url of urls) {
         try {
-          console.log(`Scraping URL: ${url}`);
+          console.log(`Scraping listing: ${url}`);
           const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
             method: "POST",
             headers: {
@@ -287,7 +362,6 @@ Deno.serve(async (req) => {
           const pageParsed = parseDealsFromHtml(html, baseUrl);
           console.log(`Parsed ${pageParsed.length} deals from ${url}`);
 
-          // Deduplicate by slug across pages
           for (const deal of pageParsed) {
             const dedupeKey = deal.origin_external_id || deal.affiliate_url;
             if (!seenSlugs.has(dedupeKey)) {
@@ -301,11 +375,106 @@ Deno.serve(async (req) => {
         }
       }
 
+      console.log(`Phase 1 (listings): ${allParsedDeals.length} unique deals from ${urls.length} pages`);
+
+      // ========== PHASE 2: Map API discovery ==========
+      let mapDiscoveredUrls: string[] = [];
+      try {
+        console.log(`Phase 2: Map API discovery for ${originUrl}`);
+        const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: originUrl,
+            search: "ubizresgata/p/",
+            limit: 500,
+            includeSubdomains: false,
+          }),
+        });
+
+        const mapData = await mapResponse.json();
+
+        if (mapResponse.ok) {
+          mapDiscoveredUrls = (mapData?.links || []).filter((link: string) =>
+            link.includes("/ubizresgata/p/") || link.includes("/p/")
+          );
+          console.log(`Map API discovered ${mapDiscoveredUrls.length} product URLs`);
+        } else {
+          console.error("Map API error:", JSON.stringify(mapData));
+          errorDetails.push({ phase: "map", error: mapData?.error || `HTTP ${mapResponse.status}` });
+        }
+      } catch (mapError: any) {
+        console.error("Map API error:", mapError);
+        errorDetails.push({ phase: "map", error: mapError.message });
+      }
+
+      // ========== PHASE 3: Scrape individual product pages for new slugs ==========
+      // Find slugs discovered by Map that we don't already have from listings
+      const newProductUrls = mapDiscoveredUrls.filter(url => {
+        const slug = extractSlug(url);
+        return slug && !seenSlugs.has(slug);
+      });
+
+      console.log(`Phase 3: ${newProductUrls.length} new product URLs to scrape individually`);
+
+      // Batch individual scrapes (limit concurrency to avoid rate limits)
+      const BATCH_SIZE = 5;
+      for (let i = 0; i < newProductUrls.length; i += BATCH_SIZE) {
+        const batch = newProductUrls.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.allSettled(
+          batch.map(async (productUrl) => {
+            try {
+              const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${firecrawlKey}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  url: productUrl,
+                  formats: ["html"],
+                  waitFor: 2000,
+                  onlyMainContent: false,
+                }),
+              });
+
+              const scrapeData = await scrapeResp.json();
+              if (!scrapeResp.ok) {
+                console.error(`Product scrape error for ${productUrl}`);
+                return null;
+              }
+
+              const html = scrapeData?.data?.html || scrapeData?.html || "";
+              if (!html) return null;
+
+              return parseProductPage(html, productUrl);
+            } catch (e: any) {
+              console.error(`Error scraping product ${productUrl}:`, e);
+              return null;
+            }
+          })
+        );
+
+        for (const result of batchResults) {
+          if (result.status === "fulfilled" && result.value) {
+            const deal = result.value;
+            const dedupeKey = deal.origin_external_id || deal.affiliate_url;
+            if (!seenSlugs.has(dedupeKey)) {
+              seenSlugs.add(dedupeKey);
+              allParsedDeals.push(deal);
+            }
+          }
+        }
+      }
+
       const parsedDeals = allParsedDeals;
       totalRead = parsedDeals.length;
-      console.log(`Total unique deals parsed from ${urls.length} pages: ${totalRead}`);
+      console.log(`Total unique deals (listings + map): ${totalRead}`);
 
-      // Load existing hashes for deduplication
+      // Load existing for deduplication
       const { data: existingDeals } = await supabase
         .from("affiliate_deals")
         .select("id, origin_hash, origin_external_id, affiliate_url, title, price, image_url")
@@ -322,7 +491,7 @@ Deno.serve(async (req) => {
         if (d.affiliate_url) urlMap.set(d.affiliate_url, d);
       }
 
-      // Get default category (first active one or null)
+      // Get default category
       const { data: defaultCat } = await supabase
         .from("affiliate_deal_categories")
         .select("id")
@@ -336,18 +505,17 @@ Deno.serve(async (req) => {
         try {
           const hash = md5Hex(`${deal.title}|${deal.price}|${deal.affiliate_url}`);
 
-          // Check dedup: slug → hash → url
           const existingBySlug = deal.origin_external_id ? slugMap.get(deal.origin_external_id) : null;
           const existingByHash = hashMap.get(hash);
           const existingByUrl = urlMap.get(deal.affiliate_url);
           const existing = existingBySlug || existingByHash || existingByUrl;
 
           if (existing) {
-            // Check if needs update (price or image changed)
             const needsUpdate =
               existing.price !== deal.price ||
               existing.image_url !== deal.image_url ||
-              existing.title !== deal.title;
+              existing.title !== deal.title ||
+              (existing.price === null && deal.price !== null);
 
             if (needsUpdate) {
               await supabase
@@ -367,7 +535,6 @@ Deno.serve(async (req) => {
                 .eq("id", existing.id);
               totalUpdated++;
             } else {
-              // Just update sync timestamp
               await supabase
                 .from("affiliate_deals")
                 .update({
@@ -378,7 +545,6 @@ Deno.serve(async (req) => {
               totalSkipped++;
             }
           } else {
-            // New deal - insert
             const now = new Date().toISOString();
             await supabase.from("affiliate_deals").insert({
               brand_id,
