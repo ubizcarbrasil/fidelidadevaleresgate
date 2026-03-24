@@ -424,21 +424,23 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                   const visibleCount = Math.floor(allCatDeals.length / effectiveRows) * effectiveRows || allCatDeals.length;
                   const visibleDeals = allCatDeals.slice(0, visibleCount);
                   return (
-                    <div
-                      className="overflow-x-auto scrollbar-hide px-5 pb-1"
-                      style={{
-                        display: "grid",
-                        gridTemplateRows: `repeat(${effectiveRows}, auto)`,
-                        gridAutoFlow: "column",
-                        gridAutoColumns: "minmax(160px, 180px)",
-                        gap: "12px",
-                        scrollSnapType: "x mandatory",
-                        touchAction: "pan-x pan-y",
-                      }}
-                    >
-                      {visibleDeals.map(deal => (
-                        <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
-                      ))}
+                    <div className="space-y-3">
+                      {(() => {
+                        const rowBuckets: AffiliateDeal[][] = Array.from({ length: effectiveRows }, () => []);
+                        visibleDeals.forEach((deal, i) => rowBuckets[i % effectiveRows].push(deal));
+                        return rowBuckets.map((rowDeals, rowIndex) => (
+                          <div
+                            key={rowIndex}
+                            className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                            style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                          >
+                            {rowDeals.map(deal => (
+                              <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
+                            ))}
+                            <div className="min-w-[16px] flex-shrink-0" />
+                          </div>
+                        ));
+                      })()}
                     </div>
                   );
                 })()}

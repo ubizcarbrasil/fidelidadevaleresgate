@@ -335,21 +335,23 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div
-                className="overflow-x-auto scrollbar-hide px-5 pb-1"
-                style={{
-                  display: "grid",
-                  gridTemplateRows: `repeat(${effectiveRows}, auto)`,
-                  gridAutoFlow: "column",
-                  gridAutoColumns: "minmax(160px, 180px)",
-                  gap: "12px",
-                  scrollSnapType: "x mandatory",
-                  touchAction: "pan-x pan-y",
-                }}
-              >
-                {visibleDeals.map((deal) => (
-                  <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
-                ))}
+              <div className="space-y-3">
+                {(() => {
+                  const rowBuckets: AffiliateDeal[][] = Array.from({ length: effectiveRows }, () => []);
+                  visibleDeals.forEach((deal, i) => rowBuckets[i % effectiveRows].push(deal));
+                  return rowBuckets.map((rowDeals, rowIndex) => (
+                    <div
+                      key={rowIndex}
+                      className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                      style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                    >
+                      {rowDeals.map((deal) => (
+                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                      ))}
+                      <div className="min-w-[16px] flex-shrink-0" />
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           );
