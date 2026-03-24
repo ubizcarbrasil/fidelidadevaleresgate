@@ -171,10 +171,6 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     return 0;
   }), [rawCategories, categoryLayout]);
 
-  const filteredDeals = useMemo(() => {
-    if (!selectedCat) return deals;
-    return deals.filter(d => d.category_id === selectedCat);
-  }, [deals, selectedCat]);
 
   const handleClick = (deal: AffiliateDeal) => {
     setSelectedDeal(deal);
@@ -309,74 +305,66 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         </div>
       )}
 
-      {/* Deals — grid vertical quando categoria selecionada, carrossel horizontal por categoria para "Todos" */}
-      {selectedCat ? (
-        <div className="grid grid-cols-2 gap-3 px-5 pb-1 animate-fade-in">
-          {filteredDeals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-5 animate-fade-in">
-          {categories.map(cat => {
-            const catDeals = deals.filter(d => d.category_id === cat.id);
-            if (!catDeals.length) return null;
-            // Show ALL deals — only trim incomplete last row (3 per row minimum)
-            const ITEMS_PER_ROW = 3;
-            const totalFullRows = Math.max(1, Math.floor(catDeals.length / ITEMS_PER_ROW));
-            const visibleDeals = catDeals.slice(0, totalFullRows * ITEMS_PER_ROW);
-            return (
-              <div key={cat.id}>
-                <div className="px-5 mb-2 flex items-end justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-5 w-5 rounded flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
-                      <LucideIcon name={cat.icon_name} className="h-3 w-3" style={{ color: cat.color }} />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-foreground">{cat.name}</span>
-                      <p className="text-[10px] text-muted-foreground">{catDeals.length} oferta{catDeals.length !== 1 ? "s" : ""}</p>
-                    </div>
+      {/* Deals — carrossel horizontal por categoria */}
+      <div className="space-y-5 animate-fade-in">
+        {(selectedCat ? categories.filter(c => c.id === selectedCat) : categories).map(cat => {
+          const catDeals = deals.filter(d => d.category_id === cat.id);
+          if (!catDeals.length) return null;
+          return (
+            <div key={cat.id}>
+              <div className="px-5 mb-2 flex items-end justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
+                    <LucideIcon name={cat.icon_name} className="h-3 w-3" style={{ color: cat.color }} />
                   </div>
-                  <button
-                    onClick={() => setSelectedCat(cat.id)}
-                    className="text-xs font-semibold flex items-center gap-0.5"
-                    style={{ color: highlight }}
-                  >
-                    Ver todos
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
+                  <div>
+                    <span className="text-xs font-bold text-foreground">{cat.name}</span>
+                    <p className="text-[10px] text-muted-foreground">{catDeals.length} oferta{catDeals.length !== 1 ? "s" : ""}</p>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 px-5">
-                  {visibleDeals.map((deal) => (
-                    <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-          {/* Uncategorized deals */}
-          {(() => {
-            const uncatDeals = deals.filter(d => !d.category_id || !categories.some(c => c.id === d.category_id));
-            if (!uncatDeals.length) return null;
-            return (
-              <div>
-                <div className="px-5 mb-2">
-                  <span className="text-xs font-bold text-foreground">Outras ofertas</span>
-                </div>
-                <div
-                  className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
-                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                <button
+                  onClick={() => onOpenAllCategories ? onOpenAllCategories() : setSelectedCat(cat.id)}
+                  className="text-xs font-semibold flex items-center gap-0.5"
+                  style={{ color: highlight }}
                 >
-                  {uncatDeals.map((deal) => (
-                    <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
-                  ))}
-                  <div className="min-w-[16px] flex-shrink-0" />
-                </div>
+                  Ver todos
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
               </div>
-            );
-          })()}
-        </div>
-      )}
+              <div
+                className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+              >
+                {catDeals.map((deal) => (
+                  <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                ))}
+                <div className="min-w-[16px] flex-shrink-0" />
+              </div>
+            </div>
+          );
+        })}
+        {/* Uncategorized deals */}
+        {!selectedCat && (() => {
+          const uncatDeals = deals.filter(d => !d.category_id || !categories.some(c => c.id === d.category_id));
+          if (!uncatDeals.length) return null;
+          return (
+            <div>
+              <div className="px-5 mb-2">
+                <span className="text-xs font-bold text-foreground">Outras ofertas</span>
+              </div>
+              <div
+                className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+              >
+                {uncatDeals.map((deal) => (
+                  <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                ))}
+                <div className="min-w-[16px] flex-shrink-0" />
+              </div>
+            </div>
+          );
+        })()}
+      </div>
 
       {selectedDeal && (
         <AchadinhoDealDetail
