@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Star, Zap, ExternalLink, ToggleLeft, ToggleRight, Copy, FolderSync, ImagePlus } from "lucide-react";
+import AiBannerDialog from "./AiBannerDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,19 +23,15 @@ interface Props {
 
 export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dupTarget, setDupTarget] = useState<{ dealId: string; catId: string } | null>(null);
+  const [bannerDeal, setBannerDeal] = useState<any | null>(null);
 
   const handleCreateBanner = (deal: any) => {
-    const params = new URLSearchParams();
-    if (deal.image_url) params.set("prefill_image", deal.image_url);
-    if (deal.origin_url) params.set("prefill_link", deal.origin_url);
-    if (deal.title) params.set("prefill_title", deal.title);
-    navigate(`/banner-manager?${params.toString()}`);
+    setBannerDeal(deal);
   };
 
   const { data: deals, isLoading } = useQuery({
@@ -197,6 +193,13 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
           onCreateBanner={handleCreateBanner}
         />
       )}
+
+      <AiBannerDialog
+        open={!!bannerDeal}
+        onOpenChange={(open) => !open && setBannerDeal(null)}
+        deal={bannerDeal}
+        brandId={brandId}
+      />
     </div>
   );
 }
