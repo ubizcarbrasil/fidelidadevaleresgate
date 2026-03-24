@@ -172,7 +172,7 @@ function AppRoutes() {
           <Route path="modules" element={<RootGuard><ModuleDefinitionsPage /></RootGuard>} />
           <Route path="permissions" element={<PermissionsPage />} />
           <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
-          <Route path="audit" element={<AuditLogsPage />} />
+          <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
           <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
           <Route path="home-templates" element={<HomeTemplatesPage />} />
           <Route path="csv-import" element={<ModuleGuard moduleKey="stores"><CsvImportPage /></ModuleGuard>} />
