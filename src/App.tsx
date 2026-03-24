@@ -192,7 +192,7 @@ function AppRoutes() {
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
-          <Route path="icon-library" element={<RootGuard><IconLibraryPage /></RootGuard>} />
+          <Route path="icon-library" element={<ModuleGuard moduleKey="icon_library"><IconLibraryPage /></ModuleGuard>} />
           <Route path="banner-manager" element={<BannerManagerPage />} />
           <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
           <Route path="page-builder" element={<PageBuilderPage />} />
