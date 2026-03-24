@@ -6,6 +6,7 @@ import MirrorSyncDealsTable from "@/components/mirror-sync/MirrorSyncDealsTable"
 import MirrorSyncLogs from "@/components/mirror-sync/MirrorSyncLogs";
 import MirrorSyncConfig from "@/components/mirror-sync/MirrorSyncConfig";
 import MirrorSyncDebug from "@/components/mirror-sync/MirrorSyncDebug";
+import MirrorSyncCategoryDiag from "@/components/mirror-sync/MirrorSyncCategoryDiag";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export default function MirrorSyncPage() {
