@@ -390,7 +390,9 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
           const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
           const ITEMS_PER_ROW = 3;
-          const maxVisible = configuredRows * ITEMS_PER_ROW;
+          const maxFullRows = Math.floor(allCatDeals.length / ITEMS_PER_ROW);
+          const effectiveRows = Math.min(configuredRows, Math.max(1, maxFullRows));
+          const maxVisible = effectiveRows * ITEMS_PER_ROW;
           const visibleDeals = allCatDeals.slice(0, maxVisible);
           const hasMore = allCatDeals.length > maxVisible;
 
