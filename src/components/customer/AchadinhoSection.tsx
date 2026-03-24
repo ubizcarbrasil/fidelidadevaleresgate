@@ -263,7 +263,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       </div>
 
       {/* Category pills */}
-      {categories.length > 0 && (
+      {viableCategories.length > 0 && (
         <div ref={catScrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-3">
           <button
             onClick={() => setSelectedCat(null)}
