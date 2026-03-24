@@ -692,6 +692,15 @@ export default function AchadinhosMobileImportPage() {
                           )}
                           {p._no_match && <Badge variant="outline" className="text-amber-600 border-amber-400 text-[10px]">Sem correspondência</Badge>}
                           {p._no_link && <Badge variant="outline" className="text-amber-600 border-amber-400 text-[10px]">Sem link</Badge>}
+                          {p.category_name && (
+                            <Badge variant="secondary" className="text-[10px] gap-0.5">
+                              <Tag className="h-2.5 w-2.5" />
+                              {p.category_name}
+                            </Badge>
+                          )}
+                          {!p.category_id && !p._no_match && (
+                            <Badge variant="outline" className="text-muted-foreground text-[10px]">Sem categoria</Badge>
+                          )}
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" className="shrink-0 self-start" onClick={(e) => { e.stopPropagation(); removeProduct(p.id); }}>
