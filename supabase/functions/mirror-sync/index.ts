@@ -55,16 +55,22 @@ function matchDealToCategory(
 
   let bestCatId: string | null = null;
   let bestScore = 0;
+  const MIN_SCORE = 3; // score mínimo para atribuir categoria
 
   for (const cat of categories) {
     let score = 0;
     for (const kw of cat.keywords) {
       const nkw = normalize(kw);
-      if (text.includes(nkw)) {
+      if (nkw.length === 0) continue;
+      // Word-boundary aware matching para evitar falsos positivos
+      // Ex: "pet" não deve dar match em "carpet" ou "competição"
+      const escaped = nkw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(?:^|\\s|[^a-z0-9])${escaped}(?:$|\\s|[^a-z0-9])`, "i");
+      if (regex.test(` ${text} `)) {
         score += nkw.length; // longer keyword = higher weight
       }
     }
-    if (score > bestScore) {
+    if (score > bestScore && score >= MIN_SCORE) {
       bestScore = score;
       bestCatId = cat.id;
     }
