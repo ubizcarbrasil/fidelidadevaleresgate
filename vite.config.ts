@@ -5,9 +5,10 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
+export default defineConfig(({ mode }) => {
 const isPreview = process.env.LOVABLE_PREVIEW === "true" || mode === "development";
 
-export default defineConfig(({ mode }) => ({
+return ({
   server: {
     host: "::",
     port: 8080,
