@@ -2,41 +2,8 @@
 
 ## Problema
 
-A edge function `mirror-sync` não encontra nenhuma oferta porque o regex do parser espera URLs relativas (`/ubizresgata/p/XXX`) mas o HTML real contém URLs absolutas (`https://www.divulgadorinteligente.com/ubizresgata/p/XXX`).
+O parser da edge function `mirror-sync` não extrai preços nem nome da loja porque:
 
-**Regex atual (linha 58):**
-```
-/<a[^>]*href="(\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi
-```
-
-**HTML real:**
-```html
-<a class="sc-a1e0a9be-0 ifztke" href="https://www.divulgadorinteligente.com/ubizresgata/p/OQsYd7EvWp">
-```
-
-## Correção
-
-Atualizar o regex para aceitar tanto URLs absolutas quanto relativas. Também corrigir o `extractSlug` e a construção da `fullUrl` para lidar com ambos os formatos.
-
-### Alteração em `supabase/functions/mirror-sync/index.ts`
-
-**Linha 58** — regex do parser:
-```typescript
-// DE:
-const cardRegex = /<a[^>]*href="(\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-
-// PARA:
-const cardRegex = /<a[^>]*href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-```
-
-**Linha 65** — construção da URL:
-```typescript
-// DE:
-const fullUrl = `${baseUrl}${href}`;
-
-// PARA:
-const fullUrl = href.startsWith("http") ? href : `${baseUrl}${href}`;
-```
-
-**1 arquivo, 2 linhas.** Requer re-deploy da edge function.
-
+1. **Preços**: O regex de texto (linha 78) busca apenas tags `<p>`, `<span>`, `<h1-6>`, mas os preços no HTML do Divulgador Inteligente estão dentro de `<div>` (ex: `<div class="sc-a1e0a9be-...">R$ 134,89</div>`)
+2. **Loja**: O parser não tenta extrair o nome da loja, que está disponível em links para `/lojas/mercadolivre`
+3. **Badge**: Todos os cards estão vindo com badge "100%" em vez do desconto real — o regex pega texto "100%" de algum elemento antes de achar o desc
