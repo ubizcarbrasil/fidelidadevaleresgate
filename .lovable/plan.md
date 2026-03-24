@@ -1,26 +1,44 @@
 
 
-## Problema: Limite de ofertas visíveis no Achadinhos
+## Correções no Achadinhos: linhas, ordem e categorização
 
-### Causa raiz
+### Problema 1: Regra de linhas (nunca ter linha incompleta)
 
-Dois limites estão impedindo a visualização de todas as ofertas:
+**Arquivo:** `src/components/driver/DriverMarketplace.tsx` (linhas 391-394) e `src/components/customer/AchadinhoSection.tsx`
 
-1. **Query com `.limit(50)`** (linha 135): a busca no banco traz no máximo 50 deals no total, divididos entre TODAS as categorias. "Casa" pode ter 52, mas nunca chega a 52 porque o limite global corta antes.
+Atualmente o código usa `configuredRows` direto do admin sem validar se a última linha ficaria incompleta. A regra correta:
+- Com 3 items por linha: se a categoria tem < 6 deals → máximo 1 linha (3 cards), < 9 → máximo 2 linhas (6 cards), etc.
+- Fórmula: `maxRows = Math.floor(totalDeals / ITEMS_PER_ROW)`, e o `configuredRows` nunca pode ultrapassar esse limite.
 
-2. **Slice artificial** (linha 167): `catDeals.slice(0, 4)` limita categorias com menos de 6 deals, mas para categorias maiores o filteredDeals retorna tudo — porém "tudo" já veio limitado pelo `.limit(50)`.
+```typescript
+const ITEMS_PER_ROW = 3;
+const maxFullRows = Math.floor(allCatDeals.length / ITEMS_PER_ROW);
+const effectiveRows = Math.min(configuredRows, Math.max(1, maxFullRows));
+const maxVisible = effectiveRows * ITEMS_PER_ROW;
+```
 
-### Correções
+Isso garante que cada linha sempre tenha exatamente 3 items.
 
-**Arquivo**: `src/components/customer/AchadinhoSection.tsx`
+Aplicar a mesma lógica no `AchadinhoSection` na view "Todos" (agrupada por categoria).
 
-1. **Remover `.limit(50)`** da query de deals (linha 135) — ou aumentar para 500. O filtro por `brand_id + is_active` já delimita o volume. Com 50 como teto, categorias grandes ficam cortadas.
+### Problema 2: Ordem das categorias
 
-2. **Quando uma categoria é selecionada, mostrar TODAS as ofertas** no grid vertical sem slice. A regra do slice de 4 cards (linha 167) só faz sentido na view "Todos" agrupada. Quando o usuário selecionou uma categoria específica, ele quer ver tudo com scroll vertical natural.
+**Arquivo:** `src/components/customer/AchadinhoSection.tsx`
 
-3. **Garantir que o grid não tenha restrição de altura** — já está ok no código atual (`grid grid-cols-2 gap-3`), mas vou confirmar que nenhum container pai limita.
+O `AchadinhoSection` (vitrine do app do consumidor) não aplica a ordenação do `driver_category_layout` do `brand_settings_json`. O `DriverMarketplace` já faz isso (linhas 184-191), mas o `AchadinhoSection` usa a ordem bruta do banco (`order_index`).
+
+Correção: ler `brand.brand_settings_json?.driver_category_layout` e re-ordenar as categorias pela propriedade `order`, igual ao `DriverMarketplace`.
+
+### Problema 3: Categorização incorreta ("Potes" em "Ofertas Variadas")
+
+Isso é um problema de dados no banco — o deal "Brinox - Conjunto de Potes para Mantimentos" está associado à categoria "Ofertas Variadas" em vez de "Casa". Isso precisa ser corrigido no painel admin de Achadinhos, re-categorizando o deal. Não é um bug de código.
+
+### Arquivos a alterar
+1. `src/components/driver/DriverMarketplace.tsx` — aplicar regra de linhas completas
+2. `src/components/customer/AchadinhoSection.tsx` — aplicar regra de linhas + ordenação por `driver_category_layout`
 
 ### Resultado esperado
-
-Ao selecionar "Casa" com 52 ofertas, o grid mostrará todos os 52 cards em 2 colunas (26 linhas), com scroll vertical natural da página.
+- Categorias aparecem na ordem definida pelo admin (Eletrônicos → Moda → Ofertas Variadas → Casa → ...)
+- Nenhuma linha aparece com menos de 3 cards
+- Categorias com poucos deals são automaticamente limitadas para evitar linhas incompletas
 
