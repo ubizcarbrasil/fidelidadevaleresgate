@@ -1,7 +1,7 @@
 import {
   Store, MapPin, LayoutDashboard, LogOut, Palette, Users,
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag,
-  FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket,
+  FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw,
   Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
   ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp,
 } from "lucide-react";
