@@ -87,6 +87,17 @@ export default function MirrorSyncConfig({ brandId }: Props) {
           <Input value={form.origin_url} onChange={(e) => setForm({ ...form, origin_url: e.target.value })} />
         </div>
 
+        <div className="space-y-2">
+          <Label>Sub-páginas para scrape</Label>
+          <p className="text-xs text-muted-foreground">Uma URL ou path relativo por linha. Ex: /lojas/shopee</p>
+          <Textarea
+            rows={6}
+            value={form.extra_pages_text}
+            onChange={(e) => setForm({ ...form, extra_pages_text: e.target.value })}
+            placeholder={"/promocoes-do-dia\n/lojas/shopee\n/lojas/mercadolivre"}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Intervalo (min)</Label>
