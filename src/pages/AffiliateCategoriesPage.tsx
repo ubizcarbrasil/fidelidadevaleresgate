@@ -152,6 +152,24 @@ export default function AffiliateCategoriesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const resetDealsMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      if (!currentBrandId) throw new Error("Brand não identificada");
+      const { error } = await supabase
+        .from("affiliate_deals")
+        .delete()
+        .eq("brand_id", currentBrandId)
+        .eq("category_id", categoryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
+      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      toast.success("Ofertas da categoria excluídas com sucesso!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
       const { error } = await supabase.from("affiliate_deal_categories").update({ is_active: active }).eq("id", id);
@@ -319,6 +337,21 @@ export default function AffiliateCategoriesPage() {
                   <span className="text-xs text-muted-foreground sm:hidden">{cat.is_active ? "Ativo" : "Inativo"}</span>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-destructive hover:text-destructive"
+                    onClick={() => {
+                      if (window.confirm(`Tem certeza? Todas as ofertas da categoria "${cat.name}" serão excluídas permanentemente.`)) {
+                        resetDealsMutation.mutate(cat.id);
+                      }
+                    }}
+                    disabled={resetDealsMutation.isPending}
+                    title="Resetar ofertas"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Resetar
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setBannerCatId(bannerCatId === cat.id ? null : cat.id)} title="Banners">
                     <ImageIcon className="h-4 w-4" />
                   </Button>

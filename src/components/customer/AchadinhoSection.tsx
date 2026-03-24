@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ChevronRight, ExternalLink, icons } from "lucide-react";
+import { ChevronRight, ExternalLink, LayoutGrid, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -213,6 +213,23 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
               </button>
             );
           })}
+
+          {onOpenAllCategories && (
+            <button
+              onClick={onOpenAllCategories}
+              className="flex flex-col items-center gap-1.5 min-w-[60px] flex-shrink-0"
+            >
+              <div
+                className="h-14 w-14 rounded-full flex items-center justify-center transition-all border-2 border-dashed"
+                style={{ borderColor: withAlpha(highlight, 0.4), backgroundColor: withAlpha(highlight, 0.06) }}
+              >
+                <LayoutGrid className="h-6 w-6" style={{ color: highlight }} />
+              </div>
+              <span className="text-[10px] font-medium text-center leading-tight" style={{ color: highlight }}>
+                Ver todos
+              </span>
+            </button>
+          )}
         </div>
       )}
 
