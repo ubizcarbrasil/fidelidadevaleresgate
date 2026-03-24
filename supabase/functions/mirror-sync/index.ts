@@ -351,6 +351,7 @@ Deno.serve(async (req) => {
               image_url: deal.image_url,
               affiliate_url: deal.affiliate_url,
               badge_label: deal.badge_label,
+              store_name: deal.store_name,
               is_active: autoActivate,
               origin: "divulgador_inteligente",
               origin_external_id: deal.origin_external_id,
