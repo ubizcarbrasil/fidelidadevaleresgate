@@ -25,7 +25,55 @@ function extractSitename(originUrl: string): string {
   }
 }
 
-// ---------- API-based product fetching ----------
+function normalize(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+// ---------- Category matching ----------
+
+interface DealCategory {
+  id: string;
+  name: string;
+  keywords: string[];
+  is_active: boolean;
+}
+
+function matchDealToCategory(
+  title: string,
+  description: string | null,
+  category: string | null,
+  storeName: string | null,
+  categories: DealCategory[]
+): string | null {
+  const text = normalize(
+    [title, description, category, storeName].filter(Boolean).join(" ")
+  );
+
+  let bestCatId: string | null = null;
+  let bestScore = 0;
+
+  for (const cat of categories) {
+    let score = 0;
+    for (const kw of cat.keywords) {
+      const nkw = normalize(kw);
+      if (text.includes(nkw)) {
+        score += nkw.length; // longer keyword = higher weight
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestCatId = cat.id;
+    }
+  }
+
+  return bestCatId;
+}
+
+// ---------- API types ----------
 
 interface ApiProduct {
   id: number;
@@ -53,6 +101,171 @@ interface SyncResult {
   title: string;
   action: "created" | "updated" | "skipped" | "error";
   error?: string;
+}
+
+// ---------- Auto-categorization phase ----------
+
+async function runAutoCategorization(supabase: any, brandId: string) {
+  const MIN_DEALS_PER_CATEGORY = 4;
+  const catStats = {
+    matched_by_keywords: 0,
+    sent_to_variadas: 0,
+    categories_activated: [] as string[],
+    categories_deactivated: [] as string[],
+    deals_moved_to_variadas: 0,
+  };
+
+  // 1. Load all categories (active + inactive)
+  const { data: allCategories } = await supabase
+    .from("affiliate_deal_categories")
+    .select("id, name, keywords, is_active")
+    .eq("brand_id", brandId);
+
+  const categories: DealCategory[] = allCategories || [];
+
+  // 2. Load all active deals for this brand (mirrored)
+  const { data: allDeals } = await supabase
+    .from("affiliate_deals")
+    .select("id, title, description, category, store_name, category_id, is_active")
+    .eq("brand_id", brandId)
+    .eq("origin", "divulgador_inteligente")
+    .eq("is_active", true);
+
+  const deals = allDeals || [];
+
+  // 3. Phase 3 — Keyword matching for deals without category_id
+  const dealsToMatch = deals.filter((d: any) => !d.category_id);
+  const categoryUpdates = new Map<string, string[]>(); // category_id -> deal_ids
+
+  for (const deal of dealsToMatch) {
+    const matchedCatId = matchDealToCategory(
+      deal.title,
+      deal.description,
+      deal.category,
+      deal.store_name,
+      categories
+    );
+    if (matchedCatId) {
+      catStats.matched_by_keywords++;
+      if (!categoryUpdates.has(matchedCatId)) {
+        categoryUpdates.set(matchedCatId, []);
+      }
+      categoryUpdates.get(matchedCatId)!.push(deal.id);
+    }
+  }
+
+  // Batch update category_id for matched deals
+  for (const [catId, dealIds] of categoryUpdates) {
+    await supabase
+      .from("affiliate_deals")
+      .update({ category_id: catId })
+      .in("id", dealIds);
+  }
+
+  // 4. Phase 4 — Category lifecycle management
+  // Re-count deals per category after matching
+  const { data: refreshedDeals } = await supabase
+    .from("affiliate_deals")
+    .select("id, category_id")
+    .eq("brand_id", brandId)
+    .eq("origin", "divulgador_inteligente")
+    .eq("is_active", true);
+
+  const countByCategory = new Map<string, number>();
+  const dealsByCategory = new Map<string, string[]>();
+  const uncategorized: string[] = [];
+
+  for (const d of refreshedDeals || []) {
+    if (d.category_id) {
+      countByCategory.set(d.category_id, (countByCategory.get(d.category_id) || 0) + 1);
+      if (!dealsByCategory.has(d.category_id)) dealsByCategory.set(d.category_id, []);
+      dealsByCategory.get(d.category_id)!.push(d.id);
+    } else {
+      uncategorized.push(d.id);
+    }
+  }
+
+  // Auto-activate inactive categories with 4+ deals
+  for (const cat of categories) {
+    const count = countByCategory.get(cat.id) || 0;
+    if (!cat.is_active && count >= MIN_DEALS_PER_CATEGORY) {
+      await supabase
+        .from("affiliate_deal_categories")
+        .update({ is_active: true })
+        .eq("id", cat.id);
+      catStats.categories_activated.push(cat.name);
+    }
+  }
+
+  // Auto-deactivate active categories with < 4 deals, move deals to uncategorized
+  for (const cat of categories) {
+    if (cat.name === "Ofertas Variadas") continue; // never deactivate fallback
+    const count = countByCategory.get(cat.id) || 0;
+    if (cat.is_active && count < MIN_DEALS_PER_CATEGORY && count > 0) {
+      await supabase
+        .from("affiliate_deal_categories")
+        .update({ is_active: false })
+        .eq("id", cat.id);
+      catStats.categories_deactivated.push(cat.name);
+
+      // Move deals to uncategorized
+      const idsToMove = dealsByCategory.get(cat.id) || [];
+      if (idsToMove.length > 0) {
+        await supabase
+          .from("affiliate_deals")
+          .update({ category_id: null })
+          .in("id", idsToMove);
+        uncategorized.push(...idsToMove);
+        catStats.deals_moved_to_variadas += idsToMove.length;
+      }
+    }
+  }
+
+  // 5. Ensure "Ofertas Variadas" exists
+  let variadasId: string | null = null;
+  const existing = categories.find((c) => c.name === "Ofertas Variadas");
+  if (existing) {
+    variadasId = existing.id;
+    // Make sure it's active
+    if (!existing.is_active) {
+      await supabase
+        .from("affiliate_deal_categories")
+        .update({ is_active: true })
+        .eq("id", existing.id);
+    }
+  } else {
+    // Get max order_index
+    const maxOrder = categories.reduce((m, c) => Math.max(m, 0), 0);
+    const { data: created } = await supabase
+      .from("affiliate_deal_categories")
+      .insert({
+        brand_id: brandId,
+        name: "Ofertas Variadas",
+        icon_name: "Package",
+        color: "#6b7280",
+        order_index: maxOrder + 1,
+        is_active: true,
+        keywords: [],
+      })
+      .select("id")
+      .single();
+    variadasId = created?.id || null;
+  }
+
+  // 6. Assign all uncategorized deals to "Ofertas Variadas"
+  if (variadasId && uncategorized.length > 0) {
+    catStats.sent_to_variadas = uncategorized.length;
+    // Batch in chunks of 100
+    for (let i = 0; i < uncategorized.length; i += 100) {
+      const chunk = uncategorized.slice(i, i + 100);
+      await supabase
+        .from("affiliate_deals")
+        .update({ category_id: variadasId })
+        .in("id", chunk);
+    }
+  }
+
+  return catStats;
 }
 
 // ---------- main handler ----------
@@ -156,7 +369,6 @@ Deno.serve(async (req) => {
       const newCount = products.filter(p => !existingBySlug.has(p.attributes.uuid)).length;
       const existingCount = products.filter(p => existingBySlug.has(p.attributes.uuid)).length;
 
-      // Sample of sellers
       const sellerCounts: Record<string, number> = {};
       for (const p of products) {
         const seller = p.attributes.seller || "unknown";
@@ -251,7 +463,6 @@ Deno.serve(async (req) => {
 
       try {
         if (existing) {
-          // Update existing — only update fields that might have changed
           const { error } = await supabase
             .from("affiliate_deals")
             .update({
@@ -276,7 +487,6 @@ Deno.serve(async (req) => {
           updated++;
           syncResults.push({ slug, title: attrs.title, action: "updated" });
         } else {
-          // Insert new
           const { error } = await supabase
             .from("affiliate_deals")
             .insert({
@@ -299,6 +509,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ========== Phase 3 & 4: Auto-categorization ==========
+    console.log("[Categorization] Starting auto-categorization...");
+    let categorizationStats = null;
+    try {
+      categorizationStats = await runAutoCategorization(supabase, brand_id);
+      console.log("[Categorization] Done:", JSON.stringify(categorizationStats));
+    } catch (e: any) {
+      console.error("[Categorization] Error:", e.message);
+      categorizationStats = { error: e.message };
+    }
+
     // ========== Log the sync ==========
     const finishedAt = new Date().toISOString();
     const details = {
@@ -319,6 +540,7 @@ Deno.serve(async (req) => {
         skipped,
         errors,
       },
+      categorization: categorizationStats,
       samples: syncResults.slice(0, 20),
     };
 
@@ -345,6 +567,7 @@ Deno.serve(async (req) => {
         updated,
         skipped,
         errors,
+        categorization: categorizationStats,
         duration_ms: Date.now() - apiStart,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
