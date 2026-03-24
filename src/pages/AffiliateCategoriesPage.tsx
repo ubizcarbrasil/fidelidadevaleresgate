@@ -337,6 +337,21 @@ export default function AffiliateCategoriesPage() {
                   <span className="text-xs text-muted-foreground sm:hidden">{cat.is_active ? "Ativo" : "Inativo"}</span>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-destructive hover:text-destructive"
+                    onClick={() => {
+                      if (window.confirm(`Tem certeza? Todas as ofertas da categoria "${cat.name}" serão excluídas permanentemente.`)) {
+                        resetDealsMutation.mutate(cat.id);
+                      }
+                    }}
+                    disabled={resetDealsMutation.isPending}
+                    title="Resetar ofertas"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Resetar
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setBannerCatId(bannerCatId === cat.id ? null : cat.id)} title="Banners">
                     <ImageIcon className="h-4 w-4" />
                   </Button>
