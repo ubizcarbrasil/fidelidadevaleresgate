@@ -180,17 +180,38 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     },
   });
 
+  const MIN_DEALS = 3;
+  const MIN_PER_ROW = 3;
+
   const rawCategories = data?.categories || [];
-  const categories = useMemo(() => [...rawCategories].sort((a, b) => {
-    const oa = categoryLayout[a.id]?.order;
-    const ob = categoryLayout[b.id]?.order;
-    if (oa != null && ob != null) return oa - ob;
-    if (oa != null) return -1;
-    if (ob != null) return 1;
-    return 0;
-  }), [rawCategories, categoryLayout]);
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
-  const uncategorized = data?.uncategorized || [];
+  const rawUncategorized = data?.uncategorized || [];
+
+  const { viableCategories, overflowDeals } = useMemo(() => {
+    const overflow: AffiliateDeal[] = [];
+    const viable = rawCategories.filter(cat => {
+      const catDeals = dealsByCategory.get(cat.id) || [];
+      if (catDeals.length < MIN_DEALS) {
+        overflow.push(...catDeals);
+        return false;
+      }
+      return true;
+    });
+
+    viable.sort((a, b) => {
+      const oa = categoryLayout[a.id]?.order;
+      const ob = categoryLayout[b.id]?.order;
+      const hasA = oa != null, hasB = ob != null;
+      if (hasA && hasB) return oa! - ob!;
+      if (hasA) return -1;
+      if (hasB) return 1;
+      return (dealsByCategory.get(b.id)?.length || 0) - (dealsByCategory.get(a.id)?.length || 0);
+    });
+
+    return { viableCategories: viable, overflowDeals: overflow };
+  }, [rawCategories, dealsByCategory, categoryLayout]);
+
+  const uncategorized = useMemo(() => [...rawUncategorized, ...overflowDeals], [rawUncategorized, overflowDeals]);
   const allDeals = data?.allDeals || [];
   const activeBanners = useMemo(() => interstitialBanners.filter((b: any) => b.is_active && b.image_url), [interstitialBanners]);
 
