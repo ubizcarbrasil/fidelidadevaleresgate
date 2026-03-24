@@ -236,10 +236,10 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       return;
     }
     if (initialCategoryId) {
-      const cat = categories.find(c => c.id === initialCategoryId);
+      const cat = viableCategories.find(c => c.id === initialCategoryId);
       if (cat) setOpenCategory(cat);
     }
-  }, [data, deepLinked, initialDealId, initialCategoryId, allDeals, categories]);
+  }, [data, deepLinked, initialDealId, initialCategoryId, allDeals, viableCategories]);
 
   const marketplaceTitle = settings?.driver_marketplace_title || "Marketplace";
   const marketplaceSubtitle = settings?.driver_marketplace_subtitle || "Ofertas exclusivas para motoristas parceiros";
@@ -293,7 +293,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     );
   }
 
-  if (!categories.length && !uncategorized.length) {
+  if (!viableCategories.length && !uncategorized.length) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-12 text-center">
         <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
@@ -389,9 +389,9 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       ) : (
         <>
       {/* Category carousel */}
-      {categories.length > 0 && (
+      {viableCategories.length > 0 && (
         <DriverCategoryCarousel
-          categories={categories}
+          categories={viableCategories}
           selectedId={selectedCategoryId}
           onSelect={handleCategorySelect}
         />
@@ -405,7 +405,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           return topBanners.length > 0 ? <InterstitialBannerGroup banners={topBanners} /> : null;
         })()}
 
-        {categories.map(cat => {
+        {viableCategories.map(cat => {
           const allCatDeals = dealsByCategory.get(cat.id) || [];
           if (!allCatDeals.length) return null;
 
