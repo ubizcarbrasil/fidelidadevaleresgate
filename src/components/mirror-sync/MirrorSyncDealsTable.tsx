@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff, Star, Zap, ExternalLink, ToggleLeft, ToggleRight, Copy, FolderSync } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Star, Zap, ExternalLink, ToggleLeft, ToggleRight, Copy, FolderSync, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,11 +23,20 @@ interface Props {
 
 export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dupTarget, setDupTarget] = useState<{ dealId: string; catId: string } | null>(null);
+
+  const handleCreateBanner = (deal: any) => {
+    const params = new URLSearchParams();
+    if (deal.image_url) params.set("prefill_image", deal.image_url);
+    if (deal.origin_url) params.set("prefill_link", deal.origin_url);
+    if (deal.title) params.set("prefill_title", deal.title);
+    navigate(`/banner-manager?${params.toString()}`);
+  };
 
   const { data: deals, isLoading } = useQuery({
     queryKey: ["mirror-deals", brandId, refreshKey, statusFilter, search],
@@ -170,6 +180,7 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
           categories={categories || []}
           onRecategorize={(dealId, catId) => recategorizeMutation.mutate({ dealId, categoryId: catId })}
           onDuplicate={(dealId, catId) => duplicateMutation.mutate({ dealId, categoryId: catId })}
+          onCreateBanner={handleCreateBanner}
         />
       ) : (
         <DesktopTable
@@ -183,6 +194,7 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
           categories={categories || []}
           onRecategorize={(dealId, catId) => recategorizeMutation.mutate({ dealId, categoryId: catId })}
           onDuplicate={(dealId, catId) => duplicateMutation.mutate({ dealId, categoryId: catId })}
+          onCreateBanner={handleCreateBanner}
         />
       )}
     </div>
@@ -201,9 +213,10 @@ interface TableProps {
   categories: any[];
   onRecategorize: (dealId: string, catId: string) => void;
   onDuplicate: (dealId: string, catId: string) => void;
+  onCreateBanner: (deal: any) => void;
 }
 
-function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate }: TableProps) {
+function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate, onCreateBanner }: TableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -272,6 +285,9 @@ function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, form
               <TableCell>
                 <div className="flex gap-1">
                   <DuplicateButton dealId={deal.id} categories={categories} onDuplicate={onDuplicate} />
+                  <button onClick={() => onCreateBanner(deal)} className="p-1.5 rounded-md border" title="Criar Banner">
+                    <ImagePlus className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                  </button>
                   {deal.origin_url && (
                     <a href={deal.origin_url} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-foreground" />
@@ -288,7 +304,7 @@ function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, form
 }
 
 /* ─── Mobile Card List ─── */
-function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate }: Omit<TableProps, "toggleAll">) {
+function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate, onCreateBanner }: Omit<TableProps, "toggleAll">) {
   return (
     <div className="space-y-3">
       {deals.map((deal: any) => (
@@ -338,6 +354,9 @@ function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, 
               <Star className={`h-3.5 w-3.5 ${deal.is_featured ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />
             </button>
             <DuplicateButton dealId={deal.id} categories={categories} onDuplicate={onDuplicate} />
+            <button onClick={() => onCreateBanner(deal)} className="p-1.5 rounded-md border" title="Criar Banner">
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+            </button>
             {deal.origin_url && (
               <a href={deal.origin_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md border">
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
