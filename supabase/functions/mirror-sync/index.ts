@@ -68,8 +68,8 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
       const imgMatch = cardHtml.match(/<img[^>]*src="([^"]+)"[^>]*>/i);
       const imageUrl = imgMatch ? imgMatch[1] : null;
 
-      // Extract discount badge — only match -N% pattern, skip "100%" progress bars
-      const discountBadgeMatch = cardHtml.match(/>-(\d+)%</);
+      // Extract discount badge — match both >-33%< and >-<!-- -->33<!-- -->%< patterns
+      const discountBadgeMatch = cardHtml.match(/>-(?:<!-- -->)?(\d+)(?:<!-- -->)?%</);
       const badgeLabel = discountBadgeMatch ? `-${discountBadgeMatch[1]}%` : null;
 
       // Extract store name from /lojas/XXX links
@@ -78,8 +78,8 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
         ? decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
         : null;
 
-      // Extract prices directly via R$ pattern (works regardless of tag type)
-      const priceRegex = /R\$\s*([\d.,]+)/g;
+      // Extract prices directly via R$ pattern (handles &nbsp; and regular spaces)
+      const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
       let priceMatch;
       const rawPrices: number[] = [];
       while ((priceMatch = priceRegex.exec(cardHtml)) !== null) {
