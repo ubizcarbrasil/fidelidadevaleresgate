@@ -60,7 +60,11 @@ export default function MirrorSyncConfig({ brandId }: Props) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await upsertSyncConfig(brandId, form);
+      const extra_pages = form.extra_pages_text
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
+      await upsertSyncConfig(brandId, { ...form, extra_pages });
       queryClient.invalidateQueries({ queryKey: ["mirror-sync-config"] });
       toast.success("Configurações salvas!");
     } catch (e: any) {
