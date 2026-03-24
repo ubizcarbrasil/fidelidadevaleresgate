@@ -1,52 +1,30 @@
 
 
-## Adicionar keywords à categoria "Mercado"
+## Painel de diagnóstico de categorias no Mirror Sync
 
 ### O que será feito
-Atualizar os keywords da categoria "Mercado" no banco de dados para todas as brands existentes, adicionando termos alimentícios comuns que melhoram o matching automático do motor de categorização.
+Adicionar uma nova aba **"Categorias"** na página Mirror Sync que mostra:
+1. Tabela com cada categoria, quantidade de deals, status (viável/overflow) e indicador visual
+2. Lista dos deals que caíram em "Outras ofertas" (overflow) com motivo
 
-### Keywords atuais (seed)
-`mercado, alimento, bebida, supermercado, comida, snack, chocolate, cafe`
+### Arquivo novo
+**`src/components/mirror-sync/MirrorSyncCategoryDiag.tsx`**
 
-### Keywords a adicionar
-Termos de produtos alimentícios comuns em promoções brasileiras:
-- **Bebidas**: cerveja, refrigerante, suco, leite, agua, vinho, whisky, energetico
-- **Alimentos básicos**: arroz, feijao, macarrao, farinha, oleo, acucar, sal, molho
-- **Laticínios/proteínas**: queijo, iogurte, manteiga, ovo, carne, frango, peixe
-- **Industrializados**: biscoito, bolacha, cereal, granola, geleia, achocolatado, nescau, nutella
-- **Limpeza/higiene (presentes em supermercados)**: sabao, detergente, amaciante, papel higienico, desinfetante
-- **Outros**: cesta basica, kit, feira, hortifruti, congelado, sorvete, picole
+Componente que:
+- Busca `affiliate_deal_categories` e `affiliate_deals` (origin = divulgador_inteligente) para o brandId
+- Calcula contagem de deals por categoria
+- Aplica regra MIN_DEALS = 3: categorias com < 3 deals são marcadas como "overflow"
+- Exibe tabela com colunas: Nome | Cor | Deals | Status (✅ Viável / ⚠️ Insuficiente)
+- Abaixo, card "Deals em Outras ofertas" listando os deals cujas categorias têm < 3 itens, mostrando título, categoria original e motivo
 
-### Alterações
-
-#### 1. Banco de dados (via insert tool — UPDATE)
-Atualizar `affiliate_deal_categories.keywords` para todas as linhas onde `name = 'Mercado'`, substituindo o array atual pelo array expandido.
-
-#### 2. `src/lib/categorizadorAchadinhos.ts` (linha 30-31)
-Sem alteração — o `API_CATEGORY_MAP` apenas mapeia `grocery`/`food` → `"mercado"`. O matching por keywords usa os dados do banco.
-
-#### 3. `supabase/functions/mirror-sync/index.ts`
-Sem alteração — a edge function lê keywords do banco em runtime.
-
-#### 4. Seed function `seed_affiliate_categories` (SQL)
-Atualizar o array de keywords do INSERT de "Mercado" para incluir os novos termos, garantindo que brands futuras já recebam a lista completa.
+### Arquivo editado
+**`src/pages/MirrorSyncPage.tsx`**
+- Importar `MirrorSyncCategoryDiag`
+- Adicionar tab "Categorias" entre "Ofertas" e "Histórico"
 
 ### Detalhes técnicos
-
-**UPDATE no banco:**
-```sql
-UPDATE affiliate_deal_categories
-SET keywords = ARRAY[
-  'mercado','alimento','bebida','supermercado','comida','snack','chocolate','cafe',
-  'cerveja','refrigerante','suco','leite','agua','vinho','whisky','energetico',
-  'arroz','feijao','macarrao','farinha','oleo','acucar','sal','molho',
-  'queijo','iogurte','manteiga','ovo','carne','frango','peixe',
-  'biscoito','bolacha','cereal','granola','geleia','achocolatado','nescau','nutella',
-  'sabao','detergente','amaciante','papel higienico','desinfetante',
-  'cesta basica','feira','hortifruti','congelado','sorvete','picole'
-]
-WHERE name = 'Mercado';
-```
-
-**Migration para atualizar seed function** — apenas alterar o array de keywords de "Mercado" na função `seed_affiliate_categories`.
+- Reutiliza `fetchMirroredDeals` e `fetchCategories` de `@/lib/api/mirrorSync`
+- Usa `useQuery` com queryKey incluindo `refreshKey`
+- Componente puro client-side, sem alteração de banco
+- Layout responsivo com cards no mobile
 
