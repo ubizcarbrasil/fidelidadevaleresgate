@@ -314,11 +314,30 @@ export default function AffiliateCategoriesPage() {
 
       <div className="grid gap-2">
         {isLoading && <p className="text-muted-foreground text-sm">Carregando...</p>}
-        {(categories || []).map(cat => (
+        {(categories || []).map((cat, idx) => (
           <Card key={cat.id} className={!cat.is_active ? "opacity-50" : ""}>
             <CardContent className="p-3 space-y-2">
               <div className="flex items-center gap-3">
-                <GripVertical className="hidden sm:block h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={idx === 0 || reorderMutation.isPending}
+                    onClick={() => handleReorder(idx, "up")}
+                  >
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={idx === (categories || []).length - 1 || reorderMutation.isPending}
+                    onClick={() => handleReorder(idx, "down")}
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
                 <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${cat.color}20` }}>
                   <LucideIcon name={cat.icon_name} className="h-5 w-5" style={{ color: cat.color }} />
                 </div>
