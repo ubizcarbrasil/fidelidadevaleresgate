@@ -48,13 +48,12 @@ interface ParsedDeal {
   origin_external_id: string | null;
   origin_url: string;
   raw_html: string;
+  store_name: string | null;
 }
 
 function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
   const deals: ParsedDeal[] = [];
 
-  // Strategy: find all anchor tags that link to /ubizresgata/p/XXX
-  // Each one is a deal card
   const cardRegex = /<a[^>]*href="((?:https?:\/\/[^"]*)?\/ubizresgata\/p\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let cardMatch;
 
@@ -69,46 +68,57 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
       const imgMatch = cardHtml.match(/<img[^>]*src="([^"]+)"[^>]*>/i);
       const imageUrl = imgMatch ? imgMatch[1] : null;
 
-      // Extract discount badge (e.g., -33%)
-      const discountMatch = cardHtml.match(/-\d+%/);
-      const badgeLabel = discountMatch ? discountMatch[0] : null;
+      // Extract discount badge — only match -N% pattern, skip "100%" progress bars
+      const discountBadgeMatch = cardHtml.match(/>-(\d+)%</);
+      const badgeLabel = discountBadgeMatch ? `-${discountBadgeMatch[1]}%` : null;
 
-      // Extract text content - find all <p> and <span> text
+      // Extract store name from /lojas/XXX links
+      const storeMatch = cardHtml.match(/\/lojas\/([^"\/\s]+)/i);
+      const storeName = storeMatch
+        ? decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+        : null;
+
+      // Extract prices directly via R$ pattern (works regardless of tag type)
+      const priceRegex = /R\$\s*([\d.,]+)/g;
+      let priceMatch;
+      const rawPrices: number[] = [];
+      while ((priceMatch = priceRegex.exec(cardHtml)) !== null) {
+        const val = cleanPrice(priceMatch[1]);
+        if (val !== null && val > 0) rawPrices.push(val);
+      }
+
+      // Extract title from text content (p, span, div, h1-6)
       const textParts: string[] = [];
-      const textRegex = /<(?:p|span|h[1-6])[^>]*>([^<]+)<\/(?:p|span|h[1-6])>/gi;
+      const textRegex = /<(?:p|span|div|h[1-6])[^>]*>([^<]{4,})<\/(?:p|span|div|h[1-6])>/gi;
       let textMatch;
       while ((textMatch = textRegex.exec(cardHtml)) !== null) {
         const text = textMatch[1].trim();
-        if (text) textParts.push(text);
+        if (text && !text.match(/R\$/) && !text.match(/^-?\d+%$/) && !text.match(/^\d+[.,]\d{2}$/)) {
+          textParts.push(text);
+        }
       }
 
-      // Try to identify title (longest text), prices (R$ pattern)
+      // Title = longest non-price text
       let title = "";
+      for (const part of textParts) {
+        if (part.length > title.length) title = part;
+      }
+
+      // Determine price and original_price from extracted R$ values
       let price: number | null = null;
       let originalPrice: number | null = null;
-      const priceTexts: string[] = [];
 
-      for (const part of textParts) {
-        if (part.match(/R\$\s*[\d.,]+/) || part.match(/^\d+[.,]\d{2}$/)) {
-          priceTexts.push(part);
-        } else if (part.length > title.length && !part.match(/-?\d+%/)) {
-          title = part;
-        }
+      if (rawPrices.length >= 2) {
+        // Sort: smaller = current price, larger = original
+        const sorted = [...rawPrices].sort((a, b) => a - b);
+        price = sorted[0];
+        originalPrice = sorted[sorted.length - 1];
+        if (price === originalPrice) originalPrice = null;
+      } else if (rawPrices.length === 1) {
+        price = rawPrices[0];
       }
 
-      // Parse prices - first is usually current, second is original
-      if (priceTexts.length >= 2) {
-        const p1 = cleanPrice(priceTexts[0]);
-        const p2 = cleanPrice(priceTexts[1]);
-        if (p1 !== null && p2 !== null) {
-          if (p1 < p2) { price = p1; originalPrice = p2; }
-          else { price = p2; originalPrice = p1; }
-        }
-      } else if (priceTexts.length === 1) {
-        price = cleanPrice(priceTexts[0]);
-      }
-
-      if (!title && !price && !imageUrl) continue; // skip empty cards
+      if (!title && !price && !imageUrl) continue;
       if (!title) title = "Oferta sem título";
 
       deals.push({
@@ -117,10 +127,11 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
         original_price: originalPrice,
         image_url: imageUrl,
         affiliate_url: fullUrl,
-        badge_label: badgeLabel || extractDiscount(cardHtml),
+        badge_label: badgeLabel,
         origin_external_id: slug,
         origin_url: fullUrl,
         raw_html: cardHtml.substring(0, 2000),
+        store_name: storeName,
       });
     } catch (e) {
       console.error("Error parsing card:", e);
@@ -310,6 +321,7 @@ Deno.serve(async (req) => {
                   original_price: deal.original_price,
                   image_url: deal.image_url,
                   badge_label: deal.badge_label,
+                  store_name: deal.store_name,
                   last_synced_at: new Date().toISOString(),
                   sync_status: "synced",
                   sync_error: null,
@@ -340,6 +352,7 @@ Deno.serve(async (req) => {
               image_url: deal.image_url,
               affiliate_url: deal.affiliate_url,
               badge_label: deal.badge_label,
+              store_name: deal.store_name,
               is_active: autoActivate,
               origin: "divulgador_inteligente",
               origin_external_id: deal.origin_external_id,
