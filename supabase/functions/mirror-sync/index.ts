@@ -78,8 +78,8 @@ function parseDealsFromHtml(html: string, baseUrl: string): ParsedDeal[] {
         ? decodeURIComponent(storeMatch[1]).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
         : null;
 
-      // Extract prices directly via R$ pattern (works regardless of tag type)
-      const priceRegex = /R\$\s*([\d.,]+)/g;
+      // Extract prices directly via R$ pattern (handles &nbsp; and regular spaces)
+      const priceRegex = /R\$(?:&nbsp;|\s)*([\d.,]+)/g;
       let priceMatch;
       const rawPrices: number[] = [];
       while ((priceMatch = priceRegex.exec(cardHtml)) !== null) {
