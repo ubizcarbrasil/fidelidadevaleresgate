@@ -2,69 +2,59 @@
 
 ## Problema
 
-O site usa **scroll infinito** — cada página só renderiza ~20 ofertas inicialmente. O Firecrawl com `waitFor: 3000` captura apenas o primeiro lote visível. Com 6 URLs estamos pegando ~77 ofertas únicas das ~194 disponíveis.
+Cada página de listagem usa **scroll infinito** — o Firecrawl só captura os primeiros ~20 itens visíveis no carregamento inicial. O Map API também falhou (só encontrou 1 URL) porque o site não tem sitemap.xml.
+
+**Evidência dos logs:**
+- `/promocoes-do-dia`: 32 deals (de ~60+)
+- `/lojas/shopee`: 20 deals (de ~50+)
+- `/lojas/mercadolivre`: 20 deals
+- `/lojas/amazon`: 20 deals
+- `/lojas/magalu`: 17 deals
+- Map API: apenas 1 URL descoberta
 
 ## Solução
 
-Usar a **Firecrawl Map API** antes do scrape. O Map descobre todas as URLs do site sem precisar renderizar JavaScript — ele analisa o sitemap e links internos. Com isso, encontramos todos os links `/ubizresgata/p/SLUG` e depois fazemos scrape individual de cada produto, ou fazemos scrape apenas das páginas de listagem com scroll simulado mais longo.
+O Firecrawl suporta o parâmetro `actions` que permite executar ações no navegador **antes** de extrair o HTML. Vamos adicionar múltiplos ciclos de scroll+wait para forçar o carregamento de todo o conteúdo lazy-loaded.
 
-**Abordagem escolhida**: Map API para descobrir todas as URLs de produto → para cada URL descoberta, extrair o slug → para os slugs novos (não existentes no BD), fazer scrape individual da página do produto para pegar título, preço, imagem, loja.
-
-### Alterações
+### Alteração
 
 **Arquivo**: `supabase/functions/mirror-sync/index.ts`
 
-#### Passo 1 — Fase de descoberta com Map API
-Antes do loop de scrape, chamar o Firecrawl Map para descobrir todas as URLs:
+Na chamada do Firecrawl scrape de cada página de listagem (Phase 1), adicionar ações de scroll:
 
 ```typescript
-// Discover all product URLs via Map API
-const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${firecrawlKey}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    url: originUrl,
-    search: "ubizresgata/p/",
-    limit: 500,
-    includeSubdomains: false,
-  }),
-});
-const mapData = await mapResponse.json();
-const allProductUrls: string[] = mapData?.links || [];
+body: JSON.stringify({
+  url,
+  formats: ["html"],
+  waitFor: 3000,
+  onlyMainContent: false,
+  actions: [
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+    { type: "scroll", direction: "down" },
+    { type: "wait", milliseconds: 2000 },
+  ],
+}),
 ```
 
-#### Passo 2 — Processar URLs descobertas
-Para cada URL de produto descoberta pelo Map:
-- Extrair o slug
-- Verificar se já existe no BD (por slug)
-- Se não existe, fazer scrape individual da página do produto
-
-```typescript
-for (const productUrl of newProductUrls) {
-  // Scrape individual product page
-  const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-    body: JSON.stringify({ url: productUrl, formats: ["html"], waitFor: 2000 }),
-    ...
-  });
-  // Parse title, price, image from product detail page
-}
-```
-
-#### Passo 3 — Manter scrape de listagem como fallback
-Manter o loop atual de scrape de páginas de listagem para pegar os dados iniciais rapidamente. O Map + scrape individual complementa com as ofertas que o scroll infinito esconde.
-
-#### Passo 4 — Parser para página individual de produto
-Adicionar uma função `parseProductPage(html, url)` que extrai dados de uma página de detalhe de produto (layout diferente da listagem).
+Isso faz 7 scrolls com 2s de espera entre cada um (~16s por página), carregando todo o conteúdo do infinite scroll.
 
 ### Resultado esperado
 
-- Map API descobre ~194 URLs de produto (1 credit)
-- Scrape das páginas de listagem pega ~77 ofertas com dados completos
-- Scrape individual apenas dos ~117 produtos restantes (novos)
-- Total: ~194 ofertas importadas
+- Cada página vai retornar TODOS os itens em vez de apenas os primeiros ~20
+- De ~77 para ~194 ofertas importadas
+- Redeploy da edge function
 
-**1 arquivo alterado** (`supabase/functions/mirror-sync/index.ts`) + redeploy.
+**1 arquivo alterado** + redeploy.
 
