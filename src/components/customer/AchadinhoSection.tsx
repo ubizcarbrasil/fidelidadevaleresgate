@@ -132,7 +132,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
-        .limit(50);
+        .limit(500);
       if (selectedBranch) {
         dealsQuery = dealsQuery.or(`branch_id.eq.${selectedBranch.id},branch_id.is.null`);
       }
@@ -162,10 +162,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const filteredDeals = useMemo(() => {
     if (!selectedCat) return deals;
-    const catDeals = deals.filter(d => d.category_id === selectedCat);
-    // Categorias com menos de 6 ofertas: limitar a 4 cards (2 linhas no grid 2-col)
-    if (catDeals.length < 6) return catDeals.slice(0, 4);
-    return catDeals;
+    return deals.filter(d => d.category_id === selectedCat);
   }, [deals, selectedCat]);
 
   const handleClick = (deal: AffiliateDeal) => {
