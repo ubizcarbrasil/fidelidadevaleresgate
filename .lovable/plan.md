@@ -2,22 +2,35 @@
 
 ## Problema
 
-A rota `/welcome-tour` está protegida por `RootGuard` no `App.tsx` (linha 212), permitindo acesso apenas a administradores ROOT. Porém, o `BrandSidebar` exibe o link "Boas-Vindas" para empreendedores (Brand Admin), que ao clicar são bloqueados.
+O `ImageCropDialog` usa `modal={false}` (linha 98 de `ImageCropDialog.tsx`), o que permite interação com o conteúdo por trás do diálogo. No mobile (430px), ao selecionar uma imagem para upload nos Achadinhos, o diálogo de recorte abre sem bloquear a tela — qualquer toque fora dele fecha o diálogo e pode causar navegação indesejada ou troca de aba, dando a impressão de que "fechou".
 
-## Solução
+Além disso, o `ImageUploadField` tem limite de 2MB, muito restritivo para fotos de produto (o componente de ofertas da loja permite 5MB).
 
-Trocar o guard de `RootGuard` para `ModuleGuard` com a chave `welcome_tour`, consistente com o que já está configurado no `BrandSidebar`.
+## Alterações
 
-## Alteração
+### 1. Corrigir `ImageCropDialog.tsx` — tornar modal verdadeiro
+**Linha 98**: Remover `modal={false}` para usar o padrão `modal={true}`, bloqueando interação com o fundo.
 
-**`src/App.tsx` — linha 212**
-```
+```tsx
 // DE:
-<Route path="welcome-tour" element={<RootGuard><WelcomeTourConfigPage /></RootGuard>} />
+<Dialog open={open} onOpenChange={(v) => !v && onCancel()} modal={false}>
 
 // PARA:
-<Route path="welcome-tour" element={<ModuleGuard moduleKey="welcome_tour"><WelcomeTourConfigPage /></ModuleGuard>} />
+<Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
 ```
 
-Apenas 1 linha alterada. Nenhuma outra mudança necessária.
+### 2. Aumentar limite de upload em `ImageUploadField.tsx`
+**Linha 61**: Mudar o limite de 2MB para 5MB, consistente com outros componentes de upload.
+
+```tsx
+// DE:
+if (file.size > 2 * 1024 * 1024) {
+  toast.error("Arquivo muito grande. Máximo 2MB.");
+
+// PARA:
+if (file.size > 5 * 1024 * 1024) {
+  toast.error("Arquivo muito grande. Máximo 5MB.");
+```
+
+**2 arquivos, 2 linhas alteradas.**
 
