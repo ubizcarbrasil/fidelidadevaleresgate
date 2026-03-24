@@ -384,7 +384,7 @@ export default function AchadinhosMobileImportPage() {
           category_name: null,
         });
       }
-      setProducts(items);
+      setProducts(autoCategorizar(items));
       toast.success(`${items.length} produto(s) carregado(s) do CSV.`);
       setStep("review");
     };
