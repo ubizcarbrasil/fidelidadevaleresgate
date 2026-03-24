@@ -213,6 +213,7 @@ interface TableProps {
   categories: any[];
   onRecategorize: (dealId: string, catId: string) => void;
   onDuplicate: (dealId: string, catId: string) => void;
+  onCreateBanner: (deal: any) => void;
 }
 
 function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate }: TableProps) {
