@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/PageHeader";
+import PageHeader from "@/components/PageHeader";
 import MirrorSyncKpis from "@/components/mirror-sync/MirrorSyncKpis";
 import MirrorSyncDealsTable from "@/components/mirror-sync/MirrorSyncDealsTable";
 import MirrorSyncLogs from "@/components/mirror-sync/MirrorSyncLogs";

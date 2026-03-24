@@ -190,6 +190,7 @@ function AppRoutes() {
           <Route path="affiliate-deals" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateDealsPage /></ModuleGuard>} />
           <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="affiliate_deals"><AchadinhosMobileImportPage /></ModuleGuard>} />
           <Route path="affiliate-categories" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateCategoriesPage /></ModuleGuard>} />
+          <Route path="mirror-sync" element={<ModuleGuard moduleKey="affiliate_deals"><MirrorSyncPage /></ModuleGuard>} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
