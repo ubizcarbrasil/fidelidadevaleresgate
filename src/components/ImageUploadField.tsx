@@ -59,8 +59,8 @@ export default function ImageUploadField({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. Máximo 2MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 5MB.");
       return;
     }
 
