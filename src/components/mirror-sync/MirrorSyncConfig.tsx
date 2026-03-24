@@ -22,6 +22,8 @@ export default function MirrorSyncConfig({ brandId }: Props) {
     queryFn: () => fetchSyncConfig(brandId),
   });
 
+  const defaultExtraPages = "/promocoes-do-dia\n/lojas/shopee\n/lojas/mercadolivre\n/lojas/amazon\n/lojas/magalu";
+
   const [form, setForm] = useState({
     origin_url: "https://www.divulgadorinteligente.com/ubizresgata",
     auto_sync_enabled: false,
@@ -32,6 +34,7 @@ export default function MirrorSyncConfig({ brandId }: Props) {
     debug_mode: false,
     auto_activate: true,
     auto_visible_driver: true,
+    extra_pages_text: defaultExtraPages,
   });
 
   const [saving, setSaving] = useState(false);
