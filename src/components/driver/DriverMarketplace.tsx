@@ -388,10 +388,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           const allCatDeals = dealsByCategory.get(cat.id) || [];
           if (!allCatDeals.length) return null;
 
-          const ITEMS_PER_ROW = 3;
-          const totalFullRows = Math.max(1, Math.floor(allCatDeals.length / ITEMS_PER_ROW));
-          const visibleDeals = allCatDeals.slice(0, totalFullRows * ITEMS_PER_ROW);
-
           const bannersAfter = activeBanners.filter(b => b.after_category_id === cat.id);
 
           return (
@@ -422,10 +418,14 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-3 px-5">
-                  {visibleDeals.map((deal, idx) => (
-                    <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} onClickDeal={handleClickDeal} />
+                <div
+                  className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                  style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                >
+                  {allCatDeals.map(deal => (
+                    <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
                   ))}
+                  <div className="min-w-[16px] flex-shrink-0" />
                 </div>
               </section>
               {bannersAfter.length > 0 && <InterstitialBannerGroup banners={bannersAfter} />}
