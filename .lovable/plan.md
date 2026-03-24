@@ -1,110 +1,28 @@
 
-## Correção definitiva da tela branca
 
-### O problema real
-Encontrei dois pontos frágeis no bootstrap que explicam a tela branca intermitente:
+## Correção: KPIs travados em 200 e deals novos não aparecendo no app do motorista
 
-1. `src/main.tsx` força limpeza de service worker + `window.location.reload()` no preview. Em iframe/preview isso pode virar um ciclo instável e deixar a app carregando em branco.
-2. `src/contexts/AuthContext.tsx` usa `onAuthStateChange(async ...)` e libera `loading` antes de a restauração de roles terminar. Isso cria corrida entre sessão, roles, guards e queries. A própria documentação do SDK alerta para deadlock/race ao usar fluxo assíncrono dentro do callback de auth.
+### Problemas encontrados
 
-Também confirmei que não há erro novo de runtime ligado à rota atual; isso reforça que o defeito é de inicialização, não de um componente específico quebrado.
+1. **KPIs travados em 200**: A função `fetchMirroredDeals` em `src/lib/api/mirrorSync.ts` tem `.limit(200)`. Com 251 deals no banco, os KPIs ficam truncados.
 
-### O que vou implementar
+2. **Deals novos não aparecem no app do motorista**: A query em `DriverMarketplace.tsx` também tem `.limit(200)`. Os 51 deals mais recentes ficam de fora.
 
-#### 1. Blindar o preview contra PWA/service worker
-Arquivos:
-- `src/main.tsx`
-- `vite.config.ts`
+3. **Scraper da vitrine extraindo 0 preços**: Os logs confirmam `[Scrape] Extracted 0 prices` -- o regex de extração não está casando com o HTML real da página. Isso é um problema separado (preços caem no fallback da API), mas não afeta visibilidade.
 
-Mudanças:
-- parar de forçar `window.location.reload()` no preview
-- desabilitar/neutralizar o registro automático do service worker no ambiente de preview
-- manter comportamento PWA só onde realmente faz sentido (site publicado), não no iframe de desenvolvimento
+### Correções
 
-Objetivo:
-- eliminar recarregamentos automáticos e estados em branco por bootstrap instável
+#### 1. Remover limite de 200 nos KPIs
+**`src/lib/api/mirrorSync.ts`** -- linha 73: trocar `.limit(200)` por `.limit(1000)`
 
-#### 2. Refatorar a inicialização de autenticação
-Arquivo:
-- `src/contexts/AuthContext.tsx`
+#### 2. Remover limite de 200 no app do motorista
+**`src/components/driver/DriverMarketplace.tsx`** -- linha 149: trocar `.limit(200)` por `.limit(1000)`
 
-Mudanças:
-- remover `async` do callback de `onAuthStateChange`
-- transformar qualquer side effect em “fire-and-forget” (`void ...`)
-- centralizar a restauração inicial da sessão + roles em uma função controlada
-- só marcar auth como pronta depois que sessão e roles forem resolvidas
-- proteger contra updates concorrentes/stale com cancelamento simples ou request id
+#### 3. Corrigir scraper de vitrine (bônus)
+**`supabase/functions/mirror-sync/index.ts`** -- A função `scrapeVitrinePrices` usa regex `<a>` que não casa com o HTML real (provavelmente a página é SPA/JavaScript-rendered). Vou ajustar para tentar extrair de outro padrão ou logar o HTML parcial para diagnóstico futuro.
 
-Objetivo:
-- impedir deadlock do auth
-- impedir que a UI monte com sessão parcial ou roles vazias por alguns instantes
+### Detalhes técnicos
+- O banco tem 251 deals, todos com `visible_driver = true` e `is_active = true`
+- O limite de 1000 é o máximo do SDK e cobre bem o volume atual
+- Se o volume crescer além de 1000, será necessário paginação, mas hoje isso é suficiente
 
-#### 3. Separar “sessão pronta” de “app pronta”
-Arquivos:
-- `src/App.tsx`
-- `src/components/ProtectedRoute.tsx`
-- `src/components/RootGuard.tsx`
-- `src/components/ModuleGuard.tsx`
-- possivelmente `src/hooks/useBrandModules.ts` e `src/hooks/useBrandGuard.ts`
-
-Mudanças:
-- garantir que guards não redirecionem enquanto auth/roles ainda estão restaurando
-- evitar que páginas dependentes de brand/roles consultem dados cedo demais
-- exibir loader visível e estável durante bootstrap, nunca DOM vazio
-
-Objetivo:
-- remover os estados intermediários que hoje podem cair em branco ou redirecionar errado
-
-#### 4. Adicionar diagnóstico de bootstrap
-Arquivos:
-- `src/contexts/AuthContext.tsx`
-- `src/lib/errorTracker.ts` (apenas se necessário para contexto melhor)
-
-Mudanças:
-- registrar falhas/timeout de inicialização com contexto claro (`auth-init`, `roles-fetch`, `preview-bootstrap`)
-- facilitar identificar imediatamente se o problema futuro vier de auth, preview ou query pendurada
-
-Objetivo:
-- se voltar a acontecer, o erro ficará explícito em vez de parecer “tela branca sem motivo”
-
-### Resultado esperado
-Depois dessa correção:
-- o preview deixa de entrar em ciclo frágil de reload/cache
-- a sessão não trava mais na restauração
-- os guards deixam de renderizar com auth incompleta
-- a app sempre mostra loader ou conteúdo, nunca uma tela branca “silenciosa”
-
-### Validação após implementar
-Vou validar estes cenários:
-1. abrir no preview em `/index`
-2. hard refresh no preview
-3. recarregar com sessão existente
-4. abrir `/auth` sem sessão
-5. navegar para `/` e para páginas protegidas
-6. repetir no viewport mobile que você está usando
-
-### Arquivos mais prováveis de alteração
-- `src/main.tsx`
-- `vite.config.ts`
-- `src/contexts/AuthContext.tsx`
-- `src/App.tsx`
-- `src/components/ProtectedRoute.tsx`
-- `src/components/RootGuard.tsx`
-- `src/components/ModuleGuard.tsx`
-- `src/hooks/useBrandModules.ts`
-
-### Resumo técnico
-```text
-Causa principal = bootstrap instável
-- preview + service worker/reload
-- auth init + roles restore em corrida
-- guards consultando estado antes da hora
-```
-
-```text
-Correção definitiva
-- sem reload forçado no preview
-- sem async perigoso no onAuthStateChange
-- auth/roles prontos antes de liberar a app
-- guards e queries bloqueados até bootstrap concluir
-```
