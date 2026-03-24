@@ -216,7 +216,7 @@ interface TableProps {
   onCreateBanner: (deal: any) => void;
 }
 
-function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate }: TableProps) {
+function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, formatPrice, catMap, categories, onRecategorize, onDuplicate, onCreateBanner }: TableProps) {
   return (
     <div className="rounded-md border">
       <Table>
