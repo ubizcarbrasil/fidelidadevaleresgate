@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
@@ -21,47 +21,102 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+  const fetchIdRef = useRef(0);
 
-  const fetchRoles = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("id, role, tenant_id, brand_id, branch_id")
-      .eq("user_id", userId);
-    setRoles(data || []);
+  const fetchRoles = async (userId: string, requestId: number) => {
+    try {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("id, role, tenant_id, brand_id, branch_id")
+        .eq("user_id", userId);
+      // Só aplica se ainda for o request mais recente e componente montado
+      if (mountedRef.current && fetchIdRef.current === requestId) {
+        setRoles(data || []);
+      }
+    } catch (err) {
+      console.warn("[AuthContext] Falha ao buscar roles:", err);
+      if (mountedRef.current && fetchIdRef.current === requestId) {
+        setRoles([]);
+      }
+    }
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+    let initialLoadDone = false;
+
+    // Restauração inicial: sessão + roles antes de liberar loading
+    const bootstrap = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!mountedRef.current) return;
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          const reqId = ++fetchIdRef.current;
+          await fetchRoles(currentSession.user.id, reqId);
+        }
+      } catch (err) {
+        console.warn("[AuthContext] Falha no bootstrap:", err);
+      } finally {
+        if (mountedRef.current) {
+          setLoading(false);
+          initialLoadDone = true;
+        }
+      }
+    };
+
+    void bootstrap();
+
+    // Listener para mudanças de auth — NÃO async, fire-and-forget
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          setTimeout(() => fetchRoles(session.user.id), 0);
+      (event, newSession) => {
+        if (!mountedRef.current) return;
+
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+
+        if (newSession?.user) {
+          const reqId = ++fetchIdRef.current;
+          void fetchRoles(newSession.user.id, reqId);
         } else {
           setRoles([]);
         }
-        // Audit critical auth events
-        if (event === "SIGNED_IN" && session?.user) {
-          logAudit(session.user.id, { action: "LOGIN", entity_type: "auth" });
-        } else if (event === "SIGNED_OUT") {
-          logAudit(user?.id ?? null, { action: "LOGOUT", entity_type: "auth" });
-        } else if (event === "PASSWORD_RECOVERY") {
-          logAudit(session?.user?.id ?? null, { action: "PASSWORD_RESET", entity_type: "auth" });
+
+        // Só libera loading se o bootstrap inicial ainda não terminou
+        if (!initialLoadDone) {
+          setLoading(false);
+          initialLoadDone = true;
         }
-        setLoading(false);
+
+        // Audit fire-and-forget
+        if (event === "SIGNED_IN" && newSession?.user) {
+          void logAudit(newSession.user.id, { action: "LOGIN", entity_type: "auth" });
+        } else if (event === "SIGNED_OUT") {
+          void logAudit(null, { action: "LOGOUT", entity_type: "auth" });
+        } else if (event === "PASSWORD_RECOVERY") {
+          void logAudit(newSession?.user?.id ?? null, { action: "PASSWORD_RESET", entity_type: "auth" });
+        }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRoles(session.user.id);
+    // Timeout de segurança — se em 8s o bootstrap não completou, libera
+    const safetyTimer = setTimeout(() => {
+      if (mountedRef.current && !initialLoadDone) {
+        console.warn("[AuthContext] Bootstrap timeout — liberando loading");
+        setLoading(false);
+        initialLoadDone = true;
       }
-      setLoading(false);
-    });
+    }, 8000);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   const hasRole = (role: AppRole) => roles.some((r) => r.role === role);

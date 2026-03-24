@@ -4,57 +4,58 @@ import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
 
-async function clearPreviewPwaCache() {
-  if (typeof window === "undefined") return;
-
+/**
+ * Detecta se estamos em ambiente de preview (iframe do Lovable).
+ * Nesses casos, desabilita completamente o service worker e cache PWA
+ * para evitar ciclos de reload e tela branca.
+ */
+function isPreviewHost(): boolean {
+  if (typeof window === "undefined") return false;
   const hostname = window.location.hostname;
-  const isPreviewHost =
+  return (
     hostname.includes("lovableproject.com") ||
     hostname.includes("lovable.app") ||
-    hostname.includes("preview--");
-  if (!("serviceWorker" in navigator)) return;
+    hostname.includes("preview--")
+  );
+}
+
+async function cleanupServiceWorkers() {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
-
-    // On preview hosts, always unregister all SWs and clear caches
-    if (isPreviewHost && registrations.length > 0) {
+    if (registrations.length > 0) {
       await Promise.all(registrations.map((r) => r.unregister()));
-
       if ("caches" in window) {
         const cacheKeys = await caches.keys();
         await Promise.all(cacheKeys.map((k) => caches.delete(k)));
       }
-
-      if (!sessionStorage.getItem("__preview_sw_reset__")) {
-        sessionStorage.setItem("__preview_sw_reset__", "1");
-        window.location.reload();
-        return;
-      }
     }
 
-    // For all hosts: tell any active SW to skipWaiting so new version activates immediately
-    for (const reg of registrations) {
-      if (reg.waiting) {
-        reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      }
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        if (newWorker) {
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              newWorker.postMessage({ type: "SKIP_WAITING" });
-            }
-          });
+    // Para hosts não-preview: gerenciar SW updates normalmente
+    if (!isPreviewHost()) {
+      for (const reg of registrations) {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
         }
-      });
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                newWorker.postMessage({ type: "SKIP_WAITING" });
+              }
+            });
+          }
+        });
+      }
     }
   } catch (error) {
-    console.warn("Falha ao limpar cache PWA no preview", error);
+    console.warn("Falha ao gerenciar service workers", error);
   }
 }
 
-// Normalize /index or /index.html to / before React mounts (preview hosts open on /index)
+// Normalize /index or /index.html to / before React mounts
 if (
   typeof window !== "undefined" &&
   (window.location.pathname === "/index" ||
@@ -65,12 +66,12 @@ if (
   window.history.replaceState(null, "", newUrl);
 }
 
-void clearPreviewPwaCache();
+// Limpa SWs sem reload — NUNCA forçar window.location.reload()
+void cleanupServiceWorkers();
 initErrorTracker();
 initWebVitals();
 
 // Fix React 18 "removeChild" error caused by third-party DOM manipulation
-// https://github.com/facebook/react/issues/11538#issuecomment-417504600
 if (typeof Node === "function" && Node.prototype) {
   const originalRemoveChild = Node.prototype.removeChild;
   Node.prototype.removeChild = function <T extends Node>(child: T): T {
