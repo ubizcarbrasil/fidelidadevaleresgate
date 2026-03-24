@@ -388,13 +388,9 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           const allCatDeals = dealsByCategory.get(cat.id) || [];
           if (!allCatDeals.length) return null;
 
-          const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
           const ITEMS_PER_ROW = 3;
-          const maxFullRows = Math.floor(allCatDeals.length / ITEMS_PER_ROW);
-          const effectiveRows = Math.min(configuredRows, Math.max(1, maxFullRows));
-          const maxVisible = effectiveRows * ITEMS_PER_ROW;
-          const visibleDeals = allCatDeals.slice(0, maxVisible);
-          const hasMore = allCatDeals.length > maxVisible;
+          const totalFullRows = Math.max(1, Math.floor(allCatDeals.length / ITEMS_PER_ROW));
+          const visibleDeals = allCatDeals.slice(0, totalFullRows * ITEMS_PER_ROW);
 
           const bannersAfter = activeBanners.filter(b => b.after_category_id === cat.id);
 
@@ -418,52 +414,40 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                       </p>
                     </div>
                   </div>
-                  {hasMore && (
-                    <button
-                      onClick={() => setOpenCategory(cat)}
-                      className="text-xs font-semibold flex items-center gap-0.5 text-primary"
-                    >
-                      Ver todos
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setOpenCategory(cat)}
+                    className="text-xs font-semibold flex items-center gap-0.5 text-primary"
+                  >
+                    Ver todos
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-                {configuredRows === 1 ? (
-                  <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
-                    {visibleDeals.map(deal => (
-                      <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
-                    ))}
-                    <div className="min-w-[16px] flex-shrink-0" />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {Array.from({ length: configuredRows }).map((_, rowIndex) => {
-                      const itemsPerRow = Math.ceil(visibleDeals.length / configuredRows);
-                      const rowDeals = visibleDeals.slice(rowIndex * itemsPerRow, (rowIndex + 1) * itemsPerRow);
-                      if (!rowDeals.length) return null;
-                      return (
-                        <div
-                          key={rowIndex}
-                          className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
-                          style={{
-                            scrollSnapType: "x mandatory",
-                            touchAction: "pan-x pan-y",
-                            paddingLeft: "20px",
-                            paddingRight: "20px",
-                            scrollPaddingLeft: "20px",
-                          }}
-                        >
-                          {rowDeals.map((deal, idx) => (
-                            <div key={deal.id} className="flex-shrink-0" style={{ width: "170px", scrollSnapAlign: "start" }}>
-                              <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * itemsPerRow + idx} onClickDeal={handleClickDeal} />
-                            </div>
-                          ))}
-                          <div className="min-w-[16px] flex-shrink-0" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <div className="space-y-3">
+                  {Array.from({ length: totalFullRows }).map((_, rowIndex) => {
+                    const rowDeals = visibleDeals.slice(rowIndex * ITEMS_PER_ROW, (rowIndex + 1) * ITEMS_PER_ROW);
+                    if (!rowDeals.length) return null;
+                    return (
+                      <div
+                        key={rowIndex}
+                        className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
+                        style={{
+                          scrollSnapType: "x mandatory",
+                          touchAction: "pan-x pan-y",
+                          paddingLeft: "20px",
+                          paddingRight: "20px",
+                          scrollPaddingLeft: "20px",
+                        }}
+                      >
+                        {rowDeals.map((deal, idx) => (
+                          <div key={deal.id} className="flex-shrink-0" style={{ width: "170px", scrollSnapAlign: "start" }}>
+                            <DriverDealCardGrid deal={deal} highlight={highlight} fontHeading={fontHeading} idx={rowIndex * ITEMS_PER_ROW + idx} onClickDeal={handleClickDeal} />
+                          </div>
+                        ))}
+                        <div className="min-w-[16px] flex-shrink-0" />
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
               {bannersAfter.length > 0 && <InterstitialBannerGroup banners={bannersAfter} />}
             </div>
