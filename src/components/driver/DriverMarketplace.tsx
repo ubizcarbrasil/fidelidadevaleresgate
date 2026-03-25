@@ -27,6 +27,7 @@ export interface AffiliateDeal {
   store_logo_url: string | null;
   badge_label: string | null;
   category_id: string | null;
+  created_at?: string;
 }
 
 export interface DealCategory {
@@ -141,7 +142,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     queryFn: async () => {
       let dealsQ = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .eq("visible_driver" as any, true)
@@ -189,6 +190,10 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const rawCategories = data?.categories || [];
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const rawUncategorized = data?.uncategorized || [];
+  const allDeals = data?.allDeals || [];
+
+  const NEW_OFFERS_ID = "__new_offers__";
+  const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
 
   const { viableCategories, overflowDeals } = useMemo(() => {
     const overflow: AffiliateDeal[] = [];
@@ -211,11 +216,27 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       return (dealsByCategory.get(b.id)?.length || 0) - (dealsByCategory.get(a.id)?.length || 0);
     });
 
+    // Virtual "Novas Ofertas" category — deals created in last 48h
+    const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
+    const newDeals = allDeals
+      .filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff)
+      .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
+
+    if (newDeals.length >= MIN_DEALS) {
+      const virtualCat: DealCategory = {
+        id: NEW_OFFERS_ID,
+        name: "Novas Ofertas",
+        icon_name: "Sparkles",
+        color: "#f59e0b",
+      };
+      viable.unshift(virtualCat);
+      dealsByCategory.set(NEW_OFFERS_ID, newDeals);
+    }
+
     return { viableCategories: viable, overflowDeals: overflow };
-  }, [rawCategories, dealsByCategory, categoryLayout]);
+  }, [rawCategories, dealsByCategory, categoryLayout, allDeals]);
 
   const uncategorized = useMemo(() => [...rawUncategorized, ...overflowDeals], [rawUncategorized, overflowDeals]);
-  const allDeals = data?.allDeals || [];
   const activeBanners = useMemo(() => interstitialBanners.filter((b: any) => b.is_active && b.image_url), [interstitialBanners]);
 
   // Deep-link support: auto-open category or deal from URL params
@@ -443,7 +464,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                   </button>
                 </div>
                 {(() => {
-                  const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+                  const configuredRows = cat.id === NEW_OFFERS_ID ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
                   const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(allCatDeals.length / MIN_PER_ROW)));
                   const visibleCount = Math.floor(allCatDeals.length / effectiveRows) * effectiveRows || allCatDeals.length;
                   const visibleDeals = allCatDeals.slice(0, visibleCount);
