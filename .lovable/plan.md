@@ -1,125 +1,52 @@
 
-## Diagnóstico: por que a tela fica branca “do nada”
 
-Sim. Agora eu sei o que está acontecendo.
+## Diagnóstico: spinner infinito no carregamento
 
-A tela branca não está vindo mais do bootstrap de autenticação. O problema atual é a combinação de **2 falhas diferentes**:
+### Causa raiz
 
-1. **Falha de carregamento de chunks/lazy imports**
-   - Os logs já registraram erros como:
-     - `Importing a module script failed`
-   - Como o app usa muitas páginas com `lazy(() => import(...))` em `src/App.tsx`, quando o preview recompila ou publica uma nova versão, o navegador às vezes tenta abrir um chunk antigo que já não existe mais.
-   - Resultado: o React nem sempre consegue montar a rota corretamente e você percebe como “tela branca”.
+O `AppContent` (linha 292 do `App.tsx`) bloqueia **todas as rotas** — inclusive `/auth` — enquanto `BrandContext.loading` for `true`:
 
-2. **Erros de runtime em rotas específicas**
-   - Os logs também mostram crashes reais em páginas:
-     - `/driver-config` → `ReferenceError: Can't find variable: SortableCategoryItem`
-     - `/` → já houve `ReferenceError: productionUrl`
-   - Ou seja: além do problema de chunk, existem páginas que em algum momento quebram em runtime. Quando isso acontece, a experiência fica parecendo instável e intermitente.
-
-## O que isso significa em linguagem simples
-
-Não é “a rota /index”.
-Não é “só cache”.
-Não é “só autenticação”.
-
-É um app com:
-- muitas rotas lazy
-- preview recompilando com frequência
-- e algumas páginas que, quando quebram, derrubam a renderização
-
-Isso explica por que às vezes funciona e às vezes vira tela branca.
-
-## Plano para resolver de forma definitiva
-
-### 1. Blindar os imports lazy contra chunks quebrados
-**Arquivo principal:** `src/App.tsx`
-
-Vou:
-- criar um helper tipo `lazyWithRetry`
-- trocar os `lazy(() => import(...))` críticos por versão com retry
-- quando ocorrer erro de chunk/module import, tentar 1 recuperação controlada
-- evitar loop infinito de reload
-
-Objetivo:
-- quando o preview/build trocar os arquivos, a app se recupera em vez de morrer em branco
-
-### 2. Melhorar fallback para erro de import
-**Arquivos:**
-- `src/components/ErrorBoundary.tsx`
-- possivelmente `src/main.tsx`
-
-Vou:
-- detectar especificamente erros como `Importing a module script failed`
-- mostrar mensagem útil com botão de recarregar
-- evitar fallback genérico “silencioso”
-
-Objetivo:
-- se algo quebrar, aparece erro tratável, não tela branca muda
-
-### 3. Colocar um fallback visual antes do React montar
-**Arquivos:**
-- `index.html`
-- `src/main.tsx`
-
-Vou:
-- adicionar um shell/fallback mínimo no HTML
-- remover esse fallback assim que o React montar com sucesso
-
-Objetivo:
-- mesmo se o bundle principal falhar, nunca mais ficar “tela totalmente branca”
-
-### 4. Corrigir rotas já sinalizadas pelos logs
-**Arquivos mais prováveis:**
-- `src/pages/DriverPanelConfigPage.tsx`
-- `src/pages/Dashboard.tsx`
-- qualquer página recentemente alterada ligada ao erro registrado
-
-Vou:
-- revisar os componentes usados nessas páginas
-- eliminar referências soltas/instáveis
-- garantir que uma página quebrada não derrube a navegação inteira
-
-Objetivo:
-- remover os crashes reais que estão aparecendo no backend
-
-### 5. Isolar melhor falhas por rota
-**Arquivos:**
-- `src/App.tsx`
-- possivelmente wrappers de página
-
-Vou:
-- aplicar boundaries mais perto das páginas mais sensíveis
-- impedir que uma rota com erro derrube toda a aplicação
-
-Objetivo:
-- se uma página falhar, o resto do sistema continua funcionando
-
-## Arquivos que devo mexer
-- `src/App.tsx`
-- `src/components/ErrorBoundary.tsx`
-- `src/main.tsx`
-- `index.html`
-- `src/pages/DriverPanelConfigPage.tsx`
-- possivelmente `src/pages/Dashboard.tsx`
-
-## Resultado esperado
-Depois disso:
-- o preview para de morrer por chunk velho
-- o app deixa de ficar branco quando uma rota lazy falhar
-- erros de página passam a aparecer de forma controlada
-- mesmo em falha de bootstrap, o usuário vê um fallback, não uma tela vazia
-
-## Resumo técnico
-```text
-Causa real:
-1) falha intermitente de lazy chunks após rebuild/deploy
-2) crashes reais em algumas rotas
-
-Correção:
-- lazy import com retry
-- fallback visual de bootstrap
-- error boundary específico para chunk load
-- corrigir páginas com erro real
-- isolar falhas por rota
+```typescript
+// App.tsx:292
+if (loading) {
+  return <div>...spinner...</div>; // ← TUDO fica preso aqui
+}
 ```
+
+O `BrandContext.resolve()` (linha 84) não tem `try/catch`. Se a chamada ao Supabase falhar ou demorar, `setLoading(false)` nunca é chamado e o app fica no spinner para sempre.
+
+Além disso, diferente do `AuthContext` que tem timeout de 8 segundos, o `BrandContext` não tem nenhum mecanismo de segurança.
+
+### Correções
+
+#### 1. Adicionar try/catch + timeout no BrandContext
+**Arquivo:** `src/contexts/BrandContext.tsx`
+
+- Envolver `resolve()` em try/catch, garantindo que `setLoading(false)` seja chamado mesmo em caso de erro
+- Adicionar timeout de segurança de 5 segundos (similar ao AuthContext)
+
+#### 2. Não bloquear /auth atrás do BrandContext loading
+**Arquivo:** `src/App.tsx`
+
+Na função `AppContent`, verificar o pathname antes do gate de loading. Se a rota for `/auth`, `/reset-password`, `/trial`, `/landing` ou `/register-store` (rotas públicas), renderizar direto sem esperar BrandContext.
+
+Mudança em `AppContent`:
+```typescript
+// Rotas públicas que não dependem de brand
+const publicPaths = ["/auth", "/reset-password", "/trial", "/landing"];
+const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
+
+if (loading && !isPublicPath && !isPartnerLanding && !isDriverPanel) {
+  return <div>...spinner...</div>;
+}
+```
+
+### Resultado
+- BrandContext nunca fica preso em loading infinito
+- A página de login renderiza imediatamente, sem esperar resolução de brand
+- Rotas públicas ficam acessíveis mesmo com Supabase lento
+
+### Arquivos alterados
+- `src/contexts/BrandContext.tsx`
+- `src/App.tsx`
+
