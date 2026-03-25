@@ -65,13 +65,20 @@ export default function AffiliateCategoriesPage() {
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaBgColor, setCtaBgColor] = useState("#F97316");
   const [ctaTextColor, setCtaTextColor] = useState("#FFFFFF");
-  const [detailBannerUrl, setDetailBannerUrl] = useState("");
+  const [detailBanners, setDetailBanners] = useState<string[]>([]);
 
   useEffect(() => {
     if (ctaConfig.label) setCtaLabel(ctaConfig.label);
     if (ctaConfig.bg_color) setCtaBgColor(ctaConfig.bg_color);
     if (ctaConfig.text_color) setCtaTextColor(ctaConfig.text_color);
-    if (brandData?.achadinho_detail_banner_url) setDetailBannerUrl(brandData.achadinho_detail_banner_url);
+    // backward compat: migrate single URL to array
+    const banners = brandData?.achadinho_detail_banners as string[] | undefined;
+    const legacyUrl = brandData?.achadinho_detail_banner_url as string | undefined;
+    if (banners && banners.length > 0) {
+      setDetailBanners(banners);
+    } else if (legacyUrl) {
+      setDetailBanners([legacyUrl]);
+    }
   }, [brandData]);
 
   const saveCtaMutation = useMutation({
@@ -80,7 +87,8 @@ export default function AffiliateCategoriesPage() {
       const settings = {
         ...(brandData || {}),
         achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor },
-        achadinho_detail_banner_url: detailBannerUrl || null,
+        achadinho_detail_banners: detailBanners.filter(Boolean),
+        achadinho_detail_banner_url: detailBanners[0] || null, // backward compat
       };
       const { error } = await supabase.from("brands").update({ brand_settings_json: settings }).eq("id", currentBrandId);
       if (error) throw error;
@@ -278,23 +286,50 @@ export default function AffiliateCategoriesPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Banner de fundo */}
-          <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+          {/* Banners de fundo rotativos */}
+          <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
             <Label className="text-xs font-semibold flex items-center gap-1.5">
               <ImagePlus className="h-3.5 w-3.5" />
-              Banner de fundo da página de produto
+              Banners rotativos de fundo
             </Label>
-            <p className="text-[11px] text-muted-foreground">Imagem exibida atrás da foto do produto. Proporção ideal: 16:9 (1200×675)</p>
-            <StorageImageUpload
-              value={detailBannerUrl}
-              onChange={setDetailBannerUrl}
-              label="Banner do produto"
-              folder="achadinho-banners"
-              aspectHint="Proporção ideal: 16:9 (1200×675)"
-            />
-            {detailBannerUrl && (
-              <ImageAiActions imageUrl={detailBannerUrl} onReplace={setDetailBannerUrl} context="banner" />
-            )}
+            <p className="text-[11px] text-muted-foreground">
+              Imagens exibidas atrás da foto do produto com rotação automática. Proporção ideal: 16:9 (1200×675)
+            </p>
+
+            {detailBanners.map((url, idx) => (
+              <div key={idx} className="space-y-2 p-2 bg-muted/20 rounded-lg border border-border/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-muted-foreground">Banner {idx + 1}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setDetailBanners(prev => prev.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+                <StorageImageUpload
+                  value={url}
+                  onChange={(newUrl) => setDetailBanners(prev => prev.map((u, i) => i === idx ? newUrl : u))}
+                  label={`Banner ${idx + 1}`}
+                  folder="achadinho-banners"
+                  aspectHint="Proporção ideal: 16:9 (1200×675)"
+                />
+                {url && (
+                  <ImageAiActions imageUrl={url} onReplace={(newUrl) => setDetailBanners(prev => prev.map((u, i) => i === idx ? newUrl : u))} context="banner" />
+                )}
+              </div>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setDetailBanners(prev => [...prev, ""])}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Adicionar banner
+            </Button>
           </div>
 
           {/* CTA config */}

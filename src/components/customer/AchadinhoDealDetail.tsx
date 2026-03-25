@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Share2, Tag } from "lucide-react";
@@ -57,7 +57,25 @@ export default function AchadinhoDealDetail({
   const ctaText = ctaConfig?.text_color || "#FFFFFF";
   const ctaLabel = ctaConfig?.label || "Ir para oferta";
 
-  const bannerUrl = brandSettings?.achadinho_detail_banner_url;
+  // Support multiple banners with rotation (backward compat with single URL)
+  const detailBanners: string[] = useMemo(() => {
+    const arr = brandSettings?.achadinho_detail_banners as string[] | undefined;
+    const legacy = brandSettings?.achadinho_detail_banner_url as string | undefined;
+    if (arr && arr.length > 0) return arr.filter(Boolean);
+    if (legacy) return [legacy];
+    return [];
+  }, [brandSettings]);
+
+  const [bannerIdx, setBannerIdx] = useState(0);
+  const bannerCount = detailBanners.length;
+
+  useEffect(() => {
+    if (bannerCount <= 1) return;
+    const timer = setInterval(() => setBannerIdx(prev => (prev + 1) % bannerCount), 4000);
+    return () => clearInterval(timer);
+  }, [bannerCount]);
+
+  const currentBannerUrl = detailBanners[bannerIdx] || null;
 
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount
@@ -145,15 +163,40 @@ export default function AchadinhoDealDetail({
           <div className="max-w-lg mx-auto">
             {/* Banner + Product Image */}
             <div className="relative mx-4 mb-4">
-              {/* Decorative background */}
-              <div
-                className="w-full aspect-[16/9] rounded-2xl overflow-hidden"
-                style={{
-                  background: bannerUrl
-                    ? `url(${bannerUrl}) center/cover`
-                    : `linear-gradient(135deg, ${withAlpha(primary, 0.15)}, ${withAlpha(primary, 0.05)})`,
-                }}
-              />
+              {/* Decorative background with rotation */}
+              <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden relative">
+                {currentBannerUrl ? (
+                  detailBanners.map((url, i) => (
+                    <div
+                      key={url}
+                      className="absolute inset-0 transition-opacity duration-700"
+                      style={{
+                        background: `url(${url}) center/cover`,
+                        opacity: i === bannerIdx ? 1 : 0,
+                      }}
+                    />
+                  ))
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: `linear-gradient(135deg, ${withAlpha(primary, 0.15)}, ${withAlpha(primary, 0.05)})` }}
+                  />
+                )}
+                {bannerCount > 1 && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {detailBanners.map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-1.5 rounded-full transition-all duration-300"
+                        style={{
+                          width: i === bannerIdx ? 16 : 6,
+                          backgroundColor: i === bannerIdx ? "#fff" : "rgba(255,255,255,0.5)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
               {/* Product image floating over banner */}
               <div className="absolute left-1/2 -translate-x-1/2 -bottom-8">
                 <div
