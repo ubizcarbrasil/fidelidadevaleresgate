@@ -37,15 +37,21 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
   const { data: deals, isLoading } = useQuery({
     queryKey: ["driver-cat-deals", brandId, branchId, category.id],
     queryFn: async () => {
+      const isVirtual = category.id === "__new_offers__";
       let q = supabase
         .from("affiliate_deals")
         .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured")
         .eq("brand_id", brandId)
-        .eq("is_active", true)
-        .eq("category_id", category.id)
-        .order("is_featured", { ascending: false })
-        .order("order_index")
-        .limit(1000);
+        .eq("is_active", true);
+
+      if (isVirtual) {
+        const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        q = q.gte("created_at", cutoff).order("created_at", { ascending: false });
+      } else {
+        q = q.eq("category_id", category.id).order("is_featured", { ascending: false }).order("order_index");
+      }
+
+      q = q.limit(1000);
       if (branchId) q = q.or(`branch_id.eq.${branchId},branch_id.is.null`);
       const { data } = await q;
       return (data as AffiliateDeal[]) || [];
