@@ -1,47 +1,115 @@
 
 
-## Plano: Categoria virtual "Novas Ofertas" com expiração de 48h
+## Etapa 1 — Estado global de boot com fases observáveis
 
-### Conceito
-Criar uma categoria virtual "Novas Ofertas" que aparece **sempre em primeiro lugar** (antes de Eletrônicos), com **3 linhas** de produtos. Não é uma categoria real no banco — é montada no frontend filtrando deals criados nas últimas 48 horas. Deals permanecem em sua categoria original simultaneamente.
+### Objetivo
+Criar um módulo centralizado (`bootState`) que rastreia cada fase da inicialização com logs explícitos, sem alterar guards, redirects ou lógica de negócio.
 
-### Mudanças
+### Arquivos alterados (4 arquivos, mudanças mínimas)
 
-**1. Queries — adicionar `created_at` ao select**
+**1. Novo: `src/lib/bootState.ts`**
+Módulo singleton com estado de boot e logging:
+```typescript
+export type BootPhase =
+  | "BOOTSTRAP"    // main.tsx carregou, App.tsx importado
+  | "AUTH_LOADING"  // AuthProvider iniciando restauração
+  | "AUTH_READY"    // AuthProvider resolveu sessão (ou timeout)
+  | "BRAND_LOADING" // BrandProvider resolvendo marca
+  | "BRAND_READY"   // BrandProvider resolveu
+  | "APP_MOUNTED"   // MountSignal executou
+  | "FAILED";       // Erro fatal
 
-Arquivos: `DriverMarketplace.tsx`, `AchadinhoSection.tsx`
+let currentPhase: BootPhase = "BOOTSTRAP";
+const listeners: Array<(phase: BootPhase) => void> = [];
 
-- Adicionar `created_at` no `.select(...)` das queries de `affiliate_deals`
-- Adicionar `created_at` na interface `AffiliateDeal` em ambos os arquivos
+export function setBootPhase(phase: BootPhase, detail?: string) {
+  currentPhase = phase;
+  const ts = (performance.now() / 1000).toFixed(2);
+  console.info(`[boot] ${ts}s → ${phase}${detail ? ` (${detail})` : ""}`);
+  listeners.forEach(fn => fn(phase));
+}
 
-**2. Categoria virtual "Novas Ofertas" no Driver**
+export function getBootPhase() { return currentPhase; }
+export function onBootPhase(fn: (phase: BootPhase) => void) {
+  listeners.push(fn);
+  return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); };
+}
+```
 
-Arquivo: `src/components/driver/DriverMarketplace.tsx`
+**2. `src/main.tsx` — marcar fase BOOTSTRAP**
+Adicionar 2 linhas:
+```diff
++ import { setBootPhase } from "@/lib/bootState";
 
-- Após processar as categorias reais, criar uma categoria virtual:
-  - `id: "__new_offers__"`, `name: "Novas Ofertas"`, `icon_name: "Sparkles"`, `color: "#f59e0b"`
-- Filtrar todos os deals com `created_at` dentro das últimas 48h
-- Inserir essa categoria como **primeira** no array de `viableCategories`
-- No `categoryLayout`, forçar `rows: 3` e `order: -1` para essa categoria virtual
-- Deals novos aparecem duplicados: na "Novas Ofertas" E na sua categoria original
+  async function bootstrap() {
+    try {
++     setBootPhase("BOOTSTRAP", "importing App");
+      const rootEl = document.getElementById("root");
+      ...
+      createRoot(rootEl).render(<App />);
+    } catch (err) {
++     setBootPhase("FAILED", String(err));
+      console.error("Bootstrap failed:", err);
+      showBootstrapError(...);
+    }
+  }
+```
 
-**3. Categoria virtual "Novas Ofertas" no Customer (Achadinhos)**
+**3. `src/contexts/AuthContext.tsx` — marcar fases AUTH**
+Adicionar 3 linhas dentro do `useEffect` existente:
+```diff
++ import { setBootPhase } from "@/lib/bootState";
 
-Arquivo: `src/components/customer/AchadinhoSection.tsx`
+  const bootstrap = async () => {
++   setBootPhase("AUTH_LOADING");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      ...
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
++       setBootPhase("AUTH_READY");
+      }
+    }
+  };
+```
+No timeout de segurança:
+```diff
+  if (mountedRef.current && !initialLoadDone) {
++   setBootPhase("AUTH_READY", "timeout");
+    setLoading(false);
+  }
+```
 
-- Mesma lógica: adicionar `created_at` ao select e interface
-- Criar categoria virtual com 3 linhas, posição 0
-- Duplicar deals recentes nessa categoria sem removê-los da original
+**4. `src/contexts/BrandContext.tsx` — marcar fases BRAND**
+Adicionar 2 linhas nos pontos onde `loading` muda para `false`:
+```diff
++ import { setBootPhase } from "@/lib/bootState";
 
-**4. Regras de exibição**
-- A estrela (`is_featured`) continua funcionando normalmente dentro de cada categoria real
-- Na "Novas Ofertas", ordenar por `created_at DESC` (mais recentes primeiro)
-- Se não houver deals com menos de 48h, a categoria "Novas Ofertas" não aparece
-- Mínimo de 3 deals para a categoria aparecer (regra existente)
+  // No início da resolução:
++ setBootPhase("BRAND_LOADING");
 
-### O que NÃO muda
-- Nenhuma tabela/migration no banco de dados
-- Nenhuma categoria real criada no `affiliate_deal_categories`
-- Estrela e `order_index` continuam funcionando nas categorias reais
-- Não afeta página de categoria individual nem busca
+  // Quando loading = false (sucesso ou erro):
++ setBootPhase("BRAND_READY");
+```
 
+**5. `src/components/MountSignal.tsx` — marcar APP_MOUNTED**
+Adicionar 1 linha:
+```diff
++ import { setBootPhase } from "@/lib/bootState";
+
+  useEffect(() => {
++   setBootPhase("APP_MOUNTED");
+    (window as any).__APP_MOUNTED__ = true;
+    ...
+  }, []);
+```
+
+**6. `src/components/ErrorBoundary.tsx` — marcar FAILED**
+Adicionar 1 linha no `componentDidCatch`:
+```diff
++ import { setBootPhase } from "@/lib/bootState";
+
+  componentDidCatch(error, errorInfo) {
++   setBootPhase("FAILED", error.message);
+    reportError({
