@@ -4,6 +4,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { getCurrentPosition, distanceKm, type Coords } from "@/lib/geolocation";
 import { useBrandTheme, type BrandTheme } from "@/hooks/useBrandTheme";
+import { setBootPhase } from "@/lib/bootState";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -87,6 +88,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }, 5000);
 
+      setBootPhase("BRAND_LOADING");
       try {
         const hostname = window.location.hostname;
 
@@ -121,6 +123,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       } finally {
         clearTimeout(safetyTimeout);
         setLoading(false);
+        setBootPhase("BRAND_READY");
       }
     };
     resolve();

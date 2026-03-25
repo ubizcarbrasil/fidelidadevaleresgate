@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/errorTracker";
+import { setBootPhase } from "@/lib/bootState";
 
 interface Props {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    setBootPhase("FAILED", error.message);
     reportError({
       message: error.message,
       stack: error.stack,
