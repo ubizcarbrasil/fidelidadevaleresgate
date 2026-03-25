@@ -16,15 +16,16 @@ import AppLayout from "@/components/AppLayout";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
-const RootJourneyGuidePage = lazy(() => import("@/pages/RootJourneyGuidePage"));
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+const RootJourneyGuidePage = lazyWithRetry(() => import("@/pages/RootJourneyGuidePage"));
 import { queryClient } from "@/lib/queryClient";
 import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
-const BrandJourneyGuidePage = lazy(() => import("@/pages/BrandJourneyGuidePage"));
+const BrandJourneyGuidePage = lazyWithRetry(() => import("@/pages/BrandJourneyGuidePage"));
 
 // Lazy-loaded pages
-const Auth = lazy(() => import("@/pages/Auth"));
-const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Auth = lazyWithRetry(() => import("@/pages/Auth"));
+const ResetPassword = lazyWithRetry(() => import("@/pages/ResetPassword"));
+const Dashboard = lazyWithRetry(() => import("@/pages/Dashboard"));
 const Tenants = lazy(() => import("@/pages/Tenants"));
 const TenantForm = lazy(() => import("@/pages/TenantForm"));
 const Brands = lazy(() => import("@/pages/Brands"));
