@@ -96,6 +96,10 @@ if (typeof Node === "function" && Node.prototype) {
   };
 }
 
+// Remove bootstrap fallback before mounting React
+const fallback = document.getElementById("bootstrap-fallback");
+if (fallback) fallback.remove();
+
 createRoot(document.getElementById("root")!).render(
   <App />
 );
