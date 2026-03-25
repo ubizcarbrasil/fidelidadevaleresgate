@@ -331,7 +331,6 @@ export default function AffiliateCategoriesPage() {
               <Plus className="h-4 w-4 mr-1" /> Adicionar banner
             </Button>
           </div>
-          </div>
 
           {/* CTA config */}
           <Label className="text-xs font-semibold">Botão CTA</Label>
