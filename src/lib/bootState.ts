@@ -22,6 +22,7 @@ export function setBootPhase(phase: BootPhase, detail?: string) {
   (window as any).__BOOT_PHASE__ = phase;
   const ts = (performance.now() / 1000).toFixed(2);
   console.info(`[boot] ${ts}s → ${phase}${detail ? ` (${detail})` : ""}`);
+  checkResolved();
   listeners.forEach((fn) => fn(phase));
 
   if (phase === "APP_MOUNTED" || phase === "FAILED") {
