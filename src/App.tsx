@@ -153,7 +153,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Dashboard />} />
+          <Route index element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
           <Route path="tenants" element={<Tenants />} />
           <Route path="tenants/new" element={<TenantForm />} />
           <Route path="tenants/:id" element={<TenantForm />} />
