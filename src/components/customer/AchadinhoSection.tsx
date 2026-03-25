@@ -23,6 +23,7 @@ interface AffiliateDeal {
   badge_label: string | null;
   category: string | null;
   category_id: string | null;
+  created_at?: string;
 }
 
 interface DealCategory {
@@ -128,7 +129,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     queryFn: async () => {
       let dealsQuery = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
@@ -162,6 +163,8 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const MIN_DEALS = 3;
   const MIN_PER_ROW = 3;
+  const NEW_OFFERS_ID = "__new_offers__";
+  const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
 
   const categoryLayout: Record<string, { rows?: number; order?: number }> = (brand as any)?.brand_settings_json?.driver_category_layout || {};
 
@@ -188,6 +191,22 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       if (hasB) return 1;
       return (countMap.get(b.id) || 0) - (countMap.get(a.id) || 0);
     });
+
+    // Virtual "Novas Ofertas" category — deals created in last 48h
+    const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
+    const newDeals = deals
+      .filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff)
+      .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
+
+    if (newDeals.length >= MIN_DEALS) {
+      const virtualCat: DealCategory = {
+        id: NEW_OFFERS_ID,
+        name: "Novas Ofertas",
+        icon_name: "Sparkles",
+        color: "#f59e0b",
+      };
+      viable.unshift(virtualCat);
+    }
 
     return { viableCategories: viable, overflowDealIds: overflow };
   }, [rawCategories, deals, categoryLayout]);
