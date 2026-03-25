@@ -161,10 +161,9 @@ export default function AchadinhoDealDetail({
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto">
-            {/* Banner + Product Image */}
-            <div className="relative mx-4 mb-4">
-              {/* Decorative background with rotation */}
-              <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden relative">
+            {/* Banner decorativo */}
+            <div className="relative mx-4 mb-3">
+              <div className="w-full aspect-[3/1] rounded-2xl overflow-hidden relative">
                 {currentBannerUrl ? (
                   detailBanners.map((url, i) => (
                     <div
@@ -196,45 +195,41 @@ export default function AchadinhoDealDetail({
                     ))}
                   </div>
                 )}
+                {badgeText && (
+                  <div
+                    className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-white text-xs font-bold z-10"
+                    style={{ backgroundColor: highlight }}
+                  >
+                    {badgeText}
+                  </div>
+                )}
               </div>
-              {/* Product image floating over banner */}
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-8">
-                <div
-                  className="h-44 w-44 rounded-2xl overflow-hidden bg-card"
-                  style={{ boxShadow: "0 8px 30px hsl(var(--foreground) / 0.12)" }}
-                >
-                  {deal.image_url ? (
-                    <SafeImage
-                      src={deal.image_url}
-                      alt={deal.title}
-                      className="h-full w-full object-contain"
-                      fallback={
-                        <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
-                          <AppIcon iconKey="section_deals" className="h-10 w-10" style={{ color: withAlpha(primary, 0.3) }} />
-                        </div>
-                      }
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
-                      <AppIcon iconKey="section_deals" className="h-10 w-10" style={{ color: withAlpha(primary, 0.3) }} />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Badge */}
-              {badgeText && (
-                <div
-                  className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-white text-xs font-bold"
-                  style={{ backgroundColor: highlight }}
-                >
-                  {badgeText}
-                </div>
-              )}
             </div>
 
-            {/* Spacer for floating image */}
-            <div className="h-12" />
+            {/* Imagem do produto */}
+            <div className="flex justify-center mb-4">
+              <div
+                className="h-44 w-44 rounded-2xl overflow-hidden bg-card"
+                style={{ boxShadow: "0 8px 30px hsl(var(--foreground) / 0.12)" }}
+              >
+                {deal.image_url ? (
+                  <SafeImage
+                    src={deal.image_url}
+                    alt={deal.title}
+                    className="h-full w-full object-contain"
+                    fallback={
+                      <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
+                        <AppIcon iconKey="section_deals" className="h-10 w-10" style={{ color: withAlpha(primary, 0.3) }} />
+                      </div>
+                    }
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
+                    <AppIcon iconKey="section_deals" className="h-10 w-10" style={{ color: withAlpha(primary, 0.3) }} />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Product Info */}
             <div className="px-5 text-center space-y-2">
