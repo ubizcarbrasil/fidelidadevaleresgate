@@ -82,36 +82,46 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const resolve = async () => {
-      const hostname = window.location.hostname;
-
-      // Skip resolution for dev/preview/root domains
-      const isLocal = hostname === "localhost"
-        || hostname.includes("lovable.app")
-        || hostname.includes("lovableproject.com")
-        || hostname.startsWith("root.");
-
-      if (isLocal) {
-        // Check for brandId URL parameter (root admin impersonation)
-        const params = new URLSearchParams(window.location.search);
-        const brandIdParam = params.get("brandId");
-        if (brandIdParam) {
-          const { data: brandData } = await supabase
-            .from("brands")
-            .select("*")
-            .eq("id", brandIdParam)
-            .single();
-          if (brandData) {
-            setBrand(brandData);
-          }
-        }
+      // Safety timeout: force loading = false after 5 seconds
+      const safetyTimeout = setTimeout(() => {
         setLoading(false);
-        return;
-      }
+      }, 5000);
 
-      setIsWhiteLabel(true);
-      const resolved = await resolveBrandByDomain(hostname);
-      setBrand(resolved);
-      setLoading(false);
+      try {
+        const hostname = window.location.hostname;
+
+        // Skip resolution for dev/preview/root domains
+        const isLocal = hostname === "localhost"
+          || hostname.includes("lovable.app")
+          || hostname.includes("lovableproject.com")
+          || hostname.startsWith("root.");
+
+        if (isLocal) {
+          // Check for brandId URL parameter (root admin impersonation)
+          const params = new URLSearchParams(window.location.search);
+          const brandIdParam = params.get("brandId");
+          if (brandIdParam) {
+            const { data: brandData } = await supabase
+              .from("brands")
+              .select("*")
+              .eq("id", brandIdParam)
+              .single();
+            if (brandData) {
+              setBrand(brandData);
+            }
+          }
+          return;
+        }
+
+        setIsWhiteLabel(true);
+        const resolved = await resolveBrandByDomain(hostname);
+        setBrand(resolved);
+      } catch (err) {
+        console.error("BrandContext resolve error:", err);
+      } finally {
+        clearTimeout(safetyTimeout);
+        setLoading(false);
+      }
     };
     resolve();
   }, []);

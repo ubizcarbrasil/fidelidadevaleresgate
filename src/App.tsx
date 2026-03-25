@@ -289,7 +289,11 @@ function AppContent() {
     );
   }
 
-  if (loading) {
+  // Public paths that don't need brand resolution
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store"];
+  const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
+
+  if (loading && !isPublicPath) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
