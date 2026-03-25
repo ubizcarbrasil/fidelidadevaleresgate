@@ -43,8 +43,9 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
         .eq("brand_id", brandId)
         .eq("is_active", true)
         .eq("category_id", category.id)
+        .order("is_featured", { ascending: false })
         .order("order_index")
-        .limit(200);
+        .limit(1000);
       if (branchId) q = q.or(`branch_id.eq.${branchId},branch_id.is.null`);
       const { data } = await q;
       return (data as AffiliateDeal[]) || [];
