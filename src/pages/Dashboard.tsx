@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, memo, useMemo, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,8 +20,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-const DashboardTasksSection = lazy(() => import("@/components/dashboard/TasksSection"));
-const DashboardActivityFeed = lazy(() => import("@/components/dashboard/ActivityFeed"));
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard/TasksSection"));
+const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
