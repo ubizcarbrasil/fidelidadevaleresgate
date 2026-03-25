@@ -236,7 +236,7 @@ function AppRoutes() {
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
           {/* Driver panel configuration */}
-          <Route path="driver-config" element={<DriverPanelConfigPage />} />
+          <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
