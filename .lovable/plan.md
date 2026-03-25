@@ -1,97 +1,118 @@
 
 
-## Etapa 2 — Overlay reativo ao bootState
+## Etapa 3 — Guards aguardam boot resolvido antes de redirecionar
 
 ### Problema atual
-O overlay roxo (`#bootstrap-fallback`) só é removido por dois caminhos:
-1. `MountSignal` chama `window.__dismissBootstrap()` — funciona no sucesso
-2. Timeout de 10s mostra botão de recarregar — mas não explica o motivo
 
-Se o React monta mas falha dentro do `ErrorBoundary`, o overlay fica **por cima** do fallback do React, escondendo a mensagem de erro. Resultado: tela roxa presa.
+Os três guards (`ProtectedRoute`, `RootGuard`, `ModuleGuard`) dependem apenas do seu próprio estado de loading local. Quando auth termina mas brand ainda não resolveu, ou quando modules ainda estão carregando durante o boot, os guards podem redirecionar prematuramente (ex: `Navigate to="/"` porque `isModuleEnabled` retorna `false` enquanto dados ainda não chegaram).
 
-### Mudanças (3 arquivos, conservadoras)
+Isso causa telas brancas: o redirect acontece, a página destino também está em estado parcial, e o ciclo se repete.
 
-**1. `src/lib/bootState.ts` — adicionar `dismissBootstrap` helper**
+### Solução
 
-Extrair a lógica de remover o overlay para uma função reutilizável:
+Adicionar um hook `useBootReady()` que lê o `bootState` e retorna `true` somente quando a fase é `BRAND_READY`, `APP_MOUNTED` ou `FAILED`. Enquanto o boot não estiver resolvido, os guards renderizam um spinner estável — **nunca** um `Navigate`.
+
+### Mudanças (4 arquivos)
+
+**1. `src/lib/bootState.ts` — adicionar `useBootReady` hook**
 
 ```typescript
-export function dismissBootstrap() {
-  const el = document.getElementById("bootstrap-fallback");
-  if (el) el.style.display = "none";
+import { useSyncExternalStore } from "react";
+
+// Fases que indicam "boot resolvido"
+const RESOLVED: Set<BootPhase> = new Set(["BRAND_READY", "APP_MOUNTED", "FAILED"]);
+
+export function isBootResolved(): boolean {
+  return RESOLVED.has(currentPhase);
+}
+
+function subscribe(cb: () => void) {
+  listeners.push(cb);
+  return () => { const i = listeners.indexOf(cb); if (i >= 0) listeners.splice(i, 1); };
+}
+
+export function useBootReady(): boolean {
+  return useSyncExternalStore(subscribe, isBootResolved, isBootResolved);
 }
 ```
 
-Modificar `setBootPhase` para chamar `dismissBootstrap()` automaticamente quando a fase for `APP_MOUNTED` ou `FAILED`. Assim qualquer caminho — sucesso ou erro — remove o overlay.
+Usa `useSyncExternalStore` para integrar com React sem criar novo contexto.
 
-**2. `src/components/ErrorBoundary.tsx` — garantir overlay removido em erro**
+**2. `src/components/ProtectedRoute.tsx`**
 
-No `componentDidCatch`, após chamar `setBootPhase("FAILED", ...)`, chamar também `dismissBootstrap()` explicitamente (defesa em profundidade). Isso garante que o fallback do React (com mensagem de erro e botão) fique visível.
-
-**3. `index.html` — simplificar timeout e integrar com bootState**
-
-Substituir o script de timeout atual por uma versão que:
-- Usa o mesmo `__dismissBootstrap` existente
-- Se o overlay ainda estiver visível após 12s, mostra o botão de recarregar COM a fase atual do boot (lida de `window.__BOOT_PHASE__`)
-- Exportar `window.__BOOT_PHASE__` no `setBootPhase` para o script vanilla poder ler
-
-Mudança no script do `index.html`:
-```javascript
-window.__dismissBootstrap = function(){
-  var el = document.getElementById('bootstrap-fallback');
-  if(el) el.style.display='none';
-};
-setTimeout(function(){
-  var el = document.getElementById('bootstrap-fallback');
-  if(el && el.style.display !== 'none'){
-    var phase = window.__BOOT_PHASE__ || 'desconhecido';
-    var spinner = document.getElementById('bootstrap-spinner');
-    var err = document.getElementById('bootstrap-error');
-    if(spinner) spinner.style.display='none';
-    if(err){
-      err.style.display='block';
-      err.innerHTML = '<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Fase: '+phase+'</p>'
-        + '<p style="margin:0 0 12px;font-size:14px;">O carregamento está demorando mais que o esperado.</p>'
-        + '<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
-    }
-  }
-}, 12000);
-```
-
-Mudança no `setBootPhase` (bootState.ts):
 ```typescript
-(window as any).__BOOT_PHASE__ = phase;
+import { useBootReady } from "@/lib/bootState";
+
+export default function ProtectedRoute({ children }) {
+  const { session, loading } = useAuth();
+  const bootReady = useBootReady();
+
+  // Enquanto boot OU auth não resolveram → spinner estável
+  if (!bootReady || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!session) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
 ```
 
-### Como funciona após a mudança
+**3. `src/components/RootGuard.tsx`**
 
-**Sucesso normal:**
-1. `BOOTSTRAP` → `AUTH_LOADING` → `AUTH_READY` → `BRAND_LOADING` → `BRAND_READY` → `APP_MOUNTED`
-2. `setBootPhase("APP_MOUNTED")` chama `dismissBootstrap()` → overlay some
+```typescript
+import { useBootReady } from "@/lib/bootState";
 
-**Erro fatal no React (ErrorBoundary):**
-1. `BOOTSTRAP` → ... → `FAILED`
-2. `setBootPhase("FAILED")` chama `dismissBootstrap()` → overlay some
-3. Fallback do ErrorBoundary fica visível com mensagem e botão
+export default function RootGuard({ children }) {
+  const { isRootAdmin, loading } = useAuth();
+  const bootReady = useBootReady();
 
-**Erro fatal no bootstrap (main.tsx):**
-1. `BOOTSTRAP` → `FAILED`
-2. `setBootPhase("FAILED")` chama `dismissBootstrap()` → overlay some
-3. `showBootstrapError()` mostra mensagem no `#bootstrap-error` (que agora está visível)
+  if (!bootReady || loading) {
+    return (/* spinner */);
+  }
 
-**Timeout (nada montou em 12s):**
-1. Overlay ainda visível → script vanilla mostra fase atual + botão de recarregar
-2. Usuário vê "Fase: AUTH_LOADING" e sabe onde travou
+  if (!isRootAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+```
 
-### Arquivos alterados
-| Arquivo | Mudança |
-|---|---|
-| `src/lib/bootState.ts` | +`dismissBootstrap()`, +`window.__BOOT_PHASE__`, auto-dismiss em APP_MOUNTED/FAILED |
-| `src/components/ErrorBoundary.tsx` | +`dismissBootstrap()` no `componentDidCatch` |
-| `index.html` | Timeout mostra fase do boot, remove `__APP_MOUNTED__` check redundante |
+**4. `src/components/ModuleGuard.tsx`**
+
+```typescript
+import { useBootReady } from "@/lib/bootState";
+
+export default function ModuleGuard({ moduleKey, children }) {
+  const { isModuleEnabled, isLoading } = useBrandModules();
+  const bootReady = useBootReady();
+
+  if (!bootReady || isLoading) {
+    return (/* spinner */);
+  }
+
+  if (!isModuleEnabled(moduleKey)) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+```
+
+### Como funciona
+
+| Situação | Antes | Depois |
+|---|---|---|
+| Auth resolveu, brand ainda não | Guard podia redirecionar (módulos não carregados = `false`) | Spinner estável até `BRAND_READY` |
+| Boot completo | Redirect normal | Redirect normal (sem mudança) |
+| Boot falhou | Ficava em limbo | `FAILED` é resolvido → guard avalia normalmente, ErrorBoundary cuida do resto |
+
+### Condição que bloqueia redirects prematuros
+```typescript
+if (!bootReady || loading) → renderiza spinner, NUNCA Navigate
+```
+`bootReady` só é `true` quando `bootState` atingiu `BRAND_READY`, `APP_MOUNTED` ou `FAILED`.
 
 ### O que NÃO muda
-- `MountSignal.tsx` — continua funcionando como antes (chama `setBootPhase` que agora faz dismiss)
-- `main.tsx` — sem alteração (já chama `setBootPhase("FAILED")`)
-- Guards, redirects, auth, brand, layout, páginas — nada alterado
-
+- `AuthContext.tsx` — sem alteração
+- `BrandContext.tsx` — sem alteração
+- `App.tsx` — sem alteração
+- Layout, pág
