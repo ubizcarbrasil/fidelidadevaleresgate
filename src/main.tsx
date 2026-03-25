@@ -96,19 +96,10 @@ if (typeof Node === "function" && Node.prototype) {
   };
 }
 
-// Mount React and remove bootstrap fallback only after successful render
-try {
-  const root = createRoot(document.getElementById("root")!);
-  root.render(<App />);
+// Remove bootstrap fallback before mounting React
+const fallback = document.getElementById("bootstrap-fallback");
+if (fallback) fallback.remove();
 
-  // Signal successful mount — clears the timeout in index.html
-  (window as any).__APP_READY__ = true;
-  if ((window as any).__BOOTSTRAP_TIMER__) {
-    clearTimeout((window as any).__BOOTSTRAP_TIMER__);
-  }
-  const fallback = document.getElementById("bootstrap-fallback");
-  if (fallback) fallback.remove();
-} catch (err) {
-  console.error("Bootstrap mount failed:", err);
-  // Let the index.html timeout handler show the reload button
-}
+createRoot(document.getElementById("root")!).render(
+  <App />
+);
