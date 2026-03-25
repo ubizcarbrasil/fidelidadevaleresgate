@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 export type BootPhase =
   | "BOOTSTRAP"
   | "AUTH_LOADING"
@@ -37,4 +39,25 @@ export function onBootPhase(fn: (phase: BootPhase) => void) {
     const i = listeners.indexOf(fn);
     if (i >= 0) listeners.splice(i, 1);
   };
+}
+
+/* ── useBootReady ── */
+
+const RESOLVED: Set<BootPhase> = new Set(["BRAND_READY", "APP_MOUNTED", "FAILED"]);
+
+function isBootResolved(): boolean {
+  return RESOLVED.has(currentPhase);
+}
+
+function subscribe(cb: () => void) {
+  listeners.push(cb);
+  return () => {
+    const i = listeners.indexOf(cb);
+    if (i >= 0) listeners.splice(i, 1);
+  };
+}
+
+/** Returns true only after boot reaches BRAND_READY, APP_MOUNTED or FAILED. */
+export function useBootReady(): boolean {
+  return useSyncExternalStore(subscribe, isBootResolved, isBootResolved);
 }
