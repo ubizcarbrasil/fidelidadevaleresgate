@@ -22,6 +22,7 @@ export function setBootPhase(phase: BootPhase, detail?: string) {
   (window as any).__BOOT_PHASE__ = phase;
   const ts = (performance.now() / 1000).toFixed(2);
   console.info(`[boot] ${ts}s → ${phase}${detail ? ` (${detail})` : ""}`);
+  checkResolved();
   listeners.forEach((fn) => fn(phase));
 
   if (phase === "APP_MOUNTED" || phase === "FAILED") {
@@ -41,12 +42,20 @@ export function onBootPhase(fn: (phase: BootPhase) => void) {
   };
 }
 
-/* ── useBootReady ── */
+/* ── useBootReady (high-water mark) ── */
 
-const RESOLVED: Set<BootPhase> = new Set(["BRAND_READY", "FAILED"]);
+const TERMINAL: Set<BootPhase> = new Set(["BRAND_READY", "FAILED"]);
+let bootResolved = false;
+
+/** Called internally whenever phase changes. Once true, stays true forever. */
+function checkResolved() {
+  if (!bootResolved && TERMINAL.has(currentPhase)) {
+    bootResolved = true;
+  }
+}
 
 function isBootResolved(): boolean {
-  return RESOLVED.has(currentPhase);
+  return bootResolved;
 }
 
 function subscribe(cb: () => void) {
@@ -57,7 +66,7 @@ function subscribe(cb: () => void) {
   };
 }
 
-/** Returns true only after boot reaches BRAND_READY, APP_MOUNTED or FAILED. */
+/** Returns true once boot has ever reached BRAND_READY or FAILED. Never reverts. */
 export function useBootReady(): boolean {
   return useSyncExternalStore(subscribe, isBootResolved, isBootResolved);
 }
