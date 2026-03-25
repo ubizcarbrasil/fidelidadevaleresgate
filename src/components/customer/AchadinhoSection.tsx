@@ -348,9 +348,13 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       {/* Deals — carrossel horizontal por categoria */}
       <div className="space-y-5 animate-fade-in">
         {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
-          const catDeals = deals.filter(d => d.category_id === cat.id);
+          const isVirtualNew = cat.id === NEW_OFFERS_ID;
+          const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
+          const catDeals = isVirtualNew
+            ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
+            : deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
-          const configuredRows = categoryLayout[cat.id]?.rows ?? 1;
+          const configuredRows = isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
           const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(catDeals.length / MIN_PER_ROW)));
           const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
           const visibleDeals = catDeals.slice(0, visibleCount);
