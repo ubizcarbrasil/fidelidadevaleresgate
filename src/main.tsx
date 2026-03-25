@@ -98,29 +98,23 @@ try {
   const rootEl = document.getElementById("root");
   if (!rootEl) throw new Error("Root element not found");
 
-  // Remove bootstrap fallback AFTER render succeeds
-  const fallback = document.getElementById("bootstrap-fallback");
-
   createRoot(rootEl).render(<App />);
 
-  // Signal successful mount
-  if (fallback) fallback.remove();
-  (window as any).__APP_MOUNTED__ = true;
+  // NOTE: We do NOT remove the bootstrap-fallback here.
+  // The fallback is now OUTSIDE #root and will be dismissed
+  // by the MountSignal component inside <App /> via window.__dismissBootstrap().
 } catch (err) {
   console.error("Bootstrap failed:", err);
 
-  // Show recovery UI in the fallback
-  const fallback = document.getElementById("bootstrap-fallback");
-  if (fallback) {
-    const spinner = document.getElementById("bootstrap-spinner");
-    const errorDiv = document.getElementById("bootstrap-error");
-    if (spinner) spinner.style.display = "none";
-    if (errorDiv) {
-      errorDiv.style.display = "block";
-      errorDiv.innerHTML = `
-        <p style="margin:0 0 12px;font-size:14px;">Falha ao carregar a aplicação.</p>
-        <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
-      `;
-    }
+  // Show recovery UI in the external overlay
+  const spinner = document.getElementById("bootstrap-spinner");
+  const errorDiv = document.getElementById("bootstrap-error");
+  if (spinner) spinner.style.display = "none";
+  if (errorDiv) {
+    errorDiv.style.display = "block";
+    errorDiv.innerHTML = `
+      <p style="margin:0 0 12px;font-size:14px;">Falha ao carregar a aplicação.</p>
+      <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
+    `;
   }
 }

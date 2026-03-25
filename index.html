@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Vale Resgate" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a6cfa" />
-    <meta name="app-version" content="2026-03-13-v3" />
+    <meta name="app-version" content="2026-03-25-v1" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
@@ -34,15 +34,17 @@
 </head>
 
   <body>
-    <div id="root">
-      <div id="bootstrap-fallback" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f0a2e;flex-direction:column;gap:16px;">
-        <svg id="bootstrap-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6d4aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><style>@keyframes spin{to{transform:rotate(360deg)}}</style></svg>
-        <div id="bootstrap-error" style="display:none;text-align:center;color:#c4b5fd;font-family:system-ui,sans-serif;padding:0 24px;">
-          <p style="margin:0 0 12px;font-size:14px;">O carregamento está demorando mais que o esperado.</p>
-          <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
-        </div>
+    <!-- Bootstrap overlay: OUTSIDE #root so React never touches it -->
+    <div id="bootstrap-fallback" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0f0a2e;flex-direction:column;gap:16px;">
+      <svg id="bootstrap-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6d4aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><style>@keyframes spin{to{transform:rotate(360deg)}}</style></svg>
+      <div id="bootstrap-error" style="display:none;text-align:center;color:#c4b5fd;font-family:system-ui,sans-serif;padding:0 24px;">
+        <p style="margin:0 0 12px;font-size:14px;">O carregamento está demorando mais que o esperado.</p>
+        <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
       </div>
     </div>
+
+    <!-- React mount point: completely empty -->
+    <div id="root"></div>
 
     <!-- Storage shim: prevent SecurityError in iframe/preview environments -->
     <script>
@@ -69,9 +71,13 @@
       })();
     </script>
 
-    <!-- Safety timeout: show reload button if app doesn't mount in 8s -->
+    <!-- Safety timeout: show reload button if app doesn't mount in 10s -->
     <script>
       window.__APP_MOUNTED__=false;
+      window.__dismissBootstrap=function(){
+        var el=document.getElementById('bootstrap-fallback');
+        if(el)el.style.display='none';
+      };
       setTimeout(function(){
         if(!window.__APP_MOUNTED__){
           var spinner=document.getElementById('bootstrap-spinner');
@@ -79,7 +85,7 @@
           if(spinner)spinner.style.display='none';
           if(err)err.style.display='block';
         }
-      },8000);
+      },10000);
     </script>
 
     <script type="module" src="/src/main.tsx"></script>
