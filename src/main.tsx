@@ -6,8 +6,6 @@ import { initErrorTracker } from "@/lib/errorTracker";
 
 /**
  * Detecta se estamos em ambiente de preview (iframe do Lovable).
- * Nesses casos, desabilita completamente o service worker e cache PWA
- * para evitar ciclos de reload e tela branca.
  */
 function isPreviewHost(): boolean {
   if (typeof window === "undefined") return false;
@@ -32,7 +30,6 @@ async function cleanupServiceWorkers() {
       }
     }
 
-    // Para hosts não-preview: gerenciar SW updates normalmente
     if (!isPreviewHost()) {
       for (const reg of registrations) {
         if (reg.waiting) {
@@ -66,7 +63,7 @@ if (
   window.history.replaceState(null, "", newUrl);
 }
 
-// Limpa SWs sem reload — NUNCA forçar window.location.reload()
+// Limpa SWs sem reload
 void cleanupServiceWorkers();
 initErrorTracker();
 initWebVitals();
@@ -96,10 +93,34 @@ if (typeof Node === "function" && Node.prototype) {
   };
 }
 
-// Remove bootstrap fallback before mounting React
-const fallback = document.getElementById("bootstrap-fallback");
-if (fallback) fallback.remove();
+// Bootstrap with error protection
+try {
+  const rootEl = document.getElementById("root");
+  if (!rootEl) throw new Error("Root element not found");
 
-createRoot(document.getElementById("root")!).render(
-  <App />
-);
+  // Remove bootstrap fallback AFTER render succeeds
+  const fallback = document.getElementById("bootstrap-fallback");
+
+  createRoot(rootEl).render(<App />);
+
+  // Signal successful mount
+  if (fallback) fallback.remove();
+  (window as any).__APP_MOUNTED__ = true;
+} catch (err) {
+  console.error("Bootstrap failed:", err);
+
+  // Show recovery UI in the fallback
+  const fallback = document.getElementById("bootstrap-fallback");
+  if (fallback) {
+    const spinner = document.getElementById("bootstrap-spinner");
+    const errorDiv = document.getElementById("bootstrap-error");
+    if (spinner) spinner.style.display = "none";
+    if (errorDiv) {
+      errorDiv.style.display = "block";
+      errorDiv.innerHTML = `
+        <p style="margin:0 0 12px;font-size:14px;">Falha ao carregar a aplicação.</p>
+        <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
+      `;
+    }
+  }
+}
