@@ -1,142 +1,47 @@
 
-Diagnóstico atualizado
 
-Do I know what the issue is? Sim.
+## Plano: Categoria virtual "Novas Ofertas" com expiração de 48h
 
-O problema mais provável agora não é mais autenticação, BrandContext nem chunk lazy.
+### Conceito
+Criar uma categoria virtual "Novas Ofertas" que aparece **sempre em primeiro lugar** (antes de Eletrônicos), com **3 linhas** de produtos. Não é uma categoria real no banco — é montada no frontend filtrando deals criados nas últimas 48 horas. Deals permanecem em sua categoria original simultaneamente.
 
-O que os dados mostram:
-- No navegador remoto, `/index` carrega os scripts, executa `main.tsx` e termina em `/auth` normalmente.
-- Então o app consegue montar; o problema não é “bundle quebrado”.
-- O `manifest.json` com `401` aparece nos logs, mas é ruído de preview/PWA e não explica o travamento do app.
-- O travamento continua só no preview embutido/intermitente, o que aponta para condição de corrida no bootstrap.
+### Mudanças
 
-Causa raiz mais provável
+**1. Queries — adicionar `created_at` ao select**
 
-Hoje o fallback está dentro de `#root` em `index.html`, e `src/main.tsx` faz isso:
+Arquivos: `DriverMarketplace.tsx`, `AchadinhoSection.tsx`
 
-```ts
-createRoot(rootEl).render(<App />);
-if (fallback) fallback.remove();
-```
+- Adicionar `created_at` no `.select(...)` das queries de `affiliate_deals`
+- Adicionar `created_at` na interface `AffiliateDeal` em ambos os arquivos
 
-Em React 18, `render()` não garante commit síncrono da árvore antes da próxima linha. Então o código está:
-1. mandando React montar dentro de `#root`
-2. mexendo manualmente no DOM que React acabou de assumir
-3. às vezes antes da montagem concluir
+**2. Categoria virtual "Novas Ofertas" no Driver**
 
-Isso pode deixar o preview preso no fallback/spinner ou em estado inconsistente, principalmente no iframe/mobile preview, mesmo quando o app funciona em outra sessão.
+Arquivo: `src/components/driver/DriverMarketplace.tsx`
 
-Em resumo:
-```text
-Não é mais “loading infinito do app”.
-É uma corrida entre:
-- fallback HTML estático
-- React assumindo o #root
-- remoção manual do fallback cedo demais
-```
+- Após processar as categorias reais, criar uma categoria virtual:
+  - `id: "__new_offers__"`, `name: "Novas Ofertas"`, `icon_name: "Sparkles"`, `color: "#f59e0b"`
+- Filtrar todos os deals com `created_at` dentro das últimas 48h
+- Inserir essa categoria como **primeira** no array de `viableCategories`
+- No `categoryLayout`, forçar `rows: 3` e `order: -1` para essa categoria virtual
+- Deals novos aparecem duplicados: na "Novas Ofertas" E na sua categoria original
 
-Plano de correção
+**3. Categoria virtual "Novas Ofertas" no Customer (Achadinhos)**
 
-1. Separar o fallback do container React
-Arquivos:
-- `index.html`
+Arquivo: `src/components/customer/AchadinhoSection.tsx`
 
-Mudança:
-- tirar `#bootstrap-fallback` de dentro do `#root`
-- deixar:
-```html
-<div id="bootstrap-fallback"></div>
-<div id="root"></div>
-```
+- Mesma lógica: adicionar `created_at` ao select e interface
+- Criar categoria virtual com 3 linhas, posição 0
+- Duplicar deals recentes nessa categoria sem removê-los da original
 
-Por quê:
-- React passa a controlar só o `#root`
-- o fallback vira overlay/shell externo
-- elimina disputa de ownership do mesmo DOM node
+**4. Regras de exibição**
+- A estrela (`is_featured`) continua funcionando normalmente dentro de cada categoria real
+- Na "Novas Ofertas", ordenar por `created_at DESC` (mais recentes primeiro)
+- Se não houver deals com menos de 48h, a categoria "Novas Ofertas" não aparece
+- Mínimo de 3 deals para a categoria aparecer (regra existente)
 
-2. Trocar “remoção imediata” por handshake real de mount
-Arquivos:
-- `src/main.tsx`
-- wrapper mínimo de sinalização (se necessário)
+### O que NÃO muda
+- Nenhuma tabela/migration no banco de dados
+- Nenhuma categoria real criada no `affiliate_deal_categories`
+- Estrela e `order_index` continuam funcionando nas categorias reais
+- Não afeta página de categoria individual nem busca
 
-Mudança:
-- parar de remover o fallback logo após `render(<App />)`
-- sinalizar “app montou” só depois de um `useEffect`/`useLayoutEffect` rodando dentro da árvore React
-- só então esconder/remover o fallback
-
-Por quê:
-- garante que o fallback só sai quando a interface realmente assumiu a tela
-
-3. Manter timeout, mas só no overlay externo
-Arquivos:
-- `index.html`
-
-Mudança:
-- preservar spinner + botão “Recarregar”
-- timeout continua existindo, mas agindo sobre o overlay externo
-- se a app montar, o overlay some
-- se não montar, o usuário vê recuperação clara
-
-Por quê:
-- evita spinner eterno sem voltar a criar corrida com React
-
-4. Simplificar o bootstrap de `main.tsx`
-Arquivos:
-- `src/main.tsx`
-
-Mudança:
-- manter proteção com `try/catch`
-- remover manipulação prematura do fallback dentro do fluxo principal
-- deixar `window.__APP_MOUNTED__` ser marcado pelo sinalizador interno da app, não pela linha logo após `render()`
-
-Por quê:
-- hoje esse flag está sendo usado cedo demais para um processo assíncrono
-
-5. Validar especificamente o cenário que está quebrando
-Validação:
-- abrir `/index` no preview mobile
-- confirmar que sai do fallback e chega em `/auth`
-- confirmar que `/` redireciona corretamente quando não há sessão
-- confirmar que não existe mais caso onde o overlay fica preso enquanto o app já poderia montar
-- confirmar que o `401` do manifest não impacta o fluxo principal
-
-Arquivos que eu alteraria
-- `index.html`
-- `src/main.tsx`
-- possivelmente um wrapper mínimo em `src/App.tsx` ou componente bem pequeno só para sinalizar “mount concluído”
-
-Por que isso deve resolver de verdade
-
-Porque agora o bug mais provável não está “dentro da app”, e sim na transição entre HTML estático e React.
-
-A correção anterior blindou:
-- storage
-- chunk retry
-- timeout visual
-
-Mas ainda deixou um ponto frágil:
-- fallback e React compartilhando o mesmo `#root`
-- remoção manual logo após `render()`
-
-A próxima correção ataca exatamente isso.
-
-Resumo técnico
-```text
-Evidência:
-- app monta no navegador remoto
-- /index -> /auth funciona
-- scripts carregam
-- fallback ainda trava no preview do usuário
-
-Problema real:
-- race condition no bootstrap
-- fallback dentro do #root
-- remoção manual cedo demais após createRoot().render()
-
-Correção:
-- fallback fora do #root
-- sinalização de mount feita de dentro do React
-- remover overlay só após mount real
-- manter timeout apenas como recuperação
-```
