@@ -65,14 +65,21 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
     queryKey: [...queryKeys.offers.list(brand?.id, selectedBranch?.id, "achadinho-cat-page"), category.id],
     enabled: !!brand,
     queryFn: async () => {
+      const isVirtual = category.id === "__new_offers__";
       let q = supabase
         .from("affiliate_deals")
         .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label")
         .eq("brand_id", brand!.id)
-        .eq("is_active", true)
-        .eq("category_id", category.id)
-        .order("order_index")
-        .limit(200);
+        .eq("is_active", true);
+
+      if (isVirtual) {
+        const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        q = q.gte("created_at", cutoff).order("created_at", { ascending: false });
+      } else {
+        q = q.eq("category_id", category.id).order("order_index");
+      }
+
+      q = q.limit(1000);
       if (selectedBranch) q = q.or(`branch_id.eq.${selectedBranch.id},branch_id.is.null`);
       const { data } = await q;
       return (data as AffiliateDeal[]) || [];
