@@ -1,60 +1,24 @@
 
+## Corrigir "Novas Ofertas" vazia ao clicar "Ver todos"
 
-## Otimizar Bootstrap Overlay — Reduzir Tempo Perceptível
+### Problema
 
-### Diagnóstico
+"Novas Ofertas" é uma categoria virtual criada no frontend (id `__new_offers__`) que agrega deals criados nas últimas 48h. Quando o usuário clica "Ver todos", o sistema abre `DriverCategoryPage` ou `AchadinhoCategoryPage` que fazem `.eq("category_id", "__new_offers__")` no banco — retornando 0 resultados, pois nenhum deal tem esse category_id.
 
-A tela roxa fica visível por ~5-7s porque:
+### Correção
 
-1. **Vite module loading** — `main.tsx` faz `await import("./App.tsx")`, que puxa sincronicamente ~15 módulos pesados (AuthContext, BrandContext, AppLayout, WhiteLabelLayout, queryClient, framer-motion via customer components, etc.) antes de qualquer render
-2. **BrandContext resolve** — Executa 1-2 queries Supabase (`brand_domains`, `brands`) antes de emitir `BRAND_READY`
-3. **Dismissal abrupto** — O overlay usa `display:none` instantâneo, criando um "flash" visual em vez de transição suave
-4. **Timeout tardio** — O timeout de 12s só mostra feedback após espera longa; não há indicação de progresso intermediário
+Alterar as queries em ambas as páginas de categoria para detectar o id virtual e usar filtro por recência em vez de `category_id`:
 
-O gargalo principal no ambiente de preview é o **carregamento de módulos pelo Vite dev server** (~3-5s para resolver a árvore de dependências). Isso não é otimizável no servidor, mas a percepção pode ser melhorada.
+**Arquivo 1: `src/components/driver/DriverCategoryPage.tsx`**
+- Na queryFn (linha ~40-51): se `category.id === "__new_offers__"`, remover `.eq("category_id", ...)` e adicionar `.gte("created_at", cutoff48h)` + ordenar por `created_at desc`
+- Manter o restante do comportamento (search, banners, etc.)
 
-### Plano — 2 alterações conservadoras
+**Arquivo 2: `src/components/customer/AchadinhoCategoryPage.tsx`**
+- Mesma lógica na queryFn (linha ~67-79): detectar id virtual e usar filtro de recência
 
-#### 1. Fade-out suave no overlay (index.html)
-
-Substituir `display:none` por transição CSS com `opacity` + `pointer-events:none`, e após a animação remover o elemento. Isso elimina o "flash" entre overlay e app.
-
-```
-Arquivo: index.html
-Mudança: função __dismissBootstrap
-- Adicionar transition: opacity 300ms ease-out
-- Após transitionend, remover o elemento do DOM
-```
-
-#### 2. Progresso intermediário no overlay (index.html)
-
-Mostrar a fase atual do boot em texto discreto abaixo do spinner a partir de 3s (em vez de esperar 12s para qualquer feedback). Isso transforma "espera cega" em "espera informada".
-
-```
-Arquivo: index.html
-Mudança: adicionar um segundo setTimeout (3s) que exibe
-a fase atual (__BOOT_PHASE__) como texto sutil sob o spinner,
-atualizando a cada 1s até dismiss. O timeout de 12s com botão
-de reload permanece inalterado.
-```
+Ambos os arquivos já definem a constante de 48h em seus respectivos componentes pai — basta replicar a mesma lógica de filtro.
 
 ### O que NÃO será alterado
-
-- Nenhum guard, rota, provider ou contexto
-- Nenhuma lógica de bootState.ts
-- Nenhuma reordenação de providers
-- Nenhum import movido para lazy (risco de regressão)
-- Timeout de 12s mantido (rede segura)
-
-### Ganho esperado
-
-- **Perceptual**: eliminação do "flash branco" entre overlay e app renderizado
-- **Feedback**: usuário vê fase do boot após 3s em vez de 12s, reduzindo ansiedade
-- **Risco**: zero — são mudanças puramente visuais no HTML estático, sem tocar React
-
-### Arquivos alterados
-
-| Arquivo | Mudança |
-|---|---|
-| `index.html` | Fade-out CSS no dismiss + feedback de fase após 3s |
-
+- Nenhuma mudança na lógica de construção da categoria virtual no `AchadinhoSection` ou `DriverMarketplace`
+- Nenhuma mudança em guards, auth, providers ou bootstrap
+- Banners e busca continuam funcionando normalmente
