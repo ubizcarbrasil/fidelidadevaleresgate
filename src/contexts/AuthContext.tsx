@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
 import { logAudit } from "@/lib/auditLogger";
+import { setBootPhase } from "@/lib/bootState";
 
 interface AuthContextType {
   session: Session | null;
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Restauração inicial: sessão + roles antes de liberar loading
     const bootstrap = async () => {
+      setBootPhase("AUTH_LOADING");
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (!mountedRef.current) return;
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (mountedRef.current) {
           setLoading(false);
+          setBootPhase("AUTH_READY");
           initialLoadDone = true;
         }
       }
@@ -107,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const safetyTimer = setTimeout(() => {
       if (mountedRef.current && !initialLoadDone) {
         console.warn("[AuthContext] Bootstrap timeout — liberando loading");
+        setBootPhase("AUTH_READY", "timeout");
         setLoading(false);
         initialLoadDone = true;
       }

@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
+import { setBootPhase } from "@/lib/bootState";
 
 function showBootstrapError(message = "Falha ao carregar a aplicação.") {
   const spinner = document.getElementById("bootstrap-spinner");
@@ -100,6 +101,7 @@ if (typeof Node === "function" && Node.prototype) {
 
 async function bootstrap() {
   try {
+    setBootPhase("BOOTSTRAP", "importing App");
     const rootEl = document.getElementById("root");
     if (!rootEl) throw new Error("Root element not found");
 
@@ -110,6 +112,7 @@ async function bootstrap() {
 
     createRoot(rootEl).render(<App />);
   } catch (err) {
+    setBootPhase("FAILED", String(err));
     console.error("Bootstrap failed:", err);
     showBootstrapError("Falha ao carregar a aplicação.");
   }
