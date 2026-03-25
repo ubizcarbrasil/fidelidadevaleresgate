@@ -65,13 +65,20 @@ export default function AffiliateCategoriesPage() {
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaBgColor, setCtaBgColor] = useState("#F97316");
   const [ctaTextColor, setCtaTextColor] = useState("#FFFFFF");
-  const [detailBannerUrl, setDetailBannerUrl] = useState("");
+  const [detailBanners, setDetailBanners] = useState<string[]>([]);
 
   useEffect(() => {
     if (ctaConfig.label) setCtaLabel(ctaConfig.label);
     if (ctaConfig.bg_color) setCtaBgColor(ctaConfig.bg_color);
     if (ctaConfig.text_color) setCtaTextColor(ctaConfig.text_color);
-    if (brandData?.achadinho_detail_banner_url) setDetailBannerUrl(brandData.achadinho_detail_banner_url);
+    // backward compat: migrate single URL to array
+    const banners = brandData?.achadinho_detail_banners as string[] | undefined;
+    const legacyUrl = brandData?.achadinho_detail_banner_url as string | undefined;
+    if (banners && banners.length > 0) {
+      setDetailBanners(banners);
+    } else if (legacyUrl) {
+      setDetailBanners([legacyUrl]);
+    }
   }, [brandData]);
 
   const saveCtaMutation = useMutation({
@@ -80,7 +87,8 @@ export default function AffiliateCategoriesPage() {
       const settings = {
         ...(brandData || {}),
         achadinho_cta: { label: ctaLabel || "Ir para oferta", bg_color: ctaBgColor, text_color: ctaTextColor },
-        achadinho_detail_banner_url: detailBannerUrl || null,
+        achadinho_detail_banners: detailBanners.filter(Boolean),
+        achadinho_detail_banner_url: detailBanners[0] || null, // backward compat
       };
       const { error } = await supabase.from("brands").update({ brand_settings_json: settings }).eq("id", currentBrandId);
       if (error) throw error;
