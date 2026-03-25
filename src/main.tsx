@@ -102,7 +102,7 @@ try {
   root.render(<App />);
 
   // Signal successful mount — clears the timeout in index.html
-  window.__APP_READY__ = true;
+  (window as any).__APP_READY__ = true;
   if ((window as any).__BOOTSTRAP_TIMER__) {
     clearTimeout((window as any).__BOOTSTRAP_TIMER__);
   }
