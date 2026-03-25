@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Share2, Tag } from "lucide-react";
@@ -57,7 +57,25 @@ export default function AchadinhoDealDetail({
   const ctaText = ctaConfig?.text_color || "#FFFFFF";
   const ctaLabel = ctaConfig?.label || "Ir para oferta";
 
-  const bannerUrl = brandSettings?.achadinho_detail_banner_url;
+  // Support multiple banners with rotation (backward compat with single URL)
+  const detailBanners: string[] = useMemo(() => {
+    const arr = brandSettings?.achadinho_detail_banners as string[] | undefined;
+    const legacy = brandSettings?.achadinho_detail_banner_url as string | undefined;
+    if (arr && arr.length > 0) return arr.filter(Boolean);
+    if (legacy) return [legacy];
+    return [];
+  }, [brandSettings]);
+
+  const [bannerIdx, setBannerIdx] = useState(0);
+  const bannerCount = detailBanners.length;
+
+  useEffect(() => {
+    if (bannerCount <= 1) return;
+    const timer = setInterval(() => setBannerIdx(prev => (prev + 1) % bannerCount), 4000);
+    return () => clearInterval(timer);
+  }, [bannerCount]);
+
+  const currentBannerUrl = detailBanners[bannerIdx] || null;
 
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount
