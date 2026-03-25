@@ -163,15 +163,40 @@ export default function AchadinhoDealDetail({
           <div className="max-w-lg mx-auto">
             {/* Banner + Product Image */}
             <div className="relative mx-4 mb-4">
-              {/* Decorative background */}
-              <div
-                className="w-full aspect-[16/9] rounded-2xl overflow-hidden"
-                style={{
-                  background: bannerUrl
-                    ? `url(${bannerUrl}) center/cover`
-                    : `linear-gradient(135deg, ${withAlpha(primary, 0.15)}, ${withAlpha(primary, 0.05)})`,
-                }}
-              />
+              {/* Decorative background with rotation */}
+              <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden relative">
+                {currentBannerUrl ? (
+                  detailBanners.map((url, i) => (
+                    <div
+                      key={url}
+                      className="absolute inset-0 transition-opacity duration-700"
+                      style={{
+                        background: `url(${url}) center/cover`,
+                        opacity: i === bannerIdx ? 1 : 0,
+                      }}
+                    />
+                  ))
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: `linear-gradient(135deg, ${withAlpha(primary, 0.15)}, ${withAlpha(primary, 0.05)})` }}
+                  />
+                )}
+                {bannerCount > 1 && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {detailBanners.map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-1.5 rounded-full transition-all duration-300"
+                        style={{
+                          width: i === bannerIdx ? 16 : 6,
+                          backgroundColor: i === bannerIdx ? "#fff" : "rgba(255,255,255,0.5)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
               {/* Product image floating over banner */}
               <div className="absolute left-1/2 -translate-x-1/2 -bottom-8">
                 <div
