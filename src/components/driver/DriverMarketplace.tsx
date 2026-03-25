@@ -190,6 +190,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const rawCategories = data?.categories || [];
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const rawUncategorized = data?.uncategorized || [];
+  const allDeals = data?.allDeals || [];
 
   const NEW_OFFERS_ID = "__new_offers__";
   const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
@@ -236,7 +237,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   }, [rawCategories, dealsByCategory, categoryLayout, allDeals]);
 
   const uncategorized = useMemo(() => [...rawUncategorized, ...overflowDeals], [rawUncategorized, overflowDeals]);
-  const allDeals = data?.allDeals || [];
   const activeBanners = useMemo(() => interstitialBanners.filter((b: any) => b.is_active && b.image_url), [interstitialBanners]);
 
   // Deep-link support: auto-open category or deal from URL params
