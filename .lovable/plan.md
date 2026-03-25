@@ -1,52 +1,73 @@
 
+Diagnóstico
 
-## Diagnóstico: spinner infinito no carregamento
+Do I know what o problema é? Sim.
 
-### Causa raiz
+A falha mais provável agora não está mais no `BrandContext` nem nas rotas. Ela acontece antes do React montar.
 
-O `AppContent` (linha 292 do `App.tsx`) bloqueia **todas as rotas** — inclusive `/auth` — enquanto `BrandContext.loading` for `true`:
+Evidências no código:
+- O spinner roxo vem do `#bootstrap-fallback` em `index.html`.
+- Em `src/main.tsx`, esse fallback só sairia se o bundle chegasse a executar.
+- O import mais perigoso no bootstrap é `src/integrations/supabase/client.ts`, que instancia o client com `storage: localStorage`.
+- Em preview dentro de iframe, acesso a `localStorage`/`sessionStorage` pode falhar com `SecurityError`/`Access denied`.
+- Se isso acontecer durante a avaliação dos imports, o React nem monta, o `ErrorBoundary` nunca entra, e o spinner roxo fica para sempre.
 
-```typescript
-// App.tsx:292
-if (loading) {
-  return <div>...spinner...</div>; // ← TUDO fica preso aqui
-}
+Plano de correção
+
+1. Blindar storage antes do bundle carregar
+- Arquivo: `index.html`
+- Adicionar um script inline mínimo antes de `/src/main.tsx` para:
+  - testar `localStorage` e `sessionStorage` com `try/catch`
+  - se falhar, instalar fallback em memória com a mesma interface básica (`getItem`, `setItem`, `removeItem`, `clear`, `key`, `length`)
+  - expor isso em `window.localStorage` e `window.sessionStorage`
+- Motivo: resolve a causa raiz sem editar o arquivo gerado `src/integrations/supabase/client.ts`.
+
+2. Corrigir o handshake de bootstrap
+- Arquivo: `src/main.tsx`
+- Não remover o `#bootstrap-fallback` antes da hora.
+- Fazer o mount com proteção:
+  - `try/catch` ao redor do bootstrap
+  - marcar explicitamente quando a app montou
+  - só então esconder/remover o fallback
+- Se der erro antes do mount, trocar o spinner infinito por estado recuperável com mensagem curta + botão de recarregar.
+
+3. Manter o restante intacto
+- Não mexer em rotas, providers, auth, layout ou regras de negócio.
+- Não refatorar `App.tsx`, `BrandContext` ou páginas além do estritamente necessário.
+- Manter as proteções já existentes de lazy import, timeout e boundaries.
+
+Validação
+- Confirmar que `/index`, `/` e `/auth` deixam de travar no spinner roxo no preview.
+- Confirmar que o app continua usando o storage nativo quando ele estiver disponível.
+- Confirmar que o fallback em memória só entra quando o navegador negar acesso ao storage.
+- Confirmar que `lazyWithRetry` continua funcional e não entra em loop.
+
+Arquivos a alterar
+- `index.html`
+- `src/main.tsx`
+- Opcional, somente se necessário após validação: `src/lib/lazyWithRetry.ts` para proteger também `sessionStorage` no retry de chunks.
+
+Por que isso resolve
+- Hoje o travamento ocorre antes de React, ErrorBoundary e contexts existirem.
+- O ajuste em `index.html` atua no estágio mais cedo possível.
+- O ajuste em `main.tsx` impede spinner eterno quando o bootstrap falhar.
+- Juntos, esses dois pontos atacam exatamente o “limbo” entre HTML estático e montagem real da app.
+
+Detalhe técnico
+```text
+Cadeia atual:
+index.html mostra spinner
+-> main/App começam a importar módulos
+-> supabase client acessa localStorage
+-> preview iframe pode negar storage
+-> avaliação do módulo aborta
+-> React não monta
+-> spinner roxo fica para sempre
+
+Cadeia corrigida:
+index.html instala storage seguro primeiro
+-> main/App importam normalmente
+-> React monta
+-> main.tsx remove fallback só após mount confirmado
+-> se bootstrap falhar, aparece recuperação visível
 ```
-
-O `BrandContext.resolve()` (linha 84) não tem `try/catch`. Se a chamada ao Supabase falhar ou demorar, `setLoading(false)` nunca é chamado e o app fica no spinner para sempre.
-
-Além disso, diferente do `AuthContext` que tem timeout de 8 segundos, o `BrandContext` não tem nenhum mecanismo de segurança.
-
-### Correções
-
-#### 1. Adicionar try/catch + timeout no BrandContext
-**Arquivo:** `src/contexts/BrandContext.tsx`
-
-- Envolver `resolve()` em try/catch, garantindo que `setLoading(false)` seja chamado mesmo em caso de erro
-- Adicionar timeout de segurança de 5 segundos (similar ao AuthContext)
-
-#### 2. Não bloquear /auth atrás do BrandContext loading
-**Arquivo:** `src/App.tsx`
-
-Na função `AppContent`, verificar o pathname antes do gate de loading. Se a rota for `/auth`, `/reset-password`, `/trial`, `/landing` ou `/register-store` (rotas públicas), renderizar direto sem esperar BrandContext.
-
-Mudança em `AppContent`:
-```typescript
-// Rotas públicas que não dependem de brand
-const publicPaths = ["/auth", "/reset-password", "/trial", "/landing"];
-const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
-
-if (loading && !isPublicPath && !isPartnerLanding && !isDriverPanel) {
-  return <div>...spinner...</div>;
-}
-```
-
-### Resultado
-- BrandContext nunca fica preso em loading infinito
-- A página de login renderiza imediatamente, sem esperar resolução de brand
-- Rotas públicas ficam acessíveis mesmo com Supabase lento
-
-### Arquivos alterados
-- `src/contexts/BrandContext.tsx`
-- `src/App.tsx`
-
