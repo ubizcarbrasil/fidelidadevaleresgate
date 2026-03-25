@@ -43,7 +43,7 @@ export function onBootPhase(fn: (phase: BootPhase) => void) {
 
 /* ── useBootReady ── */
 
-const RESOLVED: Set<BootPhase> = new Set(["BRAND_READY", "APP_MOUNTED", "FAILED"]);
+const RESOLVED: Set<BootPhase> = new Set(["BRAND_READY", "FAILED"]);
 
 function isBootResolved(): boolean {
   return RESOLVED.has(currentPhase);
