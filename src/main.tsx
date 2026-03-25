@@ -1,8 +1,20 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
+
+function showBootstrapError(message = "Falha ao carregar a aplicação.") {
+  const spinner = document.getElementById("bootstrap-spinner");
+  const errorDiv = document.getElementById("bootstrap-error");
+  if (spinner) spinner.style.display = "none";
+  if (errorDiv) {
+    errorDiv.style.display = "block";
+    errorDiv.innerHTML = `
+      <p style="margin:0 0 12px;font-size:14px;">${message}</p>
+      <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
+    `;
+  }
+}
 
 /**
  * Detecta se estamos em ambiente de preview (iframe do Lovable).
@@ -52,7 +64,6 @@ async function cleanupServiceWorkers() {
   }
 }
 
-// Normalize /index or /index.html to / before React mounts
 if (
   typeof window !== "undefined" &&
   (window.location.pathname === "/index" ||
@@ -63,19 +74,15 @@ if (
   window.history.replaceState(null, "", newUrl);
 }
 
-// Limpa SWs sem reload
 void cleanupServiceWorkers();
 initErrorTracker();
 initWebVitals();
 
-// Fix React 18 "removeChild" error caused by third-party DOM manipulation
 if (typeof Node === "function" && Node.prototype) {
   const originalRemoveChild = Node.prototype.removeChild;
   Node.prototype.removeChild = function <T extends Node>(child: T): T {
     if (child.parentNode !== this) {
-      if (console) {
-        console.warn("Cannot remove a child from a different parent", child, this);
-      }
+      console.warn("Cannot remove a child from a different parent", child, this);
       return child;
     }
     return originalRemoveChild.apply(this, [child]) as T;
@@ -84,37 +91,28 @@ if (typeof Node === "function" && Node.prototype) {
   const originalInsertBefore = Node.prototype.insertBefore;
   Node.prototype.insertBefore = function <T extends Node>(newNode: T, referenceNode: Node | null): T {
     if (referenceNode && referenceNode.parentNode !== this) {
-      if (console) {
-        console.warn("Cannot insert before a reference node from a different parent", referenceNode, this);
-      }
+      console.warn("Cannot insert before a reference node from a different parent", referenceNode, this);
       return newNode;
     }
     return originalInsertBefore.apply(this, [newNode, referenceNode]) as T;
   };
 }
 
-// Bootstrap with error protection
-try {
-  const rootEl = document.getElementById("root");
-  if (!rootEl) throw new Error("Root element not found");
+async function bootstrap() {
+  try {
+    const rootEl = document.getElementById("root");
+    if (!rootEl) throw new Error("Root element not found");
 
-  createRoot(rootEl).render(<App />);
+    const [{ default: App }] = await Promise.all([
+      import("./App.tsx"),
+      Promise.resolve(),
+    ]);
 
-  // NOTE: We do NOT remove the bootstrap-fallback here.
-  // The fallback is now OUTSIDE #root and will be dismissed
-  // by the MountSignal component inside <App /> via window.__dismissBootstrap().
-} catch (err) {
-  console.error("Bootstrap failed:", err);
-
-  // Show recovery UI in the external overlay
-  const spinner = document.getElementById("bootstrap-spinner");
-  const errorDiv = document.getElementById("bootstrap-error");
-  if (spinner) spinner.style.display = "none";
-  if (errorDiv) {
-    errorDiv.style.display = "block";
-    errorDiv.innerHTML = `
-      <p style="margin:0 0 12px;font-size:14px;">Falha ao carregar a aplicação.</p>
-      <button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>
-    `;
+    createRoot(rootEl).render(<App />);
+  } catch (err) {
+    console.error("Bootstrap failed:", err);
+    showBootstrapError("Falha ao carregar a aplicação.");
   }
 }
+
+void bootstrap();
