@@ -1,36 +1,49 @@
 
 
-## Corrigir sobreposição do banner sobre a imagem do produto
+## Integrar dvlinks.com.br como nova fonte de espelhamento
 
-### Problema
-O banner rotativo (aspect-ratio 16/9) ocupa a área onde a imagem do produto deveria ficar visível. A imagem do produto flutua com `absolute -bottom-8`, mas o banner a cobre parcialmente — como visível no screenshot com a faixa verde sobre a caixa de som.
+### Contexto
+O site dvlinks.com.br expõe ofertas em formato de cards HTML com: título, imagem (Mercado Livre), preço original, preço atual, link de afiliado e data. Possui paginação (5+ páginas). A estrutura é simples e pode ser raspada via Firecrawl (já conectado) ou fetch direto.
 
-### Correção
-Reorganizar o layout para que o banner fique **acima** e a imagem do produto fique **abaixo do banner**, sem sobreposição:
+### Abordagem
+Adicionar suporte a **múltiplas origens** no sistema de espelhamento existente, sem quebrar o fluxo atual do Divulgador Inteligente.
 
-**Arquivo: `src/components/customer/AchadinhoDealDetail.tsx`**
+### Alterações
 
-1. **Reduzir aspect-ratio do banner** de `16/9` para `3/1` (mais estreito, faixa decorativa)
-2. **Mover a imagem do produto para fora do container `relative`** do banner — posicionar como elemento estático abaixo, centralizado, em vez de `absolute -bottom-8`
-3. **Remover o spacer `h-12`** que compensava o float (não será mais necessário)
-4. **Manter**: rotação, dots, badge, fade transitions — tudo funciona igual
+**1. Banco de dados — tabela `mirror_sync_config`**
+- Adicionar coluna `source_type` (text, default `'divulgador_inteligente'`) para distinguir a origem
+- Permitir múltiplas configs por brand (uma por fonte)
 
-Layout resultante:
-```text
-┌─────────────────────────┐
-│   ← Header buttons  →  │
-├─────────────────────────┤
-│  Banner (3/1, slim)     │  ← faixa decorativa, sem cobrir produto
-│  · · ·  (dots)          │
-├─────────────────────────┤
-│       ┌────────┐        │
-│       │ Produto│        │  ← imagem estática, centralizada, sem overlap
-│       └────────┘        │
-│     store · título      │
-│      R$ 69,99           │
-│   [ Ir para oferta ]    │
-└─────────────────────────┘
-```
+**2. Edge Function `mirror-sync/index.ts`**
+- Criar função `scrapeDvlinks(baseUrl, maxPages)` que:
+  - Busca cada página (`?page=1`, `?page=2`, etc.) via fetch direto
+  - Extrai do HTML: título, imagem, preço original, preço atual, link de afiliado
+  - Usa o link de afiliado como `origin_external_id` para deduplicação
+- No handler principal, verificar `source_type` da config:
+  - `divulgador_inteligente` → fluxo atual (API + vitrine)
+  - `dvlinks` → novo fluxo de scrape HTML
+- Reutilizar a mesma lógica de categorização por keywords e auto-categorização
 
-Nenhuma mudança em guards, auth, bootstrap ou outras páginas.
+**3. UI — `MirrorSyncConfig.tsx`**
+- Adicionar seletor de "Tipo de Fonte" (Divulgador Inteligente / DVLinks)
+- Quando DVLinks selecionado, mostrar campo de URL base (pré-preenchido com `https://dvlinks.com.br/g/achadinhosresgata-69a302fc25d02`)
+- Adicionar campo "Máx. páginas" (default 5)
+
+**4. UI — `MirrorSyncPage.tsx`**
+- Permitir visualizar e acionar sync de cada fonte separadamente
+- Logs e KPIs filtrados por origem
+
+### O que NÃO muda
+- Estrutura da tabela `affiliate_deals` (já tem `origin` text que suporta novos valores)
+- Lógica de categorização por keywords (reutilizada)
+- Fluxo do Divulgador Inteligente continua funcionando igual
+- Auth, guards, bootstrap, RLS — tudo inalterado
+
+### Dados extraídos do DVLinks por card
+- **Título**: texto do `## heading`
+- **Imagem**: URL do `mlstatic.com` (imagem do Mercado Livre)
+- **Preço original**: primeiro valor (ex: R$99.90)
+- **Preço atual**: segundo valor (ex: R$88.97)
+- **Link afiliado**: `meli.la/...` ou similar (href do botão "Ir à loja")
+- **Loja**: texto do botão (ex: "Mercadolivre")
 
