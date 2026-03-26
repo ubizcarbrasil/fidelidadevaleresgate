@@ -812,6 +812,45 @@ export default function MachineIntegrationPage() {
                 </p>
               </div>
 
+              {/* Driver Points */}
+              <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Truck className="h-3 w-3" /> Pontuação do Motorista
+                  </Label>
+                  <Switch
+                    checked={driverPointsEnabled}
+                    onCheckedChange={setDriverPointsEnabled}
+                  />
+                </div>
+                {driverPointsEnabled && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 max-w-xs">
+                      <Label className="text-xs whitespace-nowrap">Percentual</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={driverPointsPercent}
+                        onChange={(e) => setDriverPointsPercent(e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-xs text-muted-foreground">%</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      O motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos creditados ao passageiro.
+                      Ex: passageiro ganha 100 pts → motorista ganha {Math.floor(100 * (Number(driverPointsPercent) || 50) / 100)} pts.
+                    </p>
+                  </div>
+                )}
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={() => saveDriverPointsMutation.mutate()} disabled={saveDriverPointsMutation.isPending}>
+                    {driverPointsSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveDriverPointsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar
+                  </Button>
+                </div>
+              </div>
+
               {/* Preferred Endpoint */}
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground flex items-center gap-1">
