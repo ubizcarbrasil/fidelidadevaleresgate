@@ -10,9 +10,10 @@ interface Props {
   brandId: string;
   refreshKey: number;
   onSyncDone: () => void;
+  sourceType?: string;
 }
 
-export default function MirrorSyncKpis({ brandId, refreshKey, onSyncDone }: Props) {
+export default function MirrorSyncKpis({ brandId, refreshKey, onSyncDone, sourceType = "divulgador_inteligente" }: Props) {
   const [syncing, setSyncing] = useState(false);
 
   const { data: deals } = useQuery({
@@ -34,7 +35,7 @@ export default function MirrorSyncKpis({ brandId, refreshKey, onSyncDone }: Prop
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const result = await triggerMirrorSync(brandId);
+      const result = await triggerMirrorSync(brandId, sourceType);
       toast.success(result.summary || "Sincronização concluída!");
       onSyncDone();
     } catch (e: any) {

@@ -60,12 +60,6 @@ async function scrapeVitrinePrices(originUrl: string, sitename: string): Promise
       }
       const html = await res.text();
 
-      // Extract product cards: each card links to /sitename/p/{uuid}
-      // Pattern: href="/sitename/p/{uuid}" ... price text nearby
-      // The HTML structure has <a> tags wrapping each card with href containing /p/UUID
-      // Inside, prices appear as "R$ X,XX" text
-
-      // Strategy: find all card links with UUID, then extract prices from the card HTML
       const cardRegex = new RegExp(
         `<a[^>]*href="[^"]*/${sitename}/p/([a-zA-Z0-9_-]+)"[^>]*>(.*?)</a>`,
         "gs"
@@ -76,7 +70,6 @@ async function scrapeVitrinePrices(originUrl: string, sitename: string): Promise
         const uuid = match[1];
         const cardHtml = match[2];
 
-        // Extract all price patterns: R$ followed by digits
         const priceMatches = cardHtml.match(/R\$[\s\u00a0]*[\d.,]+/g);
         if (priceMatches && priceMatches.length > 0) {
           const parsedPrices = priceMatches
@@ -84,7 +77,6 @@ async function scrapeVitrinePrices(originUrl: string, sitename: string): Promise
             .filter((p): p is number => p !== null && p > 0);
 
           if (parsedPrices.length >= 2) {
-            // Two prices: higher is original, lower is current
             const sorted = [...parsedPrices].sort((a, b) => b - a);
             priceMap.set(uuid, {
               uuid,
@@ -108,6 +100,109 @@ async function scrapeVitrinePrices(originUrl: string, sitename: string): Promise
   }
 
   return priceMap;
+}
+
+// ---------- DVLinks scraping ----------
+
+interface DvlinksDeal {
+  title: string;
+  imageUrl: string | null;
+  price: number | null;
+  originalPrice: number | null;
+  affiliateUrl: string;
+  storeName: string | null;
+}
+
+async function scrapeDvlinks(baseUrl: string, maxPages: number): Promise<DvlinksDeal[]> {
+  const deals: DvlinksDeal[] = [];
+  const seenUrls = new Set<string>();
+
+  for (let page = 1; page <= maxPages; page++) {
+    const url = page === 1 ? baseUrl : `${baseUrl}?page=${page}`;
+    console.log(`[DVLinks] Fetching page ${page}: ${url}`);
+
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; MirrorSync/1.0)" },
+      });
+      if (!res.ok) {
+        console.warn(`[DVLinks] Page ${page} returned ${res.status}`);
+        break;
+      }
+      const html = await res.text();
+
+      // Each card is a div with class "bg-white rounded-2xl shadow-md"
+      // Structure:
+      //   <a href="AFFILIATE_LINK"><img src="IMAGE_URL"></a>
+      //   <h2>TITLE</h2>
+      //   <span class="line-through">R$ORIGINAL</span>
+      //   <span class="font-bold">R$PRICE</span>
+      //   <a href="AFFILIATE_LINK">Ir à loja STORE_NAME</a>
+
+      const cardRegex = /<div[^>]*class="[^"]*bg-white[^"]*rounded-2xl[^"]*shadow-md[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*bg-white[^"]*rounded-2xl|<\/div>\s*<\/main|\s*$)/g;
+
+      let cardMatch;
+      let cardsFound = 0;
+
+      // Alternative: split by card divs
+      // Use a simpler approach — find all product cards by their structure
+      const cardBlocks = html.split(/(?=<div[^>]*class="[^"]*bg-white[^"]*rounded-2xl[^"]*shadow-md)/);
+
+      for (const block of cardBlocks) {
+        if (!block.includes('bg-white') || !block.includes('rounded-2xl')) continue;
+
+        // Extract affiliate URL from first <a href="...">
+        const linkMatch = block.match(/<a\s+href="(https?:\/\/[^"]+)"[^>]*target="_blank"[^>]*class="block"/);
+        if (!linkMatch) continue;
+
+        const affiliateUrl = linkMatch[1];
+        if (seenUrls.has(affiliateUrl)) continue;
+        seenUrls.add(affiliateUrl);
+
+        // Extract image
+        const imgMatch = block.match(/<img\s+src="([^"]+)"/);
+        const imageUrl = imgMatch ? imgMatch[1] : null;
+
+        // Extract title from h2
+        const titleMatch = block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
+        const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, "").trim() : null;
+        if (!title) continue;
+
+        // Extract prices
+        const originalPriceMatch = block.match(/<span[^>]*class="[^"]*line-through[^"]*"[^>]*>\s*(R\$[\s\S]*?)\s*<\/span>/);
+        const currentPriceMatch = block.match(/<span[^>]*class="[^"]*font-bold[^"]*"[^>]*>\s*(R\$[\s\S]*?)\s*<\/span>/);
+
+        const originalPrice = originalPriceMatch ? cleanPrice(originalPriceMatch[1]) : null;
+        const price = currentPriceMatch ? cleanPrice(currentPriceMatch[1]) : null;
+
+        // Extract store name from button text "Ir à loja STORE_NAME"
+        const storeMatch = block.match(/Ir à loja\s+(\S+)/i);
+        const storeName = storeMatch ? storeMatch[1] : null;
+
+        deals.push({
+          title,
+          imageUrl,
+          price,
+          originalPrice,
+          affiliateUrl,
+          storeName,
+        });
+        cardsFound++;
+      }
+
+      console.log(`[DVLinks] Page ${page}: found ${cardsFound} deals`);
+
+      // If no cards found, stop pagination
+      if (cardsFound === 0) break;
+
+    } catch (e: any) {
+      console.error(`[DVLinks] Error on page ${page}: ${e.message}`);
+      break;
+    }
+  }
+
+  console.log(`[DVLinks] Total deals scraped: ${deals.length}`);
+  return deals;
 }
 
 // ---------- Category matching ----------
@@ -231,7 +326,7 @@ interface SyncResult {
 
 // ---------- Auto-categorization phase ----------
 
-async function runAutoCategorization(supabase: any, brandId: string) {
+async function runAutoCategorization(supabase: any, brandId: string, originFilter: string) {
   const MIN_DEALS_PER_CATEGORY = 4;
   const catStats = {
     matched_by_keywords: 0,
@@ -252,7 +347,7 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     .from("affiliate_deals")
     .select("id, title, description, category, store_name, category_id, is_active")
     .eq("brand_id", brandId)
-    .eq("origin", "divulgador_inteligente")
+    .eq("origin", originFilter)
     .eq("is_active", true);
 
   const deals = allDeals || [];
@@ -285,7 +380,7 @@ async function runAutoCategorization(supabase: any, brandId: string) {
     .from("affiliate_deals")
     .select("id, category_id")
     .eq("brand_id", brandId)
-    .eq("origin", "divulgador_inteligente")
+    .eq("origin", originFilter)
     .eq("is_active", true);
 
   const countByCategory = new Map<string, number>();
@@ -377,6 +472,217 @@ async function runAutoCategorization(supabase: any, brandId: string) {
   return catStats;
 }
 
+// ---------- DVLinks sync handler ----------
+
+async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagnose: boolean) {
+  const baseUrl = config?.origin_url || "https://dvlinks.com.br/g/achadinhosresgata-69a302fc25d02";
+  const maxPages = config?.max_pages || 5;
+  const autoActivate = config?.auto_activate !== false;
+  const autoVisibleDriver = config?.auto_visible_driver !== false;
+  const originValue = "dvlinks";
+
+  const startedAt = new Date().toISOString();
+
+  // Scrape DVLinks pages
+  const scrapeStart = Date.now();
+  const dvDeals = await scrapeDvlinks(baseUrl, maxPages);
+  const scrapeDurationMs = Date.now() - scrapeStart;
+
+  // Load existing deals for dedup
+  const { data: existingDeals } = await supabase
+    .from("affiliate_deals")
+    .select("id, origin_external_id, affiliate_url, title, price, image_url")
+    .eq("brand_id", brandId)
+    .eq("origin", originValue);
+
+  const existingByExtId = new Map<string, any>();
+  for (const deal of existingDeals || []) {
+    if (deal.origin_external_id) {
+      existingByExtId.set(deal.origin_external_id, deal);
+    }
+  }
+
+  // Diagnose mode
+  if (isDiagnose) {
+    const newCount = dvDeals.filter(d => !existingByExtId.has(d.affiliateUrl)).length;
+    const existingCount = dvDeals.filter(d => existingByExtId.has(d.affiliateUrl)).length;
+
+    const storeCounts: Record<string, number> = {};
+    for (const d of dvDeals) {
+      const store = d.storeName || "unknown";
+      storeCounts[store] = (storeCounts[store] || 0) + 1;
+    }
+
+    return {
+      success: true,
+      mode: "diagnose",
+      source_type: "dvlinks",
+      scrape: {
+        total_deals_scraped: dvDeals.length,
+        duration_ms: scrapeDurationMs,
+        base_url: baseUrl,
+        max_pages: maxPages,
+      },
+      discovery: {
+        total_scraped: dvDeals.length,
+        already_in_db: existingCount,
+        new_to_import: newCount,
+        existing_in_db_total: existingDeals?.length || 0,
+      },
+      stores: storeCounts,
+      samples: dvDeals.slice(0, 20).map(d => ({
+        title: d.title.substring(0, 60),
+        price: d.price,
+        original_price: d.originalPrice,
+        store: d.storeName,
+        affiliate_url: d.affiliateUrl,
+        image: d.imageUrl ? "yes" : "no",
+        is_new: !existingByExtId.has(d.affiliateUrl),
+      })),
+    };
+  }
+
+  // Sync mode
+  let persistedNew = 0;
+  let updated = 0;
+  let skipped = 0;
+  let errors = 0;
+  const syncResults: SyncResult[] = [];
+
+  for (const deal of dvDeals) {
+    if (!deal.title || !deal.affiliateUrl) {
+      skipped++;
+      continue;
+    }
+
+    const extId = deal.affiliateUrl; // Use affiliate URL as unique identifier
+
+    const dealData: Record<string, any> = {
+      brand_id: brandId,
+      title: deal.title,
+      image_url: deal.imageUrl,
+      price: deal.price,
+      original_price: deal.originalPrice,
+      affiliate_url: deal.affiliateUrl,
+      origin: originValue,
+      origin_external_id: extId,
+      origin_url: baseUrl,
+      store_name: deal.storeName,
+      store_logo_url: null,
+      badge_label: null,
+      category: null,
+      description: null,
+      last_synced_at: new Date().toISOString(),
+      sync_status: "ok",
+      sync_error: null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const existing = existingByExtId.get(extId);
+
+    try {
+      if (existing) {
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .update({
+            title: dealData.title,
+            image_url: dealData.image_url,
+            price: dealData.price,
+            original_price: dealData.original_price,
+            affiliate_url: dealData.affiliate_url,
+            store_name: dealData.store_name,
+            last_synced_at: dealData.last_synced_at,
+            sync_status: "ok",
+            sync_error: null,
+            updated_at: dealData.updated_at,
+          })
+          .eq("id", existing.id);
+
+        if (error) throw error;
+        updated++;
+        syncResults.push({ slug: extId, title: deal.title, action: "updated" });
+      } else {
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .insert({
+            ...dealData,
+            is_active: autoActivate,
+            visible_driver: autoVisibleDriver,
+            click_count: 0,
+            order_index: 0,
+            first_imported_at: new Date().toISOString(),
+          });
+
+        if (error) throw error;
+        persistedNew++;
+        syncResults.push({ slug: extId, title: deal.title, action: "created" });
+      }
+    } catch (e: any) {
+      errors++;
+      syncResults.push({ slug: extId, title: deal.title, action: "error", error: e.message });
+      console.error(`[DVLinks Sync] Error for "${deal.title}": ${e.message}`);
+    }
+  }
+
+  // Auto-categorization
+  console.log("[DVLinks] Starting auto-categorization...");
+  let categorizationStats = null;
+  try {
+    categorizationStats = await runAutoCategorization(supabase, brandId, originValue);
+    console.log("[DVLinks] Categorization done:", JSON.stringify(categorizationStats));
+  } catch (e: any) {
+    console.error("[DVLinks] Categorization error:", e.message);
+    categorizationStats = { error: e.message };
+  }
+
+  // Log the sync
+  const finishedAt = new Date().toISOString();
+  const details = {
+    source_type: "dvlinks",
+    scrape: {
+      total_deals_scraped: dvDeals.length,
+      duration_ms: scrapeDurationMs,
+      base_url: baseUrl,
+    },
+    totals: {
+      total_read: dvDeals.length,
+      persisted_new: persistedNew,
+      updated,
+      skipped,
+      errors,
+    },
+    categorization: categorizationStats,
+    samples: syncResults.slice(0, 30),
+  };
+
+  await supabase.from("mirror_sync_logs").insert({
+    brand_id: brandId,
+    started_at: startedAt,
+    finished_at: finishedAt,
+    status: errors > 0 ? "partial" : "success",
+    total_read: dvDeals.length,
+    total_persisted: persistedNew + updated,
+    new_count: persistedNew,
+    updated_count: updated,
+    error_count: errors,
+    details,
+  });
+
+  console.log(`[DVLinks Sync] Done: ${persistedNew} new, ${updated} updated, ${skipped} skipped, ${errors} errors`);
+
+  return {
+    success: true,
+    source_type: "dvlinks",
+    total_scraped: dvDeals.length,
+    persisted_new: persistedNew,
+    updated,
+    skipped,
+    errors,
+    categorization: categorizationStats,
+    duration_ms: Date.now() - scrapeStart,
+  };
+}
+
 // ---------- main handler ----------
 
 Deno.serve(async (req) => {
@@ -390,14 +696,14 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { brand_id, mode } = body;
+    const { brand_id, mode, source_type: requestedSource } = body;
     const isDiagnose = mode === "diagnose";
 
     // Handle auto-sync from cron
     if (brand_id === "auto") {
       const { data: configs } = await supabase
         .from("mirror_sync_config")
-        .select("brand_id")
+        .select("brand_id, source_type")
         .eq("auto_sync_enabled", true);
 
       const results = [];
@@ -406,12 +712,12 @@ Deno.serve(async (req) => {
           const res = await fetch(`${supabaseUrl}/functions/v1/mirror-sync`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
-            body: JSON.stringify({ brand_id: cfg.brand_id }),
+            body: JSON.stringify({ brand_id: cfg.brand_id, source_type: cfg.source_type }),
           });
           const data = await res.json();
-          results.push({ brand_id: cfg.brand_id, ...data });
+          results.push({ brand_id: cfg.brand_id, source_type: cfg.source_type, ...data });
         } catch (e: any) {
-          results.push({ brand_id: cfg.brand_id, error: e.message });
+          results.push({ brand_id: cfg.brand_id, source_type: cfg.source_type, error: e.message });
         }
       }
       return new Response(
@@ -427,14 +733,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    const startedAt = new Date().toISOString();
+    // Determine source type
+    const sourceType = requestedSource || "divulgador_inteligente";
 
-    // Load config
+    // Load config for this source
     const { data: config } = await supabase
       .from("mirror_sync_config")
       .select("*")
       .eq("brand_id", brand_id)
-      .single();
+      .eq("source_type", sourceType)
+      .maybeSingle();
+
+    // Route to appropriate handler
+    if (sourceType === "dvlinks") {
+      const result = await syncDvlinks(supabase, brand_id, config, isDiagnose);
+      return new Response(
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ========== Default: Divulgador Inteligente flow ==========
+    const startedAt = new Date().toISOString();
 
     const originUrl = config?.origin_url || "https://www.divulgadorinteligente.com/ubizresgata";
     const autoActivate = config?.auto_activate !== false;
@@ -491,7 +811,6 @@ Deno.serve(async (req) => {
         sellerCounts[seller] = (sellerCounts[seller] || 0) + 1;
       }
 
-      // Price comparison diagnostics
       const priceDiagnostics: any[] = [];
       for (const p of products.slice(0, 30)) {
         const uuid = p.attributes.uuid;
@@ -502,7 +821,6 @@ Deno.serve(async (req) => {
         const pricePage = vitrineEntry?.price ?? null;
         const originalPricePage = vitrineEntry?.originalPrice ?? null;
 
-        // Determine which source to use
         const priceUsed = pricePage ?? priceApi;
         const originalPriceUsed = originalPricePage ?? originalPriceApi;
         const source = pricePage !== null ? "vitrine" : "api";
@@ -531,6 +849,7 @@ Deno.serve(async (req) => {
       const result = {
         success: true,
         mode: "diagnose",
+        source_type: "divulgador_inteligente",
         scrape: {
           vitrine_prices_found: vitrinePrices.size,
           duration_ms: scrapeDurationMs,
@@ -578,7 +897,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Price resolution: vitrine > API
       const priceApi = cleanPrice(attrs.price);
       const originalPriceApi = cleanPrice(attrs.price_from);
       const vitrineEntry = vitrinePrices.get(slug);
@@ -674,7 +992,7 @@ Deno.serve(async (req) => {
     console.log("[Categorization] Starting auto-categorization...");
     let categorizationStats = null;
     try {
-      categorizationStats = await runAutoCategorization(supabase, brand_id);
+      categorizationStats = await runAutoCategorization(supabase, brand_id, "divulgador_inteligente");
       console.log("[Categorization] Done:", JSON.stringify(categorizationStats));
     } catch (e: any) {
       console.error("[Categorization] Error:", e.message);
@@ -684,6 +1002,7 @@ Deno.serve(async (req) => {
     // ========== Log the sync ==========
     const finishedAt = new Date().toISOString();
     const details = {
+      source_type: "divulgador_inteligente",
       scrape: {
         vitrine_prices_found: vitrinePrices.size,
         duration_ms: scrapeDurationMs,
@@ -731,6 +1050,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        source_type: "divulgador_inteligente",
         total_from_api: products.length,
         persisted_new: persistedNew,
         updated,

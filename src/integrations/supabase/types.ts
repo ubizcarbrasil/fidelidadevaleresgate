@@ -3007,6 +3007,7 @@ export type Database = {
           max_offers_per_read: number | null
           max_pages: number | null
           origin_url: string
+          source_type: string
           sync_interval_minutes: number | null
           timeout_seconds: number | null
           updated_at: string | null
@@ -3023,6 +3024,7 @@ export type Database = {
           max_offers_per_read?: number | null
           max_pages?: number | null
           origin_url?: string
+          source_type?: string
           sync_interval_minutes?: number | null
           timeout_seconds?: number | null
           updated_at?: string | null
@@ -3039,6 +3041,7 @@ export type Database = {
           max_offers_per_read?: number | null
           max_pages?: number | null
           origin_url?: string
+          source_type?: string
           sync_interval_minutes?: number | null
           timeout_seconds?: number | null
           updated_at?: string | null
@@ -3047,14 +3050,14 @@ export type Database = {
           {
             foreignKeyName: "mirror_sync_config_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "mirror_sync_config_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
