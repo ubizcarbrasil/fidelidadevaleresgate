@@ -225,6 +225,9 @@ export default function MachineIntegrationPage() {
   const [identifyNotif, setIdentifyNotif] = useState<any>(null);
   const [identifyForm, setIdentifyForm] = useState({ name: "", cpf: "", phone: "" });
   const [credTestResult, setCredTestResult] = useState<{ success: boolean; message?: string; error?: string; details?: string } | null>(null);
+  const [driverPointsEnabled, setDriverPointsEnabled] = useState(false);
+  const [driverPointsPercent, setDriverPointsPercent] = useState("50");
+  const [driverPointsSaved, setDriverPointsSaved] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
