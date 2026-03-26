@@ -282,6 +282,8 @@ export default function MachineIntegrationPage() {
     setSelectedMatrixApiKey(selectedIntegration?.matrix_api_key || "");
     setSelectedMatrixBasicUser(selectedIntegration?.matrix_basic_auth_user || "");
     setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
+    setDriverPointsEnabled((selectedIntegration as any)?.driver_points_enabled ?? false);
+    setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
   }, [
     selectedIntegration?.id,
     selectedIntegration?.callback_url,
@@ -289,6 +291,8 @@ export default function MachineIntegrationPage() {
     selectedIntegration?.matrix_api_key,
     selectedIntegration?.matrix_basic_auth_user,
     selectedIntegration?.matrix_basic_auth_password,
+    (selectedIntegration as any)?.driver_points_enabled,
+    (selectedIntegration as any)?.driver_points_percent,
   ]);
 
   /* ── Initial events ── */
