@@ -153,6 +153,54 @@ export async function fetchClientDetails(
     return { phone: null, email: null, cpf: null, name: null };
   }
 }
+
+/**
+ * Fetch driver details from TaxiMachine /api/integracao/condutor endpoint.
+ * Returns CPF, phone, email and name of the driver.
+ */
+export async function fetchDriverDetails(
+  driverId: string,
+  matrixHeaders: Record<string, string>
+): Promise<DriverDetails> {
+  const url = `${API_BASE_URL}/api/integracao/condutor?id=${driverId}`;
+  logger.info("Fetching driver details", { driverId, url });
+
+  try {
+    const res = await fetch(url, { headers: matrixHeaders });
+    if (!res.ok) {
+      const body = await res.text();
+      logger.warn("Driver details fetch failed", { driverId, status: res.status, body: body.slice(0, 300) });
+      return { cpf: null, phone: null, email: null, name: null };
+    }
+
+    const json = await res.json();
+    // Response format: [{ success: true, response: [{ id, nome, cpf, telefone, email, ... }] }]
+    const item = Array.isArray(json) ? json[0] : json;
+    if (item?.success === false) {
+      logger.warn("Driver details returned success=false", { driverId });
+      return { cpf: null, phone: null, email: null, name: null };
+    }
+
+    const responseArr = item?.response;
+    const driver = Array.isArray(responseArr) ? responseArr[0] : responseArr;
+    if (!driver) {
+      logger.warn("Driver details response empty", { driverId });
+      return { cpf: null, phone: null, email: null, name: null };
+    }
+
+    const cpf = (driver.cpf || "").replace(/\D/g, "") || null;
+    const phone = driver.telefone || null;
+    const email = driver.email || null;
+    const name = driver.nome || null;
+
+    logger.info("Driver details fetched", { driverId, hasPhone: !!phone, hasEmail: !!email, hasCpf: !!cpf, name });
+    return { cpf, phone, email, name };
+  } catch (e) {
+    logger.warn("Driver details fetch exception", { driverId, error: String(e) });
+    return { cpf: null, phone: null, email: null, name: null };
+  }
+}
+
 export function buildApiHeaders(
   receiptApiKey: string,
   basicUser: string,
