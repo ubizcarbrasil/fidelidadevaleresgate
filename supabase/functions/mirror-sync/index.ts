@@ -602,9 +602,7 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
 
     try {
       if (existing) {
-        const { error } = await supabase
-          .from("affiliate_deals")
-          .update({
+        const updateFields: Record<string, any> = {
             title: dealData.title,
             image_url: dealData.image_url,
             price: dealData.price,
@@ -615,7 +613,12 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
             sync_status: "ok",
             sync_error: null,
             updated_at: dealData.updated_at,
-          })
+        };
+        if (matchedCatId) updateFields.category_id = matchedCatId;
+
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .update(updateFields)
           .eq("id", existing.id);
 
         if (error) throw error;
