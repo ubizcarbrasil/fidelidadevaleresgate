@@ -10,6 +10,7 @@ import { Search, Activity, AlertTriangle, CheckCircle, Loader2, Database, ArrowR
 interface Props {
   brandId: string;
   refreshKey: number;
+  sourceType?: string;
 }
 
 function StatBox({ label, value, highlight, error }: { label: string; value: number | string; highlight?: boolean; error?: boolean }) {
@@ -52,7 +53,7 @@ export default function MirrorSyncDebug({ brandId, refreshKey }: Props) {
     setDiagnoseError(null);
     setDiagnoseResult(null);
     try {
-      const result = await runMirrorDiagnose(brandId);
+      const result = await runMirrorDiagnose(brandId, sourceType);
       setDiagnoseResult(result);
     } catch (e: any) {
       setDiagnoseError(e.message);
