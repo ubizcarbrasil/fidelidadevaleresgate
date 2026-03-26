@@ -74,12 +74,14 @@ export async function fetchMirroredDeals(brandId: string, filters?: {
   visible?: boolean;
   featured?: boolean;
   search?: string;
+  sourceType?: string;
 }) {
+  const origin = filters?.sourceType || "divulgador_inteligente";
   let query = supabase
     .from("affiliate_deals")
     .select("*")
     .eq("brand_id", brandId)
-    .eq("origin", "divulgador_inteligente")
+    .eq("origin", origin)
     .order("created_at", { ascending: false })
     .limit(1000);
 

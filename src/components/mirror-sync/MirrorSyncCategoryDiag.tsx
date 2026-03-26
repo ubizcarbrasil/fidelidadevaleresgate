@@ -10,17 +10,18 @@ const MIN_DEALS = 3;
 interface Props {
   brandId: string;
   refreshKey: number;
+  sourceType?: string;
 }
 
-export default function MirrorSyncCategoryDiag({ brandId, refreshKey }: Props) {
+export default function MirrorSyncCategoryDiag({ brandId, refreshKey, sourceType = "divulgador_inteligente" }: Props) {
   const { data: categories = [] } = useQuery({
     queryKey: ["mirror-diag-cats", brandId, refreshKey],
     queryFn: () => fetchCategories(brandId),
   });
 
   const { data: deals = [] } = useQuery({
-    queryKey: ["mirror-diag-deals", brandId, refreshKey],
-    queryFn: () => fetchMirroredDeals(brandId),
+    queryKey: ["mirror-diag-deals", brandId, refreshKey, sourceType],
+    queryFn: () => fetchMirroredDeals(brandId, { sourceType }),
   });
 
   const countByCategory = new Map<string, number>();

@@ -59,11 +59,11 @@ export default function MirrorSyncPage() {
         </TabsList>
 
         <TabsContent value="deals">
-          <MirrorSyncDealsTable brandId={currentBrandId} refreshKey={refreshKey} />
+          <MirrorSyncDealsTable brandId={currentBrandId} refreshKey={refreshKey} sourceType={sourceType} />
         </TabsContent>
 
         <TabsContent value="categorias">
-          <MirrorSyncCategoryDiag brandId={currentBrandId} refreshKey={refreshKey} />
+          <MirrorSyncCategoryDiag brandId={currentBrandId} refreshKey={refreshKey} sourceType={sourceType} />
         </TabsContent>
 
         <TabsContent value="logs">
