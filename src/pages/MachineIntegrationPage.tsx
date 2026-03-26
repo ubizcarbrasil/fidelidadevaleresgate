@@ -18,8 +18,9 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
   Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound, AlertTriangle,
-  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User, RefreshCw,
+  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User, RefreshCw, Truck,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 /* ── Status labels ── */
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
