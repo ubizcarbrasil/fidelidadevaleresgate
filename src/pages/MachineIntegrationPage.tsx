@@ -539,6 +539,29 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const saveDriverPointsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      const percent = Math.min(100, Math.max(1, Number(driverPointsPercent) || 50));
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .update({
+          driver_points_enabled: driverPointsEnabled,
+          driver_points_percent: percent,
+        })
+        .eq("id", selectedIntegration.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setDriverPointsSaved(true);
+      setTimeout(() => setDriverPointsSaved(false), 2000);
+      toast({ title: "Pontuação do motorista salva!" });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
 
   const integratedBranchIds = new Set(activeIntegrations.map((i) => i.branch_id));
   const availableBranches = branches.filter((b) => !integratedBranchIds.has(b.id));
