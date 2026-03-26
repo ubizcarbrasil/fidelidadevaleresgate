@@ -590,6 +590,14 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
       updated_at: new Date().toISOString(),
     };
 
+    // Immediate category matching with lower threshold for DVLinks
+    const matchedCatId = matchDealToCategory(
+      deal.title, null, null, deal.storeName, categories, 3
+    );
+    if (matchedCatId) {
+      dealData.category_id = matchedCatId;
+    }
+
     const existing = existingByExtId.get(extId);
 
     try {
