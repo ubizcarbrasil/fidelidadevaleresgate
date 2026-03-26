@@ -2659,6 +2659,9 @@ export type Database = {
           brand_id: string
           callback_url: string | null
           created_at: string
+          driver_customer_tag: string
+          driver_points_enabled: boolean
+          driver_points_percent: number
           id: string
           is_active: boolean
           last_ride_processed_at: string | null
@@ -2682,6 +2685,9 @@ export type Database = {
           brand_id: string
           callback_url?: string | null
           created_at?: string
+          driver_customer_tag?: string
+          driver_points_enabled?: boolean
+          driver_points_percent?: number
           id?: string
           is_active?: boolean
           last_ride_processed_at?: string | null
@@ -2705,6 +2711,9 @@ export type Database = {
           brand_id?: string
           callback_url?: string | null
           created_at?: string
+          driver_customer_tag?: string
+          driver_points_enabled?: boolean
+          driver_points_percent?: number
           id?: string
           is_active?: boolean
           last_ride_processed_at?: string | null
@@ -2881,7 +2890,10 @@ export type Database = {
           branch_id: string | null
           brand_id: string
           created_at: string
+          driver_customer_id: string | null
+          driver_id: string | null
           driver_name: string | null
+          driver_points_credited: number
           finalized_at: string | null
           id: string
           machine_ride_id: string
@@ -2897,7 +2909,10 @@ export type Database = {
           branch_id?: string | null
           brand_id: string
           created_at?: string
+          driver_customer_id?: string | null
+          driver_id?: string | null
           driver_name?: string | null
+          driver_points_credited?: number
           finalized_at?: string | null
           id?: string
           machine_ride_id: string
@@ -2913,7 +2928,10 @@ export type Database = {
           branch_id?: string | null
           brand_id?: string
           created_at?: string
+          driver_customer_id?: string | null
+          driver_id?: string | null
           driver_name?: string | null
+          driver_points_credited?: number
           finalized_at?: string | null
           id?: string
           machine_ride_id?: string

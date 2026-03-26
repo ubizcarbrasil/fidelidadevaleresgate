@@ -18,8 +18,9 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
   Eye, EyeOff, Copy, Check, Radio, ExternalLink, Save, Link2, KeyRound, AlertTriangle,
-  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User, RefreshCw,
+  MapPin, Plus, Power, PowerOff, Send, Trophy, Phone, User, RefreshCw, Truck,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 /* ── Status labels ── */
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -224,6 +225,9 @@ export default function MachineIntegrationPage() {
   const [identifyNotif, setIdentifyNotif] = useState<any>(null);
   const [identifyForm, setIdentifyForm] = useState({ name: "", cpf: "", phone: "" });
   const [credTestResult, setCredTestResult] = useState<{ success: boolean; message?: string; error?: string; details?: string } | null>(null);
+  const [driverPointsEnabled, setDriverPointsEnabled] = useState(false);
+  const [driverPointsPercent, setDriverPointsPercent] = useState("50");
+  const [driverPointsSaved, setDriverPointsSaved] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
@@ -278,6 +282,8 @@ export default function MachineIntegrationPage() {
     setSelectedMatrixApiKey(selectedIntegration?.matrix_api_key || "");
     setSelectedMatrixBasicUser(selectedIntegration?.matrix_basic_auth_user || "");
     setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
+    setDriverPointsEnabled((selectedIntegration as any)?.driver_points_enabled ?? false);
+    setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
   }, [
     selectedIntegration?.id,
     selectedIntegration?.callback_url,
@@ -285,6 +291,8 @@ export default function MachineIntegrationPage() {
     selectedIntegration?.matrix_api_key,
     selectedIntegration?.matrix_basic_auth_user,
     selectedIntegration?.matrix_basic_auth_password,
+    (selectedIntegration as any)?.driver_points_enabled,
+    (selectedIntegration as any)?.driver_points_percent,
   ]);
 
   /* ── Initial events ── */
@@ -531,6 +539,29 @@ export default function MachineIntegrationPage() {
     },
   });
 
+  const saveDriverPointsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      const percent = Math.min(100, Math.max(1, Number(driverPointsPercent) || 50));
+      const { error } = await (supabase as any)
+        .from("machine_integrations")
+        .update({
+          driver_points_enabled: driverPointsEnabled,
+          driver_points_percent: percent,
+        })
+        .eq("id", selectedIntegration.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setDriverPointsSaved(true);
+      setTimeout(() => setDriverPointsSaved(false), 2000);
+      toast({ title: "Pontuação do motorista salva!" });
+      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    },
+  });
 
   const integratedBranchIds = new Set(activeIntegrations.map((i) => i.branch_id));
   const availableBranches = branches.filter((b) => !integratedBranchIds.has(b.id));
@@ -779,6 +810,45 @@ export default function MachineIntegrationPage() {
                 <p className="text-xs text-muted-foreground">
                   Crie um bot no <strong>@BotFather</strong>, adicione ao grupo e use <strong>@userinfobot</strong> para obter o chat_id.
                 </p>
+              </div>
+
+              {/* Driver Points */}
+              <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Truck className="h-3 w-3" /> Pontuação do Motorista
+                  </Label>
+                  <Switch
+                    checked={driverPointsEnabled}
+                    onCheckedChange={setDriverPointsEnabled}
+                  />
+                </div>
+                {driverPointsEnabled && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 max-w-xs">
+                      <Label className="text-xs whitespace-nowrap">Percentual</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={driverPointsPercent}
+                        onChange={(e) => setDriverPointsPercent(e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-xs text-muted-foreground">%</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      O motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos creditados ao passageiro.
+                      Ex: passageiro ganha 100 pts → motorista ganha {Math.floor(100 * (Number(driverPointsPercent) || 50) / 100)} pts.
+                    </p>
+                  </div>
+                )}
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={() => saveDriverPointsMutation.mutate()} disabled={saveDriverPointsMutation.isPending}>
+                    {driverPointsSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveDriverPointsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar
+                  </Button>
+                </div>
               </div>
 
               {/* Preferred Endpoint */}

@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
-import { fetchRideData, buildApiHeaders } from "../_shared/fetchRideData.ts";
+import { fetchRideData, buildApiHeaders, fetchDriverDetails } from "../_shared/fetchRideData.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -293,7 +293,7 @@ async function processFinalized(
     return { error: rideResult.error, status: 502 };
   }
 
-  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, source } = rideResult.data;
+  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId, source } = rideResult.data;
   logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone });
 
   if (rideValue <= 0) {
@@ -441,6 +441,126 @@ async function processFinalized(
       });
   }
 
+  // --- Driver scoring ---
+  let driverPointsCredited = 0;
+  let driverCustomerId: string | null = null;
+
+  if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
+    const driverPercent = Number(integration.driver_points_percent) || 50;
+    const driverPoints = Math.floor(points * (driverPercent / 100));
+
+    if (driverPoints > 0) {
+      // Fetch driver details from TaxiMachine API
+      const driverHeaders = matrixHeaders ?? cityHeaders;
+      const driverDetails = await fetchDriverDetails(driverId, driverHeaders);
+      const driverDisplayName = driverDetails.name || driverName || `Motorista #${driverId}`;
+      const driverTag = integration.driver_customer_tag || "MOTORISTA";
+
+      // Find or create driver customer
+      const driverCascade = await findCustomerCascade(
+        sb, brandId,
+        driverDetails.cpf,
+        driverDetails.phone,
+        driverDisplayName
+      );
+
+      let driverCustomer: any = null;
+      let driverMatchedBy: string | null = null;
+
+      if (driverCascade) {
+        driverCustomer = driverCascade.customer;
+        driverMatchedBy = driverCascade.matchedBy;
+      }
+
+      if (!driverCustomer) {
+        let resolveBranchId = branchId || integration.branch_id;
+        if (!resolveBranchId) {
+          const { data: branch } = await sb
+            .from("branches").select("id")
+            .eq("brand_id", brandId).eq("is_active", true)
+            .order("created_at", { ascending: true }).limit(1).maybeSingle();
+          resolveBranchId = branch?.id || null;
+        }
+        if (resolveBranchId) {
+          const taggedName = `[${driverTag}] ${driverDisplayName}`;
+          const { data: created } = await sb
+            .from("customers")
+            .insert({
+              brand_id: brandId,
+              branch_id: resolveBranchId,
+              cpf: driverDetails.cpf || null,
+              phone: driverDetails.phone || null,
+              name: taggedName,
+              points_balance: 0,
+              money_balance: 0,
+              ride_count: 0,
+              customer_tier: "INICIANTE",
+              crm_sync_status: "PENDING",
+            })
+            .select(CUSTOMER_SELECT)
+            .single();
+          if (created) {
+            driverCustomer = created;
+            logAudit(sb, "MACHINE_DRIVER_CREATED", {
+              brandId, entityId: created.id, ip,
+              details: { name: taggedName, driver_id: driverId, tag: driverTag },
+            });
+          }
+        }
+      }
+
+      if (driverCustomer) {
+        driverCustomerId = driverCustomer.id;
+
+        // Credit driver points
+        await sb.from("points_ledger").insert({
+          brand_id: brandId,
+          branch_id: driverCustomer.branch_id,
+          customer_id: driverCustomer.id,
+          entry_type: "CREDIT",
+          points_amount: driverPoints,
+          money_amount: rideValue,
+          reason: `Corrida TaxiMachine #${machineRideId} - Motorista (${driverPercent}% de ${points} pts)`,
+          reference_type: "MACHINE_RIDE",
+        });
+
+        const newRideCount = (driverCustomer.ride_count || 0) + 1;
+        const newTier = getTierFromRideCount(newRideCount);
+        await sb.from("customers").update({
+          points_balance: (driverCustomer.points_balance || 0) + driverPoints,
+          ride_count: newRideCount,
+          customer_tier: newTier,
+        }).eq("id", driverCustomer.id);
+
+        driverPointsCredited = driverPoints;
+
+        // Mirror driver to crm_contacts
+        const driverContactPayload: Record<string, unknown> = {
+          brand_id: brandId,
+          branch_id: driverCustomer.branch_id || branchId,
+          customer_id: driverCustomer.id,
+          name: driverDetails.name || driverName || null,
+          phone: driverDetails.phone || null,
+          email: driverDetails.email || null,
+          cpf: driverDetails.cpf || null,
+          source: "MOBILITY_DRIVER",
+          is_active: true,
+          ride_count: newRideCount,
+        };
+        Object.keys(driverContactPayload).forEach(k => { if (driverContactPayload[k] === null) delete driverContactPayload[k]; });
+
+        sb.from("crm_contacts")
+          .upsert(driverContactPayload, { onConflict: "brand_id,customer_id" })
+          .then(({ error }) => { if (error) logger.error("crm_contacts driver upsert error", { error }); });
+
+        logger.info("Driver points credited", {
+          machineRideId, driverId, driverPoints, driverPercent,
+          passengerPoints: points, driverCustomerId, driverMatchedBy,
+        });
+      }
+    }
+  }
+
   // Persist ride
   await sb.from("machine_rides").upsert({
     brand_id: brandId,
@@ -455,6 +575,9 @@ async function processFinalized(
     points_credited: pointsCredited ? points : 0,
     finalized_at: new Date().toISOString(),
     driver_name: driverName || null,
+    driver_id: driverId || null,
+    driver_points_credited: driverPointsCredited,
+    driver_customer_id: driverCustomerId,
   }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
 
   // Update integration counters
