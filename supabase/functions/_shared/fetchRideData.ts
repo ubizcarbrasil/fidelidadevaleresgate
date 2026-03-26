@@ -22,7 +22,15 @@ export interface RideData {
   passengerPhone: string | null;
   passengerEmail: string | null;
   driverName: string | null;
+  driverId: string | null;
   clienteId: string | null;
+}
+
+export interface DriverDetails {
+  cpf: string | null;
+  phone: string | null;
+  email: string | null;
+  name: string | null;
 }
 
 export type FetchRideResult =
