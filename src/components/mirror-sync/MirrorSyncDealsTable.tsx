@@ -19,9 +19,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface Props {
   brandId: string;
   refreshKey: number;
+  sourceType?: string;
 }
 
-export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
+export default function MirrorSyncDealsTable({ brandId, refreshKey, sourceType = "divulgador_inteligente" }: Props) {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
@@ -35,11 +36,12 @@ export default function MirrorSyncDealsTable({ brandId, refreshKey }: Props) {
   };
 
   const { data: deals, isLoading } = useQuery({
-    queryKey: ["mirror-deals", brandId, refreshKey, statusFilter, search],
+    queryKey: ["mirror-deals", brandId, refreshKey, statusFilter, search, sourceType],
     queryFn: () =>
       fetchMirroredDeals(brandId, {
         status: statusFilter !== "all" ? statusFilter : undefined,
         search: search.trim() || undefined,
+        sourceType,
       }),
   });
 
