@@ -29,7 +29,7 @@ function formatPrice(val: number | null | undefined): string {
   return `R$ ${val.toFixed(2).replace(".", ",")}`;
 }
 
-export default function MirrorSyncDebug({ brandId, refreshKey }: Props) {
+export default function MirrorSyncDebug({ brandId, refreshKey, sourceType = "divulgador_inteligente" }: Props) {
   const [diagnoseResult, setDiagnoseResult] = useState<any>(null);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [diagnoseError, setDiagnoseError] = useState<string | null>(null);
