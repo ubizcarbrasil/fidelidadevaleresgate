@@ -42,7 +42,7 @@ export default function MirrorSyncConfig({ brandId, sourceType: initialSource }:
     auto_sync_enabled: false,
     sync_interval_minutes: 10,
     max_offers_per_read: 100,
-    max_pages: 5,
+    max_pages: 40,
     timeout_seconds: 30,
     debug_mode: false,
     auto_activate: true,

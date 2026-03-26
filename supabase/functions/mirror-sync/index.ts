@@ -192,8 +192,12 @@ async function scrapeDvlinks(baseUrl: string, maxPages: number): Promise<Dvlinks
 
       console.log(`[DVLinks] Page ${page}: found ${cardsFound} deals`);
 
-      // If no cards found, stop pagination
+      // If no cards found or page says "no products", stop pagination
       if (cardsFound === 0) break;
+      if (html.includes("Nenhum produto encontrado")) {
+        console.log(`[DVLinks] Page ${page}: detected empty page marker, stopping`);
+        break;
+      }
 
     } catch (e: any) {
       console.error(`[DVLinks] Error on page ${page}: ${e.message}`);
@@ -241,7 +245,8 @@ function matchDealToCategory(
   description: string | null,
   category: string | null,
   storeName: string | null,
-  categories: DealCategory[]
+  categories: DealCategory[],
+  minScore?: number
 ): string | null {
   if (category) {
     const normApiCat = normalize(category);
@@ -268,7 +273,7 @@ function matchDealToCategory(
 
   let bestCatId: string | null = null;
   let bestScore = 0;
-  const MIN_SCORE = 4;
+  const MIN_SCORE = minScore ?? 4;
 
   for (const cat of categories) {
     let score = 0;
@@ -476,7 +481,7 @@ async function runAutoCategorization(supabase: any, brandId: string, originFilte
 
 async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagnose: boolean) {
   const baseUrl = config?.origin_url || "https://dvlinks.com.br/g/achadinhosresgata-69a302fc25d02";
-  const maxPages = config?.max_pages || 5;
+  const maxPages = config?.max_pages || 40;
   const autoActivate = config?.auto_activate !== false;
   const autoVisibleDriver = config?.auto_visible_driver !== false;
   const originValue = "dvlinks";
@@ -542,6 +547,13 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
     };
   }
 
+  // Load categories for immediate matching
+  const { data: allCategories } = await supabase
+    .from("affiliate_deal_categories")
+    .select("id, name, keywords, is_active")
+    .eq("brand_id", brandId);
+  const categories: DealCategory[] = allCategories || [];
+
   // Sync mode
   let persistedNew = 0;
   let updated = 0;
@@ -578,13 +590,19 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
       updated_at: new Date().toISOString(),
     };
 
+    // Immediate category matching with lower threshold for DVLinks
+    const matchedCatId = matchDealToCategory(
+      deal.title, null, null, deal.storeName, categories, 3
+    );
+    if (matchedCatId) {
+      dealData.category_id = matchedCatId;
+    }
+
     const existing = existingByExtId.get(extId);
 
     try {
       if (existing) {
-        const { error } = await supabase
-          .from("affiliate_deals")
-          .update({
+        const updateFields: Record<string, any> = {
             title: dealData.title,
             image_url: dealData.image_url,
             price: dealData.price,
@@ -595,7 +613,12 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
             sync_status: "ok",
             sync_error: null,
             updated_at: dealData.updated_at,
-          })
+        };
+        if (matchedCatId) updateFields.category_id = matchedCatId;
+
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .update(updateFields)
           .eq("id", existing.id);
 
         if (error) throw error;
