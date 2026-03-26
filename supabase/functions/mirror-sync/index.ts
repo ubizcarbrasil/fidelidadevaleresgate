@@ -192,8 +192,12 @@ async function scrapeDvlinks(baseUrl: string, maxPages: number): Promise<Dvlinks
 
       console.log(`[DVLinks] Page ${page}: found ${cardsFound} deals`);
 
-      // If no cards found, stop pagination
+      // If no cards found or page says "no products", stop pagination
       if (cardsFound === 0) break;
+      if (html.includes("Nenhum produto encontrado")) {
+        console.log(`[DVLinks] Page ${page}: detected empty page marker, stopping`);
+        break;
+      }
 
     } catch (e: any) {
       console.error(`[DVLinks] Error on page ${page}: ${e.message}`);
@@ -241,7 +245,8 @@ function matchDealToCategory(
   description: string | null,
   category: string | null,
   storeName: string | null,
-  categories: DealCategory[]
+  categories: DealCategory[],
+  minScore?: number
 ): string | null {
   if (category) {
     const normApiCat = normalize(category);
@@ -268,7 +273,7 @@ function matchDealToCategory(
 
   let bestCatId: string | null = null;
   let bestScore = 0;
-  const MIN_SCORE = 4;
+  const MIN_SCORE = minScore ?? 4;
 
   for (const cat of categories) {
     let score = 0;
@@ -476,7 +481,7 @@ async function runAutoCategorization(supabase: any, brandId: string, originFilte
 
 async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagnose: boolean) {
   const baseUrl = config?.origin_url || "https://dvlinks.com.br/g/achadinhosresgata-69a302fc25d02";
-  const maxPages = config?.max_pages || 5;
+  const maxPages = config?.max_pages || 40;
   const autoActivate = config?.auto_activate !== false;
   const autoVisibleDriver = config?.auto_visible_driver !== false;
   const originValue = "dvlinks";
