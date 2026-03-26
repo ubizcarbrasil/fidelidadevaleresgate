@@ -293,7 +293,7 @@ async function processFinalized(
     return { error: rideResult.error, status: 502 };
   }
 
-  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, source } = rideResult.data;
+  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId, source } = rideResult.data;
   logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone });
 
   if (rideValue <= 0) {
