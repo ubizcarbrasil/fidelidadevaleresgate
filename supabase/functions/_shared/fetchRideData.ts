@@ -57,6 +57,8 @@ function parseRecibo(json: any): Omit<RideData, "source"> | null {
   const corridaBlock = response?.corrida || response?.dados_solicitacao || {};
   const rawCpf = (clienteBlock.cpf || "").replace(/\D/g, "");
 
+  const driverId = motoristaBlock.id ? String(motoristaBlock.id) : null;
+
   return {
     rideValue: Number(corridaBlock.valor || 0),
     passengerName: clienteBlock.nome || null,
@@ -64,6 +66,7 @@ function parseRecibo(json: any): Omit<RideData, "source"> | null {
     passengerPhone: null,  // Recibo API does not return passenger phone
     passengerEmail: null,  // Recibo API does not return passenger email
     driverName: motoristaBlock.nome || null,
+    driverId,
     clienteId: clienteBlock.cliente_id || null,
   };
 }
@@ -86,6 +89,8 @@ function parseRequestV1(json: any): Omit<RideData, "source"> {
   const phone = client.phone || rootClient.phone || passenger.phone || json?.passenger_phone || null;
   const cpf = (client.cpf || rootClient.cpf || passenger.cpf || json?.passenger_cpf || "").replace(/\D/g, "") || null;
 
+  const driverId = driver.id ? String(driver.id) : null;
+
   if (name || phone || cpf) {
     logger.info("V1 client data found", { name, hasPhone: !!phone, hasCpf: !!cpf, source: client.name ? "stops[0].client" : rootClient.name ? "root.client" : "passenger/root" });
   }
@@ -97,6 +102,7 @@ function parseRequestV1(json: any): Omit<RideData, "source"> {
     passengerPhone: phone,
     passengerEmail: null, // V1 does not return email
     driverName: driver.name || null,
+    driverId,
     clienteId: null, // V1 does not return cliente_id
   };
 }
