@@ -547,6 +547,13 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
     };
   }
 
+  // Load categories for immediate matching
+  const { data: allCategories } = await supabase
+    .from("affiliate_deal_categories")
+    .select("id, name, keywords, is_active")
+    .eq("brand_id", brandId);
+  const categories: DealCategory[] = allCategories || [];
+
   // Sync mode
   let persistedNew = 0;
   let updated = 0;
