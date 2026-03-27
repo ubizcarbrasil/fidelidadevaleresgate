@@ -138,7 +138,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <CustomerContext.Provider value={{ customer, loading, isDriver, refetch }}>
+    <CustomerContext.Provider value={{ customer, loading, isDriver, isImpersonating: canImpersonate, refetch }}>
       {children}
     </CustomerContext.Provider>
   );
