@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ScoredCustomersPanel from "@/components/machine-integration/ScoredCustomersPanel";
+import ScoredDriversPanel from "@/components/machine-integration/ScoredDriversPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
@@ -227,6 +228,8 @@ export default function MachineIntegrationPage() {
   const [credTestResult, setCredTestResult] = useState<{ success: boolean; message?: string; error?: string; details?: string } | null>(null);
   const [driverPointsEnabled, setDriverPointsEnabled] = useState(false);
   const [driverPointsPercent, setDriverPointsPercent] = useState("50");
+  const [driverPointsMode, setDriverPointsMode] = useState("PERCENT");
+  const [driverPointsPerReal, setDriverPointsPerReal] = useState("1");
   const [driverPointsSaved, setDriverPointsSaved] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -284,6 +287,8 @@ export default function MachineIntegrationPage() {
     setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
     setDriverPointsEnabled((selectedIntegration as any)?.driver_points_enabled ?? false);
     setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
+    setDriverPointsMode((selectedIntegration as any)?.driver_points_mode ?? "PERCENT");
+    setDriverPointsPerReal(String((selectedIntegration as any)?.driver_points_per_real ?? 1));
   }, [
     selectedIntegration?.id,
     selectedIntegration?.callback_url,
@@ -293,6 +298,8 @@ export default function MachineIntegrationPage() {
     selectedIntegration?.matrix_basic_auth_password,
     (selectedIntegration as any)?.driver_points_enabled,
     (selectedIntegration as any)?.driver_points_percent,
+    (selectedIntegration as any)?.driver_points_mode,
+    (selectedIntegration as any)?.driver_points_per_real,
   ]);
 
   /* ── Initial events ── */
@@ -543,11 +550,14 @@ export default function MachineIntegrationPage() {
     mutationFn: async () => {
       if (!selectedIntegration?.id) throw new Error("Integration not found");
       const percent = Math.min(100, Math.max(1, Number(driverPointsPercent) || 50));
+      const perReal = Math.max(0.01, Number(driverPointsPerReal) || 1);
       const { error } = await (supabase as any)
         .from("machine_integrations")
         .update({
           driver_points_enabled: driverPointsEnabled,
           driver_points_percent: percent,
+          driver_points_mode: driverPointsMode,
+          driver_points_per_real: perReal,
         })
         .eq("id", selectedIntegration.id);
       if (error) throw error;
@@ -824,23 +834,60 @@ export default function MachineIntegrationPage() {
                   />
                 </div>
                 {driverPointsEnabled && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 max-w-xs">
-                      <Label className="text-xs whitespace-nowrap">Percentual</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={driverPointsPercent}
-                        onChange={(e) => setDriverPointsPercent(e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-xs text-muted-foreground">%</span>
+                  <div className="space-y-3">
+                    {/* Mode selector */}
+                    <div className="space-y-1">
+                      <Label className="text-xs">Modo de cálculo</Label>
+                      <Select value={driverPointsMode} onValueChange={setDriverPointsMode}>
+                        <SelectTrigger className="w-full max-w-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PERCENT">Percentual do passageiro</SelectItem>
+                          <SelectItem value="PER_REAL">Pontos por R$ da corrida</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      O motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos creditados ao passageiro.
-                      Ex: passageiro ganha 100 pts → motorista ganha {Math.floor(100 * (Number(driverPointsPercent) || 50) / 100)} pts.
-                    </p>
+
+                    {driverPointsMode === "PERCENT" ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 max-w-xs">
+                          <Label className="text-xs whitespace-nowrap">Percentual</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={driverPointsPercent}
+                            onChange={(e) => setDriverPointsPercent(e.target.value)}
+                            className="w-20"
+                          />
+                          <span className="text-xs text-muted-foreground">%</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          O motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos creditados ao passageiro.
+                          Ex: passageiro ganha 100 pts → motorista ganha {Math.floor(100 * (Number(driverPointsPercent) || 50) / 100)} pts.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 max-w-xs">
+                          <Label className="text-xs whitespace-nowrap">Pontos por R$</Label>
+                          <Input
+                            type="number"
+                            min={0.01}
+                            step={0.1}
+                            value={driverPointsPerReal}
+                            onChange={(e) => setDriverPointsPerReal(e.target.value)}
+                            className="w-24"
+                          />
+                          <span className="text-xs text-muted-foreground">pts/R$</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          O motorista receberá <strong>{driverPointsPerReal || 1} ponto(s)</strong> para cada R$ 1,00 do valor da corrida.
+                          Ex: corrida de R$ 30,00 → motorista ganha {Math.floor(30 * (Number(driverPointsPerReal) || 1))} pts.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-end">
@@ -1040,6 +1087,11 @@ export default function MachineIntegrationPage() {
 
       {/* Scored Customers */}
       {activeIntegrations.length > 0 && <ScoredCustomersPanel brandId={currentBrandId!} />}
+
+      {/* Scored Drivers */}
+      {activeIntegrations.length > 0 && integrations.some((i: any) => i.driver_points_enabled) && (
+        <ScoredDriversPanel brandId={currentBrandId!} />
+      )}
 
       {/* ─── ADD NEW CITY ─── */}
       <Card>
