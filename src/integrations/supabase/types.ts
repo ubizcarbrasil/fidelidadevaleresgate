@@ -3207,6 +3207,47 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_reports: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          offer_id: string
+          reason: string
+          screenshot_url: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          offer_id: string
+          reason: string
+          screenshot_url?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          offer_id?: string
+          reason?: string
+          screenshot_url?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_reports_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offers: {
         Row: {
           allowed_hours: string | null
