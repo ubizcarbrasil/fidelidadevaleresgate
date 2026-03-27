@@ -349,14 +349,26 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                 {marketplaceTitle}
               </span>
             </div>
-            <button
-              onClick={() => shareDriverUrl(brand.id, marketplaceTitle)}
-              className="h-9 w-9 flex items-center justify-center rounded-xl"
-              style={{ backgroundColor: "hsl(var(--muted))" }}
-            >
-              <Share2 className="h-4.5 w-4.5 text-foreground" />
-            </button>
-          </div>
+            <div className="flex items-center gap-2">
+              {whatsappNumber && (
+                <a
+                  href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 w-9 flex items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "hsl(var(--muted))" }}
+                >
+                  <MessageCircle className="h-4.5 w-4.5 text-emerald-400" />
+                </a>
+              )}
+              <button
+                onClick={() => shareDriverUrl(brand.id, marketplaceTitle)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl"
+                style={{ backgroundColor: "hsl(var(--muted))" }}
+              >
+                <Share2 className="h-4.5 w-4.5 text-foreground" />
+              </button>
+            </div>
 
           {/* Search Bar — customer style */}
           {searchTerm ? (
