@@ -1,21 +1,23 @@
 
 
-# Plano: Criar seção dedicada "Integrações" no editor da marca
+# Plano: Disponibilizar campo WhatsApp no painel do empreendedor
 
-## O que muda
+## Contexto
+Atualmente, o campo "WhatsApp (Achadinhos)" só existe no `BrandThemeEditor`, acessível pelo Root Admin nas rotas `/brands/:id` e `/platform-theme`. O empreendedor (Brand Admin) não tem acesso a esse campo.
 
-Mover o campo **WhatsApp (Achadinhos)** da seção "Textos" para uma nova seção **"Integrações"** com ícone próprio (`Link` ou `Plug`), posicionada após "Textos" e antes de "Layout & Dimensões". Isso dá mais visibilidade ao campo e prepara a estrutura para futuras integrações.
+## Investigação necessária
+Preciso identificar qual tela/componente o painel do empreendedor usa para configurações de tema/identidade visual da marca, para adicionar o campo lá.
 
-## Alterações
+## Alterações previstas
 
-### 1. `src/components/BrandThemeEditor.tsx`
-- Remover o bloco do WhatsApp (linhas 413-424) da seção "Textos"
-- Adicionar nova seção `Card` com título "Integrações" e ícone `Plug` (lucide-react)
-- Condicionar exibição com `canShow("theme_integrations")`
-- Conteúdo: campo WhatsApp com ícone verde, input e texto auxiliar (igual ao atual)
+### 1. Localizar a tela de configurações do empreendedor
+- Identificar o componente de configurações de marca no console do Brand Admin
+- Verificar se já existe um `BrandThemeEditor` ou equivalente nesse painel
 
-### 2. Imports
-- Adicionar `Plug` ao import de `lucide-react`
+### 2. Adicionar o campo WhatsApp
+- Se o painel do empreendedor já usa `BrandThemeEditor`: garantir que a seção "Integrações" (`theme_integrations`) esteja habilitada via módulos para o Brand Admin
+- Se usa outro componente: adicionar o campo de WhatsApp com a mesma lógica (leitura/gravação em `brand_settings_json.whatsapp_number`)
 
-Nenhuma mudança em tipos, hooks ou banco de dados — apenas reorganização visual.
+### 3. Controle de permissão
+- Garantir que o módulo `theme_integrations` esteja visível para o empreendedor conforme a governança de módulos (customer_facing)
 
