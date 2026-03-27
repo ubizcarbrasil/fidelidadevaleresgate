@@ -64,8 +64,8 @@ function useRealtimeRefresh() {
         queryClient.invalidateQueries({ queryKey: ["redemptions-count"] });
         queryClient.invalidateQueries({ queryKey: ["redemptions-chart"] });
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "earning_events" }, () => {
-        queryClient.invalidateQueries({ queryKey: ["earning_events-count"] });
+      .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["machine_rides-count"] });
         queryClient.invalidateQueries({ queryKey: ["earnings-chart"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
@@ -718,7 +718,7 @@ export default function Dashboard() {
           <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" sparkData={recentEarnings?.map(d => d.count)} />
         </div>
         <div className="animate-slide-up delay-3">
-          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" sparkData={recentEarnings?.map(d => d.count)} />
+          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="primary" sparkData={recentEarnings?.map(d => d.count)} />
         </div>
         <div className="animate-slide-up delay-4">
           <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="violet" sparkData={recentRedemptions?.map(d => d.count)} />
