@@ -834,23 +834,60 @@ export default function MachineIntegrationPage() {
                   />
                 </div>
                 {driverPointsEnabled && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 max-w-xs">
-                      <Label className="text-xs whitespace-nowrap">Percentual</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={driverPointsPercent}
-                        onChange={(e) => setDriverPointsPercent(e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-xs text-muted-foreground">%</span>
+                  <div className="space-y-3">
+                    {/* Mode selector */}
+                    <div className="space-y-1">
+                      <Label className="text-xs">Modo de cálculo</Label>
+                      <Select value={driverPointsMode} onValueChange={setDriverPointsMode}>
+                        <SelectTrigger className="w-full max-w-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PERCENT">Percentual do passageiro</SelectItem>
+                          <SelectItem value="PER_REAL">Pontos por R$ da corrida</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      O motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos creditados ao passageiro.
-                      Ex: passageiro ganha 100 pts → motorista ganha {Math.floor(100 * (Number(driverPointsPercent) || 50) / 100)} pts.
-                    </p>
+
+                    {driverPointsMode === "PERCENT" ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 max-w-xs">
+                          <Label className="text-xs whitespace-nowrap">Percentual</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={driverPointsPercent}
+                            onChange={(e) => setDriverPointsPercent(e.target.value)}
+                            className="w-20"
+                          />
+                          <span className="text-xs text-muted-foreground">%</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          O motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos creditados ao passageiro.
+                          Ex: passageiro ganha 100 pts → motorista ganha {Math.floor(100 * (Number(driverPointsPercent) || 50) / 100)} pts.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 max-w-xs">
+                          <Label className="text-xs whitespace-nowrap">Pontos por R$</Label>
+                          <Input
+                            type="number"
+                            min={0.01}
+                            step={0.1}
+                            value={driverPointsPerReal}
+                            onChange={(e) => setDriverPointsPerReal(e.target.value)}
+                            className="w-24"
+                          />
+                          <span className="text-xs text-muted-foreground">pts/R$</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          O motorista receberá <strong>{driverPointsPerReal || 1} ponto(s)</strong> para cada R$ 1,00 do valor da corrida.
+                          Ex: corrida de R$ 30,00 → motorista ganha {Math.floor(30 * (Number(driverPointsPerReal) || 1))} pts.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-end">
