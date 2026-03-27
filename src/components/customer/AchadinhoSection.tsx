@@ -24,6 +24,7 @@ interface AffiliateDeal {
   category: string | null;
   category_id: string | null;
   created_at?: string;
+  origin?: string | null;
 }
 
 interface DealCategory {
@@ -72,7 +73,7 @@ function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice,
     >
       <div className="relative bg-muted/30">
         {deal.image_url ? (
-          <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
+          <img src={deal.image_url} alt={deal.title} className={`w-full aspect-square ${deal.origin === 'dvlinks' ? 'object-cover' : 'object-contain'}`} loading="lazy" />
         ) : (
           <div className="w-full aspect-square flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
             <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
@@ -129,7 +130,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     queryFn: async () => {
       let dealsQuery = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")

@@ -33,6 +33,7 @@ interface AffiliateDeal {
   store_name: string | null;
   store_logo_url: string | null;
   badge_label: string | null;
+  origin?: string | null;
 }
 
 export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
@@ -49,7 +50,7 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
     queryFn: async () => {
       let q = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, origin")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .eq("category_id", category.id)
@@ -173,7 +174,7 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
                     >
                       <div className="relative bg-muted/30">
                         {deal.image_url ? (
-                          <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
+                          <img src={deal.image_url} alt={deal.title} className={`w-full aspect-square ${deal.origin === 'dvlinks' ? 'object-cover' : 'object-contain'}`} loading="lazy" />
                         ) : (
                           <div className="w-full aspect-square flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
                             <AppIcon iconKey="section_deals" className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
