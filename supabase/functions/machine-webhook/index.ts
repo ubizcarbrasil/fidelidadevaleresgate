@@ -672,6 +672,31 @@ async function processFinalized(
             driver_name: driverName || null,
           }),
         }).catch((e) => logger.error("Telegram notification error", { error: String(e) }));
+
+        // Send driver Telegram notification if driver was scored
+        if (driverPointsCredited > 0) {
+          const driverDisplayName = driverName || `Motorista #${driverId || "?"}`;
+          fetch(`${supabaseUrl}/functions/v1/send-telegram-ride-notification`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({
+              chat_id: integration.telegram_chat_id,
+              customer_name: customerFullName,
+              customer_phone: customerPhone,
+              city_name: resolvedCityName,
+              ride_value: rideValue,
+              points_credited: points,
+              finalized_at: new Date().toISOString(),
+              machine_ride_id: machineRideId,
+              driver_name: driverDisplayName,
+              is_driver_notification: true,
+              driver_points: driverPointsCredited,
+            }),
+          }).catch((e) => logger.error("Telegram driver notification error", { error: String(e) }));
+        }
       } catch (e) {
         logger.error("Telegram notification setup error", { error: String(e) });
       }

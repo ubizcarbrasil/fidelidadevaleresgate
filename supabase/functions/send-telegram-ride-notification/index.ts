@@ -44,6 +44,8 @@ Deno.serve(async (req) => {
       finalized_at,
       machine_ride_id,
       driver_name,
+      is_driver_notification,
+      driver_points,
     } = body;
 
     if (!chat_id) {
@@ -57,20 +59,42 @@ Deno.serve(async (req) => {
       ? new Date(finalized_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
       : new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
-    const message = [
-      "🎯 <b>Nova pontuação por corrida!</b>",
-      "",
-      `👤 Cliente: ${customer_name || "Não identificado"}`,
-      customer_phone ? `📱 Telefone: ${customer_phone}` : null,
-      driver_name ? `🚗 Motorista: ${driver_name}` : null,
-      city_name ? `🏙️ Cidade: ${city_name}` : null,
-      `💰 Valor da corrida: R$ ${Number(ride_value || 0).toFixed(2)}`,
-      `🪙 Pontos creditados: ${points_credited || 0}`,
-      `🕐 Finalizada em: ${dateStr}`,
-      machine_ride_id ? `🔗 ID: #${machine_ride_id}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    let message: string;
+
+    if (is_driver_notification && driver_points) {
+      // Driver notification template
+      message = [
+        "🚗 <b>Motorista pontuado!</b>",
+        "",
+        `👤 Motorista: ${driver_name || "Não identificado"}`,
+        `🪙 Pontos creditados: ${driver_points}`,
+        `💰 Valor da corrida: R$ ${Number(ride_value || 0).toFixed(2)}`,
+        city_name ? `🏙️ Cidade: ${city_name}` : null,
+        `👥 Passageiro: ${customer_name || "Não identificado"}`,
+        customer_phone ? `📱 Tel passageiro: ${customer_phone}` : null,
+        `🎯 Pontos passageiro: ${points_credited || 0}`,
+        `🕐 Finalizada em: ${dateStr}`,
+        machine_ride_id ? `🔗 ID: #${machine_ride_id}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    } else {
+      // Passenger notification template (original)
+      message = [
+        "🎯 <b>Nova pontuação por corrida!</b>",
+        "",
+        `👤 Cliente: ${customer_name || "Não identificado"}`,
+        customer_phone ? `📱 Telefone: ${customer_phone}` : null,
+        driver_name ? `🚗 Motorista: ${driver_name}` : null,
+        city_name ? `🏙️ Cidade: ${city_name}` : null,
+        `💰 Valor da corrida: R$ ${Number(ride_value || 0).toFixed(2)}`,
+        `🪙 Pontos creditados: ${points_credited || 0}`,
+        `🕐 Finalizada em: ${dateStr}`,
+        machine_ride_id ? `🔗 ID: #${machine_ride_id}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
 
     logger.info("Sending Telegram notification", { chat_id, machine_ride_id });
 
