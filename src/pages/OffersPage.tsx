@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Truck } from "lucide-react";
 import DataSkeleton from "@/components/DataSkeleton";
 import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
@@ -180,7 +180,16 @@ export default function OffersPage() {
                 )}
                 {data?.items?.map(o => (
                   <TableRow key={o.id}>
-                    <TableCell className="font-medium">{o.title}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {o.title}
+                        {o.driver_only && (
+                          <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 bg-primary/5 text-primary border-primary/20">
+                            <Truck className="h-3 w-3" /> Motorista
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{(o.stores as any)?.name}</TableCell>
                     <TableCell>{(o.branches as any)?.name}</TableCell>
                     <TableCell>R$ {Number(o.value_rescue).toFixed(2)}</TableCell>
