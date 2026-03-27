@@ -26,6 +26,7 @@ const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard
 const AchadinhosAlerts = lazyWithRetry(() => import("@/components/dashboard/AchadinhosAlerts"));
 const PointsFeed = lazyWithRetry(() => import("@/components/dashboard/PointsFeed"));
 const PendingReportsSection = lazyWithRetry(() => import("@/components/dashboard/PendingReportsSection"));
+const RankingPontuacao = lazyWithRetry(() => import("@/components/dashboard/RankingPontuacao"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -781,6 +782,15 @@ export default function Dashboard() {
         </Card>
         <RankingSection brandFilter={brandFilter} />
       </div>
+
+      {/* ── Ranking de Pontuação (Passageiros + Motoristas) ── */}
+      {showBrand && !isRoot && (
+        <div className="animate-slide-up delay-5">
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <RankingPontuacao brandId={brandFilter} />
+          </Suspense>
+        </div>
+      )}
 
       {/* ── Pontuações em Tempo Real + Achadinhos Alertas ── */}
       {showBrand && !isRoot && (
