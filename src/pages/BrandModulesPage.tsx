@@ -58,6 +58,7 @@ const MODULE_ICONS: Record<string, any> = {
   theme_texts: Type,
   theme_layout: Layers,
   theme_offer_cards: Tag,
+  theme_integrations: Plug,
   users_management: Users,
   approvals: Shield,
   audit: ClipboardList,
