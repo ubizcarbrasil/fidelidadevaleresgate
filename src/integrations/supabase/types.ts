@@ -3399,6 +3399,7 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percent: number | null
+          driver_only: boolean | null
           end_at: string | null
           id: string
           image_url: string | null
@@ -3441,6 +3442,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number | null
+          driver_only?: boolean | null
           end_at?: string | null
           id?: string
           image_url?: string | null
@@ -3483,6 +3485,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number | null
+          driver_only?: boolean | null
           end_at?: string | null
           id?: string
           image_url?: string | null

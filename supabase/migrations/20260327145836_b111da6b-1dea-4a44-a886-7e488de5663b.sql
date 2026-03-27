@@ -1,0 +1,2 @@
+
+ALTER TABLE public.offers ADD COLUMN IF NOT EXISTS driver_only BOOLEAN DEFAULT false;
