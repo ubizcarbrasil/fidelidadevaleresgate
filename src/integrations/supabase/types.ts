@@ -2017,6 +2017,7 @@ export type Database = {
           driver_cycle_start: string | null
           driver_monthly_ride_count: number | null
           email: string | null
+          external_driver_id: string | null
           id: string
           is_active: boolean
           money_balance: number
@@ -2038,6 +2039,7 @@ export type Database = {
           driver_cycle_start?: string | null
           driver_monthly_ride_count?: number | null
           email?: string | null
+          external_driver_id?: string | null
           id?: string
           is_active?: boolean
           money_balance?: number
@@ -2059,6 +2061,7 @@ export type Database = {
           driver_cycle_start?: string | null
           driver_monthly_ride_count?: number | null
           email?: string | null
+          external_driver_id?: string | null
           id?: string
           is_active?: boolean
           money_balance?: number
