@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useCustomer } from "@/contexts/CustomerContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useBrand } from "@/contexts/BrandContext";
@@ -18,6 +19,7 @@ type OfferWithStore = Tables<"offers"> & {
 
 export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
+  const { isDriver } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
   const { formatSubtitle } = useOfferCardConfig();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -54,7 +56,7 @@ export default function ForYouSection() {
   });
 
   // Filter driver-only offers for non-drivers
-  const offers = rawOffers.filter((o) => !(o as any).driver_only);
+  const offers = isDriver ? rawOffers : rawOffers.filter((o) => !(o as any).driver_only);
 
   if (loading) {
     return (
