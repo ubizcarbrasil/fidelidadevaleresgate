@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle } from "lucide-react";
+import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle, Plug } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
@@ -410,7 +410,20 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
               placeholder="© 2026 Minha Marca. Todos os direitos reservados."
             />
           </div>
-          <div className="space-y-2 mt-4">
+        </CardContent>
+      </Card>
+      )}
+
+      {/* Integrações */}
+      {canShow("theme_integrations") && (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Plug className="h-4 w-4" /> Integrações
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
             <Label className="text-xs flex items-center gap-1.5">
               <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />
               WhatsApp (Achadinhos)
