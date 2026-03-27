@@ -132,8 +132,12 @@ export default function CustomerLayout() {
   const { unreadCount } = useCustomerNotifications();
 
   const filteredTabs = useMemo(() =>
-    TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
-    [isModuleEnabled]
+    TABS.filter(t => {
+      if (t.driverOnly && !isDriver) return false;
+      if (t.moduleKey && !isModuleEnabled(t.moduleKey)) return false;
+      return true;
+    }),
+    [isModuleEnabled, isDriver]
   );
 
   // Auto-hide header on scroll down, show on scroll up
