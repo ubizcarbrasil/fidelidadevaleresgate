@@ -593,27 +593,23 @@ export default function Dashboard() {
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
   const { data: motoristasTotal } = useMetric("customers", true, (q) => q.ilike("name", "%[MOTORISTA]%"), "motoristas", brandFilter);
 
-  // Soma de pontos motoristas e clientes
-  const { data: pontosMotoristas } = useQuery({
-    queryKey: ["pontos-motoristas", brandFilter ?? "global"],
+  // Soma de pontos motoristas e clientes via RPC
+  const { data: pontosSummary } = useQuery({
+    queryKey: ["pontos-summary", brandFilter ?? "global"],
     queryFn: async () => {
-      let q = fromTable("machine_rides").select("driver_points_credited").eq("ride_status", "FINALIZED");
-      if (brandFilter) q = q.eq("brand_id", brandFilter);
-      q = q.limit(5000);
-      const { data: rows } = await q;
-      return (rows || []).reduce((sum, r: any) => sum + (r.driver_points_credited || 0), 0);
+      if (!brandFilter) return { driver_points_total: 0, client_points_total: 0 };
+      const { data, error } = await supabase.rpc("get_points_summary", { p_brand_id: brandFilter } as any);
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        driver_points_total: Number(row?.driver_points_total ?? 0),
+        client_points_total: Number(row?.client_points_total ?? 0),
+      };
     },
+    enabled: !!brandFilter,
   });
-  const { data: pontosClientes } = useQuery({
-    queryKey: ["pontos-clientes", brandFilter ?? "global"],
-    queryFn: async () => {
-      let q = fromTable("machine_rides").select("points_credited").eq("ride_status", "FINALIZED");
-      if (brandFilter) q = q.eq("brand_id", brandFilter);
-      q = q.limit(5000);
-      const { data: rows } = await q;
-      return (rows || []).reduce((sum, r: any) => sum + (r.points_credited || 0), 0);
-    },
-  });
+  const pontosMotoristas = pontosSummary?.driver_points_total;
+  const pontosClientes = pontosSummary?.client_points_total;
 
   // Optimized: single query per table instead of N queries per day
   const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any) => {
