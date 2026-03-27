@@ -49,12 +49,14 @@ export default function OffersPage() {
   }, [isRootAdmin, currentBrandId]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["offers", debouncedSearch, page, currentBrandId],
+    queryKey: ["offers", debouncedSearch, page, currentBrandId, filtroMotorista],
     enabled: !!currentBrandId || isRootAdmin,
     queryFn: async () => {
       let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
+      if (filtroMotorista === "driver_only") query = query.eq("driver_only", true);
+      else if (filtroMotorista === "customer_only") query = query.eq("driver_only", false);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
