@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 import {
   Search, Eye, Loader2, Coins, ArrowUpRight, ArrowDownRight,
-  User, Phone, Mail, CreditCard, Hash, Download, Truck, Gift,
+  User, Phone, Mail, CreditCard, Hash, Download, Truck, Gift, Link2, Unlink,
 } from "lucide-react";
 import ManualDriverScoringDialog from "./ManualDriverScoringDialog";
 
@@ -39,7 +41,11 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
   const [search, setSearch] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<ScoredDriver | null>(null);
   const [bonusDriver, setBonusDriver] = useState<ScoredDriver | null>(null);
+  const [linkDriver, setLinkDriver] = useState<ScoredDriver | null>(null);
+  const [linkEmail, setLinkEmail] = useState("");
   const debouncedSearch = useDebounce(search, 400);
+  const queryClient = useQueryClient();
+  const debouncedLinkEmail = useDebounce(linkEmail, 400);
 
   /* ── Query: customers with [MOTORISTA] tag ── */
   const { data: drivers, isLoading } = useQuery({
@@ -118,6 +124,63 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
       return (data || []) as LedgerEntry[];
     },
     enabled: !!selectedDriver?.id,
+  });
+
+  /* ── Query: search users by email for linking ── */
+  const { data: foundUsers, isLoading: usersLoading } = useQuery({
+    queryKey: ["link-user-search", debouncedLinkEmail],
+    queryFn: async () => {
+      const term = debouncedLinkEmail.trim();
+      if (term.length < 3) return [];
+      const { data, error } = await (supabase as any)
+        .from("profiles")
+        .select("id, email, full_name")
+        .ilike("email", `%${term}%`)
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as { id: string; email: string; full_name: string | null }[];
+    },
+    enabled: !!linkDriver && debouncedLinkEmail.trim().length >= 3,
+  });
+
+  /* ── Mutation: link user_id to driver ── */
+  const linkMutation = useMutation({
+    mutationFn: async ({ driverId, userId }: { driverId: string; userId: string }) => {
+      const { error } = await supabase
+        .from("customers")
+        .update({ user_id: userId } as any)
+        .eq("id", driverId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Conta vinculada!", description: "O motorista agora pode acessar o app." });
+      queryClient.invalidateQueries({ queryKey: ["scored-drivers"] });
+      setLinkDriver(null);
+      setLinkEmail("");
+      setSelectedDriver(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao vincular", description: err.message, variant: "destructive" });
+    },
+  });
+
+  /* ── Mutation: unlink user_id from driver ── */
+  const unlinkMutation = useMutation({
+    mutationFn: async (driverId: string) => {
+      const { error } = await supabase
+        .from("customers")
+        .update({ user_id: null } as any)
+        .eq("id", driverId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Conta desvinculada" });
+      queryClient.invalidateQueries({ queryKey: ["scored-drivers"] });
+      setSelectedDriver(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao desvincular", description: err.message, variant: "destructive" });
+    },
   });
 
   const maskCpf = (cpf: string | null) => {
@@ -289,7 +352,45 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
                 </div>
               </div>
 
-              <div>
+              {/* ── Link / Unlink user account ── */}
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Conta vinculada</span>
+                  {selectedDriver.user_id ? (
+                    <Badge variant="secondary" className="text-xs">
+                      <Link2 className="h-3 w-3 mr-1" />
+                      {selectedDriver.user_id.slice(0, 8)}...
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      Sem vínculo
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!selectedDriver.user_id ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => { setLinkDriver(selectedDriver); setLinkEmail(""); }}
+                    >
+                      <Link2 className="h-3.5 w-3.5 mr-1" />
+                      Vincular conta
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="w-full"
+                      disabled={unlinkMutation.isPending}
+                      onClick={() => unlinkMutation.mutate(selectedDriver.id)}
+                    >
+                      <Unlink className="h-3.5 w-3.5 mr-1" />
+                      {unlinkMutation.isPending ? "Desvinculando..." : "Desvincular"}
+                    </Button>
+                  )}
+                </div>
                 <h4 className="text-sm font-semibold mb-2">Extrato da carteira</h4>
                 <ScrollArea className="h-[calc(100vh-420px)]">
                   {ledgerLoading ? (
@@ -347,6 +448,77 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
         driver={bonusDriver}
         brandId={brandId}
       />
+
+      {/* ── Link User Dialog ── */}
+      <Dialog open={!!linkDriver} onOpenChange={(open) => { if (!open) { setLinkDriver(null); setLinkEmail(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-5 w-5" />
+              Vincular conta ao motorista
+            </DialogTitle>
+            <DialogDescription>
+              Busque pelo e-mail do usuário cadastrado para vincular ao motorista{" "}
+              <strong>{linkDriver ? cleanDriverName(linkDriver.name) : ""}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={linkEmail}
+                onChange={(e) => setLinkEmail(e.target.value)}
+                placeholder="Digite o e-mail do usuário..."
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+
+            <ScrollArea className="h-48">
+              {usersLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : !foundUsers || foundUsers.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  {debouncedLinkEmail.trim().length < 3
+                    ? "Digite pelo menos 3 caracteres"
+                    : "Nenhum usuário encontrado"}
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {foundUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      className="flex items-center gap-3 rounded-md border border-border px-3 py-2 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</div>
+                        <div className="text-xs text-muted-foreground truncate">{u.email}</div>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={linkMutation.isPending}
+                        onClick={() => linkDriver && linkMutation.mutate({ driverId: linkDriver.id, userId: u.id })}
+                      >
+                        {linkMutation.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <Link2 className="h-3.5 w-3.5 mr-1" />
+                            Vincular
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
