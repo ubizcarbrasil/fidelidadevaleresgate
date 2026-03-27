@@ -1,23 +1,21 @@
 
 
-# Plano: Adicionar campo de WhatsApp no editor da marca
+# Plano: Criar seção dedicada "Integrações" no editor da marca
 
-## Problema
-O botão de WhatsApp nos Achadinhos lê `brand_settings_json.whatsapp_number`, mas não existe nenhum campo no painel para cadastrar esse número.
+## O que muda
 
-## Solução
-Adicionar um campo "WhatsApp dos Achadinhos" no `BrandThemeEditor.tsx`, na seção de imagens/identidade (onde já ficam logo e favicon), para que o admin da marca configure o número.
+Mover o campo **WhatsApp (Achadinhos)** da seção "Textos" para uma nova seção **"Integrações"** com ícone próprio (`Link` ou `Plug`), posicionada após "Textos" e antes de "Layout & Dimensões". Isso dá mais visibilidade ao campo e prepara a estrutura para futuras integrações.
 
 ## Alterações
 
 ### 1. `src/components/BrandThemeEditor.tsx`
-- Adicionar um campo `Input` com label "WhatsApp (Achadinhos)" e placeholder "5511999999999"
-- O campo lê/grava em `value.whatsapp_number` / `update({ whatsapp_number: ... })`
-- Posicionar na seção de identidade visual, próximo ao logo
-- Incluir ícone `MessageCircle` no label para clareza
+- Remover o bloco do WhatsApp (linhas 413-424) da seção "Textos"
+- Adicionar nova seção `Card` com título "Integrações" e ícone `Plug` (lucide-react)
+- Condicionar exibição com `canShow("theme_integrations")`
+- Conteúdo: campo WhatsApp com ícone verde, input e texto auxiliar (igual ao atual)
 
-### 2. `src/hooks/useBrandTheme.ts` (se necessário)
-- Verificar se o tipo `BrandTheme` aceita campos extras ou se precisa adicionar `whatsapp_number?: string`
+### 2. Imports
+- Adicionar `Plug` ao import de `lucide-react`
 
-Após salvar, o número ficará disponível automaticamente no `brand_settings_json` e o botão nos Achadinhos funcionará.
+Nenhuma mudança em tipos, hooks ou banco de dados — apenas reorganização visual.
 
