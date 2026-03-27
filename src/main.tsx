@@ -1,7 +1,7 @@
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
-import { setBootPhase } from "@/lib/bootState";
+import { setBootPhase } from "@/lib/bootStateCore";
 
 // Marcador precoce — executa assim que os imports leves resolvem
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
@@ -68,15 +68,7 @@ async function cleanupServiceWorkers() {
   }
 }
 
-if (
-  typeof window !== "undefined" &&
-  (window.location.pathname === "/index" ||
-    window.location.pathname === "/index.html" ||
-    window.location.pathname === "/index/")
-) {
-  const newUrl = "/" + window.location.search + window.location.hash;
-  window.history.replaceState(null, "", newUrl);
-}
+// /index normalization moved to index.html loader
 
 void cleanupServiceWorkers();
 initErrorTracker();

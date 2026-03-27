@@ -118,7 +118,41 @@
       },12000);
     </script>
 
-    <script>window.__BOOT_PHASE__="ENTRY_LOADING";</script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.__BOOT_PHASE__="ENTRY_LOADING";
+
+      /* Normalização de /index → / antes do import */
+      (function(){
+        var p=window.location.pathname;
+        if(p==="/index"||p==="/index.html"||p==="/index/"){
+          window.history.replaceState(null,"","/"+window.location.search+window.location.hash);
+        }
+      })();
+    </script>
+    <script type="module">
+      import("/src/main.tsx").then(function(){
+        /* ok — main.tsx assume o controle */
+      }).catch(function(err){
+        window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
+        console.error("[boot] entrypoint import failed",err);
+
+        /* Single-attempt cache-busting reload */
+        if(!sessionStorage.getItem("__boot_retry")){
+          sessionStorage.setItem("__boot_retry","1");
+          window.location.reload();
+        } else {
+          sessionStorage.removeItem("__boot_retry");
+          var spinner=document.getElementById("bootstrap-spinner");
+          var errDiv=document.getElementById("bootstrap-error");
+          if(spinner)spinner.style.display="none";
+          if(errDiv){
+            errDiv.style.display="block";
+            errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Fase: ENTRY_IMPORT_FAILED</p>'
+              +'<p style="margin:0 0 12px;font-size:14px;">Falha ao carregar a aplicação.</p>'
+              +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
+          }
+        }
+      });
+    </script>
   </body>
 </html>
