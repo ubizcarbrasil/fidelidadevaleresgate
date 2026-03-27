@@ -46,6 +46,8 @@ Deno.serve(async (req) => {
       driver_name,
       is_driver_notification,
       driver_points,
+      driver_monthly_rides,
+      driver_volume_tier,
     } = body;
 
     if (!chat_id) {

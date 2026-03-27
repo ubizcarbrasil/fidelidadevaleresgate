@@ -782,6 +782,8 @@ async function processFinalized(
               driver_name: driverDisplayName,
               is_driver_notification: true,
               driver_points: driverPointsCredited,
+              driver_monthly_rides: driverMonthlyRides,
+              driver_volume_tier: driverVolumeTierLabel,
             }),
           }).catch((e) => logger.error("Telegram driver notification error", { error: String(e) }));
         }
