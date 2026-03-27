@@ -518,8 +518,7 @@ async function processFinalized(
 
     if (driverPoints !== 0) {
       // Fetch driver details from TaxiMachine API (only if we have driverId)
-      const driverHeaders = matrixHeaders ?? cityHeaders;
-      const driverDetails = driverId ? await fetchDriverDetails(driverId, driverHeaders) : { name: null, cpf: null, phone: null, email: null };
+      const driverDetails = driverId ? await fetchDriverDetails(driverId, matrixHeaders ?? cityHeaders, cityHeaders) : { name: null, cpf: null, phone: null, email: null };
       const driverDisplayName = driverDetails.name || driverName || (driverId ? `Motorista #${driverId}` : `Motorista corrida #${machineRideId}`);
       const driverTag = integration.driver_customer_tag || "MOTORISTA";
 

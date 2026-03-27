@@ -155,37 +155,40 @@ export async function fetchClientDetails(
 }
 
 /**
- * Fetch driver details from TaxiMachine /api/integracao/condutor endpoint.
- * Returns CPF, phone, email and name of the driver.
+ * Internal helper: call /api/integracao/condutor and parse the response.
+ * Returns the parsed DriverDetails or null if the response was empty/failed.
  */
-export async function fetchDriverDetails(
+async function tryFetchDriver(
   driverId: string,
-  matrixHeaders: Record<string, string>
-): Promise<DriverDetails> {
+  headers: Record<string, string>,
+  authLabel: string
+): Promise<DriverDetails | null> {
   const url = `${API_BASE_URL}/api/integracao/condutor?id=${driverId}`;
-  logger.info("Fetching driver details", { driverId, url });
+  logger.info("Fetching driver details", { driverId, url, authLabel });
 
   try {
-    const res = await fetch(url, { headers: matrixHeaders });
+    const res = await fetch(url, { headers });
     if (!res.ok) {
       const body = await res.text();
-      logger.warn("Driver details fetch failed", { driverId, status: res.status, body: body.slice(0, 300) });
-      return { cpf: null, phone: null, email: null, name: null };
+      logger.warn("Driver details fetch failed", { driverId, authLabel, status: res.status, body: body.slice(0, 300) });
+      return null;
     }
 
     const json = await res.json();
-    // Response format: [{ success: true, response: [{ id, nome, cpf, telefone, email, ... }] }]
+    // Log raw response for debugging
+    logger.info("Driver details raw response", { driverId, authLabel, raw: JSON.stringify(json).slice(0, 500) });
+
     const item = Array.isArray(json) ? json[0] : json;
     if (item?.success === false) {
-      logger.warn("Driver details returned success=false", { driverId });
-      return { cpf: null, phone: null, email: null, name: null };
+      logger.warn("Driver details returned success=false", { driverId, authLabel });
+      return null;
     }
 
     const responseArr = item?.response;
     const driver = Array.isArray(responseArr) ? responseArr[0] : responseArr;
     if (!driver) {
-      logger.warn("Driver details response empty", { driverId });
-      return { cpf: null, phone: null, email: null, name: null };
+      logger.warn("Driver details response empty", { driverId, authLabel });
+      return null;
     }
 
     const cpf = (driver.cpf || "").replace(/\D/g, "") || null;
@@ -193,12 +196,44 @@ export async function fetchDriverDetails(
     const email = driver.email || null;
     const name = driver.nome || null;
 
-    logger.info("Driver details fetched", { driverId, hasPhone: !!phone, hasEmail: !!email, hasCpf: !!cpf, name });
+    logger.info("Driver details fetched", { driverId, authLabel, hasPhone: !!phone, hasEmail: !!email, hasCpf: !!cpf, name });
     return { cpf, phone, email, name };
   } catch (e) {
-    logger.warn("Driver details fetch exception", { driverId, error: String(e) });
-    return { cpf: null, phone: null, email: null, name: null };
+    logger.warn("Driver details fetch exception", { driverId, authLabel, error: String(e) });
+    return null;
   }
+}
+
+/**
+ * Fetch driver details from TaxiMachine /api/integracao/condutor endpoint.
+ * Tries matrixHeaders first, falls back to cityHeaders if response is empty.
+ * Returns CPF, phone, email and name of the driver.
+ */
+export async function fetchDriverDetails(
+  driverId: string,
+  matrixHeaders: Record<string, string>,
+  cityHeaders?: Record<string, string>
+): Promise<DriverDetails> {
+  const empty: DriverDetails = { cpf: null, phone: null, email: null, name: null };
+
+  // 1. Try with matrix headers
+  const matrixResult = await tryFetchDriver(driverId, matrixHeaders, "matrix");
+  if (matrixResult) {
+    logger.info("Driver details resolved", { driverId, strategy: "matrix" });
+    return matrixResult;
+  }
+
+  // 2. Fallback to city headers if available and different
+  if (cityHeaders && cityHeaders["api-key"] !== matrixHeaders["api-key"]) {
+    const cityResult = await tryFetchDriver(driverId, cityHeaders, "city");
+    if (cityResult) {
+      logger.info("Driver details resolved", { driverId, strategy: "matrix_then_city" });
+      return cityResult;
+    }
+    logger.warn("Driver details empty with both matrix and city headers", { driverId });
+  }
+
+  return empty;
 }
 
 export function buildApiHeaders(
