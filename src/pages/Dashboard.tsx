@@ -64,8 +64,8 @@ function useRealtimeRefresh() {
         queryClient.invalidateQueries({ queryKey: ["redemptions-count"] });
         queryClient.invalidateQueries({ queryKey: ["redemptions-chart"] });
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "earning_events" }, () => {
-        queryClient.invalidateQueries({ queryKey: ["earning_events-count"] });
+      .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["machine_rides-count"] });
         queryClient.invalidateQueries({ queryKey: ["earnings-chart"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
@@ -583,15 +583,16 @@ export default function Dashboard() {
   const { data: vouchersTotal } = useMetric("vouchers", true, undefined, undefined, brandFilter);
   const { data: usersCount } = useMetric("profiles", showBrand);
   const { data: storeRulesPending } = useMetric("store_points_rules", true, (q) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
-  const { data: earningEventsTotal } = useMetric("earning_events", true, undefined, undefined, brandFilter);
-  const { data: earningEventsPeriod } = useMetric("earning_events", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
+  const { data: earningEventsTotal } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINISHED"), "finished", brandFilter);
+  const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINISHED").gte("created_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
   // Optimized: single query per table instead of N queries per day
-  const fetchChartData = useCallback(async (table: string) => {
+  const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any) => {
     const startDate = getPeriodStart(period);
     let q = fromTable(table).select("created_at").gte("created_at", startDate.toISOString());
     if (brandFilter) q = q.eq("brand_id", brandFilter);
+    if (extraFilter) q = extraFilter(q);
     q = q.order("created_at", { ascending: true }).limit(5000);
     const { data: rows } = await q;
 
@@ -623,7 +624,7 @@ export default function Dashboard() {
   });
   const { data: recentEarnings } = useQuery({
     queryKey: ["earnings-chart", period, brandFilter ?? "global"],
-    queryFn: () => fetchChartData("earning_events"),
+    queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINISHED")),
   });
 
   // Combined chart data
@@ -717,7 +718,7 @@ export default function Dashboard() {
           <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" sparkData={recentEarnings?.map(d => d.count)} />
         </div>
         <div className="animate-slide-up delay-3">
-          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="warning" sparkData={recentEarnings?.map(d => d.count)} />
+          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="primary" sparkData={recentEarnings?.map(d => d.count)} />
         </div>
         <div className="animate-slide-up delay-4">
           <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="violet" sparkData={recentRedemptions?.map(d => d.count)} />
