@@ -52,7 +52,7 @@ const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, co
         </div>
         {sparkData && sparkData.length > 1 && (
           <div className="absolute bottom-0 left-0 right-0 h-12 opacity-40">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={48} minWidth={0} minHeight={0}>
               <AreaChart data={sparkData.map((v, i) => ({ v, i }))} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
