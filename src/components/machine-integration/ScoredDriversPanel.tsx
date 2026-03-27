@@ -352,7 +352,45 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
                 </div>
               </div>
 
-              <div>
+              {/* ── Link / Unlink user account ── */}
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Conta vinculada</span>
+                  {selectedDriver.user_id ? (
+                    <Badge variant="secondary" className="text-xs">
+                      <Link2 className="h-3 w-3 mr-1" />
+                      {selectedDriver.user_id.slice(0, 8)}...
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      Sem vínculo
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!selectedDriver.user_id ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => { setLinkDriver(selectedDriver); setLinkEmail(""); }}
+                    >
+                      <Link2 className="h-3.5 w-3.5 mr-1" />
+                      Vincular conta
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="w-full"
+                      disabled={unlinkMutation.isPending}
+                      onClick={() => unlinkMutation.mutate(selectedDriver.id)}
+                    >
+                      <Unlink className="h-3.5 w-3.5 mr-1" />
+                      {unlinkMutation.isPending ? "Desvinculando..." : "Desvincular"}
+                    </Button>
+                  )}
+                </div>
                 <h4 className="text-sm font-semibold mb-2">Extrato da carteira</h4>
                 <ScrollArea className="h-[calc(100vh-420px)]">
                   {ledgerLoading ? (
