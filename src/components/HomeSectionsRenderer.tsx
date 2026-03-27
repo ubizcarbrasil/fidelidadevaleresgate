@@ -223,13 +223,14 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
 
   // Filter sections based on props, audience, and deduplicate by title
   const filteredSections = sections.filter((s) => {
-    const isBanner = s.section_templates?.type === "BANNER_CAROUSEL";
-    if (renderBannersOnly) return isBanner;
-    if (skipBanners) return !isBanner;
-    // Audience filter
+    // Audience filter applies to all sections
     const audience = s.audience || "all";
     if (audience === "driver_only" && !isDriver) return false;
     if (audience === "customer_only" && isDriver) return false;
+    // Type filter
+    const isBanner = s.section_templates?.type === "BANNER_CAROUSEL";
+    if (renderBannersOnly) return isBanner;
+    if (skipBanners) return !isBanner;
     return true;
   });
 
