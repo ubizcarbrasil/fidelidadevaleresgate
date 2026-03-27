@@ -35,11 +35,9 @@ export default function ReportarOfertaDialog({ open, onOpenChange, dealId }: Pro
 
     setEnviando(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       const { error } = await supabase.from("offer_reports").insert({
         offer_id: dealId,
-        user_id: user?.id || null,
+        user_id: null,
         reason: motivo,
         note: observacao || null,
         status: "pending",

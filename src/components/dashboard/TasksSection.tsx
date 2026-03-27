@@ -54,6 +54,15 @@ export default function TasksSection() {
     staleTime: 30_000,
   });
 
+  const { data: pendingReports } = useQuery({
+    queryKey: ["tasks-pending-reports-count", currentBrandId ?? "global"],
+    queryFn: async () => {
+      const { count } = await supabase.from("offer_reports").select("*", { count: "exact", head: true }).eq("status", "pending");
+      return count || 0;
+    },
+    staleTime: 30_000,
+  });
+
   const isLoading = pendingRedemptions === undefined && pendingStores === undefined;
 
   const tasks: TaskItem[] = [
@@ -80,6 +89,14 @@ export default function TasksSection() {
       statusClass: "saas-badge-info",
       statusLabel: "Em análise",
       href: "/approve-store-rules",
+    }] : []),
+    ...(pendingReports && pendingReports > 0 ? [{
+      label: "Denúncias de ofertas pendentes",
+      count: pendingReports,
+      icon: AlertTriangle,
+      statusClass: "saas-badge-warning",
+      statusLabel: "Pendente",
+      href: "/offer-governance",
     }] : []),
   ];
 
