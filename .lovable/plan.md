@@ -1,74 +1,49 @@
 
 
-## Auto-vinculação de motorista ao login no PWA
+## Criar conta de teste de motorista + exibir no Dashboard
 
-### Problema
-Quando o webhook cria um motorista automaticamente, o registro `customers` fica **sem `user_id`**. Quando esse motorista faz login no PWA, o `CustomerContext` não encontra nenhum customer com seu `user_id` e cria um registro novo — perdendo o saldo de pontos e histórico.
+### O que será feito
 
-### Solução
-No `CustomerContext.tsx`, antes de criar um novo customer, buscar registros `[MOTORISTA]` sem `user_id` que correspondam por **email**, **telefone** ou **CPF**. Se encontrar, vincular o `user_id` e retornar esse registro.
+1. **Criar conta real de motorista via edge function** — Adicionarei a criação de um 4º usuário de teste (motorista) na edge function `provision-brand` (e `provision-trial`), com e-mail no padrão `motorista@{slug}.test` e senha `123456`. Esse usuário terá um registro `customers` com a tag `[MOTORISTA]` e role `customer`.
 
-### Fluxo
+2. **Atualizar `test_accounts` na brand** — O array `test_accounts` no `brand_settings_json` passará a incluir `{ email: motoristaEmail, role: "driver", is_active: true }`.
 
-```text
-Login no PWA
-  ↓
-CustomerContext.queryFn
-  ↓
-1. Busca customer com user_id (fluxo atual) → encontrou? retorna
-  ↓
-2. [NOVO] Busca customer sem user_id, com tag [MOTORISTA], 
-   matching por email OU phone OU cpf
-  ↓
-   Encontrou? → UPDATE user_id = auth.uid → retorna registro vinculado
-  ↓
-3. Auto-create (fluxo atual, para clientes normais)
-```
+3. **Atualizar o Dashboard** — Adicionar `driver: "Motorista"` no `roleLabel` e `driver: "🚗"` no `roleIcon` para que o card "Acessos de Teste" exiba corretamente a conta do motorista.
 
-### Implementação
+4. **Adicionar link do Dashboard do Motorista** — No card de cada conta com role `driver`, incluir um botão direto para abrir o PWA do cliente (onde a aba Motorista aparece automaticamente).
 
-#### Arquivo: `src/contexts/CustomerContext.tsx`
+5. **Inserir a conta de teste na brand atual** — Como a brand já foi provisionada, usarei o insert tool para criar o usuário auth, profile, customer `[MOTORISTA]` e atualizar o `brand_settings_json.test_accounts` da brand existente.
 
-Após a busca por `user_id` retornar vazio (linha ~57), adicionar bloco de auto-vinculação:
-
-```typescript
-// Tentar vincular motorista órfão por email/phone/cpf
-const userEmail = user!.email;
-const userPhone = user!.user_metadata?.phone || null;
-
-// Buscar motoristas sem user_id nesta brand
-let orphanQuery = supabase
-  .from("customers")
-  .select("*")
-  .eq("brand_id", brand!.id)
-  .is("user_id", null)
-  .ilike("name", "%[MOTORISTA]%");
-
-// Construir filtro OR por email/phone
-const orFilters: string[] = [];
-if (userEmail) orFilters.push(`email.eq.${userEmail}`);
-if (userPhone) orFilters.push(`phone.eq.${userPhone}`);
-
-if (orFilters.length > 0) {
-  const { data: orphans } = await orphanQuery.or(orFilters.join(","));
-  const match = orphans?.[0];
-  if (match) {
-    const { data: linked } = await supabase
-      .from("customers")
-      .update({ user_id: user!.id, branch_id: selectedBranch!.id })
-      .eq("id", match.id)
-      .select("*")
-      .maybeSingle();
-    return linked || match;
-  }
-}
-```
-
-Nenhuma migration necessária — usa apenas colunas existentes (`email`, `phone`, `user_id`, `name`).
-
-### Arquivo afetado
+### Arquivos afetados
 
 | Arquivo | Ação |
 |---------|------|
-| `src/contexts/CustomerContext.tsx` | Adicionar busca por motorista órfão antes do auto-create |
+| `src/pages/Dashboard.tsx` | Adicionar role `driver` nos mapas de label/icon + botão de link para PWA motorista |
+| `supabase/functions/provision-brand/index.ts` | Criar 4ª conta de teste (motorista) no fluxo de provisão |
+| `supabase/functions/provision-trial/index.ts` | Idem para trial |
+| SQL (insert tool) | Criar usuário, profile, customer [MOTORISTA] e atualizar test_accounts na brand atual |
+
+### Detalhes técnicos
+
+**Dashboard (`BrandQuickLinks`):**
+```typescript
+const roleLabel = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista" };
+const roleIcon = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗" };
+```
+
+No card do motorista, além do botão "Copiar", adicionar botão para abrir o app do cliente (onde a aba Motorista aparece):
+```typescript
+{acc.role === "driver" && (
+  <Button variant="outline" size="sm" className="h-7 text-xs w-full gap-1" 
+    onClick={() => openExternal(`${origin}/customer-preview?brandId=${currentBrandId}`)}>
+    <ExternalLink className="h-3 w-3" /> Abrir como Motorista
+  </Button>
+)}
+```
+
+**Provisão (provision-brand + provision-trial):**
+- Criar `motoristaEmail = motorista@${slug}.test`
+- Criar usuário auth com `supabaseAdmin.auth.admin.createUser()`
+- Criar customer com `name: "[MOTORISTA] Motorista Teste"`, `brand_id`, `branch_id`
+- Adicionar ao array `test_accounts`
 
