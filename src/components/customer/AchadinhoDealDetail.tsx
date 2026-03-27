@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Share2, Tag, AlertTriangle } from "lucide-react";

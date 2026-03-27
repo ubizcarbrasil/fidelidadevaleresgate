@@ -6,6 +6,7 @@ import {
   ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandInfo } from "@/hooks/useBrandName";
@@ -145,6 +146,8 @@ function CollapsibleGroup({
   getLabel,
   badges,
   brandId,
+  isOpen,
+  onToggle,
 }: {
   label: string;
   items: MenuItem[];
@@ -153,16 +156,13 @@ function CollapsibleGroup({
   getLabel: (key: string) => string;
   badges: Record<string, number>;
   brandId?: string;
+  isOpen: boolean;
+  onToggle: () => void;
 }) {
   const { setOpenMobile } = useSidebar();
-  const hasActiveRoute = items.some(
-    (item) =>
-      location.pathname === item.url ||
-      (item.url !== "/" && location.pathname.startsWith(item.url))
-  );
 
   return (
-    <Collapsible defaultOpen={hasActiveRoute} className="group/collapsible">
+    <Collapsible open={isOpen} onOpenChange={onToggle} className="group/collapsible">
       {/* Gradient separator between groups */}
       <div className="gradient-separator mx-3" />
       <SidebarGroup className="py-0">
@@ -222,6 +222,7 @@ export function BrandSidebar() {
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
   const badges = useSidebarBadges();
+  const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
 
   const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
 
@@ -237,6 +238,13 @@ export function BrandSidebar() {
       .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
       .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? "")),
   }));
+
+  // Auto-open the group containing the active route
+  const activeGroupLabel = resolvedGroups.find(g =>
+    g.items.some(item => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url)))
+  )?.label || null;
+
+  const effectiveOpenGroup = openGroupLabel ?? activeGroupLabel;
 
   const initials = user?.email
     ? user.email.substring(0, 2).toUpperCase()
@@ -301,6 +309,8 @@ export function BrandSidebar() {
               getLabel={getLabel}
               badges={badges}
               brandId={currentBrandId ?? undefined}
+              isOpen={effectiveOpenGroup === group.label}
+              onToggle={() => setOpenGroupLabel((prev: string | null) => prev === group.label ? null : group.label)}
             />
           );
         })}
