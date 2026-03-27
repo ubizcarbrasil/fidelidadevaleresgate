@@ -1,8 +1,11 @@
-import { createRoot } from "react-dom/client";
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
 import { setBootPhase } from "@/lib/bootState";
+
+// Marcador precoce — executa assim que os imports leves resolvem
+(window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
+console.info("[boot] MAIN_MODULE_START");
 
 function showBootstrapError(message = "Falha ao carregar a aplicação.") {
   const spinner = document.getElementById("bootstrap-spinner");
@@ -105,9 +108,9 @@ async function bootstrap() {
     const rootEl = document.getElementById("root");
     if (!rootEl) throw new Error("Root element not found");
 
-    const [{ default: App }] = await Promise.all([
+    const [{ createRoot }, { default: App }] = await Promise.all([
+      import("react-dom/client"),
       import("./App.tsx"),
-      Promise.resolve(),
     ]);
 
     createRoot(rootEl).render(<App />);
