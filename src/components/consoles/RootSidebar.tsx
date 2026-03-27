@@ -2,7 +2,9 @@ import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
   ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
   TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen, Crown, Car, ExternalLink,
+  Shield as ShieldIcon2,
 } from "lucide-react";
+// Note: Shield is already imported via ShieldCheck pattern. We use Shield directly below.
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,6 +88,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: Copy },
+      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { key: "sidebar.gg_store_summary", defaultTitle: "Resumo Cashback", url: "/ganha-ganha-store-summary", icon: Handshake },
       { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine },

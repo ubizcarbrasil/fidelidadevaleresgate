@@ -9,7 +9,6 @@ import GovernanceGroupsTable from "@/components/offer-governance/GovernanceGroup
 import GovernanceSyncLogs from "@/components/offer-governance/GovernanceSyncLogs";
 import GovernanceCleanup from "@/components/offer-governance/GovernanceCleanup";
 import PageHeader from "@/components/PageHeader";
-import { Shield } from "lucide-react";
 
 export default function OfferGovernancePage() {
   const { currentBrandId } = useBrandGuard();
@@ -22,8 +21,7 @@ export default function OfferGovernancePage() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="Governança de Ofertas"
-        subtitle="Controle completo de ofertas espelhadas por origem"
-        icon={Shield}
+        description="Controle completo de ofertas espelhadas por origem"
       />
 
       {/* Tabs de origem */}
