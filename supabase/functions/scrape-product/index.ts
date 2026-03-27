@@ -69,8 +69,39 @@ Deno.serve(async (req) => {
     const prices: number[] = [];
     let match;
     while ((match = pricePattern.exec(markdown)) !== null) {
-      const cleaned = match[1].replace(/\./g, '').replace(',', '.');
-      const num = parseFloat(cleaned);
+      const raw = match[1];
+      let num: number;
+      const hasComma = raw.includes(',');
+      const hasDot = raw.includes('.');
+
+      if (hasComma && hasDot) {
+        // Determine format by position: last separator is decimal
+        const lastComma = raw.lastIndexOf(',');
+        const lastDot = raw.lastIndexOf('.');
+        if (lastComma > lastDot) {
+          // BR format: 1.599,00
+          num = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+        } else {
+          // US format: 1,599.00
+          num = parseFloat(raw.replace(/,/g, ''));
+        }
+      } else if (hasComma) {
+        // Only comma: BR decimal (999,90)
+        num = parseFloat(raw.replace(',', '.'));
+      } else if (hasDot) {
+        // Only dot: check if it's decimal (1-2 digits after) or thousands
+        const afterDot = raw.split('.').pop() || '';
+        if (afterDot.length <= 2) {
+          // Decimal: 674.91 → 674.91
+          num = parseFloat(raw);
+        } else {
+          // Thousands: 1.500 → 1500 (BR format without decimals)
+          num = parseFloat(raw.replace(/\./g, ''));
+        }
+      } else {
+        num = parseFloat(raw);
+      }
+
       if (!isNaN(num) && num > 0 && num < 100000) {
         prices.push(num);
       }
