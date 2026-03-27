@@ -648,7 +648,7 @@ async function processFinalized(
             if (matchedTier.mode === "FIXED") {
               driverPoints = matchedTier.value;
             } else if (matchedTier.mode === "PERCENT") {
-              driverPoints = Math.floor(points * (matchedTier.value / 100));
+              driverPoints = Math.floor(passengerPointsRef * (matchedTier.value / 100));
             } else {
               driverPoints = Math.floor(rideValue * matchedTier.value);
             }
