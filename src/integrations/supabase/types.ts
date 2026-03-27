@@ -179,6 +179,7 @@ export type Database = {
           category_id: string | null
           click_count: number
           created_at: string
+          current_status: string
           description: string | null
           first_imported_at: string | null
           id: string
@@ -187,6 +188,7 @@ export type Database = {
           is_featured: boolean | null
           is_flash_promo: boolean | null
           last_synced_at: string | null
+          marketplace: string | null
           order_index: number
           origin: string | null
           origin_external_id: string | null
@@ -195,6 +197,8 @@ export type Database = {
           original_price: number | null
           price: number | null
           raw_payload: Json | null
+          source_group_id: string | null
+          source_group_name: string | null
           store_logo_url: string | null
           store_name: string | null
           sync_error: string | null
@@ -212,6 +216,7 @@ export type Database = {
           category_id?: string | null
           click_count?: number
           created_at?: string
+          current_status?: string
           description?: string | null
           first_imported_at?: string | null
           id?: string
@@ -220,6 +225,7 @@ export type Database = {
           is_featured?: boolean | null
           is_flash_promo?: boolean | null
           last_synced_at?: string | null
+          marketplace?: string | null
           order_index?: number
           origin?: string | null
           origin_external_id?: string | null
@@ -228,6 +234,8 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           raw_payload?: Json | null
+          source_group_id?: string | null
+          source_group_name?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           sync_error?: string | null
@@ -245,6 +253,7 @@ export type Database = {
           category_id?: string | null
           click_count?: number
           created_at?: string
+          current_status?: string
           description?: string | null
           first_imported_at?: string | null
           id?: string
@@ -253,6 +262,7 @@ export type Database = {
           is_featured?: boolean | null
           is_flash_promo?: boolean | null
           last_synced_at?: string | null
+          marketplace?: string | null
           order_index?: number
           origin?: string | null
           origin_external_id?: string | null
@@ -261,6 +271,8 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           raw_payload?: Json | null
+          source_group_id?: string | null
+          source_group_name?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           sync_error?: string | null
