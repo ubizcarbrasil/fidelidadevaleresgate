@@ -90,6 +90,14 @@ export default function TasksSection() {
       statusLabel: "Em análise",
       href: "/approve-store-rules",
     }] : []),
+    ...(pendingReports && pendingReports > 0 ? [{
+      label: "Denúncias de ofertas pendentes",
+      count: pendingReports,
+      icon: AlertTriangle,
+      statusClass: "saas-badge-warning",
+      statusLabel: "Pendente",
+      href: "/offer-governance",
+    }] : []),
   ];
 
   if (isLoading) {
