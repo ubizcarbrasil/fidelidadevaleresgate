@@ -54,6 +54,7 @@ export default function ManualDriverScoringDialog({ open, onOpenChange, driver, 
       toast.success(`${points} pontos creditados com sucesso!`);
       qc.invalidateQueries({ queryKey: ["scored-drivers"] });
       qc.invalidateQueries({ queryKey: ["driver-ledger-machine"] });
+      qc.invalidateQueries({ queryKey: ["driver-ledger-detail"] });
       setPoints("");
       setReason("");
       onOpenChange(false);

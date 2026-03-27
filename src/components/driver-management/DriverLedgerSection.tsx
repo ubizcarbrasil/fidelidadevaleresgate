@@ -20,7 +20,7 @@ type LedgerEntry = {
 };
 
 export default function DriverLedgerSection({ driverId, driverName }: Props) {
-  const { data: ledger, isLoading } = useQuery({
+  const { data: ledger, isLoading, error } = useQuery({
     queryKey: ["driver-ledger-detail", driverId],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -80,6 +80,10 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
           <div className="flex justify-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
+        ) : error ? (
+          <p className="text-sm text-destructive text-center py-8">
+            Erro ao carregar extrato. Verifique suas permissões.
+          </p>
         ) : !ledger || ledger.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
             Nenhuma movimentação encontrada
