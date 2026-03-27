@@ -20,6 +20,7 @@ interface AffiliateDeal {
   store_logo_url: string | null;
   badge_label: string | null;
   category_id?: string | null;
+  origin?: string | null;
 }
 
 interface Props {
@@ -92,7 +93,7 @@ export default function AchadinhoDealDetail({
     queryFn: async () => {
       let q = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, origin")
         .eq("brand_id", brandId)
         .eq("is_active", true)
         .eq("category_id", deal.category_id!)
@@ -216,7 +217,7 @@ export default function AchadinhoDealDetail({
                   <SafeImage
                     src={deal.image_url}
                     alt={deal.title}
-                    className="h-full w-full object-contain"
+                    className={`h-full w-full ${deal.origin === 'dvlinks' ? 'object-cover' : 'object-contain'}`}
                     fallback={
                       <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
                         <AppIcon iconKey="section_deals" className="h-10 w-10" style={{ color: withAlpha(primary, 0.3) }} />

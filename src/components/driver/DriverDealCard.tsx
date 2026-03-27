@@ -24,7 +24,7 @@ function DriverDealCardInner({ deal, highlight, fontHeading, onClickDeal }: Prop
     >
       <div className="relative bg-muted/30">
         {deal.image_url ? (
-          <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
+          <img src={deal.image_url} alt={deal.title} className={`w-full aspect-square ${deal.origin === 'dvlinks' ? 'object-cover' : 'object-contain'}`} loading="lazy" />
         ) : (
           <div className="w-full aspect-square flex items-center justify-center bg-muted/10">
             <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />

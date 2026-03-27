@@ -28,6 +28,7 @@ export interface AffiliateDeal {
   badge_label: string | null;
   category_id: string | null;
   created_at?: string;
+  origin?: string | null;
 }
 
 export interface DealCategory {
@@ -142,7 +143,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     queryFn: async () => {
       let dealsQ = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at, origin")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .eq("visible_driver" as any, true)
@@ -253,7 +254,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       // If not in preloaded deals, fetch it
       supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, origin")
         .eq("id", initialDealId)
         .single()
         .then(({ data: d }) => { if (d) setSelectedDeal(d as AffiliateDeal); });
