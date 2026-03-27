@@ -41,7 +41,11 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
   const [search, setSearch] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<ScoredDriver | null>(null);
   const [bonusDriver, setBonusDriver] = useState<ScoredDriver | null>(null);
+  const [linkDriver, setLinkDriver] = useState<ScoredDriver | null>(null);
+  const [linkEmail, setLinkEmail] = useState("");
   const debouncedSearch = useDebounce(search, 400);
+  const queryClient = useQueryClient();
+  const debouncedLinkEmail = useDebounce(linkEmail, 400);
 
   /* ── Query: customers with [MOTORISTA] tag ── */
   const { data: drivers, isLoading } = useQuery({
