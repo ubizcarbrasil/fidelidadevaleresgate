@@ -2028,6 +2028,7 @@ export type Database = {
           phone: string | null
           points_balance: number
           ride_count: number | null
+          scoring_disabled: boolean
           updated_at: string
           user_id: string | null
         }
@@ -2050,6 +2051,7 @@ export type Database = {
           phone?: string | null
           points_balance?: number
           ride_count?: number | null
+          scoring_disabled?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -2072,6 +2074,7 @@ export type Database = {
           phone?: string | null
           points_balance?: number
           ride_count?: number | null
+          scoring_disabled?: boolean
           updated_at?: string
           user_id?: string | null
         }
