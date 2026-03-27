@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard/TasksSection"));
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
+const AchadinhosAlerts = lazyWithRetry(() => import("@/components/dashboard/AchadinhosAlerts"));
+const PointsFeed = lazyWithRetry(() => import("@/components/dashboard/PointsFeed"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
