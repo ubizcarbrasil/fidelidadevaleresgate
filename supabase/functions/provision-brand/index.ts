@@ -395,21 +395,16 @@ Deno.serve(async (req) => {
     );
 
     // Verify caller is root_admin
-    const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(
+    const { data: { user: callerUser }, error: userErr } = await supabaseAdmin.auth.getUser(
       authHeader.replace("Bearer ", ""),
     );
-    if (claimsErr || !claimsData?.claims?.sub) {
+    if (userErr || !callerUser) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const callerUserId = claimsData.claims.sub as string;
+    const callerUserId = callerUser.id;
 
     const { data: isRoot } = await supabaseAdmin.rpc("has_role", {
       _user_id: callerUserId,
