@@ -61,8 +61,6 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized" }, 401);
   }
   const userId = callerUser.id;
-
-  const sb = createClient(supabaseUrl, serviceRoleKey);
   const clientIp = getClientIp(req);
 
   try {
