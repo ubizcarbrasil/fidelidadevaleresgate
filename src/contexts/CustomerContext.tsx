@@ -56,6 +56,35 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         return best;
       }
 
+      // Auto-vincular motorista órfão (criado pelo webhook sem user_id)
+      const userEmail = user!.email;
+      const userPhone = user!.user_metadata?.phone || null;
+
+      const orFilters: string[] = [];
+      if (userEmail) orFilters.push(`email.eq.${userEmail}`);
+      if (userPhone) orFilters.push(`phone.eq.${userPhone}`);
+
+      if (orFilters.length > 0) {
+        const { data: orphans } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("brand_id", brand!.id)
+          .is("user_id", null)
+          .ilike("name", "%[MOTORISTA]%")
+          .or(orFilters.join(","));
+
+        const match = orphans?.[0];
+        if (match) {
+          const { data: linked } = await supabase
+            .from("customers")
+            .update({ user_id: user!.id, branch_id: selectedBranch!.id })
+            .eq("id", match.id)
+            .select("*")
+            .maybeSingle();
+          return linked || match;
+        }
+      }
+
       // Auto-create customer record
       const name = user!.user_metadata?.full_name || user!.email?.split("@")[0] || "Cliente";
       const phone = user!.user_metadata?.phone || null;
