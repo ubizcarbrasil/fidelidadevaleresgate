@@ -157,7 +157,24 @@ export default function OffersPage() {
         </Dialog>
       </div>
 
-      <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+        <div className="flex-1 w-full">
+          <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+        </div>
+        <Select value={filtroMotorista} onValueChange={setFiltroMotorista}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-muted-foreground" />
+              <SelectValue placeholder="Público" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as ofertas</SelectItem>
+            <SelectItem value="driver_only">🚗 Exclusivo Motorista</SelectItem>
+            <SelectItem value="customer_only">👤 Apenas Clientes</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <DataSkeleton variant="table-row" rows={5} />
