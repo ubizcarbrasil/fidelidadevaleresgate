@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Truck, Eye, Gift, Download, Loader2, Users } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
+import ImportarCsvMotoristas from "@/components/driver-management/ImportarCsvMotoristas";
 
 export type DriverRow = {
   id: string;
@@ -182,6 +183,7 @@ export default function DriverManagementPage() {
             <Download className="h-4 w-4 mr-1" />
             Exportar CSV
           </Button>
+          {currentBrandId && <ImportarCsvMotoristas brandId={currentBrandId} />}
         </div>
       </div>
 
