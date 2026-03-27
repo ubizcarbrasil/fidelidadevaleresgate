@@ -294,8 +294,10 @@ async function processFinalized(
     return { error: rideResult.error, status: 502 };
   }
 
-  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId, source } = rideResult.data;
-  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone });
+  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId: apiDriverId, source } = rideResult.data;
+  // Use payload driverId as fallback when API doesn't return it
+  const driverId = apiDriverId || payloadDriverId;
+  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone, driverId, apiDriverId, payloadDriverId });
 
   if (rideValue <= 0) {
     await sb.from("machine_rides").upsert({
