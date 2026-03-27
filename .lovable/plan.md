@@ -1,49 +1,69 @@
 
 
-## Criar conta de teste de motorista + exibir no Dashboard
+## Seções exclusivas para motoristas na Home do PWA
 
-### O que será feito
+### Resumo
+Adicionar um campo `audience` na tabela `brand_sections` para controlar a visibilidade de seções CMS. Seções marcadas como `driver_only` serão exibidas apenas para usuários com a tag `[MOTORISTA]`. O editor de seções (Page Builder V2) ganhará um seletor de audiência.
 
-1. **Criar conta real de motorista via edge function** — Adicionarei a criação de um 4º usuário de teste (motorista) na edge function `provision-brand` (e `provision-trial`), com e-mail no padrão `motorista@{slug}.test` e senha `123456`. Esse usuário terá um registro `customers` com a tag `[MOTORISTA]` e role `customer`.
+### 1. Migração: coluna `audience` em `brand_sections`
 
-2. **Atualizar `test_accounts` na brand** — O array `test_accounts` no `brand_settings_json` passará a incluir `{ email: motoristaEmail, role: "driver", is_active: true }`.
+```sql
+ALTER TABLE public.brand_sections
+ADD COLUMN audience text NOT NULL DEFAULT 'all'
+CHECK (audience IN ('all', 'driver_only', 'customer_only'));
 
-3. **Atualizar o Dashboard** — Adicionar `driver: "Motorista"` no `roleLabel` e `driver: "🚗"` no `roleIcon` para que o card "Acessos de Teste" exiba corretamente a conta do motorista.
+COMMENT ON COLUMN public.brand_sections.audience IS 'Controla visibilidade: all (todos), driver_only (só motoristas), customer_only (só clientes comuns)';
+```
 
-4. **Adicionar link do Dashboard do Motorista** — No card de cada conta com role `driver`, incluir um botão direto para abrir o PWA do cliente (onde a aba Motorista aparece automaticamente).
+### 2. Filtro no `HomeSectionsRenderer`
 
-5. **Inserir a conta de teste na brand atual** — Como a brand já foi provisionada, usarei o insert tool para criar o usuário auth, profile, customer `[MOTORISTA]` e atualizar o `brand_settings_json.test_accounts` da brand existente.
+No componente que renderiza as seções CMS, usar o `isDriver` do `CustomerContext` para filtrar:
+
+```typescript
+const { isDriver } = useCustomer();
+
+const filteredSections = sections.filter((s) => {
+  const audience = (s as any).audience || "all";
+  if (audience === "driver_only" && !isDriver) return false;
+  if (audience === "customer_only" && isDriver) return false;
+  // ...filtros existentes de banner
+});
+```
+
+Também adicionar `audience` ao select da query de seções para que o campo esteja disponível.
+
+### 3. Seletor de audiência no Page Builder V2
+
+No `SectionEditor.tsx`, adicionar um `<Select>` com as opções:
+- **Todos** (`all`) — padrão
+- **Apenas Motoristas** (`driver_only`)
+- **Apenas Clientes** (`customer_only`)
+
+Exibir um badge visual `🚗 Motoristas` ou `👤 Clientes` na lista de seções do `PageSectionsEditor.tsx` quando a audiência não for `all`.
+
+### 4. Seções nativas (FOR_YOU, EMISSORAS, etc.)
+
+Estender o tipo `NativeSectionConfig` para suportar `audience`:
+
+```typescript
+export interface NativeSectionConfig {
+  key: string;
+  label: string;
+  enabled: boolean;
+  order: number;
+  audience?: "all" | "driver_only" | "customer_only";
+}
+```
+
+No `renderNativeSection` em `CustomerHomePage.tsx`, verificar o `audience` junto com `isNativeEnabled`.
 
 ### Arquivos afetados
 
 | Arquivo | Ação |
-|---------|------|
-| `src/pages/Dashboard.tsx` | Adicionar role `driver` nos mapas de label/icon + botão de link para PWA motorista |
-| `supabase/functions/provision-brand/index.ts` | Criar 4ª conta de teste (motorista) no fluxo de provisão |
-| `supabase/functions/provision-trial/index.ts` | Idem para trial |
-| SQL (insert tool) | Criar usuário, profile, customer [MOTORISTA] e atualizar test_accounts na brand atual |
-
-### Detalhes técnicos
-
-**Dashboard (`BrandQuickLinks`):**
-```typescript
-const roleLabel = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista" };
-const roleIcon = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗" };
-```
-
-No card do motorista, além do botão "Copiar", adicionar botão para abrir o app do cliente (onde a aba Motorista aparece):
-```typescript
-{acc.role === "driver" && (
-  <Button variant="outline" size="sm" className="h-7 text-xs w-full gap-1" 
-    onClick={() => openExternal(`${origin}/customer-preview?brandId=${currentBrandId}`)}>
-    <ExternalLink className="h-3 w-3" /> Abrir como Motorista
-  </Button>
-)}
-```
-
-**Provisão (provision-brand + provision-trial):**
-- Criar `motoristaEmail = motorista@${slug}.test`
-- Criar usuário auth com `supabaseAdmin.auth.admin.createUser()`
-- Criar customer com `name: "[MOTORISTA] Motorista Teste"`, `brand_id`, `branch_id`
-- Adicionar ao array `test_accounts`
+|---|---|
+| SQL migration | Adicionar coluna `audience` em `brand_sections` |
+| `src/components/HomeSectionsRenderer.tsx` | Filtrar seções por `audience` + `isDriver` |
+| `src/components/page-builder-v2/SectionEditor.tsx` | Adicionar seletor de audiência |
+| `src/components/page-builder-v2/PageSectionsEditor.tsx` | Badge visual de audiência na lista + suporte em `NativeSectionConfig` |
+| `src/pages/customer/CustomerHomePage.tsx` | Filtrar seções nativas por `audience` |
 
