@@ -75,7 +75,7 @@ export default function CustomerOffersPage() {
     },
   });
 
-  const { isDriver } = useCustomer();
+  const { isDriver } = customer ? { isDriver: !!(customer?.name && /\[MOTORISTA\]/i.test(customer?.name || "")) } : { isDriver: false };
 
   const filtered = useMemo(() => {
     let result = offers;
