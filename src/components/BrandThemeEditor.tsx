@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2 } from "lucide-react";
+import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
@@ -409,6 +409,18 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
               onChange={(e) => update({ footer_text: e.target.value || undefined })}
               placeholder="© 2026 Minha Marca. Todos os direitos reservados."
             />
+          </div>
+          <div className="space-y-2 mt-4">
+            <Label className="text-xs flex items-center gap-1.5">
+              <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />
+              WhatsApp (Achadinhos)
+            </Label>
+            <Input
+              value={(value as any).whatsapp_number || ""}
+              onChange={(e) => update({ whatsapp_number: e.target.value || undefined } as any)}
+              placeholder="5511999999999"
+            />
+            <p className="text-[10px] text-muted-foreground">Número com DDI+DDD sem espaços. Aparece no botão do cabeçalho dos Achadinhos.</p>
           </div>
         </CardContent>
       </Card>

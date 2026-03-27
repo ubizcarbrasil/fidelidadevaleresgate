@@ -48,6 +48,7 @@ export interface BrandTheme {
   footer_text?: string;
   badge_config?: BadgeConfig;
   layout?: BrandLayoutConfig;
+  whatsapp_number?: string;
 }
 
 const CSS_VAR_MAP: Record<string, string> = {
