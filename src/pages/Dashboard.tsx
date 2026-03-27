@@ -25,6 +25,7 @@ const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
 const AchadinhosAlerts = lazyWithRetry(() => import("@/components/dashboard/AchadinhosAlerts"));
 const PointsFeed = lazyWithRetry(() => import("@/components/dashboard/PointsFeed"));
+const PendingReportsSection = lazyWithRetry(() => import("@/components/dashboard/PendingReportsSection"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -804,7 +805,14 @@ export default function Dashboard() {
         <ActivityHeatmap chartData={recentRedemptions} />
       </div>
 
-      {/* ── SECTION F + G: Tasks + Activity Feed ── */}
+      {/* ── SECTION F: Denúncias Pendentes ── */}
+      <div className="animate-slide-up delay-7">
+        <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+          <PendingReportsSection brandId={brandFilter} />
+        </Suspense>
+      </div>
+
+      {/* ── SECTION G + H: Tasks + Activity Feed ── */}
       <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
         <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardTasksSection /></Suspense>
         <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardActivityFeed /></Suspense>
