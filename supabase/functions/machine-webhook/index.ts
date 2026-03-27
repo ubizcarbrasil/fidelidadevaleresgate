@@ -227,7 +227,8 @@ async function processFinalized(
   brandId: string,
   branchId: string | null,
   machineRideId: string,
-  ip: string
+  ip: string,
+  payloadDriverId: string | null = null
 ) {
   // City-level credentials (used for V1 endpoint)
   const basicUser = (integration.basic_auth_user || "").trim();
