@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Share2, Tag } from "lucide-react";
+import { ArrowLeft, ExternalLink, Share2, Tag, AlertTriangle } from "lucide-react";
+import ReportarOfertaDialog from "@/components/customer/ReportarOfertaDialog";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { hslToCss, withAlpha } from "@/lib/utils";
@@ -50,6 +51,7 @@ export default function AchadinhoDealDetail({
   onSelectDeal,
 }: Props) {
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const [reportOpen, setReportOpen] = useState(false);
   const highlight = "hsl(var(--vb-highlight))";
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
 
