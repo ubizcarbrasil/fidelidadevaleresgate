@@ -41,7 +41,7 @@ export default function DriverManagementPage() {
     queryFn: async () => {
       let q = (supabase as any)
         .from("customers")
-        .select("id, name, cpf, phone, email, points_balance, user_id, branch_id, customer_tier, scoring_disabled")
+        .select("id, name, cpf, phone, email, points_balance, user_id, branch_id, customer_tier, scoring_disabled, driver_monthly_ride_count")
         .eq("brand_id", currentBrandId)
         .ilike("name", "%[MOTORISTA]%")
         .order("updated_at", { ascending: false })
@@ -64,9 +64,11 @@ export default function DriverManagementPage() {
         .in("driver_customer_id", custIds);
 
       const ridePointsById: Record<string, number> = {};
+      const rideCountById: Record<string, number> = {};
       (ridesData || []).forEach((r: any) => {
         if (r.driver_customer_id) {
           ridePointsById[r.driver_customer_id] = (ridePointsById[r.driver_customer_id] || 0) + (r.driver_points_credited || 0);
+          rideCountById[r.driver_customer_id] = (rideCountById[r.driver_customer_id] || 0) + 1;
         }
       });
 
@@ -83,6 +85,19 @@ export default function DriverManagementPage() {
         });
       }
 
+      // Fetch branch names for city display
+      const branchIds = [...new Set(data.filter((c: any) => c.branch_id).map((c: any) => c.branch_id))];
+      let branchMap: Record<string, string> = {};
+      if (branchIds.length > 0) {
+        const { data: branchesData } = await (supabase as any)
+          .from("branches")
+          .select("id, name, city")
+          .in("id", branchIds);
+        (branchesData || []).forEach((b: any) => {
+          branchMap[b.id] = b.city || b.name || "";
+        });
+      }
+
       return data.map((c: any): DriverRow => ({
         id: c.id,
         name: c.name,
@@ -95,6 +110,8 @@ export default function DriverManagementPage() {
         customer_tier: c.customer_tier,
         scoring_disabled: c.scoring_disabled ?? false,
         total_ride_points: ridePointsById[c.id] || 0,
+        total_rides: rideCountById[c.id] || 0,
+        branch_name: c.branch_id ? branchMap[c.branch_id] || null : null,
       }));
     },
     enabled: !!currentBrandId,
@@ -209,6 +226,7 @@ export default function DriverManagementPage() {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      {driver.branch_name && <span>📍 {driver.branch_name}</span>}
                       {driver.cpf && <span>CPF: {maskCpf(driver.cpf)}</span>}
                       {driver.phone && <span>Tel: {driver.phone}</span>}
                       {driver.email && <span className="hidden sm:inline">{driver.email}</span>}
@@ -222,8 +240,11 @@ export default function DriverManagementPage() {
                     <Badge variant="secondary" className="text-xs font-mono">
                       {driver.points_balance} pts
                     </Badge>
-                    <Badge className="bg-primary/10 text-primary border-primary/30 text-xs font-mono">
+                    <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
                       +{driver.total_ride_points}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                      🚗 {driver.total_rides}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
