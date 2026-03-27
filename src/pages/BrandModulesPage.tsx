@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
   Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
-  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList,
+  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug,
 } from "lucide-react";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
@@ -58,6 +58,7 @@ const MODULE_ICONS: Record<string, any> = {
   theme_texts: Type,
   theme_layout: Layers,
   theme_offer_cards: Tag,
+  theme_integrations: Plug,
   users_management: Users,
   approvals: Shield,
   audit: ClipboardList,
