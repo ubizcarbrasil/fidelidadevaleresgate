@@ -185,8 +185,9 @@ function LedgerEntry({
   referenceType: string | null;
 }) {
   const isCredit = type === "CREDIT";
-  const icon = referenceType === "MANUAL_BONUS" ? <Gift className="h-4 w-4" /> : <Car className="h-4 w-4" />;
-  const label = referenceType === "MANUAL_BONUS" ? "Bonificação" : "Corrida";
+  const isBonus = referenceType === "MANUAL_ADJUSTMENT";
+  const icon = isBonus ? <Gift className="h-4 w-4" /> : <Car className="h-4 w-4" />;
+  const label = isBonus ? "Bonificação" : "Corrida";
 
   return (
     <div className="flex items-center gap-3 py-3 border-b last:border-b-0" style={{ borderColor: "hsl(var(--border))" }}>
@@ -246,7 +247,7 @@ export default function CustomerDriverDashboardPage() {
       .filter((e) => e.entry_type === "CREDIT")
       .reduce((acc, e) => acc + (e.points_amount || 0), 0);
     const totalBonuses = ledgerEntries
-      .filter((e) => e.reference_type === "MANUAL_BONUS")
+      .filter((e) => e.reference_type === "MANUAL_ADJUSTMENT")
       .reduce((acc, e) => acc + (e.points_amount || 0), 0);
     const rideEntries = ledgerEntries.filter((e) => e.reference_type === "MACHINE_RIDE");
     const totalRideValue = rideEntries.reduce((acc, e) => acc + (e.money_amount || 0), 0);
