@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +22,7 @@ interface Props {
   userId?: string | null;
 }
 
-export default function ReportarOfertaDialog({ open, onOpenChange, dealId, userId }: Props) {
+export default function ReportarOfertaDialog({ open, onOpenChange, dealId }: Props) {
   const [motivo, setMotivo] = useState("");
   const [observacao, setObservacao] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -35,9 +35,11 @@ export default function ReportarOfertaDialog({ open, onOpenChange, dealId, userI
 
     setEnviando(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+
       const { error } = await supabase.from("offer_reports").insert({
         offer_id: dealId,
-        user_id: userId || null,
+        user_id: user?.id || null,
         reason: motivo,
         note: observacao || null,
         status: "pending",
@@ -65,8 +67,10 @@ export default function ReportarOfertaDialog({ open, onOpenChange, dealId, userI
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             Reportar problema
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Informe o motivo do problema com esta oferta.
+          </DialogDescription>
         </DialogHeader>
-
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Motivo</label>

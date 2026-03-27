@@ -329,7 +329,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
           </div>
         </div>
 
-        {selectedDeal && (
+        {selectedDeal && createPortal(
           <AchadinhoDealDetail
             deal={selectedDeal}
             brandId={brand!.id}
@@ -339,7 +339,8 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
             brandSettings={(brand as any)?.brand_settings_json}
             onBack={() => setSelectedDeal(null)}
             onSelectDeal={(d) => setSelectedDeal(d)}
-          />
+          />,
+          document.body
         )}
       </motion.div>
     </motion.div>

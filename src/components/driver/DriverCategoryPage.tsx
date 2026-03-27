@@ -260,7 +260,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
           </div>
         </div>
 
-        {selectedDeal && (
+        {selectedDeal && createPortal(
           <AchadinhoDealDetail
             deal={selectedDeal}
             brandId={brandId}
@@ -269,7 +269,8 @@ export default function DriverCategoryPage({ category, brandId, branchId, fontHe
             brandSettings={brandSettings}
             onBack={() => setSelectedDeal(null)}
             onSelectDeal={(d) => setSelectedDeal(d as any)}
-          />
+          />,
+          document.body
         )}
       </div>
     </div>

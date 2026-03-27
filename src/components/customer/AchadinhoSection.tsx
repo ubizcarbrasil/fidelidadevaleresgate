@@ -424,9 +424,8 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
         })()}
       </div>
 
-      {selectedDeal && (
+      {selectedDeal && createPortal(
         <AchadinhoDealDetail
-
           deal={selectedDeal}
           brandId={brand!.id}
           branchId={selectedBranch?.id}
@@ -435,7 +434,8 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           brandSettings={(brand as any)?.brand_settings_json}
           onBack={() => setSelectedDeal(null)}
           onSelectDeal={(d) => setSelectedDeal(d as any)}
-        />
+        />,
+        document.body
       )}
     </section>
   );
