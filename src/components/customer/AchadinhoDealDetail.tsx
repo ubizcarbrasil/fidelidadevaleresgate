@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Share2, Tag } from "lucide-react";
+import { ArrowLeft, ExternalLink, Share2, Tag, AlertTriangle } from "lucide-react";
+import ReportarOfertaDialog from "@/components/customer/ReportarOfertaDialog";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { hslToCss, withAlpha } from "@/lib/utils";
@@ -50,6 +51,7 @@ export default function AchadinhoDealDetail({
   onSelectDeal,
 }: Props) {
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const [reportOpen, setReportOpen] = useState(false);
   const highlight = "hsl(var(--vb-highlight))";
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
 
@@ -277,7 +279,24 @@ export default function AchadinhoDealDetail({
               </button>
             </div>
 
-            {/* Similar Products */}
+            {/* Report button */}
+            <div className="px-5 pb-4">
+              <button
+                onClick={() => setReportOpen(true)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-muted-foreground transition-colors active:scale-[0.97]"
+                style={{ backgroundColor: "hsl(var(--muted))" }}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Preço diferente? Avisar
+              </button>
+            </div>
+
+            <ReportarOfertaDialog
+              open={reportOpen}
+              onOpenChange={setReportOpen}
+              dealId={deal.id}
+              userId={customerId}
+            />
             {similarDeals && similarDeals.length > 0 && (
               <div className="pt-2 pb-8">
                 <div className="px-5 mb-3">

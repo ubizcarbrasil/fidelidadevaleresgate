@@ -56,6 +56,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals" },
+      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals" },
       { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image, moduleKey: "banners" },
     ],
   },

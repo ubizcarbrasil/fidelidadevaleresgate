@@ -179,6 +179,7 @@ export type Database = {
           category_id: string | null
           click_count: number
           created_at: string
+          current_status: string
           description: string | null
           first_imported_at: string | null
           id: string
@@ -187,6 +188,7 @@ export type Database = {
           is_featured: boolean | null
           is_flash_promo: boolean | null
           last_synced_at: string | null
+          marketplace: string | null
           order_index: number
           origin: string | null
           origin_external_id: string | null
@@ -195,6 +197,8 @@ export type Database = {
           original_price: number | null
           price: number | null
           raw_payload: Json | null
+          source_group_id: string | null
+          source_group_name: string | null
           store_logo_url: string | null
           store_name: string | null
           sync_error: string | null
@@ -212,6 +216,7 @@ export type Database = {
           category_id?: string | null
           click_count?: number
           created_at?: string
+          current_status?: string
           description?: string | null
           first_imported_at?: string | null
           id?: string
@@ -220,6 +225,7 @@ export type Database = {
           is_featured?: boolean | null
           is_flash_promo?: boolean | null
           last_synced_at?: string | null
+          marketplace?: string | null
           order_index?: number
           origin?: string | null
           origin_external_id?: string | null
@@ -228,6 +234,8 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           raw_payload?: Json | null
+          source_group_id?: string | null
+          source_group_name?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           sync_error?: string | null
@@ -245,6 +253,7 @@ export type Database = {
           category_id?: string | null
           click_count?: number
           created_at?: string
+          current_status?: string
           description?: string | null
           first_imported_at?: string | null
           id?: string
@@ -253,6 +262,7 @@ export type Database = {
           is_featured?: boolean | null
           is_flash_promo?: boolean | null
           last_synced_at?: string | null
+          marketplace?: string | null
           order_index?: number
           origin?: string | null
           origin_external_id?: string | null
@@ -261,6 +271,8 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           raw_payload?: Json | null
+          source_group_id?: string | null
+          source_group_name?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           sync_error?: string | null
@@ -3194,6 +3206,113 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      offer_reports: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          offer_id: string
+          reason: string
+          screenshot_url: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          offer_id: string
+          reason: string
+          screenshot_url?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          offer_id?: string
+          reason?: string
+          screenshot_url?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_reports_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_sync_groups: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          last_sync_status: string
+          source_group_id: string
+          source_group_name: string | null
+          source_system: string
+          sync_version: number
+          total_active: number
+          total_imported: number
+          total_removed: number
+          total_reported: number
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_status?: string
+          source_group_id: string
+          source_group_name?: string | null
+          source_system: string
+          sync_version?: number
+          total_active?: number
+          total_imported?: number
+          total_removed?: number
+          total_reported?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_status?: string
+          source_group_id?: string
+          source_group_name?: string | null
+          source_system?: string
+          sync_version?: number
+          total_active?: number
+          total_imported?: number
+          total_removed?: number
+          total_reported?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_sync_groups_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_sync_groups_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       offers: {
         Row: {

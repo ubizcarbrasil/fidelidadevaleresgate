@@ -86,6 +86,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: Copy },
+      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield },
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
       { key: "sidebar.gg_store_summary", defaultTitle: "Resumo Cashback", url: "/ganha-ganha-store-summary", icon: Handshake },
       { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine },
