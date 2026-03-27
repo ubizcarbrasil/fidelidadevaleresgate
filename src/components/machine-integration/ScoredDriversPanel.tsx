@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 import {
   Search, Eye, Loader2, Coins, ArrowUpRight, ArrowDownRight,
-  User, Phone, Mail, CreditCard, Hash, Download, Truck, Gift,
+  User, Phone, Mail, CreditCard, Hash, Download, Truck, Gift, Link2, Unlink,
 } from "lucide-react";
 import ManualDriverScoringDialog from "./ManualDriverScoringDialog";
 
