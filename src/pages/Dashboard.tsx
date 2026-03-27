@@ -585,8 +585,8 @@ export default function Dashboard() {
   const { data: vouchersTotal } = useMetric("vouchers", true, undefined, undefined, brandFilter);
   const { data: usersCount } = useMetric("profiles", showBrand);
   const { data: storeRulesPending } = useMetric("store_points_rules", true, (q) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
-  const { data: earningEventsTotal } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINISHED"), "finished", brandFilter);
-  const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINISHED").gte("created_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
+  const { data: earningEventsTotal } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED"), "finished", brandFilter);
+  const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED").gte("created_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
 
   // Optimized: single query per table instead of N queries per day
@@ -626,7 +626,7 @@ export default function Dashboard() {
   });
   const { data: recentEarnings } = useQuery({
     queryKey: ["earnings-chart", period, brandFilter ?? "global"],
-    queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINISHED")),
+    queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINALIZED")),
   });
 
   // Combined chart data
