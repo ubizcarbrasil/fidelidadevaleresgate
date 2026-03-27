@@ -369,6 +369,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                 <Share2 className="h-4.5 w-4.5 text-foreground" />
               </button>
             </div>
+          </div>
 
           {/* Search Bar — customer style */}
           {searchTerm ? (
