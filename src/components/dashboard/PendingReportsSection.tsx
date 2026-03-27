@@ -25,6 +25,10 @@ interface Report {
   affiliate_deals: {
     title: string;
     affiliate_url: string;
+    origin_url: string | null;
+    price: number | null;
+    original_price: number | null;
+    marketplace: string | null;
     is_active: boolean;
   } | null;
 }
@@ -41,7 +45,7 @@ export default function PendingReportsSection({ brandId }: Props) {
     queryFn: async () => {
       let q = supabase
         .from("offer_reports")
-        .select("id, offer_id, reason, note, status, created_at, affiliate_deals(title, affiliate_url, is_active)")
+        .select("id, offer_id, reason, note, status, created_at, affiliate_deals(title, affiliate_url, origin_url, price, original_price, marketplace, is_active)")
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(20);
@@ -151,13 +155,28 @@ export default function PendingReportsSection({ brandId }: Props) {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-foreground truncate">
+                   <p className="text-xs font-medium text-foreground truncate">
                     {r.affiliate_deals?.title || "Oferta não encontrada"}
                   </p>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30">
                       {MOTIVO_LABELS[r.reason] || r.reason}
                     </Badge>
+                    {r.affiliate_deals?.marketplace && (
+                      <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
+                        {r.affiliate_deals.marketplace}
+                      </Badge>
+                    )}
+                    {r.affiliate_deals?.price != null && (
+                      <span className="text-[11px] font-semibold text-emerald-400">
+                        R$ {r.affiliate_deals.price.toFixed(2).replace(".", ",")}
+                        {r.affiliate_deals.original_price != null && r.affiliate_deals.original_price > r.affiliate_deals.price && (
+                          <span className="text-muted-foreground line-through ml-1 font-normal">
+                            R$ {r.affiliate_deals.original_price.toFixed(2).replace(".", ",")}
+                          </span>
+                        )}
+                      </span>
+                    )}
                     <span className="text-[10px] text-muted-foreground">
                       {new Date(r.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                     </span>
@@ -169,6 +188,17 @@ export default function PendingReportsSection({ brandId }: Props) {
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
+                {r.affiliate_deals?.origin_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[11px] gap-1"
+                    onClick={() => window.open(r.affiliate_deals!.origin_url!, "_blank")}
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Link original
+                  </Button>
+                )}
                 {r.affiliate_deals?.affiliate_url && (
                   <Button
                     variant="outline"
@@ -177,7 +207,7 @@ export default function PendingReportsSection({ brandId }: Props) {
                     onClick={() => window.open(r.affiliate_deals!.affiliate_url, "_blank")}
                   >
                     <ExternalLink className="h-3 w-3" />
-                    Ver oferta
+                    Marketplace
                   </Button>
                 )}
                 <Button
