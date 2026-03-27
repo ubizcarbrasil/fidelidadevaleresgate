@@ -29,6 +29,7 @@ const CustomerOffersPage = lazy(() => import("@/pages/customer/CustomerOffersPag
 const CustomerRedemptionsPage = lazy(() => import("@/pages/customer/CustomerRedemptionsPage"));
 const CustomerWalletPage = lazy(() => import("@/pages/customer/CustomerWalletPage"));
 const CustomerProfilePage = lazy(() => import("@/pages/customer/CustomerProfilePage"));
+const CustomerDriverDashboardPage = lazy(() => import("@/pages/customer/CustomerDriverDashboardPage"));
 const CustomerEmissorasPage = lazy(() => import("@/pages/customer/CustomerEmissorasPage"));
 
 // Lazy-loaded overlays (rendered on demand)
@@ -85,13 +86,14 @@ function TabSkeleton() {
   );
 }
 
-type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile";
+type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile" | "driver";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
 
-const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string }[] = [
+const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string; driverOnly?: boolean }[] = [
   { key: "home", label: "Início", iconKey: "nav_home" },
   { key: "offers", label: "Ofertas", iconKey: "nav_offers", moduleKey: "offers" },
+  { key: "driver", label: "Motorista", iconKey: "nav_wallet", driverOnly: true },
   { key: "redemptions", label: "Resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
   { key: "wallet", label: "Carteira", iconKey: "nav_wallet", moduleKey: "wallet" },
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
@@ -100,6 +102,7 @@ const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string }
 const TAB_CONTENT: Record<Tab, React.FC<any>> = {
   home: CustomerHomePage,
   offers: CustomerOffersPage,
+  driver: CustomerDriverDashboardPage,
   redemptions: CustomerRedemptionsPage,
   wallet: CustomerWalletPage,
   profile: CustomerProfilePage,
@@ -109,7 +112,7 @@ const TAB_CONTENT: Record<Tab, React.FC<any>> = {
 
 export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
   const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<NavOffer | null>(null);
@@ -129,8 +132,12 @@ export default function CustomerLayout() {
   const { unreadCount } = useCustomerNotifications();
 
   const filteredTabs = useMemo(() =>
-    TABS.filter(t => !t.moduleKey || isModuleEnabled(t.moduleKey)),
-    [isModuleEnabled]
+    TABS.filter(t => {
+      if (t.driverOnly && !isDriver) return false;
+      if (t.moduleKey && !isModuleEnabled(t.moduleKey)) return false;
+      return true;
+    }),
+    [isModuleEnabled, isDriver]
   );
 
   // Auto-hide header on scroll down, show on scroll up
