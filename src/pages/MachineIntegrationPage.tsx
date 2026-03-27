@@ -1088,6 +1088,11 @@ export default function MachineIntegrationPage() {
       {/* Scored Customers */}
       {activeIntegrations.length > 0 && <ScoredCustomersPanel brandId={currentBrandId!} />}
 
+      {/* Scored Drivers */}
+      {activeIntegrations.length > 0 && integrations.some((i: any) => i.driver_points_enabled) && (
+        <ScoredDriversPanel brandId={currentBrandId!} />
+      )}
+
       {/* ─── ADD NEW CITY ─── */}
       <Card>
         <CardHeader>
