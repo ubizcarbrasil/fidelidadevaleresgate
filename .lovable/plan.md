@@ -1,80 +1,58 @@
 
 
-## Problema Identificado: Motoristas NÃO estão sendo pontuados
+## Diagnóstico Completo — 3 Problemas Pendentes
 
-### Diagnóstico
+### Status atual
+Os 7 itens estão **implementados no código**, e a pontuação de motoristas **já está funcionando** em produção (2 corridas reais pontuaram). Porém, há 3 bugs que precisam ser corrigidos:
 
-Analisei corridas reais finalizadas no banco de dados. Resultado:
+---
 
-- Passageiros **estão sendo pontuados** corretamente (ex: 12-16 pontos por corrida)
-- Motoristas **NÃO recebem pontos** em nenhuma corrida (`driver_points_credited = 0` em todas)
-- `driver_id = NULL` em todas as corridas, mesmo com `driver_name` presente (ex: "Tatiane Maria De Souza", "Caio Cesar Ribeiro")
+### Problema 1: CPF/telefone/e-mail do motorista não são salvos
 
-### Causa Raiz
+**Causa:** A API do condutor (`/api/integracao/condutor?id=XXXX`) retorna resposta vazia (log: `Driver details response empty`). Como o `fetchDriverDetails` retorna tudo `null`, o customer é criado sem CPF, telefone ou e-mail.
 
-O payload real do webhook TaxiMachine contém o ID do motorista na URL `links.driver`:
+**Solução:** Na `findCustomerCascade` para motoristas, o sistema já busca por nome com tag `[MOTORISTA]`. Porém quando a API falha, precisamos de um fallback: buscar por `machine_driver_id` (ID externo do TaxiMachine). 
 
-```text
-"links": {
-  "driver": "https://api.taximachine.com.br/api/integracao/condutor?id=1336570",
-  "request": "..."
-}
+- Adicionar campo `external_driver_id TEXT` na tabela `customers`
+- No webhook, ao criar o motorista, salvar `external_driver_id = driverId`
+- Na busca do motorista, priorizar: CPF → telefone → `external_driver_id` → nome com tag
+- Isso resolve também o **Problema 3** (duplicação)
+
+### Problema 2: Erro `crm_contacts` upsert — `no unique constraint matching ON CONFLICT`
+
+**Causa:** O código faz `upsert(..., { onConflict: "brand_id,customer_id" })`, mas o índice único é **parcial**: `WHERE customer_id IS NOT NULL`. O Supabase não consegue usar um índice parcial para ON CONFLICT.
+
+**Solução:** Mudar a estratégia de upsert: primeiro tentar `select` por `brand_id + customer_id`, depois `insert` ou `update` conforme resultado. Isso evita o conflito com o índice parcial.
+
+### Problema 3: Motoristas duplicados (Elizeu com 2 registros)
+
+**Causa:** Como a API do condutor retorna vazio, `findCustomerCascade` recebe CPF=null, phone=null, e busca por nome exato `[MOTORISTA] Elizeu Fortunato Duarte`. Se houve uma race condition entre corridas processadas simultaneamente, o customer foi criado 2 vezes antes do primeiro insert retornar.
+
+**Solução:** Resolvido pelo campo `external_driver_id` do Problema 1 (busca determinística pelo ID do TaxiMachine). Adicionalmente, deduplicar os registros existentes via merge.
+
+---
+
+## Plano de Implementação
+
+### Migration: Adicionar `external_driver_id` a `customers`
+```sql
+ALTER TABLE customers ADD COLUMN external_driver_id TEXT;
+CREATE UNIQUE INDEX idx_customers_brand_external_driver 
+  ON customers(brand_id, external_driver_id) 
+  WHERE external_driver_id IS NOT NULL;
 ```
 
-Mas o código **nunca extrai** esse valor do payload. O `driverId` só é obtido do retorno da API Recibo (`motoristaBlock.id`), e aparentemente a API não retorna esse campo consistentemente.
+### Editar `machine-webhook/index.ts`
+1. **Nova busca prioritária para motoristas:** Antes de `findCustomerCascade`, buscar por `external_driver_id = driverId` + `brand_id`
+2. **Salvar `external_driver_id`** ao criar novo motorista
+3. **Fix crm_contacts upsert:** Substituir `.upsert()` por select + insert/update para ambos (passageiro e motorista)
 
-A condição para pontuar o motorista é:
-```typescript
-if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
-```
-
-Como `driverId` é sempre `null`, o bloco inteiro de pontuação do motorista **nunca executa**.
-
-### Solução
-
-#### Passo 1: Extrair `driverId` do payload do webhook
-
-No `machine-webhook/index.ts`, na função `Deno.serve`, extrair o `driverId` de `body.links.driver` (parseando a URL para pegar o `id`) e passá-lo para `processFinalized`.
-
-```typescript
-// Extrair driver ID do payload
-const driverLinkUrl = body?.links?.driver;
-let payloadDriverId: string | null = null;
-if (typeof driverLinkUrl === "string") {
-  const match = driverLinkUrl.match(/[?&]id=(\d+)/);
-  if (match) payloadDriverId = match[1];
-}
-```
-
-#### Passo 2: Usar como fallback no `processFinalized`
-
-Passar `payloadDriverId` para `processFinalized` e usá-lo como fallback quando o `driverId` retornado pela API for `null`:
-
-```typescript
-const effectiveDriverId = rideResult.data.driverId || payloadDriverId;
-```
-
-#### Passo 3: Também extrair `driverName` do payload do webhook
-
-O payload do webhook para status "ACCEPTED" contém `links.driver` — o nome vem da API. Garantir que se o `driverId` do payload estiver disponível, as chamadas a `fetchDriverDetails` funcionem.
+### Deduplicação dos registros existentes
+- Merge manual dos 2 registros de Elizeu via SQL (somar pontos, manter 1 registro)
 
 ### Arquivos afetados
-
 | Arquivo | Ação |
 |---------|------|
-| `supabase/functions/machine-webhook/index.ts` | Extrair `driverId` de `body.links.driver`, passar para `processFinalized`, usar como fallback |
-
-### Impacto
-
-Após esta correção, **todas as corridas futuras** irão pontuar os motoristas automaticamente de acordo com as regras configuradas. As corridas passadas permanecerão sem pontuação (podem ser reprocessadas manualmente se necessário).
-
-### Verificação
-
-Após o deploy, a próxima corrida finalizada deve:
-1. Extrair o `driverId` do link no payload
-2. Buscar detalhes do motorista na API (`fetchDriverDetails`)
-3. Criar ou encontrar o customer com tag `[MOTORISTA]`
-4. Calcular pontos conforme a regra ativa (PERCENT 50% atualmente)
-5. Creditar no `points_ledger`
-6. Enviar notificação Telegram
+| 1 migration | Campo `external_driver_id` + índice único |
+| `supabase/functions/machine-webhook/index.ts` | Busca por driver ID, salvar external_driver_id, fix crm_contacts upsert |
 
