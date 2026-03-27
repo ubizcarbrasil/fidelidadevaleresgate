@@ -1,148 +1,73 @@
 
 
-## Governança de Ofertas Espelhadas — Achadinhos
+## O que falta implementar
 
-### Contexto atual
-
-A tabela `affiliate_deals` já possui campos `origin`, `origin_external_id`, `origin_url`, `sync_status`, `sync_error`, `raw_payload`, `first_imported_at`, `last_synced_at`. A página `MirrorSyncPage` já separa fontes por um seletor. Logs existem em `mirror_sync_logs` e config em `mirror_sync_config`.
-
-O que **falta**: tabela de denúncias, tabela de grupos de sync, status padronizados, botão de report na vitrine, módulo admin de governança com grupos, limpeza em massa, e sincronização inteligente com detecção de remoção.
+A maioria do plano foi executada (migrations, tabelas, componentes de UI, botão de report, rota, navegação). Porém **duas fases críticas do plano não foram implementadas**:
 
 ---
 
-### Fase 1 — Banco de dados (3 migrations)
+### 1. Sincronização Inteligente no Edge Function (Fase 4 do plano)
 
-**Migration 1: Novos campos em `affiliate_deals`**
-- `source_group_id TEXT` — ID do grupo na origem
-- `source_group_name TEXT` — nome do grupo
-- `marketplace TEXT` — marketplace de onde veio (ex: mercadolivre, amazon)
-- `current_status TEXT DEFAULT 'active'` — enum: active, suspected_outdated, user_reported, removed_from_source, sync_error, archived, inactive
+O `mirror-sync/index.ts` **não foi atualizado**. Ele continua com a lógica antiga — sem nenhuma referência a `current_status`, `offer_sync_groups`, ou detecção de remoção.
 
-**Migration 2: Tabela `offer_reports`**
-```sql
-CREATE TABLE offer_reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  offer_id UUID NOT NULL REFERENCES affiliate_deals(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  reason TEXT NOT NULL,
-  note TEXT,
-  screenshot_url TEXT,
-  status TEXT DEFAULT 'pending', -- pending, reviewed, confirmed, dismissed
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-Com RLS: qualquer autenticado pode INSERT, root/brand admin pode SELECT/UPDATE.
+**O que falta adicionar no edge function:**
 
-**Migration 3: Tabela `offer_sync_groups`**
-```sql
-CREATE TABLE offer_sync_groups (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  brand_id UUID NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
-  source_system TEXT NOT NULL, -- dvlinks, divulgador_inteligente
-  source_group_id TEXT NOT NULL,
-  source_group_name TEXT,
-  last_sync_at TIMESTAMPTZ,
-  last_sync_status TEXT DEFAULT 'pending',
-  total_imported INT DEFAULT 0,
-  total_active INT DEFAULT 0,
-  total_removed INT DEFAULT 0,
-  total_reported INT DEFAULT 0,
-  sync_version INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(brand_id, source_system, source_group_id)
-);
-```
-Com RLS para brand/root admins.
-
----
-
-### Fase 2 — Botão "Preço diferente? Avisar" na vitrine
-
-**Arquivo**: `src/components/customer/AchadinhoDealDetail.tsx`
-
-- Adicionar botão abaixo do CTA "Ir para oferta"
-- Ao clicar, abrir dialog `ReportarOfertaDialog` com:
-  - Select de motivo (preço diferente, oferta indisponível, link com erro, produto diferente, outro)
-  - Textarea opcional para observação
-  - Upload opcional de screenshot (bucket `brand-assets`)
-  - Botão enviar → `INSERT INTO offer_reports`
-  - Toast de confirmação
-
-**Novo componente**: `src/components/customer/ReportarOfertaDialog.tsx`
-
----
-
-### Fase 3 — Módulo administrativo de governança
-
-**Nova página**: `src/pages/OfferGovernancePage.tsx`  
-**Nova rota**: `/offer-governance` (protegida por ModuleGuard `affiliate_deals`)
-
-**Layout**:
-- Tabs primárias: **Divulga Link** | **Divulgador Inteligente**
-- Cada tab mostra:
-  - KPIs: total grupos, total ofertas, ativas, removidas, denunciadas, última sync
-  - Sub-tabs: **Grupos** | **Ofertas** | **Denúncias** | **Limpeza** | **Logs**
-
-**Novos componentes** (todos em `src/components/offer-governance/`):
-1. `GovernanceKpis.tsx` — cards de métricas por origem
-2. `GovernanceGroupsTable.tsx` — lista de grupos com ações (sync, reset, arquivar, reimportar, limpar erros/removidas/denunciadas)
-3. `GovernanceDealsTable.tsx` — tabela de ofertas com filtros (origem, grupo, marketplace, status, período) e ações em massa (desativar, arquivar, resetar grupo, remover espelhamento, forçar sync)
-4. `GovernanceReportsTable.tsx` — tabela de denúncias com ações (revisar, confirmar, dispensar, ocultar oferta)
-5. `GovernanceCleanup.tsx` — painel de limpeza em massa com filtros compostos e ações bulk
-6. `GovernanceSyncLogs.tsx` — logs de sync filtrados por origem
-
-**API layer**: `src/lib/api/offerGovernance.ts` — todas as queries e mutations para o módulo
-
----
-
-### Fase 4 — Sincronização inteligente (Edge Function)
+- Ao sincronizar, criar/atualizar registro em `offer_sync_groups` (brand_id, source_system, source_group_id, contadores)
+- Setar `current_status = 'active'` em ofertas novas e atualizadas
+- Detectar ofertas que **sumiram da origem** e marcar como `removed_from_source` + `is_active = false`
+- Reativar ofertas arquivadas que reapareceram na origem
+- Atualizar contadores (`total_imported`, `total_active`, `total_removed`) em `offer_sync_groups` ao final
+- Incrementar `sync_version` no grupo após cada sync
 
 **Arquivo**: `supabase/functions/mirror-sync/index.ts`
 
-Evoluir a lógica existente para:
-1. Ao sincronizar, criar/atualizar registro em `offer_sync_groups`
-2. Comparar ofertas da origem por `origin + origin_external_id`
-3. Ofertas novas → `INSERT` com `current_status = 'active'`
-4. Ofertas existentes → `UPDATE` dados (preço, imagem, título)
-5. Ofertas que sumiram da origem → `current_status = 'removed_from_source'`, `is_active = false`, `visible_driver = false`
-6. Ofertas arquivadas que reapareceram → reativar com `current_status = 'active'`
-7. Atualizar contadores em `offer_sync_groups` ao final
+---
 
-**Reset seguro**: não deleta registros, apenas marca como `archived`, mantém logs, incrementa `sync_version` no grupo.
+### 2. Auto-ocultação por denúncias (Fase 5 do plano)
+
+Nenhuma lógica foi implementada para auto-ocultar ofertas com múltiplas denúncias confirmadas.
+
+**O que falta:**
+- No `GovernanceReportsTable`, ao confirmar uma denúncia, verificar quantas denúncias confirmadas a oferta já tem
+- Se atingir o limiar (default 3), marcar a oferta como `current_status = 'suspected_outdated'` e `is_active = false`
+- Exibir badge de alerta no admin para ofertas com denúncias acumuladas
+
+**Arquivos**: `src/components/offer-governance/GovernanceReportsTable.tsx` e `src/lib/api/offerGovernance.ts`
 
 ---
 
-### Fase 5 — Auto-ocultação por denúncias
+### 3. Ações nos Grupos (parcialmente ausente)
 
-Lógica no `GovernanceReportsTable`:
-- Quando uma oferta atinge N denúncias confirmadas (configurável, default 3), marcar como `suspected_outdated` e `is_active = false`
-- Exibir badge de alerta no admin
+O `GovernanceGroupsTable` é somente leitura — exibe dados mas **não tem botões de ação**. O plano previa:
+- Sincronizar agora
+- Resetar grupo (arquivar ofertas, incrementar sync_version)
+- Reimportar grupo
+- Limpar ofertas com erro / removidas / denunciadas
 
----
-
-### Fase 6 — Navegação
-
-- Adicionar link "Governança de Ofertas" no `RootSidebar` e `BrandSidebar` (seção Gestão Comercial)
-- A página `MirrorSyncPage` existente permanece como painel operacional; a nova `OfferGovernancePage` é o módulo de governança completo
+**Arquivo**: `src/components/offer-governance/GovernanceGroupsTable.tsx`
 
 ---
 
-### Resumo de arquivos
+### Resumo das pendências
 
-| Ação | Arquivo |
-|------|---------|
-| Migration | 3 novas migrations (campos, offer_reports, offer_sync_groups) |
-| Nova página | `src/pages/OfferGovernancePage.tsx` |
-| Novo API | `src/lib/api/offerGovernance.ts` |
-| Novos componentes | 6 em `src/components/offer-governance/` |
-| Novo componente customer | `src/components/customer/ReportarOfertaDialog.tsx` |
-| Editar | `AchadinhoDealDetail.tsx` (botão report) |
-| Editar | `mirror-sync/index.ts` (sync inteligente + grupos) |
-| Editar | `RootSidebar.tsx` / `BrandSidebar.tsx` (nav) |
-| Editar | `App.tsx` (rota) |
+| Fase | Status | Ação |
+|------|--------|------|
+| Fase 1 — Migrations | Feito | — |
+| Fase 2 — Botão report | Feito | — |
+| Fase 3 — UI admin | Feito | — |
+| Fase 4 — Sync inteligente | **Pendente** | Atualizar `mirror-sync/index.ts` |
+| Fase 5 — Auto-ocultação | **Pendente** | Lógica no Reports + API |
+| Fase 6 — Navegação | Feito | — |
+| Ações nos Grupos | **Pendente** | Botões no `GovernanceGroupsTable` |
 
-### Escalabilidade
+---
 
-A arquitetura usa `source_system TEXT` em vez de enum, permitindo adicionar novas fontes sem migrations. Todas as queries filtram por `source_system`, garantindo isolamento absoluto entre origens.
+### Plano de implementação
 
+#### Passo 1: Atualizar `mirror-sync/index.ts`
+- Após o upsert de cada oferta, setar `current_status = 'active'`
+- Após processar todas as ofertas de um grupo, buscar ofertas existentes no DB que **não vieram na sync** e marcar como `removed_from_source`
+- Criar/atualizar registro em `offer_sync_groups` com contadores
+- Incrementar `sync_version`
+
+#### Passo 2: Adicionar
