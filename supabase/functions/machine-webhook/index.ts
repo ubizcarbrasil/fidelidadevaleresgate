@@ -458,13 +458,17 @@ async function processFinalized(
     })();
   }
 
-  // --- Driver scoring ---
+  // --- Driver scoring (decoupled from passenger result) ---
   let driverPointsCredited = 0;
   let driverCustomerId: string | null = null;
   let driverMonthlyRides = 0;
   let driverVolumeTierLabel: string | null = null;
 
-  if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
+  // Calculate a passenger points reference for PERCENT-based driver rules
+  // even when the passenger wasn't credited (e.g. customer creation failed)
+  const passengerPointsRef = points > 0 ? points : Math.floor(rideValue * 1);
+
+  if (integration.driver_points_enabled && rideValue > 0 && (driverId || driverName)) {
     // 1. Try advanced rules from driver_points_rules table
     const { data: advancedRule } = await sb
       .from("driver_points_rules")
@@ -488,11 +492,9 @@ async function processFinalized(
         reasonDetail = `Fixo: ${driverPoints} pts/corrida`;
       } else if (ruleMode === "PERCENT") {
         const pct = Number(advancedRule.percent_of_passenger) || 50;
-        driverPoints = Math.floor(points * (pct / 100));
-        reasonDetail = `${pct}% de ${points} pts passageiro`;
+        driverPoints = Math.floor(passengerPointsRef * (pct / 100));
+        reasonDetail = `${pct}% de ${passengerPointsRef} pts passageiro`;
       } else if (ruleMode === "VOLUME_TIER") {
-        // We need to resolve the driver customer first to check ride count
-        // Will be calculated after driver customer resolution below
         driverPoints = -1; // sentinel: calculate after finding driver
         reasonDetail = "volume_tier";
       } else {
@@ -508,10 +510,10 @@ async function processFinalized(
       const driverPerReal = Number(integration.driver_points_per_real) || 1;
       driverPoints = driverMode === "PER_REAL"
         ? Math.floor(rideValue * driverPerReal)
-        : Math.floor(points * (driverPercent / 100));
+        : Math.floor(passengerPointsRef * (driverPercent / 100));
       reasonDetail = driverMode === "PER_REAL"
         ? `${driverPerReal} pts/R$ × R$ ${rideValue.toFixed(2)}`
-        : `${driverPercent}% de ${points} pts`;
+        : `${driverPercent}% de ${passengerPointsRef} pts`;
     }
 
     if (driverPoints !== 0) {
