@@ -2,7 +2,6 @@
  * Lightweight error tracking module.
  * Captures unhandled errors and persists them to the error_logs table.
  */
-import { supabase } from "@/integrations/supabase/client";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("errorTracker");
@@ -29,6 +28,7 @@ export function setErrorContext(userId: string | null, brandId: string | null): 
 /** Report an error to the error_logs table */
 export async function reportError(report: ErrorReport): Promise<void> {
   try {
+    const { supabase } = await import("@/integrations/supabase/client");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any).from("error_logs").insert({
       message: report.message.slice(0, 2000),
