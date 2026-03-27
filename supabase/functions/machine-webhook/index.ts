@@ -517,25 +517,27 @@ async function processFinalized(
     }
 
     if (driverPoints !== 0) {
-      // Fetch driver details from TaxiMachine API
+      // Fetch driver details from TaxiMachine API (only if we have driverId)
       const driverHeaders = matrixHeaders ?? cityHeaders;
-      const driverDetails = await fetchDriverDetails(driverId, driverHeaders);
-      const driverDisplayName = driverDetails.name || driverName || `Motorista #${driverId}`;
+      const driverDetails = driverId ? await fetchDriverDetails(driverId, driverHeaders) : { name: null, cpf: null, phone: null, email: null };
+      const driverDisplayName = driverDetails.name || driverName || (driverId ? `Motorista #${driverId}` : `Motorista corrida #${machineRideId}`);
       const driverTag = integration.driver_customer_tag || "MOTORISTA";
 
       // Find driver customer: prioritize external_driver_id lookup
       let driverCascade: { customer: any; matchedBy: string } | null = null;
 
       // 1. Try by external_driver_id first (deterministic, prevents duplicates)
-      const { data: byExtId } = await sb
-        .from("customers")
-        .select(CUSTOMER_SELECT + ", driver_monthly_ride_count, driver_cycle_start")
-        .eq("brand_id", brandId)
-        .eq("external_driver_id", driverId)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (byExtId) {
-        driverCascade = { customer: byExtId, matchedBy: "external_driver_id" };
+      if (driverId) {
+        const { data: byExtId } = await sb
+          .from("customers")
+          .select(CUSTOMER_SELECT + ", driver_monthly_ride_count, driver_cycle_start")
+          .eq("brand_id", brandId)
+          .eq("external_driver_id", driverId)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (byExtId) {
+          driverCascade = { customer: byExtId, matchedBy: "external_driver_id" };
+        }
       }
 
       // 2. Fallback to CPF/phone/name cascade
@@ -547,6 +549,22 @@ async function processFinalized(
           `[${driverTag}] ${driverDisplayName}`
         );
         if (cascadeResult) driverCascade = cascadeResult;
+      }
+
+      // 3. Fallback by tagged name when no driverId and no cascade match
+      if (!driverCascade && !driverId && driverName) {
+        const taggedName = `[${driverTag}] ${driverName}`;
+        const { data: byName } = await sb
+          .from("customers")
+          .select(CUSTOMER_SELECT + ", driver_monthly_ride_count, driver_cycle_start")
+          .eq("brand_id", brandId)
+          .eq("name", taggedName)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (byName) {
+          driverCascade = { customer: byName, matchedBy: "name_fallback" };
+          logger.warn("Driver matched by name fallback (no driverId)", { machineRideId, driverName: taggedName });
+        }
       }
 
       let driverCustomer: any = null;
@@ -575,6 +593,7 @@ async function processFinalized(
               branch_id: resolveBranchId,
               cpf: driverDetails.cpf || null,
               phone: driverDetails.phone || null,
+              email: driverDetails.email || null,
               name: taggedName,
               points_balance: 0,
               money_balance: 0,
@@ -583,7 +602,7 @@ async function processFinalized(
               crm_sync_status: "PENDING",
               driver_monthly_ride_count: 0,
               driver_cycle_start: new Date().toISOString().slice(0, 10),
-              external_driver_id: driverId,
+              external_driver_id: driverId || null,
             })
             .select("id, branch_id, points_balance, name, phone, customer_tier, ride_count, driver_monthly_ride_count, driver_cycle_start, external_driver_id")
             .single();
@@ -591,7 +610,7 @@ async function processFinalized(
             driverCustomer = created;
             logAudit(sb, "MACHINE_DRIVER_CREATED", {
               brandId, entityId: created.id, ip,
-              details: { name: taggedName, driver_id: driverId, tag: driverTag },
+              details: { name: taggedName, driver_id: driverId || "none", tag: driverTag, has_email: !!driverDetails.email },
             });
           }
         }
