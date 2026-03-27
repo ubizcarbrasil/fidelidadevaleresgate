@@ -185,61 +185,66 @@ export default function DriverManagementPage() {
             {drivers.map((driver: DriverRow) => (
               <div
                 key={driver.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <Truck className="h-4 w-4 text-primary" />
+                {/* Linha 1: ícone + nome + badges */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Truck className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-sm truncate">{cleanName(driver.name)}</span>
+                      {driver.scoring_disabled && (
+                        <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
+                          Pontuação desativada
+                        </Badge>
+                      )}
+                      {driver.customer_tier && driver.customer_tier !== "INICIANTE" && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          {driver.customer_tier}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      {driver.cpf && <span>CPF: {maskCpf(driver.cpf)}</span>}
+                      {driver.phone && <span>Tel: {driver.phone}</span>}
+                      {driver.email && <span className="hidden sm:inline">{driver.email}</span>}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0 space-y-0.5">
+
+                {/* Linha 2 (mobile) / inline (desktop): saldo + corridas + ações */}
+                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-12 sm:pl-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm truncate">{cleanName(driver.name)}</span>
-                    {driver.scoring_disabled && (
-                      <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
-                        Pontuação desativada
-                      </Badge>
-                    )}
-                    {driver.customer_tier && driver.customer_tier !== "INICIANTE" && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        {driver.customer_tier}
-                      </Badge>
-                    )}
+                    <Badge variant="secondary" className="text-xs font-mono">
+                      {driver.points_balance} pts
+                    </Badge>
+                    <Badge className="bg-primary/10 text-primary border-primary/30 text-xs font-mono">
+                      +{driver.total_ride_points}
+                    </Badge>
                   </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                    {driver.cpf && <span>CPF: {maskCpf(driver.cpf)}</span>}
-                    {driver.phone && <span>Tel: {driver.phone}</span>}
-                    {driver.email && <span>{driver.email}</span>}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-primary"
+                      title="Bonificar"
+                      onClick={() => setBonusDriver(driver)}
+                    >
+                      <Gift className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      title="Abrir detalhes"
+                      onClick={() => setSelectedDriver(driver)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="text-right shrink-0 space-y-0.5">
-                  <div className="text-[10px] text-muted-foreground">Saldo</div>
-                  <Badge variant="secondary" className="text-xs font-mono">
-                    {driver.points_balance} pts
-                  </Badge>
-                </div>
-                <div className="text-right shrink-0 space-y-0.5">
-                  <div className="text-[10px] text-muted-foreground">Corridas</div>
-                  <Badge className="bg-primary/10 text-primary border-primary/30 text-xs font-mono">
-                    +{driver.total_ride_points} pts
-                  </Badge>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 text-primary"
-                  title="Bonificar"
-                  onClick={() => setBonusDriver(driver)}
-                >
-                  <Gift className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  title="Abrir detalhes"
-                  onClick={() => setSelectedDriver(driver)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
               </div>
             ))}
           </div>
