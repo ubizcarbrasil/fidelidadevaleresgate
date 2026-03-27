@@ -155,8 +155,8 @@ function BrandQuickLinks() {
   const origin = window.location.origin;
   const driverPublicBase = (settings?.driver_public_base_url as string) || null;
 
-  const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro" };
-  const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪" };
+  const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista" };
+  const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
   const openExternal = (url: string) => { const popup = window.open(url, "_blank", "noopener,noreferrer"); if (!popup) window.location.href = url; };
 
@@ -243,6 +243,11 @@ function BrandQuickLinks() {
                   <Button variant="secondary" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => copyText(`${acc.email} / 123456`)}>
                     <Copy className="h-3 w-3" /> Copiar
                   </Button>
+                  {acc.role === "driver" && currentBrandId && (
+                    <Button variant="outline" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => openExternal(`${origin}/customer-preview?brandId=${currentBrandId}`)}>
+                      <ExternalLink className="h-3 w-3" /> Abrir como Motorista
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

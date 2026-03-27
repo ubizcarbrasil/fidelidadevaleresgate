@@ -648,12 +648,28 @@ Deno.serve(async (req) => {
       log.info("Created 20 affiliate deals for brand");
     }
 
-    // ─── 11. Save test accounts in brand settings ────────────────
+    // ─── 11. Driver test user ──────────────────────────────────
+    const motoristaEmail = `motorista-${emailPrefix}@teste.com`;
+    const motoristaUser = await getOrCreateUser(motoristaEmail, "123456", "Motorista Teste");
+    await supabaseAdmin.from("customers").insert({
+      name: "[MOTORISTA] Motorista Teste",
+      user_id: motoristaUser.id,
+      brand_id: brand.id,
+      branch_id: branch.id,
+      points_balance: 0,
+    });
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: motoristaUser.id, role: "customer" },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+
+    // ─── 12. Save test accounts in brand settings ────────────────
     const testAccounts = [
       { email: owner_email, role: "brand_admin", is_active: true },
       { email: adminEmail, role: "brand_admin", is_active: true },
       { email: customerEmail, role: "customer", is_active: true },
       { email: storeEmail, role: "store_admin", is_active: true },
+      { email: motoristaEmail, role: "driver", is_active: true },
     ];
     await supabaseAdmin.from("brands").update({
       brand_settings_json: { ...brandSettings, test_accounts: testAccounts },
