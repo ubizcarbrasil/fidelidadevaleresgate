@@ -227,7 +227,8 @@ async function processFinalized(
   brandId: string,
   branchId: string | null,
   machineRideId: string,
-  ip: string
+  ip: string,
+  payloadDriverId: string | null = null
 ) {
   // City-level credentials (used for V1 endpoint)
   const basicUser = (integration.basic_auth_user || "").trim();
@@ -293,8 +294,10 @@ async function processFinalized(
     return { error: rideResult.error, status: 502 };
   }
 
-  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId, source } = rideResult.data;
-  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone });
+  const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId: apiDriverId, source } = rideResult.data;
+  // Use payload driverId as fallback when API doesn't return it
+  const driverId = apiDriverId || payloadDriverId;
+  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone, driverId, apiDriverId, payloadDriverId });
 
   if (rideValue <= 0) {
     await sb.from("machine_rides").upsert({
@@ -933,7 +936,18 @@ Deno.serve(async (req) => {
       return json({ message: "Ride already processed", machine_ride_id: machineRideId });
     }
 
-    const result = await processFinalized(sb, integration, brandId, branchId, machineRideId, ip);
+    // Extract driver ID from webhook payload links.driver URL
+    let payloadDriverId: string | null = null;
+    const driverLinkUrl = body?.links?.driver;
+    if (typeof driverLinkUrl === "string") {
+      const match = driverLinkUrl.match(/[?&]id=(\d+)/);
+      if (match) payloadDriverId = match[1];
+    }
+    if (payloadDriverId) {
+      logger.info("Driver ID extracted from payload", { machineRideId, payloadDriverId, driverLinkUrl });
+    }
+
+    const result = await processFinalized(sb, integration, brandId, branchId, machineRideId, ip, payloadDriverId);
     if (result.error) {
       return json({ error: result.error }, result.status);
     }
