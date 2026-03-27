@@ -1,60 +1,62 @@
 
 
-## Pontuar motorista com percentual dos pontos do passageiro
+## Plano: Configuração de pontos do motorista, aba Motoristas e notificação Telegram
 
-### Contexto
-A API TaxiMachine já retorna `condutor.id` e `condutor.nome` no webhook de status. Com o `condutor.id`, podemos buscar CPF, telefone e email do motorista via `/api/integracao/condutor?id=X`. O motorista receberá um percentual configurável dos pontos que o passageiro recebeu.
+### Resumo
+
+O usuário quer três coisas:
+1. **Configuração no painel do empreendedor** para definir quanto o motorista ganha por real (substituindo/complementando o percentual atual)
+2. **Aba "Motoristas"** no painel de integração para consultar motoristas pontuados e seus saldos
+3. **Notificação Telegram** informando quando o motorista foi pontuado e quantos pontos recebeu
 
 ### Alterações
 
 **1. Banco de dados — `machine_integrations`**
-- Adicionar coluna `driver_points_enabled` (boolean, default false)
-- Adicionar coluna `driver_points_percent` (numeric, default 50) — percentual dos pontos do passageiro
-- Adicionar coluna `driver_customer_tag` (text, default 'MOTORISTA') — tag para identificar o customer como motorista
+- Adicionar coluna `driver_points_per_real` (numeric, default 1) — pontos por R$1 para o motorista
+- Adicionar coluna `driver_points_mode` (text, default 'PERCENT') — modo: 'PERCENT' (percentual do passageiro) ou 'PER_REAL' (pontos por R$ da corrida)
 
-**2. Edge Function `_shared/fetchRideData.ts`**
-- Adicionar `driverId` (string | null) ao `RideData` — ID numérico do condutor na TaxiMachine
-- Extrair `condutor.id` ou `driver.id` dos parsers (Recibo e V1)
-- Criar função `fetchDriverDetails(driverId, headers)` que chama `/api/integracao/condutor?id=X` e retorna `{ cpf, phone, email, name }`
+Isso permite ao empreendedor escolher entre o modelo atual (percentual) ou o novo (pontos por real).
 
-**3. Edge Function `machine-webhook/index.ts` — `processFinalized`**
-- Após pontuar o passageiro, verificar se `integration.driver_points_enabled === true`
-- Se sim, usar o `driverId` retornado pelo fetch para buscar dados completos do motorista via `fetchDriverDetails`
-- Buscar/criar customer para o motorista usando cascata: CPF → telefone → nome (igual ao passageiro), com tag `[MOTORISTA]` no nome
-- Calcular pontos do motorista: `Math.floor(passengerPoints * (integration.driver_points_percent / 100))`
-- Inserir no `points_ledger` com reason "Corrida TaxiMachine #X - Motorista (Y% de Z pts)"
-- Atualizar `points_balance` e `ride_count` do customer-motorista
-- Espelhar para `crm_contacts` com source `MOBILITY_DRIVER`
-- Registrar `driver_points_credited` e `driver_customer_id` no upsert de `machine_rides`
+**2. UI — `MachineIntegrationPage.tsx` — Seção de configuração**
+- Expandir a seção "Pontuação do Motorista" existente:
+  - Seletor de modo: "Percentual do passageiro" vs "Pontos por R$ da corrida"
+  - Se "Percentual": campo de percentual (já existe)
+  - Se "Por R$": campo numérico de pontos por real (novo)
+  - Texto explicativo dinâmico com simulação
 
-**4. Banco de dados — `machine_rides`**
-- Adicionar coluna `driver_points_credited` (integer, default 0)
-- Adicionar coluna `driver_customer_id` (uuid, nullable)
-- Adicionar coluna `driver_id` (text, nullable) — ID do condutor na TaxiMachine
+**3. UI — Novo componente `ScoredDriversPanel`**
+- Criar `src/components/machine-integration/ScoredDriversPanel.tsx`
+- Similar ao `ScoredCustomersPanel` existente, mas filtra customers com tag `[MOTORISTA]` no nome
+- Exibe: nome, CPF, telefone, saldo de pontos, total de pontos de corridas
+- Busca por nome/CPF/telefone
+- Drawer lateral com extrato (ledger) do motorista
+- Botão de exportar CSV
 
-**5. UI — `MachineIntegrationPage.tsx`**
-- Adicionar seção "Pontuação do Motorista" na configuração da integração
-- Toggle para habilitar/desabilitar
-- Campo numérico para o percentual (1-100, default 50)
-- Texto explicativo: "O motorista receberá X% dos pontos creditados ao passageiro"
+**4. UI — `MachineIntegrationPage.tsx` — Aba "Motoristas"**
+- Adicionar o componente `ScoredDriversPanel` logo após o `ScoredCustomersPanel`, ou como aba separada
+- Renderizar apenas quando `driver_points_enabled` estiver ativo em alguma integração
 
-### Fluxo resumido
+**5. Edge Function `machine-webhook/index.ts` — Lógica de pontuação do motorista**
+- Suportar o novo modo `PER_REAL`: `driverPoints = Math.floor(rideValue * driver_points_per_real)`
+- Manter compatibilidade com modo `PERCENT` existente
 
-```text
-Webhook F (finalizada)
-  → Fetch dados da corrida (Recibo/V1)
-  → Pontuar passageiro (fluxo atual)
-  → Se driver_points_enabled:
-    → Extrair condutor.id do payload/fetch
-    → GET /api/integracao/condutor?id=X → CPF, telefone, email
-    → Buscar/criar customer-motorista por CPF/telefone/nome
-    → Creditar Math.floor(pontosPassageiro × percent/100)
-    → Ledger + balance + crm_contacts
-```
+**6. Edge Function `machine-webhook/index.ts` — Telegram do motorista**
+- Após pontuar o motorista com sucesso, enviar segunda notificação Telegram com os dados do motorista
+- Reutilizar a mesma edge function `send-telegram-ride-notification` com novos campos ou criar mensagem inline
+
+**7. Edge Function `send-telegram-ride-notification/index.ts`**
+- Aceitar campo `is_driver_notification` (boolean) e `driver_points` no body
+- Se for notificação de motorista, usar template diferente:
+  - "🚗 Motorista pontuado! [nome] recebeu X pts pela corrida #Y (R$ Z)"
+
+### Detalhes técnicos
+
+- A query de motoristas filtra `customers` com `name ILIKE '%[MOTORISTA]%'` e join com `machine_rides.driver_customer_id`
+- O extrato do motorista usa `points_ledger` com `reason ILIKE '%Motorista%'`
+- A notificação Telegram do motorista é fire-and-forget, igual à do passageiro
 
 ### O que NÃO muda
 - Fluxo de pontuação do passageiro (inalterado)
-- Regras de tier, limites anti-fraude
-- Webhook payload — apenas consumimos dados já disponíveis
+- `ScoredCustomersPanel` existente (inalterado)
 - RLS, auth, guards
 
