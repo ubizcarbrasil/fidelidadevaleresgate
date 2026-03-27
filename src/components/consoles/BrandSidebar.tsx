@@ -77,6 +77,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
+      { key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: Truck, moduleKey: "machine_integration" },
       { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap, moduleKey: "sponsored" },
     ],
   },
