@@ -19,6 +19,7 @@ type OfferWithStore = Tables<"offers"> & {
 
 export default function ForYouSection() {
   const { brand, selectedBranch, theme } = useBrand();
+  const { isDriver } = useCustomer();
   const { openOffer, openSectionDetail } = useCustomerNav();
   const { formatSubtitle } = useOfferCardConfig();
   const scrollRef = useRef<HTMLDivElement>(null);
