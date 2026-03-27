@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { useBrand } from "./BrandContext";
@@ -11,23 +11,48 @@ interface CustomerContextType {
   customer: Customer | null;
   loading: boolean;
   isDriver: boolean;
+  isImpersonating: boolean;
   refetch: () => Promise<void>;
 }
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const { brand, selectedBranch } = useBrand();
   const queryClient = useQueryClient();
 
-  const queryKey = ["customer-context", user?.id, brand?.id, selectedBranch?.id];
+  const impersonateCustomerId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("customerId");
+  }, []);
+
+  const isAdmin = useMemo(() => {
+    if (!roles?.length) return false;
+    const adminRoles = ["root_admin", "tenant_admin", "brand_admin", "branch_admin"];
+    return roles.some((r) => adminRoles.includes(r.role));
+  }, [roles]);
+
+  const canImpersonate = !!impersonateCustomerId && isAdmin;
+
+  const queryKey = ["customer-context", user?.id, brand?.id, selectedBranch?.id, impersonateCustomerId];
 
   const { data: customer = null, isLoading: loading } = useQuery({
     queryKey,
-    enabled: !!user && !!brand && !!selectedBranch,
+    enabled: !!user && !!brand && (!!selectedBranch || canImpersonate),
     queryFn: async () => {
-      // Single query: fetch any existing customer for this user + brand
+      // Impersonation mode: fetch the specific customer directly
+      if (canImpersonate) {
+        const { data } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("id", impersonateCustomerId!)
+          .eq("brand_id", brand!.id)
+          .maybeSingle();
+        return data;
+      }
+
+      // Normal flow: fetch any existing customer for this user + brand
       const { data: existing } = await supabase
         .from("customers")
         .select("*")
@@ -113,7 +138,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <CustomerContext.Provider value={{ customer, loading, isDriver, refetch }}>
+    <CustomerContext.Provider value={{ customer, loading, isDriver, isImpersonating: canImpersonate, refetch }}>
       {children}
     </CustomerContext.Provider>
   );

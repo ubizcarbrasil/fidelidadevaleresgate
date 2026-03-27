@@ -91,7 +91,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
   };
 
   const handleOpenPwa = () => {
-    const url = `/customer-preview?brandId=${brandId}`;
+    const url = `/customer-preview?brandId=${brandId}&customerId=${driver.id}`;
     window.open(url, "_blank");
   };
 
