@@ -40,6 +40,7 @@ export default function OffersPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
+  const [filtroMotorista, setFiltroMotorista] = useState<string>("all");
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId && !form.brand_id) {
@@ -48,12 +49,14 @@ export default function OffersPage() {
   }, [isRootAdmin, currentBrandId]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["offers", debouncedSearch, page, currentBrandId],
+    queryKey: ["offers", debouncedSearch, page, currentBrandId, filtroMotorista],
     enabled: !!currentBrandId || isRootAdmin,
     queryFn: async () => {
       let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
+      if (filtroMotorista === "driver_only") query = query.eq("driver_only", true);
+      else if (filtroMotorista === "customer_only") query = query.eq("driver_only", false);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
@@ -154,7 +157,24 @@ export default function OffersPage() {
         </Dialog>
       </div>
 
-      <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+        <div className="flex-1 w-full">
+          <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
+        </div>
+        <Select value={filtroMotorista} onValueChange={setFiltroMotorista}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-muted-foreground" />
+              <SelectValue placeholder="Público" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as ofertas</SelectItem>
+            <SelectItem value="driver_only">🚗 Exclusivo Motorista</SelectItem>
+            <SelectItem value="customer_only">👤 Apenas Clientes</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <DataSkeleton variant="table-row" rows={5} />
