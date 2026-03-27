@@ -134,6 +134,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
+  const whatsappNumber = settings?.whatsapp_number as string | undefined;
   const showBanners = settings?.driver_show_banners !== false;
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
   const interstitialBanners: Array<{ id: string; image_url: string; title: string; link_url: string; after_category_id: string; is_active: boolean }> = settings?.driver_interstitial_banners || [];
