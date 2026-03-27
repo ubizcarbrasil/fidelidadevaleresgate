@@ -112,7 +112,7 @@ const TAB_CONTENT: Record<Tab, React.FC<any>> = {
 
 export default function CustomerLayout() {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
   const { isModuleEnabled } = useBrandModules();
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedOffer, setSelectedOffer] = useState<NavOffer | null>(null);
