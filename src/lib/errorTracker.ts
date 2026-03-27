@@ -2,7 +2,6 @@
  * Lightweight error tracking module.
  * Captures unhandled errors and persists them to the error_logs table.
  */
-import { supabase } from "@/integrations/supabase/client";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("errorTracker");
