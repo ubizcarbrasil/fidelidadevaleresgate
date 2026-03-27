@@ -27,20 +27,18 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Caller client (to verify identity)
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Caller identity via service role
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await callerClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
+    const { data: { user: callerUser }, error: userErr } = await adminClient.auth.getUser(token);
+    if (userErr || !callerUser) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const callerId = claimsData.claims.sub as string;
+    const callerId = callerUser.id;
 
     // Admin client for creating users
     const adminClient = createClient(supabaseUrl, serviceRoleKey);

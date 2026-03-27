@@ -426,13 +426,12 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     let callerUserId = "00000000-0000-0000-0000-000000000000";
     if (authHeader.startsWith("Bearer ")) {
-      const anonClient = createClient(
+      const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } },
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
-      const { data: claimsData } = await anonClient.auth.getClaims(authHeader.replace("Bearer ", ""));
-      if (claimsData?.claims?.sub) callerUserId = claimsData.claims.sub as string;
+      const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
+      if (user?.id) callerUserId = user.id;
     }
 
     const body = await req.json();
