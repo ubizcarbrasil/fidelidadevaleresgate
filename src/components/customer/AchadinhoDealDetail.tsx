@@ -165,7 +165,7 @@ export default function AchadinhoDealDetail({
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto">
             {/* Banner decorativo */}
-            <div className="relative mx-4 mb-3">
+            <div className="relative mx-4 mt-2 mb-3">
               <div className="w-full aspect-[3/1] rounded-2xl overflow-hidden relative">
                 {currentBannerUrl ? (
                   detailBanners.map((url, i) => (

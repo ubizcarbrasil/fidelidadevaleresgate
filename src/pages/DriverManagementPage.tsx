@@ -169,7 +169,7 @@ export default function DriverManagementPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">
+          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs">
             <Users className="h-3 w-3 mr-1" />
             {drivers?.length ?? 0} motoristas
           </Badge>
@@ -220,7 +220,7 @@ export default function DriverManagementPage() {
                         </Badge>
                       )}
                       {driver.customer_tier && driver.customer_tier !== "INICIANTE" && (
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-[10px]">
                           {driver.customer_tier}
                         </Badge>
                       )}
@@ -237,7 +237,7 @@ export default function DriverManagementPage() {
                 {/* Linha 2 (mobile) / inline (desktop): saldo + corridas + ações */}
                 <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-12 sm:pl-0">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs font-mono">
+                    <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
                       {driver.points_balance} pts
                     </Badge>
                     <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
