@@ -110,7 +110,7 @@ export default function DriverManagementPage() {
   const handleExportCsv = () => {
     if (!drivers || drivers.length === 0) return;
     const header = "Nome,CPF,Telefone,Email,Saldo Pontos,Pontos Corridas,Tier,Pontuação Ativa";
-    const rows = drivers.map((c) =>
+    const rows = drivers.map((c: DriverRow) =>
       [
         `"${cleanName(c.name).replace(/"/g, '""')}"`,
         c.cpf || "",
@@ -182,7 +182,7 @@ export default function DriverManagementPage() {
       ) : (
         <ScrollArea className="h-[calc(100vh-260px)]">
           <div className="space-y-2">
-            {drivers.map((driver) => (
+            {drivers.map((driver: DriverRow) => (
               <div
                 key={driver.id}
                 className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors"
@@ -255,7 +255,7 @@ export default function DriverManagementPage() {
       <ManualDriverScoringDialog
         open={!!bonusDriver}
         onOpenChange={(open) => { if (!open) setBonusDriver(null); }}
-        driver={bonusDriver}
+        driver={bonusDriver ? { id: bonusDriver.id, name: bonusDriver.name, branch_id: bonusDriver.branch_id ?? undefined } : null}
         brandId={currentBrandId || ""}
       />
     </div>
