@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Coins, Gift } from "lucide-react";
+import { Coins, Gift, Car } from "lucide-react";
 import type { DriverRow } from "@/pages/DriverManagementPage";
 import DriverScoringToggle from "../DriverScoringToggle";
 
@@ -23,8 +23,15 @@ export default function AbaPontuacaoMotorista({ driver, onAddPoints }: Props) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Pontos de corridas</span>
-          <Badge className="bg-primary/10 text-primary border-primary/30 text-sm font-mono">
+          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-sm font-mono">
             +{driver.total_ride_points} pts
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Corridas realizadas</span>
+          <Badge variant="outline" className="text-sm font-mono">
+            <Car className="h-3.5 w-3.5 mr-1" />
+            {driver.total_rides}
           </Badge>
         </div>
       </div>
