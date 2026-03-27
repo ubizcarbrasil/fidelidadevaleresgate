@@ -69,6 +69,8 @@ function useRealtimeRefresh() {
       .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
         queryClient.invalidateQueries({ queryKey: ["machine_rides-count"] });
         queryClient.invalidateQueries({ queryKey: ["earnings-chart"] });
+        queryClient.invalidateQueries({ queryKey: ["pontos-motoristas"] });
+        queryClient.invalidateQueries({ queryKey: ["pontos-clientes"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
         queryClient.invalidateQueries({ queryKey: ["customers-count"] });
@@ -588,6 +590,29 @@ export default function Dashboard() {
   const { data: earningEventsTotal } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED"), "finished", brandFilter);
   const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED").gte("created_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
+  const { data: motoristasTotal } = useMetric("customers", true, (q) => q.ilike("name", "%[MOTORISTA]%"), "motoristas", brandFilter);
+
+  // Soma de pontos motoristas e clientes
+  const { data: pontosMotoristas } = useQuery({
+    queryKey: ["pontos-motoristas", brandFilter ?? "global"],
+    queryFn: async () => {
+      let q = fromTable("machine_rides").select("driver_points_credited").eq("ride_status", "FINALIZED");
+      if (brandFilter) q = q.eq("brand_id", brandFilter);
+      q = q.limit(5000);
+      const { data: rows } = await q;
+      return (rows || []).reduce((sum, r: any) => sum + (r.driver_points_credited || 0), 0);
+    },
+  });
+  const { data: pontosClientes } = useQuery({
+    queryKey: ["pontos-clientes", brandFilter ?? "global"],
+    queryFn: async () => {
+      let q = fromTable("machine_rides").select("points_credited").eq("ride_status", "FINALIZED");
+      if (brandFilter) q = q.eq("brand_id", brandFilter);
+      q = q.limit(5000);
+      const { data: rows } = await q;
+      return (rows || []).reduce((sum, r: any) => sum + (r.points_credited || 0), 0);
+    },
+  });
 
   // Optimized: single query per table instead of N queries per day
   const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any) => {
@@ -694,6 +719,19 @@ export default function Dashboard() {
         </div>
         <div className="animate-slide-up delay-4">
           <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="violet" sparkData={recentRedemptions?.map(d => d.count)} />
+        </div>
+      </div>
+
+      {/* ── SECTION A2: KPIs Motoristas ── */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Motoristas" value={motoristasTotal} icon={Car} color="warning" />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Pontos Motoristas" value={pontosMotoristas !== undefined ? pontosMotoristas.toLocaleString("pt-BR") : undefined} icon={Coins} color="success" />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Pontos Clientes" value={pontosClientes !== undefined ? pontosClientes.toLocaleString("pt-BR") : undefined} icon={UserCheck} color="primary" />
         </div>
       </div>
 
