@@ -665,7 +665,7 @@ export default function Dashboard() {
             </span>
             Tempo real
           </Badge>
-          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
+          <Select value={period} onValueChange={(v) => startTransition(() => setPeriod(v as PeriodKey))}>
             <SelectTrigger className="w-[130px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
