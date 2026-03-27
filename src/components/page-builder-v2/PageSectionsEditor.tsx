@@ -19,6 +19,7 @@ export interface NativeSectionConfig {
   label: string;
   enabled: boolean;
   order: number;
+  audience?: "all" | "driver_only" | "customer_only";
 }
 
 const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
@@ -305,6 +306,12 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary">
                       <Lock className="h-2.5 w-2.5 mr-0.5" /> Nativa
                     </Badge>
+                    {ns.audience === "driver_only" && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">🚗 Motoristas</Badge>
+                    )}
+                    {ns.audience === "customer_only" && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">👤 Clientes</Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">Seção fixa do sistema</p>
                 </div>
@@ -375,6 +382,12 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
                     {section.section_templates?.key || "—"}
                   </span>
+                  {(section as any).audience === "driver_only" && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">🚗 Motoristas</Badge>
+                  )}
+                  {(section as any).audience === "customer_only" && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">👤 Clientes</Badge>
+                  )}
                 </div>
                 {section.subtitle && <p className="text-xs text-muted-foreground truncate">{section.subtitle}</p>}
               </div>
