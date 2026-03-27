@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Search, X, ExternalLink, icons, Tag, Share2 } from "lucide-react";
 import { shareDriverUrl } from "@/lib/publicShareUrl";

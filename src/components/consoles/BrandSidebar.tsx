@@ -6,6 +6,7 @@ import {
   ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandInfo } from "@/hooks/useBrandName";
@@ -309,7 +310,7 @@ export function BrandSidebar() {
               badges={badges}
               brandId={currentBrandId ?? undefined}
               isOpen={effectiveOpenGroup === group.label}
-              onToggle={() => setOpenGroupLabel(prev => prev === group.label ? null : group.label)}
+              onToggle={() => setOpenGroupLabel((prev: string | null) => prev === group.label ? null : group.label)}
             />
           );
         })}
