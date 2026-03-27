@@ -774,6 +774,7 @@ export type Database = {
       }
       brand_sections: {
         Row: {
+          audience: string
           banner_height: string
           banner_image_url: string | null
           banners_json: Json
@@ -801,6 +802,7 @@ export type Database = {
           visual_json: Json
         }
         Insert: {
+          audience?: string
           banner_height?: string
           banner_image_url?: string | null
           banners_json?: Json
@@ -828,6 +830,7 @@ export type Database = {
           visual_json?: Json
         }
         Update: {
+          audience?: string
           banner_height?: string
           banner_image_url?: string | null
           banners_json?: Json
