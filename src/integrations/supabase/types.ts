@@ -6204,6 +6204,14 @@ export type Database = {
         Returns: string[]
       }
       get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_points_ranking: {
+        Args: { p_brand_id: string; p_limit?: number }
+        Returns: {
+          participant_name: string
+          participant_type: string
+          total_points: number
+        }[]
+      }
       get_points_summary: {
         Args: { p_brand_id: string }
         Returns: {

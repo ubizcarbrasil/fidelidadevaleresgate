@@ -26,6 +26,7 @@ const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard
 const AchadinhosAlerts = lazyWithRetry(() => import("@/components/dashboard/AchadinhosAlerts"));
 const PointsFeed = lazyWithRetry(() => import("@/components/dashboard/PointsFeed"));
 const PendingReportsSection = lazyWithRetry(() => import("@/components/dashboard/PendingReportsSection"));
+const RankingPontuacao = lazyWithRetry(() => import("@/components/dashboard/RankingPontuacao"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -71,6 +72,7 @@ function useRealtimeRefresh() {
         queryClient.invalidateQueries({ queryKey: ["machine_rides-count"] });
         queryClient.invalidateQueries({ queryKey: ["earnings-chart"] });
         queryClient.invalidateQueries({ queryKey: ["pontos-summary"] });
+        queryClient.invalidateQueries({ queryKey: ["ranking-pontuacao"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
         queryClient.invalidateQueries({ queryKey: ["customers-count"] });
@@ -781,6 +783,15 @@ export default function Dashboard() {
         </Card>
         <RankingSection brandFilter={brandFilter} />
       </div>
+
+      {/* ── Ranking de Pontuação (Passageiros + Motoristas) ── */}
+      {showBrand && !isRoot && (
+        <div className="animate-slide-up delay-5">
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <RankingPontuacao brandId={brandFilter} />
+          </Suspense>
+        </div>
+      )}
 
       {/* ── Pontuações em Tempo Real + Achadinhos Alertas ── */}
       {showBrand && !isRoot && (
