@@ -222,7 +222,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
           <Rocket className="h-4 w-4 text-primary" />
           Dados de Teste
           {hasDemoStores && (
-            <Badge variant={demoActive ? "default" : "secondary"} className="text-[10px] ml-auto">
+            <Badge variant={demoActive ? "default" : "outline"} className="text-[10px] ml-auto">
               {demoInfo!.active}/{demoInfo!.total} lojas
             </Badge>
           )}
