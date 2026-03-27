@@ -2,6 +2,8 @@ import { StoreVoucherData } from "../types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Truck } from "lucide-react";
 
 interface Props {
   data: StoreVoucherData;
@@ -69,6 +71,22 @@ export default function StepLimits({ data, update }: Props) {
               onCheckedChange={(v) => update({ no_interval: !!v, interval_between_uses_days: v ? null : 7 })}
             />
             <span className="text-sm">Sem intervalo</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-2 border-t border-border">
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={data.driver_only}
+            onCheckedChange={(v) => update({ driver_only: !!v })}
+          />
+          <div className="flex items-center gap-2">
+            <Truck className="h-4 w-4 text-primary" />
+            <div>
+              <span className="text-sm font-medium">Exclusivo para motoristas</span>
+              <p className="text-xs text-muted-foreground">Apenas motoristas identificados poderão ver e resgatar esta oferta</p>
+            </div>
           </div>
         </div>
       </div>

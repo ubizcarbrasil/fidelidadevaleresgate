@@ -48,6 +48,7 @@ export interface StoreVoucherData {
   product_price: number;
   badge_config: BadgeConfig | null;
   publish_to_catalog: boolean;
+  driver_only: boolean;
 }
 
 export const WEEKDAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -92,4 +93,5 @@ export const initialStoreVoucherData: StoreVoucherData = {
   product_price: 0,
   badge_config: null,
   publish_to_catalog: false,
+  driver_only: false,
 };

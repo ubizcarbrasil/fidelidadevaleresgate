@@ -2014,6 +2014,8 @@ export type Database = {
           crm_contact_id: string | null
           crm_sync_status: string | null
           customer_tier: string | null
+          driver_cycle_start: string | null
+          driver_monthly_ride_count: number | null
           email: string | null
           id: string
           is_active: boolean
@@ -2033,6 +2035,8 @@ export type Database = {
           crm_contact_id?: string | null
           crm_sync_status?: string | null
           customer_tier?: string | null
+          driver_cycle_start?: string | null
+          driver_monthly_ride_count?: number | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -2052,6 +2056,8 @@ export type Database = {
           crm_contact_id?: string | null
           crm_sync_status?: string | null
           customer_tier?: string | null
+          driver_cycle_start?: string | null
+          driver_monthly_ride_count?: number | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -2097,6 +2103,73 @@ export type Database = {
             columns: ["crm_contact_id"]
             isOneToOne: false
             referencedRelation: "crm_contacts_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_points_rules: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string | null
+          fixed_points_per_ride: number | null
+          id: string
+          is_active: boolean | null
+          percent_of_passenger: number | null
+          points_per_real: number | null
+          rule_mode: string
+          updated_at: string | null
+          volume_cycle_days: number | null
+          volume_tiers: Json | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string | null
+          fixed_points_per_ride?: number | null
+          id?: string
+          is_active?: boolean | null
+          percent_of_passenger?: number | null
+          points_per_real?: number | null
+          rule_mode?: string
+          updated_at?: string | null
+          volume_cycle_days?: number | null
+          volume_tiers?: Json | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string | null
+          fixed_points_per_ride?: number | null
+          id?: string
+          is_active?: boolean | null
+          percent_of_passenger?: number | null
+          points_per_real?: number | null
+          rule_mode?: string
+          updated_at?: string | null
+          volume_cycle_days?: number | null
+          volume_tiers?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_points_rules_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -3326,6 +3399,7 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percent: number | null
+          driver_only: boolean | null
           end_at: string | null
           id: string
           image_url: string | null
@@ -3368,6 +3442,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number | null
+          driver_only?: boolean | null
           end_at?: string | null
           id?: string
           image_url?: string | null
@@ -3410,6 +3485,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number | null
+          driver_only?: boolean | null
           end_at?: string | null
           id?: string
           image_url?: string | null

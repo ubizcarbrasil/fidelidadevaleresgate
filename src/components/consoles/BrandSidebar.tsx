@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw,
   Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
-  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp,
+  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -123,6 +123,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
       { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car, moduleKey: "machine_integration" },
       { key: "sidebar.machine_test", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical, moduleKey: "machine_integration" },
+      { key: "sidebar.driver_points_rules", defaultTitle: "Pontuação Motoristas", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration" },
     ],
   },
   {

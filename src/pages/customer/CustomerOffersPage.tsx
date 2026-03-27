@@ -16,7 +16,7 @@ import { queryKeys } from "@/lib/queryKeys";
 
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
   const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
   const { formatSubtitle } = useOfferCardConfig();
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
@@ -75,8 +75,14 @@ export default function CustomerOffersPage() {
     },
   });
 
+  
+
   const filtered = useMemo(() => {
     let result = offers;
+    // Hide driver-only offers from non-drivers
+    if (!isDriver) {
+      result = result.filter((o) => !(o as any).driver_only);
+    }
     if (selectedSegmentId) {
       result = result.filter((o) => o.stores?.taxonomy_segment_id === selectedSegmentId);
     }
@@ -89,7 +95,7 @@ export default function CustomerOffersPage() {
       );
     }
     return result;
-  }, [offers, selectedSegmentId, query]);
+  }, [offers, selectedSegmentId, query, isDriver]);
 
   if (loading) {
     return (

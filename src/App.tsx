@@ -99,6 +99,7 @@ const OfferCardConfigPage = lazyWithRetry(() => import("@/pages/OfferCardConfigP
 const PlanModuleTemplatesPage = lazyWithRetry(() => import("@/pages/PlanModuleTemplatesPage"));
 const SubscriptionPlansAdminPage = lazyWithRetry(() => import("@/pages/SubscriptionPlansAdminPage"));
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
+const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 
 const TaxonomyPage = lazyWithRetry(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazyWithRetry(() => import("@/pages/customer/CustomPage"));
@@ -235,6 +236,7 @@ function AppRoutes() {
           <Route path="sponsored-placements" element={<ModuleGuard moduleKey="sponsored"><SponsoredPlacementsPage /></ModuleGuard>} />
           <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
           <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
+          <Route path="driver-points-rules" element={<ModuleGuard moduleKey="machine_integration"><DriverPointsRulesPage /></ModuleGuard>} />
           <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />

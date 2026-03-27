@@ -25,7 +25,7 @@ export default function ForYouSection() {
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const { data: offers = [], isLoading: loading } = useQuery({
+  const { data: rawOffers = [], isLoading: loading } = useQuery({
     queryKey: [...queryKeys.offers.list(brand?.id, selectedBranch?.id, "foryou"), rankedIds.length > 0 ? "ranked" : "fallback"],
     enabled: !!brand && !!selectedBranch,
     queryFn: async () => {
@@ -52,6 +52,9 @@ export default function ForYouSection() {
       return (data || []) as OfferWithStore[];
     },
   });
+
+  // Filter driver-only offers for non-drivers
+  const offers = rawOffers.filter((o) => !(o as any).driver_only);
 
   if (loading) {
     return (

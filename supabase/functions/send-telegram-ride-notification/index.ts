@@ -46,6 +46,8 @@ Deno.serve(async (req) => {
       driver_name,
       is_driver_notification,
       driver_points,
+      driver_monthly_rides,
+      driver_volume_tier,
     } = body;
 
     if (!chat_id) {
@@ -70,6 +72,8 @@ Deno.serve(async (req) => {
         `🪙 Pontos creditados: ${driver_points}`,
         `💰 Valor da corrida: R$ ${Number(ride_value || 0).toFixed(2)}`,
         city_name ? `🏙️ Cidade: ${city_name}` : null,
+        driver_volume_tier ? `📊 ${driver_volume_tier}` : null,
+        driver_monthly_rides ? `🔄 Corridas no ciclo: ${driver_monthly_rides}` : null,
         `👥 Passageiro: ${customer_name || "Não identificado"}`,
         customer_phone ? `📱 Tel passageiro: ${customer_phone}` : null,
         `🎯 Pontos passageiro: ${points_credited || 0}`,
