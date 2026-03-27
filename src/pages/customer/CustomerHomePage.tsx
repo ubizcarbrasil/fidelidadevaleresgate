@@ -102,13 +102,19 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     return DEFAULT_NATIVE_SECTIONS;
   }, [brand?.home_layout_json]);
 
-  const isNativeEnabled = (key: string) => {
-    const section = nativeSections.find((s: NativeSectionConfig) => s.key === key);
-    return section ? section.enabled : true;
+  const isDriver = !!(customer?.name && /\[MOTORISTA\]/i.test(customer.name));
+
+  const isNativeSectionVisible = (ns: NativeSectionConfig) => {
+    if (!ns.enabled) return false;
+    const audience = ns.audience || "all";
+    if (audience === "driver_only" && !isDriver) return false;
+    if (audience === "customer_only" && isDriver) return false;
+    return true;
   };
 
-  const renderNativeSection = (key: string) => {
-    if (!isNativeEnabled(key)) return null;
+  const renderNativeSection = (ns: NativeSectionConfig) => {
+    if (!isNativeSectionVisible(ns)) return null;
+    const key = ns.key;
 
     switch (key) {
       case "BANNERS":
@@ -183,7 +189,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
       </div>
 
       {/* Render native sections in configured order */}
-      {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns.key))}
+      {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns))}
 
       {/* Dynamic CMS Sections */}
       <div className="mt-6 animate-fade-in">

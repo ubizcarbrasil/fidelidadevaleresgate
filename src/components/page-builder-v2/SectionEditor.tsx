@@ -48,6 +48,7 @@ export default function SectionEditor({ section, onBack }: Props) {
     coupon_type_filter: section.coupon_type_filter || "all",
     card_radius: section.visual_json?.card_radius ?? 16,
     card_shadow: section.visual_json?.card_shadow ?? true,
+    audience: (section as any).audience || "all",
   });
   const [saving, setSaving] = useState(false);
 
@@ -66,6 +67,7 @@ export default function SectionEditor({ section, onBack }: Props) {
       icon_size: form.icon_size,
       banner_height: form.banner_height,
       coupon_type_filter: form.coupon_type_filter === "all" ? null : form.coupon_type_filter,
+      audience: form.audience,
       visual_json: {
         card_radius: form.card_radius,
         card_shadow: form.card_shadow,
@@ -99,6 +101,22 @@ export default function SectionEditor({ section, onBack }: Props) {
       </div>
 
       <div className="space-y-6">
+        {/* Audience */}
+        <div className="rounded-xl border p-4 space-y-4">
+          <h3 className="font-semibold text-sm">👥 Audiência</h3>
+          <div>
+            <Label>Quem pode ver esta seção?</Label>
+            <Select value={form.audience} onValueChange={v => setForm(f => ({ ...f, audience: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="driver_only">🚗 Apenas Motoristas</SelectItem>
+                <SelectItem value="customer_only">👤 Apenas Clientes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Identity */}
         <div className="rounded-xl border p-4 space-y-4">
           <h3 className="font-semibold text-sm">📝 Identidade</h3>

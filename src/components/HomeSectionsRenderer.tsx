@@ -28,6 +28,7 @@ interface BrandSection {
   banner_height?: string;
   display_mode?: string;
   segment_filter_ids?: string[] | null;
+  audience?: string;
   section_templates: {
     key: string;
     name: string;
@@ -217,8 +218,16 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const brandBadgeConfig = theme?.badge_config || null;
 
-  // Filter sections based on props and deduplicate by title
+  // Detect driver from CustomerContext
+  const isDriver = !!(customer?.name && /\[MOTORISTA\]/i.test(customer.name));
+
+  // Filter sections based on props, audience, and deduplicate by title
   const filteredSections = sections.filter((s) => {
+    // Audience filter applies to all sections
+    const audience = s.audience || "all";
+    if (audience === "driver_only" && !isDriver) return false;
+    if (audience === "customer_only" && isDriver) return false;
+    // Type filter
     const isBanner = s.section_templates?.type === "BANNER_CAROUSEL";
     if (renderBannersOnly) return isBanner;
     if (skipBanners) return !isBanner;
