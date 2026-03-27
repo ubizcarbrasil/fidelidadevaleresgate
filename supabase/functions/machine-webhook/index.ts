@@ -446,8 +446,12 @@ async function processFinalized(
   let driverCustomerId: string | null = null;
 
   if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
+    const driverMode = integration.driver_points_mode || "PERCENT";
     const driverPercent = Number(integration.driver_points_percent) || 50;
-    const driverPoints = Math.floor(points * (driverPercent / 100));
+    const driverPerReal = Number(integration.driver_points_per_real) || 1;
+    const driverPoints = driverMode === "PER_REAL"
+      ? Math.floor(rideValue * driverPerReal)
+      : Math.floor(points * (driverPercent / 100));
 
     if (driverPoints > 0) {
       // Fetch driver details from TaxiMachine API
@@ -513,16 +517,19 @@ async function processFinalized(
         driverCustomerId = driverCustomer.id;
 
         // Credit driver points
-        await sb.from("points_ledger").insert({
-          brand_id: brandId,
-          branch_id: driverCustomer.branch_id,
-          customer_id: driverCustomer.id,
-          entry_type: "CREDIT",
-          points_amount: driverPoints,
-          money_amount: rideValue,
-          reason: `Corrida TaxiMachine #${machineRideId} - Motorista (${driverPercent}% de ${points} pts)`,
-          reference_type: "MACHINE_RIDE",
-        });
+          const reasonDetail = driverMode === "PER_REAL"
+            ? `${driverPerReal} pts/R$ × R$ ${rideValue.toFixed(2)}`
+            : `${driverPercent}% de ${points} pts`;
+          await sb.from("points_ledger").insert({
+            brand_id: brandId,
+            branch_id: driverCustomer.branch_id,
+            customer_id: driverCustomer.id,
+            entry_type: "CREDIT",
+            points_amount: driverPoints,
+            money_amount: rideValue,
+            reason: `Corrida TaxiMachine #${machineRideId} - Motorista (${reasonDetail})`,
+            reference_type: "MACHINE_RIDE",
+          });
 
         const newRideCount = (driverCustomer.ride_count || 0) + 1;
         const newTier = getTierFromRideCount(newRideCount);
