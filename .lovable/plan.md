@@ -1,75 +1,66 @@
 
+Objetivo: corrigir o enriquecimento dos motoristas para que CPF, telefone e e-mail deixem de vir nulos quando `fetchDriverDetails` consulta `/api/integracao/condutor`.
 
-## Correção: Motoristas não pontuados em algumas corridas
+Diagnóstico encontrado:
+- O fluxo atual extrai o `driverId` do webhook em `links.driver` e usa esse valor corretamente como fallback determinístico.
+- A pontuação do motorista funciona, então o problema não está na identificação principal nem no crédito de pontos.
+- O endpoint de corrida e o endpoint de cliente funcionam com as credenciais atuais.
+- O ponto fraco está aqui: `machine-webhook` chama `fetchDriverDetails(driverId, driverHeaders)` usando `matrixHeaders ?? cityHeaders`, ou seja, tenta apenas um conjunto de credenciais.
+- Os logs mostram padrão consistente: `Fetching driver details` seguido de `Driver details response empty`, sem erro HTTP e sem `success=false`. Isso indica resposta 200 com `response` vazio.
+- Como o endpoint `/cliente` enriquece corretamente com credenciais matrix, a hipótese mais provável é: `/condutor` exige credenciais de cidade em alguns casos, ou responde vazio com matrix mesmo quando o `driverId` é válido.
 
-### Diagnóstico
+Plano de implementação:
+1. Ajustar `fetchDriverDetails` em `supabase/functions/_shared/fetchRideData.ts`
+- Receber dois conjuntos de headers: matrix e cidade.
+- Tentar primeiro com matrix quando existir.
+- Se a resposta vier vazia, tentar novamente com city headers.
+- Padronizar um helper interno para interpretar a resposta e diferenciar:
+  - erro HTTP
+  - `success=false`
+  - `response` vazio
+  - sucesso com dados
+- Adicionar logs mais explícitos informando qual credencial foi usada e se houve fallback.
 
-Analisando o webhook `machine-webhook/index.ts`, identifiquei **duas causas raiz** para motoristas não serem pontuados:
+2. Atualizar a chamada no webhook em `supabase/functions/machine-webhook/index.ts`
+- Parar de enviar apenas `driverHeaders`.
+- Passar `matrixHeaders` e `cityHeaders` separadamente para `fetchDriverDetails`.
+- Manter a regra atual de usar `payloadDriverId` como fallback do `apiDriverId`.
 
-**Causa 1 — Linha 467**: O bloco de pontuação do motorista está condicionado a `pointsCredited && points > 0`:
-```typescript
-if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
-```
-Se o passageiro não for pontuado (ex: falha ao criar customer, pontos = 0), o motorista é **completamente ignorado**, mesmo que o driverId exista.
+3. Melhorar a observabilidade
+- Logar um trecho curto do payload bruto retornado por `/condutor` quando a resposta vier vazia.
+- Logar qual estratégia resolveu:
+  - `matrix`
+  - `city`
+  - `matrix_then_city`
+- Isso permite validar rapidamente em produção sem alterar o comportamento do restante do fluxo.
 
-**Causa 2 — `driverId` nulo**: Se nem a API (recibo/V1) nem o payload (`links.driver`) retornam o ID do motorista, o bloco inteiro é pulado — mesmo quando o `driverName` está disponível nos dados da corrida.
+4. Garantir impacto mínimo no restante do fluxo
+- Não mexer na lógica de criação/atualização do customer motorista, só no enriquecimento.
+- Manter `external_driver_id` como chave principal de deduplicação.
+- Manter fallback de nome atual quando a API continuar sem devolver dados.
 
-### Plano de Correção
+Resultado esperado:
+- Motoristas novos passam a ser criados com CPF, telefone e e-mail quando o endpoint aceitar as credenciais de cidade.
+- Motoristas existentes continuam sendo localizados por `external_driver_id`, mas com chance maior de atualização correta no espelho de CRM e nos próximos cadastros.
+- Se ainda vier vazio com ambos os headers, os logs vão mostrar de forma objetiva se o problema é de credencial ou de semântica do `driverId`.
 
-#### 1. Desacoplar pontuação do motorista da do passageiro
-
-Mover a condição de entrada do bloco de driver scoring para depender apenas de:
-- `integration.driver_points_enabled` 
-- `driverId` OU `driverName` disponível
-- `rideValue > 0`
-
-Remover a dependência de `pointsCredited && points > 0`. O motorista deve ser pontuado independentemente do resultado do passageiro.
-
-Para regras do tipo `PERCENT` (percentual dos pontos do passageiro), usar os pontos calculados do passageiro como referência mesmo que o passageiro não tenha sido creditado (calcular sem creditar).
-
-#### 2. Fallback por nome quando driverId é nulo
-
-Quando `driverId` é null mas `driverName` está presente:
-- Buscar motorista existente por nome com tag `[MOTORISTA]` no `customers`
-- Se não encontrar, criar o registro normalmente com todos os dados disponíveis (sem `external_driver_id`)
-- Logar warning para rastreabilidade
-
-#### 3. Garantir dados completos no cadastro do motorista
-
-O cadastro atual (linhas 569-586) já inclui CPF, phone via `fetchDriverDetails`. Adicionar:
-- `email` do motorista (já retornado por `fetchDriverDetails` mas não salvo no customer)
-- Salvar o email no campo apropriado ou no CRM contact
-
-#### Arquivo afetado
-
-| Arquivo | Alteração |
-|---|---|
-| `supabase/functions/machine-webhook/index.ts` | Desacoplar guard condition do driver scoring, adicionar fallback por nome, incluir email no cadastro |
-
-### Detalhes técnicos
-
-```typescript
-// ANTES (linha 467):
-if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
-
-// DEPOIS:
-if (integration.driver_points_enabled && rideValue > 0 && (driverId || driverName)) {
-  // Para regras PERCENT, calcular pontos de referência do passageiro
-  const passengerPointsRef = points > 0 ? points : Math.floor(rideValue * resolvedPointsPerReal);
-  // ... usar passengerPointsRef no lugar de `points` para cálculo PERCENT
+Detalhes técnicos:
+```text
+machine-webhook
+  -> extrai payloadDriverId de links.driver
+  -> fetchRideData(...) resolve corrida/passageiro
+  -> fetchDriverDetails(driverId, matrixHeaders, cityHeaders)
+       1. tenta /condutor com matrix
+       2. se response vazio, tenta /condutor com city
+       3. retorna dados normalizados ou nulos
+  -> customer do motorista é criado/atualizado
+  -> crm_contacts recebe dados enriquecidos
 ```
 
-Para o fallback por nome (quando `driverId` é null):
-```typescript
-// Após falhar a busca por external_driver_id e cascade CPF/phone/name
-if (!driverCascade && !driverId && driverName) {
-  // Buscar por nome tagado
-  const taggedName = `[${driverTag}] ${driverName}`;
-  const { data } = await sb.from("customers").select(...)
-    .eq("brand_id", brandId).eq("name", taggedName).maybeSingle();
-  if (data) driverCascade = { customer: data, matchedBy: "name_fallback" };
-}
-```
+Arquivos envolvidos:
+- `supabase/functions/_shared/fetchRideData.ts`
+- `supabase/functions/machine-webhook/index.ts`
 
-Também preciso salvar o `pointsPerReal` resolvido em uma variável acessível ao bloco do motorista (atualmente fica dentro do escopo `if (customer)`).
-
+Critério de validação após implementar:
+- Ver em logs pelo menos um caso com fallback bem-sucedido ou confirmação de vazio com ambos headers.
+- Confirmar que novos motoristas processados deixam de ficar com `cpf`, `phone` e `email` nulos quando a API responder dados.
