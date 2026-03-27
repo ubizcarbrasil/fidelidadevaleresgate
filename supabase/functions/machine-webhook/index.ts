@@ -131,7 +131,7 @@ function getTierFromRideCount(rideCount: number): string {
   return "INICIANTE";
 }
 
-const CUSTOMER_SELECT = "id, branch_id, points_balance, name, phone, customer_tier, ride_count";
+const CUSTOMER_SELECT = "id, branch_id, points_balance, name, phone, customer_tier, ride_count, external_driver_id";
 
 async function findCustomerCascade(
   sb: ReturnType<typeof createClient>,
@@ -437,11 +437,25 @@ async function processFinalized(
     // Remove null keys to avoid overwriting good data
     Object.keys(contactPayload).forEach(k => { if (contactPayload[k] === null) delete contactPayload[k]; });
 
-    sb.from("crm_contacts")
-      .upsert(contactPayload, { onConflict: "brand_id,customer_id" })
-      .then(({ error }) => {
-        if (error) logger.error("crm_contacts upsert error", { error });
-      });
+    // Use select+insert/update instead of upsert to avoid partial unique index conflict
+    (async () => {
+      try {
+        const { data: existing } = await sb.from("crm_contacts")
+          .select("id")
+          .eq("brand_id", brandId)
+          .eq("customer_id", customer.id)
+          .maybeSingle();
+        if (existing) {
+          const { error } = await sb.from("crm_contacts").update(contactPayload).eq("id", existing.id);
+          if (error) logger.error("crm_contacts update error", { error });
+        } else {
+          const { error } = await sb.from("crm_contacts").insert(contactPayload);
+          if (error) logger.error("crm_contacts insert error", { error });
+        }
+      } catch (e) {
+        logger.error("crm_contacts sync error", { error: String(e) });
+      }
+    })();
   }
 
   // --- Driver scoring ---
@@ -507,13 +521,31 @@ async function processFinalized(
       const driverDisplayName = driverDetails.name || driverName || `Motorista #${driverId}`;
       const driverTag = integration.driver_customer_tag || "MOTORISTA";
 
-      // Find or create driver customer
-      const driverCascade = await findCustomerCascade(
-        sb, brandId,
-        driverDetails.cpf,
-        driverDetails.phone,
-        driverDisplayName
-      );
+      // Find driver customer: prioritize external_driver_id lookup
+      let driverCascade: { customer: any; matchedBy: string } | null = null;
+
+      // 1. Try by external_driver_id first (deterministic, prevents duplicates)
+      const { data: byExtId } = await sb
+        .from("customers")
+        .select(CUSTOMER_SELECT + ", driver_monthly_ride_count, driver_cycle_start")
+        .eq("brand_id", brandId)
+        .eq("external_driver_id", driverId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (byExtId) {
+        driverCascade = { customer: byExtId, matchedBy: "external_driver_id" };
+      }
+
+      // 2. Fallback to CPF/phone/name cascade
+      if (!driverCascade) {
+        const cascadeResult = await findCustomerCascade(
+          sb, brandId,
+          driverDetails.cpf,
+          driverDetails.phone,
+          `[${driverTag}] ${driverDisplayName}`
+        );
+        if (cascadeResult) driverCascade = cascadeResult;
+      }
 
       let driverCustomer: any = null;
       let driverMatchedBy: string | null = null;
@@ -549,8 +581,9 @@ async function processFinalized(
               crm_sync_status: "PENDING",
               driver_monthly_ride_count: 0,
               driver_cycle_start: new Date().toISOString().slice(0, 10),
+              external_driver_id: driverId,
             })
-            .select("id, branch_id, points_balance, name, phone, customer_tier, ride_count, driver_monthly_ride_count, driver_cycle_start")
+            .select("id, branch_id, points_balance, name, phone, customer_tier, ride_count, driver_monthly_ride_count, driver_cycle_start, external_driver_id")
             .single();
           if (created) {
             driverCustomer = created;
@@ -646,9 +679,25 @@ async function processFinalized(
         };
         Object.keys(driverContactPayload).forEach(k => { if (driverContactPayload[k] === null) delete driverContactPayload[k]; });
 
-        sb.from("crm_contacts")
-          .upsert(driverContactPayload, { onConflict: "brand_id,customer_id" })
-          .then(({ error }) => { if (error) logger.error("crm_contacts driver upsert error", { error }); });
+        // Use select+insert/update instead of upsert to avoid partial unique index conflict
+        (async () => {
+          try {
+            const { data: existing } = await sb.from("crm_contacts")
+              .select("id")
+              .eq("brand_id", brandId)
+              .eq("customer_id", driverCustomer.id)
+              .maybeSingle();
+            if (existing) {
+              const { error } = await sb.from("crm_contacts").update(driverContactPayload).eq("id", existing.id);
+              if (error) logger.error("crm_contacts driver update error", { error });
+            } else {
+              const { error } = await sb.from("crm_contacts").insert(driverContactPayload);
+              if (error) logger.error("crm_contacts driver insert error", { error });
+            }
+          } catch (e) {
+            logger.error("crm_contacts driver sync error", { error: String(e) });
+          }
+        })();
 
         logger.info("Driver points credited", {
           machineRideId, driverId, driverPoints: driverPointsCredited,
