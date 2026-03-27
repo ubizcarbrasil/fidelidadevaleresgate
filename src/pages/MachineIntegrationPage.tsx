@@ -833,6 +833,15 @@ export default function MachineIntegrationPage() {
                     onCheckedChange={setDriverPointsEnabled}
                   />
                 </div>
+                {!driverPointsEnabled && (
+                  <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-500/10 text-yellow-700 [&>svg]:text-yellow-600">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle className="text-xs font-semibold">Pontuação desativada</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      Os motoristas <strong>não estão sendo pontuados</strong>. Ative o switch acima e salve para que cada corrida finalizada credite pontos ao motorista e envie notificação no Telegram.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 {driverPointsEnabled && (
                   <div className="space-y-3">
                     {/* Mode selector */}
