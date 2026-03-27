@@ -1,33 +1,35 @@
 
 
-## Plano: Reorganizar painel de detalhes do motorista com abas
+## Plano: Layout mobile para lista de motoristas
 
-### Resumo
-Refatorar o `DriverDetailSheet` para usar o componente `Tabs` do shadcn, distribuindo o conteúdo em 4 abas: **Dados**, **Pontuação**, **Regras** e **Extrato**. Cada aba será extraída para seu próprio componente, seguindo a regra de componentização do workspace.
+### Problema
+No mobile (430px), os cards dos motoristas estão cortados — as colunas "Saldo", "Corridas" e os botões de ação ficam fora da tela.
 
-### Distribuição das abas
-
-| Aba | Conteúdo |
-|-----|----------|
-| **Dados** | Dados cadastrais (nome, CPF, telefone, email), tier, cidade/branch, ações rápidas (acessar conta, redefinir senha) |
-| **Pontuação** | Saldo atual, toggle de pontuação ativa/desativada, botão adicionar pontos |
-| **Regras** | Editor de regra individual de pontuação (`DriverRuleEditor`) |
-| **Extrato** | Extrato/relatório de pontos (`DriverLedgerSection`) |
-
-### Arquivos a criar
-1. `src/components/driver-management/tabs/AbaDadosMotorista.tsx` — dados cadastrais, branch, senha, acesso à conta
-2. `src/components/driver-management/tabs/AbaPontuacaoMotorista.tsx` — saldo, toggle, adicionar pontos
-3. `src/components/driver-management/tabs/AbaRegrasMotorista.tsx` — wrapper do `DriverRuleEditor`
-4. `src/components/driver-management/tabs/AbaExtratoMotorista.tsx` — wrapper do `DriverLedgerSection`
+### Solução
+Refatorar cada card de motorista para empilhar verticalmente no mobile, usando layout de card compacto em vez de linha horizontal.
 
 ### Arquivo a editar
-5. `src/components/driver-management/DriverDetailSheet.tsx` — substituir conteúdo monolítico por `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` com as 4 abas, mantendo header com nome e ícone acima das abas
+`src/pages/DriverManagementPage.tsx` — bloco do card de cada motorista (linhas 186-243)
+
+### Layout mobile proposto
+
+```text
+┌─────────────────────────────────┐
+│ 🚛  Nome do Motorista    BRONZE │
+│     CPF: •••.123.456-78         │
+│     Tel: (11) 99999-9999        │
+│                                 │
+│  Saldo: 45 pts  Corridas: +20  │
+│              [🎁]  [👁]        │
+└─────────────────────────────────┘
+```
 
 ### Detalhes técnicos
-- Usar `Tabs` de `@/components/ui/tabs` com `defaultValue="dados"`
-- `TabsList` com layout `grid grid-cols-4` para distribuir uniformemente
-- Cada `TabsContent` renderiza o componente da aba correspondente
-- `InfoRow` será movido para `AbaDadosMotorista` ou extraído como utilitário compartilhado
-- `ManualDriverScoringDialog` permanece no `DriverDetailSheet` (controlado por estado local, disparado pela aba Pontuação)
-- Props de cada aba recebem apenas o que precisam (`driver`, `brandId`, callbacks)
+- No mobile: card usa `flex-col` com seções internas empilhadas
+- Linha superior: ícone + nome + badges (tier, pontuação desativada)
+- Linha de dados: CPF, telefone (texto menor)
+- Linha inferior: badges de saldo e corridas à esquerda, botões de ação à direita
+- No desktop (sm+): manter layout horizontal atual
+- Usar classes responsivas (`flex-col sm:flex-row`, `sm:items-center`)
+- Esconder label "Corridas" no mobile para economizar espaço, mantendo apenas os badges com pontos
 
