@@ -720,6 +720,19 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── SECTION A2: KPIs Motoristas ── */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Motoristas" value={motoristasTotal} icon={Car} color="warning" />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Pontos Motoristas" value={pontosMotoristas !== undefined ? pontosMotoristas.toLocaleString("pt-BR") : undefined} icon={Coins} color="success" />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Pontos Clientes" value={pontosClientes !== undefined ? pontosClientes.toLocaleString("pt-BR") : undefined} icon={UserCheck} color="primary" />
+        </div>
+      </div>
+
       {/* ── SECTION B + C: Chart + Ranking ── */}
       <div className="grid gap-4 lg:grid-cols-3 animate-slide-up delay-5">
         <Card className="lg:col-span-2">
