@@ -279,7 +279,24 @@ export default function AchadinhoDealDetail({
               </button>
             </div>
 
-            {/* Similar Products */}
+            {/* Report button */}
+            <div className="px-5 pb-4">
+              <button
+                onClick={() => setReportOpen(true)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-muted-foreground transition-colors active:scale-[0.97]"
+                style={{ backgroundColor: "hsl(var(--muted))" }}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Preço diferente? Avisar
+              </button>
+            </div>
+
+            <ReportarOfertaDialog
+              open={reportOpen}
+              onOpenChange={setReportOpen}
+              dealId={deal.id}
+              userId={customerId}
+            />
             {similarDeals && similarDeals.length > 0 && (
               <div className="pt-2 pb-8">
                 <div className="px-5 mb-3">
