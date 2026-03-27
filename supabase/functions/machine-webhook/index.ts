@@ -936,7 +936,18 @@ Deno.serve(async (req) => {
       return json({ message: "Ride already processed", machine_ride_id: machineRideId });
     }
 
-    const result = await processFinalized(sb, integration, brandId, branchId, machineRideId, ip);
+    // Extract driver ID from webhook payload links.driver URL
+    let payloadDriverId: string | null = null;
+    const driverLinkUrl = body?.links?.driver;
+    if (typeof driverLinkUrl === "string") {
+      const match = driverLinkUrl.match(/[?&]id=(\d+)/);
+      if (match) payloadDriverId = match[1];
+    }
+    if (payloadDriverId) {
+      logger.info("Driver ID extracted from payload", { machineRideId, payloadDriverId, driverLinkUrl });
+    }
+
+    const result = await processFinalized(sb, integration, brandId, branchId, machineRideId, ip, payloadDriverId);
     if (result.error) {
       return json({ error: result.error }, result.status);
     }
