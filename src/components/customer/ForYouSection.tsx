@@ -56,7 +56,7 @@ export default function ForYouSection() {
   });
 
   // Filter driver-only offers for non-drivers
-  const offers = rawOffers.filter((o) => !(o as any).driver_only);
+  const offers = isDriver ? rawOffers : rawOffers.filter((o) => !(o as any).driver_only);
 
   if (loading) {
     return (
