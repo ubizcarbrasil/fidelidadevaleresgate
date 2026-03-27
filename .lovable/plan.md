@@ -1,65 +1,27 @@
 
 
-## Diagnóstico e correção: boot preso em ENTRY_LOADING
+## Ativar pontuação do motorista
 
-### Análise do código atual
+### Estado atual
+A integração ativa tem `driver_points_enabled = false`. O webhook ignora completamente a lógica de pontuação do motorista quando essa flag está desligada.
 
-O `main.tsx` tem estes imports estáticos (linhas 1-5):
+### Correção
+Executar um UPDATE direto na tabela `machine_integrations` para ativar a pontuação do motorista com a configuração padrão (50% dos pontos do passageiro):
 
-```text
-main.tsx (TUDO deve resolver antes de qualquer linha executar)
-  ├── react-dom/client  → React + ReactDOM inteiros (~150+ sub-módulos em dev/ESM)
-  ├── ./index.css
-  ├── @/lib/webVitals   → @/lib/logger
-  ├── @/lib/errorTracker → @/lib/logger
-  └── @/lib/bootState   → react (useSyncExternalStore)
+```sql
+UPDATE machine_integrations
+SET driver_points_enabled = true,
+    driver_points_mode = 'PERCENT',
+    driver_points_percent = 50,
+    driver_points_per_real = 1
+WHERE id = '5e734e6f-4775-4f87-b51d-c17bce740d3a';
 ```
 
-Em modo ESM (Vite dev / preview), **cada import é uma requisição HTTP separada**. O `react-dom/client` sozinho puxa centenas de sub-módulos. Nenhuma linha de `main.tsx` executa até que TODO esse grafo resolva — incluindo a chamada `bootstrap()` na linha 121 que faz `setBootPhase("BOOTSTRAP")`.
+### O que muda
+- Próximas corridas finalizadas vão pontuar o motorista com 50% dos pontos do passageiro
+- O Telegram vai receber notificação "🚗 Motorista pontuado!" para cada corrida
+- O painel "Motoristas Pontuados" ficará visível na página de integração
 
-### Causa raiz
+### Nenhum código alterado
+Apenas configuração no banco de dados.
 
-O `createRoot` (de `react-dom/client`) é importado estaticamente na linha 1, mas só é usado dentro de `bootstrap()` na linha 113. Isso força o carregamento de React + ReactDOM inteiros **antes** de qualquer código executar, incluindo o `setBootPhase("BOOTSTRAP")`.
-
-Em conexões lentas ou quando o servidor demora a servir os módulos, a fase fica travada em `ENTRY_LOADING` indefinidamente.
-
-### Correção mínima — `src/main.tsx`
-
-**Duas mudanças:**
-
-1. **Remover o import estático de `react-dom/client`** e movê-lo para dynamic import dentro de `bootstrap()`
-2. **Adicionar marcadores de fase granulares** logo no início do módulo para diagnóstico
-
-```typescript
-// ANTES (linha 1):
-import { createRoot } from "react-dom/client";
-
-// DEPOIS: remover linha 1, e dentro de bootstrap():
-async function bootstrap() {
-  try {
-    setBootPhase("BOOTSTRAP", "importing App");
-    const rootEl = document.getElementById("root");
-    if (!rootEl) throw new Error("Root element not found");
-
-    const [{ createRoot }, { default: App }] = await Promise.all([
-      import("react-dom/client"),
-      import("./App.tsx"),
-    ]);
-
-    createRoot(rootEl).render(<App />);
-  } catch (err) { ... }
-}
-```
-
-E no topo do módulo, logo após os imports leves:
-
-```typescript
-// Marcador precoce — executa assim que os imports leves resolvem
-(window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
-console.info("[boot] MAIN_MODULE_START");
-```
-
-### Resultado esperado
-
-Com esta mudança, os imports estáticos de `main.tsx` ficam apenas:
-- `./index.css` (CSS
