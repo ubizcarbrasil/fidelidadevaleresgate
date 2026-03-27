@@ -213,7 +213,7 @@ function CollapsibleGroup({
 const BASIC_PLAN_HIDDEN_MODULES = ["page_builder", "icon_library", "subscription"];
 
 export function BrandSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
@@ -278,6 +278,7 @@ export function BrandSidebar() {
                     end
                     className={`transition-colors rounded-md ${location.pathname === '/' ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
                     activeClassName=""
+                    onClick={() => setOpenMobile(false)}
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
