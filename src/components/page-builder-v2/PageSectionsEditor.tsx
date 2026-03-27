@@ -90,6 +90,8 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [editingNativeAudience, setEditingNativeAudience] = useState<NativeSectionConfig | null>(null);
+  const [nativeAudienceValue, setNativeAudienceValue] = useState<"all" | "driver_only" | "customer_only">("all");
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
 
@@ -319,6 +321,9 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
                   <Button variant="ghost" size="icon" onClick={() => handleToggleNativeSection(ns.key)} title={ns.enabled ? "Desativar" : "Ativar"}>
                     {ns.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
+                  <Button variant="ghost" size="icon" onClick={() => { setEditingNativeAudience(ns); setNativeAudienceValue(ns.audience || "all"); }} title="Configurar audiência">
+                    <Settings2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ));
@@ -415,6 +420,41 @@ export default function PageSectionsEditor({ page, onBack }: Props) {
           ))}
         </div>
       )}
+
+      {/* Native Section Audience Dialog */}
+      <Dialog open={!!editingNativeAudience} onOpenChange={(open) => { if (!open) setEditingNativeAudience(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configurar: {editingNativeAudience?.label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Quem pode ver?</Label>
+              <Select value={nativeAudienceValue} onValueChange={(v: "all" | "driver_only" | "customer_only") => setNativeAudienceValue(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="driver_only">🚗 Apenas Motoristas</SelectItem>
+                  <SelectItem value="customer_only">👤 Apenas Clientes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingNativeAudience(null)}>Cancelar</Button>
+            <Button onClick={async () => {
+              if (!editingNativeAudience) return;
+              const updated = nativeSections.map(s => s.key === editingNativeAudience.key ? { ...s, audience: nativeAudienceValue } : s);
+              setNativeSections(updated);
+              await supabase.from("brands").update({
+                home_layout_json: { native_sections: updated } as any
+              } as any).eq("id", currentBrandId!);
+              toast({ title: "Audiência atualizada" });
+              setEditingNativeAudience(null);
+            }}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Page Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
