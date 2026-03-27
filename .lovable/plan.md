@@ -1,69 +1,55 @@
 
 
-## Seções exclusivas para motoristas na Home do PWA
+## Painel de Gestão de Motoristas
 
-### Resumo
-Adicionar um campo `audience` na tabela `brand_sections` para controlar a visibilidade de seções CMS. Seções marcadas como `driver_only` serão exibidas apenas para usuários com a tag `[MOTORISTA]`. O editor de seções (Page Builder V2) ganhará um seletor de audiência.
+Nova página dedicada acessível pelo menu lateral da marca, consolidando todas as operações de gestão de motoristas em um único lugar.
 
-### 1. Migração: coluna `audience` em `brand_sections`
+### Menu no Sidebar
 
-```sql
-ALTER TABLE public.brand_sections
-ADD COLUMN audience text NOT NULL DEFAULT 'all'
-CHECK (audience IN ('all', 'driver_only', 'customer_only'));
+Adicionar item **"Motoristas"** com ícone `Truck` no grupo **"Gestão Comercial"**, logo abaixo de "Clientes". URL: `/motoristas`. Sem `moduleKey` obrigatório (ou reutilizar `machine_integration`).
 
-COMMENT ON COLUMN public.brand_sections.audience IS 'Controla visibilidade: all (todos), driver_only (só motoristas), customer_only (só clientes comuns)';
-```
+### Nova página `/motoristas` — DriverManagementPage
 
-### 2. Filtro no `HomeSectionsRenderer`
+Página com listagem de motoristas (clientes com tag `[MOTORISTA]`) e as seguintes funcionalidades:
 
-No componente que renderiza as seções CMS, usar o `isDriver` do `CustomerContext` para filtrar:
-
-```typescript
-const { isDriver } = useCustomer();
-
-const filteredSections = sections.filter((s) => {
-  const audience = (s as any).audience || "all";
-  if (audience === "driver_only" && !isDriver) return false;
-  if (audience === "customer_only" && isDriver) return false;
-  // ...filtros existentes de banner
-});
-```
-
-Também adicionar `audience` ao select da query de seções para que o campo esteja disponível.
-
-### 3. Seletor de audiência no Page Builder V2
-
-No `SectionEditor.tsx`, adicionar um `<Select>` com as opções:
-- **Todos** (`all`) — padrão
-- **Apenas Motoristas** (`driver_only`)
-- **Apenas Clientes** (`customer_only`)
-
-Exibir um badge visual `🚗 Motoristas` ou `👤 Clientes` na lista de seções do `PageSectionsEditor.tsx` quando a audiência não for `all`.
-
-### 4. Seções nativas (FOR_YOU, EMISSORAS, etc.)
-
-Estender o tipo `NativeSectionConfig` para suportar `audience`:
-
-```typescript
-export interface NativeSectionConfig {
-  key: string;
-  label: string;
-  enabled: boolean;
-  order: number;
-  audience?: "all" | "driver_only" | "customer_only";
-}
-```
-
-No `renderNativeSection` em `CustomerHomePage.tsx`, verificar o `audience` junto com `isNativeEnabled`.
-
-### Arquivos afetados
-
-| Arquivo | Ação |
+| Funcionalidade | Implementação |
 |---|---|
-| SQL migration | Adicionar coluna `audience` em `brand_sections` |
-| `src/components/HomeSectionsRenderer.tsx` | Filtrar seções por `audience` + `isDriver` |
-| `src/components/page-builder-v2/SectionEditor.tsx` | Adicionar seletor de audiência |
-| `src/components/page-builder-v2/PageSectionsEditor.tsx` | Badge visual de audiência na lista + suporte em `NativeSectionConfig` |
-| `src/pages/customer/CustomerHomePage.tsx` | Filtrar seções nativas por `audience` |
+| **Dados cadastrais** | Sheet lateral com nome, CPF, telefone, e-mail, cidade/branch, tier, saldo de pontos |
+| **Mudar senha** | Botão que abre dialog para reset de senha via `supabase.auth.admin.resetPasswordForEmail` (edge function) |
+| **Ver pontos / Extrato** | Reutilizar query do `points_ledger` filtrado pelo `customer_id` do motorista |
+| **Adicionar pontos** | Reutilizar `ManualDriverScoringDialog` já existente |
+| **Cidade (branch)** | Select para alterar `branch_id` do motorista |
+| **Desativar pontuação** | Toggle que seta um campo `scoring_disabled` (ou atualiza status) no registro do motorista |
+| **Alterar regra individual** | Inline edit de `points_per_real` ou modo de pontuação específico do motorista (via campo custom na tabela customers ou driver_points_rules) |
+| **Baixar relatório** | Export CSV do extrato de pontos do motorista selecionado |
+| **Acessar conta** | Botão que abre o PWA do motorista em nova aba (`/customer?brand=...`) usando o login dele |
+
+### Estrutura de arquivos
+
+```
+src/pages/DriverManagementPage.tsx          — página principal com listagem
+src/components/driver-management/
+  DriverDetailSheet.tsx                     — sheet lateral com dados + ações
+  DriverScoringToggle.tsx                   — toggle ativar/desativar pontuação
+  DriverRuleEditor.tsx                      — editor de regra individual
+  DriverPasswordReset.tsx                   — dialog de reset de senha
+  DriverLedgerSection.tsx                   — extrato de pontos inline
+```
+
+### Migração de banco (se necessário)
+
+Adicionar coluna `scoring_disabled boolean NOT NULL DEFAULT false` na tabela `customers` para permitir desativar pontuação individualmente por motorista.
+
+### Alterações no roteamento
+
+- `App.tsx`: Adicionar rota `/motoristas` → `DriverManagementPage`
+- `BrandSidebar.tsx`: Adicionar item no grupo "Gestão Comercial"
+
+### Detalhes técnicos
+
+- A listagem filtra `customers` por `name ILIKE '%[MOTORISTA]%'` (padrão já existente no `ScoredDriversPanel`)
+- O extrato consulta `points_ledger` por `customer_id`
+- O export CSV reutiliza o padrão do `ScoredDriversPanel.handleExportCsv`
+- O reset de senha requer uma edge function que use `supabase.auth.admin.resetPasswordForEmail` (service role)
+- A regra individual de pontuação edita `driver_points_rules` filtrada por motorista ou cria override personalizado
 
