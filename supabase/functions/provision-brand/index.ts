@@ -596,7 +596,7 @@ Deno.serve(async (req) => {
       "categories", "coupons", "crm", "custom_pages", "customers",
       "earn_points_store", "home_sections", "machine_integration", "offers",
       "page_builder", "partner_landing", "profile_links", "redemption_qr",
-      "reports", "stores", "taxonomy", "theme_images", "theme_texts",
+      "reports", "stores", "taxonomy", "theme_images", "theme_integrations", "theme_texts",
       "users_management", "wallet",
     ]);
     const isBasicPlan = !subscription_plan || subscription_plan === "free" || subscription_plan === "basic";
