@@ -3248,6 +3248,72 @@ export type Database = {
           },
         ]
       }
+      offer_sync_groups: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          last_sync_status: string
+          source_group_id: string
+          source_group_name: string | null
+          source_system: string
+          sync_version: number
+          total_active: number
+          total_imported: number
+          total_removed: number
+          total_reported: number
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_status?: string
+          source_group_id: string
+          source_group_name?: string | null
+          source_system: string
+          sync_version?: number
+          total_active?: number
+          total_imported?: number
+          total_removed?: number
+          total_reported?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_status?: string
+          source_group_id?: string
+          source_group_name?: string | null
+          source_system?: string
+          sync_version?: number
+          total_active?: number
+          total_imported?: number
+          total_removed?: number
+          total_reported?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_sync_groups_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_sync_groups_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offers: {
         Row: {
           allowed_hours: string | null
