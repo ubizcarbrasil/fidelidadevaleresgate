@@ -154,6 +154,7 @@ function CollapsibleGroup({
   badges: Record<string, number>;
   brandId?: string;
 }) {
+  const { setOpenMobile } = useSidebar();
   const hasActiveRoute = items.some(
     (item) =>
       location.pathname === item.url ||
@@ -189,6 +190,7 @@ function CollapsibleGroup({
                         end={item.url === "/"}
                         className={`transition-colors rounded-md ${isActive ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
                         activeClassName=""
+                        onClick={() => setOpenMobile(false)}
                       >
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
