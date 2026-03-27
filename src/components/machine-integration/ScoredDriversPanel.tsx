@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Separator } from "@/components/ui/separator";
 import {
   Search, Eye, Loader2, Coins, ArrowUpRight, ArrowDownRight,
-  User, Phone, Mail, CreditCard, Hash, Download, Truck,
+  User, Phone, Mail, CreditCard, Hash, Download, Truck, Gift,
 } from "lucide-react";
+import ManualDriverScoringDialog from "./ManualDriverScoringDialog";
 
 type ScoredDriver = {
   id: string;
@@ -37,6 +38,7 @@ type LedgerEntry = {
 export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
   const [search, setSearch] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<ScoredDriver | null>(null);
+  const [bonusDriver, setBonusDriver] = useState<ScoredDriver | null>(null);
   const debouncedSearch = useDebounce(search, 400);
 
   /* ── Query: customers with [MOTORISTA] tag ── */
@@ -231,6 +233,15 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="shrink-0 text-primary"
+                      title="Bonificar"
+                      onClick={() => setBonusDriver(c)}
+                    >
+                      <Gift className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="shrink-0"
                       onClick={() => setSelectedDriver(c)}
                     >
@@ -329,6 +340,13 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
           )}
         </SheetContent>
       </Sheet>
+
+      <ManualDriverScoringDialog
+        open={!!bonusDriver}
+        onOpenChange={(open) => { if (!open) setBonusDriver(null); }}
+        driver={bonusDriver}
+        brandId={brandId}
+      />
     </>
   );
 }
