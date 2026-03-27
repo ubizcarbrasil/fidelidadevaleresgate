@@ -15,6 +15,18 @@ function cleanPrice(raw: string | null | undefined): number | null {
   return isNaN(val) ? null : val;
 }
 
+/** US-format price parser for DVLinks (dot = decimal, comma = thousands) */
+function cleanPriceDvlinks(raw: string | null | undefined): number | null {
+  if (!raw) return null;
+  // Remove everything except digits, dots and commas
+  const cleaned = raw.replace(/[^\d,\.]/g, "");
+  // Remove commas (US thousands separator)
+  const noDots = cleaned.replace(/,/g, "");
+  // Dot is already the decimal separator in US format
+  const val = parseFloat(noDots);
+  return isNaN(val) || val <= 0 ? null : val;
+}
+
 function extractSitename(originUrl: string): string {
   try {
     const u = new URL(originUrl);
@@ -172,8 +184,8 @@ async function scrapeDvlinks(baseUrl: string, maxPages: number): Promise<Dvlinks
         const originalPriceMatch = block.match(/<span[^>]*class="[^"]*line-through[^"]*"[^>]*>\s*(R\$[\s\S]*?)\s*<\/span>/);
         const currentPriceMatch = block.match(/<span[^>]*class="[^"]*font-bold[^"]*"[^>]*>\s*(R\$[\s\S]*?)\s*<\/span>/);
 
-        const originalPrice = originalPriceMatch ? cleanPrice(originalPriceMatch[1]) : null;
-        const price = currentPriceMatch ? cleanPrice(currentPriceMatch[1]) : null;
+        const originalPrice = originalPriceMatch ? cleanPriceDvlinks(originalPriceMatch[1]) : null;
+        const price = currentPriceMatch ? cleanPriceDvlinks(currentPriceMatch[1]) : null;
 
         // Extract store name from button text "Ir à loja STORE_NAME"
         const storeMatch = block.match(/Ir à loja\s+(\S+)/i);
