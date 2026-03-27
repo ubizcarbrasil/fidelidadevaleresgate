@@ -1,107 +1,85 @@
 
-## Diagnóstico
 
-O problema voltou a acontecer porque a aplicação continua travando antes mesmo do React começar a executar.
+## Problema: preços DVLinks inflados 100x
 
-A evidência mais forte é esta:
-- a tela permanece em `Fase: ENTRY_LOADING`
-- o replay mostra que ela nunca sai dessa fase
-- não há logs do `MAIN_MODULE_START`
-- não há transição para `BOOTSTRAP`
+### Causa raiz confirmada
 
-Isso significa que o navegador não chegou a executar nenhuma linha útil de `src/main.tsx`.
+O site **dvlinks.com.br** usa formato **americano** para preços:
+- `R$88.97` (ponto = decimal)
+- `R$1,199.00` (vírgula = milhar, ponto = decimal)
 
-## Causa mais provável
-
-A correção anterior resolveu só uma parte do gargalo.
-
-Hoje `src/main.tsx` ainda importa estaticamente:
-
-```ts
-import { setBootPhase } from "@/lib/bootState";
-```
-
-Mas `src/lib/bootState.ts` importa React:
-
-```ts
-import { useSyncExternalStore } from "react";
-```
-
-Ou seja: o entrypoint ainda depende de React para começar. Então o boot continua vulnerável a travar antes da primeira linha executar.
-
-Além disso, o `index.html` usa:
-
-```html
-<script type="module" src="/src/main.tsx"></script>
-```
-
-Se esse módulo falhar ao carregar, parsear ou resolver dependências, o `try/catch` dentro de `main.tsx` nunca roda. Resultado: a UI fica parada em `ENTRY_LOADING` e só mostra o botão de recarregar.
-
-## O que está acontecendo na prática
-
-Fluxo atual:
+A função `cleanPrice` no edge function `mirror-sync` assume formato **brasileiro** (ponto = milhar, vírgula = decimal):
 
 ```text
-index.html
-  └── define ENTRY_LOADING
-  └── tenta carregar /src/main.tsx
-       └── main.tsx ainda depende de bootState
-            └── bootState depende de react
+cleanPrice("R$959.20")
+  → remove tudo exceto dígitos/,/.  → "959.20"
+  → remove TODOS os pontos           → "95920"
+  → substitui vírgula por ponto      → "95920"
+  → parseFloat                       → 95920  ← 100x errado!
+
+cleanPrice("R$1,199.00")
+  → "1,199.00"
+  → remove pontos → "1,19900"
+  → vírgula→ponto → "1.19900"
+  → parseFloat    → 1.199  ← deveria ser 1199!
 ```
 
-Se qualquer etapa acima falhar ou demorar demais, a app não avança e o overlay nunca é desmontado.
+**Dados afetados**: 286 de 359 ofertas dvlinks com `price > 1000` (valores em centavos).
 
-## Plano de correção
+### Plano de correção
 
-### 1. Separar o estado de boot em duas camadas
-Refatorar `src/lib/bootState.ts` para remover a dependência de React do núcleo do boot.
+#### 1. Criar função `cleanPriceDvlinks` no edge function
 
-Estrutura proposta:
-- `src/lib/boot_state_core.ts`
-  - `setBootPhase`
-  - `getBootPhase`
-  - `dismissBootstrap`
-  - subscribe/listeners
-- `src/lib/use_boot_ready.ts`
-  - `useSyncExternalStore`
-  - `useBootReady`
+Função específica para formato US (ponto = decimal, vírgula = milhar):
 
-Assim, `main.tsx` passa a importar só a versão sem React.
+```text
+cleanPriceDvlinks("R$959.20")
+  → remove tudo exceto dígitos/,/.
+  → remove vírgulas (milhar US)
+  → parseFloat("959.20") → 959.20 ✓
 
-### 2. Tornar o entrypoint realmente leve
-Atualizar `src/main.tsx` para depender apenas de módulos leves:
-- CSS
-- logger/webVitals/errorTracker
-- `boot_state_core`
+cleanPriceDvlinks("R$1,199.00")
+  → "1,199.00"
+  → remove vírgulas → "1199.00"
+  → parseFloat → 1199.00 ✓
+```
 
-Objetivo: fazer `MAIN_MODULE_START` e `BOOTSTRAP` aparecerem imediatamente, sem esperar React.
+**Arquivo**: `supabase/functions/mirror-sync/index.ts`
+- Adicionar `cleanPriceDvlinks` ao lado da `cleanPrice` existente
+- No `scrapeDvlinks()` (linhas 175-176), trocar `cleanPrice` por `cleanPriceDvlinks`
+- Manter `cleanPrice` inalterada para o Divulgador Inteligente (formato BR)
 
-### 3. Mover o carregamento do app para um loader inline no `index.html`
-Trocar o `script type="module" src="/src/main.tsx"` por um loader inline com `import("/src/main.tsx")`.
+#### 2. Corrigir mesma lógica no `scrape-product`
 
-Isso permite:
-- capturar falha real do entrypoint com `.catch(...)`
-- atualizar a fase para algo como `ENTRY_IMPORT_FAILED`
-- mostrar mensagem mais útil
-- tentar um único reload com cache-busting antes de desistir
+**Arquivo**: `supabase/functions/scrape-product/index.ts`
+- O regex de preço já extrai valores como `R$ 674.91`
+- Já usa lógica própria de parsing (limpa ponto de milhar BR, vírgula→ponto)
+- Adicionar detecção: se não há vírgula e ponto tem 1-2 dígitos após, tratar como decimal
 
-### 4. Mover a normalização de `/index` para antes do import
-Hoje o redirect de `/index` para `/` fica dentro de `main.tsx`, mas isso não ajuda se `main.tsx` nem rodar.
+#### 3. Corrigir dados existentes no banco
 
-Vou mover essa normalização para o loader do `index.html`, antes de importar o app.
+Migration SQL para normalizar os 286 registros afetados:
 
-### 5. Tratar cache/stale entry de forma defensiva
-Como isso está reaparecendo, adicionar proteção no loader inicial:
-- detectar primeira falha de import
-- recarregar uma vez com marcador anti-loop
-- evitar reload infinito
-- exibir fase exata da falha se continuar quebrando
+```sql
+-- Preços atuais: stored como centavos (95920 deveria ser 959.20)
+UPDATE affiliate_deals
+SET price = price / 100.0
+WHERE origin = 'dvlinks' AND price > 1000;
 
-### 6. Manter a instrumentação de diagnóstico
-Preservar e complementar os marcadores:
-- `ENTRY_LOADING`
-- `MAIN_MODULE_START`
-- `BOOTSTRAP`
-- `AUTH_LOADING`
-- `AUTH_READY`
-- `
+-- Original prices: stored como milésimos (1.199 deveria ser 1199)
+UPDATE affiliate_deals
+SET original_price = original_price * 1000.0
+WHERE origin = 'dvlinks' AND original_price IS NOT NULL AND original_price < 10;
+```
+
+#### 4. Verificação pós-correção
+
+Consulta para validar que os preços estão na faixa esperada (R$1 ~ R$10.000).
+
+### Resultado esperado
+
+- DVLinks: `R$ 959,20` em vez de `R$ 95.920,00`
+- Divulgador Inteligente: sem alteração (já está correto)
+- Próximas sincronizações já gravam valores corretos
+- Dados históricos corrigidos retroativamente
+
