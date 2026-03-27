@@ -1,7 +1,7 @@
 import "./index.css";
 import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
-import { setBootPhase } from "@/lib/bootState";
+import { setBootPhase } from "@/lib/bootStateCore";
 
 // Marcador precoce — executa assim que os imports leves resolvem
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
