@@ -183,9 +183,9 @@ function AppRoutes() {
           <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
           <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
           <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
-          <Route path="home-templates" element={<HomeTemplatesPage />} />
+          <Route path="home-templates" element={<RootGuard><HomeTemplatesPage /></RootGuard>} />
           <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
-          <Route path="clone-branch" element={<CloneBranchPage />} />
+          <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />
           <Route path="brand-modules" element={<BrandModulesPage />} />
           <Route path="pdv" element={<ModuleGuard moduleKey="earn_points_store"><OperatorRedeemPage /></ModuleGuard>} />
           <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />
@@ -206,7 +206,7 @@ function AppRoutes() {
           <Route path="icon-library" element={<ModuleGuard moduleKey="icon_library"><IconLibraryPage /></ModuleGuard>} />
           <Route path="banner-manager" element={<ModuleGuard moduleKey="banners"><BannerManagerPage /></ModuleGuard>} />
           <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
-          <Route path="page-builder" element={<PageBuilderPage />} />
+          <Route path="page-builder" element={<ModuleGuard moduleKey="page_builder"><PageBuilderPage /></ModuleGuard>} />
           <Route path="page-builder-v2" element={<ModuleGuard moduleKey="page_builder"><PageBuilderV2Page /></ModuleGuard>} />
           <Route path="public-vouchers" element={<PublicVouchers />} />
           
@@ -243,7 +243,7 @@ function AppRoutes() {
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
           {/* Driver panel configuration */}
-          <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
+          <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
@@ -298,7 +298,7 @@ function AppContent() {
   }
 
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   if (loading && !isPublicPath) {
