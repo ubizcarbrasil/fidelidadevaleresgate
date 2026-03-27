@@ -25,6 +25,8 @@ export type DriverRow = {
   customer_tier: string | null;
   scoring_disabled: boolean;
   total_ride_points: number;
+  total_rides: number;
+  branch_name: string | null;
 };
 
 export default function DriverManagementPage() {
