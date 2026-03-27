@@ -1,38 +1,35 @@
 
 
-## Plano: Corrigir "Acessar Conta" para mostrar dados do motorista
+## Plano: Adicionar KPIs de Motoristas na Dashboard
 
-### Problema
+### O que será adicionado
 
-O botão "Acessar Conta" abre `/customer-preview?brandId=X`, que carrega o PWA com a sessão do **admin logado**, não do motorista. O `CustomerContext` busca o customer pelo `user.id` do admin, então mostra o perfil errado (o motorista de teste do admin, ou cria um novo customer).
+Três novos cards KPI na Dashboard, logo abaixo dos 4 KPIs existentes:
 
-### Solução
-
-Adicionar um parâmetro `customerId` na URL para que o `CustomerContext` use diretamente o registro do motorista selecionado, em vez de resolver pelo `user.id`. Isso funciona como "visualização de conta" sem precisar logar como o motorista.
+1. **Motoristas** — contagem de clientes com tag `[MOTORISTA]` no nome
+2. **Pontos Motoristas** — soma de `driver_points_credited` da tabela `machine_rides` (status `FINALIZED`)
+3. **Pontos Clientes** — soma de `points_credited` da tabela `machine_rides` (status `FINALIZED`)
 
 ### Alterações
 
-**1. `src/components/driver-management/tabs/AbaDadosMotorista.tsx`**
-- Alterar `handleOpenPwa` para incluir `&customerId={driver.id}` na URL
+**`src/pages/Dashboard.tsx`**
 
-**2. `src/contexts/CustomerContext.tsx`**
-- Ler `customerId` da URL (`window.location.search`)
-- Se `customerId` estiver presente, buscar diretamente o customer pelo ID em vez de resolver pelo `user.id`
-- Marcar como modo "impersonação" (read-only, sem auto-create/auto-link)
+1. Adicionar query para contar motoristas:
+   - `useMetric("customers", true, (q) => q.ilike("name", "%[MOTORISTA]%"), "drivers", brandFilter)`
 
-**3. `src/pages/CustomerPreviewPage.tsx`**
-- Passar o `customerId` da URL para que fique disponível no contexto
+2. Adicionar duas queries com `useQuery` para somar pontos (não dá para usar `useMetric` pois precisa de `SUM`):
+   - Query 1: `SELECT COALESCE(SUM(driver_points_credited), 0)` de `machine_rides` onde `ride_status = 'FINALIZED'`
+   - Query 2: `SELECT COALESCE(SUM(points_credited), 0)` de `machine_rides` onde `ride_status = 'FINALIZED'`
+   - Ambas com filtro de `brand_id` e período
 
-### Fluxo
-```text
-Admin clica "Acessar Conta"
-  → /customer-preview?brandId=X&customerId=Y
-  → CustomerContext detecta customerId
-  → Busca customer Y diretamente (SELECT * FROM customers WHERE id = Y)
-  → PWA renderiza com os dados do motorista Gabriel
-```
+3. Adicionar uma nova linha de 3 KPI cards entre os KPIs existentes (linha 698) e o gráfico de Visão Geral (linha 700), usando o mesmo componente `KpiCard` já existente:
+   - Ícone `Car` para Motoristas
+   - Ícone `Coins` para Pontos Motoristas  
+   - Ícone `UserCheck` para Pontos Clientes
 
-### Segurança
-- O `customerId` só será usado quando o usuário logado tiver role admin (verificação via `roles` do AuthContext)
-- Se não for admin, o parâmetro é ignorado e o fluxo normal continua
+### Detalhes técnicos
+
+Como o Supabase JS client não suporta `SUM` diretamente via `.select()`, vou usar uma RPC ou fazer a soma client-side buscando apenas as colunas necessárias (`driver_points_credited`, `points_credited`) com limit adequado. Alternativa mais robusta: criar uma função SQL `get_points_summary` que retorna as somas.
+
+A abordagem mais simples e sem migração: buscar os valores das colunas e somar no client (já existe padrão similar com `fetchChartData` que busca até 5000 rows).
 
