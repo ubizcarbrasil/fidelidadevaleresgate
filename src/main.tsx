@@ -108,9 +108,9 @@ async function bootstrap() {
     const rootEl = document.getElementById("root");
     if (!rootEl) throw new Error("Root element not found");
 
-    const [{ default: App }] = await Promise.all([
+    const [{ createRoot }, { default: App }] = await Promise.all([
+      import("react-dom/client"),
       import("./App.tsx"),
-      Promise.resolve(),
     ]);
 
     createRoot(rootEl).render(<App />);
