@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2 } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -134,6 +134,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
+  const whatsappNumber = settings?.whatsapp_number as string | undefined;
   const showBanners = settings?.driver_show_banners !== false;
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
   const interstitialBanners: Array<{ id: string; image_url: string; title: string; link_url: string; after_category_id: string; is_active: boolean }> = settings?.driver_interstitial_banners || [];
@@ -348,13 +349,26 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                 {marketplaceTitle}
               </span>
             </div>
-            <button
-              onClick={() => shareDriverUrl(brand.id, marketplaceTitle)}
-              className="h-9 w-9 flex items-center justify-center rounded-xl"
-              style={{ backgroundColor: "hsl(var(--muted))" }}
-            >
-              <Share2 className="h-4.5 w-4.5 text-foreground" />
-            </button>
+            <div className="flex items-center gap-2">
+              {whatsappNumber && (
+                <a
+                  href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 w-9 flex items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "hsl(var(--muted))" }}
+                >
+                  <MessageCircle className="h-4.5 w-4.5 text-emerald-400" />
+                </a>
+              )}
+              <button
+                onClick={() => shareDriverUrl(brand.id, marketplaceTitle)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl"
+                style={{ backgroundColor: "hsl(var(--muted))" }}
+              >
+                <Share2 className="h-4.5 w-4.5 text-foreground" />
+              </button>
+            </div>
           </div>
 
           {/* Search Bar — customer style */}
