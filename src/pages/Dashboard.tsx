@@ -594,6 +594,20 @@ export default function Dashboard() {
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
   const { data: motoristasTotal } = useMetric("customers", true, (q) => q.ilike("name", "%[MOTORISTA]%"), "motoristas", brandFilter);
 
+  // Achadinhos KPIs
+  const { data: achadinhosAtivas } = useMetric("affiliate_deals", true, (q) => q.eq("is_active", true), "achadinhos-active", brandFilter);
+  const { data: achadinhosLojas } = useQuery({
+    queryKey: ["achadinhos-stores-count", brandFilter ?? "global"],
+    queryFn: async () => {
+      let q = supabase.from("affiliate_deals").select("store_name").eq("is_active", true);
+      if (brandFilter) q = q.eq("brand_id", brandFilter);
+      const { data } = await q.limit(1000);
+      const unique = new Set((data || []).map((d: any) => d.store_name).filter(Boolean));
+      return unique.size;
+    },
+  });
+  const { data: achadinhosCidades } = useMetric("branches", true, (q) => q.eq("is_active", true), "branches-active", brandFilter);
+
   // Soma de pontos motoristas e clientes via RPC
   const { data: pontosSummary } = useQuery({
     queryKey: ["pontos-summary", brandFilter ?? "global"],
@@ -730,6 +744,19 @@ export default function Dashboard() {
         </div>
         <div className="animate-slide-up delay-3">
           <KpiCard title="Pontos Clientes" value={pontosClientes !== undefined ? pontosClientes.toLocaleString("pt-BR") : undefined} icon={UserCheck} color="primary" />
+        </div>
+      </div>
+
+      {/* ── SECTION A3: KPIs Achadinhos ── */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Achadinhos Ativos" value={achadinhosAtivas} icon={ShoppingBag} color="warning" />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Lojas Ativas" value={achadinhosLojas} icon={Store} color="success" />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Cidades Ativas" value={achadinhosCidades} icon={MapPin} color="primary" />
         </div>
       </div>
 
