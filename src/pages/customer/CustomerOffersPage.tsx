@@ -16,7 +16,7 @@ import { queryKeys } from "@/lib/queryKeys";
 
 export default function CustomerOffersPage() {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
   const { openOffer, isFavorite, toggleFavorite, activeSegmentFilter, clearSegmentFilter } = useCustomerNav();
   const { formatSubtitle } = useOfferCardConfig();
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export default function CustomerOffersPage() {
     },
   });
 
-  const { isDriver } = customer ? { isDriver: !!(customer?.name && /\[MOTORISTA\]/i.test(customer?.name || "")) } : { isDriver: false };
+  
 
   const filtered = useMemo(() => {
     let result = offers;
