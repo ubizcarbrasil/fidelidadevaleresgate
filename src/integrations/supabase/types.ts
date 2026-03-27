@@ -6199,6 +6199,11 @@ export type Database = {
       }
     }
     Functions: {
+      get_customer_ids_for_store_owner: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
+      get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }
       get_recommended_offers: {
         Args: {
           p_branch_id: string
