@@ -40,6 +40,7 @@ export default function OffersPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
+  const [filtroMotorista, setFiltroMotorista] = useState<string>("all");
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId && !form.brand_id) {
