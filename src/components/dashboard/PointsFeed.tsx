@@ -33,7 +33,7 @@ const PointsFeed = memo(function PointsFeed({ brandId }: PointsFeedProps) {
       let q = supabase
         .from("machine_rides")
         .select("id, created_at, passenger_name, driver_name, points_credited, driver_points_credited, ride_value, ride_status")
-        .eq("ride_status", "FINISHED")
+        .eq("ride_status", "FINALIZED")
         .order("created_at", { ascending: false })
         .limit(15);
       if (brandId) q = q.eq("brand_id", brandId);
