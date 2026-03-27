@@ -108,11 +108,84 @@ export async function fetchOfferReports(brandId: string, origin?: SourceSystem) 
   return (data || []) as any[];
 }
 
-export async function updateReportStatus(reportId: string, status: string) {
+export async function updateReportStatus(reportId: string, status: string, offerId?: string) {
   const { error } = await supabase
     .from("offer_reports")
     .update({ status } as any)
     .eq("id", reportId);
+  if (error) throw error;
+
+  // Auto-hide: if confirming, check threshold
+  if (status === "confirmed" && offerId) {
+    await checkAutoHideThreshold(offerId);
+  }
+}
+
+const AUTO_HIDE_THRESHOLD = 3;
+
+async function checkAutoHideThreshold(offerId: string) {
+  const { count } = await supabase
+    .from("offer_reports")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_id", offerId)
+    .eq("status", "confirmed");
+
+  if ((count || 0) >= AUTO_HIDE_THRESHOLD) {
+    await supabase
+      .from("affiliate_deals")
+      .update({
+        current_status: "suspected_outdated",
+        is_active: false,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq("id", offerId);
+  }
+}
+
+// ---- Group Actions ----
+
+export async function syncGroupNow(brandId: string, sourceSystem: string) {
+  const { data, error } = await supabase.functions.invoke("mirror-sync", {
+    body: { brand_id: brandId, source_type: sourceSystem },
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function resetGroup(brandId: string, sourceSystem: string, sourceGroupId: string) {
+  // Archive all offers in the group
+  const { error } = await supabase
+    .from("affiliate_deals")
+    .update({ current_status: "archived", is_active: false, updated_at: new Date().toISOString() } as any)
+    .eq("brand_id", brandId)
+    .eq("origin", sourceSystem)
+    .eq("source_group_id", sourceGroupId);
+  if (error) throw error;
+
+  // Increment sync_version
+  const { data: group } = await supabase
+    .from("offer_sync_groups")
+    .select("id, sync_version")
+    .eq("brand_id", brandId)
+    .eq("source_system", sourceSystem)
+    .eq("source_group_id", sourceGroupId)
+    .maybeSingle();
+
+  if (group) {
+    await supabase
+      .from("offer_sync_groups")
+      .update({ sync_version: (group.sync_version || 0) + 1, updated_at: new Date().toISOString() } as any)
+      .eq("id", group.id);
+  }
+}
+
+export async function cleanupGroupByStatus(brandId: string, origin: string, statusFilter: string) {
+  const { error } = await supabase
+    .from("affiliate_deals")
+    .update({ current_status: "archived", is_active: false, updated_at: new Date().toISOString() } as any)
+    .eq("brand_id", brandId)
+    .eq("origin", origin)
+    .eq("current_status", statusFilter);
   if (error) throw error;
 }
 

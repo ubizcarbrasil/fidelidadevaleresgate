@@ -341,6 +341,142 @@ interface SyncResult {
   price_used?: number | null;
 }
 
+// ---------- Governance: sync groups + removal detection ----------
+
+async function updateSyncGroup(
+  supabase: any,
+  brandId: string,
+  sourceSystem: string,
+  sourceGroupId: string,
+  sourceGroupName: string | null,
+  syncStatus: string,
+  counters: { totalImported: number; totalActive: number; totalRemoved: number; totalReported: number }
+) {
+  const now = new Date().toISOString();
+  const { data: existing } = await supabase
+    .from("offer_sync_groups")
+    .select("id, sync_version")
+    .eq("brand_id", brandId)
+    .eq("source_system", sourceSystem)
+    .eq("source_group_id", sourceGroupId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("offer_sync_groups")
+      .update({
+        source_group_name: sourceGroupName,
+        last_sync_at: now,
+        last_sync_status: syncStatus,
+        total_imported: counters.totalImported,
+        total_active: counters.totalActive,
+        total_removed: counters.totalRemoved,
+        total_reported: counters.totalReported,
+        sync_version: (existing.sync_version || 0) + 1,
+        updated_at: now,
+      })
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("offer_sync_groups").insert({
+      brand_id: brandId,
+      source_system: sourceSystem,
+      source_group_id: sourceGroupId,
+      source_group_name: sourceGroupName,
+      last_sync_at: now,
+      last_sync_status: syncStatus,
+      total_imported: counters.totalImported,
+      total_active: counters.totalActive,
+      total_removed: counters.totalRemoved,
+      total_reported: counters.totalReported,
+      sync_version: 1,
+    });
+  }
+}
+
+async function detectRemovedOffers(
+  supabase: any,
+  brandId: string,
+  originValue: string,
+  syncedExtIds: Set<string>
+) {
+  const { data: allExisting } = await supabase
+    .from("affiliate_deals")
+    .select("id, origin_external_id, current_status, is_active")
+    .eq("brand_id", brandId)
+    .eq("origin", originValue)
+    .in("current_status", ["active", "suspected_outdated", "user_reported"]);
+
+  let removedCount = 0;
+  for (const deal of allExisting || []) {
+    if (deal.origin_external_id && !syncedExtIds.has(deal.origin_external_id)) {
+      await supabase
+        .from("affiliate_deals")
+        .update({
+          current_status: "removed_from_source",
+          is_active: false,
+          visible_driver: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", deal.id);
+      removedCount++;
+    }
+  }
+  return removedCount;
+}
+
+async function reactivateReappearedOffers(
+  supabase: any,
+  brandId: string,
+  originValue: string,
+  syncedExtIds: Set<string>
+) {
+  const { data: archived } = await supabase
+    .from("affiliate_deals")
+    .select("id, origin_external_id")
+    .eq("brand_id", brandId)
+    .eq("origin", originValue)
+    .in("current_status", ["archived", "removed_from_source", "inactive"])
+    .eq("is_active", false);
+
+  let reactivatedCount = 0;
+  for (const deal of archived || []) {
+    if (deal.origin_external_id && syncedExtIds.has(deal.origin_external_id)) {
+      await supabase
+        .from("affiliate_deals")
+        .update({
+          current_status: "active",
+          is_active: true,
+          visible_driver: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", deal.id);
+      reactivatedCount++;
+    }
+  }
+  return reactivatedCount;
+}
+
+async function computeSyncGroupCounters(supabase: any, brandId: string, originValue: string) {
+  const { data: deals } = await supabase
+    .from("affiliate_deals")
+    .select("id, current_status, is_active")
+    .eq("brand_id", brandId)
+    .eq("origin", originValue);
+
+  const items = deals || [];
+  const { count: reportedCount } = await supabase
+    .from("offer_reports")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "confirmed");
+
+  return {
+    totalImported: items.length,
+    totalActive: items.filter((d: any) => d.current_status === "active" && d.is_active).length,
+    totalRemoved: items.filter((d: any) => d.current_status === "removed_from_source").length,
+    totalReported: reportedCount || 0,
+  };
+}
+
 // ---------- Auto-categorization phase ----------
 
 async function runAutoCategorization(supabase: any, brandId: string, originFilter: string) {
@@ -614,7 +750,7 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
 
     try {
       if (existing) {
-        const updateFields: Record<string, any> = {
+      const updateFields: Record<string, any> = {
             title: dealData.title,
             image_url: dealData.image_url,
             price: dealData.price,
@@ -624,6 +760,7 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
             last_synced_at: dealData.last_synced_at,
             sync_status: "ok",
             sync_error: null,
+            current_status: "active",
             updated_at: dealData.updated_at,
         };
         if (matchedCatId) updateFields.category_id = matchedCatId;
@@ -641,6 +778,7 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
           .from("affiliate_deals")
           .insert({
             ...dealData,
+            current_status: "active",
             is_active: autoActivate,
             visible_driver: autoVisibleDriver,
             click_count: 0,
@@ -659,6 +797,16 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
     }
   }
 
+  // ========== Governance: detect removed + reactivated offers ==========
+  const syncedExtIdsDv = new Set(dvDeals.filter(d => d.affiliateUrl).map(d => d.affiliateUrl));
+  
+  console.log("[DVLinks] Detecting removed offers...");
+  const removedCountDv = await detectRemovedOffers(supabase, brandId, originValue, syncedExtIdsDv);
+  console.log(`[DVLinks] Marked ${removedCountDv} offers as removed_from_source`);
+
+  const reactivatedCountDv = await reactivateReappearedOffers(supabase, brandId, originValue, syncedExtIdsDv);
+  console.log(`[DVLinks] Reactivated ${reactivatedCountDv} offers`);
+
   // Auto-categorization
   console.log("[DVLinks] Starting auto-categorization...");
   let categorizationStats = null;
@@ -669,6 +817,11 @@ async function syncDvlinks(supabase: any, brandId: string, config: any, isDiagno
     console.error("[DVLinks] Categorization error:", e.message);
     categorizationStats = { error: e.message };
   }
+
+  // ========== Governance: update sync group ==========
+  const countersDv = await computeSyncGroupCounters(supabase, brandId, originValue);
+  const syncStatusDv = errors > 0 ? "partial" : "success";
+  await updateSyncGroup(supabase, brandId, originValue, baseUrl, "DVLinks", syncStatusDv, countersDv);
 
   // Log the sync
   const finishedAt = new Date().toISOString();
@@ -987,6 +1140,7 @@ Deno.serve(async (req) => {
               last_synced_at: dealData.last_synced_at,
               sync_status: "ok",
               sync_error: null,
+              current_status: "active",
               updated_at: dealData.updated_at,
             })
             .eq("id", existing.id);
@@ -1002,6 +1156,7 @@ Deno.serve(async (req) => {
             .from("affiliate_deals")
             .insert({
               ...dealData,
+              current_status: "active",
               is_active: autoActivate,
               visible_driver: autoVisibleDriver,
               click_count: 0,
@@ -1023,6 +1178,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ========== Governance: detect removed + reactivated offers ==========
+    const syncedExtIdsDi = new Set(products.filter(p => p.attributes.uuid).map(p => p.attributes.uuid));
+
+    console.log("[DI] Detecting removed offers...");
+    const removedCountDi = await detectRemovedOffers(supabase, brand_id, "divulgador_inteligente", syncedExtIdsDi);
+    console.log(`[DI] Marked ${removedCountDi} offers as removed_from_source`);
+
+    const reactivatedCountDi = await reactivateReappearedOffers(supabase, brand_id, "divulgador_inteligente", syncedExtIdsDi);
+    console.log(`[DI] Reactivated ${reactivatedCountDi} offers`);
+
     // ========== Phase 3 & 4: Auto-categorization ==========
     console.log("[Categorization] Starting auto-categorization...");
     let categorizationStats = null;
@@ -1033,6 +1198,11 @@ Deno.serve(async (req) => {
       console.error("[Categorization] Error:", e.message);
       categorizationStats = { error: e.message };
     }
+
+    // ========== Governance: update sync group ==========
+    const countersDi = await computeSyncGroupCounters(supabase, brand_id, "divulgador_inteligente");
+    const syncStatusDi = errors > 0 ? "partial" : "success";
+    await updateSyncGroup(supabase, brand_id, "divulgador_inteligente", originUrl, "Divulgador Inteligente", syncStatusDi, countersDi);
 
     // ========== Log the sync ==========
     const finishedAt = new Date().toISOString();
