@@ -69,6 +69,8 @@ function useRealtimeRefresh() {
       .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
         queryClient.invalidateQueries({ queryKey: ["machine_rides-count"] });
         queryClient.invalidateQueries({ queryKey: ["earnings-chart"] });
+        queryClient.invalidateQueries({ queryKey: ["pontos-motoristas"] });
+        queryClient.invalidateQueries({ queryKey: ["pontos-clientes"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
         queryClient.invalidateQueries({ queryKey: ["customers-count"] });
