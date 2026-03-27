@@ -6204,6 +6204,13 @@ export type Database = {
         Returns: string[]
       }
       get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_points_summary: {
+        Args: { p_brand_id: string }
+        Returns: {
+          client_points_total: number
+          driver_points_total: number
+        }[]
+      }
       get_recommended_offers: {
         Args: {
           p_branch_id: string
