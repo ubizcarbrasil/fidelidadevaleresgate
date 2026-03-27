@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard/TasksSection"));
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
+const AchadinhosAlerts = lazyWithRetry(() => import("@/components/dashboard/AchadinhosAlerts"));
+const PointsFeed = lazyWithRetry(() => import("@/components/dashboard/PointsFeed"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -679,36 +681,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Links & Demo */}
-      {showBrand && !isRoot && <BrandQuickLinks />}
-      {showBrand && !isRoot && <DemoStoresSection />}
-
-      {/* CRM Banner */}
-      {showBrand && !isRoot && (
-        <Card className="border-primary/20 overflow-hidden">
-          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h3 className="font-semibold text-sm">CRM Estratégico</h3>
-                  <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
-              </div>
-            </div>
-            <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
-              <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Access Hub */}
-      <AccessHubSection consoleScope={consoleScope} />
-
       {/* ── SECTION A: KPIs ── */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <div className="animate-slide-up delay-1">
@@ -776,6 +748,18 @@ export default function Dashboard() {
         <RankingSection brandFilter={brandFilter} />
       </div>
 
+      {/* ── Pontuações em Tempo Real + Achadinhos Alertas ── */}
+      {showBrand && !isRoot && (
+        <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-5">
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <PointsFeed brandId={brandFilter} />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <AchadinhosAlerts brandId={brandFilter} />
+          </Suspense>
+        </div>
+      )}
+
       {/* ── SECTION D + E: Alerts + Heatmap ── */}
       <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-6">
         <AlertsSection redemptionsPending={redemptionsPending} storeRulesPending={storeRulesPending} />
@@ -787,6 +771,36 @@ export default function Dashboard() {
         <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardTasksSection /></Suspense>
         <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardActivityFeed /></Suspense>
       </div>
+
+      {/* CRM Banner */}
+      {showBrand && !isRoot && (
+        <Card className="border-primary/20 overflow-hidden">
+          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="font-semibold text-sm">CRM Estratégico</h3>
+                  <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
+              </div>
+            </div>
+            <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
+              <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Access Hub */}
+      <AccessHubSection consoleScope={consoleScope} />
+
+      {/* Quick Links & Demo (movido para o final) */}
+      {showBrand && !isRoot && <BrandQuickLinks />}
+      {showBrand && !isRoot && <DemoStoresSection />}
 
       {/* FAB */}
       {currentBrandId && (
