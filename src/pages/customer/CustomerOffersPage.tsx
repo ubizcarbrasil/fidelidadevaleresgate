@@ -75,8 +75,14 @@ export default function CustomerOffersPage() {
     },
   });
 
+  const { isDriver } = useCustomer();
+
   const filtered = useMemo(() => {
     let result = offers;
+    // Hide driver-only offers from non-drivers
+    if (!isDriver) {
+      result = result.filter((o) => !(o as any).driver_only);
+    }
     if (selectedSegmentId) {
       result = result.filter((o) => o.stores?.taxonomy_segment_id === selectedSegmentId);
     }
@@ -89,7 +95,7 @@ export default function CustomerOffersPage() {
       );
     }
     return result;
-  }, [offers, selectedSegmentId, query]);
+  }, [offers, selectedSegmentId, query, isDriver]);
 
   if (loading) {
     return (

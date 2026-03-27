@@ -10,6 +10,7 @@ type Customer = Tables<"customers">;
 interface CustomerContextType {
   customer: Customer | null;
   loading: boolean;
+  isDriver: boolean;
   refetch: () => Promise<void>;
 }
 
@@ -76,12 +77,14 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const isDriver = !!(customer?.name && /\[MOTORISTA\]/i.test(customer.name));
+
   const refetch = async () => {
     await queryClient.invalidateQueries({ queryKey });
   };
 
   return (
-    <CustomerContext.Provider value={{ customer, loading, refetch }}>
+    <CustomerContext.Provider value={{ customer, loading, isDriver, refetch }}>
       {children}
     </CustomerContext.Provider>
   );
