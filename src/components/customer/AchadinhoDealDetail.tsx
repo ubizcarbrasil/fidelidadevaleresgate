@@ -301,7 +301,7 @@ export default function AchadinhoDealDetail({
                       >
                         <div className="relative h-24 w-24 rounded-xl overflow-hidden flex-shrink-0 bg-muted/30">
                           {s.image_url ? (
-                            <img src={s.image_url} alt={s.title} className="h-full w-full object-contain" loading="lazy" />
+                            <img src={s.image_url} alt={s.title} className={`h-full w-full ${(s as any).origin === 'dvlinks' ? 'object-cover' : 'object-contain'}`} loading="lazy" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
                               <Tag className="h-6 w-6" style={{ color: withAlpha(primary, 0.3) }} />
