@@ -183,7 +183,7 @@ function BrandQuickLinks() {
                 <Globe className="h-3 w-3" /> URL configurada
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-[10px]">Usando domínio atual</Badge>
+              <Badge variant="outline" className="text-[10px]">Usando domínio atual</Badge>
             )}
           </div>
         </CardHeader>
@@ -228,7 +228,7 @@ function BrandQuickLinks() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <LogIn className="h-4 w-4 text-primary" /> Acessos de Teste
-              <Badge variant="secondary" className="text-[10px] ml-auto">Senha: 123456</Badge>
+              <Badge variant="outline" className="text-[10px] ml-auto">Senha: 123456</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -240,7 +240,7 @@ function BrandQuickLinks() {
                     <span className="text-sm font-semibold">{roleLabel[acc.role] || acc.role}</span>
                   </div>
                   <code className="block text-xs truncate text-muted-foreground">{acc.email}</code>
-                  <Button variant="secondary" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => copyText(`${acc.email} / 123456`)}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => copyText(`${acc.email} / 123456`)}>
                     <Copy className="h-3 w-3" /> Copiar
                   </Button>
                   {acc.role === "driver" && currentBrandId && (
