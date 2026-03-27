@@ -126,6 +126,63 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
     enabled: !!selectedDriver?.id,
   });
 
+  /* ── Query: search users by email for linking ── */
+  const { data: foundUsers, isLoading: usersLoading } = useQuery({
+    queryKey: ["link-user-search", debouncedLinkEmail],
+    queryFn: async () => {
+      const term = debouncedLinkEmail.trim();
+      if (term.length < 3) return [];
+      const { data, error } = await (supabase as any)
+        .from("profiles")
+        .select("id, email, full_name")
+        .ilike("email", `%${term}%`)
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as { id: string; email: string; full_name: string | null }[];
+    },
+    enabled: !!linkDriver && debouncedLinkEmail.trim().length >= 3,
+  });
+
+  /* ── Mutation: link user_id to driver ── */
+  const linkMutation = useMutation({
+    mutationFn: async ({ driverId, userId }: { driverId: string; userId: string }) => {
+      const { error } = await supabase
+        .from("customers")
+        .update({ user_id: userId } as any)
+        .eq("id", driverId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Conta vinculada!", description: "O motorista agora pode acessar o app." });
+      queryClient.invalidateQueries({ queryKey: ["scored-drivers"] });
+      setLinkDriver(null);
+      setLinkEmail("");
+      setSelectedDriver(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao vincular", description: err.message, variant: "destructive" });
+    },
+  });
+
+  /* ── Mutation: unlink user_id from driver ── */
+  const unlinkMutation = useMutation({
+    mutationFn: async (driverId: string) => {
+      const { error } = await supabase
+        .from("customers")
+        .update({ user_id: null } as any)
+        .eq("id", driverId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Conta desvinculada" });
+      queryClient.invalidateQueries({ queryKey: ["scored-drivers"] });
+      setSelectedDriver(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao desvincular", description: err.message, variant: "destructive" });
+    },
+  });
+
   const maskCpf = (cpf: string | null) => {
     if (!cpf) return "—";
     if (cpf.length >= 11) return `•••.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
