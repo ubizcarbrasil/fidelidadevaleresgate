@@ -444,16 +444,60 @@ async function processFinalized(
   // --- Driver scoring ---
   let driverPointsCredited = 0;
   let driverCustomerId: string | null = null;
+  let driverMonthlyRides = 0;
+  let driverVolumeTierLabel: string | null = null;
 
   if (pointsCredited && points > 0 && integration.driver_points_enabled && driverId) {
-    const driverMode = integration.driver_points_mode || "PERCENT";
-    const driverPercent = Number(integration.driver_points_percent) || 50;
-    const driverPerReal = Number(integration.driver_points_per_real) || 1;
-    const driverPoints = driverMode === "PER_REAL"
-      ? Math.floor(rideValue * driverPerReal)
-      : Math.floor(points * (driverPercent / 100));
+    // 1. Try advanced rules from driver_points_rules table
+    const { data: advancedRule } = await sb
+      .from("driver_points_rules")
+      .select("*")
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .or(branchId ? `branch_id.eq.${branchId},branch_id.is.null` : "branch_id.is.null")
+      .order("branch_id", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (driverPoints > 0) {
+    // Determine driver points based on rule
+    let driverPoints = 0;
+    let reasonDetail = "";
+
+    if (advancedRule) {
+      const ruleMode = advancedRule.rule_mode || "PER_REAL";
+
+      if (ruleMode === "FIXED") {
+        driverPoints = Number(advancedRule.fixed_points_per_ride) || 10;
+        reasonDetail = `Fixo: ${driverPoints} pts/corrida`;
+      } else if (ruleMode === "PERCENT") {
+        const pct = Number(advancedRule.percent_of_passenger) || 50;
+        driverPoints = Math.floor(points * (pct / 100));
+        reasonDetail = `${pct}% de ${points} pts passageiro`;
+      } else if (ruleMode === "VOLUME_TIER") {
+        // We need to resolve the driver customer first to check ride count
+        // Will be calculated after driver customer resolution below
+        driverPoints = -1; // sentinel: calculate after finding driver
+        reasonDetail = "volume_tier";
+      } else {
+        // PER_REAL
+        const ppr = Number(advancedRule.points_per_real) || 1;
+        driverPoints = Math.floor(rideValue * ppr);
+        reasonDetail = `${ppr} pts/R$ × R$ ${rideValue.toFixed(2)}`;
+      }
+    } else {
+      // Fallback to integration-level config
+      const driverMode = integration.driver_points_mode || "PERCENT";
+      const driverPercent = Number(integration.driver_points_percent) || 50;
+      const driverPerReal = Number(integration.driver_points_per_real) || 1;
+      driverPoints = driverMode === "PER_REAL"
+        ? Math.floor(rideValue * driverPerReal)
+        : Math.floor(points * (driverPercent / 100));
+      reasonDetail = driverMode === "PER_REAL"
+        ? `${driverPerReal} pts/R$ × R$ ${rideValue.toFixed(2)}`
+        : `${driverPercent}% de ${points} pts`;
+    }
+
+    if (driverPoints !== 0) {
       // Fetch driver details from TaxiMachine API
       const driverHeaders = matrixHeaders ?? cityHeaders;
       const driverDetails = await fetchDriverDetails(driverId, driverHeaders);
@@ -500,8 +544,10 @@ async function processFinalized(
               ride_count: 0,
               customer_tier: "INICIANTE",
               crm_sync_status: "PENDING",
+              driver_monthly_ride_count: 0,
+              driver_cycle_start: new Date().toISOString().slice(0, 10),
             })
-            .select(CUSTOMER_SELECT)
+            .select("id, branch_id, points_balance, name, phone, customer_tier, ride_count, driver_monthly_ride_count, driver_cycle_start")
             .single();
           if (created) {
             driverCustomer = created;
@@ -516,10 +562,49 @@ async function processFinalized(
       if (driverCustomer) {
         driverCustomerId = driverCustomer.id;
 
-        // Credit driver points
-          const reasonDetail = driverMode === "PER_REAL"
-            ? `${driverPerReal} pts/R$ × R$ ${rideValue.toFixed(2)}`
-            : `${driverPercent}% de ${points} pts`;
+        // Handle volume cycle reset
+        const cycleStart = driverCustomer.driver_cycle_start ? new Date(driverCustomer.driver_cycle_start) : new Date();
+        const now = new Date();
+        const cycleDays = advancedRule?.volume_cycle_days || 30;
+        const daysSinceCycleStart = Math.floor((now.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
+        let currentMonthlyRides = Number(driverCustomer.driver_monthly_ride_count) || 0;
+
+        if (daysSinceCycleStart >= cycleDays) {
+          // Reset cycle
+          currentMonthlyRides = 0;
+          await sb.from("customers").update({
+            driver_monthly_ride_count: 0,
+            driver_cycle_start: now.toISOString().slice(0, 10),
+          }).eq("id", driverCustomer.id);
+        }
+
+        currentMonthlyRides += 1;
+        driverMonthlyRides = currentMonthlyRides;
+
+        // If VOLUME_TIER, calculate points now
+        if (driverPoints === -1 && advancedRule) {
+          const tiers = (advancedRule.volume_tiers || []) as Array<{ min: number; max: number | null; mode: string; value: number }>;
+          const matchedTier = tiers.find(
+            (t) => currentMonthlyRides >= t.min && (t.max === null || currentMonthlyRides <= t.max)
+          );
+          if (matchedTier) {
+            if (matchedTier.mode === "FIXED") {
+              driverPoints = matchedTier.value;
+            } else if (matchedTier.mode === "PERCENT") {
+              driverPoints = Math.floor(points * (matchedTier.value / 100));
+            } else {
+              driverPoints = Math.floor(rideValue * matchedTier.value);
+            }
+            driverVolumeTierLabel = `Faixa ${matchedTier.min}-${matchedTier.max ?? "∞"} (${currentMonthlyRides} corridas)`;
+            reasonDetail = `Volume: ${driverVolumeTierLabel} → ${matchedTier.value} ${matchedTier.mode === "FIXED" ? "pts" : matchedTier.mode === "PERCENT" ? "%" : "pts/R$"}`;
+          } else {
+            driverPoints = 0;
+            reasonDetail = "Sem faixa aplicável";
+          }
+        }
+
+        if (driverPoints > 0) {
+          // Credit driver points
           await sb.from("points_ledger").insert({
             brand_id: brandId,
             branch_id: driverCustomer.branch_id,
@@ -531,15 +616,17 @@ async function processFinalized(
             reference_type: "MACHINE_RIDE",
           });
 
-        const newRideCount = (driverCustomer.ride_count || 0) + 1;
-        const newTier = getTierFromRideCount(newRideCount);
-        await sb.from("customers").update({
-          points_balance: (driverCustomer.points_balance || 0) + driverPoints,
-          ride_count: newRideCount,
-          customer_tier: newTier,
-        }).eq("id", driverCustomer.id);
+          const newRideCount = (driverCustomer.ride_count || 0) + 1;
+          const newTier = getTierFromRideCount(newRideCount);
+          await sb.from("customers").update({
+            points_balance: (driverCustomer.points_balance || 0) + driverPoints,
+            ride_count: newRideCount,
+            customer_tier: newTier,
+            driver_monthly_ride_count: currentMonthlyRides,
+          }).eq("id", driverCustomer.id);
 
-        driverPointsCredited = driverPoints;
+          driverPointsCredited = driverPoints;
+        }
 
         // Mirror driver to crm_contacts
         const driverContactPayload: Record<string, unknown> = {
@@ -552,7 +639,7 @@ async function processFinalized(
           cpf: driverDetails.cpf || null,
           source: "MOBILITY_DRIVER",
           is_active: true,
-          ride_count: newRideCount,
+          ride_count: (driverCustomer.ride_count || 0) + 1,
         };
         Object.keys(driverContactPayload).forEach(k => { if (driverContactPayload[k] === null) delete driverContactPayload[k]; });
 
@@ -561,8 +648,9 @@ async function processFinalized(
           .then(({ error }) => { if (error) logger.error("crm_contacts driver upsert error", { error }); });
 
         logger.info("Driver points credited", {
-          machineRideId, driverId, driverPoints, driverPercent,
+          machineRideId, driverId, driverPoints: driverPointsCredited,
           passengerPoints: points, driverCustomerId, driverMatchedBy,
+          monthlyRides: currentMonthlyRides, volumeTier: driverVolumeTierLabel,
         });
       }
     }
