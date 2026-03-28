@@ -120,6 +120,7 @@ const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"))
 const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernancePage"));
 const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductRedemptionOrdersPage"));
 const ProdutosResgatePage = lazyWithRetry(() => import("@/pages/ProdutosResgatePage"));
+const RegrasResgatePage = lazyWithRetry(() => import("@/pages/RegrasResgatePage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
