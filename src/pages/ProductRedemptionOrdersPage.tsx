@@ -153,6 +153,10 @@ export default function ProductRedemptionOrdersPage() {
     }
   };
 
+  const filteredOrders = statusFilter === "ALL"
+    ? orders
+    : orders.filter((o: any) => o.status === statusFilter);
+
   return (
     <div className="space-y-6">
       <div>
@@ -161,6 +165,24 @@ export default function ProductRedemptionOrdersPage() {
           Pedidos de Resgate
         </h2>
         <p className="text-muted-foreground">Gerencie pedidos de resgate de produtos com pontos</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {[{ key: "ALL", label: "Todos" }, ...Object.entries(STATUS_MAP).map(([key, val]) => ({ key, label: val.label }))].map((item) => (
+          <Button
+            key={item.key}
+            variant={statusFilter === item.key ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter(item.key)}
+          >
+            {item.label}
+            {item.key !== "ALL" && (
+              <Badge variant="secondary" className="ml-1.5 text-xs px-1.5 py-0">
+                {orders.filter((o: any) => o.status === item.key).length}
+              </Badge>
+            )}
+          </Button>
+        ))}
       </div>
 
       <Card>
