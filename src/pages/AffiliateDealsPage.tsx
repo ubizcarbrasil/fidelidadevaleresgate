@@ -940,6 +940,67 @@ export default function AffiliateDealsPage() {
           <Import className="h-6 w-6" />
         </Button>
       )}
+
+      {/* Dialog de resgate em massa */}
+      <Dialog open={showBulkRedeemDialog} onOpenChange={setShowBulkRedeemDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tornar Resgatável em Massa</DialogTitle>
+            <DialogDescription>
+              {selectedIds.size} produto(s) selecionado(s) serão marcados como resgatáveis com pontos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bulkAutoCalc}
+                onCheckedChange={setBulkAutoCalc}
+              />
+              <Label className="text-sm">Calcular automaticamente pelo preço</Label>
+            </div>
+            {bulkAutoCalc ? (
+              <div className="space-y-1">
+                <Label className="text-xs">Pontos por R$ 1,00</Label>
+                <Input
+                  type="number"
+                  value={bulkConversionRate}
+                  onChange={(e) => setBulkConversionRate(e.target.value)}
+                  placeholder="Ex: 100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ex: Produto de R$ 50,00 com taxa 100 = 5.000 pontos
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <Label className="text-xs">Custo em pontos (fixo para todos)</Label>
+                <Input
+                  type="number"
+                  value={bulkPointsCost}
+                  onChange={(e) => setBulkPointsCost(e.target.value)}
+                  placeholder="Ex: 5000"
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkRedeemDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => bulkRedeemMutation.mutate()}
+              disabled={bulkRedeemMutation.isPending || (!bulkAutoCalc && !bulkPointsCost)}
+            >
+              {bulkRedeemMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Gift className="h-4 w-4 mr-2" />
+              )}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
