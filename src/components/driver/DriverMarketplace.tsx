@@ -2,11 +2,13 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverRedeemCheckout from "./DriverRedeemCheckout";
+import DriverProgramInfo from "./DriverProgramInfo";
+import DriverRedeemStorePage from "./DriverRedeemStorePage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -126,6 +128,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
+  const [showProgramInfo, setShowProgramInfo] = useState(false);
+  const [showRedeemStore, setShowRedeemStore] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
