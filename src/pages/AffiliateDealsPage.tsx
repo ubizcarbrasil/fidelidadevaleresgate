@@ -35,6 +35,8 @@ interface DealDraft {
   category: string;
   category_id: string;
   badge_label: string;
+  is_redeemable?: boolean;
+  redeem_points_cost?: string;
 }
 
 const BADGE_SUGGESTIONS = ["Baratinho", "Imperdível", "Oferta Relâmpago", "Mais Vendido", "Exclusivo"];
