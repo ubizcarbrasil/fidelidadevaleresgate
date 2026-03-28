@@ -71,6 +71,9 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.governanca_ofertas": "Governança Achadinho",
     "sidebar.motoristas": "Motorista",
     "sidebar.driver_points_rules": "Regras de Pontuação Motorista",
+    "sidebar.produtos_resgate": "Produtos de Resgate",
+    "sidebar.regras_resgate": "Regras de Resgate",
+    "sidebar.pedidos_resgate": "Pedidos de Resgate",
   },
   customer_app: {
     "app.ofertas": "Ofertas",
