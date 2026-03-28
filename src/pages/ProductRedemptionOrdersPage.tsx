@@ -1,0 +1,382 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Package, ExternalLink, Check, X, Truck, MapPin, Clock, Eye,
+} from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  PENDING: { label: "Pendente", variant: "outline" },
+  APPROVED: { label: "Aprovado", variant: "default" },
+  SHIPPED: { label: "Enviado", variant: "secondary" },
+  DELIVERED: { label: "Entregue", variant: "default" },
+  REJECTED: { label: "Rejeitado", variant: "destructive" },
+};
+
+export default function ProductRedemptionOrdersPage() {
+  const qc = useQueryClient();
+  const { currentBrandId } = useBrandGuard();
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [trackingCode, setTrackingCode] = useState("");
+  const [adminNotes, setAdminNotes] = useState("");
+
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["product-redemption-orders", currentBrandId],
+    enabled: !!currentBrandId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_redemption_orders")
+        .select("*")
+        .eq("brand_id", currentBrandId!)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status, extras }: { id: string; status: string; extras?: Record<string, any> }) => {
+      const updateData: any = { status, ...extras };
+      if (status !== "PENDING") {
+        updateData.reviewed_at = new Date().toISOString();
+      }
+      const { error } = await supabase
+        .from("product_redemption_orders")
+        .update(updateData)
+        .eq("id", id);
+      if (error) throw error;
+
+      // If rejecting, refund points
+      if (status === "REJECTED") {
+        const order = orders.find((o: any) => o.id === id);
+        if (order) {
+          await supabase.from("points_ledger").insert({
+            customer_id: order.customer_id,
+            brand_id: order.brand_id,
+            branch_id: order.branch_id,
+            entry_type: "CREDIT",
+            points_amount: order.points_spent,
+            reason: `Reembolso: pedido de resgate rejeitado`,
+            reference_type: "MANUAL_ADJUSTMENT",
+          });
+          // Update customer balance
+          await supabase.rpc("update_customer_points_balance" as any, {
+            p_customer_id: order.customer_id,
+          }).catch(() => {
+            // fallback: direct update
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["product-redemption-orders"] });
+      toast.success("Pedido atualizado!");
+      setSelectedOrder(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openDetail = (order: any) => {
+    setSelectedOrder(order);
+    setTrackingCode(order.tracking_code || "");
+    setAdminNotes(order.admin_notes || "");
+  };
+
+  const snapshot = (order: any) => {
+    try {
+      return typeof order.deal_snapshot_json === "string"
+        ? JSON.parse(order.deal_snapshot_json)
+        : order.deal_snapshot_json || {};
+    } catch {
+      return {};
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+          <Package className="h-6 w-6" />
+          Pedidos de Resgate
+        </h2>
+        <p className="text-muted-foreground">Gerencie pedidos de resgate de produtos com pontos</p>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Produto</TableHead>
+                <TableHead>Motorista</TableHead>
+                <TableHead>Pontos</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Carregando...
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && !orders.length && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Nenhum pedido de resgate encontrado
+                  </TableCell>
+                </TableRow>
+              )}
+              {orders.map((order: any) => {
+                const snap = snapshot(order);
+                const st = STATUS_MAP[order.status] || STATUS_MAP.PENDING;
+                return (
+                  <TableRow key={order.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {snap.image_url && (
+                          <img src={snap.image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                        )}
+                        <span className="font-medium text-sm line-clamp-1">{snap.title || "Produto"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <p className="font-medium">{order.customer_name}</p>
+                        <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-bold text-sm">{order.points_spent} pts</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={st.variant}>{st.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => openDetail(order)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {order.affiliate_url && (
+                        <Button variant="ghost" size="icon" asChild>
+                          <a href={order.affiliate_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Detail dialog */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Detalhe do Pedido
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedOrder && (() => {
+            const snap = snapshot(selectedOrder);
+            const st = STATUS_MAP[selectedOrder.status] || STATUS_MAP.PENDING;
+            return (
+              <div className="space-y-4">
+                {/* Product info */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  {snap.image_url && (
+                    <img src={snap.image_url} alt="" className="h-16 w-16 rounded object-cover flex-shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm">{snap.title}</p>
+                    {snap.price && <p className="text-xs text-muted-foreground">Preço: R$ {Number(snap.price).toFixed(2).replace(".", ",")}</p>}
+                    <p className="text-sm font-bold mt-1">{selectedOrder.points_spent} pts</p>
+                  </div>
+                </div>
+
+                {/* Link ML */}
+                {selectedOrder.affiliate_url && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Link Marketplace</Label>
+                    <a
+                      href={selectedOrder.affiliate_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary underline break-all"
+                    >
+                      {selectedOrder.affiliate_url}
+                    </a>
+                  </div>
+                )}
+
+                {/* Customer info */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-1">
+                    <MapPin className="h-4 w-4" /> Dados do Motorista
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground text-xs">Nome</span>
+                      <p>{selectedOrder.customer_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground text-xs">Telefone</span>
+                      <p>{selectedOrder.customer_phone}</p>
+                    </div>
+                    {selectedOrder.customer_cpf && (
+                      <div>
+                        <span className="text-muted-foreground text-xs">CPF</span>
+                        <p>{selectedOrder.customer_cpf}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Endereço de Entrega</h4>
+                  <div className="text-sm bg-muted/30 p-3 rounded-lg">
+                    <p>{selectedOrder.delivery_address}, {selectedOrder.delivery_number}</p>
+                    {selectedOrder.delivery_complement && <p>{selectedOrder.delivery_complement}</p>}
+                    <p>{selectedOrder.delivery_neighborhood} - {selectedOrder.delivery_city}/{selectedOrder.delivery_state}</p>
+                    <p>CEP: {selectedOrder.delivery_cep}</p>
+                  </div>
+                </div>
+
+                {/* Status & Actions */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Status:</span>
+                    <Badge variant={st.variant}>{st.label}</Badge>
+                  </div>
+
+                  {selectedOrder.tracking_code && (
+                    <div>
+                      <span className="text-xs text-muted-foreground">Rastreio:</span>
+                      <p className="text-sm font-medium">{selectedOrder.tracking_code}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Admin notes */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Notas internas</Label>
+                  <Textarea
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Observações sobre o pedido..."
+                  />
+                </div>
+
+                {/* Tracking code input for shipping */}
+                {(selectedOrder.status === "APPROVED" || selectedOrder.status === "PENDING") && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Código de Rastreio</Label>
+                    <Input
+                      value={trackingCode}
+                      onChange={(e) => setTrackingCode(e.target.value)}
+                      placeholder="Ex: BR123456789..."
+                    />
+                  </div>
+                )}
+
+                <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                  {selectedOrder.status === "PENDING" && (
+                    <>
+                      <Button
+                        variant="default"
+                        onClick={() =>
+                          updateStatus.mutate({
+                            id: selectedOrder.id,
+                            status: "APPROVED",
+                            extras: { admin_notes: adminNotes },
+                          })
+                        }
+                        disabled={updateStatus.isPending}
+                      >
+                        <Check className="h-4 w-4 mr-1" /> Aprovar
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() =>
+                          updateStatus.mutate({
+                            id: selectedOrder.id,
+                            status: "REJECTED",
+                            extras: { admin_notes: adminNotes },
+                          })
+                        }
+                        disabled={updateStatus.isPending}
+                      >
+                        <X className="h-4 w-4 mr-1" /> Rejeitar (devolver pts)
+                      </Button>
+                    </>
+                  )}
+                  {selectedOrder.status === "APPROVED" && (
+                    <Button
+                      onClick={() =>
+                        updateStatus.mutate({
+                          id: selectedOrder.id,
+                          status: "SHIPPED",
+                          extras: { tracking_code: trackingCode, admin_notes: adminNotes },
+                        })
+                      }
+                      disabled={updateStatus.isPending}
+                    >
+                      <Truck className="h-4 w-4 mr-1" /> Marcar Enviado
+                    </Button>
+                  )}
+                  {selectedOrder.status === "SHIPPED" && (
+                    <Button
+                      onClick={() =>
+                        updateStatus.mutate({
+                          id: selectedOrder.id,
+                          status: "DELIVERED",
+                          extras: { admin_notes: adminNotes },
+                        })
+                      }
+                      disabled={updateStatus.isPending}
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Marcar Entregue
+                    </Button>
+                  )}
+                </DialogFooter>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
