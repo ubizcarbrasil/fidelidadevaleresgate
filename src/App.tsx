@@ -120,6 +120,7 @@ const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"))
 const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernancePage"));
 const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductRedemptionOrdersPage"));
 const ProdutosResgatePage = lazyWithRetry(() => import("@/pages/ProdutosResgatePage"));
+const RegrasResgatePage = lazyWithRetry(() => import("@/pages/RegrasResgatePage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
@@ -204,6 +205,7 @@ function AppRoutes() {
           <Route path="offer-governance" element={<ModuleGuard moduleKey="affiliate_deals"><OfferGovernancePage /></ModuleGuard>} />
           <Route path="product-redemption-orders" element={<ModuleGuard moduleKey="affiliate_deals"><ProductRedemptionOrdersPage /></ModuleGuard>} />
           <Route path="produtos-resgate" element={<ModuleGuard moduleKey="affiliate_deals"><ProdutosResgatePage /></ModuleGuard>} />
+          <Route path="regras-resgate" element={<ModuleGuard moduleKey="affiliate_deals"><RegrasResgatePage /></ModuleGuard>} />
           <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
           <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
           <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
