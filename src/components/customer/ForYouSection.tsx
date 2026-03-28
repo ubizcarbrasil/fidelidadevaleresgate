@@ -145,7 +145,13 @@ export default function ForYouSection() {
                 {o.title}
               </h3>
               {o.stores?.name && (
-                <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
+                <p className="text-[10px] mt-0.5 text-muted-foreground truncate">
+                  {o.stores.name}
+                  {o.coupon_type !== "PRODUCT" && Number(o.value_rescue) > 0 && Number((o as any).min_purchase || 0) > 0 && (() => {
+                    const pct = Math.round((Number(o.value_rescue) / Number((o as any).min_purchase)) * 100);
+                    return <span className="ml-1 font-bold" style={{ color: "hsl(var(--vb-highlight))", fontSize: "9px" }}>{pct}%</span>;
+                  })()}
+                </p>
               )}
               {o.coupon_type === "PRODUCT" && Number(o.value_rescue) > 0 && (() => {
                 const tp = (o as any).terms_params_json as Record<string, unknown> | null;
@@ -165,7 +171,7 @@ export default function ForYouSection() {
               })()}
               {o.coupon_type !== "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {formatSubtitle("store", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue), min: Number((o as any).min_purchase || 0) })}
+                  Crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>
