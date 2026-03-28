@@ -63,32 +63,68 @@ export default function ProductRedemptionOrdersPage() {
         .eq("id", id);
       if (error) throw error;
 
+      const order = orders.find((o: any) => o.id === id);
+
       // If rejecting, refund points
-      if (status === "REJECTED") {
-        const order = orders.find((o: any) => o.id === id);
-        if (order) {
-          const userId = (await supabase.auth.getUser()).data.user!.id;
-          await supabase.from("points_ledger").insert({
-            customer_id: order.customer_id,
-            brand_id: order.brand_id,
-            branch_id: order.branch_id,
-            entry_type: "CREDIT",
-            points_amount: order.points_spent,
-            reason: `Reembolso: pedido de resgate rejeitado`,
-            reference_type: "MANUAL_ADJUSTMENT",
-            created_by_user_id: userId,
-          } as any);
-          // Refund customer balance
-          const { data: cust } = await supabase
-            .from("customers")
-            .select("points_balance")
-            .eq("id", order.customer_id)
-            .single();
-          if (cust) {
-            await supabase.from("customers").update({
-              points_balance: (cust.points_balance || 0) + order.points_spent,
-            }).eq("id", order.customer_id);
-          }
+      if (status === "REJECTED" && order) {
+        const userId = (await supabase.auth.getUser()).data.user!.id;
+        await supabase.from("points_ledger").insert({
+          customer_id: order.customer_id,
+          brand_id: order.brand_id,
+          branch_id: order.branch_id,
+          entry_type: "CREDIT",
+          points_amount: order.points_spent,
+          reason: `Reembolso: pedido de resgate rejeitado`,
+          reference_type: "MANUAL_ADJUSTMENT",
+          created_by_user_id: userId,
+        } as any);
+        const { data: cust } = await supabase
+          .from("customers")
+          .select("points_balance")
+          .eq("id", order.customer_id)
+          .single();
+        if (cust) {
+          await supabase.from("customers").update({
+            points_balance: (cust.points_balance || 0) + order.points_spent,
+          }).eq("id", order.customer_id);
+        }
+      }
+
+      // Send push notification
+      if (order) {
+        const snap = snapshot(order);
+        const title = snap.title || "Produto";
+        const notificationMap: Record<string, { title: string; body: string }> = {
+          APPROVED: {
+            title: "Seu pedido de resgate foi aprovado! 🎉",
+            body: `O produto ${title} foi aprovado e será enviado em breve.`,
+          },
+          SHIPPED: {
+            title: "Seu pedido foi enviado! 📦",
+            body: extras?.tracking_code
+              ? `Rastreio: ${extras.tracking_code}`
+              : `O produto ${title} está a caminho.`,
+          },
+          DELIVERED: {
+            title: "Pedido entregue! ✅",
+            body: `O produto ${title} foi entregue.`,
+          },
+          REJECTED: {
+            title: "Pedido de resgate não aprovado",
+            body: `Seus ${order.points_spent} pontos foram devolvidos.`,
+          },
+        };
+        const msg = notificationMap[status];
+        if (msg) {
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              customer_ids: [order.customer_id],
+              title: msg.title,
+              body: msg.body,
+              reference_type: "product_redemption",
+              reference_id: order.id,
+            },
+          });
         }
       }
     },
