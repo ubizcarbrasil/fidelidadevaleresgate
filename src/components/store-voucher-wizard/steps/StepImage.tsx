@@ -6,6 +6,7 @@ import { ImagePlus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { StoreVoucherData } from "../types";
 import ImageAiActions from "@/components/ImageAiActions";
+import ImageCropDialog from "@/components/ImageCropDialog";
 
 interface Props {
   data: StoreVoucherData;
@@ -15,28 +16,17 @@ interface Props {
 
 export default function StepImage({ data, update, storeId }: Props) {
   const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Selecione um arquivo de imagem.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem deve ter no máximo 5MB.");
-      return;
-    }
-
+  const uploadBlob = async (blob: Blob, ext: string) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
     const path = `offers/${storeId}/${Date.now()}.${ext}`;
 
     const { error } = await supabase.storage
       .from("brand-assets")
-      .upload(path, file, { upsert: true });
+      .upload(path, blob, { upsert: true });
 
     if (error) {
       toast.error("Erro ao enviar imagem: " + error.message);
@@ -51,6 +41,40 @@ export default function StepImage({ data, update, storeId }: Props) {
     update({ image_url: urlData.publicUrl });
     setUploading(false);
     toast.success("Imagem enviada!");
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem deve ter no máximo 5MB.");
+      return;
+    }
+
+    setPendingFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropped = (blob: Blob) => {
+    setCropSrc(null);
+    setPendingFile(null);
+    uploadBlob(blob, "png");
+  };
+
+  const handleCropCancel = () => {
+    setCropSrc(null);
+    if (pendingFile) {
+      uploadBlob(pendingFile, pendingFile.name.split(".").pop() || "png");
+      setPendingFile(null);
+    }
   };
 
   const handleRemove = () => {
@@ -86,7 +110,7 @@ export default function StepImage({ data, update, storeId }: Props) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        onChange={handleUpload}
+        onChange={handleFileSelect}
         className="hidden"
       />
 
@@ -129,6 +153,15 @@ export default function StepImage({ data, update, storeId }: Props) {
             </>
           )}
         </button>
+      )}
+
+      {cropSrc && (
+        <ImageCropDialog
+          open={!!cropSrc}
+          imageSrc={cropSrc}
+          onCropped={handleCropped}
+          onCancel={handleCropCancel}
+        />
       )}
     </div>
   );
