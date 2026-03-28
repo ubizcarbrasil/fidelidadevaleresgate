@@ -628,14 +628,28 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 {o.stores?.name && (
                   <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
                 )}
-                {o.coupon_type === "PRODUCT" && o.discount_percent > 0 && (
-                  <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    {Math.floor(Number(o.value_rescue || 0))} pts = R$ {Number(o.value_rescue || 0).toFixed(2)}
-                  </span>
-                )}
+                {o.coupon_type === "PRODUCT" && (() => {
+                  const tp = o.terms_params_json as Record<string, unknown> | null;
+                  const pp = tp?.product_price ? Number(tp.product_price) : 0;
+                  const vr = Number(o.value_rescue || 0);
+                  return (
+                    <div className="mt-1">
+                      {pp > 0 && (
+                        <span className="font-bold text-xs block" style={{ fontFamily: "inherit" }}>
+                          R$ {pp.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                      )}
+                      {vr > 0 && o.discount_percent > 0 && (
+                        <span className="font-bold text-xs block" style={{ color: "hsl(var(--vb-highlight))" }}>
+                          {Math.floor(vr)} pts = R$ {vr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
                 {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
+                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 )}
               </div>
@@ -693,14 +707,28 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               {o.stores?.name && (
                 <p className="text-[9px] text-muted-foreground truncate">{o.stores.name}</p>
               )}
-              {o.coupon_type === "PRODUCT" && o.value_rescue > 0 && (
-                <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  {Math.floor(Number(o.value_rescue))} pts = R$ {Number(o.value_rescue).toFixed(2)}
-                </span>
-              )}
+              {o.coupon_type === "PRODUCT" && (() => {
+                const tp = o.terms_params_json as Record<string, unknown> | null;
+                const pp = tp?.product_price ? Number(tp.product_price) : 0;
+                const vr = Number(o.value_rescue || 0);
+                return (
+                  <div className="mt-1">
+                    {pp > 0 && (
+                      <span className="font-bold text-xs block">
+                        R$ {pp.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    )}
+                    {vr > 0 && (
+                      <span className="font-bold text-xs block" style={{ color: accent }}>
+                        {Math.floor(vr)} pts = R$ {vr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toFixed(2)}
+                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>

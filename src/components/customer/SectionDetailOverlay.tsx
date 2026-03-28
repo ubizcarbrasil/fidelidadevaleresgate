@@ -193,14 +193,28 @@ export default function SectionDetailOverlay({
                         {segmentTag}
                       </p>
                     )}
-                    {item.coupon_type === "PRODUCT" && (item.value_rescue ?? 0) > 0 && (
-                      <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        {Math.floor(Number(item.value_rescue ?? 0))} pts = R$ {Number(item.value_rescue ?? 0).toFixed(2)}
-                      </span>
-                    )}
+                    {item.coupon_type === "PRODUCT" && (() => {
+                      const tp = (item as any).terms_params_json as Record<string, unknown> | null;
+                      const pp = tp?.product_price ? Number(tp.product_price) : 0;
+                      const vr = Number(item.value_rescue ?? 0);
+                      return (
+                        <div className="mt-1">
+                          {pp > 0 && (
+                            <span className="text-xs font-bold block">
+                              R$ {pp.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                          {vr > 0 && (
+                            <span className="text-xs font-bold block" style={{ color: "hsl(var(--vb-gold))" }}>
+                              {Math.floor(vr)} pts = R$ {vr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {item.coupon_type !== "PRODUCT" && (item.value_rescue ?? 0) > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        Troque {Math.floor(Number(item.value_rescue ?? 0))} pts · Mín. R$ {Number(item.min_purchase || 0).toFixed(2)}
+                        Troque {Math.floor(Number(item.value_rescue ?? 0))} pts · Mín. R$ {Number(item.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </span>
                     )}
                     {item.address && (
