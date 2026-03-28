@@ -13,7 +13,6 @@ const PendingReportsSection = lazyWithRetry(() => import("@/components/dashboard
 
 /* ── Ranking Section ── */
 function RankingSection({ brandFilter }: { brandFilter?: string }) {
-
   const { data: topStores } = useQuery({
     queryKey: ["top-stores-ranking", brandFilter ?? "global"],
     queryFn: async () => {
