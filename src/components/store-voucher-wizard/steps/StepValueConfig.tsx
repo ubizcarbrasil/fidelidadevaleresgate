@@ -26,10 +26,11 @@ export default function StepValueConfig({ data, update }: Props) {
               <span className="text-lg font-bold text-muted-foreground">R$</span>
               <Input
                 type="number" min={0.01} step={0.01}
-                value={data.product_price}
-                onChange={(e) => update({ product_price: Number(e.target.value) })}
-                className="text-lg font-bold max-w-[140px]"
-                placeholder="0,00"
+              value={data.product_price}
+              onChange={(e) => update({ product_price: Number(e.target.value) })}
+              onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
+              className="text-lg font-bold max-w-[140px]"
+              placeholder="0,00"
               />
             </div>
           </div>
@@ -107,6 +108,7 @@ export default function StepValueConfig({ data, update }: Props) {
               type="number" min={0.01} step={0.01}
               value={data.product_price}
               onChange={(e) => update({ product_price: Number(e.target.value) })}
+              onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
               className="text-lg font-bold max-w-[140px]"
               placeholder="0,00"
             />
@@ -145,6 +147,7 @@ export default function StepValueConfig({ data, update }: Props) {
                 type="number" min={1} max={100} step={1}
                 value={data.discount_percent}
                 onChange={(e) => update({ discount_percent: Number(e.target.value) })}
+                onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
                 className="text-lg font-bold max-w-[100px]"
               />
               <span className="text-lg font-bold text-muted-foreground">%</span>
@@ -159,6 +162,7 @@ export default function StepValueConfig({ data, update }: Props) {
                 type="number" min={0.01} step={0.01}
                 value={data.discount_fixed}
                 onChange={(e) => update({ discount_fixed: Number(e.target.value) })}
+                onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
                 className="text-lg font-bold max-w-[120px]"
               />
             </div>
@@ -173,6 +177,7 @@ export default function StepValueConfig({ data, update }: Props) {
                 type="number" min={0} step={0.01}
                 value={data.min_purchase}
                 onChange={(e) => update({ min_purchase: Number(e.target.value) })}
+                onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
               />
             </div>
           </div>
@@ -230,6 +235,7 @@ export default function StepValueConfig({ data, update }: Props) {
                   type="number" min={0} step={1}
                   value={sv.min_purchase}
                   onChange={(e) => updateScale(idx, "min_purchase", Number(e.target.value))}
+                  onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
                   className="w-24 h-8 text-sm"
                 />
               </div>
