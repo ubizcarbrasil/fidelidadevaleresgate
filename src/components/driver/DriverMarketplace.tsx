@@ -359,6 +359,13 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowProgramInfo(true)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl"
+                style={{ backgroundColor: "hsl(var(--muted))" }}
+              >
+                <HelpCircle className="h-4.5 w-4.5 text-foreground" />
+              </button>
               {whatsappNumber && (
                 <a
                   href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}`}
@@ -367,7 +374,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                   className="h-9 w-9 flex items-center justify-center rounded-xl"
                   style={{ backgroundColor: "hsl(var(--muted))" }}
                 >
-                  <MessageCircle className="h-4.5 w-4.5 text-emerald-400" />
+                  <MessageCircle className="h-4.5 w-4.5" style={{ color: "#25D366" }} />
                 </a>
               )}
               <button
