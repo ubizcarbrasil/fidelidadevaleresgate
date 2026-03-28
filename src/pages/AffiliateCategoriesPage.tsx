@@ -277,6 +277,8 @@ export default function AffiliateCategoriesPage() {
         </Button>
       </div>
 
+      {newForm && renderForm(newForm, setNewForm, () => saveMutation.mutate(newForm), () => setNewForm(null))}
+
       {/* CTA & Banner Config */}
       <Card>
         <CardHeader className="pb-3">
@@ -370,7 +372,6 @@ export default function AffiliateCategoriesPage() {
         </CardContent>
       </Card>
 
-      {newForm && renderForm(newForm, setNewForm, () => saveMutation.mutate(newForm), () => setNewForm(null))}
       {editId && editForm && renderForm(editForm, setEditForm, () => saveMutation.mutate({ ...editForm, id: editId }), () => { setEditId(null); setEditForm(null); })}
 
       <div className="grid gap-2">
