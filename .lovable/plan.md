@@ -1,42 +1,43 @@
 
 
-# Simplificar texto de crédito nos cards de oferta de loja
+# Reorganizar menu lateral — Criar grupo "Achadinhos" e mover itens
 
-## Problema
-O texto "Troque 20 pontos por crédito de R$ 20,00 · Mín. R$ 40,00" é longo demais para caber no card. Precisa ser mais conciso.
+## Resumo das mudanças
 
-## Solução
+Criar um novo grupo de menu chamado **"Achadinhos"** no `BrandSidebar.tsx` e reorganizar os itens conforme solicitado.
 
-### Nos cards (todas as vitrines):
-- Trocar o texto longo por apenas: **"Crédito de R$ 20,00"**
-- Ao lado do nome da loja, exibir de forma minimalista a **% que o crédito representa** em relação à compra mínima (ex: `50%` se crédito=20 e min=40)
+## Alterações no arquivo `src/components/consoles/BrandSidebar.tsx`
 
-### Na abertura da oferta / detail:
-- Manter a informação completa com compra mínima (já existente no detail)
+### 1. Remover do grupo "Personalização & Vitrine":
+- `sidebar.achadinhos` (Achadinhos)
+- `sidebar.categorias_achadinhos` (Categorias de Achadinhos)
+- `sidebar.espelhamento` (renomear para **"Espelhamento Achadinho"**)
+- `sidebar.governanca_ofertas` (renomear para **"Governança Achadinho"**)
 
-### Badge/etiqueta:
-- Continua carregando normalmente como já está
+### 2. Remover do grupo "Equipe & Acessos":
+- `sidebar.painel_motorista` (Painel do Motorista) — mover para o novo grupo Achadinhos
+
+### 3. Remover do grupo "Gestão Comercial":
+- `sidebar.motoristas` — renomear de "Motoristas" para **"Motorista"**
+
+### 4. Remover do grupo "Integrações & API":
+- `sidebar.driver_points_rules` — renomear de "Pontuação Motoristas" para **"Regras de Pontuação Motorista"** e mover para **"Programa de Fidelidade"**
+
+### 5. Criar novo grupo "Achadinhos" (após "Personalização & Vitrine"):
+```
+Achadinhos
+├── Achadinhos              (/affiliate-deals)
+├── Categorias de Achadinhos (/affiliate-categories)
+├── Espelhamento Achadinho   (/mirror-sync)
+├── Governança Achadinho     (/offer-governance)
+└── Painel do Motorista      (/driver-config)
+```
+
+### 6. Adicionar ao grupo "Programa de Fidelidade":
+```
++ Regras de Pontuação Motorista (/driver-points-rules)
+```
 
 ## Arquivos afetados
-
-### 1. `src/components/HomeSectionsRenderer.tsx`
-- **Carousel (linha ~650-653)**: Substituir texto longo por `Crédito de R$ {value}`
-- **Grid (linha ~729-732)**: Idem
-- Em ambos, ao lado do `o.stores?.name`, adicionar `{percent}%` calculado como `(value_rescue / min_purchase) * 100`
-
-### 2. `src/components/customer/ForYouSection.tsx`
-- **Linha ~166-169**: Substituir `formatSubtitle("store", ...)` por `Crédito de R$ {value}`
-- Ao lado do nome da loja (linha ~148), adicionar badge com `%`
-
-### 3. `src/components/customer/SectionDetailOverlay.tsx`
-- **Linha ~215-217**: Mesma alteração — texto curto no card
-
-### 4. `src/pages/customer/CustomerOffersPage.tsx`
-- Verificar se ofertas de loja exibem texto longo e simplificar
-
-## Cálculo do percentual
-```
-percent = min_purchase > 0 ? Math.round((value_rescue / min_purchase) * 100) : 0
-```
-Exibido como badge discreto: `50%` ao lado do nome da loja, com estilo minimalista (texto pequeno, cor highlight).
+- `src/components/consoles/BrandSidebar.tsx` — única alteração necessária
 
