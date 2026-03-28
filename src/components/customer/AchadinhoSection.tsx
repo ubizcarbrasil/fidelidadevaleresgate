@@ -221,6 +221,35 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
   }, [rawCategories, deals, categoryLayout]);
 
 
+  const [bannerIndex, setBannerIndex] = useState(0);
+
+  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID;
+
+  const { data: catBanners } = useQuery({
+    queryKey: ["affiliate-cat-banners-inline", brand?.id, selectedCat],
+    enabled: !!brand && !!isRealCategory,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("affiliate_category_banners")
+        .select("id, image_url, title, link_url")
+        .eq("brand_id", brand!.id)
+        .eq("category_id", selectedCat!)
+        .eq("is_active", true)
+        .order("order_index");
+      return (data as CategoryBanner[]) || [];
+    },
+  });
+
+  // Auto-rotate banners
+  useEffect(() => {
+    if (!catBanners || catBanners.length <= 1) return;
+    setBannerIndex(0);
+    const interval = setInterval(() => {
+      setBannerIndex(prev => (prev + 1) % catBanners.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [catBanners]);
+
   const handleClick = (deal: AffiliateDeal) => {
     setSelectedDeal(deal);
   };
