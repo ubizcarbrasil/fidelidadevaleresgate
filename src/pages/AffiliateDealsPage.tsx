@@ -66,6 +66,7 @@ export default function AffiliateDealsPage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("list");
   const [page, setPage] = useState(1);
+  const [redeemFilter, setRedeemFilter] = useState<"all" | "not_redeemable" | "redeemable">("all");
   const debouncedSearch = useDebounce(search, 300);
 
   // Bulk manual creation
@@ -165,11 +166,13 @@ export default function AffiliateDealsPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId],
+    queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId, redeemFilter],
     queryFn: async () => {
       let query = supabase.from("affiliate_deals").select("*", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
+      if (redeemFilter === "not_redeemable") query = query.or("is_redeemable.is.null,is_redeemable.eq.false");
+      if (redeemFilter === "redeemable") query = query.eq("is_redeemable", true);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("order_index").range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
@@ -460,6 +463,34 @@ export default function AffiliateDealsPage() {
             totalCount={data?.total || 0}
             onPageChange={setPage}
           />
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground mr-1">Filtro resgate:</span>
+            <Button
+              size="sm"
+              variant={redeemFilter === "all" ? "default" : "outline"}
+              onClick={() => { setRedeemFilter("all"); setPage(1); }}
+              className="h-7 text-xs"
+            >
+              Todos
+            </Button>
+            <Button
+              size="sm"
+              variant={redeemFilter === "not_redeemable" ? "default" : "outline"}
+              onClick={() => { setRedeemFilter("not_redeemable"); setPage(1); }}
+              className="h-7 text-xs"
+            >
+              Não resgatáveis
+            </Button>
+            <Button
+              size="sm"
+              variant={redeemFilter === "redeemable" ? "default" : "outline"}
+              onClick={() => { setRedeemFilter("redeemable"); setPage(1); }}
+              className="h-7 text-xs"
+            >
+              🎁 Resgatáveis
+            </Button>
+          </div>
 
           {/* Barra de ações em massa */}
           {selectedIds.size > 0 && (
