@@ -54,11 +54,17 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText, moduleKey: "profile_links" },
       { key: "sidebar.offer_card_config", defaultTitle: "Layout de Ofertas", url: "/offer-card-config", icon: LayoutTemplate, moduleKey: "offer_card_config" },
       { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers, moduleKey: "page_builder" },
+      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image, moduleKey: "banners" },
+    ],
+  },
+  {
+    label: "Achadinhos",
+    items: [
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals" },
-      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals" },
-      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image, moduleKey: "banners" },
+      { key: "sidebar.espelhamento", defaultTitle: "Espelhamento Achadinho", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals" },
+      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança Achadinho", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals" },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
     ],
   },
   {
@@ -78,7 +84,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
-      { key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: Truck, moduleKey: "machine_integration" },
+      { key: "sidebar.motoristas", defaultTitle: "Motorista", url: "/motoristas", icon: Truck, moduleKey: "machine_integration" },
       { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap, moduleKey: "sponsored" },
     ],
   },
@@ -89,6 +95,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
       { key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: Crown, moduleKey: "earn_points_store" },
       { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
+      { key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration" },
     ],
   },
   {
@@ -105,7 +112,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users, moduleKey: "users_management" },
       { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: Shield, moduleKey: "store_permissions" },
       { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye, moduleKey: "access_hub" },
-      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
     ],
   },
   {
@@ -125,7 +131,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
       { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car, moduleKey: "machine_integration" },
       { key: "sidebar.machine_test", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical, moduleKey: "machine_integration" },
-      { key: "sidebar.driver_points_rules", defaultTitle: "Pontuação Motoristas", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration" },
+      
     ],
   },
   {
