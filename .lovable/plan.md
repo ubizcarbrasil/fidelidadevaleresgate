@@ -1,29 +1,26 @@
 
 
-# Exibir banner da categoria acima dos produtos no AchadinhoSection
+# Corrigir criação de nova categoria — formulário invisível no mobile
 
 ## Problema
-Quando uma categoria de achadinhos é acionada (selecionada pelo pill), os banners da categoria não aparecem na seção inline da home. Eles só existem nas páginas completas de categoria (`AchadinhoCategoryPage` e `DriverCategoryPage`), onde já ficam acima dos produtos.
+Ao clicar em "Nova Categoria", o formulário de criação aparece na **linha 373**, que fica **abaixo** do grande card de "Configurações — Detalhe do Achadinho" (banners + CTA). No mobile (430px), esse card é extenso e o formulário fica fora da tela, dando a impressão de que nada aconteceu.
 
-O objetivo é carregar o banner da categoria ativa na seção da home, posicionado **acima** dos produtos como uma "capa de abertura".
+## Solução
 
-## Alterações
+### Alteração em `src/pages/AffiliateCategoriesPage.tsx`
 
-### 1. `src/components/customer/AchadinhoSection.tsx`
-- Adicionar query para buscar banners de `affiliate_category_banners` quando uma categoria está selecionada (`selectedCat`)
-- Renderizar o banner carousel **antes** dos carrosséis de produtos da categoria ativa (entre o header da categoria e os deals)
-- Usar o mesmo estilo de banner carousel das category pages (aspect-ratio 21/9, dots de navegação, rounded-2xl)
-- Só buscar e exibir quando `selectedCat` não é nulo e não é virtual (`__new_offers__`)
+1. **Mover o bloco `{newForm && renderForm(...)}`** da linha 373 para logo após o botão "Nova Categoria" (após a linha 278), antes do card de configurações CTA.
 
-### 2. Estrutura de renderização por categoria (linha ~364):
+2. **Adicionar scroll automático** com `useRef` + `scrollIntoView` para que, ao clicar em "Nova Categoria", a tela role automaticamente até o formulário no mobile.
+
+Estrutura final:
 ```
-Antes:
-  Header da categoria → Carrosséis de produtos
-
-Depois:
-  Header da categoria → Banner carousel (se houver) → Carrosséis de produtos
+Header + Botão "Nova Categoria"
+→ Formulário de nova categoria (se aberto)  ← movido para cá
+Card de Configurações CTA/Banners
+Formulário de edição (se aberto)
+Lista de categorias
 ```
 
-### Nenhuma alteração nas category pages
-`AchadinhoCategoryPage.tsx` e `DriverCategoryPage.tsx` já têm os banners acima dos produtos — permanecem inalterados.
+Arquivo único afetado: `src/pages/AffiliateCategoriesPage.tsx`
 
