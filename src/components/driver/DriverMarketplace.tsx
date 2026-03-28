@@ -672,6 +672,25 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           onSuccess={() => setRedeemDeal(null)}
         />
       )}
+
+      {/* Program info overlay */}
+      {showProgramInfo && (
+        <DriverProgramInfo
+          whatsappNumber={whatsappNumber}
+          fontHeading={fontHeading}
+          onBack={() => setShowProgramInfo(false)}
+        />
+      )}
+
+      {/* Redeem store overlay */}
+      {showRedeemStore && (
+        <DriverRedeemStorePage
+          brandId={brand.id}
+          branchId={branch?.id}
+          fontHeading={fontHeading}
+          onBack={() => setShowRedeemStore(false)}
+        />
+      )}
     </div>
   );
 }
