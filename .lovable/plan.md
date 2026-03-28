@@ -1,32 +1,54 @@
 
 
-# Notificações push ao mudar status do pedido de resgate
+# O que já está implementado vs. o que falta
 
-## Visão Geral
+## Já implementado (100%)
+- Admin marca deals como resgatáveis com custo em pontos
+- Seção "Resgatar com Pontos" no marketplace do motorista
+- Checkout completo com endereço, CEP (ViaCEP), nome, telefone, CPF
+- Painel admin de pedidos de resgate com workflow de status
+- Notificações push ao mudar status
+- Filtros por status na página admin
+- Histórico de resgates no dashboard do motorista
 
-Quando o admin muda o status de um pedido de resgate (Aprovado, Enviado, Entregue, Rejeitado), o sistema já tem a edge function `send-push-notification` que insere registros na tabela `customer_notifications`. O motorista já recebe notificações in-app via `useCustomerNotifications`. Basta integrar a chamada no fluxo de atualização de status.
+## O que falta (baseado na sua descrição)
 
-## Alteração
+### 1. Página "Como Funciona" para o Motorista
+Uma tela educativa/informativa acessível pelo marketplace ou dashboard explicando:
+- Como ganhar pontos comprando no Mercado Livre (1 R$ = 1 pt)
+- O processo: enviar link para WhatsApp → receber link de pontuação → comprar → aguardar 30-40 dias
+- Regra: só pontua com o link correto da Ubiz
+- Preço não muda, vantagem é o acúmulo de pontos
+- Pode comprar para amigos/familiares e os pontos vão para sua conta
+- Como usar os pontos no e-commerce de resgate
 
-### Arquivo: `src/pages/ProductRedemptionOrdersPage.tsx`
+**Arquivo:** `src/components/driver/DriverProgramInfo.tsx`
+**Integração:** Botão/ícone de "?" ou "Como Funciona" no header do marketplace e no dashboard
 
-Após o `update` bem-sucedido do status (e após o refund se for REJECTED), chamar `supabase.functions.invoke("send-push-notification")` com:
+### 2. Seção dedicada de Resgate (página completa)
+Atualmente o resgate é apenas um carrossel horizontal. Criar uma página completa de "Loja de Resgate" com:
+- Grid de produtos resgatáveis (visual de e-commerce)
+- Filtro por categoria
+- Exibição do saldo de pontos do motorista no topo
+- Acesso via botão "Ver todos" na seção de resgate ou via aba no marketplace
 
-- `customer_ids`: `[order.customer_id]`
-- `title`: mensagem de acordo com o status (ex: "Pedido Aprovado ✅", "Pedido Enviado 📦", "Pedido Entregue 🎉", "Pedido Rejeitado")
-- `body`: detalhes do produto e tracking code quando aplicável
-- `reference_type`: `"product_redemption"`
-- `reference_id`: `order.id`
+**Arquivo:** `src/components/driver/DriverRedeemStorePage.tsx`
 
-Mapa de mensagens:
-```
-APPROVED → "Seu pedido de resgate foi aprovado! 🎉" / "O produto {título} foi aprovado e será enviado em breve."
-SHIPPED  → "Seu pedido foi enviado! 📦" / "Rastreio: {tracking_code}"
-DELIVERED → "Pedido entregue! ✅" / "O produto {título} foi entregue."
-REJECTED → "Pedido de resgate não aprovado" / "Seus {points} pontos foram devolvidos."
-```
+### 3. Botão de WhatsApp para enviar link do ML
+No marketplace, adicionar um CTA visível para o motorista enviar links de produtos do ML via WhatsApp, facilitando o fluxo de geração de links de pontuação.
 
-### Nenhuma nova tabela, edge function ou migração necessária
+**Integração:** Banner ou card no marketplace com link direto para o WhatsApp da marca com mensagem pré-formatada
 
-O sistema de notificações já existe e funciona. Apenas falta conectar o evento de mudança de status à chamada da edge function existente.
+---
+
+## Detalhes técnicos
+
+| Ação | Arquivo |
+|------|---------|
+| Criar | `src/components/driver/DriverProgramInfo.tsx` — página educativa com regras do programa |
+| Criar | `src/components/driver/DriverRedeemStorePage.tsx` — loja completa de resgate com grid |
+| Editar | `src/components/driver/DriverMarketplace.tsx` — botão "Como Funciona", link "Ver todos" no resgate, CTA WhatsApp para ML |
+| Editar | `src/pages/customer/CustomerDriverDashboardPage.tsx` — link para "Como Funciona" |
+
+Nenhuma migração de banco necessária — tudo usa a estrutura existente.
 
