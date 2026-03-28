@@ -1,25 +1,48 @@
 
 
-# Adicionar recorte manual de imagem no wizard de cupons
+# Aplicar mudanças na seção "Selecionados para você" (ForYouSection)
 
 ## Problema
-Atualmente o `StepImage.tsx` do wizard de cupons faz upload direto da imagem sem passar pelo `ImageCropDialog`, resultando em imagens sem enquadramento adequado no app do cliente (como visto nas screenshots).
+As alterações de formato (vírgula, preço do produto, texto de oferta de loja) foram aplicadas apenas no `HomeSectionsRenderer` e `SectionDetailOverlay`. A seção "Selecionados para você" é renderizada por um componente separado (`ForYouSection.tsx`) que usa templates do `useOfferCardConfig.ts`, e esses não foram atualizados.
 
-## Solução
-Integrar o `ImageCropDialog` (já existente no projeto) ao `StepImage.tsx`, da mesma forma que o `ImageUploadField.tsx` já faz. Quando o lojista selecionar uma imagem, o dialog de recorte abre antes do upload, permitindo enquadrar manualmente.
+## Arquivos afetados
 
-## Arquivo afetado
-**`src/components/store-voucher-wizard/steps/StepImage.tsx`**
+### 1. `src/components/customer/ForYouSection.tsx`
+- Para ofertas **PRODUCT**: exibir o preço do produto (extraído de `terms_params_json.product_price`) acima da linha de pontos
+- Para ofertas **STORE**: exibir "Troque X pontos por crédito de R$ X,XX · Mín. R$ X,XX" (com `min_purchase`)
 
-## Mudanças
-1. Importar `ImageCropDialog`
-2. Adicionar estados `cropSrc` e `pendingFile` (mesmo padrão do `ImageUploadField`)
-3. No `handleUpload`: em vez de fazer upload direto, ler o arquivo como DataURL e abrir o crop dialog
-4. Criar `handleCropped`: recebe o blob recortado, faz upload no storage e atualiza o `image_url`
-5. Criar `handleCropCancel`: fecha o dialog e faz upload da imagem original (sem recorte)
-6. Renderizar o `<ImageCropDialog>` com `aspectRatio` livre (undefined) para que o lojista escolha o enquadramento
-7. Manter todo o restante intacto (IA actions, preview, botões, tipo STORE)
+### 2. `src/hooks/useOfferCardConfig.ts`
+- Atualizar o template default da subtitle de **store** de `"{points} pontos por R$ {credit}"` para `"Troque {points} pontos por crédito de R$ {credit} · Mín. R$ {min}"`
+- Isso garante que qualquer outro lugar que use `formatSubtitle("store", ...)` também reflita o novo padrão
 
-## Resultado
-O lojista poderá enquadrar/recortar a imagem do produto antes de publicar, garantindo que a imagem apareça bem no card do app do cliente.
+## Mudanças técnicas
+
+No `ForYouSection.tsx`, adicionar exibição do preço do produto:
+```tsx
+// Para PRODUCT: mostrar preço + pontos
+{o.coupon_type === "PRODUCT" && (() => {
+  const tp = (o as any).terms_params_json;
+  const pp = tp?.product_price ? Number(tp.product_price) : 0;
+  return (
+    <>
+      {pp > 0 && <span className="font-bold text-xs block">R$ {pp.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
+      <span>...</span>
+    </>
+  );
+})()}
+```
+
+Para **store**, passar `min` no `formatSubtitle`:
+```tsx
+formatSubtitle("store", {
+  points: Math.floor(Number(o.value_rescue)),
+  credit: Number(o.value_rescue),
+  min: Number(o.min_purchase || 0),
+})
+```
+
+No `useOfferCardConfig.ts`, atualizar o default:
+```ts
+subtitle_template: "Troque {points} pontos por crédito de R$ {credit} · Mín. R$ {min}",
+```
 
