@@ -1,43 +1,20 @@
 
 
-# Reorganizar menu lateral — Criar grupo "Achadinhos" e mover itens
+# Atualizar nomes no hook useMenuLabels
 
-## Resumo das mudanças
+## Problema
+O `useMenuLabels.ts` possui um mapa `DEFAULT_LABELS` que é consultado pelo sidebar via `getLabel(key)`. Esse mapa não foi atualizado com os novos nomes, então os labels antigos continuam aparecendo.
 
-Criar um novo grupo de menu chamado **"Achadinhos"** no `BrandSidebar.tsx` e reorganizar os itens conforme solicitado.
+## Alteração em `src/hooks/useMenuLabels.ts`
 
-## Alterações no arquivo `src/components/consoles/BrandSidebar.tsx`
+Adicionar/atualizar estas entradas no objeto `DEFAULT_LABELS.admin`:
 
-### 1. Remover do grupo "Personalização & Vitrine":
-- `sidebar.achadinhos` (Achadinhos)
-- `sidebar.categorias_achadinhos` (Categorias de Achadinhos)
-- `sidebar.espelhamento` (renomear para **"Espelhamento Achadinho"**)
-- `sidebar.governanca_ofertas` (renomear para **"Governança Achadinho"**)
+| Key | Valor atual | Novo valor |
+|-----|------------|------------|
+| `sidebar.espelhamento` | *(não existe)* | `"Espelhamento Achadinho"` |
+| `sidebar.governanca_ofertas` | *(não existe)* | `"Governança Achadinho"` |
+| `sidebar.motoristas` | *(não existe)* | `"Motorista"` |
+| `sidebar.driver_points_rules` | *(não existe)* | `"Regras de Pontuação Motorista"` |
 
-### 2. Remover do grupo "Equipe & Acessos":
-- `sidebar.painel_motorista` (Painel do Motorista) — mover para o novo grupo Achadinhos
-
-### 3. Remover do grupo "Gestão Comercial":
-- `sidebar.motoristas` — renomear de "Motoristas" para **"Motorista"**
-
-### 4. Remover do grupo "Integrações & API":
-- `sidebar.driver_points_rules` — renomear de "Pontuação Motoristas" para **"Regras de Pontuação Motorista"** e mover para **"Programa de Fidelidade"**
-
-### 5. Criar novo grupo "Achadinhos" (após "Personalização & Vitrine"):
-```
-Achadinhos
-├── Achadinhos              (/affiliate-deals)
-├── Categorias de Achadinhos (/affiliate-categories)
-├── Espelhamento Achadinho   (/mirror-sync)
-├── Governança Achadinho     (/offer-governance)
-└── Painel do Motorista      (/driver-config)
-```
-
-### 6. Adicionar ao grupo "Programa de Fidelidade":
-```
-+ Regras de Pontuação Motorista (/driver-points-rules)
-```
-
-## Arquivos afetados
-- `src/components/consoles/BrandSidebar.tsx` — única alteração necessária
+Arquivo único afetado: `src/hooks/useMenuLabels.ts`
 
