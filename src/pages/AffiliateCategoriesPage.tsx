@@ -378,24 +378,12 @@ export default function AffiliateCategoriesPage() {
         {(categories || []).map((cat, idx) => (
           <Card key={cat.id} className={!cat.is_active ? "opacity-50" : ""}>
             <CardContent className="p-3 space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-0.5 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    disabled={idx === 0 || reorderMutation.isPending}
-                    onClick={() => handleReorder(idx, "up")}
-                  >
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-0.5 shrink-0 hidden sm:flex">
+                  <Button variant="ghost" size="icon" className="h-6 w-6" disabled={idx === 0 || reorderMutation.isPending} onClick={() => handleReorder(idx, "up")}>
                     <ChevronUp className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    disabled={idx === (categories || []).length - 1 || reorderMutation.isPending}
-                    onClick={() => handleReorder(idx, "down")}
-                  >
+                  <Button variant="ghost" size="icon" className="h-6 w-6" disabled={idx === (categories || []).length - 1 || reorderMutation.isPending} onClick={() => handleReorder(idx, "down")}>
                     <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -406,21 +394,30 @@ export default function AffiliateCategoriesPage() {
                   <p className="font-medium text-sm">{cat.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{(cat.keywords || []).join(", ") || "Sem palavras-chave"}</p>
                 </div>
+                {/* Mobile reorder */}
+                <div className="flex gap-0.5 sm:hidden shrink-0">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0 || reorderMutation.isPending} onClick={() => handleReorder(idx, "up")}>
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === (categories || []).length - 1 || reorderMutation.isPending} onClick={() => handleReorder(idx, "down")}>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center justify-between gap-2 pt-1 border-t sm:border-0 sm:pt-0 sm:justify-end">
+              <div className="flex items-center justify-between gap-2 pt-1.5 border-t">
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={cat.is_active}
                     onCheckedChange={v => toggleMutation.mutate({ id: cat.id, active: v })}
                     disabled={toggleMutation.isPending}
                   />
-                  <span className="text-xs text-muted-foreground sm:hidden">{cat.is_active ? "Ativo" : "Inativo"}</span>
+                  <span className="text-xs text-muted-foreground">{cat.is_active ? "Ativo" : "Inativo"}</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 flex-wrap justify-end">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-xs text-destructive hover:text-destructive"
+                    className="h-8 text-xs text-destructive hover:text-destructive px-2"
                     onClick={() => {
                       if (window.confirm(`Tem certeza? Todas as ofertas da categoria "${cat.name}" serão excluídas permanentemente.`)) {
                         resetDealsMutation.mutate(cat.id);
@@ -430,7 +427,7 @@ export default function AffiliateCategoriesPage() {
                     title="Resetar ofertas"
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Resetar
+                    <span className="hidden sm:inline">Resetar</span>
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setBannerCatId(bannerCatId === cat.id ? null : cat.id)} title="Banners">
                     <ImageIcon className="h-4 w-4" />
