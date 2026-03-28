@@ -1,5 +1,5 @@
 // rebuild-trigger v2024-03-24
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, forwardRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -123,13 +123,13 @@ const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernanceP
 // Initialize event bus → query bridge for automatic cache invalidation
 initEventBusQueryBridge(queryClient);
 
-function PageLoader() {
+const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_props, ref) {
   return (
-    <div className="min-h-[200px] flex items-center justify-center">
+    <div ref={ref} className="min-h-[200px] flex items-center justify-center">
       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
     </div>
   );
-}
+});
 
 function AppRoutes() {
   return (
