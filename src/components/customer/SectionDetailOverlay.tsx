@@ -214,7 +214,7 @@ export default function SectionDetailOverlay({
                     })()}
                     {item.coupon_type !== "PRODUCT" && (item.value_rescue ?? 0) > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        Troque {Math.floor(Number(item.value_rescue ?? 0))} pts · Mín. R$ {Number(item.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        Troque {Math.floor(Number(item.value_rescue ?? 0))} pontos por crédito de R$ {Number(item.value_rescue ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Mín. R$ {Number(item.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </span>
                     )}
                     {item.address && (

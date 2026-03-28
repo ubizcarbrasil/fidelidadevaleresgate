@@ -649,7 +649,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 })()}
                 {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    Troque {Math.floor(Number(o.value_rescue))} pontos por crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 )}
               </div>
@@ -728,7 +728,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               })()}
               {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  Troque {Math.floor(Number(o.value_rescue))} pts · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  Troque {Math.floor(Number(o.value_rescue))} pontos por crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>
