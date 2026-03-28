@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Wand2, Smartphone, Import } from "lucide-react";
+import { Loader2, Wand2, Smartphone, Import, Gift } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,6 +80,73 @@ export default function AffiliateDealsPage() {
   // Edit inline in existing table
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<DealDraft | null>(null);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkRedeemDialog, setShowBulkRedeemDialog] = useState(false);
+  const [bulkPointsCost, setBulkPointsCost] = useState("");
+  const [bulkAutoCalc, setBulkAutoCalc] = useState(false);
+  const [bulkConversionRate, setBulkConversionRate] = useState("100");
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!data?.items) return;
+    const allIds = data.items.map((d) => d.id);
+    const allSelected = allIds.every((id) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const bulkRedeemMutation = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selectedIds);
+      if (!ids.length) return;
+
+      if (bulkAutoCalc && data?.items) {
+        const rate = Number(bulkConversionRate) || 100;
+        // Update each item with its own calculated cost
+        for (const id of ids) {
+          const item = data.items.find((d) => d.id === id);
+          const price = item?.price || 0;
+          const points = Math.ceil(price * rate);
+          const { error } = await supabase
+            .from("affiliate_deals")
+            .update({ is_redeemable: true, redeem_points_cost: points } as any)
+            .eq("id", id);
+          if (error) throw error;
+        }
+      } else {
+        const cost = Number(bulkPointsCost);
+        if (!cost || cost <= 0) throw new Error("Informe o custo em pontos.");
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .update({ is_redeemable: true, redeem_points_cost: cost } as any)
+          .in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
+      toast.success(`${selectedIds.size} produto(s) marcados como resgatáveis!`);
+      setSelectedIds(new Set());
+      setShowBulkRedeemDialog(false);
+      setBulkPointsCost("");
+      setBulkAutoCalc(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   // Categories for dropdown
   const { data: brandCategories } = useQuery({
@@ -391,11 +460,32 @@ export default function AffiliateDealsPage() {
             totalCount={data?.total || 0}
             onPageChange={setPage}
           />
+
+          {/* Barra de ações em massa */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+              <Button size="sm" onClick={() => setShowBulkRedeemDialog(true)}>
+                <Gift className="h-4 w-4 mr-2" />
+                Tornar Resgatável
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                Limpar seleção
+              </Button>
+            </div>
+          )}
+
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={!!data?.items?.length && data.items.every((d) => selectedIds.has(d.id))}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Título</TableHead>
                     <TableHead>Loja</TableHead>
                     <TableHead>Preço</TableHead>
@@ -407,26 +497,37 @@ export default function AffiliateDealsPage() {
                 <TableBody>
                   {isLoading && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         Carregando...
                       </TableCell>
                     </TableRow>
                   )}
                   {!isLoading && !data?.items?.length && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         Nenhum achadinho encontrado
                       </TableCell>
                     </TableRow>
                   )}
                   {data?.items?.map((d) => (
-                    <TableRow key={d.id}>
+                    <TableRow key={d.id} data-state={selectedIds.has(d.id) ? "selected" : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(d.id)}
+                          onCheckedChange={() => toggleSelect(d.id)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {d.image_url && (
                             <img src={d.image_url} alt="" className="h-8 w-8 rounded object-cover" />
                           )}
-                          <span className="font-medium">{d.title}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{d.title}</span>
+                            {d.is_redeemable && (
+                              <span className="text-[10px] text-primary">🎁 Resgatável ({d.redeem_points_cost} pts)</span>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -839,6 +940,67 @@ export default function AffiliateDealsPage() {
           <Import className="h-6 w-6" />
         </Button>
       )}
+
+      {/* Dialog de resgate em massa */}
+      <Dialog open={showBulkRedeemDialog} onOpenChange={setShowBulkRedeemDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tornar Resgatável em Massa</DialogTitle>
+            <DialogDescription>
+              {selectedIds.size} produto(s) selecionado(s) serão marcados como resgatáveis com pontos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={bulkAutoCalc}
+                onCheckedChange={setBulkAutoCalc}
+              />
+              <Label className="text-sm">Calcular automaticamente pelo preço</Label>
+            </div>
+            {bulkAutoCalc ? (
+              <div className="space-y-1">
+                <Label className="text-xs">Pontos por R$ 1,00</Label>
+                <Input
+                  type="number"
+                  value={bulkConversionRate}
+                  onChange={(e) => setBulkConversionRate(e.target.value)}
+                  placeholder="Ex: 100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ex: Produto de R$ 50,00 com taxa 100 = 5.000 pontos
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <Label className="text-xs">Custo em pontos (fixo para todos)</Label>
+                <Input
+                  type="number"
+                  value={bulkPointsCost}
+                  onChange={(e) => setBulkPointsCost(e.target.value)}
+                  placeholder="Ex: 5000"
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkRedeemDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => bulkRedeemMutation.mutate()}
+              disabled={bulkRedeemMutation.isPending || (!bulkAutoCalc && !bulkPointsCost)}
+            >
+              {bulkRedeemMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Gift className="h-4 w-4 mr-2" />
+              )}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
