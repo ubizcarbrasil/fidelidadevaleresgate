@@ -123,13 +123,13 @@ const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernanceP
 // Initialize event bus → query bridge for automatic cache invalidation
 initEventBusQueryBridge(queryClient);
 
-function PageLoader() {
+const PageLoader = React.forwardRef<HTMLDivElement>(function PageLoader(_props, ref) {
   return (
-    <div className="min-h-[200px] flex items-center justify-center">
+    <div ref={ref} className="min-h-[200px] flex items-center justify-center">
       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
     </div>
   );
-}
+});
 
 function AppRoutes() {
   return (
