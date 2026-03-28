@@ -2,10 +2,11 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
+import DriverRedeemCheckout from "./DriverRedeemCheckout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -29,6 +30,8 @@ export interface AffiliateDeal {
   category_id: string | null;
   created_at?: string;
   origin?: string | null;
+  is_redeemable?: boolean;
+  redeem_points_cost?: number | null;
 }
 
 export interface DealCategory {
@@ -122,6 +125,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -144,7 +148,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     queryFn: async () => {
       let dealsQ = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at, origin")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at, origin, is_redeemable, redeem_points_cost")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .eq("visible_driver" as any, true)
