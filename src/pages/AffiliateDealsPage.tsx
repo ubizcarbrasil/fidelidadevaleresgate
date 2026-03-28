@@ -66,6 +66,7 @@ export default function AffiliateDealsPage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("list");
   const [page, setPage] = useState(1);
+  const [redeemFilter, setRedeemFilter] = useState<"all" | "not_redeemable" | "redeemable">("all");
   const debouncedSearch = useDebounce(search, 300);
 
   // Bulk manual creation
