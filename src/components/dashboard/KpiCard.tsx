@@ -22,7 +22,7 @@ const colorMap: Record<string, { text: string; bg: string; stroke: string }> = {
   violet: { text: "text-purple-400", bg: "bg-purple-500/10", stroke: "hsl(270 60% 60%)" },
 };
 
-const KpiCard = memo(function KpiCard({ title, value, sub, icon: Icon, trend, color = "primary", sparkData }: KpiCardProps) {
+const KpiCard = memo(forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({ title, value, sub, icon: Icon, trend, color = "primary", sparkData }, ref) {
   const c = colorMap[color] || colorMap.primary;
 
   return (
