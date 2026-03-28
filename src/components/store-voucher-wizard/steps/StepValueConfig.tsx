@@ -44,6 +44,7 @@ export default function StepValueConfig({ data, update }: Props) {
                 type="number" min={0} step={0.01}
                 value={data.min_purchase}
                 onChange={(e) => update({ min_purchase: Number(e.target.value) })}
+                onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
               />
             </div>
           </div>
