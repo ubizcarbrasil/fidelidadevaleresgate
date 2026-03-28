@@ -69,7 +69,7 @@ export default function ProdutosResgatePage() {
   });
 
   const items = data?.items ?? [];
-
+  const isEmptyNoSearch = !isLoading && !items.length && !debouncedSearch;
   // ── Mutations ──
   const updateDeal = useMutation({
     mutationFn: async (payload: { id: string; updates: Record<string, any> }) => {
