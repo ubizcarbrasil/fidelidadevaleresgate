@@ -1,31 +1,42 @@
 
 
-# Seleção em Massa de Produtos para Resgate
+# Criar grupo dedicado "Resgate com Pontos" no menu lateral
 
 ## Problema
-Hoje, para marcar um achadinho como resgatável, é necessário abrir a edição de cada deal individualmente. Não há forma de selecionar vários de uma vez na listagem principal de Achadinhos.
+Os itens de resgate (Produtos, Regras, Pedidos) estão misturados dentro do grupo "Achadinhos", dificultando a visibilidade e o acesso rápido a tudo que envolve o módulo de resgate.
 
 ## Solução
-Adicionar na página principal de Achadinhos (`/affiliate-deals`) uma ação em massa para "Tornar Resgatável", permitindo selecionar múltiplos produtos e ativá-los para resgate com um custo em pontos padrão.
+Extrair os itens relacionados a resgate para um **novo grupo independente** no menu lateral chamado **"Resgate com Pontos"**, posicionado logo após o grupo "Achadinhos".
 
 ## Alterações
 
-| Ação | Arquivo | Descrição |
-|------|---------|-----------|
-| **Editar** | Página de listagem de Achadinhos (affiliate deals) | Adicionar checkboxes de seleção + barra de ações em massa com botão "Tornar Resgatável" |
-| **Editar** | Página de listagem de Achadinhos | Modal/dialog ao clicar "Tornar Resgatável" pedindo o custo em pontos a aplicar nos selecionados |
+### 1. `src/components/consoles/BrandSidebar.tsx`
+- **Remover** do grupo "Achadinhos" os três itens: `produtos_resgate`, `regras_resgate`, `pedidos_resgate`
+- **Criar** novo grupo com label `"Resgate com Pontos"` contendo:
+  - Produtos de Resgate (`/produtos-resgate`, ícone ShoppingBag)
+  - Regras de Resgate (`/regras-resgate`, ícone Settings2)
+  - Pedidos de Resgate (`/product-redemption-orders`, ícone Package)
 
-## Funcionalidades
+### 2. `src/hooks/useMenuLabels.ts`
+- Adicionar as três chaves que estão faltando no `DEFAULT_LABELS.admin`:
+  - `"sidebar.produtos_resgate": "Produtos de Resgate"`
+  - `"sidebar.regras_resgate": "Regras de Resgate"`
+  - `"sidebar.pedidos_resgate": "Pedidos de Resgate"`
 
-1. **Checkboxes na tabela de Achadinhos**: Selecionar/desselecionar individualmente ou todos
-2. **Barra de ações em massa**: Aparece quando há itens selecionados, com botão "Tornar Resgatável"
-3. **Dialog de custo**: Ao clicar, abre um dialog pedindo o custo em pontos (com opção de calcular automaticamente baseado no preço)
-4. **Batch update**: Executa `update affiliate_deals set is_redeemable = true, redeem_points_cost = X where id in (...)` para todos os selecionados
-5. **Feedback**: Toast de sucesso com quantidade de itens atualizados
+## Resultado
+O menu lateral terá a seguinte estrutura:
 
-## Detalhes técnicos
-- Reutiliza o mesmo padrão de seleção em massa já implementado em `ProdutosResgatePage.tsx`
-- Mutation com `.in("id", ids)` para update batch
-- Invalidação das queries `affiliate-deals` e `produtos-resgate`
-- Sem migração de banco necessária
+```text
+Achadinhos
+  ├── Achadinhos
+  ├── Categorias de Achadinhos
+  ├── Espelhamento Achadinho
+  ├── Governança Achadinho
+  └── Painel do Motorista
+
+Resgate com Pontos        ← NOVO GRUPO
+  ├── Produtos de Resgate
+  ├── Regras de Resgate
+  └── Pedidos de Resgate
+```
 
