@@ -1,54 +1,38 @@
 
 
-# O que já está implementado vs. o que falta
+# Página Admin de Produtos de Resgate
 
-## Já implementado (100%)
-- Admin marca deals como resgatáveis com custo em pontos
-- Seção "Resgatar com Pontos" no marketplace do motorista
-- Checkout completo com endereço, CEP (ViaCEP), nome, telefone, CPF
-- Painel admin de pedidos de resgate com workflow de status
-- Notificações push ao mudar status
-- Filtros por status na página admin
-- Histórico de resgates no dashboard do motorista
+## Visão Geral
 
-## O que falta (baseado na sua descrição)
+Criar uma página dedicada que lista apenas os achadinhos marcados como resgatáveis (`is_redeemable = true`), permitindo ao admin ativar/desativar o modo resgate e editar o custo em pontos em massa, sem precisar abrir cada deal individualmente na página de Achadinhos.
 
-### 1. Página "Como Funciona" para o Motorista
-Uma tela educativa/informativa acessível pelo marketplace ou dashboard explicando:
-- Como ganhar pontos comprando no Mercado Livre (1 R$ = 1 pt)
-- O processo: enviar link para WhatsApp → receber link de pontuação → comprar → aguardar 30-40 dias
-- Regra: só pontua com o link correto da Ubiz
-- Preço não muda, vantagem é o acúmulo de pontos
-- Pode comprar para amigos/familiares e os pontos vão para sua conta
-- Como usar os pontos no e-commerce de resgate
+## Arquitetura
 
-**Arquivo:** `src/components/driver/DriverProgramInfo.tsx`
-**Integração:** Botão/ícone de "?" ou "Como Funciona" no header do marketplace e no dashboard
+| Ação | Arquivo | Descrição |
+|------|---------|-----------|
+| **Criar** | `src/pages/ProdutosResgatePage.tsx` | Página principal com listagem, filtros, seleção em massa e edição inline |
+| **Editar** | `src/components/consoles/BrandSidebar.tsx` | Adicionar item "Produtos de Resgate" no grupo Achadinhos |
+| **Editar** | `src/App.tsx` | Adicionar rota `/produtos-resgate` |
 
-### 2. Seção dedicada de Resgate (página completa)
-Atualmente o resgate é apenas um carrossel horizontal. Criar uma página completa de "Loja de Resgate" com:
-- Grid de produtos resgatáveis (visual de e-commerce)
-- Filtro por categoria
-- Exibição do saldo de pontos do motorista no topo
-- Acesso via botão "Ver todos" na seção de resgate ou via aba no marketplace
+## Funcionalidades da Página
 
-**Arquivo:** `src/components/driver/DriverRedeemStorePage.tsx`
+1. **Listagem filtrada**: Query em `affiliate_deals` com `is_redeemable = true` + filtro por brand_id via `useBrandGuard`
+2. **Busca por título**: Input de pesquisa com debounce
+3. **Tabela com colunas**: Imagem, Título, Preço Original, Custo em Pontos, Status (ativo/inativo), Ações
+4. **Edição inline do custo em pontos**: Campo editável diretamente na tabela
+5. **Seleção em massa**: Checkboxes para selecionar múltiplos itens
+6. **Ações em massa**:
+   - Desativar resgate (set `is_redeemable = false`)
+   - Alterar custo em pontos para todos os selecionados
+7. **Toggle individual**: Switch para ativar/desativar `is_redeemable` por item
+8. **KPIs no topo**: Total de produtos resgatáveis, total ativos, faixa de preço em pontos
 
-### 3. Botão de WhatsApp para enviar link do ML
-No marketplace, adicionar um CTA visível para o motorista enviar links de produtos do ML via WhatsApp, facilitando o fluxo de geração de links de pontuação.
+## Detalhes Técnicos
 
-**Integração:** Banner ou card no marketplace com link direto para o WhatsApp da marca com mensagem pré-formatada
-
----
-
-## Detalhes técnicos
-
-| Ação | Arquivo |
-|------|---------|
-| Criar | `src/components/driver/DriverProgramInfo.tsx` — página educativa com regras do programa |
-| Criar | `src/components/driver/DriverRedeemStorePage.tsx` — loja completa de resgate com grid |
-| Editar | `src/components/driver/DriverMarketplace.tsx` — botão "Como Funciona", link "Ver todos" no resgate, CTA WhatsApp para ML |
-| Editar | `src/pages/customer/CustomerDriverDashboardPage.tsx` — link para "Como Funciona" |
-
-Nenhuma migração de banco necessária — tudo usa a estrutura existente.
+- Usa `useBrandGuard` para scoping de marca
+- Query com `useQuery` filtrando `is_redeemable = true` e `brand_id`
+- Mutations com `useMutation` para updates individuais e batch
+- Segue padrão visual dark mode existente
+- Componentes do shadcn: Table, Switch, Input, Badge, Button, Card
+- Sem migração de banco — usa campos existentes (`is_redeemable`, `redeem_points_cost`)
 
