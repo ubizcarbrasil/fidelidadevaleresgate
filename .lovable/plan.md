@@ -1,42 +1,19 @@
 
-
-# Criar grupo dedicado "Resgate com Pontos" no menu lateral
+# Estado vazio com link para Achadinhos na página Produtos de Resgate
 
 ## Problema
-Os itens de resgate (Produtos, Regras, Pedidos) estão misturados dentro do grupo "Achadinhos", dificultando a visibilidade e o acesso rápido a tudo que envolve o módulo de resgate.
+Quando não há produtos resgatáveis, a página mostra apenas "Nenhum produto resgatável encontrado" dentro da tabela — sem orientação sobre como ativar produtos.
 
 ## Solução
-Extrair os itens relacionados a resgate para um **novo grupo independente** no menu lateral chamado **"Resgate com Pontos"**, posicionado logo após o grupo "Achadinhos".
+Substituir o estado vazio genérico da tabela por um componente visual dedicado com ícone, texto explicativo e botão que leva direto à página de Achadinhos com o filtro "Não resgatáveis".
 
 ## Alterações
 
-### 1. `src/components/consoles/BrandSidebar.tsx`
-- **Remover** do grupo "Achadinhos" os três itens: `produtos_resgate`, `regras_resgate`, `pedidos_resgate`
-- **Criar** novo grupo com label `"Resgate com Pontos"` contendo:
-  - Produtos de Resgate (`/produtos-resgate`, ícone ShoppingBag)
-  - Regras de Resgate (`/regras-resgate`, ícone Settings2)
-  - Pedidos de Resgate (`/product-redemption-orders`, ícone Package)
-
-### 2. `src/hooks/useMenuLabels.ts`
-- Adicionar as três chaves que estão faltando no `DEFAULT_LABELS.admin`:
-  - `"sidebar.produtos_resgate": "Produtos de Resgate"`
-  - `"sidebar.regras_resgate": "Regras de Resgate"`
-  - `"sidebar.pedidos_resgate": "Pedidos de Resgate"`
-
-## Resultado
-O menu lateral terá a seguinte estrutura:
-
-```text
-Achadinhos
-  ├── Achadinhos
-  ├── Categorias de Achadinhos
-  ├── Espelhamento Achadinho
-  ├── Governança Achadinho
-  └── Painel do Motorista
-
-Resgate com Pontos        ← NOVO GRUPO
-  ├── Produtos de Resgate
-  ├── Regras de Resgate
-  └── Pedidos de Resgate
-```
-
+### 1. `src/pages/ProdutosResgatePage.tsx`
+- Quando `!isLoading && !items.length && !debouncedSearch` (sem busca ativa), renderizar **fora da tabela** um bloco de estado vazio contendo:
+  - Ícone `Package` em destaque
+  - Título: "Nenhum produto resgatável"
+  - Descrição: "Ative produtos para resgate na página de Achadinhos usando o filtro 'Não resgatáveis'."
+  - Botão com `Link` do react-router para `/achadinhos` — "Ir para Achadinhos"
+- Ocultar a tabela, KPIs e controles quando o estado vazio sem busca estiver ativo
+- Manter o estado vazio inline na tabela quando houver busca sem resultados (filtro ativo)
