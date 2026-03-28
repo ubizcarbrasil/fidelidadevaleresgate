@@ -67,6 +67,10 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
     "sidebar.crm_lost": "Clientes Perdidos",
     "sidebar.crm_potential": "Clientes Potenciais",
     "sidebar.painel_motorista": "Painel do Motorista",
+    "sidebar.espelhamento": "Espelhamento Achadinho",
+    "sidebar.governanca_ofertas": "Governança Achadinho",
+    "sidebar.motoristas": "Motorista",
+    "sidebar.driver_points_rules": "Regras de Pontuação Motorista",
   },
   customer_app: {
     "app.ofertas": "Ofertas",
