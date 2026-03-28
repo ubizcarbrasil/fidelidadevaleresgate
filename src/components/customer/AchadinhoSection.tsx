@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
@@ -10,6 +10,13 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
+
+interface CategoryBanner {
+  id: string;
+  image_url: string;
+  title: string | null;
+  link_url: string | null;
+}
 
 interface AffiliateDeal {
   id: string;
