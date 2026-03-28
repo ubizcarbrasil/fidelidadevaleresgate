@@ -53,10 +53,10 @@ export default function RegrasResgatePage() {
   const save = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Marca não identificada");
-      const updated = { ...settings, redemption_rules: form } as unknown as Record<string, unknown>;
+      const updated = { ...settings, redemption_rules: form };
       const { error } = await supabase
         .from("brands")
-        .update({ brand_settings_json: updated })
+        .update({ brand_settings_json: updated } as any)
         .eq("id", currentBrandId);
       if (error) throw error;
     },
