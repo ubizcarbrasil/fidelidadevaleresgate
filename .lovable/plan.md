@@ -1,45 +1,38 @@
 
 
-# Fix Badge forwardRef + Lista Final de Go-Live
+# Fix: Remover zeros à esquerda nos inputs numéricos
 
-## 1. Correção do Badge (simples, sem risco)
+## Problema
+Nos inputs `type="number"` em mobile, o navegador mantém zeros à esquerda (ex: "045" em vez de "45", "030" em vez de "30"). Isso acontece porque o input numérico do mobile preserva o texto digitado internamente, mesmo com `value` controlado pelo React.
 
-O `Badge` é um componente simples que renderiza um `<div>`. O fix é apenas adicionar `React.forwardRef` — padrão shadcn. Mudança de 3 linhas, zero risco funcional.
+## Solução
+Adicionar handler `onBlur` em todos os inputs numéricos dos wizards para normalizar o valor (remover leading zeros) quando o usuário sai do campo. Isso é seguro, sem impacto visual e resolve o problema em mobile.
 
-**Arquivo:** `src/components/ui/badge.tsx`
+## Arquivos afetados
 
-**Alteração:**
+### 1. `src/components/store-voucher-wizard/steps/StepValueConfig.tsx`
+- Adicionar `onBlur` em todos os `<Input type="number">` (~8 ocorrências)
+- No `onBlur`, re-setar o valor com `Number(e.target.value)` para forçar o React a re-renderizar sem zeros
+
+### 2. `src/components/voucher-wizard/steps/StepDiscountValue.tsx`
+- Mesmo tratamento nos 4 inputs numéricos (discount_percent, discount_fixed_value, min_purchase)
+
+### Lógica do fix
 ```tsx
-const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, ...props }, ref) => {
-    return <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />;
-  }
-);
-Badge.displayName = "Badge";
+// Antes (só onChange):
+<Input type="number" value={data.product_price}
+  onChange={(e) => update({ product_price: Number(e.target.value) })} />
+
+// Depois (onChange + onBlur para normalizar):
+<Input type="number" value={data.product_price}
+  onChange={(e) => update({ product_price: Number(e.target.value) })}
+  onBlur={(e) => { e.target.value = String(Number(e.target.value)); }} />
 ```
 
----
+O `onBlur` força o input nativo a atualizar seu valor interno, removendo zeros à esquerda quando o usuário sai do campo.
 
-## 2. Lista Final de Go-Live
-
-### Corrigido nesta etapa completa de auditoria
-1. 4 rotas protegidas com guards (`/home-templates`, `/clone-branch`, `/page-builder`, `/driver-config`)
-2. 5 edge functions migradas de `getClaims()` para `getUser()`
-3. `publicPaths` atualizado com `/p/` e `/driver`
-4. DialogTitle adicionado ao `CommandDialog` (acessibilidade)
-5. KpiCard duplicado removido do Dashboard
-6. `setPeriod` com `startTransition` (INP)
-7. Realtime com debounce de 120ms (re-renders)
-8. Charts -1px corrigidos com height fixo e minWidth/minHeight
-9. Badge com `forwardRef` (este fix)
-
-### Para pós go-live (não crítico)
-1. Refatorar Dashboard.tsx em sub-componentes
-2. Refatorar StoresPage.tsx e CustomersPage.tsx
-3. Monitoramento de Web Vitals em produção
-4. Migração gradual para arquitetura feature-based
-5. Batch inserts no provision-brand (otimização)
-
-### Recomendação final
-**PODE PUBLICAR.** Nenhuma pendência crítica aberta. Sistema seguro, estável e funcional.
+## Impacto
+- Zero risco funcional — apenas normalização visual
+- Não altera estilos, layout ou lógica de dados
+- Resolve o problema em iOS e Android
 
