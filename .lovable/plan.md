@@ -1,38 +1,31 @@
 
 
-# Página Admin de Produtos de Resgate
+# Seleção em Massa de Produtos para Resgate
 
-## Visão Geral
+## Problema
+Hoje, para marcar um achadinho como resgatável, é necessário abrir a edição de cada deal individualmente. Não há forma de selecionar vários de uma vez na listagem principal de Achadinhos.
 
-Criar uma página dedicada que lista apenas os achadinhos marcados como resgatáveis (`is_redeemable = true`), permitindo ao admin ativar/desativar o modo resgate e editar o custo em pontos em massa, sem precisar abrir cada deal individualmente na página de Achadinhos.
+## Solução
+Adicionar na página principal de Achadinhos (`/affiliate-deals`) uma ação em massa para "Tornar Resgatável", permitindo selecionar múltiplos produtos e ativá-los para resgate com um custo em pontos padrão.
 
-## Arquitetura
+## Alterações
 
 | Ação | Arquivo | Descrição |
 |------|---------|-----------|
-| **Criar** | `src/pages/ProdutosResgatePage.tsx` | Página principal com listagem, filtros, seleção em massa e edição inline |
-| **Editar** | `src/components/consoles/BrandSidebar.tsx` | Adicionar item "Produtos de Resgate" no grupo Achadinhos |
-| **Editar** | `src/App.tsx` | Adicionar rota `/produtos-resgate` |
+| **Editar** | Página de listagem de Achadinhos (affiliate deals) | Adicionar checkboxes de seleção + barra de ações em massa com botão "Tornar Resgatável" |
+| **Editar** | Página de listagem de Achadinhos | Modal/dialog ao clicar "Tornar Resgatável" pedindo o custo em pontos a aplicar nos selecionados |
 
-## Funcionalidades da Página
+## Funcionalidades
 
-1. **Listagem filtrada**: Query em `affiliate_deals` com `is_redeemable = true` + filtro por brand_id via `useBrandGuard`
-2. **Busca por título**: Input de pesquisa com debounce
-3. **Tabela com colunas**: Imagem, Título, Preço Original, Custo em Pontos, Status (ativo/inativo), Ações
-4. **Edição inline do custo em pontos**: Campo editável diretamente na tabela
-5. **Seleção em massa**: Checkboxes para selecionar múltiplos itens
-6. **Ações em massa**:
-   - Desativar resgate (set `is_redeemable = false`)
-   - Alterar custo em pontos para todos os selecionados
-7. **Toggle individual**: Switch para ativar/desativar `is_redeemable` por item
-8. **KPIs no topo**: Total de produtos resgatáveis, total ativos, faixa de preço em pontos
+1. **Checkboxes na tabela de Achadinhos**: Selecionar/desselecionar individualmente ou todos
+2. **Barra de ações em massa**: Aparece quando há itens selecionados, com botão "Tornar Resgatável"
+3. **Dialog de custo**: Ao clicar, abre um dialog pedindo o custo em pontos (com opção de calcular automaticamente baseado no preço)
+4. **Batch update**: Executa `update affiliate_deals set is_redeemable = true, redeem_points_cost = X where id in (...)` para todos os selecionados
+5. **Feedback**: Toast de sucesso com quantidade de itens atualizados
 
-## Detalhes Técnicos
-
-- Usa `useBrandGuard` para scoping de marca
-- Query com `useQuery` filtrando `is_redeemable = true` e `brand_id`
-- Mutations com `useMutation` para updates individuais e batch
-- Segue padrão visual dark mode existente
-- Componentes do shadcn: Table, Switch, Input, Badge, Button, Card
-- Sem migração de banco — usa campos existentes (`is_redeemable`, `redeem_points_cost`)
+## Detalhes técnicos
+- Reutiliza o mesmo padrão de seleção em massa já implementado em `ProdutosResgatePage.tsx`
+- Mutation com `.in("id", ids)` para update batch
+- Invalidação das queries `affiliate-deals` e `produtos-resgate`
+- Sem migração de banco necessária
 
