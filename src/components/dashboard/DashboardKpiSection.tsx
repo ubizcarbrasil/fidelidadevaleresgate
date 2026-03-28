@@ -1,0 +1,79 @@
+import { Car, Coins, MapPin, ReceiptText, ShoppingBag, Store, Tag, UserCheck } from "lucide-react";
+import KpiCard from "@/components/dashboard/KpiCard";
+
+interface DashboardKpiSectionProps {
+  // Main KPIs
+  redemptionsPeriod?: number;
+  redemptionsTotal?: number;
+  customersTotal?: number;
+  customersActive?: number;
+  earningEventsPeriod?: number;
+  earningEventsTotal?: number;
+  offersActive?: number;
+  offersTotal?: number;
+  // Motoristas
+  motoristasTotal?: number;
+  pontosMotoristas?: number;
+  pontosClientes?: number;
+  // Achadinhos
+  achadinhosAtivas?: number;
+  achadinhosLojas?: number;
+  achadinhosCidades?: number;
+  // Spark data
+  recentRedemptions?: number[];
+  recentEarnings?: number[];
+}
+
+export default function DashboardKpiSection({
+  redemptionsPeriod, redemptionsTotal, customersTotal, customersActive,
+  earningEventsPeriod, earningEventsTotal, offersActive, offersTotal,
+  motoristasTotal, pontosMotoristas, pontosClientes,
+  achadinhosAtivas, achadinhosLojas, achadinhosCidades,
+  recentRedemptions, recentEarnings,
+}: DashboardKpiSectionProps) {
+  return (
+    <>
+      {/* KPIs Principais */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Resgates" value={redemptionsPeriod} sub={`${redemptionsTotal ?? 0} total`} icon={ReceiptText} color="primary" sparkData={recentRedemptions} />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Clientes" value={customersTotal} sub={`${customersActive ?? 0} ativos`} icon={UserCheck} color="success" sparkData={recentEarnings} />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Pontuações" value={earningEventsPeriod} sub={`${earningEventsTotal ?? 0} total`} icon={Coins} color="primary" sparkData={recentEarnings} />
+        </div>
+        <div className="animate-slide-up delay-4">
+          <KpiCard title="Ofertas Ativas" value={offersActive} sub={`${offersTotal ?? 0} total`} icon={Tag} color="violet" sparkData={recentRedemptions} />
+        </div>
+      </div>
+
+      {/* KPIs Motoristas */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Motoristas" value={motoristasTotal} icon={Car} color="warning" />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Pontos Motoristas" value={pontosMotoristas !== undefined ? pontosMotoristas.toLocaleString("pt-BR") : undefined} icon={Coins} color="success" />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Pontos Clientes" value={pontosClientes !== undefined ? pontosClientes.toLocaleString("pt-BR") : undefined} icon={UserCheck} color="primary" />
+        </div>
+      </div>
+
+      {/* KPIs Achadinhos */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="animate-slide-up delay-1">
+          <KpiCard title="Achadinhos Ativos" value={achadinhosAtivas} icon={ShoppingBag} color="warning" />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard title="Lojas Ativas" value={achadinhosLojas} icon={Store} color="success" />
+        </div>
+        <div className="animate-slide-up delay-3">
+          <KpiCard title="Cidades Ativas" value={achadinhosCidades} icon={MapPin} color="primary" />
+        </div>
+      </div>
+    </>
+  );
+}
