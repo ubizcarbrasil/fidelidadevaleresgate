@@ -11,12 +11,12 @@ export default function StepUsageLimits({ data, update }: Props) {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Total máximo de usos</Label>
-          <Input type="number" min="1" value={data.max_uses} onChange={(e) => update({ max_uses: e.target.value })} />
+          <Input type="number" min="1" value={data.max_uses} onChange={(e) => update({ max_uses: e.target.value })} onBlur={(e) => { e.target.value = String(Number(e.target.value)); }} />
           <p className="text-xs text-muted-foreground">Quantas vezes o cupom pode ser usado no total</p>
         </div>
         <div className="space-y-2">
           <Label>Máximo por cliente</Label>
-          <Input type="number" min="1" value={data.max_uses_per_customer} onChange={(e) => update({ max_uses_per_customer: e.target.value })} />
+          <Input type="number" min="1" value={data.max_uses_per_customer} onChange={(e) => update({ max_uses_per_customer: e.target.value })} onBlur={(e) => { e.target.value = String(Number(e.target.value)); }} />
           <p className="text-xs text-muted-foreground">Quantas vezes cada cliente pode usar</p>
         </div>
       </div>

@@ -12,7 +12,7 @@ export default function StepDiscountValue({ data, update }: Props) {
         <p className="text-muted-foreground">Nenhum valor adicional necessário para este tipo.</p>
         <div className="space-y-2">
           <Label>Compra mínima para aplicar (R$)</Label>
-          <Input type="number" min="0" step="0.01" value={data.min_purchase} onChange={(e) => update({ min_purchase: e.target.value })} />
+        <Input type="number" min="0" step="0.01" value={data.min_purchase} onChange={(e) => update({ min_purchase: e.target.value })} onBlur={(e) => { e.target.value = String(Number(e.target.value)); }} />
         </div>
       </div>
     );
@@ -35,6 +35,7 @@ export default function StepDiscountValue({ data, update }: Props) {
               step="0.01"
               value={data.discount_percent}
               onChange={(e) => update({ discount_percent: e.target.value })}
+              onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
               className="text-2xl font-bold max-w-[150px]"
             />
             <span className="text-2xl font-bold text-muted-foreground">%</span>
@@ -51,6 +52,7 @@ export default function StepDiscountValue({ data, update }: Props) {
               step="0.01"
               value={data.discount_fixed_value}
               onChange={(e) => update({ discount_fixed_value: e.target.value })}
+              onBlur={(e) => { e.target.value = String(Number(e.target.value)); }}
               className="text-2xl font-bold max-w-[200px]"
             />
           </div>
@@ -58,7 +60,7 @@ export default function StepDiscountValue({ data, update }: Props) {
       )}
       <div className="space-y-2 pt-2">
         <Label>Compra mínima para aplicar (R$)</Label>
-        <Input type="number" min="0" step="0.01" value={data.min_purchase} onChange={(e) => update({ min_purchase: e.target.value })} />
+        <Input type="number" min="0" step="0.01" value={data.min_purchase} onChange={(e) => update({ min_purchase: e.target.value })} onBlur={(e) => { e.target.value = String(Number(e.target.value)); }} />
       </div>
     </div>
   );
