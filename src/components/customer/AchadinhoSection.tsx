@@ -417,6 +417,42 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
+              {/* Banner carousel above products */}
+              {cat.id !== NEW_OFFERS_ID && catBanners && catBanners.length > 0 && selectedCat === cat.id && (
+                <div className="px-5 mb-3">
+                  <div className="relative rounded-2xl overflow-hidden">
+                    <div
+                      className="flex transition-transform duration-300"
+                      style={{ transform: `translateX(-${bannerIndex * 100}%)` }}
+                    >
+                      {catBanners.map(b => (
+                        <div
+                          key={b.id}
+                          className="w-full flex-shrink-0 cursor-pointer"
+                          onClick={() => b.link_url && window.open(b.link_url, "_blank", "noopener,noreferrer")}
+                        >
+                          <img src={b.image_url} alt={b.title || ""} className="w-full aspect-[21/9] object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                    {catBanners.length > 1 && (
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {catBanners.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setBannerIndex(i)}
+                            className="h-1.5 rounded-full transition-all"
+                            style={{
+                              width: i === bannerIndex ? 16 : 6,
+                              backgroundColor: i === bannerIndex ? "#fff" : "rgba(255,255,255,0.5)",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="space-y-3">
                 {(() => {
                   const rowBuckets: AffiliateDeal[][] = Array.from({ length: effectiveRows }, () => []);
