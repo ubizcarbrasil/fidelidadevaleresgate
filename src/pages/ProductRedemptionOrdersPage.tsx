@@ -213,7 +213,7 @@ export default function ProductRedemptionOrdersPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {orders.map((order: any) => {
+              {filteredOrders.map((order: any) => {
                 const snap = snapshot(order);
                 const st = STATUS_MAP[order.status] || STATUS_MAP.PENDING;
                 return (
