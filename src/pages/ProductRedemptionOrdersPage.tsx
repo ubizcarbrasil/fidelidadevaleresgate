@@ -35,6 +35,7 @@ export default function ProductRedemptionOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [trackingCode, setTrackingCode] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["product-redemption-orders", currentBrandId],
