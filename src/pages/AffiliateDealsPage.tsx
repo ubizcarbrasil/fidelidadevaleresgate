@@ -81,6 +81,73 @@ export default function AffiliateDealsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<DealDraft | null>(null);
 
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkRedeemDialog, setShowBulkRedeemDialog] = useState(false);
+  const [bulkPointsCost, setBulkPointsCost] = useState("");
+  const [bulkAutoCalc, setBulkAutoCalc] = useState(false);
+  const [bulkConversionRate, setBulkConversionRate] = useState("100");
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!data?.items) return;
+    const allIds = data.items.map((d) => d.id);
+    const allSelected = allIds.every((id) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const bulkRedeemMutation = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selectedIds);
+      if (!ids.length) return;
+
+      if (bulkAutoCalc && data?.items) {
+        const rate = Number(bulkConversionRate) || 100;
+        // Update each item with its own calculated cost
+        for (const id of ids) {
+          const item = data.items.find((d) => d.id === id);
+          const price = item?.price || 0;
+          const points = Math.ceil(price * rate);
+          const { error } = await supabase
+            .from("affiliate_deals")
+            .update({ is_redeemable: true, redeem_points_cost: points } as any)
+            .eq("id", id);
+          if (error) throw error;
+        }
+      } else {
+        const cost = Number(bulkPointsCost);
+        if (!cost || cost <= 0) throw new Error("Informe o custo em pontos.");
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .update({ is_redeemable: true, redeem_points_cost: cost } as any)
+          .in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
+      toast.success(`${selectedIds.size} produto(s) marcados como resgatáveis!`);
+      setSelectedIds(new Set());
+      setShowBulkRedeemDialog(false);
+      setBulkPointsCost("");
+      setBulkAutoCalc(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   // Categories for dropdown
   const { data: brandCategories } = useQuery({
     queryKey: ["affiliate-categories", currentBrandId],
