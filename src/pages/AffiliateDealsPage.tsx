@@ -304,6 +304,8 @@ export default function AffiliateDealsPage() {
       category: d.category || "",
       category_id: d.category_id || "",
       badge_label: d.badge_label || "",
+      is_redeemable: d.is_redeemable || false,
+      redeem_points_cost: d.redeem_points_cost != null ? String(d.redeem_points_cost) : "",
     });
   };
 
@@ -324,7 +326,9 @@ export default function AffiliateDealsPage() {
           category: editForm.category || null,
           category_id: editForm.category_id || null,
           badge_label: editForm.badge_label?.trim() || null,
-        })
+          is_redeemable: (editForm as any).is_redeemable || false,
+          redeem_points_cost: (editForm as any).redeem_points_cost ? Number((editForm as any).redeem_points_cost) : null,
+        } as any)
         .eq("id", editId);
       if (error) throw error;
     },
@@ -537,6 +541,27 @@ export default function AffiliateDealsPage() {
                         <button key={b} type="button" onClick={() => setEditForm({ ...editForm, badge_label: b })} className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-accent transition-colors">{b}</button>
                       ))}
                     </div>
+                  </div>
+                  {/* Resgate com pontos */}
+                  <div className="col-span-1 md:col-span-2 border-t pt-3 mt-2 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={(editForm as any).is_redeemable || false}
+                        onCheckedChange={(v) => setEditForm({ ...editForm, is_redeemable: v as any })}
+                      />
+                      <Label className="text-xs font-medium">Resgatável com Pontos</Label>
+                    </div>
+                    {(editForm as any).is_redeemable && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Custo em Pontos (deixe vazio p/ usar preço × 1)</Label>
+                        <Input
+                          type="number"
+                          value={(editForm as any).redeem_points_cost || ""}
+                          onChange={(e) => setEditForm({ ...editForm, redeem_points_cost: e.target.value as any })}
+                          placeholder={editForm.price ? `${Math.ceil(Number(editForm.price))} pts (automático)` : "Ex: 500"}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Button onClick={() => saveEdit.mutate()} disabled={!editForm.title}>
