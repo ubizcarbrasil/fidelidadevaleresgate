@@ -460,11 +460,32 @@ export default function AffiliateDealsPage() {
             totalCount={data?.total || 0}
             onPageChange={setPage}
           />
+
+          {/* Barra de ações em massa */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+              <Button size="sm" onClick={() => setShowBulkRedeemDialog(true)}>
+                <Gift className="h-4 w-4 mr-2" />
+                Tornar Resgatável
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                Limpar seleção
+              </Button>
+            </div>
+          )}
+
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={!!data?.items?.length && data.items.every((d) => selectedIds.has(d.id))}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Título</TableHead>
                     <TableHead>Loja</TableHead>
                     <TableHead>Preço</TableHead>
@@ -476,26 +497,37 @@ export default function AffiliateDealsPage() {
                 <TableBody>
                   {isLoading && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         Carregando...
                       </TableCell>
                     </TableRow>
                   )}
                   {!isLoading && !data?.items?.length && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         Nenhum achadinho encontrado
                       </TableCell>
                     </TableRow>
                   )}
                   {data?.items?.map((d) => (
-                    <TableRow key={d.id}>
+                    <TableRow key={d.id} data-state={selectedIds.has(d.id) ? "selected" : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(d.id)}
+                          onCheckedChange={() => toggleSelect(d.id)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {d.image_url && (
                             <img src={d.image_url} alt="" className="h-8 w-8 rounded object-cover" />
                           )}
-                          <span className="font-medium">{d.title}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{d.title}</span>
+                            {d.is_redeemable && (
+                              <span className="text-[10px] text-primary">🎁 Resgatável ({d.redeem_points_cost} pts)</span>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
