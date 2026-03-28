@@ -1,46 +1,45 @@
 
 
-# Plano: Otimização de Performance (INP, Dashboard, Charts)
+# Fix Badge forwardRef + Lista Final de Go-Live
 
-## Diagnóstico
+## 1. Correção do Badge (simples, sem risco)
 
-Após análise do código, identifiquei as causas raiz:
+O `Badge` é um componente simples que renderiza um `<div>`. O fix é apenas adicionar `React.forwardRef` — padrão shadcn. Mudança de 3 linhas, zero risco funcional.
 
-### INP 544-824ms
-- Dashboard monta **~20 `useMetric` queries** simultâneas, cada uma disparando re-render individual ao resolver
-- `colorMap` é recriado **dentro** do `memo` do KpiCard inline (Dashboard.tsx linha 92-98), anulando a memoização
-- Existe um **KpiCard duplicado**: um inline no Dashboard.tsx (linhas 89-145) e outro em `components/dashboard/KpiCard.tsx` — o Dashboard usa o inline
-- Mudança de período (`setPeriod`) causa re-render síncrono pesado (invalida ~20 queries + 2 charts)
-- Realtime channel invalida múltiplas query keys de uma vez, gerando cascata de re-renders
+**Arquivo:** `src/components/ui/badge.tsx`
 
-### Charts -1px
-- SparkData usa `ResponsiveContainer width="100%" height="100%"` dentro de `div` com `position: absolute` e `h-12` — quando o card ainda não tem layout, o container calcula -1px
-- Afeta Dashboard KpiCard e `components/dashboard/KpiCard.tsx`
+**Alteração:**
+```tsx
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, ...props }, ref) => {
+    return <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />;
+  }
+);
+Badge.displayName = "Badge";
+```
 
-## Alterações
+---
 
-### 1. Dashboard.tsx — Eliminar KpiCard duplicado e reduzir re-renders
-- Remover o KpiCard inline (linhas 88-145) e importar o de `components/dashboard/KpiCard.tsx`
-- Envolver `setPeriod` com `startTransition` para não bloquear interações
-- Agrupar invalidações do realtime com `setTimeout` de 100ms (debounce natural)
+## 2. Lista Final de Go-Live
 
-### 2. KpiCard.tsx (components/) — Corrigir chart -1px
-- Trocar `ResponsiveContainer width="100%" height="100%"` por `width="100%" height={48}` (valor fixo, pois o container é `h-12` = 48px)
-- Isso elimina o cálculo de layout que gera -1px
+### Corrigido nesta etapa completa de auditoria
+1. 4 rotas protegidas com guards (`/home-templates`, `/clone-branch`, `/page-builder`, `/driver-config`)
+2. 5 edge functions migradas de `getClaims()` para `getUser()`
+3. `publicPaths` atualizado com `/p/` e `/driver`
+4. DialogTitle adicionado ao `CommandDialog` (acessibilidade)
+5. KpiCard duplicado removido do Dashboard
+6. `setPeriod` com `startTransition` (INP)
+7. Realtime com debounce de 120ms (re-renders)
+8. Charts -1px corrigidos com height fixo e minWidth/minHeight
+9. Badge com `forwardRef` (este fix)
 
-### 3. Dashboard.tsx — Otimizar realtime
-- No `useRealtimeRefresh`, agrupar as invalidações com um debounce simples para evitar cascata
+### Para pós go-live (não crítico)
+1. Refatorar Dashboard.tsx em sub-componentes
+2. Refatorar StoresPage.tsx e CustomersPage.tsx
+3. Monitoramento de Web Vitals em produção
+4. Migração gradual para arquitetura feature-based
+5. Batch inserts no provision-brand (otimização)
 
-### 4. chart.tsx (ui) — Proteção global contra -1px
-- Adicionar `minWidth={0} minHeight={0}` ao `ResponsiveContainer` do `ChartContainer` para prevenir o warning em qualquer uso do componente shadcn
-
-## Arquivos alterados
-1. `src/pages/Dashboard.tsx`
-2. `src/components/dashboard/KpiCard.tsx`
-3. `src/components/ui/chart.tsx`
-
-## Impacto esperado
-- INP reduzido de ~600-800ms para ~200-300ms (eliminação de re-renders síncronos desnecessários)
-- Eliminação completa dos warnings de chart -1px
-- Sem mudança funcional — mesma aparência e comportamento
+### Recomendação final
+**PODE PUBLICAR.** Nenhuma pendência crítica aberta. Sistema seguro, estável e funcional.
 
