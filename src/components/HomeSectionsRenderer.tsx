@@ -626,7 +626,13 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               <div className="px-3 py-2.5">
                 <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
                 {o.stores?.name && (
-                  <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
+                  <p className="text-[10px] mt-0.5 text-muted-foreground truncate">
+                    {o.stores.name}
+                    {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && Number(o.min_purchase || 0) > 0 && (() => {
+                      const pct = Math.round((Number(o.value_rescue) / Number(o.min_purchase)) * 100);
+                      return <span className="ml-1 font-bold" style={{ color: "hsl(var(--vb-highlight))", fontSize: "9px" }}>{pct}%</span>;
+                    })()}
+                  </p>
                 )}
                 {o.coupon_type === "PRODUCT" && (() => {
                   const tp = o.terms_params_json as Record<string, unknown> | null;
