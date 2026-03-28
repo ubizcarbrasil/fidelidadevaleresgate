@@ -1,20 +1,29 @@
 
 
-# Atualizar nomes no hook useMenuLabels
+# Exibir banner da categoria acima dos produtos no AchadinhoSection
 
 ## Problema
-O `useMenuLabels.ts` possui um mapa `DEFAULT_LABELS` que é consultado pelo sidebar via `getLabel(key)`. Esse mapa não foi atualizado com os novos nomes, então os labels antigos continuam aparecendo.
+Quando uma categoria de achadinhos é acionada (selecionada pelo pill), os banners da categoria não aparecem na seção inline da home. Eles só existem nas páginas completas de categoria (`AchadinhoCategoryPage` e `DriverCategoryPage`), onde já ficam acima dos produtos.
 
-## Alteração em `src/hooks/useMenuLabels.ts`
+O objetivo é carregar o banner da categoria ativa na seção da home, posicionado **acima** dos produtos como uma "capa de abertura".
 
-Adicionar/atualizar estas entradas no objeto `DEFAULT_LABELS.admin`:
+## Alterações
 
-| Key | Valor atual | Novo valor |
-|-----|------------|------------|
-| `sidebar.espelhamento` | *(não existe)* | `"Espelhamento Achadinho"` |
-| `sidebar.governanca_ofertas` | *(não existe)* | `"Governança Achadinho"` |
-| `sidebar.motoristas` | *(não existe)* | `"Motorista"` |
-| `sidebar.driver_points_rules` | *(não existe)* | `"Regras de Pontuação Motorista"` |
+### 1. `src/components/customer/AchadinhoSection.tsx`
+- Adicionar query para buscar banners de `affiliate_category_banners` quando uma categoria está selecionada (`selectedCat`)
+- Renderizar o banner carousel **antes** dos carrosséis de produtos da categoria ativa (entre o header da categoria e os deals)
+- Usar o mesmo estilo de banner carousel das category pages (aspect-ratio 21/9, dots de navegação, rounded-2xl)
+- Só buscar e exibir quando `selectedCat` não é nulo e não é virtual (`__new_offers__`)
 
-Arquivo único afetado: `src/hooks/useMenuLabels.ts`
+### 2. Estrutura de renderização por categoria (linha ~364):
+```
+Antes:
+  Header da categoria → Carrosséis de produtos
+
+Depois:
+  Header da categoria → Banner carousel (se houver) → Carrosséis de produtos
+```
+
+### Nenhuma alteração nas category pages
+`AchadinhoCategoryPage.tsx` e `DriverCategoryPage.tsx` já têm os banners acima dos produtos — permanecem inalterados.
 
