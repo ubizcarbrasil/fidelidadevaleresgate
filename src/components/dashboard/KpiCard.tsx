@@ -68,6 +68,6 @@ const KpiCard = memo(forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       </CardContent>
     </Card>
   );
-});
+}));
 
 export default KpiCard;
