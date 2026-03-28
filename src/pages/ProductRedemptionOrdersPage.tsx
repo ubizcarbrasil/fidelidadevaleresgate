@@ -67,6 +67,7 @@ export default function ProductRedemptionOrdersPage() {
       if (status === "REJECTED") {
         const order = orders.find((o: any) => o.id === id);
         if (order) {
+          const userId = (await supabase.auth.getUser()).data.user!.id;
           await supabase.from("points_ledger").insert({
             customer_id: order.customer_id,
             brand_id: order.brand_id,
@@ -75,13 +76,19 @@ export default function ProductRedemptionOrdersPage() {
             points_amount: order.points_spent,
             reason: `Reembolso: pedido de resgate rejeitado`,
             reference_type: "MANUAL_ADJUSTMENT",
-          });
-          // Update customer balance
-          await supabase.rpc("update_customer_points_balance" as any, {
-            p_customer_id: order.customer_id,
-          }).catch(() => {
-            // fallback: direct update
-          });
+            created_by_user_id: userId,
+          } as any);
+          // Refund customer balance
+          const { data: cust } = await supabase
+            .from("customers")
+            .select("points_balance")
+            .eq("id", order.customer_id)
+            .single();
+          if (cust) {
+            await supabase.from("customers").update({
+              points_balance: (cust.points_balance || 0) + order.points_spent,
+            }).eq("id", order.customer_id);
+          }
         }
       }
     },

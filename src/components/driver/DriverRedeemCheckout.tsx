@@ -85,6 +85,8 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
 
     setLoading(true);
     try {
+      const userId = (await supabase.auth.getUser()).data.user!.id;
+
       // 1. Debit points
       const { error: ledgerError } = await supabase.from("points_ledger").insert({
         customer_id: customer.id,
@@ -94,8 +96,14 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
         points_amount: deal.redeem_points_cost,
         reason: `Resgate: ${deal.title}`,
         reference_type: "REDEMPTION",
-      });
+        created_by_user_id: userId,
+      } as any);
       if (ledgerError) throw ledgerError;
+
+      // 1b. Decrement customer balance
+      await supabase.from("customers").update({
+        points_balance: pointsBalance - deal.redeem_points_cost,
+      }).eq("id", customer.id);
 
       // 2. Create redemption order
       const { error: orderError } = await supabase.from("product_redemption_orders").insert({
