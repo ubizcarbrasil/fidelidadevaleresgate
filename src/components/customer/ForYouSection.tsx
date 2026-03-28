@@ -147,14 +147,25 @@ export default function ForYouSection() {
               {o.stores?.name && (
                 <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
               )}
-              {o.coupon_type === "PRODUCT" && Number(o.value_rescue) > 0 && (
-                <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {formatSubtitle("product", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
-                </span>
-              )}
+              {o.coupon_type === "PRODUCT" && Number(o.value_rescue) > 0 && (() => {
+                const tp = (o as any).terms_params_json as Record<string, unknown> | null;
+                const pp = tp?.product_price ? Number(tp.product_price) : 0;
+                return (
+                  <>
+                    {pp > 0 && (
+                      <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--foreground))" }}>
+                        R$ {pp.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    )}
+                    <span className="font-bold text-xs mt-0.5 block" style={{ color: "hsl(var(--vb-highlight))" }}>
+                      {formatSubtitle("product", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
+                    </span>
+                  </>
+                );
+              })()}
               {o.coupon_type !== "PRODUCT" && Number(o.value_rescue) > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                  {formatSubtitle("store", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue) })}
+                  {formatSubtitle("store", { points: Math.floor(Number(o.value_rescue)), credit: Number(o.value_rescue), min: Number((o as any).min_purchase || 0) })}
                 </span>
               )}
             </div>

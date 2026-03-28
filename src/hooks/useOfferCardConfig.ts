@@ -17,7 +17,7 @@ export interface OfferCardConfig {
 export const DEFAULT_CONFIG: OfferCardConfig = {
   store: {
     title_template: "CRÉDITO DE R$ {credit}",
-    subtitle_template: "{points} pontos por R$ {credit}",
+    subtitle_template: "Troque {points} pontos por crédito de R$ {credit} · Mín. R$ {min}",
     detail_template: "{points} pontos por R$ {credit} em créditos na compra mínima de R$ {min}",
     badge: { bg_color: "", text_color: "#FFFFFF", text_template: "Troque {points} pts por R$ {credit}", icon: "sparkles" },
   },
