@@ -166,11 +166,13 @@ export default function AffiliateDealsPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId],
+    queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId, redeemFilter],
     queryFn: async () => {
       let query = supabase.from("affiliate_deals").select("*", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
+      if (redeemFilter === "not_redeemable") query = query.or("is_redeemable.is.null,is_redeemable.eq.false");
+      if (redeemFilter === "redeemable") query = query.eq("is_redeemable", true);
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("order_index").range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
