@@ -187,6 +187,7 @@ export type Database = {
           is_active: boolean
           is_featured: boolean | null
           is_flash_promo: boolean | null
+          is_redeemable: boolean | null
           last_synced_at: string | null
           marketplace: string | null
           order_index: number
@@ -197,6 +198,7 @@ export type Database = {
           original_price: number | null
           price: number | null
           raw_payload: Json | null
+          redeem_points_cost: number | null
           source_group_id: string | null
           source_group_name: string | null
           store_logo_url: string | null
@@ -224,6 +226,7 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean | null
           is_flash_promo?: boolean | null
+          is_redeemable?: boolean | null
           last_synced_at?: string | null
           marketplace?: string | null
           order_index?: number
@@ -234,6 +237,7 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           raw_payload?: Json | null
+          redeem_points_cost?: number | null
           source_group_id?: string | null
           source_group_name?: string | null
           store_logo_url?: string | null
@@ -261,6 +265,7 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean | null
           is_flash_promo?: boolean | null
+          is_redeemable?: boolean | null
           last_synced_at?: string | null
           marketplace?: string | null
           order_index?: number
@@ -271,6 +276,7 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           raw_payload?: Json | null
+          redeem_points_cost?: number | null
           source_group_id?: string | null
           source_group_name?: string | null
           store_logo_url?: string | null
@@ -4018,6 +4024,133 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_redemption_orders: {
+        Row: {
+          admin_notes: string | null
+          affiliate_url: string
+          branch_id: string | null
+          brand_id: string
+          created_at: string | null
+          customer_cpf: string | null
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          deal_id: string
+          deal_snapshot_json: Json
+          delivery_address: string
+          delivery_cep: string
+          delivery_city: string
+          delivery_complement: string | null
+          delivery_neighborhood: string
+          delivery_number: string
+          delivery_state: string
+          id: string
+          points_spent: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tracking_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          affiliate_url: string
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string | null
+          customer_cpf?: string | null
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          deal_id: string
+          deal_snapshot_json?: Json
+          delivery_address: string
+          delivery_cep: string
+          delivery_city: string
+          delivery_complement?: string | null
+          delivery_neighborhood: string
+          delivery_number: string
+          delivery_state: string
+          id?: string
+          points_spent: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          affiliate_url?: string
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string | null
+          customer_cpf?: string | null
+          customer_id?: string
+          customer_name?: string
+          customer_phone?: string
+          deal_id?: string
+          deal_snapshot_json?: Json
+          delivery_address?: string
+          delivery_cep?: string
+          delivery_city?: string
+          delivery_complement?: string | null
+          delivery_neighborhood?: string
+          delivery_number?: string
+          delivery_state?: string
+          id?: string
+          points_spent?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_redemption_orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_redemption_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_redemption_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_redemption_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_redemption_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_redemption_orders_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deals"
             referencedColumns: ["id"]
           },
         ]
