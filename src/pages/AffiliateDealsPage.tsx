@@ -464,6 +464,34 @@ export default function AffiliateDealsPage() {
             onPageChange={setPage}
           />
 
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground mr-1">Filtro resgate:</span>
+            <Button
+              size="sm"
+              variant={redeemFilter === "all" ? "default" : "outline"}
+              onClick={() => { setRedeemFilter("all"); setPage(1); }}
+              className="h-7 text-xs"
+            >
+              Todos
+            </Button>
+            <Button
+              size="sm"
+              variant={redeemFilter === "not_redeemable" ? "default" : "outline"}
+              onClick={() => { setRedeemFilter("not_redeemable"); setPage(1); }}
+              className="h-7 text-xs"
+            >
+              Não resgatáveis
+            </Button>
+            <Button
+              size="sm"
+              variant={redeemFilter === "redeemable" ? "default" : "outline"}
+              onClick={() => { setRedeemFilter("redeemable"); setPage(1); }}
+              className="h-7 text-xs"
+            >
+              🎁 Resgatáveis
+            </Button>
+          </div>
+
           {/* Barra de ações em massa */}
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
