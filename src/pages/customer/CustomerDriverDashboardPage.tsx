@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Car, TrendingUp, Trophy, Coins, Gift, Clock, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hslToCss } from "@/lib/utils";
+import DriverRedeemOrderHistory from "@/components/driver/DriverRedeemOrderHistory";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -330,6 +331,9 @@ export default function CustomerDriverDashboardPage() {
         cycleStart={cycleStart}
         accent={accent}
       />
+
+      {/* Redemption Order History */}
+      <DriverRedeemOrderHistory />
 
       {/* Ledger History */}
       <div className="mt-6">

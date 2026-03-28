@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag,
   FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw,
   Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
-  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck,
+  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
@@ -64,6 +64,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento Achadinho", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals" },
       { key: "sidebar.governanca_ofertas", defaultTitle: "Governança Achadinho", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals" },
+      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package, moduleKey: "affiliate_deals" },
       { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
     ],
   },

@@ -2,10 +2,11 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
+import DriverRedeemCheckout from "./DriverRedeemCheckout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -29,6 +30,8 @@ export interface AffiliateDeal {
   category_id: string | null;
   created_at?: string;
   origin?: string | null;
+  is_redeemable?: boolean;
+  redeem_points_cost?: number | null;
 }
 
 export interface DealCategory {
@@ -122,6 +125,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -144,7 +148,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     queryFn: async () => {
       let dealsQ = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at, origin")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at, origin, is_redeemable, redeem_points_cost")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .eq("visible_driver" as any, true)
@@ -193,6 +197,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const rawUncategorized = data?.uncategorized || [];
   const allDeals = data?.allDeals || [];
+  const redeemableDeals = useMemo(() => allDeals.filter((d: any) => d.is_redeemable), [allDeals]);
 
   const NEW_OFFERS_ID = "__new_offers__";
   const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
@@ -406,6 +411,55 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
+      {/* Redeemable section */}
+      {!debouncedSearch.trim() && redeemableDeals.length > 0 && (
+        <section className="pt-4">
+          <div className="px-5 mb-3 flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.15)" }}>
+              <Gift className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground" style={{ fontFamily: fontHeading }}>
+                Resgatar com Pontos
+              </h2>
+              <p className="text-[10px] text-muted-foreground">{redeemableDeals.length} produto{redeemableDeals.length !== 1 ? "s" : ""} disponíveis</p>
+            </div>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
+            {redeemableDeals.map((deal: any) => {
+              const pointsCost = deal.redeem_points_cost || Math.ceil(deal.price || 0);
+              return (
+                <div
+                  key={deal.id}
+                  className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform"
+                  style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
+                  onClick={() => setRedeemDeal(deal)}
+                >
+                  <div className="relative bg-muted/30">
+                    {deal.image_url ? (
+                      <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
+                    ) : (
+                      <div className="w-full aspect-square flex items-center justify-center bg-muted/10">
+                        <Gift className="h-8 w-8 text-muted-foreground/30" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm" style={{ backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}>
+                      Resgate
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    {deal.store_name && <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>}
+                    <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
+                    <span className="text-sm font-bold" style={{ color: "hsl(var(--primary))" }}>{pointsCost} pts</span>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="min-w-[16px] flex-shrink-0" />
+          </div>
+        </section>
+      )}
+
       {/* Search results */}
       {debouncedSearch.trim() ? (
         <div className="px-4 pt-4 pb-8">
@@ -552,6 +606,22 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           brandSettings={brand.brand_settings_json}
           onBack={() => setSelectedDeal(null)}
           onSelectDeal={(d) => setSelectedDeal(d as any)}
+        />
+      )}
+
+      {/* Redeem checkout */}
+      {redeemDeal && (
+        <DriverRedeemCheckout
+          deal={{
+            id: redeemDeal.id,
+            title: redeemDeal.title,
+            image_url: redeemDeal.image_url,
+            price: redeemDeal.price,
+            affiliate_url: redeemDeal.affiliate_url,
+            redeem_points_cost: (redeemDeal as any).redeem_points_cost || Math.ceil(redeemDeal.price || 0),
+          }}
+          onClose={() => setRedeemDeal(null)}
+          onSuccess={() => setRedeemDeal(null)}
         />
       )}
     </div>
