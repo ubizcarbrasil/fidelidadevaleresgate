@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -49,6 +49,7 @@ export default function AffiliateCategoriesPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category> | null>(null);
   const [newForm, setNewForm] = useState<Partial<Category> | null>(null);
+  const newFormRef = useRef<HTMLDivElement>(null);
   const [bannerCatId, setBannerCatId] = useState<string | null>(null);
 
   // CTA config
@@ -272,12 +273,17 @@ export default function AffiliateCategoriesPage() {
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Categorias de Achadinhos</h2>
           <p className="text-muted-foreground">Gerencie as categorias de produtos para filtros no app</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setNewForm({ name: "", icon_name: "Tag", color: "#6366f1", keywords: [] })}>
+        <Button className="w-full sm:w-auto" onClick={() => {
+          setNewForm({ name: "", icon_name: "Tag", color: "#6366f1", keywords: [] });
+          setTimeout(() => newFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+        }}>
           <Plus className="h-4 w-4 mr-2" />Nova Categoria
         </Button>
       </div>
 
-      {newForm && renderForm(newForm, setNewForm, () => saveMutation.mutate(newForm), () => setNewForm(null))}
+      <div ref={newFormRef}>
+        {newForm && renderForm(newForm, setNewForm, () => saveMutation.mutate(newForm), () => setNewForm(null))}
+      </div>
 
       {/* CTA & Banner Config */}
       <Card>
