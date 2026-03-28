@@ -186,6 +186,10 @@ export default function SectionDetailOverlay({
                     {!isStore && storeName && storeName !== title && (
                       <p className="text-[11px] mt-0.5 text-muted-foreground">
                         {storeName}
+                        {item.coupon_type !== "PRODUCT" && (item.value_rescue ?? 0) > 0 && Number(item.min_purchase || 0) > 0 && (() => {
+                          const pct = Math.round((Number(item.value_rescue) / Number(item.min_purchase)) * 100);
+                          return <span className="ml-1 font-bold" style={{ color: "hsl(var(--vb-highlight))", fontSize: "10px" }}>{pct}%</span>;
+                        })()}
                       </p>
                     )}
                     {segmentTag && (
@@ -214,7 +218,7 @@ export default function SectionDetailOverlay({
                     })()}
                     {item.coupon_type !== "PRODUCT" && (item.value_rescue ?? 0) > 0 && (
                       <span className="text-xs font-bold mt-1 block" style={{ color: "hsl(var(--vb-gold))" }}>
-                        Troque {Math.floor(Number(item.value_rescue ?? 0))} pontos por crédito de R$ {Number(item.value_rescue ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Mín. R$ {Number(item.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        Crédito de R$ {Number(item.value_rescue ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </span>
                     )}
                     {item.address && (

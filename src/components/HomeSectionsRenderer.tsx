@@ -626,7 +626,13 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
               <div className="px-3 py-2.5">
                 <h3 className="font-bold text-xs text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
                 {o.stores?.name && (
-                  <p className="text-[10px] mt-0.5 text-muted-foreground truncate">{o.stores.name}</p>
+                  <p className="text-[10px] mt-0.5 text-muted-foreground truncate">
+                    {o.stores.name}
+                    {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && Number(o.min_purchase || 0) > 0 && (() => {
+                      const pct = Math.round((Number(o.value_rescue) / Number(o.min_purchase)) * 100);
+                      return <span className="ml-1 font-bold" style={{ color: "hsl(var(--vb-highlight))", fontSize: "9px" }}>{pct}%</span>;
+                    })()}
+                  </p>
                 )}
                 {o.coupon_type === "PRODUCT" && (() => {
                   const tp = o.terms_params_json as Record<string, unknown> | null;
@@ -649,7 +655,7 @@ function OffersCarousel({ items, primary, cardBg, accent, fontHeading, fg, onOff
                 })()}
                 {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                   <span className="font-bold text-xs mt-1 block" style={{ color: "hsl(var(--vb-highlight))" }}>
-                    Troque {Math.floor(Number(o.value_rescue))} pontos por crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    Crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 )}
               </div>
@@ -705,7 +711,13 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
             <div className="px-2.5 py-2">
               <h3 className="font-semibold text-[11px] text-foreground truncate" style={{ fontFamily: fontHeading }}>{o.title}</h3>
               {o.stores?.name && (
-                <p className="text-[9px] text-muted-foreground truncate">{o.stores.name}</p>
+                <p className="text-[9px] text-muted-foreground truncate">
+                  {o.stores.name}
+                  {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && Number(o.min_purchase || 0) > 0 && (() => {
+                    const pct = Math.round((Number(o.value_rescue) / Number(o.min_purchase)) * 100);
+                    return <span className="ml-1 font-bold" style={{ color: accent, fontSize: "8px" }}>{pct}%</span>;
+                  })()}
+                </p>
               )}
               {o.coupon_type === "PRODUCT" && (() => {
                 const tp = o.terms_params_json as Record<string, unknown> | null;
@@ -728,7 +740,7 @@ function OffersGrid({ items, columns, primary, cardBg, accent, fontHeading, fg, 
               })()}
               {o.coupon_type !== "PRODUCT" && o.value_rescue > 0 && (
                 <span className="font-bold text-xs mt-1 block" style={{ color: accent }}>
-                  Troque {Math.floor(Number(o.value_rescue))} pontos por crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · Mín. R$ {Number(o.min_purchase || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  Crédito de R$ {Number(o.value_rescue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>
