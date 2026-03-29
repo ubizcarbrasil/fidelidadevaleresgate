@@ -1,50 +1,68 @@
 
 
-# Corrigir travamento em ENTRY_LOADING
+# Corrigir import dinâmico que trava o boot
 
-## Diagnóstico
+## Problema
 
-Após inspeção detalhada do código, **não há erros de sintaxe, imports faltantes ou dependências circulares**. O problema é que `import("/src/main.tsx")` no `index.html` nunca resolve — o dev server do sandbox não está entregando o módulo corretamente.
+A função `doImport(url)` no `index.html` usa `import(url)` onde `url` é uma variável. O Vite precisa de caminhos literais (strings estáticas) para resolver módulos ESM. Com uma variável, o dev server simplesmente não serve o arquivo — o import fica pendente para sempre.
 
-Tentativas anteriores de forçar rebuild via comentários não funcionaram porque o problema está no servidor de desenvolvimento, não no código.
+## Solução
 
-## Plano em duas frentes
+Reescrever o bloco `<script type="module">` no `index.html` para usar imports com **strings literais**, mantendo a lógica de timeout e retry.
 
-### Frente 1 — Reverter para versão funcional (recomendado primeiro)
+### Arquivo alterado: `index.html` (linhas 138-189)
 
-Use o Histórico de versões para voltar a um estado anterior que funcionava. Isso pode resolver o problema se o dev server recompilar do zero.
+Substituir o bloco inteiro por:
 
-### Frente 2 — Tornar o boot mais resiliente (mudanças de código)
+```javascript
+<script type="module">
+  (function(){
+    var TIMEOUT_MS=15000;
 
-Caso a reversão não resolva, implementar as seguintes melhorias:
+    function showFatalError(){
+      window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
+      var spinner=document.getElementById("bootstrap-spinner");
+      var errDiv=document.getElementById("bootstrap-error");
+      if(spinner)spinner.style.display="none";
+      if(errDiv){
+        errDiv.style.display="block";
+        errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Não foi possível conectar ao servidor</p>'
+          +'<p style="margin:0 0 12px;font-size:14px;">Verifique sua conexão e tente novamente.</p>'
+          +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Tentar novamente</button>';
+      }
+    }
 
-#### 1. `index.html` — Auto-retry inteligente com cache-bust
-- Reduzir safety timeout de 12s para 8s
-- Quando `import("/src/main.tsx")` falhar ou travar, adicionar `?t=timestamp` ao import para forçar cache-bust
-- Limitar a 2 tentativas automáticas antes de mostrar botão manual
-- Usar `Promise.race` com timeout de 10s no import dinâmico (o import pode ficar pendente indefinidamente)
+    var timeout=setTimeout(function(){
+      console.error("[boot] import timeout");
+      showFatalError();
+    },TIMEOUT_MS);
 
-#### 2. `index.html` — Remover link do manifest.json
-- Remover `<link rel="manifest" href="/manifest.json" />` do head, pois no ambiente de preview pode causar interferência com service workers stale
-
-#### 3. `src/main.tsx` — Adicionar timestamp dinâmico ao App import
-- No `import("./App.tsx")`, adicionar query string com timestamp para evitar cache de módulo stale do Vite
-
-## Detalhes técnicos
-
-```text
-index.html (boot flow atual):
-  ENTRY_LOADING → import("/src/main.tsx") → [HANG] → 12s timeout → botão
-
-index.html (boot flow proposto):
-  ENTRY_LOADING → Promise.race(import, 10s timeout)
-    ├─ resolve → main.tsx assume controle
-    └─ timeout/reject → retry com cache-bust (?t=Date.now())
-        ├─ resolve → main.tsx assume controle
-        └─ reject → mostrar botão de reload
+    import("/src/main.tsx").then(function(){
+      clearTimeout(timeout);
+    }).catch(function(err){
+      clearTimeout(timeout);
+      console.error("[boot] import failed",err);
+      showFatalError();
+    });
+  })();
+</script>
 ```
 
-### Arquivos alterados
-- `index.html` — Lógica de import com timeout e retry automático
-- `src/main.tsx` — Timestamp no import dinâmico do App
+### O que muda
+
+| Antes | Depois |
+|---|---|
+| `doImport(url)` com variável | `import("/src/main.tsx")` com string literal |
+| `Promise.race` + retry + cache-bust | Timeout simples de 15s com `setTimeout` |
+| Múltiplas tentativas com `sessionStorage` | Uma tentativa limpa, botão manual se falhar |
+
+### Por que resolve
+
+O Vite faz análise estática do código-fonte. Quando vê `import("/src/main.tsx")` com string literal, sabe que precisa servir esse módulo. Com `import(url)` via variável, o Vite ignora — o módulo nunca é requisitado ao servidor.
+
+### Escopo
+
+- **Apenas** `index.html`, bloco do script de boot
+- Nenhuma mudança em auth, brand, guards, rotas, providers ou lógica da app
+- `src/main.tsx` permanece inalterado
 
