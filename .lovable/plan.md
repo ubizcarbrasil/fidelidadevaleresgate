@@ -1,68 +1,62 @@
 
 
-# Corrigir import dinâmico que trava o boot
+# Teste de isolamento — bootstrap mínimo
 
-## Problema
+## O que será feito
 
-A função `doImport(url)` no `index.html` usa `import(url)` onde `url` é uma variável. O Vite precisa de caminhos literais (strings estáticas) para resolver módulos ESM. Com uma variável, o dev server simplesmente não serve o arquivo — o import fica pendente para sempre.
+Substituir temporariamente `src/main.tsx` por um arquivo mínimo que:
 
-## Solução
+1. Define `window.__BOOT_PHASE__ = "MAIN_MODULE_START"` imediatamente
+2. Importa apenas `react` e `react-dom/client`
+3. Renderiza um `<div>` estático com "Teste mínimo carregado"
+4. Chama `window.__dismissBootstrap()` para remover o overlay
+5. Zero imports do app (sem App, providers, Supabase, contexts, guards, trackers)
 
-Reescrever o bloco `<script type="module">` no `index.html` para usar imports com **strings literais**, mantendo a lógica de timeout e retry.
+## Arquivo alterado: `src/main.tsx`
 
-### Arquivo alterado: `index.html` (linhas 138-189)
+Conteúdo completo temporário:
 
-Substituir o bloco inteiro por:
+```tsx
+(window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
+console.info("[boot] MAIN_MODULE_START — teste de isolamento");
 
-```javascript
-<script type="module">
-  (function(){
-    var TIMEOUT_MS=15000;
+import { createRoot } from "react-dom/client";
 
-    function showFatalError(){
-      window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
-      var spinner=document.getElementById("bootstrap-spinner");
-      var errDiv=document.getElementById("bootstrap-error");
-      if(spinner)spinner.style.display="none";
-      if(errDiv){
-        errDiv.style.display="block";
-        errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Não foi possível conectar ao servidor</p>'
-          +'<p style="margin:0 0 12px;font-size:14px;">Verifique sua conexão e tente novamente.</p>'
-          +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Tentar novamente</button>';
-      }
-    }
-
-    var timeout=setTimeout(function(){
-      console.error("[boot] import timeout");
-      showFatalError();
-    },TIMEOUT_MS);
-
-    import("/src/main.tsx").then(function(){
-      clearTimeout(timeout);
-    }).catch(function(err){
-      clearTimeout(timeout);
-      console.error("[boot] import failed",err);
-      showFatalError();
-    });
-  })();
-</script>
+const rootEl = document.getElementById("root");
+if (rootEl) {
+  const root = createRoot(rootEl);
+  root.render(
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "#0f0a2e",
+      color: "#c4b5fd",
+      fontFamily: "system-ui, sans-serif",
+      fontSize: "18px",
+      fontWeight: 600,
+    }}>
+      Teste mínimo carregado
+    </div>
+  );
+  (window as any).__dismissBootstrap?.();
+  (window as any).__BOOT_PHASE__ = "APP_MOUNTED";
+  console.info("[boot] APP_MOUNTED — teste de isolamento concluído");
+} else {
+  console.error("[boot] #root não encontrado");
+}
 ```
 
-### O que muda
+## Diagnóstico esperado
 
-| Antes | Depois |
+| Resultado | Significado |
 |---|---|
-| `doImport(url)` com variável | `import("/src/main.tsx")` com string literal |
-| `Promise.race` + retry + cache-bust | Timeout simples de 15s com `setTimeout` |
-| Múltiplas tentativas com `sessionStorage` | Uma tentativa limpa, botão manual se falhar |
+| Tela aparece consistentemente | Problema está no grafo de módulos da app (imports pesados, circular deps, etc.) |
+| Ainda trava em ENTRY_LOADING | Problema está no ambiente Vite/preview/Lovable, não no código |
 
-### Por que resolve
+## Escopo
 
-O Vite faz análise estática do código-fonte. Quando vê `import("/src/main.tsx")` com string literal, sabe que precisa servir esse módulo. Com `import(url)` via variável, o Vite ignora — o módulo nunca é requisitado ao servidor.
-
-### Escopo
-
-- **Apenas** `index.html`, bloco do script de boot
-- Nenhuma mudança em auth, brand, guards, rotas, providers ou lógica da app
-- `src/main.tsx` permanece inalterado
+- Apenas `src/main.tsx` — nenhum outro arquivo tocado
+- Mudança temporária, será revertida após o diagnóstico
 
