@@ -70,9 +70,9 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Resgate com Pontos",
     items: [
-      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, moduleKey: "affiliate_deals" },
-      { key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2, moduleKey: "affiliate_deals" },
-      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package, moduleKey: "affiliate_deals" },
+      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag },
+      { key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2 },
+      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package },
     ],
   },
   {
