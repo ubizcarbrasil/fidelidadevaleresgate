@@ -1,43 +1,50 @@
 
-
-# Corrigir imagem gigante na tela de login
+Corrigir a tela em duas frentes, porque o sintoma atual mudou: agora o problema principal é travamento no carregamento, não mais só a imagem.
 
 ## Diagnóstico
+- A prévia mostra a rota `/auth` parada em “Carregando aplicação…”/loader.
+- Os logs indicam dois avisos importantes de `ref`:
+  - `Auth` está recebendo `ref`
+  - `PlatformLogo` está recebendo `ref`
+- Isso sugere incompatibilidade com algum ponto da árvore que espera componentes compatíveis com `forwardRef`, principalmente em combinação com `lazy`, `Suspense` e a montagem inicial.
+- O ajuste anterior de contenção da imagem não resolve esse travamento.
 
-O arquivo `/logo-vale-resgate.png` (porquinho amarelo em fundo ciano) está sendo exibido como logo na tela de Auth. As classes `h-16 w-16` deveriam limitar a 64x64px, mas no mobile a imagem está escapando do container e preenchendo a tela inteira.
+## Plano de correção
 
-## Alterações
+### 1. Tornar `PlatformLogo` compatível com `ref`
+**Arquivo:** `src/components/PlatformLogo.tsx`
 
-### 1. `src/pages/Auth.tsx` — Forçar contenção do logo
+- Refatorar o componente para usar `React.forwardRef`
+- Encaminhar o `ref` para o elemento renderizado:
+  - `<img>` quando houver imagem válida
+  - `<div>` no fallback
+- Manter a mesma API atual (`src`, `alt`, `className`, `fallbackLabel`, `loading`)
 
-Envolver o `PlatformLogo` em um `div` com tamanho fixo e `overflow-hidden`, e adicionar `style` inline como garantia:
+Objetivo:
+- Eliminar o warning “Function components cannot be given refs” relacionado ao `PlatformLogo`
 
-```tsx
-<CardHeader className="text-center space-y-2">
-  <div className="mx-auto h-16 w-16 overflow-hidden rounded-2xl shadow-md">
-    <PlatformLogo
-      src={brandLogoUrl || "/logo-vale-resgate.png"}
-      alt={brandName || "Vale Resgate"}
-      fallbackLabel={brandName ? brandName.substring(0, 2).toUpperCase() : "VR"}
-      className="h-full w-full"
-    />
-  </div>
-```
+### 2. Evitar `lazy` na rota pública de autenticação
+**Arquivo:** `src/App.tsx`
 
-### 2. `src/components/PlatformLogo.tsx` — Adicionar contenção inline
+- Remover `Auth` do carregamento com `lazyWithRetry`
+- Importar `Auth` diretamente
+- Manter `lazy` apenas nas páginas pesadas/privadas, onde faz mais sentido
 
-Adicionar `style={{ maxWidth: "100%", maxHeight: "100%" }}` no `<img>` como proteção contra vazamento de imagens grandes:
+Objetivo:
+- Evitar que a tela de login dependa do fluxo de `Suspense` logo no bootstrap
+- Reduzir o risco de a rota pública ficar presa no loader inicial
 
-```tsx
-<img
-  src={src}
-  alt={alt}
-  className={cn("object-contain shrink-0", className)}
-  style={{ maxWidth: "100%", maxHeight: "100%" }}
-  loading={loading}
-  onError={() => setFailed(true)}
-/>
-```
+### 3. Revisar a rota `/auth`
+**Arquivo:** `src/App.tsx`
 
-Duas camadas de proteção: container fixo com overflow-hidden + inline styles de max no img.
+- Garantir que `<Route path="/auth" element={<Auth />} />` continue simples, sem wrappers extras
+- Não alterar comportamento de navegação nem autenticação
 
+## Resultado esperado
+- A tela `/auth` deixa de travar no carregamento
+- Os warnings de `ref` ligados a `Auth`/`PlatformLogo` desaparecem
+- O formulário volta a renderizar normalmente no mobile
+- A logo permanece contida dentro do card
+
+## Observação técnica
+Se após isso ainda houver instabilidade, o próximo passo seria revisar o bootstrap (`main.tsx` + `MountSignal`) para garantir que a overlay de carregamento seja sempre descartada mesmo quando houver falha parcial de render. Mas eu começaria por essas duas correções, porque são as evidências mais fortes do problema atual.
