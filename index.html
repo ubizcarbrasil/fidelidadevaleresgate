@@ -17,7 +17,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a6cfa" />
     <meta name="app-version" content="2026-03-25-v1" />
-    <link rel="manifest" href="/manifest.json" />
+    <!-- manifest removed to avoid stale SW interference in preview -->
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
     
@@ -98,7 +98,7 @@
         },1000);
       },3000);
 
-      /* Timeout de segurança: botão de reload após 12s */
+      /* Timeout de segurança: botão de reload após 8s */
       setTimeout(function(){
         if(window.__bootstrapDismissed)return;
         var el=document.getElementById('bootstrap-fallback');
@@ -115,7 +115,7 @@
             +'<p style="margin:0 0 12px;font-size:14px;">O carregamento está demorando mais que o esperado.</p>'
             +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
         }
-      },12000);
+      },8000);
     </script>
 
     <script>
@@ -130,29 +130,57 @@
       })();
     </script>
     <script type="module">
-      import("/src/main.tsx").then(function(){
-        /* ok — main.tsx assume o controle */
-      }).catch(function(err){
-        window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
-        console.error("[boot] entrypoint import failed",err);
+      (function(){
+        var TIMEOUT_MS=10000;
+        var retryKey="__boot_retry";
+        var retryCount=parseInt(sessionStorage.getItem(retryKey)||"0",10);
 
-        /* Single-attempt cache-busting reload */
-        if(!sessionStorage.getItem("__boot_retry")){
-          sessionStorage.setItem("__boot_retry","1");
-          window.location.reload();
-        } else {
-          sessionStorage.removeItem("__boot_retry");
+        function showFatalError(phase){
+          sessionStorage.removeItem(retryKey);
+          window.__BOOT_PHASE__=phase;
           var spinner=document.getElementById("bootstrap-spinner");
           var errDiv=document.getElementById("bootstrap-error");
           if(spinner)spinner.style.display="none";
           if(errDiv){
             errDiv.style.display="block";
-            errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Fase: ENTRY_IMPORT_FAILED</p>'
+            errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Fase: '+phase+'</p>'
               +'<p style="margin:0 0 12px;font-size:14px;">Falha ao carregar a aplicação.</p>'
               +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
           }
         }
-      });
+
+        function doImport(url){
+          return Promise.race([
+            import(url),
+            new Promise(function(_,reject){
+              setTimeout(function(){reject(new Error("import timeout after "+TIMEOUT_MS+"ms"))},TIMEOUT_MS);
+            })
+          ]);
+        }
+
+        doImport("/src/main.tsx").then(function(){
+          sessionStorage.removeItem(retryKey);
+        }).catch(function(err){
+          console.error("[boot] import attempt "+(retryCount+1)+" failed",err);
+          if(retryCount<2){
+            sessionStorage.setItem(retryKey,String(retryCount+1));
+            /* Cache-bust retry */
+            doImport("/src/main.tsx?t="+Date.now()).then(function(){
+              sessionStorage.removeItem(retryKey);
+            }).catch(function(err2){
+              console.error("[boot] cache-bust retry failed",err2);
+              if(retryCount<1){
+                sessionStorage.setItem(retryKey,String(retryCount+2));
+                window.location.reload();
+              } else {
+                showFatalError("ENTRY_IMPORT_FAILED");
+              }
+            });
+          } else {
+            showFatalError("ENTRY_IMPORT_FAILED");
+          }
+        });
+      })();
     </script>
   </body>
 </html>
