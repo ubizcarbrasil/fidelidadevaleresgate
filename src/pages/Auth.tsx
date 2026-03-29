@@ -84,12 +84,11 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto h-16 w-16 overflow-hidden rounded-2xl shadow-md">
-            <PlatformLogo
+          <div className="mx-auto overflow-hidden rounded-2xl shadow-md" style={{ width: 64, height: 64 }}>
+            <img
               src={brandLogoUrl || "/logo-vale-resgate.png"}
               alt={brandName || "Vale Resgate"}
-              fallbackLabel={brandName ? brandName.substring(0, 2).toUpperCase() : "VR"}
-              className="h-full w-full"
+              style={{ width: 64, height: 64, objectFit: "contain", display: "block" }}
             />
           </div>
           <CardTitle className="text-2xl font-bold">{brandName || "Vale Resgate"}</CardTitle>
