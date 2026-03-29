@@ -3,6 +3,7 @@ import { initWebVitals } from "@/lib/webVitals";
 import { initErrorTracker } from "@/lib/errorTracker";
 import { setBootPhase } from "@/lib/bootStateCore";
 
+// rebuild 2026-03-29
 // Marcador precoce — executa assim que os imports leves resolvem
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
 console.info("[boot] MAIN_MODULE_START");
