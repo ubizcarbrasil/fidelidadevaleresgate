@@ -1,14 +1,18 @@
 
 
-# Correção: Link "Ir para Achadinhos" aponta para rota inexistente
+# Filtro de produtos Ativos/Inativos na página Produtos de Resgate
 
-## Problema
-O botão "Ir para Achadinhos" no estado vazio da página Produtos de Resgate aponta para `/achadinhos`, mas a rota real é `/affiliate-deals`. Isso causa o erro 404.
-
-## Correção
+## Alterações
 
 ### `src/pages/ProdutosResgatePage.tsx`
-- Alterar o `Link to="/achadinhos"` para `Link to="/affiliate-deals"` no estado vazio (linha do botão "Ir para Achadinhos").
 
-Correção de uma linha apenas.
+1. **Novo estado `statusFilter`** com valores `"all" | "active" | "inactive"`, default `"all"`.
+
+2. **Botões de filtro** renderizados entre os KPIs e o `DataTableControls`, seguindo o mesmo padrão visual da página de Achadinhos (botões `Todos`, `Ativos`, `Inativos`).
+
+3. **Query atualizada**: incluir `statusFilter` na queryKey e aplicar `.eq("is_active", true/false)` conforme o filtro selecionado.
+
+4. **Reset de página**: ao mudar o filtro, resetar `page` para 1.
+
+5. **Ajuste no `isEmptyNoSearch`**: considerar também se não há filtro ativo (`statusFilter === "all"`) para decidir se mostra o estado vazio global ou o estado vazio de busca/filtro.
 
