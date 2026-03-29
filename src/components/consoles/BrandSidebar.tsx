@@ -313,6 +313,7 @@ export function BrandSidebar() {
 
         {resolvedGroups.map((group) => {
           if (group.items.length === 0) return null;
+          const alwaysOpen = group.label === "Resgate com Pontos";
           return (
             <CollapsibleGroup
               key={group.label}
@@ -323,8 +324,8 @@ export function BrandSidebar() {
               getLabel={getLabel}
               badges={badges}
               brandId={currentBrandId ?? undefined}
-              isOpen={effectiveOpenGroup === group.label}
-              onToggle={() => setOpenGroupLabel((prev: string | null) => prev === group.label ? null : group.label)}
+              isOpen={alwaysOpen || effectiveOpenGroup === group.label}
+              onToggle={alwaysOpen ? () => {} : () => setOpenGroupLabel((prev: string | null) => prev === group.label ? null : group.label)}
             />
           );
         })}
