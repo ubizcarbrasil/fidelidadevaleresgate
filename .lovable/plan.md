@@ -1,30 +1,39 @@
 
 
-# Teste de isolamento — bootstrap mínimo
+# Restaurar src/main.tsx real do projeto
 
-## O que será feito
+## Contexto
 
-Substituir temporariamente `src/main.tsx` por um arquivo mínimo que:
+O `src/main.tsx` está com o código do teste de isolamento (render estático). Precisa ser restaurado para o bootstrap real que importa e renderiza `App.tsx`.
 
-1. Define `window.__BOOT_PHASE__ = "MAIN_MODULE_START"` imediatamente
-2. Importa apenas `react` e `react-dom/client`
-3. Renderiza um `<div>` estático com "Teste mínimo carregado"
-4. Chama `window.__dismissBootstrap()` para remover o overlay
-5. Zero imports do app (sem App, providers, Supabase, contexts, guards, trackers)
+O cache stale do `index.html` já foi corrigido na mensagem anterior (cache-bust + limpeza do `.vite`), então o import literal `import("/src/main.tsx")` deve funcionar agora.
 
 ## Arquivo alterado: `src/main.tsx`
 
-Conteúdo completo temporário:
+Restaurar com o bootstrap progressivo que:
+
+1. Define `__BOOT_PHASE__ = "MAIN_MODULE_START"` imediatamente
+2. Importa `bootStateCore` e sinaliza `BOOTSTRAP`
+3. Importa `react-dom/client` e renderiza um shell mínimo (spinner) para dismissar o overlay rapidamente
+4. Carrega `App.tsx` via `import("./App.tsx")` dinâmico e substitui o shell
+5. Trata erros com UI de fallback
 
 ```tsx
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
-console.info("[boot] MAIN_MODULE_START — teste de isolamento");
+console.info("[boot] MAIN_MODULE_START");
 
+import { setBootPhase } from "@/lib/bootStateCore";
 import { createRoot } from "react-dom/client";
 
+setBootPhase("BOOTSTRAP");
+
 const rootEl = document.getElementById("root");
-if (rootEl) {
+if (!rootEl) {
+  console.error("[boot] #root não encontrado");
+} else {
   const root = createRoot(rootEl);
+
+  // Shell mínimo — dismissa overlay imediatamente
   root.render(
     <div style={{
       minHeight: "100vh",
@@ -34,29 +43,57 @@ if (rootEl) {
       background: "#0f0a2e",
       color: "#c4b5fd",
       fontFamily: "system-ui, sans-serif",
-      fontSize: "18px",
-      fontWeight: 600,
+      fontSize: "14px",
     }}>
-      Teste mínimo carregado
+      Carregando aplicação…
     </div>
   );
   (window as any).__dismissBootstrap?.();
-  (window as any).__BOOT_PHASE__ = "APP_MOUNTED";
-  console.info("[boot] APP_MOUNTED — teste de isolamento concluído");
-} else {
-  console.error("[boot] #root não encontrado");
+
+  // Carrega App real
+  import("./App.tsx")
+    .then(({ default: App }) => {
+      root.render(<App />);
+    })
+    .catch((err) => {
+      console.error("[boot] Falha ao carregar App", err);
+      setBootPhase("FAILED", err?.message);
+      root.render(
+        <div style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0f0a2e",
+          color: "#c4b5fd",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: "14px",
+          gap: "12px",
+        }}>
+          <p>Falha ao carregar a aplicação.</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              background: "#6d4aff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 24px",
+              fontSize: "14px",
+              cursor: "pointer",
+            }}
+          >
+            Recarregar
+          </button>
+        </div>
+      );
+    });
 }
 ```
-
-## Diagnóstico esperado
-
-| Resultado | Significado |
-|---|---|
-| Tela aparece consistentemente | Problema está no grafo de módulos da app (imports pesados, circular deps, etc.) |
-| Ainda trava em ENTRY_LOADING | Problema está no ambiente Vite/preview/Lovable, não no código |
 
 ## Escopo
 
 - Apenas `src/main.tsx` — nenhum outro arquivo tocado
-- Mudança temporária, será revertida após o diagnóstico
+- Após restaurar, verificar console/preview para confirmar boot
 
