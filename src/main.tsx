@@ -1,6 +1,7 @@
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
 console.info("[boot] MAIN_MODULE_START");
 
+import "./index.css";
 import { setBootPhase } from "@/lib/bootStateCore";
 import { createRoot } from "react-dom/client";
 
