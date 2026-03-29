@@ -42,6 +42,7 @@ export default function PlatformLogo({
       src={src}
       alt={alt}
       className={cn("object-contain shrink-0", className)}
+      style={{ maxWidth: "100%", maxHeight: "100%" }}
       loading={loading}
       onError={() => setFailed(true)}
     />
