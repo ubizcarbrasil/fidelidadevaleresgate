@@ -24,7 +24,8 @@ import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
 const BrandJourneyGuidePage = lazyWithRetry(() => import("@/pages/BrandJourneyGuidePage"));
 
 // Lazy-loaded pages
-const Auth = lazyWithRetry(() => import("@/pages/Auth"));
+// Auth importado diretamente para evitar travamento no bootstrap
+import Auth from "@/pages/Auth";
 const ResetPassword = lazyWithRetry(() => import("@/pages/ResetPassword"));
 const Dashboard = lazyWithRetry(() => import("@/pages/Dashboard"));
 const Tenants = lazyWithRetry(() => import("@/pages/Tenants"));
