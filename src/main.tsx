@@ -103,7 +103,7 @@ async function bootstrap() {
 
     const [{ createRoot }, { default: App }] = await Promise.all([
       import("react-dom/client"),
-      import("./App.tsx"),
+      import(/* @vite-ignore */ "./App.tsx?t=" + Date.now()),
     ]);
 
     createRoot(rootEl).render(<App />);
