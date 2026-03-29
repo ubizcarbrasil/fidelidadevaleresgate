@@ -1,18 +1,13 @@
 
 
-# Filtro de produtos Ativos/Inativos na página Produtos de Resgate
+# Forçar rebuild do servidor de preview
 
-## Alterações
+## Problema
+A preview está travada na fase `ENTRY_LOADING`, indicando que o dev server não está servindo o entrypoint corretamente.
 
-### `src/pages/ProdutosResgatePage.tsx`
+## Correção
+Adicionar um comentário com timestamp no `src/main.tsx` para forçar o Vite a invalidar o módulo e rebuildar.
 
-1. **Novo estado `statusFilter`** com valores `"all" | "active" | "inactive"`, default `"all"`.
-
-2. **Botões de filtro** renderizados entre os KPIs e o `DataTableControls`, seguindo o mesmo padrão visual da página de Achadinhos (botões `Todos`, `Ativos`, `Inativos`).
-
-3. **Query atualizada**: incluir `statusFilter` na queryKey e aplicar `.eq("is_active", true/false)` conforme o filtro selecionado.
-
-4. **Reset de página**: ao mudar o filtro, resetar `page` para 1.
-
-5. **Ajuste no `isEmptyNoSearch`**: considerar também se não há filtro ativo (`statusFilter === "all"`) para decidir se mostra o estado vazio global ou o estado vazio de busca/filtro.
+### `src/main.tsx`
+- Adicionar comentário `// rebuild 2026-03-29` no topo do arquivo (após os imports existentes), sem alterar nenhuma lógica.
 
