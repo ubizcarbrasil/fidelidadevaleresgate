@@ -25,10 +25,11 @@ export default function ProdutosResgatePage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [batchCost, setBatchCost] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // ── Query ──
   const { data, isLoading } = useQuery({
-    queryKey: ["produtos-resgate", debouncedSearch, page, currentBrandId],
+    queryKey: ["produtos-resgate", debouncedSearch, page, currentBrandId, statusFilter],
     queryFn: async () => {
       let query = supabase
         .from("affiliate_deals")
@@ -37,6 +38,8 @@ export default function ProdutosResgatePage() {
 
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
+      if (statusFilter === "active") query = query.eq("is_active", true);
+      if (statusFilter === "inactive") query = query.eq("is_active", false);
 
       const from = (page - 1) * PAGE_SIZE;
       const { data, error, count } = await query.order("title").range(from, from + PAGE_SIZE - 1);
@@ -69,7 +72,12 @@ export default function ProdutosResgatePage() {
   });
 
   const items = data?.items ?? [];
-  const isEmptyNoSearch = !isLoading && !items.length && !debouncedSearch;
+  const isEmptyNoSearch = !isLoading && !items.length && !debouncedSearch && statusFilter === "all";
+
+  const handleStatusFilter = (filter: "all" | "active" | "inactive") => {
+    setStatusFilter(filter);
+    setPage(1);
+  };
   // ── Mutations ──
   const updateDeal = useMutation({
     mutationFn: async (payload: { id: string; updates: Record<string, any> }) => {
@@ -258,6 +266,24 @@ export default function ProdutosResgatePage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Filtros de status */}
+          <div className="flex items-center gap-2">
+            {([
+              { key: "all" as const, label: "Todos" },
+              { key: "active" as const, label: "Ativos" },
+              { key: "inactive" as const, label: "Inativos" },
+            ]).map((f) => (
+              <Button
+                key={f.key}
+                size="sm"
+                variant={statusFilter === f.key ? "default" : "outline"}
+                onClick={() => handleStatusFilter(f.key)}
+              >
+                {f.label}
+              </Button>
+            ))}
           </div>
 
           {/* Batch actions */}
