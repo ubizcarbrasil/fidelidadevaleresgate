@@ -200,7 +200,7 @@ export default function ProdutosResgatePage() {
               </p>
             </div>
             <Button asChild>
-              <Link to="/achadinhos">
+              <Link to="/affiliate-deals">
                 Ir para Achadinhos
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
