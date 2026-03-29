@@ -137,13 +137,10 @@
     </script>
     <script type="module">
       (function(){
-        var TIMEOUT_MS=10000;
-        var retryKey="__boot_retry";
-        var retryCount=parseInt(sessionStorage.getItem(retryKey)||"0",10);
+        var TIMEOUT_MS=15000;
 
-        function showFatalError(phase){
-          sessionStorage.removeItem(retryKey);
-          window.__BOOT_PHASE__=phase;
+        function showFatalError(){
+          window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
           var spinner=document.getElementById("bootstrap-spinner");
           var errDiv=document.getElementById("bootstrap-error");
           if(spinner)spinner.style.display="none";
@@ -155,36 +152,17 @@
           }
         }
 
-        function doImport(url){
-          return Promise.race([
-            import(url),
-            new Promise(function(_,reject){
-              setTimeout(function(){reject(new Error("import timeout after "+TIMEOUT_MS+"ms"))},TIMEOUT_MS);
-            })
-          ]);
-        }
+        var timeout=setTimeout(function(){
+          console.error("[boot] import timeout");
+          showFatalError();
+        },TIMEOUT_MS);
 
-        doImport("/src/main.tsx").then(function(){
-          sessionStorage.removeItem(retryKey);
+        import("/src/main.tsx").then(function(){
+          clearTimeout(timeout);
         }).catch(function(err){
-          console.error("[boot] import attempt "+(retryCount+1)+" failed",err);
-          if(retryCount<2){
-            sessionStorage.setItem(retryKey,String(retryCount+1));
-            /* Cache-bust retry */
-            doImport("/src/main.tsx?t="+Date.now()).then(function(){
-              sessionStorage.removeItem(retryKey);
-            }).catch(function(err2){
-              console.error("[boot] cache-bust retry failed",err2);
-              if(retryCount<1){
-                sessionStorage.setItem(retryKey,String(retryCount+2));
-                window.location.reload();
-              } else {
-                showFatalError("ENTRY_IMPORT_FAILED");
-              }
-            });
-          } else {
-            showFatalError("ENTRY_IMPORT_FAILED");
-          }
+          clearTimeout(timeout);
+          console.error("[boot] import failed",err);
+          showFatalError();
         });
       })();
     </script>
