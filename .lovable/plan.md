@@ -1,33 +1,36 @@
 
 
-# Corrigir erro "useCustomer must be used within CustomerProvider" na página de motorista
+# Recalcular custo em pontos dos produtos já ativados (taxa 40 pts/R$)
 
 ## Problema
-A rota `/driver` renderiza `DriverPanelPage` diretamente, sem envolver com `CustomerProvider`. Quando o motorista clica num produto resgatável, o `DriverRedeemCheckout` chama `useCustomer()` e causa o crash.
+Os produtos já marcados como resgatáveis foram salvos com a taxa antiga (1 pt/R$). Por isso:
+- R$ 17,99 → 18 pts (deveria ser **720 pts**)
+- R$ 62,69 → 63 pts (deveria ser **2.508 pts**)
+- R$ 169,99 → 170 pts (deveria ser **6.800 pts**)
+
+Os valores no banco estão incorretos e precisam ser recalculados.
 
 ## Solução
-Envolver o conteúdo de `DriverPanelPage` com `CustomerProvider` (que já depende de `AuthContext` e `BrandContext`). Como `DriverPanelPage` gerencia brand/branch manualmente (via query params), há duas abordagens:
 
-### Abordagem escolhida: Remover dependência de `useCustomer` do checkout do driver
+### 1. Migração SQL — recalcular todos os produtos resgatáveis
+Executar uma migração que atualiza `redeem_points_cost = CEIL(price * 40)` para todos os `affiliate_deals` onde `is_redeemable = true` e `price > 0`.
 
-O `DriverRedeemCheckout` usa `useCustomer()` apenas para pegar `customer.id`, `customer.name`, `customer.phone`, `customer.cpf` e `customer.points_balance`. Porém, o `DriverPanelPage` não tem o fluxo de `BrandProvider`/`CustomerProvider` — ele busca brand/branch por conta própria.
+```sql
+UPDATE affiliate_deals
+SET redeem_points_cost = CEIL(price * 40)
+WHERE is_redeemable = true
+  AND price IS NOT NULL
+  AND price > 0;
+```
 
-A solução mais robusta é **envolver com os providers necessários** no `DriverPanelPage`:
+### 2. Adicionar botão "Recalcular Pontos" na página `/produtos-resgate`
+Para que o admin possa recalcular em massa no futuro (caso a taxa mude), adicionar um botão na toolbar que:
+- Busca a taxa `points_per_real` das configurações da marca
+- Atualiza todos os produtos resgatáveis com `CEIL(price * taxa)`
+- Exibe confirmação antes de executar
+- Mostra toast de sucesso com quantidade atualizada
 
-### `src/pages/DriverPanelPage.tsx`
-1. Importar `CustomerProvider` de `@/contexts/CustomerContext`
-2. Envolver o `DriverMarketplace` com `<CustomerProvider>` depois que brand e branch estiverem carregados
-3. Garantir que `BrandContext` também esteja disponível — verificar se `BrandProvider` já envolve a rota ou se precisa ser adicionado
-
-### Verificação adicional
-- Confirmar que `AuthContext` e `BrandContext` já estão disponíveis na árvore de componentes acima de `DriverPanelPage`
-- Se `BrandProvider` não estiver presente, será necessário adicioná-lo também, pois `CustomerProvider` depende de `useBrand()`
-
-### Detalhes técnicos
-- `CustomerProvider` depende de: `useAuth()` (user, roles) e `useBrand()` (brand, selectedBranch)
-- `DriverPanelPage` busca brand/branch manualmente via query params, mas pode não estar dentro de `BrandProvider`
-- Se necessário, criar um wrapper local que configure `BrandProvider` com os dados já carregados, ou passar customer data como props ao `DriverRedeemCheckout` em vez de usar o context
-
-### Caminho mais simples
-Verificar a árvore em `App.tsx`: se a rota `/driver` já está dentro de `AuthProvider` e `BrandProvider`, basta adicionar `<CustomerProvider>` em `DriverPanelPage`. Caso contrário, o `DriverRedeemCheckout` precisa receber os dados de customer via props.
+### Alterações de arquivo
+- **Migração SQL**: `UPDATE` em massa dos valores existentes
+- **`src/pages/ProdutosResgatePage.tsx`**: Adicionar botão "Recalcular Pontos" na barra de ações
 
