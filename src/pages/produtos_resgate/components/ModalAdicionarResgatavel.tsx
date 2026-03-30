@@ -79,7 +79,18 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     setSelecionados(new Set());
     setCustoPontos("");
     setBusca("");
+    setTentouSalvar(false);
     onFechar();
+  };
+
+  const handleSalvar = () => {
+    if (!selecionados.size) return;
+    if (!custoPontos || isNaN(parseInt(custoPontos, 10)) || parseInt(custoPontos, 10) <= 0) {
+      setTentouSalvar(true);
+      toast.error("Informe o custo em pontos para continuar");
+      return;
+    }
+    marcarResgatavel.mutate();
   };
 
   const toggleItem = (id: string) => {
