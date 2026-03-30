@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ScrollText } from "lucide-react";
 import { format } from "date-fns";
+import { formatPoints } from "@/lib/formatPoints";
 
 export default function PointsLedgerPage() {
   const { currentBrandId, isRootAdmin } = useBrandGuard();
