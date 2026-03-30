@@ -5,6 +5,7 @@ import { Package, Clock, Check, Truck, X as XIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatPoints } from "@/lib/formatPoints";
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
   PENDING: { label: "Pendente", icon: Clock, color: "hsl(var(--muted-foreground))" },
