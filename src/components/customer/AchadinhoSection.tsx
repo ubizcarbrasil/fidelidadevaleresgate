@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ChevronRight, ExternalLink, LayoutGrid, icons } from "lucide-react";
+import { ChevronRight, ExternalLink, Gift, LayoutGrid, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -33,6 +33,8 @@ interface AffiliateDeal {
   category_id: string | null;
   created_at?: string;
   origin?: string | null;
+  is_redeemable?: boolean;
+  redeem_points_cost?: number | null;
 }
 
 interface DealCategory {
@@ -59,9 +61,10 @@ interface DealCardProps {
   onClick: (deal: AffiliateDeal) => void;
   formatPrice: (val: number | null | undefined) => string | null;
   isCarousel?: boolean;
+  showPointsPrice?: boolean;
 }
 
-function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice, isCarousel }: DealCardProps) {
+function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice, isCarousel, showPointsPrice }: DealCardProps) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount
     ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
@@ -69,6 +72,9 @@ function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice,
   const priceStr = formatPrice(deal.price);
   const originalPriceStr = formatPrice(deal.original_price);
   const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
+  const pointsStr = showPointsPrice && deal.redeem_points_cost
+    ? `${Number(deal.redeem_points_cost).toLocaleString("pt-BR")} pts`
+    : null;
 
   return (
     <div
@@ -105,12 +111,17 @@ function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice,
           <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
         )}
         <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
-        {(priceStr || originalPriceStr) && (
+        {pointsStr ? (
+          <div className="flex items-baseline gap-1">
+            <Gift className="h-3 w-3" style={{ color: highlight }} />
+            <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{pointsStr}</span>
+          </div>
+        ) : (priceStr || originalPriceStr) ? (
           <div className="flex items-baseline gap-1.5">
             {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
             {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -138,7 +149,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     queryFn: async () => {
       let dealsQuery = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin, is_redeemable, redeem_points_cost")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
@@ -172,6 +183,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const MIN_DEALS = 3;
   const MIN_PER_ROW = 3;
+  const REDEEMABLE_ID = "__redeemable__";
   const NEW_OFFERS_ID = "__new_offers__";
   const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
 
@@ -217,13 +229,25 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       viable.unshift(virtualCat);
     }
 
+    // Virtual "Resgatar com Pontos" category — redeemable deals
+    const redeemableCount = deals.filter(d => d.is_redeemable).length;
+    if (redeemableCount >= MIN_DEALS) {
+      const redeemableCat: DealCategory = {
+        id: REDEEMABLE_ID,
+        name: "Resgatar com Pontos",
+        icon_name: "Gift",
+        color: "#eab308",
+      };
+      viable.unshift(redeemableCat);
+    }
+
     return { viableCategories: viable, overflowDealIds: overflow };
   }, [rawCategories, deals, categoryLayout]);
 
 
   const [bannerIndex, setBannerIndex] = useState(0);
 
-  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID;
+  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID && selectedCat !== REDEEMABLE_ID;
 
   const { data: catBanners } = useQuery({
     queryKey: ["affiliate-cat-banners-inline", brand?.id, selectedCat],
@@ -387,8 +411,11 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       <div className="space-y-5 animate-fade-in">
         {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
           const isVirtualNew = cat.id === NEW_OFFERS_ID;
+          const isVirtualRedeemable = cat.id === REDEEMABLE_ID;
           const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
-          const catDeals = isVirtualNew
+          const catDeals = isVirtualRedeemable
+            ? deals.filter(d => d.is_redeemable)
+            : isVirtualNew
             ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
             : deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
@@ -464,7 +491,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                       style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
                     >
                       {rowDeals.map((deal) => (
-                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel showPointsPrice={isVirtualRedeemable} />
                       ))}
                       <div className="min-w-[16px] flex-shrink-0" />
                     </div>
