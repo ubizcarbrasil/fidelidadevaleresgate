@@ -134,15 +134,24 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
         </div>
 
         {/* Custo em pontos */}
-        <div className="flex items-center gap-2">
-          <Coins className="h-4 w-4 text-amber-500 shrink-0" />
-          <Input
-            type="number"
-            min={1}
-            placeholder="Custo em pontos (obrigatório)"
-            value={custoPontos}
-            onChange={(e) => setCustoPontos(e.target.value)}
-          />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-amber-500 shrink-0" />
+            <Input
+              type="number"
+              min={1}
+              placeholder="Custo em pontos (obrigatório)"
+              value={custoPontos}
+              onChange={(e) => {
+                setCustoPontos(e.target.value);
+                if (e.target.value) setTentouSalvar(false);
+              }}
+              className={tentouSalvar && !custoPontos ? "border-destructive" : ""}
+            />
+          </div>
+          {tentouSalvar && !custoPontos && (
+            <p className="text-xs text-destructive ml-8">Informe o custo em pontos</p>
+          )}
         </div>
 
         {/* Lista */}
