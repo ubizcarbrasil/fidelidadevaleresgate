@@ -1,50 +1,25 @@
 
-Corrigir a tela em duas frentes, porque o sintoma atual mudou: agora o problema principal é travamento no carregamento, não mais só a imagem.
 
-## Diagnóstico
-- A prévia mostra a rota `/auth` parada em “Carregando aplicação…”/loader.
-- Os logs indicam dois avisos importantes de `ref`:
-  - `Auth` está recebendo `ref`
-  - `PlatformLogo` está recebendo `ref`
-- Isso sugere incompatibilidade com algum ponto da árvore que espera componentes compatíveis com `forwardRef`, principalmente em combinação com `lazy`, `Suspense` e a montagem inicial.
-- O ajuste anterior de contenção da imagem não resolve esse travamento.
+# Adicionar seção "Resgatar com Pontos" nos Achadinhos (antes de Eletrônicos)
 
-## Plano de correção
+## O que muda
 
-### 1. Tornar `PlatformLogo` compatível com `ref`
-**Arquivo:** `src/components/PlatformLogo.tsx`
+Criar uma seção de produtos resgatáveis no `AchadinhoSection` do cliente, exibida como a primeira categoria — antes de "Eletrônicos" e qualquer outra categoria existente.
 
-- Refatorar o componente para usar `React.forwardRef`
-- Encaminhar o `ref` para o elemento renderizado:
-  - `<img>` quando houver imagem válida
-  - `<div>` no fallback
-- Manter a mesma API atual (`src`, `alt`, `className`, `fallbackLabel`, `loading`)
+## Alterações técnicas
 
-Objetivo:
-- Eliminar o warning “Function components cannot be given refs” relacionado ao `PlatformLogo`
+### 1. `src/components/customer/AchadinhoSection.tsx`
 
-### 2. Evitar `lazy` na rota pública de autenticação
-**Arquivo:** `src/App.tsx`
+- **Query**: Adicionar `is_redeemable, redeem_points_cost` ao select dos deals
+- **Interface**: Adicionar `is_redeemable?: boolean` e `redeem_points_cost?: number | null` ao tipo `AffiliateDeal`
+- **Filtro**: Criar `redeemableDeals` = deals filtrados por `is_redeemable === true`
+- **Categoria virtual**: Injetar uma categoria virtual `__redeemable__` (ícone Gift, nome "Resgatar com Pontos") como **primeiro item** de `viableCategories`, antes de "Novas Ofertas" e "Eletrônicos"
+- **Renderização**: No loop de categorias, quando `cat.id === "__redeemable__"`, mostrar os deals resgatáveis em carrossel horizontal com o custo em pontos (ao invés do preço em R$)
+- **Card de resgate**: Exibir `redeem_points_cost` pts no lugar do preço, com ícone de moeda/pontos
 
-- Remover `Auth` do carregamento com `lazyWithRetry`
-- Importar `Auth` diretamente
-- Manter `lazy` apenas nas páginas pesadas/privadas, onde faz mais sentido
+### 2. Comportamento
 
-Objetivo:
-- Evitar que a tela de login dependa do fluxo de `Suspense` logo no bootstrap
-- Reduzir o risco de a rota pública ficar presa no loader inicial
+- A seção só aparece se houver ≥ 3 deals resgatáveis (mesma regra de `MIN_DEALS`)
+- Ao clicar num produto resgatável, abre o mesmo `AchadinhoDealDetail` (que já existe)
+- A pill da categoria aparece no carrossel de categorias na posição 1 (após "Todos")
 
-### 3. Revisar a rota `/auth`
-**Arquivo:** `src/App.tsx`
-
-- Garantir que `<Route path="/auth" element={<Auth />} />` continue simples, sem wrappers extras
-- Não alterar comportamento de navegação nem autenticação
-
-## Resultado esperado
-- A tela `/auth` deixa de travar no carregamento
-- Os warnings de `ref` ligados a `Auth`/`PlatformLogo` desaparecem
-- O formulário volta a renderizar normalmente no mobile
-- A logo permanece contida dentro do card
-
-## Observação técnica
-Se após isso ainda houver instabilidade, o próximo passo seria revisar o bootstrap (`main.tsx` + `MountSignal`) para garantir que a overlay de carregamento seja sempre descartada mesmo quando houver falha parcial de render. Mas eu começaria por essas duas correções, porque são as evidências mais fortes do problema atual.
