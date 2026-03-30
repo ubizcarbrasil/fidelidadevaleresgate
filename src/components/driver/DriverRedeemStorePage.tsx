@@ -9,6 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import type { AffiliateDeal, DealCategory } from "./DriverMarketplace";
 import { LucideIcon, formatPrice } from "./DriverMarketplace";
 import DriverRedeemCheckout from "./DriverRedeemCheckout";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   brandId: string;
