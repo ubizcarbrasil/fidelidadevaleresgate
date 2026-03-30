@@ -61,6 +61,7 @@ interface DealCardProps {
   onClick: (deal: AffiliateDeal) => void;
   formatPrice: (val: number | null | undefined) => string | null;
   isCarousel?: boolean;
+  showPointsPrice?: boolean;
 }
 
 function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice, isCarousel }: DealCardProps) {
