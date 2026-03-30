@@ -16,6 +16,7 @@ import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus }
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
+import { formatPoints } from "@/lib/formatPoints";
 
 const PAGE_SIZE = 20;
 
@@ -264,7 +265,7 @@ export default function ProdutosResgatePage() {
                   <Coins className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{kpis?.minCost ?? 0}</p>
+                  <p className="text-2xl font-bold">{formatPoints(kpis?.minCost ?? 0)}</p>
                   <p className="text-xs text-muted-foreground">Mín. Pontos</p>
                 </div>
               </CardContent>
@@ -275,7 +276,7 @@ export default function ProdutosResgatePage() {
                   <Coins className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{kpis?.maxCost ?? 0}</p>
+                  <p className="text-2xl font-bold">{formatPoints(kpis?.maxCost ?? 0)}</p>
                   <p className="text-xs text-muted-foreground">Máx. Pontos</p>
                 </div>
               </CardContent>
@@ -374,7 +375,7 @@ export default function ProdutosResgatePage() {
                   )}
                   {items.map((deal) => {
                     const isEditing = editingCosts[deal.id] !== undefined;
-                    const costDisplay = deal.redeem_points_cost ?? "—";
+                    const costDisplay = deal.redeem_points_cost != null ? formatPoints(deal.redeem_points_cost) : "—";
 
                     return (
                       <TableRow key={deal.id}>

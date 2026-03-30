@@ -10,6 +10,7 @@ import EmptyState from "@/components/customer/EmptyState";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { hslToCss, withAlpha } from "@/lib/utils";
+import { formatPoints } from "@/lib/formatPoints";
 
 type LedgerEntry = Tables<"points_ledger">;
 
@@ -146,7 +147,7 @@ export default function CustomerWalletPage() {
                   </p>
                 </div>
                 <span className="text-sm font-bold whitespace-nowrap" style={{ color: iconColor }}>
-                  {isCredit ? "+" : "-"}{entry.points_amount} pts
+                  {isCredit ? "+" : "-"}{formatPoints(entry.points_amount)} pts
                 </span>
               </div>
             );

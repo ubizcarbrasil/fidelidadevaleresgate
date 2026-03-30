@@ -5,6 +5,7 @@ import { Package, Clock, Check, Truck, X as XIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatPoints } from "@/lib/formatPoints";
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
   PENDING: { label: "Pendente", icon: Clock, color: "hsl(var(--muted-foreground))" },
@@ -83,7 +84,7 @@ export default function DriverRedeemOrderHistory() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <span className="text-sm font-bold">{order.points_spent} pts</span>
+                <span className="text-sm font-bold">{formatPoints(order.points_spent)} pts</span>
                 <span className="text-[10px] text-muted-foreground block">
                   {format(new Date(order.created_at), "dd/MM", { locale: ptBR })}
                 </span>

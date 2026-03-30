@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText } from "lucide-react";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   driverId: string;
@@ -118,7 +119,7 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
                     variant={isCredit ? "default" : "destructive"}
                     className="text-xs font-mono shrink-0"
                   >
-                    {isCredit ? "+" : "-"}{e.points_amount}
+                    {isCredit ? "+" : "-"}{formatPoints(e.points_amount)}
                   </Badge>
                 </div>
               );

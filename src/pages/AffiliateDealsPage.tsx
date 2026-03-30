@@ -21,6 +21,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import ImageUploadField from "@/components/ImageUploadField";
+import { formatPoints } from "@/lib/formatPoints";
 
 const PAGE_SIZE = 20;
 
@@ -556,7 +557,7 @@ export default function AffiliateDealsPage() {
                           <div className="flex flex-col">
                             <span className="font-medium">{d.title}</span>
                             {d.is_redeemable && (
-                              <span className="text-[10px] text-primary">🎁 Resgatável ({d.redeem_points_cost} pts)</span>
+                              <span className="text-[10px] text-primary">🎁 Resgatável ({formatPoints(d.redeem_points_cost)} pts)</span>
                             )}
                           </div>
                         </div>

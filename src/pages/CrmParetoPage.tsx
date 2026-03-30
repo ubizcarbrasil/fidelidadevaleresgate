@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, TrendingUp, Crown, BarChart3, Users } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { formatPoints } from "@/lib/formatPoints";
 
 export default function CrmParetoPage() {
   const { paretoCustomers, paretoCount, paretoPercentage, paretoEarningsTotal, totalEarningsAll, allCustomers, isLoading } = useCrmAnalytics();
@@ -111,7 +112,7 @@ export default function CrmParetoPage() {
                   </TableCell>
                   <TableCell className="font-bold">{c.total_earnings}</TableCell>
                   <TableCell>{c.total_redemptions}</TableCell>
-                  <TableCell>{c.points_balance}</TableCell>
+                  <TableCell>{formatPoints(c.points_balance)}</TableCell>
                   <TableCell>
                     <Badge variant={c.status === "lost" ? "destructive" : "secondary"} className="text-[10px]">
                       {c.status === "active" ? "Ativo" : c.status === "new" ? "Novo" : c.status === "at_risk" ? "Em risco" : "Perdido"}

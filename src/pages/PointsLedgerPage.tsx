@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ScrollText } from "lucide-react";
 import { format } from "date-fns";
+import { formatPoints } from "@/lib/formatPoints";
 
 export default function PointsLedgerPage() {
   const { currentBrandId, isRootAdmin } = useBrandGuard();
@@ -142,7 +143,7 @@ export default function PointsLedgerPage() {
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     <span className={e.entry_type === "CREDIT" ? "text-green-600" : "text-destructive"}>
-                      {e.entry_type === "CREDIT" ? "+" : "-"}{e.points_amount}
+                      {e.entry_type === "CREDIT" ? "+" : "-"}{formatPoints(e.points_amount)}
                     </span>
                   </TableCell>
                   <TableCell className="font-mono text-sm">R$ {Number(e.money_amount).toFixed(2)}</TableCell>

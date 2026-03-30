@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
 import { toast } from "sonner";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface RedeemDeal {
   id: string;
@@ -176,7 +177,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
             <div className="flex items-center gap-2 mt-2">
               <Package className="h-4 w-4 text-muted-foreground" />
               <span className="text-lg font-bold" style={{ color: "hsl(var(--primary))" }}>
-                {deal.redeem_points_cost} pts
+                {formatPoints(deal.redeem_points_cost)} pts
               </span>
             </div>
           </div>
@@ -188,7 +189,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
           border: `1px solid ${canAfford ? "hsl(142 71% 45% / 0.2)" : "hsl(0 72% 51% / 0.2)"}`,
         }}>
           <p className="text-sm">
-            Seu saldo: <strong>{pointsBalance} pts</strong>
+            Seu saldo: <strong>{formatPoints(pointsBalance)} pts</strong>
           </p>
           {!canAfford && (
             <p className="text-xs mt-1" style={{ color: "hsl(0 72% 51%)" }}>
@@ -276,7 +277,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <>Confirmar Resgate — {deal.redeem_points_cost} pts</>
+              <>Confirmar Resgate — {formatPoints(deal.redeem_points_cost)} pts</>
             )}
           </Button>
         </div>

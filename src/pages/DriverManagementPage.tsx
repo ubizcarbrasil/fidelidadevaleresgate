@@ -13,6 +13,7 @@ import { Search, Truck, Eye, Gift, Download, Loader2, Users } from "lucide-react
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import ImportarCsvMotoristas from "@/components/driver-management/ImportarCsvMotoristas";
+import { formatPoints } from "@/lib/formatPoints";
 
 export type DriverRow = {
   id: string;
@@ -240,10 +241,10 @@ export default function DriverManagementPage() {
                 <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-12 sm:pl-0">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
-                      {driver.points_balance} pts
+                      {formatPoints(driver.points_balance)} pts
                     </Badge>
                     <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
-                      +{driver.total_ride_points}
+                      +{formatPoints(driver.total_ride_points)}
                     </Badge>
                     <Badge variant="outline" className="text-[10px] text-muted-foreground">
                       🚗 {driver.total_rides}

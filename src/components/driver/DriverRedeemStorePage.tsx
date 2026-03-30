@@ -9,6 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import type { AffiliateDeal, DealCategory } from "./DriverMarketplace";
 import { LucideIcon, formatPrice } from "./DriverMarketplace";
 import DriverRedeemCheckout from "./DriverRedeemCheckout";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   brandId: string;
@@ -98,7 +99,7 @@ export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, 
             >
               <Coins className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
               <span className="text-xs font-bold" style={{ color: "hsl(var(--primary))" }}>
-                {pointsBalance} pts
+                {formatPoints(pointsBalance)} pts
               </span>
             </div>
           </div>
@@ -243,7 +244,7 @@ export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, 
                           className="text-sm font-bold"
                           style={{ color: "hsl(var(--primary))" }}
                         >
-                          {pointsCost} pts
+                          {formatPoints(pointsCost)} pts
                         </span>
                         {deal.price != null && deal.price > 0 && (
                           <span className="text-[10px] text-muted-foreground line-through">

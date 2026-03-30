@@ -16,6 +16,7 @@ import { openLink } from "@/lib/openLink";
 import type { ProfileMenuItem } from "@/pages/ProfileLinksConfigPage";
 import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { formatPoints } from "@/lib/formatPoints";
 
 export default function CustomerProfilePage() {
   const { user, signOut } = useAuth();
@@ -343,7 +344,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
               </div>
               {Number(offer.value_rescue) > 0 && (
                 <span className="text-xs font-bold shrink-0" style={{ color: primary }}>
-                  {Number(offer.value_rescue).toLocaleString("pt-BR")} pts
+                  {formatPoints(Number(offer.value_rescue))} pts
                 </span>
               )}
               <button
