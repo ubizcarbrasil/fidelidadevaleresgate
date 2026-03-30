@@ -244,7 +244,7 @@ export default function DriverManagementPage() {
                       {formatPoints(driver.points_balance)} pts
                     </Badge>
                     <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
-                      +{driver.total_ride_points}
+                      +{formatPoints(driver.total_ride_points)}
                     </Badge>
                     <Badge variant="outline" className="text-[10px] text-muted-foreground">
                       🚗 {driver.total_rides}

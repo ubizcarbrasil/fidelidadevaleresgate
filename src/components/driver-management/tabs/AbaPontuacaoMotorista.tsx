@@ -25,7 +25,7 @@ export default function AbaPontuacaoMotorista({ driver, onAddPoints }: Props) {
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Pontos de corridas</span>
           <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-sm font-mono">
-            +{driver.total_ride_points} pts
+            +{formatPoints(driver.total_ride_points)} pts
           </Badge>
         </div>
         <div className="flex items-center justify-between">

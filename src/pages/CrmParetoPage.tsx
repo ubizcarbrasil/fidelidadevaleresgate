@@ -112,7 +112,7 @@ export default function CrmParetoPage() {
                   </TableCell>
                   <TableCell className="font-bold">{c.total_earnings}</TableCell>
                   <TableCell>{c.total_redemptions}</TableCell>
-                  <TableCell>{c.points_balance}</TableCell>
+                  <TableCell>{formatPoints(c.points_balance)}</TableCell>
                   <TableCell>
                     <Badge variant={c.status === "lost" ? "destructive" : "secondary"} className="text-[10px]">
                       {c.status === "active" ? "Ativo" : c.status === "new" ? "Novo" : c.status === "at_risk" ? "Em risco" : "Perdido"}

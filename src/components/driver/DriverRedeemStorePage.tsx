@@ -244,7 +244,7 @@ export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, 
                           className="text-sm font-bold"
                           style={{ color: "hsl(var(--primary))" }}
                         >
-                          {pointsCost} pts
+                          {formatPoints(pointsCost)} pts
                         </span>
                         {deal.price != null && deal.price > 0 && (
                           <span className="text-[10px] text-muted-foreground line-through">

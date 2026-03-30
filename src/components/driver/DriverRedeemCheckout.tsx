@@ -277,7 +277,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <>Confirmar Resgate — {deal.redeem_points_cost} pts</>
+              <>Confirmar Resgate — {formatPoints(deal.redeem_points_cost)} pts</>
             )}
           </Button>
         </div>

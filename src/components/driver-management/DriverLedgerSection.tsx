@@ -119,7 +119,7 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
                     variant={isCredit ? "default" : "destructive"}
                     className="text-xs font-mono shrink-0"
                   >
-                    {isCredit ? "+" : "-"}{e.points_amount}
+                    {isCredit ? "+" : "-"}{formatPoints(e.points_amount)}
                   </Badge>
                 </div>
               );

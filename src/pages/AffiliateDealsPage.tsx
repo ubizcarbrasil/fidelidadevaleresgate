@@ -557,7 +557,7 @@ export default function AffiliateDealsPage() {
                           <div className="flex flex-col">
                             <span className="font-medium">{d.title}</span>
                             {d.is_redeemable && (
-                              <span className="text-[10px] text-primary">🎁 Resgatável ({d.redeem_points_cost} pts)</span>
+                              <span className="text-[10px] text-primary">🎁 Resgatável ({formatPoints(d.redeem_points_cost)} pts)</span>
                             )}
                           </div>
                         </div>

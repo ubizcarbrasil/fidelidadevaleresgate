@@ -84,7 +84,7 @@ export default function DriverRedeemOrderHistory() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <span className="text-sm font-bold">{order.points_spent} pts</span>
+                <span className="text-sm font-bold">{formatPoints(order.points_spent)} pts</span>
                 <span className="text-[10px] text-muted-foreground block">
                   {format(new Date(order.created_at), "dd/MM", { locale: ptBR })}
                 </span>

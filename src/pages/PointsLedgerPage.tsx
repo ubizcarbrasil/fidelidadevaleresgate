@@ -143,7 +143,7 @@ export default function PointsLedgerPage() {
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     <span className={e.entry_type === "CREDIT" ? "text-green-600" : "text-destructive"}>
-                      {e.entry_type === "CREDIT" ? "+" : "-"}{e.points_amount}
+                      {e.entry_type === "CREDIT" ? "+" : "-"}{formatPoints(e.points_amount)}
                     </span>
                   </TableCell>
                   <TableCell className="font-mono text-sm">R$ {Number(e.money_amount).toFixed(2)}</TableCell>
