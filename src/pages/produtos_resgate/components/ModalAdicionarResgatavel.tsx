@@ -43,7 +43,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
         .single();
       if (error) throw error;
       const settings = data?.brand_settings_json as Record<string, any> | null;
-      return (settings?.redemption_rules?.points_per_real as number) || 1;
+      return (settings?.redemption_rules?.points_per_real as number) || 40;
     },
     enabled: aberto && !!currentBrandId,
   });
