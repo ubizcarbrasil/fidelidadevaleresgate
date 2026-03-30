@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight } from "lucide-react";
+import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +27,7 @@ export default function ProdutosResgatePage() {
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [batchCost, setBatchCost] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [modalAberto, setModalAberto] = useState(false);
 
   // ── Query ──
   const { data, isLoading } = useQuery({
@@ -189,10 +191,18 @@ export default function ProdutosResgatePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Produtos de Resgate</h2>
-        <p className="text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Produtos de Resgate</h2>
+          <p className="text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
+        </div>
+        <Button onClick={() => setModalAberto(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Adicionar Produtos
+        </Button>
       </div>
+
+      <ModalAdicionarResgatavel aberto={modalAberto} onFechar={() => setModalAberto(false)} />
 
       {/* Estado vazio global */}
       {isEmptyNoSearch && (
