@@ -12,9 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Search, Loader2, Coins, Plus } from "lucide-react";
+import { Search, Loader2, Coins, Plus, Zap } from "lucide-react";
 
 interface Props {
   aberto: boolean;
@@ -29,6 +30,23 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [custoPontos, setCustoPontos] = useState("");
   const [tentouSalvar, setTentouSalvar] = useState(false);
+  const [modoAutomatico, setModoAutomatico] = useState(true);
+
+  // Fetch points_per_real from brand settings
+  const { data: pointsPerReal } = useQuery({
+    queryKey: ["brand-points-per-real", currentBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", currentBrandId!)
+        .single();
+      if (error) throw error;
+      const settings = data?.brand_settings_json as Record<string, any> | null;
+      return (settings?.redemption_rules?.points_per_real as number) || 1;
+    },
+    enabled: aberto && !!currentBrandId,
+  });
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],
@@ -51,18 +69,46 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     enabled: aberto && !!currentBrandId,
   });
 
+  const calcularPontos = (price: number | null | undefined): number | null => {
+    if (price == null || price <= 0) return null;
+    const rate = pointsPerReal ?? 1;
+    return Math.ceil(price * rate);
+  };
+
   const marcarResgatavel = useMutation({
     mutationFn: async () => {
       const ids = Array.from(selecionados);
-      const num = parseInt(custoPontos, 10);
       if (!ids.length) throw new Error("Selecione ao menos um produto");
-      if (isNaN(num) || num <= 0) throw new Error("Informe um custo em pontos válido");
 
-      const { error } = await supabase
-        .from("affiliate_deals")
-        .update({ is_redeemable: true, redeem_points_cost: num } as any)
-        .in("id", ids);
-      if (error) throw error;
+      if (modoAutomatico) {
+        // Individual updates based on price
+        const produtosSelecionados = (produtos ?? []).filter((p) => ids.includes(p.id));
+        const semPreco = produtosSelecionados.filter((p) => !p.price || p.price <= 0);
+        if (semPreco.length > 0) {
+          throw new Error(`${semPreco.length} produto(s) sem preço. Desative o modo automático e informe o custo manualmente.`);
+        }
+
+        const updates = produtosSelecionados.map((p) => {
+          const cost = calcularPontos(p.price)!;
+          return supabase
+            .from("affiliate_deals")
+            .update({ is_redeemable: true, redeem_points_cost: cost } as any)
+            .eq("id", p.id);
+        });
+
+        const results = await Promise.all(updates);
+        const erros = results.filter((r) => r.error);
+        if (erros.length > 0) throw new Error(`Erro ao atualizar ${erros.length} produto(s)`);
+      } else {
+        const num = parseInt(custoPontos, 10);
+        if (isNaN(num) || num <= 0) throw new Error("Informe um custo em pontos válido");
+
+        const { error } = await supabase
+          .from("affiliate_deals")
+          .update({ is_redeemable: true, redeem_points_cost: num } as any)
+          .in("id", ids);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
@@ -85,10 +131,12 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
 
   const handleSalvar = () => {
     if (!selecionados.size) return;
-    if (!custoPontos || isNaN(parseInt(custoPontos, 10)) || parseInt(custoPontos, 10) <= 0) {
-      setTentouSalvar(true);
-      toast.error("Informe o custo em pontos para continuar");
-      return;
+    if (!modoAutomatico) {
+      if (!custoPontos || isNaN(parseInt(custoPontos, 10)) || parseInt(custoPontos, 10) <= 0) {
+        setTentouSalvar(true);
+        toast.error("Informe o custo em pontos para continuar");
+        return;
+      }
     }
     marcarResgatavel.mutate();
   };
@@ -133,26 +181,42 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
           />
         </div>
 
-        {/* Custo em pontos */}
-        <div className="flex flex-col gap-1">
+        {/* Toggle automático / manual */}
+        <div className="flex items-center justify-between gap-3 rounded-md border p-3">
           <div className="flex items-center gap-2">
-            <Coins className="h-4 w-4 text-amber-500 shrink-0" />
-            <Input
-              type="number"
-              min={1}
-              placeholder="Custo em pontos (obrigatório)"
-              value={custoPontos}
-              onChange={(e) => {
-                setCustoPontos(e.target.value);
-                if (e.target.value) setTentouSalvar(false);
-              }}
-              className={tentouSalvar && !custoPontos ? "border-destructive" : ""}
-            />
+            <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Calcular automaticamente</p>
+              <p className="text-xs text-muted-foreground">
+                Usa preço × {pointsPerReal ?? 1} pt/R$
+              </p>
+            </div>
           </div>
-          {tentouSalvar && !custoPontos && (
-            <p className="text-xs text-destructive ml-8">Informe o custo em pontos</p>
-          )}
+          <Switch checked={modoAutomatico} onCheckedChange={setModoAutomatico} />
         </div>
+
+        {/* Custo manual (só quando desligado) */}
+        {!modoAutomatico && (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Coins className="h-4 w-4 text-amber-500 shrink-0" />
+              <Input
+                type="number"
+                min={1}
+                placeholder="Custo em pontos (obrigatório)"
+                value={custoPontos}
+                onChange={(e) => {
+                  setCustoPontos(e.target.value);
+                  if (e.target.value) setTentouSalvar(false);
+                }}
+                className={tentouSalvar && !custoPontos ? "border-destructive" : ""}
+              />
+            </div>
+            {tentouSalvar && !custoPontos && (
+              <p className="text-xs text-destructive ml-8">Informe o custo em pontos</p>
+            )}
+          </div>
+        )}
 
         {/* Lista */}
         <ScrollArea className="flex-1 min-h-0 max-h-[40vh] border rounded-md">
@@ -177,31 +241,44 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
                 </span>
               </div>
 
-              {produtos.map((p) => (
-                <label
-                  key={p.id}
-                  className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/30 transition-colors"
-                >
-                  <Checkbox
-                    checked={selecionados.has(p.id)}
-                    onCheckedChange={() => toggleItem(p.id)}
-                  />
-                  {p.image_url && (
-                    <img
-                      src={p.image_url}
-                      alt=""
-                      className="h-9 w-9 rounded object-cover shrink-0"
+              {produtos.map((p) => {
+                const pontosCalc = calcularPontos(p.price);
+                return (
+                  <label
+                    key={p.id}
+                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/30 transition-colors"
+                  >
+                    <Checkbox
+                      checked={selecionados.has(p.id)}
+                      onCheckedChange={() => toggleItem(p.id)}
                     />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{p.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.store_name ? `${p.store_name} · ` : ""}
-                      {formatarPreco(p.price)}
-                    </p>
-                  </div>
-                </label>
-              ))}
+                    {p.image_url && (
+                      <img
+                        src={p.image_url}
+                        alt=""
+                        className="h-9 w-9 rounded object-cover shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{p.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {p.store_name ? `${p.store_name} · ` : ""}
+                        {formatarPreco(p.price)}
+                        {modoAutomatico && pontosCalc != null && (
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">
+                            {" · "}~{pontosCalc} pts
+                          </span>
+                        )}
+                        {modoAutomatico && pontosCalc == null && (
+                          <span className="text-destructive font-medium">
+                            {" · "}sem preço
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           )}
         </ScrollArea>
