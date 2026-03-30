@@ -28,6 +28,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [custoPontos, setCustoPontos] = useState("");
+  const [tentouSalvar, setTentouSalvar] = useState(false);
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],
@@ -78,7 +79,18 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     setSelecionados(new Set());
     setCustoPontos("");
     setBusca("");
+    setTentouSalvar(false);
     onFechar();
+  };
+
+  const handleSalvar = () => {
+    if (!selecionados.size) return;
+    if (!custoPontos || isNaN(parseInt(custoPontos, 10)) || parseInt(custoPontos, 10) <= 0) {
+      setTentouSalvar(true);
+      toast.error("Informe o custo em pontos para continuar");
+      return;
+    }
+    marcarResgatavel.mutate();
   };
 
   const toggleItem = (id: string) => {
@@ -122,15 +134,24 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
         </div>
 
         {/* Custo em pontos */}
-        <div className="flex items-center gap-2">
-          <Coins className="h-4 w-4 text-amber-500 shrink-0" />
-          <Input
-            type="number"
-            min={1}
-            placeholder="Custo em pontos (obrigatório)"
-            value={custoPontos}
-            onChange={(e) => setCustoPontos(e.target.value)}
-          />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-amber-500 shrink-0" />
+            <Input
+              type="number"
+              min={1}
+              placeholder="Custo em pontos (obrigatório)"
+              value={custoPontos}
+              onChange={(e) => {
+                setCustoPontos(e.target.value);
+                if (e.target.value) setTentouSalvar(false);
+              }}
+              className={tentouSalvar && !custoPontos ? "border-destructive" : ""}
+            />
+          </div>
+          {tentouSalvar && !custoPontos && (
+            <p className="text-xs text-destructive ml-8">Informe o custo em pontos</p>
+          )}
         </div>
 
         {/* Lista */}
@@ -190,8 +211,8 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
             Cancelar
           </Button>
           <Button
-            onClick={() => marcarResgatavel.mutate()}
-            disabled={!selecionados.size || !custoPontos || marcarResgatavel.isPending}
+            onClick={handleSalvar}
+            disabled={!selecionados.size || marcarResgatavel.isPending}
           >
             {marcarResgatavel.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
