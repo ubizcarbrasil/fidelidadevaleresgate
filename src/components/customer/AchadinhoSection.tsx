@@ -411,8 +411,11 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       <div className="space-y-5 animate-fade-in">
         {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
           const isVirtualNew = cat.id === NEW_OFFERS_ID;
+          const isVirtualRedeemable = cat.id === REDEEMABLE_ID;
           const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
-          const catDeals = isVirtualNew
+          const catDeals = isVirtualRedeemable
+            ? deals.filter(d => d.is_redeemable)
+            : isVirtualNew
             ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
             : deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
