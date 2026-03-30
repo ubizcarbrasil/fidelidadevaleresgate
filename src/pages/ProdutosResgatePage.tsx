@@ -27,6 +27,7 @@ export default function ProdutosResgatePage() {
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [batchCost, setBatchCost] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [modalAberto, setModalAberto] = useState(false);
 
   // ── Query ──
   const { data, isLoading } = useQuery({
