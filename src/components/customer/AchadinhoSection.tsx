@@ -491,7 +491,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                       style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
                     >
                       {rowDeals.map((deal) => (
-                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
+                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel showPointsPrice={isVirtualRedeemable} />
                       ))}
                       <div className="min-w-[16px] flex-shrink-0" />
                     </div>
