@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight } from "lucide-react";
+import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 
 const PAGE_SIZE = 20;
 
