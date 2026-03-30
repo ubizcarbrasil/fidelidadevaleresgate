@@ -111,12 +111,17 @@ function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice,
           <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
         )}
         <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
-        {(priceStr || originalPriceStr) && (
+        {pointsStr ? (
+          <div className="flex items-baseline gap-1">
+            <Gift className="h-3 w-3" style={{ color: highlight }} />
+            <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{pointsStr}</span>
+          </div>
+        ) : (priceStr || originalPriceStr) ? (
           <div className="flex items-baseline gap-1.5">
             {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
             {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
