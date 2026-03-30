@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, TrendingUp, Crown, BarChart3, Users } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { formatPoints } from "@/lib/formatPoints";
 
 export default function CrmParetoPage() {
   const { paretoCustomers, paretoCount, paretoPercentage, paretoEarningsTotal, totalEarningsAll, allCustomers, isLoading } = useCrmAnalytics();
