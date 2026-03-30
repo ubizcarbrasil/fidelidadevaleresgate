@@ -1,25 +1,33 @@
 
 
-# Adicionar seção "Resgatar com Pontos" nos Achadinhos (antes de Eletrônicos)
+# Adicionar botão "Adicionar Produtos" na página Produtos de Resgate
 
-## O que muda
+## Problema
+A página `/produtos-resgate` só lista produtos já marcados como resgatáveis. Para adicionar novos, o admin precisa navegar até `/affiliate-deals`, o que não é intuitivo.
 
-Criar uma seção de produtos resgatáveis no `AchadinhoSection` do cliente, exibida como a primeira categoria — antes de "Eletrônicos" e qualquer outra categoria existente.
+## Solução
+Adicionar um botão "Adicionar Produtos" no header da página que abre um modal/drawer com a lista de produtos **não resgatáveis**, permitindo selecionar e marcar em lote diretamente.
 
-## Alterações técnicas
+## Alterações
 
-### 1. `src/components/customer/AchadinhoSection.tsx`
+### 1. Criar componente `ModalAdicionarResgatavel.tsx`
+**Local:** `src/pages/` (ou componente inline no mesmo arquivo)
 
-- **Query**: Adicionar `is_redeemable, redeem_points_cost` ao select dos deals
-- **Interface**: Adicionar `is_redeemable?: boolean` e `redeem_points_cost?: number | null` ao tipo `AffiliateDeal`
-- **Filtro**: Criar `redeemableDeals` = deals filtrados por `is_redeemable === true`
-- **Categoria virtual**: Injetar uma categoria virtual `__redeemable__` (ícone Gift, nome "Resgatar com Pontos") como **primeiro item** de `viableCategories`, antes de "Novas Ofertas" e "Eletrônicos"
-- **Renderização**: No loop de categorias, quando `cat.id === "__redeemable__"`, mostrar os deals resgatáveis em carrossel horizontal com o custo em pontos (ao invés do preço em R$)
-- **Card de resgate**: Exibir `redeem_points_cost` pts no lugar do preço, com ícone de moeda/pontos
+- Modal/Dialog com busca por título
+- Query: `affiliate_deals` onde `is_redeemable = false` (ou `is_redeemable IS NULL`) e `is_active = true`
+- Lista com checkbox, imagem, título, preço e campo de custo em pontos
+- Seleção em lote com botão "Marcar como Resgatável"
+- Ao confirmar: `UPDATE` os selecionados com `is_redeemable = true` e `redeem_points_cost` informado
+- Invalida queries `produtos-resgate` e `produtos-resgate-kpis`
 
-### 2. Comportamento
+### 2. Atualizar `ProdutosResgatePage.tsx`
+- Adicionar botão `+ Adicionar Produtos` ao lado do título
+- Estado `modalAberto` para controlar a abertura do modal
+- Importar e renderizar o modal
 
-- A seção só aparece se houver ≥ 3 deals resgatáveis (mesma regra de `MIN_DEALS`)
-- Ao clicar num produto resgatável, abre o mesmo `AchadinhoDealDetail` (que já existe)
-- A pill da categoria aparece no carrossel de categorias na posição 1 (após "Todos")
+### Comportamento
+- O modal lista apenas produtos ativos que **ainda não são** resgatáveis
+- Permite buscar por nome
+- Permite definir custo em pontos antes de ativar (campo obrigatório)
+- Após salvar, o modal fecha e a tabela principal atualiza automaticamente
 
