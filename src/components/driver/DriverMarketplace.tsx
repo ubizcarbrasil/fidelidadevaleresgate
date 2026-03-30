@@ -12,6 +12,7 @@ import DriverRedeemStorePage from "./DriverRedeemStorePage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
+import { formatPoints } from "@/lib/formatPoints";
 
 import DriverBannerCarousel from "./DriverBannerCarousel";
 import DriverCategoryCarousel from "./DriverCategoryCarousel";
