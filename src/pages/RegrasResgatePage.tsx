@@ -17,7 +17,7 @@ interface RedemptionRules {
 }
 
 const DEFAULTS: RedemptionRules = {
-  points_per_real: 1,
+  points_per_real: 40,
   min_points_to_redeem: 100,
   max_redemptions_per_month: 3,
   approval_deadline_hours: 48,
