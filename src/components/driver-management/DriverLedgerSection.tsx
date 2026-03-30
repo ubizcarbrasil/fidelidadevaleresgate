@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText } from "lucide-react";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   driverId: string;
