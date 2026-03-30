@@ -16,6 +16,7 @@ import { openLink } from "@/lib/openLink";
 import type { ProfileMenuItem } from "@/pages/ProfileLinksConfigPage";
 import { hslToCss, withAlpha, brandAlpha } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { formatPoints } from "@/lib/formatPoints";
 
 export default function CustomerProfilePage() {
   const { user, signOut } = useAuth();
