@@ -19,7 +19,7 @@ export default function AbaPontuacaoMotorista({ driver, onAddPoints }: Props) {
           <span className="text-sm font-medium">Saldo atual</span>
           <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-400/30 text-sm font-mono">
             <Coins className="h-3.5 w-3.5 mr-1" />
-            {driver.points_balance} pts
+            {formatPoints(driver.points_balance)} pts
           </Badge>
         </div>
         <div className="flex items-center justify-between">
