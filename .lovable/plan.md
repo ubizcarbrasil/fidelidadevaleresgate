@@ -1,33 +1,22 @@
 
 
-# Adicionar botão "Adicionar Produtos" na página Produtos de Resgate
+# Corrigir UX do modal "Adicionar Produtos ao Resgate"
 
 ## Problema
-A página `/produtos-resgate` só lista produtos já marcados como resgatáveis. Para adicionar novos, o admin precisa navegar até `/affiliate-deals`, o que não é intuitivo.
-
-## Solução
-Adicionar um botão "Adicionar Produtos" no header da página que abre um modal/drawer com a lista de produtos **não resgatáveis**, permitindo selecionar e marcar em lote diretamente.
+O botão "Marcar como Resgatável" fica desabilitado quando o campo de custo em pontos está vazio, mas o estado visual `disabled` não é claro no dark mode. O usuário não percebe que precisa preencher o campo.
 
 ## Alterações
 
-### 1. Criar componente `ModalAdicionarResgatavel.tsx`
-**Local:** `src/pages/` (ou componente inline no mesmo arquivo)
+### `src/pages/produtos_resgate/components/ModalAdicionarResgatavel.tsx`
 
-- Modal/Dialog com busca por título
-- Query: `affiliate_deals` onde `is_redeemable = false` (ou `is_redeemable IS NULL`) e `is_active = true`
-- Lista com checkbox, imagem, título, preço e campo de custo em pontos
-- Seleção em lote com botão "Marcar como Resgatável"
-- Ao confirmar: `UPDATE` os selecionados com `is_redeemable = true` e `redeem_points_cost` informado
-- Invalida queries `produtos-resgate` e `produtos-resgate-kpis`
+1. **Validação visual no campo de pontos**: Adicionar borda vermelha e mensagem de erro quando o usuário tenta clicar no botão sem preencher o custo em pontos
+2. **Melhorar estado disabled do botão**: Adicionar `opacity-50 cursor-not-allowed` explicitamente quando desabilitado para ser mais visível no dark mode
+3. **Toast de aviso**: Se o usuário clicar no botão sem preencher o custo, mostrar um toast de aviso em vez de simplesmente não fazer nada
+4. **Permitir custo individual por produto (opcional)**: Manter o campo global mas garantir que o fluxo seja intuitivo
 
-### 2. Atualizar `ProdutosResgatePage.tsx`
-- Adicionar botão `+ Adicionar Produtos` ao lado do título
-- Estado `modalAberto` para controlar a abertura do modal
-- Importar e renderizar o modal
-
-### Comportamento
-- O modal lista apenas produtos ativos que **ainda não são** resgatáveis
-- Permite buscar por nome
-- Permite definir custo em pontos antes de ativar (campo obrigatório)
-- Após salvar, o modal fecha e a tabela principal atualiza automaticamente
+### Detalhes técnicos
+- Adicionar estado `tentouSalvar` que ativa ao clicar no botão sem pontos preenchidos
+- Quando `tentouSalvar && !custoPontos`, mostrar `border-red-500` no input e texto "Informe o custo em pontos" abaixo
+- Trocar o botão de `disabled` para sempre habilitado quando há seleção, mas validar ao clicar e mostrar toast se faltar pontos
+- Isso garante que o botão é sempre clicável e o feedback é claro
 
