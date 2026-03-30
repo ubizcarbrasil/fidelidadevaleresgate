@@ -44,6 +44,12 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    label: "Manuais",
+    items: [
+      { key: "sidebar.manuais", defaultTitle: "Manuais da Plataforma", url: "/manuais", icon: BookOpen },
+    ],
+  },
+  {
     label: "Personalização & Vitrine",
     items: [
       { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin, moduleKey: "branches" },
