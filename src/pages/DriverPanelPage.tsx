@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import DriverMarketplace from "@/components/driver/DriverMarketplace";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
+import { CustomerProvider } from "@/contexts/CustomerContext";
 
 export default function DriverPanelPage() {
   const [searchParams] = useSearchParams();
