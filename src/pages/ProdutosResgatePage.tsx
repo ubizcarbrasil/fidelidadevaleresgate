@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
+import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
 
 const PAGE_SIZE = 20;
 
