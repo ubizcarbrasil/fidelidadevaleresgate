@@ -375,7 +375,7 @@ export default function ProdutosResgatePage() {
                   )}
                   {items.map((deal) => {
                     const isEditing = editingCosts[deal.id] !== undefined;
-                    const costDisplay = deal.redeem_points_cost ?? "—";
+                    const costDisplay = deal.redeem_points_cost != null ? formatPoints(deal.redeem_points_cost) : "—";
 
                     return (
                       <TableRow key={deal.id}>
