@@ -1,36 +1,49 @@
 
 
-# Recalcular custo em pontos dos produtos já ativados (taxa 40 pts/R$)
+# Formatar pontos com separador de milhar (ex: 720 → 720, 6.800 → 6.800)
 
 ## Problema
-Os produtos já marcados como resgatáveis foram salvos com a taxa antiga (1 pt/R$). Por isso:
-- R$ 17,99 → 18 pts (deveria ser **720 pts**)
-- R$ 62,69 → 63 pts (deveria ser **2.508 pts**)
-- R$ 169,99 → 170 pts (deveria ser **6.800 pts**)
-
-Os valores no banco estão incorretos e precisam ser recalculados.
+Valores de pontos são exibidos sem separador de milhar — ex: `6800 pts` em vez de `6.800 pts`.
 
 ## Solução
+Criar uma função utilitária `formatPoints` e aplicar em todos os locais que exibem pontos.
 
-### 1. Migração SQL — recalcular todos os produtos resgatáveis
-Executar uma migração que atualiza `redeem_points_cost = CEIL(price * 40)` para todos os `affiliate_deals` onde `is_redeemable = true` e `price > 0`.
-
-```sql
-UPDATE affiliate_deals
-SET redeem_points_cost = CEIL(price * 40)
-WHERE is_redeemable = true
-  AND price IS NOT NULL
-  AND price > 0;
+### 1. Criar `src/lib/formatPoints.ts`
+```ts
+export function formatPoints(value: number | null | undefined): string {
+  if (value == null) return "0";
+  return Number(value).toLocaleString("pt-BR");
+}
 ```
 
-### 2. Adicionar botão "Recalcular Pontos" na página `/produtos-resgate`
-Para que o admin possa recalcular em massa no futuro (caso a taxa mude), adicionar um botão na toolbar que:
-- Busca a taxa `points_per_real` das configurações da marca
-- Atualiza todos os produtos resgatáveis com `CEIL(price * taxa)`
-- Exibe confirmação antes de executar
-- Mostra toast de sucesso com quantidade atualizada
+### 2. Aplicar em todos os arquivos que exibem pontos
 
-### Alterações de arquivo
-- **Migração SQL**: `UPDATE` em massa dos valores existentes
-- **`src/pages/ProdutosResgatePage.tsx`**: Adicionar botão "Recalcular Pontos" na barra de ações
+| Arquivo | Locais |
+|---|---|
+| `src/components/driver/DriverRedeemStorePage.tsx` | saldo (`{pointsBalance} pts`), custo do card (`{pointsCost} pts`) |
+| `src/components/driver/DriverRedeemCheckout.tsx` | custo (`{deal.redeem_points_cost} pts`), saldo, botão confirmar |
+| `src/components/driver/DriverRedeemOrderHistory.tsx` | `{order.points_spent} pts` |
+| `src/components/driver/DriverMarketplace.tsx` | `{pointsCost} pts` nos cards de resgate |
+| `src/components/driver-management/tabs/AbaPontuacaoMotorista.tsx` | `{driver.points_balance} pts`, `+{driver.total_ride_points} pts` |
+| `src/components/driver-management/DriverLedgerSection.tsx` | `{e.points_amount}` no badge |
+| `src/pages/DriverManagementPage.tsx` | `{driver.points_balance} pts` na lista |
+| `src/pages/ProdutosResgatePage.tsx` | `costDisplay` na tabela |
+| `src/pages/AffiliateDealsPage.tsx` | `{d.redeem_points_cost} pts` |
+| `src/pages/PointsLedgerPage.tsx` | `{e.points_amount}` |
+| `src/pages/CrmParetoPage.tsx` | `{c.points_balance}` |
+| `src/pages/customer/CustomerWalletPage.tsx` | `{entry.points_amount} pts` |
+| `src/pages/customer/CustomerRedemptionsPage.tsx` | saldo de pontos |
+| `src/pages/customer/CustomerProfilePage.tsx` | `{offer.value_rescue} pts` |
+| `src/components/dashboard/DashboardKpiSection.tsx` | pontos motoristas/clientes (já usa `toLocaleString` — ok) |
+
+### Padrão de mudança
+```tsx
+// Antes
+{pointsCost} pts
+
+// Depois
+{formatPoints(pointsCost)} pts
+```
+
+~15 arquivos editados, todos com a mesma mudança simples: importar `formatPoints` e envolver o valor numérico.
 
