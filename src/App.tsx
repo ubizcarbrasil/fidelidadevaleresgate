@@ -253,6 +253,7 @@ function AppRoutes() {
           {/* Driver panel configuration */}
           <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
+          <Route path="manuais" element={<ManuaisPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
