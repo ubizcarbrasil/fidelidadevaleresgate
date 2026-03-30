@@ -197,10 +197,13 @@ export default function ProdutosResgatePage() {
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Produtos de Resgate</h2>
           <p className="text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
         </div>
-        <Button onClick={() => setModalAberto(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Adicionar Produtos
-        </Button>
+        <div className="flex items-center gap-2">
+          <BotaoRecalcularPontos />
+          <Button onClick={() => setModalAberto(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar Produtos
+          </Button>
+        </div>
       </div>
 
       <ModalAdicionarResgatavel aberto={modalAberto} onFechar={() => setModalAberto(false)} />
