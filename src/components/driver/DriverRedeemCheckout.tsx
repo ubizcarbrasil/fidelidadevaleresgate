@@ -189,7 +189,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
           border: `1px solid ${canAfford ? "hsl(142 71% 45% / 0.2)" : "hsl(0 72% 51% / 0.2)"}`,
         }}>
           <p className="text-sm">
-            Seu saldo: <strong>{pointsBalance} pts</strong>
+            Seu saldo: <strong>{formatPoints(pointsBalance)} pts</strong>
           </p>
           {!canAfford && (
             <p className="text-xs mt-1" style={{ color: "hsl(0 72% 51%)" }}>
