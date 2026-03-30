@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
+import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
 
 const PAGE_SIZE = 20;
 
@@ -196,10 +197,13 @@ export default function ProdutosResgatePage() {
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Produtos de Resgate</h2>
           <p className="text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
         </div>
-        <Button onClick={() => setModalAberto(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Adicionar Produtos
-        </Button>
+        <div className="flex items-center gap-2">
+          <BotaoRecalcularPontos />
+          <Button onClick={() => setModalAberto(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar Produtos
+          </Button>
+        </div>
       </div>
 
       <ModalAdicionarResgatavel aberto={modalAberto} onFechar={() => setModalAberto(false)} />
