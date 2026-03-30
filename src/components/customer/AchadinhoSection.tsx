@@ -64,7 +64,7 @@ interface DealCardProps {
   showPointsPrice?: boolean;
 }
 
-function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice, isCarousel }: DealCardProps) {
+function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice, isCarousel, showPointsPrice }: DealCardProps) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount
     ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
@@ -72,6 +72,9 @@ function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice,
   const priceStr = formatPrice(deal.price);
   const originalPriceStr = formatPrice(deal.original_price);
   const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
+  const pointsStr = showPointsPrice && deal.redeem_points_cost
+    ? `${Number(deal.redeem_points_cost).toLocaleString("pt-BR")} pts`
+    : null;
 
   return (
     <div
