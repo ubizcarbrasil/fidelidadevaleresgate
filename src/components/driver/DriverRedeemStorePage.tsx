@@ -99,7 +99,7 @@ export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, 
             >
               <Coins className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
               <span className="text-xs font-bold" style={{ color: "hsl(var(--primary))" }}>
-                {pointsBalance} pts
+                {formatPoints(pointsBalance)} pts
               </span>
             </div>
           </div>
