@@ -16,6 +16,7 @@ import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus }
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
+import { formatPoints } from "@/lib/formatPoints";
 
 const PAGE_SIZE = 20;
 
