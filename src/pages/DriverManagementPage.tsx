@@ -241,7 +241,7 @@ export default function DriverManagementPage() {
                 <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-12 sm:pl-0">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
-                      {driver.points_balance} pts
+                      {formatPoints(driver.points_balance)} pts
                     </Badge>
                     <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs font-mono">
                       +{driver.total_ride_points}
