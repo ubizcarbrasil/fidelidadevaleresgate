@@ -265,7 +265,7 @@ export default function ProdutosResgatePage() {
                   <Coins className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{kpis?.minCost ?? 0}</p>
+                  <p className="text-2xl font-bold">{formatPoints(kpis?.minCost ?? 0)}</p>
                   <p className="text-xs text-muted-foreground">Mín. Pontos</p>
                 </div>
               </CardContent>
