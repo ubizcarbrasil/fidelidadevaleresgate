@@ -177,7 +177,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
             <div className="flex items-center gap-2 mt-2">
               <Package className="h-4 w-4 text-muted-foreground" />
               <span className="text-lg font-bold" style={{ color: "hsl(var(--primary))" }}>
-                {deal.redeem_points_cost} pts
+                {formatPoints(deal.redeem_points_cost)} pts
               </span>
             </div>
           </div>
