@@ -28,6 +28,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [custoPontos, setCustoPontos] = useState("");
+  const [tentouSalvar, setTentouSalvar] = useState(false);
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],
