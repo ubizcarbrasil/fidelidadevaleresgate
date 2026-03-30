@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Coins, Gift, Car } from "lucide-react";
 import type { DriverRow } from "@/pages/DriverManagementPage";
 import DriverScoringToggle from "../DriverScoringToggle";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   driver: DriverRow;
