@@ -183,6 +183,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const MIN_DEALS = 3;
   const MIN_PER_ROW = 3;
+  const REDEEMABLE_ID = "__redeemable__";
   const NEW_OFFERS_ID = "__new_offers__";
   const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
 
