@@ -229,6 +229,18 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       viable.unshift(virtualCat);
     }
 
+    // Virtual "Resgatar com Pontos" category — redeemable deals
+    const redeemableCount = deals.filter(d => d.is_redeemable).length;
+    if (redeemableCount >= MIN_DEALS) {
+      const redeemableCat: DealCategory = {
+        id: REDEEMABLE_ID,
+        name: "Resgatar com Pontos",
+        icon_name: "Gift",
+        color: "#eab308",
+      };
+      viable.unshift(redeemableCat);
+    }
+
     return { viableCategories: viable, overflowDealIds: overflow };
   }, [rawCategories, deals, categoryLayout]);
 
