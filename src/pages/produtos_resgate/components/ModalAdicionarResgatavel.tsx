@@ -211,8 +211,8 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
             Cancelar
           </Button>
           <Button
-            onClick={() => marcarResgatavel.mutate()}
-            disabled={!selecionados.size || !custoPontos || marcarResgatavel.isPending}
+            onClick={handleSalvar}
+            disabled={!selecionados.size || marcarResgatavel.isPending}
           >
             {marcarResgatavel.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
