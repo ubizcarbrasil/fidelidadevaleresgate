@@ -247,7 +247,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
 
   const [bannerIndex, setBannerIndex] = useState(0);
 
-  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID;
+  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID && selectedCat !== REDEEMABLE_ID;
 
   const { data: catBanners } = useQuery({
     queryKey: ["affiliate-cat-banners-inline", brand?.id, selectedCat],
