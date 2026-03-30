@@ -21,6 +21,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import ImageUploadField from "@/components/ImageUploadField";
+import { formatPoints } from "@/lib/formatPoints";
 
 const PAGE_SIZE = 20;
 
