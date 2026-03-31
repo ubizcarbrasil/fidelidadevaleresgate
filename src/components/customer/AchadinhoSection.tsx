@@ -242,7 +242,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     }
 
     return { viableCategories: viable, overflowDealIds: overflow };
-  }, [rawCategories, deals, categoryLayout]);
+  }, [rawCategories, deals, categoryLayout, isDriver]);
 
 
   const [bannerIndex, setBannerIndex] = useState(0);
