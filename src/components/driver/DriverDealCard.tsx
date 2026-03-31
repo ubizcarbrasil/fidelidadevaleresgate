@@ -1,6 +1,7 @@
 import React from "react";
-import { ExternalLink, ShoppingBag } from "lucide-react";
+import { ExternalLink, Gift, ShoppingBag } from "lucide-react";
 import { formatPrice, type AffiliateDeal } from "./DriverMarketplace";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   deal: AffiliateDeal;
