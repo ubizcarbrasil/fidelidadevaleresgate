@@ -41,7 +41,7 @@ interface AffiliateDeal {
 
 export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const highlight = "hsl(var(--vb-highlight))";
@@ -207,7 +207,7 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
                             {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
                           </div>
                          )}
-                        {deal.is_redeemable && deal.redeem_points_cost && deal.redeem_points_cost > 0 && (
+                        {isDriver && deal.is_redeemable && deal.redeem_points_cost && deal.redeem_points_cost > 0 && (
                           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium mt-1 w-fit" style={{ backgroundColor: `${highlight}15`, color: highlight }}>
                             <Gift className="w-2.5 h-2.5" />
                             <span>{formatPoints(deal.redeem_points_cost)} pts</span>

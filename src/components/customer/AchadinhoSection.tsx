@@ -133,7 +133,7 @@ interface AchadinhoSectionProps {
 
 export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -229,9 +229,9 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       viable.unshift(virtualCat);
     }
 
-    // Virtual "Resgatar com Pontos" category — redeemable deals
+    // Virtual "Resgatar com Pontos" category — redeemable deals (only for drivers)
     const redeemableCount = deals.filter(d => d.is_redeemable).length;
-    if (redeemableCount >= MIN_DEALS) {
+    if (isDriver && redeemableCount >= MIN_DEALS) {
       const redeemableCat: DealCategory = {
         id: REDEEMABLE_ID,
         name: "Resgatar com Pontos",
@@ -242,7 +242,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     }
 
     return { viableCategories: viable, overflowDealIds: overflow };
-  }, [rawCategories, deals, categoryLayout]);
+  }, [rawCategories, deals, categoryLayout, isDriver]);
 
 
   const [bannerIndex, setBannerIndex] = useState(0);
