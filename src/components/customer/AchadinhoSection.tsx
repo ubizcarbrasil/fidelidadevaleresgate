@@ -229,9 +229,9 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       viable.unshift(virtualCat);
     }
 
-    // Virtual "Resgatar com Pontos" category — redeemable deals
+    // Virtual "Resgatar com Pontos" category — redeemable deals (only for drivers)
     const redeemableCount = deals.filter(d => d.is_redeemable).length;
-    if (redeemableCount >= MIN_DEALS) {
+    if (isDriver && redeemableCount >= MIN_DEALS) {
       const redeemableCat: DealCategory = {
         id: REDEEMABLE_ID,
         name: "Resgatar com Pontos",
