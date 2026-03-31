@@ -133,7 +133,7 @@ interface AchadinhoSectionProps {
 
 export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
