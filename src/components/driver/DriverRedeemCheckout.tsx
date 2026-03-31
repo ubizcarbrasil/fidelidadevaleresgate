@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,13 +28,17 @@ interface Props {
 export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { customer } = useCustomer();
   const { brand, selectedBranch } = useBrand();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const cleanName = (name?: string | null) =>
+    name?.replace(/\[MOTORISTA\]\s*/i, "").replace(/\s*\(D\)\s*$/i, "").trim() || "";
+
   const [form, setForm] = useState({
-    name: customer?.name?.replace(/\[MOTORISTA\]\s*/i, "") || "",
-    phone: customer?.phone || "",
+    name: cleanName(customer?.name) || user?.user_metadata?.full_name || "",
+    phone: customer?.phone || user?.user_metadata?.phone || user?.phone || "",
     cpf: customer?.cpf || "",
     cep: "",
     address: "",
@@ -193,7 +198,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
           </p>
           {!canAfford && (
             <p className="text-xs mt-1" style={{ color: "hsl(0 72% 51%)" }}>
-              Você precisa de mais {deal.redeem_points_cost - pointsBalance} pontos para este resgate.
+              Você precisa de mais {formatPoints(deal.redeem_points_cost - pointsBalance)} pontos para este resgate.
             </p>
           )}
         </div>
