@@ -41,7 +41,7 @@ interface AffiliateDeal {
 
 export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
-  const { customer } = useCustomer();
+  const { customer, isDriver } = useCustomer();
 
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const highlight = "hsl(var(--vb-highlight))";
