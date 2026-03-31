@@ -38,7 +38,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
 
   const [form, setForm] = useState({
     name: cleanName(customer?.name) || user?.user_metadata?.full_name || "",
-    phone: customer?.phone || "",
+    phone: customer?.phone || user?.user_metadata?.phone || user?.phone || "",
     cpf: customer?.cpf || "",
     cep: "",
     address: "",
