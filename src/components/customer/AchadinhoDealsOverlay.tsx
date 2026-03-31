@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ArrowLeft, ExternalLink, icons, Tag, Share2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Gift, icons, Tag, Share2 } from "lucide-react";
+import { formatPoints } from "@/lib/formatPoints";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,8 @@ interface AffiliateDeal {
   store_logo_url: string | null;
   badge_label: string | null;
   origin?: string | null;
+  is_redeemable?: boolean | null;
+  redeem_points_cost?: number | null;
 }
 
 export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
@@ -50,7 +53,7 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
     queryFn: async () => {
       let q = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, origin")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, origin, is_redeemable, redeem_points_cost")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .eq("category_id", category.id)
@@ -202,6 +205,12 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
                           <div className="flex items-baseline gap-1.5">
                             {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
                             {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
+                          </div>
+                         )}
+                        {deal.is_redeemable && deal.redeem_points_cost && deal.redeem_points_cost > 0 && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium mt-1 w-fit" style={{ backgroundColor: `${highlight}15`, color: highlight }}>
+                            <Gift className="w-2.5 h-2.5" />
+                            <span>{formatPoints(deal.redeem_points_cost)} pts</span>
                           </div>
                         )}
                       </div>
