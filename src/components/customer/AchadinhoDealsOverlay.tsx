@@ -34,6 +34,8 @@ interface AffiliateDeal {
   store_logo_url: string | null;
   badge_label: string | null;
   origin?: string | null;
+  is_redeemable?: boolean | null;
+  redeem_points_cost?: number | null;
 }
 
 export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
