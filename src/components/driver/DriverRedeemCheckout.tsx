@@ -198,7 +198,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
           </p>
           {!canAfford && (
             <p className="text-xs mt-1" style={{ color: "hsl(0 72% 51%)" }}>
-              Você precisa de mais {deal.redeem_points_cost - pointsBalance} pontos para este resgate.
+              Você precisa de mais {formatPoints(deal.redeem_points_cost - pointsBalance)} pontos para este resgate.
             </p>
           )}
         </div>
