@@ -1,37 +1,23 @@
 
 
-# Adicionar badge "Resgate com Pontos" nos cards de Achadinhos
+# Ocultar "Resgatar com Pontos" para clientes (exibir apenas para motoristas)
 
 ## Problema
-Quando um produto é marcado como resgatável (`is_redeemable = true`), ele aparece tanto na categoria normal quanto na seção "Resgatar com Pontos", mas no card da categoria normal não há nenhuma indicação visual de que o produto pode ser resgatado com pontos.
+A seção virtual "Resgatar com Pontos" e o badge de resgate nos cards aparecem para todos os usuários, mas essa funcionalidade é exclusiva para motoristas. Clientes comuns não podem resgatar produtos com pontos.
 
 ## Solução
-Adicionar um badge discreto no canto inferior da imagem (ou abaixo do preço) indicando o custo em pontos, exibido apenas quando `deal.is_redeemable && deal.redeem_points_cost > 0` e a categoria atual **não** for a virtual de resgate (para evitar redundância).
+Usar o flag `isDriver` do `CustomerContext` para condicionar a exibição da categoria virtual `__redeemable__` e do badge de pontos nos cards.
 
 ## Arquivos a editar
 
-### 1. `src/components/driver/DriverDealCard.tsx`
-- Importar `Gift` do lucide-react e `formatPoints`
-- Abaixo do bloco de preço, quando `deal.is_redeemable && deal.redeem_points_cost`, renderizar um badge compacto:
-  ```
-  🎁 {formatPoints(redeem_points_cost)} pts
-  ```
-- Estilo: fundo sutil com cor de destaque, texto pequeno, ícone Gift
+### 1. `src/components/customer/AchadinhoSection.tsx`
+- Extrair `isDriver` de `useCustomer()`
+- No `useMemo` que monta as categorias, só injetar a categoria virtual "Resgatar com Pontos" se `isDriver === true`
+- Só renderizar o badge de pontos nos cards se `isDriver`
 
-### 2. `src/components/driver/DriverDealCardGrid.tsx`
-- Mesma lógica do DriverDealCard (usado na view de grid/categoria)
+### 2. `src/components/customer/AchadinhoDealsOverlay.tsx`
+- Extrair `isDriver` de `useCustomer()`
+- Só renderizar o badge de pontos nos cards se `isDriver`
 
-### 3. `src/components/customer/AchadinhoDealsOverlay.tsx`
-- Adicionar `is_redeemable` e `redeem_points_cost` à interface local `AffiliateDeal` e à query select
-- Renderizar o mesmo badge nos cards da overlay de categoria
-
-### 4. `src/components/customer/AchadinhoSection.tsx`
-- A query já busca `is_redeemable` e `redeem_points_cost` — nenhuma mudança na query
-- Os cards passados para os componentes já contêm os dados necessários
-
-## Design do badge
-- Posição: abaixo do preço, dentro do `p-3`
-- Visual: pill compacta com fundo `highlight/10`, ícone `Gift` + texto `{pts} pts`
-- Tamanho: `text-[9px]`, mesmo padrão dos outros badges
-- Não exibir na seção virtual `__redeemable__` (já mostra pontos como preço principal)
+Impacto mínimo: 2 arquivos, ~4 linhas alteradas em cada.
 
