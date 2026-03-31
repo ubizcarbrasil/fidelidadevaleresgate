@@ -28,12 +28,16 @@ interface Props {
 export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { customer } = useCustomer();
   const { brand, selectedBranch } = useBrand();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const cleanName = (name?: string | null) =>
+    name?.replace(/\[MOTORISTA\]\s*/i, "").replace(/\s*\(D\)\s*$/i, "").trim() || "";
+
   const [form, setForm] = useState({
-    name: customer?.name?.replace(/\[MOTORISTA\]\s*/i, "") || "",
+    name: cleanName(customer?.name) || user?.user_metadata?.full_name || "",
     phone: customer?.phone || "",
     cpf: customer?.cpf || "",
     cep: "",
