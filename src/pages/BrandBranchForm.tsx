@@ -322,6 +322,61 @@ export default function BrandBranchForm() {
         </CardContent>
       </Card>
 
+      {/* Franqueado / Gestor da Cidade */}
+      {!isEdit && (
+        <Card className="rounded-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Gestor da Cidade (Franqueado)
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Crie um usuário administrador para gerenciar esta cidade.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Criar gestor da cidade</Label>
+              <Switch checked={criarFranqueado} onCheckedChange={setCriarFranqueado} />
+            </div>
+
+            {criarFranqueado && (
+              <>
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input
+                    placeholder="Ex: João Silva"
+                    value={franqueadoNome}
+                    onChange={(e) => setFranqueadoNome(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>E-mail de acesso</Label>
+                  <Input
+                    type="email"
+                    placeholder="franqueado@exemplo.com"
+                    value={franqueadoEmail}
+                    onChange={(e) => setFranqueadoEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Senha</Label>
+                  <Input
+                    type="password"
+                    placeholder="Senha de acesso"
+                    value={franqueadoPassword}
+                    onChange={(e) => setFranqueadoPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Senha padrão: 123456. O franqueado poderá alterar após o login.
+                  </p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={() => navigate("/brand-branches")}>
           Cancelar
