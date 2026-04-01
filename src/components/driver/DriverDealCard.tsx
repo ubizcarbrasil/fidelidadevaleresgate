@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, Gift, ShoppingBag } from "lucide-react";
+import { ExternalLink, Gift, ShoppingBag, Star } from "lucide-react";
 import { formatPrice, type AffiliateDeal } from "./DriverMarketplace";
 import { formatPoints } from "@/lib/formatPoints";
 
@@ -7,6 +7,7 @@ interface Props {
   deal: AffiliateDeal;
   highlight: string;
   fontHeading: string;
+  pointsPerReal?: number;
   onClickDeal?: (deal: AffiliateDeal) => void;
 }
 
