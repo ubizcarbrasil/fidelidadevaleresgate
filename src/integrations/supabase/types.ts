@@ -439,6 +439,119 @@ export type Database = {
           },
         ]
       }
+      branch_points_wallet: {
+        Row: {
+          balance: number
+          branch_id: string
+          brand_id: string
+          created_at: string | null
+          id: string
+          total_distributed: number
+          total_loaded: number
+          updated_at: string | null
+        }
+        Insert: {
+          balance?: number
+          branch_id: string
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          total_distributed?: number
+          total_loaded?: number
+          updated_at?: string | null
+        }
+        Update: {
+          balance?: number
+          branch_id?: string
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          total_distributed?: number
+          total_loaded?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_points_wallet_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: true
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_points_wallet_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_points_wallet_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_wallet_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          branch_id: string
+          brand_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          branch_id: string
+          brand_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          branch_id?: string
+          brand_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_wallet_transactions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_wallet_transactions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_wallet_transactions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           branch_settings_json: Json | null
@@ -6380,6 +6493,20 @@ export type Database = {
       }
     }
     Functions: {
+      debit_branch_wallet: {
+        Args: { p_amount: number; p_branch_id: string; p_description?: string }
+        Returns: Json
+      }
+      get_branch_dashboard_stats: {
+        Args: { p_branch_id: string }
+        Returns: {
+          total_drivers: number
+          total_points_distributed: number
+          total_redemptions: number
+          total_rides: number
+          wallet_balance: number
+        }[]
+      }
       get_customer_ids_for_store_owner: {
         Args: { _user_id: string }
         Returns: string[]
