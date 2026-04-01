@@ -32,6 +32,7 @@ type DriverRule = {
   volume_tiers: VolumeTier[];
   volume_cycle_days: number;
   is_active: boolean;
+  macaneta_points_per_ride: number;
 };
 
 const RULE_MODES = [
