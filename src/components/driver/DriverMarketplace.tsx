@@ -396,8 +396,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         style={{ backgroundColor: "hsl(var(--background))" }}
       >
         <div className="px-4 pt-3 pb-0">
-          {/* Top row: Logo/Name */}
-          <div className="flex items-center justify-between mb-2.5">
+          {/* Row 1: Logo/Name + action icons */}
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
               {logoUrl && (
                 <img src={logoUrl} alt={brand.name} className="h-8 w-8 object-contain rounded-lg" />
@@ -409,19 +409,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                 {marketplaceTitle}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Points badge */}
-              {driver && (
-                <button
-                  onClick={() => setShowProfile(true)}
-                  className="h-9 flex items-center gap-1.5 px-3 rounded-xl text-xs font-bold"
-                  style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
-                >
-                  <Coins className="h-3.5 w-3.5" />
-                  {formatPoints(driver.points_balance)} pts
-                </button>
-              )}
-              {/* Profile */}
+            <div className="flex items-center gap-1.5">
               {driver && (
                 <button
                   onClick={() => setShowProfile(true)}
@@ -458,6 +446,37 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </button>
             </div>
           </div>
+
+          {/* Row 2: Points highlight card */}
+          {driver && (
+            <button
+              onClick={() => setShowProfile(true)}
+              className="w-full flex items-center justify-between rounded-2xl px-4 py-3 mb-3 transition-transform active:scale-[0.98]"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))",
+                border: "1px solid hsl(var(--primary) / 0.2)",
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="h-9 w-9 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: "hsl(var(--primary) / 0.2)" }}
+                >
+                  <Coins className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span
+                    className="text-xl font-extrabold tracking-tight"
+                    style={{ color: "hsl(var(--primary))" }}
+                  >
+                    {formatPoints(driver.points_balance)}
+                  </span>
+                  <span className="text-sm font-medium text-muted-foreground">pontos</span>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
+          )}
 
           {/* Search Bar — customer style */}
           {searchTerm ? (
