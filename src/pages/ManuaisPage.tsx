@@ -10,8 +10,16 @@ const iconesPorNome: Record<string, any> = {
 };
 
 export default function ManuaisPage() {
+  const { consoleScope } = useBrandGuard();
   const [busca, setBusca] = useState("");
   const [manualAberto, setManualAberto] = useState<string | null>(null);
+
+  const todosGrupos = useMemo(() => {
+    if (consoleScope === "BRANCH") {
+      return [...gruposManuaisFranqueado, ...gruposManuais];
+    }
+    return gruposManuais;
+  }, [consoleScope]);
 
   const gruposFiltrados = useMemo(() => {
     if (!busca.trim()) return gruposManuais;
