@@ -16,6 +16,7 @@ import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import DashboardKpiSection from "@/components/dashboard/DashboardKpiSection";
 import DashboardChartsSection from "@/components/dashboard/DashboardChartsSection";
 import DashboardQuickLinksSection from "@/components/dashboard/DashboardQuickLinks";
+import RidesCounterCard from "@/components/dashboard/RidesCounterCard";
 
 const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard/TasksSection"));
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
@@ -291,6 +292,9 @@ export default function Dashboard() {
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
       />
+
+      {/* Corridas com seletor de período */}
+      {showBrand && <RidesCounterCard brandId={brandFilter} />}
 
       {/* Charts, Ranking, Alerts, Heatmap, Reports */}
       <DashboardChartsSection
