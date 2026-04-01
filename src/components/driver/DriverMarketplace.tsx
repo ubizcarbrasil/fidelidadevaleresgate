@@ -835,6 +835,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           onBack={() => setShowLedger(false)}
         />
       )}
+
+      {/* City offer detail overlay */}
+      {selectedCityOffer && (
+        <CityOfferDetailOverlay
+          oferta={selectedCityOffer}
+          fontHeading={fontHeading}
+          onBack={() => setSelectedCityOffer(null)}
+        />
+      )}
     </div>
   );
 }
