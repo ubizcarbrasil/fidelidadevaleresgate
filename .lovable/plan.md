@@ -1,45 +1,66 @@
 
 
-# Exibir "Ganhe X pts" nos cards de Achadinhos do Motorista
+# Fase 1 — Login por CPF e Perfil do Motorista
 
-## Objetivo
-Mostrar abaixo do preço de cada produto no card do motorista a quantidade de pontos que ele ganharia com aquela compra, baseado na regra ativa de pontuação da marca (ex: "Ganhe 100 pts" para um produto de R$ 100,00 com regra de 1 pt/R$).
+## O que muda
 
-## Como funciona
-- Buscar a regra ativa de pontuação (`points_rules`) da marca no `DriverMarketplace`
-- Calcular `pontos = Math.floor(preço × points_per_real)` para cada deal que tem preço
-- Passar `pointsPerReal` como prop para os cards
-- Renderizar um badge verde "Ganhe X pts" abaixo do preço (apenas quando o deal tem preço e a regra existe)
+O motorista acessa o marketplace de Achadinhos e vê uma tela de login por CPF. Ao digitar o CPF, o sistema busca o registro `customers` com aquele CPF + `brand_id` + tag `[MOTORISTA]`. Se encontrado, a sessão é criada localmente (sem Supabase Auth). O header passa a exibir saldo de pontos e um botão de perfil com overlay mostrando dados e extrato.
 
-## Arquivos a editar
+## Arquivos novos
 
-### 1. `src/components/driver/DriverMarketplace.tsx`
-- Adicionar query para buscar a regra ativa: `points_rules` filtrada por `brand_id` e `is_active = true`, pegando `points_per_real`
-- Passar `pointsPerReal` como prop para `DriverDealCard` e `DriverDealCardGrid`
+### 1. `src/contexts/DriverSessionContext.tsx`
+- Contexto que gerencia a sessão do motorista por CPF
+- Estado: `driverCustomer` (registro da tabela `customers`), `loading`, `logout()`
+- Persiste o CPF no `localStorage` (chave por `brandId`)
+- Ao montar, tenta restaurar sessão do localStorage; busca `customers` por `cpf + brand_id + name ilike '%[MOTORISTA]%'`
+- Função `loginByCpf(cpf: string)`: busca o customer, se encontrar armazena e retorna sucesso
+- Exporta hook `useDriverSession()`
 
-### 2. `src/components/driver/DriverDealCard.tsx`
-- Nova prop opcional `pointsPerReal?: number`
-- Calcular `earnedPoints = Math.floor((deal.price ?? 0) * pointsPerReal)` quando preço e regra existem
-- Renderizar badge "Ganhe {formatPoints(earnedPoints)} pts" com ícone de estrela/moeda, em verde, abaixo do preço (acima do badge de resgate existente)
+### 2. `src/components/driver/DriverCpfLogin.tsx`
+- Tela fullscreen de login: campo de CPF com máscara (###.###.###-##)
+- Logo da marca no topo, título "Acesse sua conta"
+- Botão "Entrar" que chama `loginByCpf`
+- Estados: loading, erro ("CPF não cadastrado")
+- Visual dark mode, consistente com o marketplace
 
-### 3. `src/components/driver/DriverDealCardGrid.tsx`
-- Mesma lógica do `DriverDealCard`: nova prop `pointsPerReal`, cálculo e badge idênticos
+### 3. `src/components/driver/DriverProfileOverlay.tsx`
+- Overlay/drawer lateral que abre ao clicar no avatar do header
+- Exibe: Nome (sem tag [MOTORISTA]), CPF, E-mail, Telefone, Cidade (branch name), Saldo de pontos
+- Seção "Extrato de Pontos": lista do `points_ledger` filtrado por `customer_id`, ordenado por data desc
+- Cada linha: descrição, data, +/- pontos (verde/vermelho)
+- Botão "Sair" que limpa a sessão
 
-## Visual do badge
+## Arquivos editados
+
+### 4. `src/pages/DriverPanelPage.tsx`
+- Envolve tudo com `DriverSessionProvider`
+- Se não há sessão ativa, renderiza `DriverCpfLogin` ao invés do marketplace
+- Remove dependência do `CustomerProvider` para o fluxo do motorista (ou mantém como fallback)
+
+### 5. `src/components/driver/DriverMarketplace.tsx`
+- No header, adicionar:
+  - Badge de saldo de pontos (ícone moeda + "X pts") à esquerda dos botões existentes
+  - Botão de avatar/perfil que abre `DriverProfileOverlay`
+- Consome `useDriverSession()` para pegar o customer e saldo
+
+## Fluxo
+
 ```text
-┌──────────────────┐
-│  [imagem]        │
-│                  │
-│  Loja X          │
-│  Título produto  │
-│  R$ 100,00       │
-│  ⭐ Ganhe 100 pts │  ← novo badge verde
-│  🎁 500 pts      │  ← badge resgate (existente)
-└──────────────────┘
+DriverPanelPage
+  └─ DriverSessionProvider (brandId)
+       ├─ Sem sessão → DriverCpfLogin
+       └─ Com sessão → DriverMarketplace
+                          ├─ Header: [logo] [título] ... [saldo pts] [perfil] [?] [wa] [share]
+                          └─ DriverProfileOverlay (drawer)
+                               ├─ Dados pessoais
+                               ├─ Extrato de pontos
+                               └─ Botão Sair
 ```
 
-Badge com fundo verde suave (`#22c55e15`), texto verde (`#22c55e`), ícone `Star`, mesmo estilo visual do badge de resgate já existente.
-
-## Impacto
-3 arquivos editados, ~10 linhas por card + 1 query adicional no marketplace.
+## Detalhes técnicos
+- Query do login: `customers.select('*, branches(name)').eq('brand_id', X).eq('cpf', cpfLimpo).ilike('name', '%[MOTORISTA]%').maybeSingle()`
+- localStorage key: `driver_session_cpf_${brandId}`
+- Extrato: `points_ledger.select('*').eq('customer_id', id).order('created_at', { ascending: false }).limit(50)`
+- Máscara de CPF: formatação visual no input, armazenamento somente dígitos
+- 6 arquivos total (3 novos + 3 editados)
 
