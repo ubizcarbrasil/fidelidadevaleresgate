@@ -12,7 +12,9 @@ interface LedgerEntry {
   entry_type: string;
   points_amount: number;
   reason: string | null;
+  reference_type: string | null;
   created_at: string;
+  branch_name: string | null;
 }
 
 function displayName(name: string) {
