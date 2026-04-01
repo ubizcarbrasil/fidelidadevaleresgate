@@ -1,72 +1,47 @@
 
 
-# Fases 3-6: Resgate na Cidade, CSV Criar Motoristas, Linhas Resgate, Vídeos
+# Fix: Login do motorista por CPF falha por restrição de acesso
 
-## Fase 3 — Seção "Resgate na Cidade" (Item 4)
+## Problema
+A tabela `customers` tem RLS ativado e todas as políticas de SELECT exigem `auth.uid()`. O fluxo de login do motorista faz a consulta **sem autenticação** (não há sessão Supabase Auth), então a query retorna vazio e mostra "CPF não cadastrado" mesmo para motoristas válidos.
 
-Nova seção no `DriverMarketplace.tsx` abaixo de "Resgatar com Pontos" que exibe ofertas de lojistas parceiros com `offer_purpose IN ('REDEEM', 'BOTH')`.
+## Solução
+Criar uma função de banco `SECURITY DEFINER` que busca o motorista por CPF + brand_id + tag `[MOTORISTA]`, retornando apenas os dados necessários. Isso bypassa RLS de forma segura e controlada.
 
-### Arquivos
-- **Novo**: `src/components/driver/SecaoResgateCidade.tsx` — Componente da seção com cards de ofertas de lojistas (logo da loja, título, valor do crédito em pontos)
-- **Editar**: `src/components/driver/DriverMarketplace.tsx` — Adicionar query de `offers` filtrada por `offer_purpose`, renderizar `SecaoResgateCidade` abaixo da seção resgate com pontos
+### 1. Migração — Função `lookup_driver_by_cpf`
 
-### Lógica
-- Query: `offers.select('*, stores(name, logo_url)').eq('brand_id', X).eq('is_active', true).eq('status', 'ACTIVE').in('offer_purpose', ['REDEEM', 'BOTH'])`
-- Cards exibem: logo da loja, título da oferta, valor do crédito, badge de pontos necessários
-- Ao clicar, abre detalhes da oferta (reutiliza fluxo existente de redemptions)
+```sql
+CREATE OR REPLACE FUNCTION public.lookup_driver_by_cpf(p_brand_id uuid, p_cpf text)
+RETURNS TABLE(
+  id uuid, name text, cpf text, email text, phone text,
+  points_balance numeric, money_balance numeric,
+  brand_id uuid, branch_id uuid, branch_name text
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT c.id, c.name, c.cpf, c.email, c.phone,
+         c.points_balance, c.money_balance,
+         c.brand_id, c.branch_id,
+         b.name AS branch_name
+  FROM customers c
+  LEFT JOIN branches b ON b.id = c.branch_id
+  WHERE c.brand_id = p_brand_id
+    AND c.cpf = p_cpf
+    AND c.name ILIKE '%[MOTORISTA]%'
+  LIMIT 1;
+$$;
+```
 
----
+### 2. Editar `src/contexts/DriverSessionContext.tsx`
 
-## Fase 4 — CSV Criar Novos Motoristas (Item 5)
-
-O `ImportarCsvMotoristas.tsx` já atualiza motoristas existentes. Expandir para **criar** novos quando não encontra match.
-
-### Arquivos
-- **Editar**: `src/components/driver-management/ImportarCsvMotoristas.tsx`
-
-### Mudanças
-- Quando `matched === null`, criar novo `customer` com: `name: "[MOTORISTA] nome"`, `cpf`, `phone`, `email`, `brand_id`, `points_balance: 0`
-- Adicionar status `"criado"` no `ResultadoImport`
-- Badge azul "X criados" no resumo de resultados
-- Precisa do `branch_id` — usar o primeiro branch da marca ou adicionar seleção
-
----
-
-## Fase 5 — Linhas Configuráveis na Seção "Resgatar com Pontos" (Item 6)
-
-A seção redeemable hoje renderiza 1 único carrossel horizontal. Permitir configurar múltiplas linhas.
-
-### Arquivos
-- **Editar**: `src/pages/DriverPanelConfigPage.tsx` — Adicionar controle de linhas para a seção "Resgatar com Pontos" (campo `driver_redeem_rows` no `brand_settings_json`)
-- **Editar**: `src/components/driver/DriverMarketplace.tsx` — Ler `settings.driver_redeem_rows` e renderizar múltiplas linhas com distribuição round-robin (mesmo padrão das categorias)
-
----
-
-## Fase 6 — Vídeos no "Como Funciona" (Item 7)
-
-Adicionar seção de vídeos com descrição no `DriverProgramInfo`.
+Substituir a função `fetchDriverByCpf` para usar `.rpc('lookup_driver_by_cpf', { p_brand_id, p_cpf })` em vez de `.from('customers').select(...)`. Isso contorna o RLS de forma segura.
 
 ### Arquivos
-- **Novo**: `src/components/driver/SecaoVideosInfo.tsx` — Componente que renderiza cards de vídeo (YouTube/Vimeo embed ou `<video>`) com título e descrição
-- **Editar**: `src/components/driver/DriverProgramInfo.tsx` — Renderizar `SecaoVideosInfo` após o passo-a-passo, consumindo `brand_settings_json.driver_info_videos`
-- **Editar**: `src/pages/DriverPanelConfigPage.tsx` — Adicionar seção para gerenciar vídeos (adicionar/remover/editar título, descrição, URL do vídeo)
-
-### Dados
-- Persistido em `brand_settings_json` como: `driver_info_videos: [{ id, title, description, video_url }]`
-- Suporte a YouTube (embed via iframe), Vimeo e URLs diretas de vídeo
-
----
-
-## Resumo de Arquivos
-
 | Arquivo | Ação |
 |---------|------|
-| `src/components/driver/SecaoResgateCidade.tsx` | Novo |
-| `src/components/driver/SecaoVideosInfo.tsx` | Novo |
-| `src/components/driver/DriverMarketplace.tsx` | Editar (seção Resgate na Cidade + linhas resgate) |
-| `src/components/driver/DriverProgramInfo.tsx` | Editar (vídeos) |
-| `src/components/driver-management/ImportarCsvMotoristas.tsx` | Editar (criar novos motoristas) |
-| `src/pages/DriverPanelConfigPage.tsx` | Editar (config linhas resgate + gerenciar vídeos) |
+| Migração SQL | Nova função `lookup_driver_by_cpf` |
+| `src/contexts/DriverSessionContext.tsx` | Editar `fetchDriverByCpf` para usar RPC |
 
-Total: 2 arquivos novos + 4 editados. Sem migrações de banco necessárias.
+### Build Errors
+Os erros de `maskCpf` reportados são artefatos de build antigo — os arquivos já usam `formatCpf`. Nenhuma correção adicional necessária para eles.
 
