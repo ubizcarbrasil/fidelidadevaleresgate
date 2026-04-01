@@ -23,6 +23,7 @@ import DriverCategoryCarousel from "./DriverCategoryCarousel";
 import DriverDealCard from "./DriverDealCard";
 import DriverDealCardGrid from "./DriverDealCardGrid";
 import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
+import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 
 export interface AffiliateDeal {
   id: string;
@@ -138,6 +139,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showRedeemStore, setShowRedeemStore] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
+  const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -600,10 +602,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         <SecaoResgateCidade
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
-          onClickOferta={(oferta) => {
-            // For now, just log - full redemption flow for city offers will be added
-            console.log("City offer clicked:", oferta.id);
-          }}
+          onClickOferta={(oferta) => setSelectedCityOffer(oferta)}
         />
       )}
 
@@ -834,6 +833,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         <DriverLedgerOverlay
           fontHeading={fontHeading}
           onBack={() => setShowLedger(false)}
+        />
+      )}
+
+      {/* City offer detail overlay */}
+      {selectedCityOffer && (
+        <CityOfferDetailOverlay
+          oferta={selectedCityOffer}
+          fontHeading={fontHeading}
+          onBack={() => setSelectedCityOffer(null)}
         />
       )}
     </div>

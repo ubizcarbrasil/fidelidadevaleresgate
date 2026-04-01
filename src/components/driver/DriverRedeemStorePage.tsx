@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useCustomer } from "@/contexts/CustomerContext";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { ArrowLeft, Gift, Coins, Search, X, ShoppingBag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,13 +19,13 @@ interface Props {
 }
 
 export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, onBack }: Props) {
-  const { customer } = useCustomer();
+  const { driver } = useDriverSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
   const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const pointsBalance = customer?.points_balance || 0;
+  const pointsBalance = driver?.points_balance || 0;
 
   const { data, isLoading } = useQuery({
     queryKey: ["redeem-store", brandId, branchId],

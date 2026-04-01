@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomer } from "@/contexts/CustomerContext";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { Package, Clock, Check, Truck, X as XIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -16,16 +16,16 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }>
 };
 
 export default function DriverRedeemOrderHistory() {
-  const { customer } = useCustomer();
+  const { driver } = useDriverSession();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["driver-redeem-orders", customer?.id],
-    enabled: !!customer,
+    queryKey: ["driver-redeem-orders", driver?.id],
+    enabled: !!driver,
     queryFn: async () => {
       const { data } = await supabase
         .from("product_redemption_orders")
         .select("id, deal_snapshot_json, points_spent, status, tracking_code, created_at")
-        .eq("customer_id", customer!.id)
+        .eq("customer_id", driver!.id)
         .order("created_at", { ascending: false })
         .limit(20);
       return data || [];
