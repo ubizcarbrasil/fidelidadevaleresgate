@@ -68,18 +68,17 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
       if (error) throw error;
       if (!custData || custData.length === 0) return [] as ScoredDriver[];
 
-      // Fetch ride points from machine_rides via driver_customer_id
+      // Fetch ride points agregados no backend (evita limite de 1000 linhas)
       const custIds = custData.map((c: any) => c.id);
-      const { data: ridesData } = await (supabase as any)
-        .from("machine_rides")
-        .select("driver_customer_id, driver_points_credited")
-        .eq("brand_id", brandId)
-        .in("driver_customer_id", custIds);
+      const { data: statsData, error: statsError } = await supabase
+        .rpc("get_driver_ride_stats", { p_brand_id: brandId, p_customer_ids: custIds });
+
+      if (statsError) throw statsError;
 
       const ridePointsById: Record<string, number> = {};
-      (ridesData || []).forEach((r: any) => {
-        if (r.driver_customer_id) {
-          ridePointsById[r.driver_customer_id] = (ridePointsById[r.driver_customer_id] || 0) + (r.driver_points_credited || 0);
+      ((statsData || []) as any[]).forEach((r: any) => {
+        if (r.customer_id) {
+          ridePointsById[r.customer_id] = Number(r.total_ride_points || 0);
         }
       });
 
@@ -114,13 +113,14 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
   const { data: ledger, isLoading: ledgerLoading } = useQuery({
     queryKey: ["driver-ledger-machine", selectedDriver?.id],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("points_ledger")
-        .select("id, entry_type, points_amount, money_amount, reason, created_at")
-        .eq("customer_id", selectedDriver!.id)
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (error) throw error;
+      const { data, error } = await supabase
+        .rpc("get_driver_ledger", { p_customer_id: selectedDriver!.id });
+
+      if (error) {
+        console.error("Erro ao buscar extrato do motorista via RPC:", error);
+        throw error;
+      }
+
       return (data || []) as LedgerEntry[];
     },
     enabled: !!selectedDriver?.id,
