@@ -3,8 +3,43 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import DriverMarketplace from "@/components/driver/DriverMarketplace";
+import DriverCpfLogin from "@/components/driver/DriverCpfLogin";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { CustomerProvider } from "@/contexts/CustomerContext";
+import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
+
+function DriverGate({ brand, branch, theme, initialCategoryId, initialDealId }: {
+  brand: any;
+  branch: any;
+  theme: any;
+  initialCategoryId: string | null;
+  initialDealId: string | null;
+}) {
+  const { driver, loading } = useDriverSession();
+  const settings = brand?.brand_settings_json as any;
+  const logoUrl = settings?.logo_url;
+  const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : undefined;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!driver) {
+    return <DriverCpfLogin logoUrl={logoUrl} brandName={brand.name} fontHeading={fontHeading} />;
+  }
+
+  return (
+    <CustomerProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <DriverMarketplace brand={brand} branch={branch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
+      </div>
+    </CustomerProvider>
+  );
+}
 
 export default function DriverPanelPage() {
   const [searchParams] = useSearchParams();
@@ -18,12 +53,10 @@ export default function DriverPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Force dark mode like customer app
+  // Force dark mode
   useEffect(() => {
     document.documentElement.classList.add("dark");
-    return () => {
-      document.documentElement.classList.remove("dark");
-    };
+    return () => { document.documentElement.classList.remove("dark"); };
   }, []);
 
   useEffect(() => {
@@ -32,70 +65,42 @@ export default function DriverPanelPage() {
       setLoading(false);
       return;
     }
-
     const load = async () => {
-      const { data: b } = await supabase
-        .from("brands")
-        .select("*")
-        .eq("id", brandId)
-        .single();
-
-      if (!b) {
-        setError("Marca não encontrada");
-        setLoading(false);
-        return;
-      }
+      const { data: b } = await supabase.from("brands").select("*").eq("id", brandId).single();
+      if (!b) { setError("Marca não encontrada"); setLoading(false); return; }
       setBrand(b);
-
       if (branchId) {
-        const { data: br } = await supabase
-          .from("branches")
-          .select("*")
-          .eq("id", branchId)
-          .single();
+        const { data: br } = await supabase.from("branches").select("*").eq("id", branchId).single();
         setBranch(br);
       }
-
       setLoading(false);
     };
     load();
   }, [brandId, branchId]);
 
-  // Extract theme from brand_settings_json and apply PWA manifest dynamically
   const settings = brand?.brand_settings_json as any;
   const theme = settings?.theme || null;
-
-  // Apply brand theme (CSS vars, fonts, PWA manifest, favicon)
   useBrandTheme(theme);
 
-  // Update OG meta tags dynamically for link previews
+  // OG meta tags
   useEffect(() => {
     if (!brand) return;
     const brandName = brand.name || "Achadinhos";
     const ogTitle = `${brandName} — Achadinhos`;
     const ogDescription = `Ofertas exclusivas no marketplace ${brandName}`;
     const ogImage = theme?.pwa_icon_url || theme?.logo_url || "";
-
     const setMeta = (property: string, content: string) => {
       if (!content) return;
       let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(property.startsWith("og:") ? "property" : "name", property);
-        document.head.appendChild(el);
-      }
+      if (!el) { el = document.createElement("meta"); el.setAttribute(property.startsWith("og:") ? "property" : "name", property); document.head.appendChild(el); }
       el.setAttribute("content", content);
     };
-
     document.title = ogTitle;
     setMeta("og:title", ogTitle);
     setMeta("twitter:title", ogTitle);
     setMeta("og:description", ogDescription);
     setMeta("twitter:description", ogDescription);
-    if (ogImage) {
-      setMeta("og:image", ogImage);
-      setMeta("twitter:image", ogImage);
-    }
+    if (ogImage) { setMeta("og:image", ogImage); setMeta("twitter:image", ogImage); }
   }, [brand, theme]);
 
   if (loading) {
@@ -115,10 +120,14 @@ export default function DriverPanelPage() {
   }
 
   return (
-    <CustomerProvider>
-      <div className="min-h-screen bg-background text-foreground">
-        <DriverMarketplace brand={brand} branch={branch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
-      </div>
-    </CustomerProvider>
+    <DriverSessionProvider brandId={brand.id}>
+      <DriverGate
+        brand={brand}
+        branch={branch}
+        theme={theme}
+        initialCategoryId={initialCategoryId}
+        initialDealId={initialDealId}
+      />
+    </DriverSessionProvider>
   );
 }

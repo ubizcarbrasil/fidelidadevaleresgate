@@ -13,6 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatPoints } from "@/lib/formatPoints";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
+import DriverProfileOverlay from "./DriverProfileOverlay";
+import { Coins, UserCircle } from "lucide-react";
 
 import DriverBannerCarousel from "./DriverBannerCarousel";
 import DriverCategoryCarousel from "./DriverCategoryCarousel";
@@ -131,6 +134,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
   const [showProgramInfo, setShowProgramInfo] = useState(false);
   const [showRedeemStore, setShowRedeemStore] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -143,6 +147,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
+  const { driver } = useDriverSession();
   const whatsappNumber = settings?.whatsapp_number as string | undefined;
   const showBanners = settings?.driver_show_banners !== false;
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
@@ -374,6 +379,27 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {/* Points badge */}
+              {driver && (
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="h-9 flex items-center gap-1.5 px-3 rounded-xl text-xs font-bold"
+                  style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
+                >
+                  <Coins className="h-3.5 w-3.5" />
+                  {formatPoints(driver.points_balance)} pts
+                </button>
+              )}
+              {/* Profile */}
+              {driver && (
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="h-9 w-9 flex items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "hsl(var(--muted))" }}
+                >
+                  <UserCircle className="h-4.5 w-4.5 text-foreground" />
+                </button>
+              )}
               <button
                 onClick={() => setShowProgramInfo(true)}
                 className="h-9 w-9 flex items-center justify-center rounded-xl"
@@ -704,6 +730,14 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           branchId={branch?.id}
           fontHeading={fontHeading}
           onBack={() => setShowRedeemStore(false)}
+        />
+      )}
+
+      {/* Profile overlay */}
+      {showProfile && (
+        <DriverProfileOverlay
+          fontHeading={fontHeading}
+          onBack={() => setShowProfile(false)}
         />
       )}
     </div>
