@@ -602,10 +602,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         <SecaoResgateCidade
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
-          onClickOferta={(oferta) => {
-            // For now, just log - full redemption flow for city offers will be added
-            console.log("City offer clicked:", oferta.id);
-          }}
+          onClickOferta={(oferta) => setSelectedCityOffer(oferta)}
         />
       )}
 
