@@ -63,6 +63,15 @@ export default function CityOfferDetailOverlay({ oferta, fontHeading, onBack }: 
             </span>
           </div>
 
+          {/* Nota explicativa */}
+          <div
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm"
+            style={{ backgroundColor: "hsl(var(--muted) / 0.4)", color: "hsl(var(--muted-foreground))" }}
+          >
+            <Coins className="h-4 w-4 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+            <span>Cada ponto vale <strong className="text-foreground">R$ 1,00</strong> de crédito nesta loja</span>
+          </div>
+
           {/* Credit value */}
           {oferta.value_rescue != null && oferta.value_rescue > 0 && (
             <div
