@@ -102,6 +102,7 @@ const SubscriptionPlansAdminPage = lazyWithRetry(() => import("@/pages/Subscript
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
 const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
+const BranchWalletPage = lazyWithRetry(() => import("@/pages/BranchWalletPage"));
 
 const TaxonomyPage = lazyWithRetry(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazyWithRetry(() => import("@/pages/customer/CustomPage"));
@@ -257,6 +258,7 @@ function AppRoutes() {
           <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
           <Route path="manuais" element={<ManuaisPage />} />
+          <Route path="branch-wallet" element={<BranchWalletPage />} />
           <Route path="brand-branches" element={<BrandBranchesPage />} />
           <Route path="brand-branches/new" element={<BrandBranchForm />} />
           <Route path="brand-branches/:id" element={<BrandBranchForm />} />

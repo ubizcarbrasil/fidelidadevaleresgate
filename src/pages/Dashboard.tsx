@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import BranchDashboardSection from "@/components/dashboard/BranchDashboardSection";
 
 import DashboardKpiSection from "@/components/dashboard/DashboardKpiSection";
 import DashboardChartsSection from "@/components/dashboard/DashboardChartsSection";
@@ -128,7 +129,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
-  const { consoleScope, currentBrandId } = useBrandGuard();
+  const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
 
   useRealtimeRefresh();
 
@@ -292,6 +293,11 @@ export default function Dashboard() {
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
       />
+
+      {/* Branch-specific dashboard */}
+      {consoleScope === "BRANCH" && currentBranchId && (
+        <BranchDashboardSection branchId={currentBranchId} />
+      )}
 
       {/* Corridas com seletor de período */}
       {showBrand && <RidesCounterCard brandId={brandFilter} />}

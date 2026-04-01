@@ -1107,3 +1107,127 @@ export const gruposManuais: GrupoManual[] = [
     ],
   },
 ];
+
+// Grupo de manuais do franqueado (Achadinhos Motorista)
+export const gruposManuaisFranqueado: GrupoManual[] = [
+  {
+    categoria: "Achadinhos Motorista — Franqueado",
+    icone: "Coins",
+    manuais: [
+      {
+        id: "carteira-pontos",
+        titulo: "Carteira de Pontos",
+        descricao: "Entenda como funciona a carteira de pontos da sua cidade. O saldo precisa ser recarregado pelo empreendedor para que os motoristas recebam pontos pelas corridas.",
+        comoAtivar: "Acesse 'Carteira de Pontos' no menu lateral.",
+        passos: [
+          "Acesse 'Carteira de Pontos' no menu lateral.",
+          "Visualize o saldo disponível, total carregado e total distribuído.",
+          "O empreendedor realiza recargas quando necessário.",
+          "Acompanhe o histórico de transações (recargas e débitos).",
+          "Os pontos são debitados automaticamente conforme motoristas são pontuados.",
+        ],
+        dicas: [
+          "Solicite recarga ao empreendedor antes que o saldo fique zerado.",
+          "Acompanhe o histórico para controlar gastos.",
+          "Se o saldo acabar, as pontuações ficarão pendentes.",
+        ],
+        rota: "/branch-wallet",
+      },
+      {
+        id: "regras-pontuacao-motorista",
+        titulo: "Regras de Pontuação Motorista",
+        descricao: "Configure quantos pontos o motorista recebe por corrida. Defina regras baseadas no valor da corrida ou pontuação fixa.",
+        comoAtivar: "Acesse 'Regras de Pontuação' no menu lateral.",
+        passos: [
+          "Acesse 'Regras de Pontuação' no menu lateral.",
+          "Defina a pontuação base por corrida.",
+          "Configure regras avançadas (por faixa de valor, maçaneta, etc).",
+          "Salve as alterações.",
+          "As novas regras valem para as próximas corridas.",
+        ],
+        dicas: [
+          "Teste diferentes valores para encontrar o equilíbrio ideal.",
+          "Regras por faixa de valor incentivam corridas mais longas.",
+          "A pontuação maçaneta pode ter valor diferente da regra padrão.",
+        ],
+        rota: "/driver-points-rules",
+      },
+      {
+        id: "produtos-resgate-franqueado",
+        titulo: "Produtos de Resgate",
+        descricao: "Gerencie os produtos disponíveis para que motoristas resgatem com seus pontos. Defina preços em pontos, ative ou desative produtos.",
+        comoAtivar: "Acesse 'Produtos de Resgate' no menu lateral.",
+        passos: [
+          "Acesse 'Produtos de Resgate' no menu lateral.",
+          "Visualize os produtos disponíveis e seus preços em pontos.",
+          "Ative ou desative produtos conforme disponibilidade.",
+          "Edite o custo em pontos de cada produto.",
+          "Os motoristas verão apenas produtos ativos no app.",
+        ],
+        dicas: [
+          "Mantenha preços em pontos proporcionais ao valor real do produto.",
+          "Desative produtos temporariamente esgotados.",
+          "Acompanhe os pedidos de resgate para monitorar a demanda.",
+        ],
+        rota: "/produtos-resgate",
+      },
+      {
+        id: "pedidos-resgate-franqueado",
+        titulo: "Pedidos de Resgate",
+        descricao: "Acompanhe e gerencie os pedidos de resgate feitos pelos motoristas. Aprove, rejeite, registre envio e confirme entrega.",
+        comoAtivar: "Acesse 'Pedidos de Resgate' no menu lateral.",
+        passos: [
+          "Acesse 'Pedidos de Resgate' no menu lateral.",
+          "Visualize os pedidos pendentes, aprovados, enviados e entregues.",
+          "Clique em um pedido para ver os detalhes e dados de entrega.",
+          "Aprove ou rejeite pedidos pendentes.",
+          "Registre o código de rastreio ao enviar.",
+          "Confirme a entrega quando o motorista receber o produto.",
+        ],
+        dicas: [
+          "Processe pedidos pendentes rapidamente para manter os motoristas engajados.",
+          "Pedidos rejeitados estornam os pontos automaticamente.",
+          "Use filtros de status para organizar o fluxo de atendimento.",
+        ],
+        rota: "/product-redemption-orders",
+      },
+      {
+        id: "motoristas-franqueado",
+        titulo: "Motoristas",
+        descricao: "Visualize e gerencie os motoristas cadastrados na sua cidade. Acompanhe saldo de pontos, corridas e status.",
+        comoAtivar: "Acesse 'Motoristas' no menu lateral.",
+        passos: [
+          "Acesse 'Motoristas' no menu lateral.",
+          "Visualize a lista de motoristas da sua cidade.",
+          "Pesquise por nome, CPF ou telefone.",
+          "Clique em um motorista para ver o extrato de pontos e corridas.",
+          "Gerencie o status ativo/inativo dos motoristas.",
+        ],
+        dicas: [
+          "Motoristas são cadastrados automaticamente via integração de corridas.",
+          "Use o extrato para verificar pontuações e resgates.",
+          "Motoristas inativos não aparecem no ranking.",
+        ],
+        rota: "/motoristas",
+      },
+      {
+        id: "dashboard-cidade",
+        titulo: "Dashboard da Cidade",
+        descricao: "Acompanhe os indicadores da sua cidade em tempo real: corridas, motoristas, pontos, resgates e ranking.",
+        comoAtivar: "O dashboard é a página inicial do painel.",
+        passos: [
+          "Acesse o painel para ver automaticamente o dashboard.",
+          "Visualize os KPIs: corridas, motoristas, pontos, resgates e saldo.",
+          "Acompanhe o ranking de motoristas da sua cidade.",
+          "Use os filtros de período para analisar tendências.",
+        ],
+        dicas: [
+          "O dashboard atualiza em tempo real conforme corridas são finalizadas.",
+          "Use o ranking para identificar os motoristas mais engajados.",
+          "Compare períodos para avaliar o crescimento da operação.",
+        ],
+        rota: "/",
+      },
+    ],
+  },
+];

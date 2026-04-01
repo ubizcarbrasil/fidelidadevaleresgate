@@ -2,20 +2,29 @@ import { useState, useMemo } from "react";
 import { Search, BookOpen, Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ManualRenderer } from "@/components/manuais/ManualRenderer";
-import { gruposManuais } from "@/components/manuais/dados_manuais";
+import { gruposManuais, gruposManuaisFranqueado } from "@/components/manuais/dados_manuais";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const iconesPorNome: Record<string, any> = {
   Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2,
 };
 
 export default function ManuaisPage() {
+  const { consoleScope } = useBrandGuard();
   const [busca, setBusca] = useState("");
   const [manualAberto, setManualAberto] = useState<string | null>(null);
 
+  const todosGrupos = useMemo(() => {
+    if (consoleScope === "BRANCH") {
+      return [...gruposManuaisFranqueado, ...gruposManuais];
+    }
+    return gruposManuais;
+  }, [consoleScope]);
+
   const gruposFiltrados = useMemo(() => {
-    if (!busca.trim()) return gruposManuais;
+    if (!busca.trim()) return todosGrupos;
     const termo = busca.toLowerCase();
-    return gruposManuais
+    return todosGrupos
       .map((g) => ({
         ...g,
         manuais: g.manuais.filter(
@@ -25,9 +34,9 @@ export default function ManuaisPage() {
         ),
       }))
       .filter((g) => g.manuais.length > 0);
-  }, [busca]);
+  }, [busca, todosGrupos]);
 
-  const totalManuais = gruposManuais.reduce((acc, g) => acc + g.manuais.length, 0);
+  const totalManuais = todosGrupos.reduce((acc, g) => acc + g.manuais.length, 0);
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto">
