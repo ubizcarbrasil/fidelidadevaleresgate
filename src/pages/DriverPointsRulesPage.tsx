@@ -100,6 +100,7 @@ export default function DriverPointsRulesPage() {
     volume_tiers: form.volume_tiers ?? (rule?.volume_tiers as VolumeTier[] | undefined) ?? DEFAULT_TIERS,
     volume_cycle_days: form.volume_cycle_days ?? rule?.volume_cycle_days ?? 30,
     is_active: form.is_active ?? rule?.is_active ?? true,
+    macaneta_points_per_ride: form.macaneta_points_per_ride ?? rule?.macaneta_points_per_ride ?? 0,
   };
 
   const updateForm = (field: string, value: any) => {
