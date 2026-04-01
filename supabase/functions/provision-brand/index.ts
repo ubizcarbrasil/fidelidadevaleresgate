@@ -824,7 +824,7 @@ Deno.serve(async (req) => {
     await supabaseAdmin.from("profiles").update({ brand_id: brand.id, tenant_id: tenant.id }).eq("id", franqueadoUser.id);
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: franqueadoUser.id, role: "branch_admin", brand_id: brand.id, branch_id: branch.id, tenant_id: tenant.id },
-      { onConflict: "user_id,role", ignoreDuplicates: true },
+      { onConflict: "user_id,role,tenant_id,brand_id,branch_id", ignoreDuplicates: true },
     );
     await supabaseAdmin.from("branch_points_wallet").upsert(
       { branch_id: branch.id, brand_id: brand.id, balance: 0, total_loaded: 0, total_distributed: 0 },

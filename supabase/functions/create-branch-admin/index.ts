@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
         branch_id,
         tenant_id: effectiveTenantId,
       },
-      { onConflict: "user_id,role", ignoreDuplicates: false },
+      { onConflict: "user_id,role,tenant_id,brand_id,branch_id", ignoreDuplicates: true },
     );
 
     // Ensure branch_points_wallet exists
