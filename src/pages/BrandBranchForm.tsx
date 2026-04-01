@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 const ESTADOS = [
@@ -54,6 +54,12 @@ export default function BrandBranchForm() {
   const [apiKey, setApiKey] = useState("");
   const [basicAuthUser, setBasicAuthUser] = useState("");
   const [basicAuthPassword, setBasicAuthPassword] = useState("");
+
+  // Franqueado
+  const [criarFranqueado, setCriarFranqueado] = useState(false);
+  const [franqueadoEmail, setFranqueadoEmail] = useState("");
+  const [franqueadoPassword, setFranqueadoPassword] = useState("123456");
+  const [franqueadoNome, setFranqueadoNome] = useState("");
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
@@ -173,6 +179,25 @@ export default function BrandBranchForm() {
           .update({ telegram_chat_id: telegramChatId.trim() })
           .eq("brand_id", currentBrandId)
           .eq("branch_id", branchId);
+      }
+
+      // Create franchisee user if requested
+      if (!isEdit && criarFranqueado && franqueadoEmail.trim() && branchId) {
+        const { data: fnResult, error: fnErr } = await supabase.functions.invoke("create-branch-admin", {
+          body: {
+            email: franqueadoEmail.trim(),
+            password: franqueadoPassword || "123456",
+            full_name: franqueadoNome.trim() || "Franqueado",
+            brand_id: currentBrandId,
+            branch_id: branchId,
+          },
+        });
+        if (fnErr) {
+          console.error("Franchisee creation error:", fnErr);
+          toast.error("Cidade criada, mas houve erro ao criar o franqueado.");
+        } else {
+          toast.success(`Franqueado criado: ${franqueadoEmail.trim()}`);
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
@@ -296,6 +321,61 @@ export default function BrandBranchForm() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Franqueado / Gestor da Cidade */}
+      {!isEdit && (
+        <Card className="rounded-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Gestor da Cidade (Franqueado)
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Crie um usuário administrador para gerenciar esta cidade.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Criar gestor da cidade</Label>
+              <Switch checked={criarFranqueado} onCheckedChange={setCriarFranqueado} />
+            </div>
+
+            {criarFranqueado && (
+              <>
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input
+                    placeholder="Ex: João Silva"
+                    value={franqueadoNome}
+                    onChange={(e) => setFranqueadoNome(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>E-mail de acesso</Label>
+                  <Input
+                    type="email"
+                    placeholder="franqueado@exemplo.com"
+                    value={franqueadoEmail}
+                    onChange={(e) => setFranqueadoEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Senha</Label>
+                  <Input
+                    type="password"
+                    placeholder="Senha de acesso"
+                    value={franqueadoPassword}
+                    onChange={(e) => setFranqueadoPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Senha padrão: 123456. O franqueado poderá alterar após o login.
+                  </p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={() => navigate("/brand-branches")}>
