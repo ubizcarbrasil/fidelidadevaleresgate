@@ -247,6 +247,7 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
   };
 
   const atualizados = resultados?.filter((r) => r.status === "atualizado").length ?? 0;
+  const criados = resultados?.filter((r) => r.status === "criado").length ?? 0;
   const naoEncontrados = resultados?.filter((r) => r.status === "nao_encontrado").length ?? 0;
   const erros = resultados?.filter((r) => r.status === "erro").length ?? 0;
 
