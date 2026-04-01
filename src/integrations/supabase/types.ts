@@ -2189,6 +2189,51 @@ export type Database = {
           },
         ]
       }
+      driver_verification_codes: {
+        Row: {
+          code: string
+          created_at: string
+          customer_id: string
+          email: string | null
+          expires_at: string
+          id: string
+          used: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          customer_id: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          used?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          customer_id?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          used?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_verification_codes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_verification_codes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       earning_events: {
         Row: {
           branch_id: string
