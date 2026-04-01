@@ -575,8 +575,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
           onClickOferta={(oferta) => {
-            // TODO: open offer detail / redemption flow for city offers
-            toast?.({ title: `Oferta: ${oferta.title}` });
+            // For now, just log - full redemption flow for city offers will be added
+            console.log("City offer clicked:", oferta.id);
           }}
         />
       )}
