@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Truck, Info } from "lucide-react";
+import { Save, Plus, Trash2, Truck, Info, DoorOpen } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -32,6 +32,7 @@ type DriverRule = {
   volume_tiers: VolumeTier[];
   volume_cycle_days: number;
   is_active: boolean;
+  macaneta_points_per_ride: number;
 };
 
 const RULE_MODES = [
@@ -99,6 +100,7 @@ export default function DriverPointsRulesPage() {
     volume_tiers: form.volume_tiers ?? (rule?.volume_tiers as VolumeTier[] | undefined) ?? DEFAULT_TIERS,
     volume_cycle_days: form.volume_cycle_days ?? rule?.volume_cycle_days ?? 30,
     is_active: form.is_active ?? rule?.is_active ?? true,
+    macaneta_points_per_ride: form.macaneta_points_per_ride ?? rule?.macaneta_points_per_ride ?? 0,
   };
 
   const updateForm = (field: string, value: any) => {
@@ -136,6 +138,7 @@ export default function DriverPointsRulesPage() {
         volume_tiers: merged.volume_tiers,
         volume_cycle_days: merged.volume_cycle_days,
         is_active: merged.is_active,
+        macaneta_points_per_ride: merged.macaneta_points_per_ride,
       };
       const { error } = await (supabase as any)
         .from("driver_points_rules")
@@ -386,6 +389,38 @@ export default function DriverPointsRulesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Pontuação Maçaneta */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <DoorOpen className="h-4 w-4 text-amber-500" />
+            Pontuação Maçaneta
+          </CardTitle>
+          <CardDescription>
+            Corrida "maçaneta" é quando o motorista abre uma corrida avulsa no aplicativo, sem passageiro real. 
+            O passageiro não recebe pontos, mas o motorista pode receber uma pontuação fixa configurável. 
+            Se o valor for 0, a regra padrão acima será usada.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-xs space-y-2">
+            <Label className="text-xs">Pontos fixos por corrida maçaneta</Label>
+            <Input
+              type="number"
+              min={0}
+              step={1}
+              value={merged.macaneta_points_per_ride}
+              onChange={(e) => updateForm("macaneta_points_per_ride", parseInt(e.target.value) || 0)}
+            />
+            <p className="text-xs text-muted-foreground">
+              {merged.macaneta_points_per_ride > 0
+                ? `Motorista ganhará ${merged.macaneta_points_per_ride} pontos por cada corrida maçaneta`
+                : "Usando regra padrão (modo selecionado acima)"}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Simulação */}
       <Card>

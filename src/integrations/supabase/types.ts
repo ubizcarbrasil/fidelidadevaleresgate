@@ -2130,6 +2130,7 @@ export type Database = {
           fixed_points_per_ride: number | null
           id: string
           is_active: boolean | null
+          macaneta_points_per_ride: number
           percent_of_passenger: number | null
           points_per_real: number | null
           rule_mode: string
@@ -2144,6 +2145,7 @@ export type Database = {
           fixed_points_per_ride?: number | null
           id?: string
           is_active?: boolean | null
+          macaneta_points_per_ride?: number
           percent_of_passenger?: number | null
           points_per_real?: number | null
           rule_mode?: string
@@ -2158,6 +2160,7 @@ export type Database = {
           fixed_points_per_ride?: number | null
           id?: string
           is_active?: boolean | null
+          macaneta_points_per_ride?: number
           percent_of_passenger?: number | null
           points_per_real?: number | null
           rule_mode?: string
