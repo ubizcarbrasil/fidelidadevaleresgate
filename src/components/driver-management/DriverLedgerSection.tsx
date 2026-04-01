@@ -91,6 +91,17 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
           <div className="space-y-1.5">
             {ledger.map((e) => {
               const isCredit = e.entry_type === "CREDIT";
+              const refIcon = e.reference_type === "MACHINE_RIDE" || e.reference_type === "DRIVER_RIDE"
+                ? <Car className="h-4 w-4" />
+                : e.reference_type === "EARNING_EVENT"
+                ? <ShoppingCart className="h-4 w-4" />
+                : e.reference_type === "MANUAL_ADJUSTMENT"
+                ? <Gift className="h-4 w-4" />
+                : e.reference_type === "REDEMPTION"
+                ? <Ticket className="h-4 w-4" />
+                : isCredit
+                ? <ArrowUpRight className="h-4 w-4" />
+                : <ArrowDownRight className="h-4 w-4" />;
               return (
                 <div
                   key={e.id}
@@ -100,24 +111,23 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
                       : "border-destructive/20 bg-destructive/5"
                   }`}
                 >
-                  {isCredit ? (
-                    <ArrowUpRight className="h-4 w-4 text-primary shrink-0" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 text-destructive shrink-0" />
-                  )}
+                  <span className={isCredit ? "text-primary shrink-0" : "text-destructive shrink-0"}>
+                    {refIcon}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <span className="truncate block text-xs">
                       {e.reason || (isCredit ? "Crédito" : "Débito")}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       {new Date(e.created_at).toLocaleString("pt-BR")}
+                      {e.branch_name ? ` · ${e.branch_name}` : ""}
                     </span>
                   </div>
                   <Badge
                     variant={isCredit ? "default" : "destructive"}
                     className="text-xs font-mono shrink-0"
                   >
-                    {isCredit ? "+" : "-"}{formatPoints(e.points_amount)}
+                    {isCredit ? "+" : "-"}{formatPoints(Math.abs(e.points_amount))}
                   </Badge>
                 </div>
               );
