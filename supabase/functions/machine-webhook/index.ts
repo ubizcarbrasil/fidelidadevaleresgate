@@ -297,7 +297,9 @@ async function processFinalized(
   const { rideValue, passengerName, passengerCpf, passengerPhone, passengerEmail, driverName, driverId: apiDriverId, source } = rideResult.data;
   // Use payload driverId as fallback when API doesn't return it
   const driverId = apiDriverId || payloadDriverId;
-  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone, driverId, apiDriverId, payloadDriverId });
+  // Detect "maçaneta" rides (driver-initiated, no real passenger)
+  const isMacaneta = passengerName?.toLowerCase().trim() === 'maçaneta';
+  logger.info("Ride data fetched", { machineRideId, source, rideValue, passengerName, hasCpf: !!passengerCpf, hasPhone: !!passengerPhone, driverId, apiDriverId, payloadDriverId, isMacaneta });
 
   if (rideValue <= 0) {
     await sb.from("machine_rides").upsert({
@@ -317,22 +319,24 @@ async function processFinalized(
   // Resolve the branch to use for customer creation
   const customerBranchId = branchId || integration.branch_id;
 
-  // --- Cascading customer lookup ---
+  // --- Cascading customer lookup (skip for maçaneta rides) ---
   let customer: any = null;
   let matchedBy: string | null = null;
 
-  const cascadeResult = await findCustomerCascade(sb, brandId, passengerCpf, passengerPhone, passengerName);
-  if (cascadeResult) {
-    customer = cascadeResult.customer;
-    matchedBy = cascadeResult.matchedBy;
-  }
-
-  // If not found, create a new customer
+  // For maçaneta rides, skip passenger lookup/creation entirely
   let customerId: string | null = null;
   let pointsCredited = false;
   let points = 0;
 
-  if (!customer) {
+  if (!isMacaneta) {
+    const cascadeResult = await findCustomerCascade(sb, brandId, passengerCpf, passengerPhone, passengerName);
+    if (cascadeResult) {
+      customer = cascadeResult.customer;
+      matchedBy = cascadeResult.matchedBy;
+    }
+  }
+
+  if (!isMacaneta && !customer) {
     // Determine which branch to use
     let resolveBranchId = customerBranchId;
     if (!resolveBranchId) {
