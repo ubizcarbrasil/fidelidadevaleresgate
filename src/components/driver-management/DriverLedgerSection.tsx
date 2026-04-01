@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText, Car, ShoppingCart, Gift, Ticket, CircleDot } from "lucide-react";
 import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
@@ -17,19 +17,17 @@ type LedgerEntry = {
   points_amount: number;
   money_amount: number | null;
   reason: string | null;
+  reference_type: string | null;
   created_at: string;
+  branch_name: string | null;
 };
 
 export default function DriverLedgerSection({ driverId, driverName }: Props) {
   const { data: ledger, isLoading, error } = useQuery({
     queryKey: ["driver-ledger-detail", driverId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("points_ledger")
-        .select("id, entry_type, points_amount, money_amount, reason, created_at")
-        .eq("customer_id", driverId)
-        .order("created_at", { ascending: false })
-        .limit(200);
+      const { data, error } = await supabase
+        .rpc("get_driver_ledger", { p_customer_id: driverId });
       if (error) throw error;
       return (data || []) as LedgerEntry[];
     },
@@ -93,6 +91,17 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
           <div className="space-y-1.5">
             {ledger.map((e) => {
               const isCredit = e.entry_type === "CREDIT";
+              const refIcon = e.reference_type === "MACHINE_RIDE" || e.reference_type === "DRIVER_RIDE"
+                ? <Car className="h-4 w-4" />
+                : e.reference_type === "EARNING_EVENT"
+                ? <ShoppingCart className="h-4 w-4" />
+                : e.reference_type === "MANUAL_ADJUSTMENT"
+                ? <Gift className="h-4 w-4" />
+                : e.reference_type === "REDEMPTION"
+                ? <Ticket className="h-4 w-4" />
+                : isCredit
+                ? <ArrowUpRight className="h-4 w-4" />
+                : <ArrowDownRight className="h-4 w-4" />;
               return (
                 <div
                   key={e.id}
@@ -102,24 +111,23 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
                       : "border-destructive/20 bg-destructive/5"
                   }`}
                 >
-                  {isCredit ? (
-                    <ArrowUpRight className="h-4 w-4 text-primary shrink-0" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 text-destructive shrink-0" />
-                  )}
+                  <span className={isCredit ? "text-primary shrink-0" : "text-destructive shrink-0"}>
+                    {refIcon}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <span className="truncate block text-xs">
                       {e.reason || (isCredit ? "Crédito" : "Débito")}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       {new Date(e.created_at).toLocaleString("pt-BR")}
+                      {e.branch_name ? ` · ${e.branch_name}` : ""}
                     </span>
                   </div>
                   <Badge
                     variant={isCredit ? "default" : "destructive"}
                     className="text-xs font-mono shrink-0"
                   >
-                    {isCredit ? "+" : "-"}{formatPoints(e.points_amount)}
+                    {isCredit ? "+" : "-"}{formatPoints(Math.abs(e.points_amount))}
                   </Badge>
                 </div>
               );
