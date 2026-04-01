@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useCustomer } from "@/contexts/CustomerContext";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { ArrowLeft, Gift, Coins, Search, X, ShoppingBag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";

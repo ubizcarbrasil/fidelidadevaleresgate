@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomer } from "@/contexts/CustomerContext";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { Package, Clock, Check, Truck, X as XIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
