@@ -6381,6 +6381,19 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string[]
       }
+      get_driver_ledger: {
+        Args: { p_customer_id: string }
+        Returns: {
+          branch_name: string
+          created_at: string
+          entry_type: string
+          id: string
+          money_amount: number
+          points_amount: number
+          reason: string
+          reference_type: string
+        }[]
+      }
       get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }
       get_points_ranking: {
         Args: { p_brand_id: string; p_limit?: number }
