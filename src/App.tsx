@@ -102,6 +102,7 @@ const SubscriptionPlansAdminPage = lazyWithRetry(() => import("@/pages/Subscript
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
 const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
+const BranchWalletPage = lazyWithRetry(() => import("@/pages/BranchWalletPage"));
 
 const TaxonomyPage = lazyWithRetry(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazyWithRetry(() => import("@/pages/customer/CustomPage"));
