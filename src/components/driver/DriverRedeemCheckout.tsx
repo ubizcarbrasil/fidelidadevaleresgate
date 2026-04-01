@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomer } from "@/contexts/CustomerContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useBrand } from "@/contexts/BrandContext";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
 import { toast } from "sonner";
 import { formatPoints } from "@/lib/formatPoints";
+import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 
 interface RedeemDeal {
   id: string;
@@ -26,20 +25,19 @@ interface Props {
 }
 
 export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
-  const { customer } = useCustomer();
-  const { brand, selectedBranch } = useBrand();
-  const { user } = useAuth();
+  const { driver, refreshDriver } = useDriverSession();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [verified, setVerified] = useState(false);
 
   const cleanName = (name?: string | null) =>
     name?.replace(/\[MOTORISTA\]\s*/i, "").replace(/\s*\(D\)\s*$/i, "").trim() || "";
 
   const [form, setForm] = useState({
-    name: cleanName(customer?.name) || user?.user_metadata?.full_name || "",
-    phone: customer?.phone || user?.user_metadata?.phone || user?.phone || "",
-    cpf: customer?.cpf || "",
+    name: cleanName(driver?.name) || "",
+    phone: driver?.phone || "",
+    cpf: driver?.cpf || "",
     cep: "",
     address: "",
     number: "",
@@ -49,7 +47,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
     state: "",
   });
 
-  const pointsBalance = customer?.points_balance || 0;
+  const pointsBalance = driver?.points_balance || 0;
   const canAfford = pointsBalance >= deal.redeem_points_cost;
 
   const updateField = (key: string, value: string) => {
@@ -79,7 +77,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
   };
 
   const handleSubmit = async () => {
-    if (!customer || !brand) return;
+    if (!driver) return;
     if (!canAfford) {
       toast.error("Saldo de pontos insuficiente!");
       return;
@@ -91,31 +89,28 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
 
     setLoading(true);
     try {
-      const userId = (await supabase.auth.getUser()).data.user!.id;
-
-      // 1. Debit points
+      // 1. Debit points via ledger
       const { error: ledgerError } = await supabase.from("points_ledger").insert({
-        customer_id: customer.id,
-        brand_id: brand.id,
-        branch_id: selectedBranch?.id || null,
+        customer_id: driver.id,
+        brand_id: driver.brand_id,
+        branch_id: driver.branch_id,
         entry_type: "DEBIT",
         points_amount: deal.redeem_points_cost,
         reason: `Resgate: ${deal.title}`,
         reference_type: "REDEMPTION",
-        created_by_user_id: userId,
       } as any);
       if (ledgerError) throw ledgerError;
 
       // 1b. Decrement customer balance
       await supabase.from("customers").update({
         points_balance: pointsBalance - deal.redeem_points_cost,
-      }).eq("id", customer.id);
+      }).eq("id", driver.id);
 
       // 2. Create redemption order
       const { error: orderError } = await supabase.from("product_redemption_orders").insert({
-        brand_id: brand.id,
-        branch_id: selectedBranch?.id || null,
-        customer_id: customer.id,
+        brand_id: driver.brand_id,
+        branch_id: driver.branch_id,
+        customer_id: driver.id,
         deal_id: deal.id,
         deal_snapshot_json: {
           title: deal.title,
@@ -137,6 +132,9 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       });
       if (orderError) throw orderError;
 
+      // Refresh driver balance
+      await refreshDriver();
+
       setSuccess(true);
       toast.success("Resgate solicitado com sucesso!");
     } catch (err: any) {
@@ -144,6 +142,16 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
     }
     setLoading(false);
   };
+
+  // Step 1: Verification
+  if (!verified) {
+    return (
+      <DriverVerifyCodeStep
+        onVerified={() => setVerified(true)}
+        onBack={onClose}
+      />
+    );
+  }
 
   if (success) {
     return (
