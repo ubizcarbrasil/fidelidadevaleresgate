@@ -113,7 +113,8 @@ export default function DriverPanelConfigPage() {
   const showBanners = brandSettings?.driver_show_banners !== false;
   const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
   const interstitialBanners: DriverBannerItem[] = brandSettings?.driver_interstitial_banners || [];
-
+  const driverRedeemRows = brandSettings?.driver_redeem_rows ?? 1;
+  const driverInfoVideos: Array<{ id: string; title: string; description: string; video_url: string }> = brandSettings?.driver_info_videos || [];
   const settingsMutation = useMutation({
     mutationFn: async (patch: Record<string, any>) => {
       const updated = { ...brandSettings, ...patch };
