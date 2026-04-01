@@ -1,30 +1,45 @@
 
 
-# Adicionar campo Telegram (opcional) ao wizard de criação de cidade
+# Exibir "Ganhe X pts" nos cards de Achadinhos do Motorista
 
-## Problema
-Hoje o `telegram_chat_id` só pode ser configurado na página de integração root (`MachineIntegrationPage`). O empreendedor não tem como definir um grupo Telegram por cidade no wizard simplificado. Sem isso, todas as notificações caem no canal universal da marca.
+## Objetivo
+Mostrar abaixo do preço de cada produto no card do motorista a quantidade de pontos que ele ganharia com aquela compra, baseado na regra ativa de pontuação da marca (ex: "Ganhe 100 pts" para um produto de R$ 100,00 com regra de 1 pt/R$).
 
-## Solução
+## Como funciona
+- Buscar a regra ativa de pontuação (`points_rules`) da marca no `DriverMarketplace`
+- Calcular `pontos = Math.floor(preço × points_per_real)` para cada deal que tem preço
+- Passar `pointsPerReal` como prop para os cards
+- Renderizar um badge verde "Ganhe X pts" abaixo do preço (apenas quando o deal tem preço e a regra existe)
 
-### 1. `src/pages/BrandBranchForm.tsx` — Adicionar campo opcional de Telegram
-- Novo estado `telegramChatId`
-- Novo campo de input opcional no formulário (entre o switch "Ativa" e o bloco de resumo):
-  - Label: "Chat ID do Telegram (opcional)"
-  - Placeholder: "Ex: -1001234567890"
-  - Texto auxiliar explicando: "Se informado, as notificações de corridas desta cidade serão enviadas para este grupo. Caso contrário, será usado o canal padrão da marca."
-- No `handleSave`, após criar/atualizar o branch, se `telegramChatId` foi preenchido e existe integração ativa, atualizar `machine_integrations` com o `telegram_chat_id` para aquele `branch_id`
-- Em modo edição, carregar o `telegram_chat_id` existente da `machine_integrations` vinculada ao branch
+## Arquivos a editar
 
-### 2. `supabase/functions/register-machine-webhook/index.ts` — Aceitar `telegram_chat_id`
-- Extrair `telegram_chat_id` do body junto com os outros campos
-- Incluir no objeto `upsertData` (mesmo padrão dos campos `matrix_*`)
+### 1. `src/components/driver/DriverMarketplace.tsx`
+- Adicionar query para buscar a regra ativa: `points_rules` filtrada por `brand_id` e `is_active = true`, pegando `points_per_real`
+- Passar `pointsPerReal` como prop para `DriverDealCard` e `DriverDealCardGrid`
 
-### 3. `src/pages/BrandBranchForm.tsx` — Passar `telegram_chat_id` na chamada ao edge function
-- Quando o wizard invoca `register-machine-webhook`, incluir o `telegram_chat_id` no payload
+### 2. `src/components/driver/DriverDealCard.tsx`
+- Nova prop opcional `pointsPerReal?: number`
+- Calcular `earnedPoints = Math.floor((deal.price ?? 0) * pointsPerReal)` quando preço e regra existem
+- Renderizar badge "Ganhe {formatPoints(earnedPoints)} pts" com ícone de estrela/moeda, em verde, abaixo do preço (acima do badge de resgate existente)
 
-## Detalhes técnicos
-- Nenhuma migração necessária — a coluna `telegram_chat_id` já existe em `machine_integrations`
-- A edge function `register-machine-webhook` já faz upsert com campos opcionais (padrão `matrix_*`), basta replicar para `telegram_chat_id`
-- O campo é opcional: se vazio, nada muda no comportamento atual
+### 3. `src/components/driver/DriverDealCardGrid.tsx`
+- Mesma lógica do `DriverDealCard`: nova prop `pointsPerReal`, cálculo e badge idênticos
+
+## Visual do badge
+```text
+┌──────────────────┐
+│  [imagem]        │
+│                  │
+│  Loja X          │
+│  Título produto  │
+│  R$ 100,00       │
+│  ⭐ Ganhe 100 pts │  ← novo badge verde
+│  🎁 500 pts      │  ← badge resgate (existente)
+└──────────────────┘
+```
+
+Badge com fundo verde suave (`#22c55e15`), texto verde (`#22c55e`), ícone `Star`, mesmo estilo visual do badge de resgate já existente.
+
+## Impacto
+3 arquivos editados, ~10 linhas por card + 1 query adicional no marketplace.
 
