@@ -123,6 +123,9 @@ const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductR
 const ProdutosResgatePage = lazyWithRetry(() => import("@/pages/ProdutosResgatePage"));
 const RegrasResgatePage = lazyWithRetry(() => import("@/pages/RegrasResgatePage"));
 const ManuaisPage = lazyWithRetry(() => import("@/pages/ManuaisPage"));
+const BrandBranchesPage = lazyWithRetry(() => import("@/pages/BrandBranchesPage"));
+const BrandBranchForm = lazyWithRetry(() => import("@/pages/BrandBranchForm"));
+const BrandCidadesJourneyPage = lazyWithRetry(() => import("@/pages/BrandCidadesJourneyPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
