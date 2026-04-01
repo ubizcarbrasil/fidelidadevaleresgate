@@ -133,6 +133,18 @@ export default function BrandBranchForm() {
         toast.success("Cidade criada com sucesso!");
       }
 
+      // Update telegram_chat_id in machine_integrations if provided
+      if (telegramChatId.trim()) {
+        const branchId = isEdit ? id : undefined;
+        if (branchId) {
+          await supabase
+            .from("machine_integrations")
+            .update({ telegram_chat_id: telegramChatId.trim() })
+            .eq("brand_id", currentBrandId)
+            .eq("branch_id", branchId);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
       navigate("/brand-branches");
     } catch (err: any) {
