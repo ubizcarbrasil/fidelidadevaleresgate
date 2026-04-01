@@ -255,6 +255,9 @@ export default function DriverProgramInfo({ whatsappNumber, fontHeading, onBack,
           ))}
         </div>
 
+        {/* Videos */}
+        <SecaoVideosInfo videos={videos || []} fontHeading={fontHeading} />
+
         {/* WhatsApp CTA */}
         {whatsappLink && (
           <a

@@ -315,10 +315,15 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
             </>
           ) : (
             <>
-              <div className="flex gap-3 text-sm">
+              <div className="flex flex-wrap gap-3 text-sm">
                 <Badge className="bg-green-500/10 text-green-400 border-green-400/30">
                   <CheckCircle2 className="h-3 w-3 mr-1" />{atualizados} atualizados
                 </Badge>
+                {criados > 0 && (
+                  <Badge className="bg-blue-500/10 text-blue-400 border-blue-400/30">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />{criados} criados
+                  </Badge>
+                )}
                 {naoEncontrados > 0 && (
                   <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-400/30">
                     <AlertTriangle className="h-3 w-3 mr-1" />{naoEncontrados} não encontrados
