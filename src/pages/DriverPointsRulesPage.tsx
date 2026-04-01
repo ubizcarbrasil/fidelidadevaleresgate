@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Truck, Info } from "lucide-react";
+import { Save, Plus, Trash2, Truck, Info, DoorOpen } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
