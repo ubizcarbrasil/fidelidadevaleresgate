@@ -196,7 +196,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         offer_purpose: o.offer_purpose,
         store_name: o.stores?.name || null,
         store_logo_url: o.stores?.logo_url || null,
-        pointsCost: Math.ceil((o.value_rescue || 0) * (pointsPerReal || 40)),
+        pointsCost: Math.ceil(o.value_rescue || 0), // 1 ponto = R$ 1,00 de crédito na cidade
       })) as OfertaCidade[];
     },
     enabled: (pointsPerReal ?? null) !== null,
