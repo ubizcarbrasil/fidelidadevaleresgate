@@ -6394,6 +6394,14 @@ export type Database = {
           reference_type: string
         }[]
       }
+      get_driver_ride_stats: {
+        Args: { p_brand_id: string; p_customer_ids: string[] }
+        Returns: {
+          customer_id: string
+          total_ride_points: number
+          total_rides: number
+        }[]
+      }
       get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }
       get_points_ranking: {
         Args: { p_brand_id: string; p_limit?: number }

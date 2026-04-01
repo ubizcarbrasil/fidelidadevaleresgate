@@ -59,18 +59,18 @@ export default function DriverManagementPage() {
       if (!data || data.length === 0) return [] as DriverRow[];
 
       const custIds = data.map((c: any) => c.id);
-      const { data: ridesData } = await (supabase as any)
-        .from("machine_rides")
-        .select("driver_customer_id, driver_points_credited")
-        .eq("brand_id", currentBrandId)
-        .in("driver_customer_id", custIds);
+
+      // Usar RPC para agregar corridas no servidor (sem limite de 1000 linhas)
+      const { data: statsData, error: statsError } = await supabase
+        .rpc("get_driver_ride_stats", { p_brand_id: currentBrandId!, p_customer_ids: custIds });
+      if (statsError) console.error("Erro ao buscar stats de corridas:", statsError);
 
       const ridePointsById: Record<string, number> = {};
       const rideCountById: Record<string, number> = {};
-      (ridesData || []).forEach((r: any) => {
-        if (r.driver_customer_id) {
-          ridePointsById[r.driver_customer_id] = (ridePointsById[r.driver_customer_id] || 0) + (r.driver_points_credited || 0);
-          rideCountById[r.driver_customer_id] = (rideCountById[r.driver_customer_id] || 0) + 1;
+      ((statsData || []) as any[]).forEach((r: any) => {
+        if (r.customer_id) {
+          ridePointsById[r.customer_id] = Number(r.total_ride_points || 0);
+          rideCountById[r.customer_id] = Number(r.total_rides || 0);
         }
       });
 
