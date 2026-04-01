@@ -452,7 +452,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           {/* Row 2: Points highlight card */}
           {driver && (
             <button
-              onClick={() => setShowProfile(true)}
+              onClick={() => setShowLedger(true)}
               className="w-full flex items-center justify-between rounded-2xl px-4 py-3 mb-3 transition-transform active:scale-[0.98]"
               style={{
                 background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))",
