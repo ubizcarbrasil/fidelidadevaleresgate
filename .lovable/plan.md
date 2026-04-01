@@ -7,21 +7,21 @@ O provisionamento cria contas de teste para admin, cliente, parceiro e motorista
 ## Alterações
 
 ### 1. `supabase/functions/provision-brand/index.ts`
-Após a seção 11 (Driver test user, linha ~820), adicionar seção "Franchisee test user":
+Após a seção 11 (Driver test user, linha ~819), adicionar seção 12 — Franchisee test user:
 - Email: `franqueado-{emailPrefix}@teste.com`
 - Criar via `getOrCreateUser(email, "Franqueado Teste")` (2 parâmetros)
 - Atualizar profile com `brand_id` e `tenant_id`
-- Atribuir role `branch_admin` com `brand_id`, `branch_id` e `tenant_id` via `user_roles.upsert`
-- Criar `branch_points_wallet` via upsert (saldo 0)
-- Incluir `{ email, role: "branch_admin", is_active: true }` no array `testAccounts` (linha ~827)
+- Atribuir role `branch_admin` com `brand_id`, `branch_id` e `tenant_id`
+- Criar `branch_points_wallet` via upsert com saldo 0
+- Incluir `{ email: franqueadoEmail, role: "branch_admin", is_active: true }` no array `testAccounts`
 
 ### 2. `supabase/functions/provision-trial/index.ts`
-Mesma lógica após seção 11 (linha ~664), adaptada ao `getOrCreateUser` do trial (3 parâmetros: email, password, name):
+Mesma lógica após seção 11 (linha ~664), adaptada ao `getOrCreateUser` do trial com 3 parâmetros:
 - `getOrCreateUser(email, "123456", "Franqueado Teste")`
-- Restante idêntico (profile, role, wallet, testAccounts na linha ~672)
+- Profile, role, wallet e testAccounts idênticos
 
 ### 3. `src/components/dashboard/DashboardQuickLinks.tsx`
-Adicionar nos mapas existentes (linha ~40):
+Adicionar nos mapas existentes (linha 40-41):
 - `roleLabel`: `branch_admin: "Franqueado"`
 - `roleIcon`: `branch_admin: "🏙️"`
 
@@ -29,6 +29,6 @@ Adicionar nos mapas existentes (linha ~40):
 
 | Arquivo | Ação |
 |---------|------|
-| `supabase/functions/provision-brand/index.ts` | Nova seção franchisee + incluir no testAccounts |
+| `supabase/functions/provision-brand/index.ts` | Nova seção franchisee + testAccounts |
 | `supabase/functions/provision-trial/index.ts` | Mesma lógica (3 params) |
 | `src/components/dashboard/DashboardQuickLinks.tsx` | Label e ícone para branch_admin |
