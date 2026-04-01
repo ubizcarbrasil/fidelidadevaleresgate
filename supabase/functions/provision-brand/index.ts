@@ -818,12 +818,26 @@ Deno.serve(async (req) => {
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
 
-    // ─── 12. Store test accounts ────────────────────────────────
+    // ─── 12. Franchisee test user ─────────────────────────────────
+    const franqueadoEmail = `franqueado-${emailPrefix}@teste.com`;
+    const franqueadoUser = await getOrCreateUser(franqueadoEmail, "Franqueado Teste");
+    await supabaseAdmin.from("profiles").update({ brand_id: brand.id, tenant_id: tenant.id }).eq("id", franqueadoUser.id);
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: franqueadoUser.id, role: "branch_admin", brand_id: brand.id, branch_id: branch.id, tenant_id: tenant.id },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+    await supabaseAdmin.from("branch_points_wallet").upsert(
+      { branch_id: branch.id, brand_id: brand.id, balance: 0, total_loaded: 0, total_distributed: 0 },
+      { onConflict: "branch_id", ignoreDuplicates: true },
+    );
+
+    // ─── 13. Save test accounts in brand settings ────────────────
     const testAccounts = [
       { email: adminEmail, role: "brand_admin", is_active: true },
       { email: customerEmail, role: "customer", is_active: true },
       { email: storeEmail, role: "store_admin", is_active: true },
       { email: motoristaEmail, role: "driver", is_active: true },
+      { email: franqueadoEmail, role: "branch_admin", is_active: true },
     ];
     await supabaseAdmin.from("brands").update({
       brand_settings_json: { ...brandSettings, test_accounts: testAccounts },

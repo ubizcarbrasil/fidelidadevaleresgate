@@ -31,8 +31,8 @@ function BrandQuickLinks() {
   const origin = window.location.origin;
   const driverPublicBase = (settings?.driver_public_base_url as string) || null;
 
-  const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista" };
-  const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗" };
+  const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
+  const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
   const openExternal = (url: string) => { const popup = window.open(url, "_blank", "noopener,noreferrer"); if (!popup) window.location.href = url; };
 
