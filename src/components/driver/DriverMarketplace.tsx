@@ -537,7 +537,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {searchResults.map((deal, idx) => (
-                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} onClickDeal={handleClickDeal} />
+                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} pointsPerReal={pointsPerReal ?? 0} onClickDeal={handleClickDeal} />
               ))}
             </div>
           )}
