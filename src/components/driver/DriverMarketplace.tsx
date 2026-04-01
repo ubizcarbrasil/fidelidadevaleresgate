@@ -816,10 +816,19 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Profile overlay */}
+      {/* Profile overlay */}
       {showProfile && (
         <DriverProfileOverlay
           fontHeading={fontHeading}
           onBack={() => setShowProfile(false)}
+        />
+      )}
+
+      {/* Ledger overlay */}
+      {showLedger && (
+        <DriverLedgerOverlay
+          fontHeading={fontHeading}
+          onBack={() => setShowLedger(false)}
         />
       )}
     </div>
