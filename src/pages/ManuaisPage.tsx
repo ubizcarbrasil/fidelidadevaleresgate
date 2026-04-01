@@ -34,9 +34,9 @@ export default function ManuaisPage() {
         ),
       }))
       .filter((g) => g.manuais.length > 0);
-  }, [busca]);
+  }, [busca, todosGrupos]);
 
-  const totalManuais = gruposManuais.reduce((acc, g) => acc + g.manuais.length, 0);
+  const totalManuais = todosGrupos.reduce((acc, g) => acc + g.manuais.length, 0);
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto">
