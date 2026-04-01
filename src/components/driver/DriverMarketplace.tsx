@@ -612,7 +612,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                             style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
                           >
                             {rowDeals.map(deal => (
-                              <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
+                              <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} pointsPerReal={pointsPerReal ?? 0} onClickDeal={handleClickDeal} />
                             ))}
                             <div className="min-w-[16px] flex-shrink-0" />
                           </div>
