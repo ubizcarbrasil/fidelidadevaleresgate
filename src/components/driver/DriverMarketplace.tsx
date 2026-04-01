@@ -780,6 +780,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           whatsappNumber={whatsappNumber}
           fontHeading={fontHeading}
           onBack={() => setShowProgramInfo(false)}
+          videos={settings?.driver_info_videos || []}
         />
       )}
 
