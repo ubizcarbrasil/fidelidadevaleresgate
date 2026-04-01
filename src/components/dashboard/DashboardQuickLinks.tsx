@@ -44,6 +44,7 @@ function BrandQuickLinks() {
     { label: "Cadastro Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros" },
     { label: "Painel Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Gestão das lojas" },
     { label: "Achadinho Motorista", path: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", prodPath: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", icon: Car, description: "Marketplace do motorista" },
+    { label: "Painel Franqueado", path: "/branch-wallet", prodPath: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
   ];
 
   return (
