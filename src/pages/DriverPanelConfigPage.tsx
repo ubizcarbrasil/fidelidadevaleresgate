@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical } from "lucide-react";
+import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical, Video, Gift } from "lucide-react";
 import { buildDriverUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,6 +89,8 @@ export default function DriverPanelConfigPage() {
   const [copied, setCopied] = useState(false);
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [newVideo, setNewVideo] = useState({ title: "", description: "", video_url: "" });
 
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],
@@ -111,7 +113,8 @@ export default function DriverPanelConfigPage() {
   const showBanners = brandSettings?.driver_show_banners !== false;
   const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
   const interstitialBanners: DriverBannerItem[] = brandSettings?.driver_interstitial_banners || [];
-
+  const driverRedeemRows = brandSettings?.driver_redeem_rows ?? 1;
+  const driverInfoVideos: Array<{ id: string; title: string; description: string; video_url: string }> = brandSettings?.driver_info_videos || [];
   const settingsMutation = useMutation({
     mutationFn: async (patch: Record<string, any>) => {
       const updated = { ...brandSettings, ...patch };
@@ -556,6 +559,125 @@ export default function DriverPanelConfigPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Linhas "Resgatar com Pontos" */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Gift className="h-5 w-5 text-primary" />
+            Linhas — Resgatar com Pontos
+          </CardTitle>
+          <CardDescription>Quantas linhas de produtos a seção "Resgatar com Pontos" exibe no marketplace.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium">Linhas:</span>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={driverRedeemRows <= 1} onClick={() => settingsMutation.mutate({ driver_redeem_rows: Math.max(1, driverRedeemRows - 1) })}>
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="text-sm font-bold w-8 text-center">{driverRedeemRows}</span>
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={driverRedeemRows >= 5} onClick={() => settingsMutation.mutate({ driver_redeem_rows: Math.min(5, driverRedeemRows + 1) })}>
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Vídeos do Como Funciona */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Video className="h-5 w-5 text-primary" />
+            Vídeos — Como Funciona
+          </CardTitle>
+          <CardDescription>Adicione vídeos explicativos na tela "Como Funciona" do motorista.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {driverInfoVideos.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum vídeo configurado.</p>
+          )}
+
+          {driverInfoVideos.map((video) => (
+            <div key={video.id} className="rounded-lg border p-3 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{video.title || "Sem título"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{video.video_url}</p>
+                  {video.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{video.description}</p>}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive flex-shrink-0"
+                  onClick={() => {
+                    settingsMutation.mutate({
+                      driver_info_videos: driverInfoVideos.filter(v => v.id !== video.id),
+                    });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <Button variant="outline" className="w-full" onClick={() => setVideoDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Vídeo
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Add video dialog */}
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Vídeo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Título</label>
+              <Input
+                value={newVideo.title}
+                onChange={(e) => setNewVideo(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Ex: Como acumular pontos"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">URL do Vídeo</label>
+              <Input
+                value={newVideo.video_url}
+                onChange={(e) => setNewVideo(prev => ({ ...prev, video_url: e.target.value }))}
+                placeholder="https://youtube.com/watch?v=... ou link direto"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Descrição (opcional)</label>
+              <Input
+                value={newVideo.description}
+                onChange={(e) => setNewVideo(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Breve descrição do vídeo"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVideoDialogOpen(false)}>Cancelar</Button>
+            <Button
+              disabled={!newVideo.title || !newVideo.video_url}
+              onClick={() => {
+                const video = { id: crypto.randomUUID(), ...newVideo };
+                settingsMutation.mutate({ driver_info_videos: [...driverInfoVideos, video] });
+                setNewVideo({ title: "", description: "", video_url: "" });
+                setVideoDialogOpen(false);
+              }}
+            >
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

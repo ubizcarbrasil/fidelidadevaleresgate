@@ -23,7 +23,7 @@ interface LinhaCSV {
 interface ResultadoImport {
   linha: number;
   nome: string;
-  status: "atualizado" | "nao_encontrado" | "erro";
+  status: "atualizado" | "criado" | "nao_encontrado" | "erro";
   mensagem?: string;
 }
 
@@ -117,6 +117,15 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
 
     const allDrivers = drivers || [];
 
+    // Get first branch for creating new drivers
+    const { data: branches } = await supabase
+      .from("branches")
+      .select("id")
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .limit(1);
+    const defaultBranchId = branches?.[0]?.id;
+
     for (let i = 0; i < linhas.length; i++) {
       const row = linhas[i];
       const nomeCsv = row.nome || "—";
@@ -150,7 +159,36 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
       }
 
       if (!matched) {
-        results.push({ linha: i + 2, nome: nomeCsv, status: "nao_encontrado" });
+        // Fase 4: Criar novo motorista
+        if (!defaultBranchId) {
+          results.push({ linha: i + 2, nome: nomeCsv, status: "erro", mensagem: "Nenhuma filial encontrada" });
+          continue;
+        }
+        if (!row.nome || !row.nome.trim()) {
+          results.push({ linha: i + 2, nome: nomeCsv, status: "erro", mensagem: "Nome obrigatório para criar" });
+          continue;
+        }
+
+        const newDriver: Record<string, any> = {
+          name: `[MOTORISTA] ${row.nome.trim()}`,
+          brand_id: brandId,
+          branch_id: defaultBranchId,
+          points_balance: 0,
+          money_balance: 0,
+        };
+        if (cpfLimpo && cpfLimpo.length === 11) newDriver.cpf = cpfLimpo;
+        if (row.telefone) newDriver.phone = row.telefone.trim();
+        if (row.email) newDriver.email = row.email.trim();
+
+        const { error } = await (supabase as any)
+          .from("customers")
+          .insert(newDriver);
+
+        if (error) {
+          results.push({ linha: i + 2, nome: nomeCsv, status: "erro", mensagem: error.message });
+        } else {
+          results.push({ linha: i + 2, nome: nomeCsv, status: "criado" });
+        }
         continue;
       }
 
@@ -192,9 +230,13 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
     setImportando(false);
 
     const atualizados = results.filter((r) => r.status === "atualizado").length;
-    if (atualizados > 0) {
+    const criados = results.filter((r) => r.status === "criado").length;
+    if (atualizados > 0 || criados > 0) {
       queryClient.invalidateQueries({ queryKey: ["driver-management"] });
-      toast.success(`${atualizados} motorista(s) atualizado(s) com sucesso!`);
+      const msgs: string[] = [];
+      if (atualizados > 0) msgs.push(`${atualizados} atualizado(s)`);
+      if (criados > 0) msgs.push(`${criados} criado(s)`);
+      toast.success(`Motoristas: ${msgs.join(", ")}!`);
     }
   };
 
@@ -205,6 +247,7 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
   };
 
   const atualizados = resultados?.filter((r) => r.status === "atualizado").length ?? 0;
+  const criados = resultados?.filter((r) => r.status === "criado").length ?? 0;
   const naoEncontrados = resultados?.filter((r) => r.status === "nao_encontrado").length ?? 0;
   const erros = resultados?.filter((r) => r.status === "erro").length ?? 0;
 
@@ -272,10 +315,15 @@ export default function ImportarCsvMotoristas({ brandId }: Props) {
             </>
           ) : (
             <>
-              <div className="flex gap-3 text-sm">
+              <div className="flex flex-wrap gap-3 text-sm">
                 <Badge className="bg-green-500/10 text-green-400 border-green-400/30">
                   <CheckCircle2 className="h-3 w-3 mr-1" />{atualizados} atualizados
                 </Badge>
+                {criados > 0 && (
+                  <Badge className="bg-blue-500/10 text-blue-400 border-blue-400/30">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />{criados} criados
+                  </Badge>
+                )}
                 {naoEncontrados > 0 && (
                   <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-400/30">
                     <AlertTriangle className="h-3 w-3 mr-1" />{naoEncontrados} não encontrados

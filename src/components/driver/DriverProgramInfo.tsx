@@ -14,10 +14,13 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import SecaoVideosInfo, { type VideoInfo } from "./SecaoVideosInfo";
+
 interface Props {
   whatsappNumber?: string;
   fontHeading?: string;
   onBack: () => void;
+  videos?: VideoInfo[];
 }
 
 /* ── Accordion Item ── */
@@ -83,7 +86,7 @@ function StepCard({
 }
 
 /* ── Main ── */
-export default function DriverProgramInfo({ whatsappNumber, fontHeading, onBack }: Props) {
+export default function DriverProgramInfo({ whatsappNumber, fontHeading, onBack, videos }: Props) {
   const faqs = [
     {
       question: "O preço do produto muda?",
@@ -251,6 +254,9 @@ export default function DriverProgramInfo({ whatsappNumber, fontHeading, onBack 
             <FaqItem key={i} question={faq.question} answer={faq.answer} />
           ))}
         </div>
+
+        {/* Videos */}
+        <SecaoVideosInfo videos={videos || []} fontHeading={fontHeading} />
 
         {/* WhatsApp CTA */}
         {whatsappLink && (
