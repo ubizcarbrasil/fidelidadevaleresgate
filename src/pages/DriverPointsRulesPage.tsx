@@ -138,6 +138,7 @@ export default function DriverPointsRulesPage() {
         volume_tiers: merged.volume_tiers,
         volume_cycle_days: merged.volume_cycle_days,
         is_active: merged.is_active,
+        macaneta_points_per_ride: merged.macaneta_points_per_ride,
       };
       const { error } = await (supabase as any)
         .from("driver_points_rules")
