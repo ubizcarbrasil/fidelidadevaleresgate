@@ -6419,6 +6419,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_driver_by_cpf: {
+        Args: { p_brand_id: string; p_cpf: string }
+        Returns: {
+          branch_id: string
+          branch_name: string
+          brand_id: string
+          cpf: string
+          email: string
+          id: string
+          money_balance: number
+          name: string
+          phone: string
+          points_balance: number
+        }[]
+      }
       rate_limit_cleanup: { Args: never; Returns: undefined }
       rpc_get_store_owner_redemptions: {
         Args: { p_page?: number; p_page_size?: number; p_store_id: string }
