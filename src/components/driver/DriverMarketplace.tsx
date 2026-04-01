@@ -15,6 +15,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { formatPoints } from "@/lib/formatPoints";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import DriverProfileOverlay from "./DriverProfileOverlay";
+import DriverLedgerOverlay from "./DriverLedgerOverlay";
 import { Coins, UserCircle } from "lucide-react";
 
 import DriverBannerCarousel from "./DriverBannerCarousel";
@@ -136,6 +137,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showProgramInfo, setShowProgramInfo] = useState(false);
   const [showRedeemStore, setShowRedeemStore] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -450,7 +452,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           {/* Row 2: Points highlight card */}
           {driver && (
             <button
-              onClick={() => setShowProfile(true)}
+              onClick={() => setShowLedger(true)}
               className="w-full flex items-center justify-between rounded-2xl px-4 py-3 mb-3 transition-transform active:scale-[0.98]"
               style={{
                 background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))",
@@ -814,10 +816,19 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Profile overlay */}
+      {/* Profile overlay */}
       {showProfile && (
         <DriverProfileOverlay
           fontHeading={fontHeading}
           onBack={() => setShowProfile(false)}
+        />
+      )}
+
+      {/* Ledger overlay */}
+      {showLedger && (
+        <DriverLedgerOverlay
+          fontHeading={fontHeading}
+          onBack={() => setShowLedger(false)}
         />
       )}
     </div>
