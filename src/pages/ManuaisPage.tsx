@@ -22,9 +22,9 @@ export default function ManuaisPage() {
   }, [consoleScope]);
 
   const gruposFiltrados = useMemo(() => {
-    if (!busca.trim()) return gruposManuais;
+    if (!busca.trim()) return todosGrupos;
     const termo = busca.toLowerCase();
-    return gruposManuais
+    return todosGrupos
       .map((g) => ({
         ...g,
         manuais: g.manuais.filter(
