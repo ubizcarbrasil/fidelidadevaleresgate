@@ -1,48 +1,48 @@
 
 
-# Revisão geral: Extrato, contagem de corridas e dados de motoristas
+# Corrida Maçaneta — Identificação, Exclusão do Ranking e Pontuação Configurável
 
-## Problemas encontrados
+## Contexto
 
-### 1. Contagem de corridas mostra 0 (bug confirmado)
-A listagem de motoristas faz uma query em `machine_rides` para agregar corridas e pontos, mas **não define `.limit()`**. O Supabase aplica um limite padrão de **1000 linhas**, e a marca tem **4650 corridas**. Resultado: só os primeiros motoristas recebem contagem correta — os demais ficam com `+0` e `🚗 0`.
+"Maçaneta" é o nome que a TaxiMachine atribui ao passageiro quando o motorista abre uma corrida avulsa (sem passageiro real no app). Atualmente o sistema trata "Maçaneta" como um passageiro real — cria um registro de cliente, credita pontos de passageiro, e aparece no ranking. Isso está errado.
 
-**Solução**: Criar uma RPC `get_driver_ride_stats` que faz `GROUP BY driver_customer_id` no servidor e retorna já agregado, eliminando o problema do limite de 1000 linhas.
+Dados atuais: **86 corridas** com passenger_name = "Maçaneta", **2.747 pontos de passageiro** creditados indevidamente, e um cliente chamado "Maçaneta" no banco.
 
-### 2. Extrato vazio no painel admin
-A RPC `get_driver_ledger` funciona corretamente no banco (testei e retorna dados). O problema provável é que o erro do RPC no frontend está sendo engolido silenciosamente — o `useQuery` chama o RPC, se falha cai no fallback direto em `machine_rides`, que por sua vez pode falhar por RLS (admin autenticado pode não ter política de SELECT em `machine_rides`).
+## O que será feito
 
-**Solução**: 
-- Remover o cast `(supabase as any)` e garantir que o RPC é chamado com tipagem correta
-- Melhorar o tratamento de erro para logar o erro no console
-- Garantir que o fallback funciona ou confiar apenas na RPC (que é SECURITY DEFINER)
+### 1. Excluir "Maçaneta" do ranking de passageiros
+Alterar a RPC `get_points_ranking` para filtrar `passenger_name != 'Maçaneta'` na query de passageiros. O motorista que fez a corrida continua aparecendo normalmente no ranking de motoristas.
 
-### 3. Dados faltando em alguns motoristas
-Motoristas como "Michel Santiago Cruvinel" não têm CPF, telefone ou e-mail. Isso é um problema de dados — foram importados via webhook sem esses dados. Não é bug de código, mas podemos melhorar a visibilidade mostrando alertas de "dados incompletos".
+### 2. Não criar cliente nem pontuar passageiro em corridas maçaneta
+No webhook, quando `passengerName = 'Maçaneta'` (case-insensitive), pular a criação de customer e a pontuação de passageiro. A corrida ainda é salva em `machine_rides` com `points_credited = 0`, e o motorista continua sendo pontuado normalmente.
 
-## Plano de implementação
+### 3. Adicionar pontuação configurável para corrida maçaneta
+Adicionar coluna `macaneta_points_per_ride` (integer, default 0) na tabela `driver_points_rules`. Quando a corrida é maçaneta e esse valor é > 0, o motorista recebe essa pontuação **em vez** da regra padrão (que depende do valor da corrida ou % do passageiro). Se for 0, a regra padrão continua valendo.
 
-### Migração SQL — nova RPC `get_driver_ride_stats`
-```sql
-CREATE FUNCTION get_driver_ride_stats(p_brand_id uuid, p_customer_ids uuid[])
-RETURNS TABLE(customer_id uuid, total_rides bigint, total_ride_points numeric)
-```
-Faz `GROUP BY` no banco e retorna dados já agregados — sem limite de 1000 linhas.
+### 4. Campo de configuração na tela de Regras do Motorista
+Adicionar um card "Pontuação Maçaneta" na página `/driver-points-rules` com um campo numérico para definir quantos pontos o motorista ganha por corrida maçaneta. Inclui explicação contextual.
 
-### `DriverManagementPage.tsx`
-- Substituir a query direta em `machine_rides` pela chamada à RPC `get_driver_ride_stats`
-- Isso corrige a contagem de corridas e pontos para todos os motoristas
+## Detalhes técnicos
 
-### `DriverLedgerSection.tsx` (aba Extrato do admin)
-- Remover o fallback direto em `machine_rides` — confiar apenas na RPC `get_driver_ledger` que é SECURITY DEFINER
-- Adicionar `console.error` no tratamento de erro para facilitar debug
-- Remover cast `as any` desnecessário
+### Migração SQL
+- Adicionar coluna `macaneta_points_per_ride integer DEFAULT 0` em `driver_points_rules`
+- Atualizar `get_points_ranking` para excluir `passenger_name = 'Maçaneta'`
+
+### Webhook (`supabase/functions/machine-webhook/index.ts`)
+- Detectar maçaneta: `passengerName?.toLowerCase() === 'maçaneta'`
+- Se maçaneta: não buscar/criar customer, setar `points = 0` e `pointsCredited = false`
+- Na seção de pontuação do motorista: se maçaneta e `advancedRule.macaneta_points_per_ride > 0`, usar esse valor fixo
+
+### UI (`src/pages/DriverPointsRulesPage.tsx`)
+- Novo card com input numérico para `macaneta_points_per_ride`
+- Incluir no payload de save/upsert
+- Tipo local atualizado
 
 ### Arquivos afetados
 
 | Arquivo | Ação |
 |---------|------|
-| Migração SQL | Nova RPC `get_driver_ride_stats` |
-| `src/pages/DriverManagementPage.tsx` | Usar RPC para contagem de corridas |
-| `src/components/driver-management/DriverLedgerSection.tsx` | Simplificar: usar apenas RPC, logar erros |
+| Migração SQL | Coluna + atualização da RPC |
+| `supabase/functions/machine-webhook/index.ts` | Detectar maçaneta, pular passageiro, usar pontuação especial |
+| `src/pages/DriverPointsRulesPage.tsx` | Campo de configuração maçaneta |
 
