@@ -33,14 +33,22 @@ function storageKey(brandId: string) {
 }
 
 async function fetchDriverByCpf(brandId: string, cpf: string): Promise<DriverCustomer | null> {
-  const { data } = await supabase
-    .from("customers")
-    .select("id, name, cpf, email, phone, points_balance, money_balance, brand_id, branch_id, branches(name)")
-    .eq("brand_id", brandId)
-    .eq("cpf", cpf)
-    .ilike("name", "%[MOTORISTA]%")
-    .maybeSingle();
-  return data as DriverCustomer | null;
+  const { data, error } = await supabase
+    .rpc("lookup_driver_by_cpf", { p_brand_id: brandId, p_cpf: cpf });
+  if (error || !data || (Array.isArray(data) && data.length === 0)) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return {
+    id: row.id,
+    name: row.name,
+    cpf: row.cpf,
+    email: row.email,
+    phone: row.phone,
+    points_balance: row.points_balance,
+    money_balance: row.money_balance,
+    brand_id: row.brand_id,
+    branch_id: row.branch_id,
+    branches: row.branch_name ? { name: row.branch_name } : null,
+  } as DriverCustomer;
 }
 
 export function DriverSessionProvider({
