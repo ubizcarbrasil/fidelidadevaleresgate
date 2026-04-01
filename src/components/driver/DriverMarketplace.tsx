@@ -636,7 +636,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
               {uncategorized.map(deal => (
-                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
+                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} pointsPerReal={pointsPerReal ?? 0} onClickDeal={handleClickDeal} />
               ))}
               <div className="min-w-[16px] flex-shrink-0" />
             </div>
