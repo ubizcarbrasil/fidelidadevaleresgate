@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Key } from "lucide-react";
 import { toast } from "sonner";
 
 const ESTADOS = [
@@ -50,6 +50,11 @@ export default function BrandBranchForm() {
   const [saving, setSaving] = useState(false);
   const [telegramChatId, setTelegramChatId] = useState("");
 
+  // Credenciais da cidade
+  const [apiKey, setApiKey] = useState("");
+  const [basicAuthUser, setBasicAuthUser] = useState("");
+  const [basicAuthPassword, setBasicAuthPassword] = useState("");
+
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
     queryFn: async () => {
@@ -65,14 +70,14 @@ export default function BrandBranchForm() {
     enabled: isEdit,
   });
 
-  // Load existing telegram_chat_id from machine_integrations
+  // Load existing integration data (credentials + telegram)
   const { data: existingIntegration } = useQuery({
     queryKey: ["branch-integration", id, currentBrandId],
     queryFn: async () => {
       if (!id || !currentBrandId) return null;
       const { data } = await supabase
         .from("machine_integrations")
-        .select("telegram_chat_id")
+        .select("api_key, basic_auth_user, basic_auth_password, telegram_chat_id")
         .eq("brand_id", currentBrandId)
         .eq("branch_id", id)
         .maybeSingle();
@@ -90,8 +95,13 @@ export default function BrandBranchForm() {
   }, [existing]);
 
   useEffect(() => {
-    if (existingIntegration?.telegram_chat_id) {
-      setTelegramChatId(existingIntegration.telegram_chat_id);
+    if (existingIntegration) {
+      if (existingIntegration.telegram_chat_id) setTelegramChatId(existingIntegration.telegram_chat_id);
+      if (existingIntegration.api_key && !existingIntegration.api_key.startsWith("url-only-")) {
+        setApiKey(existingIntegration.api_key);
+      }
+      if (existingIntegration.basic_auth_user) setBasicAuthUser(existingIntegration.basic_auth_user);
+      if (existingIntegration.basic_auth_password) setBasicAuthPassword(existingIntegration.basic_auth_password);
     }
   }, [existingIntegration]);
 
@@ -123,26 +133,46 @@ export default function BrandBranchForm() {
         brand_id: currentBrandId,
       };
 
+      let branchId = id;
+
       if (isEdit && id) {
         const { error } = await supabase.from("branches").update(payload).eq("id", id);
         if (error) throw error;
         toast.success("Cidade atualizada com sucesso!");
       } else {
-        const { error } = await supabase.from("branches").insert(payload);
+        const { data: inserted, error } = await supabase
+          .from("branches")
+          .insert(payload)
+          .select("id")
+          .single();
         if (error) throw error;
+        branchId = inserted.id;
         toast.success("Cidade criada com sucesso!");
       }
 
-      // Update telegram_chat_id in machine_integrations if provided
-      if (telegramChatId.trim()) {
-        const branchId = isEdit ? id : undefined;
-        if (branchId) {
-          await supabase
-            .from("machine_integrations")
-            .update({ telegram_chat_id: telegramChatId.trim() })
-            .eq("brand_id", currentBrandId)
-            .eq("branch_id", branchId);
+      // Register integration credentials via edge function
+      if (branchId && (basicAuthUser.trim() || apiKey.trim())) {
+        const { error: fnError } = await supabase.functions.invoke("register-machine-webhook", {
+          body: {
+            brand_id: currentBrandId,
+            branch_id: branchId,
+            api_key: apiKey.trim() || undefined,
+            basic_auth_user: basicAuthUser.trim(),
+            basic_auth_password: basicAuthPassword.trim(),
+            telegram_chat_id: telegramChatId.trim() || undefined,
+          },
+        });
+        if (fnError) {
+          console.error("Integration registration error:", fnError);
+          toast.error("Cidade salva, mas houve erro ao registrar a integração.");
         }
+      } else if (branchId && telegramChatId.trim()) {
+        // Only telegram update, no credentials
+        await supabase
+          .from("machine_integrations")
+          .update({ telegram_chat_id: telegramChatId.trim() })
+          .eq("brand_id", currentBrandId)
+          .eq("branch_id", branchId);
       }
 
       queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
@@ -204,6 +234,55 @@ export default function BrandBranchForm() {
             <Switch checked={ativo} onCheckedChange={setAtivo} />
           </div>
 
+          <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
+            <p><strong>Nome gerado:</strong> {cidade.trim() && uf ? `${cidade.trim()} - ${uf}` : "—"}</p>
+            <p><strong>Slug:</strong> {cidade.trim() && uf ? normalizeSlug(cidade.trim(), uf) : "—"}</p>
+            <p><strong>Timezone:</strong> America/Sao_Paulo</p>
+            <p><strong>Coordenadas:</strong> preenchidas automaticamente ao salvar</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Credenciais de Integração */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            Credenciais da Cidade
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Credenciais de acesso à API de mobilidade desta cidade. Necessárias para receber corridas em tempo real.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>API Key</Label>
+            <Input
+              placeholder="Chave de API da cidade"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Usuário</Label>
+            <Input
+              placeholder="Usuário de autenticação"
+              value={basicAuthUser}
+              onChange={(e) => setBasicAuthUser(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Senha</Label>
+            <Input
+              type="password"
+              placeholder="Senha de autenticação"
+              value={basicAuthPassword}
+              onChange={(e) => setBasicAuthPassword(e.target.value)}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Chat ID do Telegram (opcional)</Label>
             <Input
@@ -212,28 +291,21 @@ export default function BrandBranchForm() {
               onChange={(e) => setTelegramChatId(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Se informado, as notificações de corridas desta cidade serão enviadas para este grupo. Caso contrário, será usado o canal padrão da marca.
+              Se informado, as notificações de corridas desta cidade serão enviadas para este grupo.
             </p>
-          </div>
-
-          <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
-            <p><strong>Nome gerado:</strong> {cidade.trim() && uf ? `${cidade.trim()} - ${uf}` : "—"}</p>
-            <p><strong>Slug:</strong> {cidade.trim() && uf ? normalizeSlug(cidade.trim(), uf) : "—"}</p>
-            <p><strong>Timezone:</strong> America/Sao_Paulo</p>
-            <p><strong>Coordenadas:</strong> preenchidas automaticamente ao salvar</p>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => navigate("/brand-branches")}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              {isEdit ? "Salvar" : "Criar Cidade"}
-            </Button>
           </div>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Button variant="outline" onClick={() => navigate("/brand-branches")}>
+          Cancelar
+        </Button>
+        <Button onClick={handleSave} disabled={saving}>
+          {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          {isEdit ? "Salvar" : "Criar Cidade"}
+        </Button>
+      </div>
     </div>
   );
 }
