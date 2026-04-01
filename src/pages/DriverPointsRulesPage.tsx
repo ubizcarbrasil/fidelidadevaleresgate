@@ -390,6 +390,38 @@ export default function DriverPointsRulesPage() {
         </Card>
       )}
 
+      {/* Pontuação Maçaneta */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <DoorOpen className="h-4 w-4 text-amber-500" />
+            Pontuação Maçaneta
+          </CardTitle>
+          <CardDescription>
+            Corrida "maçaneta" é quando o motorista abre uma corrida avulsa no aplicativo, sem passageiro real. 
+            O passageiro não recebe pontos, mas o motorista pode receber uma pontuação fixa configurável. 
+            Se o valor for 0, a regra padrão acima será usada.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-xs space-y-2">
+            <Label className="text-xs">Pontos fixos por corrida maçaneta</Label>
+            <Input
+              type="number"
+              min={0}
+              step={1}
+              value={merged.macaneta_points_per_ride}
+              onChange={(e) => updateForm("macaneta_points_per_ride", parseInt(e.target.value) || 0)}
+            />
+            <p className="text-xs text-muted-foreground">
+              {merged.macaneta_points_per_ride > 0
+                ? `Motorista ganhará ${merged.macaneta_points_per_ride} pontos por cada corrida maçaneta`
+                : "Usando regra padrão (modo selecionado acima)"}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Simulação */}
       <Card>
         <CardHeader>
