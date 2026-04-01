@@ -14,10 +14,13 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import SecaoVideosInfo, { type VideoInfo } from "./SecaoVideosInfo";
+
 interface Props {
   whatsappNumber?: string;
   fontHeading?: string;
   onBack: () => void;
+  videos?: VideoInfo[];
 }
 
 /* ── Accordion Item ── */
