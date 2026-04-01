@@ -25,7 +25,7 @@ export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, 
   const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const pointsBalance = customer?.points_balance || 0;
+  const pointsBalance = driver?.points_balance || 0;
 
   const { data, isLoading } = useQuery({
     queryKey: ["redeem-store", brandId, branchId],
