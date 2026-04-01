@@ -1,63 +1,35 @@
 
 
-# Extrato detalhado de pontos no painel do motorista
+# Corrigir extrato de pontos do motorista — dados vêm de `machine_rides`
 
-## Problema
-1. O clique no card de pontos abre o perfil completo — o usuário quer que abra direto o **extrato detalhado**
-2. O extrato atual não mostra a **origem** dos pontos (corrida, bônus manual, resgate, etc.)
-3. A query do extrato bate no RLS e provavelmente retorna vazio (mesmo problema do login por CPF)
+## Problema raiz
+Os pontos dos motoristas são creditados via **`machine_rides`** (coluna `driver_points_credited`), mas o extrato busca na tabela **`points_ledger`**, que está praticamente vazia para motoristas. O `points_ledger` só tem 4 registros no total (ajustes manuais e resgates), enquanto as corridas reais estão em `machine_rides`.
 
 ## Solução
+Atualizar a função `get_driver_ledger` para unir dados de **ambas as tabelas**: `machine_rides` (corridas finalizadas) e `points_ledger` (ajustes manuais e resgates), retornando um extrato completo.
 
-### 1. Migração — Função `get_driver_ledger`
-Criar função `SECURITY DEFINER` que retorna o extrato do motorista incluindo `reference_type`, `reason`, `money_amount` e dados da filial:
+### 1. Migração — Recriar `get_driver_ledger`
 
-```sql
-CREATE OR REPLACE FUNCTION public.get_driver_ledger(p_customer_id uuid)
-RETURNS TABLE(
-  id uuid, entry_type text, points_amount numeric, money_amount numeric,
-  reason text, reference_type text, created_at timestamptz, branch_name text
-)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
-AS $$
-  SELECT l.id, l.entry_type::text, l.points_amount, l.money_amount,
-         l.reason, l.reference_type::text, l.created_at,
-         b.name AS branch_name
-  FROM points_ledger l
-  LEFT JOIN branches b ON b.id = l.branch_id
-  WHERE l.customer_id = p_customer_id
-  ORDER BY l.created_at DESC
-  LIMIT 100;
-$$;
-```
+A função precisa fazer UNION entre:
+- **`machine_rides`**: cada corrida finalizada gera uma entrada CREDIT com `driver_points_credited`, mostrando nome do passageiro, valor da corrida e horário
+- **`points_ledger`**: ajustes manuais (CREDIT) e resgates (DEBIT) com `reason` do admin
 
-### 2. Novo overlay — `DriverLedgerOverlay.tsx`
-Tela fullscreen (mesmo padrão do `DriverProfileOverlay`) dedicada ao extrato:
+Colunas retornadas: `id`, `entry_type`, `points_amount`, `money_amount`, `reason`, `reference_type`, `created_at`, `branch_name`
 
-- **Header**: Seta voltar + "Extrato de pontos"
-- **Card de saldo**: Mesmo visual do card na home (gradient primary)
-- **Lista de movimentações**: Cada item mostra:
-  - Ícone de origem (🚗 corrida, 🛒 compra/earning, 🎁 bônus manual, 🎟 resgate)
-  - **Label traduzido** do `reference_type`: MACHINE_RIDE → "Corrida", EARNING_EVENT → "Compra", MANUAL_ADJUSTMENT → "Bonificação", REDEMPTION → "Resgate"
-  - Campo `reason` (anotação do admin) exibido como subtexto — é aqui que o motorista vê a origem customizada
-  - Data/hora formatada em pt-BR
-  - Badge de pontos (+/- colorido)
-  - Nome da filial quando disponível
+Para corridas, o `reason` será construído como "Corrida - {nome_passageiro}" e `reference_type` será `'MACHINE_RIDE'`.
 
-### 3. Alterar clique no card de pontos (`DriverMarketplace.tsx`)
-- O botão de pontos no header abre o novo `DriverLedgerOverlay` em vez do perfil
-- O botão de perfil (ícone de usuário) continua abrindo o `DriverProfileOverlay`
+### 2. Atualizar `DriverLedgerSection.tsx` (aba Extrato do admin)
 
-### 4. Atualizar `DriverProfileOverlay.tsx`
-- Usar a mesma RPC `get_driver_ledger` em vez da query direta (corrige o RLS)
-- Adicionar `reference_type` na exibição do extrato que já existe lá
+Trocar a query direta em `points_ledger` pela chamada RPC `get_driver_ledger`, que já faz o UNION. Adicionar `reference_type` na interface e exibir ícones por tipo de origem.
+
+### 3. Sem alteração no `DriverLedgerOverlay.tsx`
+
+O overlay do motorista já usa a RPC `get_driver_ledger` — basta a migração atualizar a função para que os dados apareçam automaticamente.
 
 ### Arquivos
 
-| Arquivo | Ação |
+| Arquivo | Acao |
 |---------|------|
-| Migração SQL | Nova função `get_driver_ledger` |
-| `src/components/driver/DriverLedgerOverlay.tsx` | **Novo** — overlay fullscreen do extrato |
-| `src/components/driver/DriverMarketplace.tsx` | Editar — card de pontos abre o ledger overlay |
-| `src/components/driver/DriverProfileOverlay.tsx` | Editar — usar RPC e mostrar `reference_type` |
+| Migracao SQL | Recriar funcao `get_driver_ledger` com UNION |
+| `src/components/driver-management/DriverLedgerSection.tsx` | Usar RPC em vez de query direta |
 
