@@ -56,6 +56,12 @@ function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, pointsPerR
             {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
           </div>
         )}
+        {earnedPoints > 0 && (
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium mt-1 w-fit" style={{ backgroundColor: "#22c55e15", color: "#22c55e" }}>
+            <Star className="w-2.5 h-2.5" fill="#22c55e" />
+            <span>Ganhe {formatPoints(earnedPoints)} pts</span>
+          </div>
+        )}
         {deal.is_redeemable && deal.redeem_points_cost && deal.redeem_points_cost > 0 && (
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium mt-1 w-fit" style={{ backgroundColor: `${highlight}15`, color: highlight }}>
             <Gift className="w-2.5 h-2.5" />
