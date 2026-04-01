@@ -732,6 +732,14 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           onBack={() => setShowRedeemStore(false)}
         />
       )}
+
+      {/* Profile overlay */}
+      {showProfile && (
+        <DriverProfileOverlay
+          fontHeading={fontHeading}
+          onBack={() => setShowProfile(false)}
+        />
+      )}
     </div>
   );
 }
