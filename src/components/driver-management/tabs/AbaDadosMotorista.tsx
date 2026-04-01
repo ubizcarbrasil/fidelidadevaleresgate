@@ -30,9 +30,10 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 const cleanName = (name: string | null) =>
   name?.replace(/\[MOTORISTA\]\s*/i, "").trim() || "Sem nome";
 
-const maskCpf = (cpf: string | null) => {
+const formatCpf = (cpf: string | null) => {
   if (!cpf) return "—";
-  if (cpf.length >= 11) return `•••.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+  const digits = cpf.replace(/\D/g, "").padStart(11, "0");
+  if (digits.length === 11) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
   return cpf;
 };
 
