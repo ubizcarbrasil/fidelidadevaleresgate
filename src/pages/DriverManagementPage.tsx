@@ -62,7 +62,7 @@ export default function DriverManagementPage() {
 
       // Usar RPC para agregar corridas no servidor (sem limite de 1000 linhas)
       const { data: statsData, error: statsError } = await supabase
-        .rpc("get_driver_ride_stats", { p_brand_id: currentBrandId, p_customer_ids: custIds });
+        .rpc("get_driver_ride_stats", { p_brand_id: currentBrandId!, p_customer_ids: custIds });
       if (statsError) console.error("Erro ao buscar stats de corridas:", statsError);
 
       const ridePointsById: Record<string, number> = {};
