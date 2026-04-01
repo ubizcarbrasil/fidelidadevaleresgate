@@ -294,6 +294,11 @@ export default function Dashboard() {
         recentEarnings={recentEarnings?.map(d => d.count)}
       />
 
+      {/* Branch-specific dashboard */}
+      {consoleScope === "BRANCH" && currentBranchId && (
+        <BranchDashboardSection branchId={currentBranchId} />
+      )}
+
       {/* Corridas com seletor de período */}
       {showBrand && <RidesCounterCard brandId={brandFilter} />}
 
