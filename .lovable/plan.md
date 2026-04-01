@@ -1,47 +1,44 @@
 
 
-# Corrigir Resgate na Cidade e Pontos Zerados no Marketplace do Motorista
+# Corrigir Atribuição de Role do Franqueado
 
-## Problema 1 — Resgate na Cidade não abre
-O `onClickOferta` no `DriverMarketplace.tsx` está apenas fazendo `console.log` sem abrir nenhuma tela de detalhe.
+## Problema
+A Edge Function `create-branch-admin` usa `upsert` com `onConflict: "user_id,role"`, mas a constraint real da tabela `user_roles` é `UNIQUE(user_id, role, tenant_id, brand_id, branch_id)`. Isso faz o upsert falhar silenciosamente — o perfil é atualizado e a carteira é criada, mas a role `branch_admin` nunca é inserida.
 
-## Problema 2 — Pontos zerados na Loja de Resgate (Ver todos)
-O `DriverRedeemStorePage.tsx` usa `useCustomer()` do `CustomerContext` para obter o saldo de pontos. Porém, o painel do motorista usa login via CPF (`DriverSessionContext`), sem sessão Supabase Auth. Resultado: `customer` é `null` e o saldo aparece como `0 pts`.
+**Usuário afetado:** `franqueado@ubizcar.com.br` (id: `ac826b3b-...`) — perfil OK, carteira OK, mas sem role `branch_admin`.
 
----
+## Correção
 
-## Alterações
+### 1. `supabase/functions/create-branch-admin/index.ts` (linha ~117-127)
+Substituir o `upsert` por um fluxo de `insert` + tratamento de conflito:
 
-### 1. `src/components/driver/DriverRedeemStorePage.tsx`
-- **Substituir** `useCustomer()` por `useDriverSession()` para obter o saldo correto do motorista logado via CPF
-- Importar `useDriverSession` no lugar de `useCustomer`
-- Usar `driver?.points_balance || 0` em vez de `customer?.points_balance || 0`
+```typescript
+// Upsert role — match full unique constraint
+await supabaseAdmin.from("user_roles").upsert(
+  {
+    user_id: userId,
+    role: "branch_admin",
+    brand_id,
+    branch_id,
+    tenant_id: effectiveTenantId,
+  },
+  { onConflict: "user_id,role,tenant_id,brand_id,branch_id", ignoreDuplicates: true },
+);
+```
 
-### 2. `src/components/driver/DriverRedeemOrderHistory.tsx`
-- **Substituir** `useCustomer()` por `useDriverSession()` para garantir que o histórico de resgates também funcione
-- Usar `driver?.id` em vez de `customer?.id`
+### 2. Deploy e re-executar
+- Fazer deploy da função corrigida
+- Chamar a função novamente para o usuário existente para inserir a role que ficou faltando
 
-### 3. `src/components/driver/DriverMarketplace.tsx`
-- **Adicionar estado** `selectedCityOffer` para controlar a oferta de cidade selecionada
-- **Criar componente inline ou modal** de detalhe da oferta da cidade (nome da loja, logo, crédito, pontos necessários, endereço) — somente visualização, sem gerar PIN
-- **Substituir** o `console.log` no `onClickOferta` por `setSelectedCityOffer(oferta)`
+### 3. Provisioning functions (mesma correção)
+Verificar e corrigir o mesmo `onConflict` em:
+- `supabase/functions/provision-brand/index.ts`
+- `supabase/functions/provision-trial/index.ts`
 
-### 4. `src/components/driver/CityOfferDetailOverlay.tsx` (novo arquivo)
-- Overlay full-screen com detalhes da oferta de cidade:
-  - Logo/imagem da loja
-  - Nome da loja e título da oferta
-  - Valor do crédito (R$)
-  - Custo em pontos
-  - Compra mínima (se houver)
-  - Botão de voltar
-- Sem fluxo de resgate/PIN — apenas informativo conforme solicitado
-
-## Arquivos afetados
-
-| Arquivo | Ação |
-|---------|------|
-| `src/components/driver/DriverRedeemStorePage.tsx` | Trocar `useCustomer` por `useDriverSession` |
-| `src/components/driver/DriverRedeemOrderHistory.tsx` | Trocar `useCustomer` por `useDriverSession` |
-| `src/components/driver/DriverMarketplace.tsx` | Adicionar estado e handler para oferta de cidade |
-| `src/components/driver/CityOfferDetailOverlay.tsx` | Novo componente de detalhe da oferta |
+## Resultado esperado
+O franqueado `franqueado@ubizcar.com.br` terá:
+- ✅ Perfil com `brand_id` e `tenant_id`
+- ✅ Role `branch_admin` vinculada a São João da Boa Vista
+- ✅ Carteira de pontos inicializada
+- Senha: `123456`
 
