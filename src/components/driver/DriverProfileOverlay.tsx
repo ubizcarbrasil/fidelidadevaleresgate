@@ -41,11 +41,7 @@ export default function DriverProfileOverlay({ fontHeading, onBack }: Props) {
   useEffect(() => {
     if (!driver) return;
     supabase
-      .from("points_ledger")
-      .select("id, entry_type, points_amount, reason, created_at")
-      .eq("customer_id", driver.id)
-      .order("created_at", { ascending: false })
-      .limit(50)
+      .rpc("get_driver_ledger", { p_customer_id: driver.id })
       .then(({ data }) => {
         setLedger((data as LedgerEntry[]) || []);
         setLoadingLedger(false);
