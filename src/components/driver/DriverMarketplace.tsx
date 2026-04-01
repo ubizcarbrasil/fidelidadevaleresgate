@@ -21,6 +21,7 @@ import DriverBannerCarousel from "./DriverBannerCarousel";
 import DriverCategoryCarousel from "./DriverCategoryCarousel";
 import DriverDealCard from "./DriverDealCard";
 import DriverDealCardGrid from "./DriverDealCardGrid";
+import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 
 export interface AffiliateDeal {
   id: string;
