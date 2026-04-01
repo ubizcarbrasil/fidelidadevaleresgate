@@ -231,7 +231,7 @@ export default function DriverManagementPage() {
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                       {driver.branch_name && <span>📍 {driver.branch_name}</span>}
-                      {driver.cpf && <span>CPF: {maskCpf(driver.cpf)}</span>}
+                      {driver.cpf && <span>CPF: {formatCpf(driver.cpf)}</span>}
                       {driver.phone && <span>Tel: {driver.phone}</span>}
                       {driver.email && <span className="hidden sm:inline">{driver.email}</span>}
                     </div>

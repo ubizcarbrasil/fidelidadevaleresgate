@@ -141,7 +141,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
                 maxLength={255}
               />
             </div>
-            <InfoRow icon={CreditCard} label="CPF" value={maskCpf(driver.cpf)} />
+            <InfoRow icon={CreditCard} label="CPF" value={formatCpf(driver.cpf)} />
             <div className="flex gap-2 pt-1">
               <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1">
                 {saving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
@@ -156,7 +156,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
         ) : (
           <>
             <InfoRow icon={User} label="Nome" value={cleanName(driver.name)} />
-            <InfoRow icon={CreditCard} label="CPF" value={maskCpf(driver.cpf)} />
+            <InfoRow icon={CreditCard} label="CPF" value={formatCpf(driver.cpf)} />
             <InfoRow icon={Phone} label="Telefone" value={driver.phone || "—"} />
             <InfoRow icon={Mail} label="E-mail" value={driver.email || "—"} />
           </>
