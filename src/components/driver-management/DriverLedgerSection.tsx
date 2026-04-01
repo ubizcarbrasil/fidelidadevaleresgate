@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText, Car, ShoppingCart, Gift, Ticket, CircleDot } from "lucide-react";
 import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
@@ -17,7 +17,9 @@ type LedgerEntry = {
   points_amount: number;
   money_amount: number | null;
   reason: string | null;
+  reference_type: string | null;
   created_at: string;
+  branch_name: string | null;
 };
 
 export default function DriverLedgerSection({ driverId, driverName }: Props) {
