@@ -517,39 +517,68 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
-            {redeemableDeals.map((deal: any) => {
-              const pointsCost = deal.redeem_points_cost || Math.ceil(deal.price || 0);
-              return (
-                <div
-                  key={deal.id}
-                  className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform"
-                  style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
-                  onClick={() => setRedeemDeal(deal)}
-                >
-                  <div className="relative bg-muted/30">
-                    {deal.image_url ? (
-                      <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
-                    ) : (
-                      <div className="w-full aspect-square flex items-center justify-center bg-muted/10">
-                        <Gift className="h-8 w-8 text-muted-foreground/30" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm" style={{ backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}>
-                      Resgate
-                    </div>
+          {(() => {
+            const effectiveRows = Math.min(driverRedeemRows, Math.max(1, Math.floor(redeemableDeals.length / MIN_PER_ROW)));
+            const visibleCount = Math.floor(redeemableDeals.length / effectiveRows) * effectiveRows || redeemableDeals.length;
+            const visibleDeals = redeemableDeals.slice(0, visibleCount);
+            const rowBuckets: AffiliateDeal[][] = Array.from({ length: effectiveRows }, () => []);
+            visibleDeals.forEach((deal, i) => rowBuckets[i % effectiveRows].push(deal));
+            return (
+              <div className="space-y-3">
+                {rowBuckets.map((rowDeals, rowIndex) => (
+                  <div
+                    key={rowIndex}
+                    className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1"
+                    style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
+                  >
+                    {rowDeals.map((deal: any) => {
+                      const pointsCost = deal.redeem_points_cost || Math.ceil(deal.price || 0);
+                      return (
+                        <div
+                          key={deal.id}
+                          className="min-w-[160px] max-w-[180px] flex-shrink-0 rounded-[18px] overflow-hidden bg-card cursor-pointer flex flex-col active:scale-[0.97] transition-transform"
+                          style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.05)", scrollSnapAlign: "start" }}
+                          onClick={() => setRedeemDeal(deal)}
+                        >
+                          <div className="relative bg-muted/30">
+                            {deal.image_url ? (
+                              <img src={deal.image_url} alt={deal.title} className="w-full aspect-square object-contain" loading="lazy" />
+                            ) : (
+                              <div className="w-full aspect-square flex items-center justify-center bg-muted/10">
+                                <Gift className="h-8 w-8 text-muted-foreground/30" />
+                              </div>
+                            )}
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm" style={{ backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}>
+                              Resgate
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            {deal.store_name && <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>}
+                            <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
+                            <span className="text-sm font-bold" style={{ color: "hsl(var(--primary))" }}>{formatPoints(pointsCost)} pts</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="min-w-[16px] flex-shrink-0" />
                   </div>
-                  <div className="p-3">
-                    {deal.store_name && <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>}
-                    <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
-                    <span className="text-sm font-bold" style={{ color: "hsl(var(--primary))" }}>{formatPoints(pointsCost)} pts</span>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="min-w-[16px] flex-shrink-0" />
-          </div>
+                ))}
+              </div>
+            );
+          })()}
         </section>
+      )}
+
+      {/* Resgate na Cidade */}
+      {!debouncedSearch.trim() && (cityOffers || []).length > 0 && (
+        <SecaoResgateCidade
+          ofertas={cityOffers || []}
+          fontHeading={fontHeading}
+          onClickOferta={(oferta) => {
+            // TODO: open offer detail / redemption flow for city offers
+            toast?.({ title: `Oferta: ${oferta.title}` });
+          }}
+        />
       )}
 
       {/* WhatsApp CTA Banner for ML affiliate link */}
