@@ -1,47 +1,35 @@
 
 
-# Fix: Login do motorista por CPF falha por restrição de acesso
+# Redesign do Header do Painel do Motorista
 
 ## Problema
-A tabela `customers` tem RLS ativado e todas as políticas de SELECT exigem `auth.uid()`. O fluxo de login do motorista faz a consulta **sem autenticação** (não há sessão Supabase Auth), então a query retorna vazio e mostra "CPF não cadastrado" mesmo para motoristas válidos.
+O header atual comprime logo, nome, badge de pontos e 4 ícones em uma única linha, ficando visualmente poluído e sem destaque para os pontos.
 
 ## Solução
-Criar uma função de banco `SECURITY DEFINER` que busca o motorista por CPF + brand_id + tag `[MOTORISTA]`, retornando apenas os dados necessários. Isso bypassa RLS de forma segura e controlada.
+Reorganizar o header em **duas linhas**:
 
-### 1. Migração — Função `lookup_driver_by_cpf`
+1. **Linha 1**: Logo + nome da marca à esquerda, ícones de ação (perfil, ajuda, WhatsApp, compartilhar) à direita
+2. **Linha 2 (destaque)**: Card de pontos em largura total com visual premium — ícone de moeda, saldo grande e bold, label "pontos" ao lado, com fundo gradiente usando a cor primária da marca
 
-```sql
-CREATE OR REPLACE FUNCTION public.lookup_driver_by_cpf(p_brand_id uuid, p_cpf text)
-RETURNS TABLE(
-  id uuid, name text, cpf text, email text, phone text,
-  points_balance numeric, money_balance numeric,
-  brand_id uuid, branch_id uuid, branch_name text
-)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
-AS $$
-  SELECT c.id, c.name, c.cpf, c.email, c.phone,
-         c.points_balance, c.money_balance,
-         c.brand_id, c.branch_id,
-         b.name AS branch_name
-  FROM customers c
-  LEFT JOIN branches b ON b.id = c.branch_id
-  WHERE c.brand_id = p_brand_id
-    AND c.cpf = p_cpf
-    AND c.name ILIKE '%[MOTORISTA]%'
-  LIMIT 1;
-$$;
+### Visual do card de pontos
+- Fundo com gradiente sutil da cor primária (15% → 5%)
+- Borda arredondada (rounded-2xl)
+- Ícone `Coins` maior (h-5 w-5)
+- Saldo em tamanho `text-xl font-extrabold` com a cor primária
+- Label "pontos" em texto menor ao lado
+- Clicável → abre perfil (mesmo comportamento atual)
+
+### Arquivo
+- **Editar**: `src/components/driver/DriverMarketplace.tsx` — Reestruturar linhas 398-460
+
+### Layout (ASCII)
+```text
+┌─────────────────────────────────────────┐
+│ [logo] ACHADINHOS    [👤] [❓] [💬] [↗] │  ← linha 1
+├─────────────────────────────────────────┤
+│  🪙  617 pontos                    →    │  ← card pontos destaque
+├─────────────────────────────────────────┤
+│ 🔍 O que está procurando?               │  ← search
+└─────────────────────────────────────────┘
 ```
-
-### 2. Editar `src/contexts/DriverSessionContext.tsx`
-
-Substituir a função `fetchDriverByCpf` para usar `.rpc('lookup_driver_by_cpf', { p_brand_id, p_cpf })` em vez de `.from('customers').select(...)`. Isso contorna o RLS de forma segura.
-
-### Arquivos
-| Arquivo | Ação |
-|---------|------|
-| Migração SQL | Nova função `lookup_driver_by_cpf` |
-| `src/contexts/DriverSessionContext.tsx` | Editar `fetchDriverByCpf` para usar RPC |
-
-### Build Errors
-Os erros de `maskCpf` reportados são artefatos de build antigo — os arquivos já usam `formatCpf`. Nenhuma correção adicional necessária para eles.
 
