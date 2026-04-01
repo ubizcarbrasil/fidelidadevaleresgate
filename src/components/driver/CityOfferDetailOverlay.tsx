@@ -85,19 +85,24 @@ export default function CityOfferDetailOverlay({ oferta, fontHeading, onBack }: 
             </div>
           )}
 
-          {/* Min purchase */}
+          {/* Min purchase — obrigatório */}
           {oferta.min_purchase != null && oferta.min_purchase > 0 && (
             <div
-              className="flex items-center justify-between px-4 py-3 rounded-2xl"
-              style={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+              className="px-4 py-3 rounded-2xl space-y-1"
+              style={{ backgroundColor: "hsl(45 93% 47% / 0.08)", border: "1px solid hsl(45 93% 47% / 0.25)" }}
             >
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Compra mínima</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4" style={{ color: "hsl(45 93% 47%)" }} />
+                  <span className="text-sm font-medium text-foreground">Compra mínima obrigatória</span>
+                </div>
+                <span className="text-base font-bold text-foreground">
+                  R$ {Number(oferta.min_purchase).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
               </div>
-              <span className="text-base font-bold text-foreground">
-                R$ {Number(oferta.min_purchase).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </span>
+              <p className="text-[11px] text-muted-foreground pl-6">
+                O crédito só pode ser utilizado em compras a partir deste valor
+              </p>
             </div>
           )}
         </div>
