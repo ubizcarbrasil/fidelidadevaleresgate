@@ -29,7 +29,30 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
       const { data, error } = await supabase
         .rpc("get_driver_ledger", { p_customer_id: driverId });
       if (error) throw error;
-      return (data || []) as LedgerEntry[];
+
+      const extratoRpc = (data || []) as LedgerEntry[];
+      if (extratoRpc.length > 0) return extratoRpc;
+
+      const { data: ridesData, error: ridesError } = await (supabase as any)
+        .from("machine_rides")
+        .select("id, driver_points_credited, ride_value, passenger_name, finalized_at, created_at, branches(name)")
+        .eq("driver_customer_id", driverId)
+        .gt("driver_points_credited", 0)
+        .order("finalized_at", { ascending: false })
+        .limit(200);
+
+      if (ridesError) throw ridesError;
+
+      return ((ridesData || []) as any[]).map((ride) => ({
+        id: ride.id,
+        entry_type: "CREDIT",
+        points_amount: Number(ride.driver_points_credited || 0),
+        money_amount: ride.ride_value ? Number(ride.ride_value) : null,
+        reason: `Corrida - ${ride.passenger_name || "Passageiro"}`,
+        reference_type: "MACHINE_RIDE",
+        created_at: ride.finalized_at || ride.created_at,
+        branch_name: ride.branches?.name || null,
+      })) as LedgerEntry[];
     },
     enabled: !!driverId,
   });
