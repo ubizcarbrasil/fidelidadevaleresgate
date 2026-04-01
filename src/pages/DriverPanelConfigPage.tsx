@@ -89,6 +89,8 @@ export default function DriverPanelConfigPage() {
   const [copied, setCopied] = useState(false);
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [newBanner, setNewBanner] = useState({ image_url: "", title: "", link_url: "", after_category_id: "__top__" });
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [newVideo, setNewVideo] = useState({ title: "", description: "", video_url: "" });
 
   const { data: brandSettings } = useQuery({
     queryKey: ["brand-settings-driver", currentBrandId],
