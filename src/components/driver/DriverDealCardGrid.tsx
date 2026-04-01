@@ -12,12 +12,13 @@ interface Props {
   onClickDeal?: (deal: AffiliateDeal) => void;
 }
 
-function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, onClickDeal }: Props) {
+function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, pointsPerReal, onClickDeal }: Props) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
   const priceStr = formatPrice(deal.price);
   const originalPriceStr = formatPrice(deal.original_price);
   const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
+  const earnedPoints = pointsPerReal && deal.price ? Math.floor(deal.price * pointsPerReal) : 0;
 
   return (
     <div
