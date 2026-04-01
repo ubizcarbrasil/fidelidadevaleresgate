@@ -204,6 +204,18 @@ export default function BrandBranchForm() {
             <Switch checked={ativo} onCheckedChange={setAtivo} />
           </div>
 
+          <div className="space-y-2">
+            <Label>Chat ID do Telegram (opcional)</Label>
+            <Input
+              placeholder="Ex: -1001234567890"
+              value={telegramChatId}
+              onChange={(e) => setTelegramChatId(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Se informado, as notificações de corridas desta cidade serão enviadas para este grupo. Caso contrário, será usado o canal padrão da marca.
+            </p>
+          </div>
+
           <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
             <p><strong>Nome gerado:</strong> {cidade.trim() && uf ? `${cidade.trim()} - ${uf}` : "—"}</p>
             <p><strong>Slug:</strong> {cidade.trim() && uf ? normalizeSlug(cidade.trim(), uf) : "—"}</p>
