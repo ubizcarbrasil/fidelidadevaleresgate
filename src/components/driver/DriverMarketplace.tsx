@@ -466,14 +466,19 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                 >
                   <Coins className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
                 </div>
-                <div className="flex items-baseline gap-1.5">
-                  <span
-                    className="text-xl font-extrabold tracking-tight"
-                    style={{ color: "hsl(var(--primary))" }}
-                  >
-                    {formatPoints(driver.points_balance)}
+                <div className="flex flex-col items-start">
+                  <span className="text-[11px] font-medium text-muted-foreground leading-tight">
+                    {driver.name.replace(/\[MOTORISTA\]\s*/gi, "").trim()}
                   </span>
-                  <span className="text-sm font-medium text-muted-foreground">pontos</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span
+                      className="text-xl font-extrabold tracking-tight"
+                      style={{ color: "hsl(var(--primary))" }}
+                    >
+                      {formatPoints(driver.points_balance)}
+                    </span>
+                    <span className="text-sm font-medium text-muted-foreground">pontos</span>
+                  </div>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
