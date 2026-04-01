@@ -48,6 +48,7 @@ export default function BrandBranchForm() {
   const [uf, setUf] = useState("");
   const [ativo, setAtivo] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [telegramChatId, setTelegramChatId] = useState("");
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
