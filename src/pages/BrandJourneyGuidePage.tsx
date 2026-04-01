@@ -71,12 +71,12 @@ const journeySteps: JourneyStep[] = [
     phaseColor: "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
     title: "Gerenciar suas Cidades",
     description: "Adicione e configure as cidades onde sua marca opera.",
-    route: "/branches",
+    route: "/brand-branches",
     steps: [
       "No menu lateral, acesse Personalização & Vitrine → Cidades.",
       "Sua primeira cidade já foi criada automaticamente.",
-      "Para expandir, clique em 'Nova Cidade' e preencha os dados.",
-      "Configure a localização geográfica (latitude/longitude) para cada cidade.",
+      "Para expandir, clique em 'Nova Cidade'.",
+      "Selecione o Estado (UF) e digite o nome da cidade — coordenadas são preenchidas automaticamente.",
       "Ative ou desative cidades conforme sua operação.",
     ],
     tips: [

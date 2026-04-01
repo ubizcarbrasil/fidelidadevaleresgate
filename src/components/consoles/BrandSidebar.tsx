@@ -53,7 +53,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Personalização & Vitrine",
     items: [
-      { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin, moduleKey: "branches" },
+      { key: "sidebar.branches", defaultTitle: "Cidades", url: "/brand-branches", icon: MapPin, moduleKey: "branches" },
       { key: "sidebar.tema_marca", defaultTitle: "Aparência da Marca", url: "/brands", icon: Palette, moduleKey: "brand_theme" },
       { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
       { key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing" },

@@ -257,6 +257,10 @@ function AppRoutes() {
           <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
           <Route path="manuais" element={<ManuaisPage />} />
+          <Route path="brand-branches" element={<BrandBranchesPage />} />
+          <Route path="brand-branches/new" element={<BrandBranchForm />} />
+          <Route path="brand-branches/:id" element={<BrandBranchForm />} />
+          <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
