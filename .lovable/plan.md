@@ -1,44 +1,37 @@
 
 
-# Corrigir Atribuição de Role do Franqueado
+# Corrigir Cálculo de Pontos para Resgate na Cidade
 
 ## Problema
-A Edge Function `create-branch-admin` usa `upsert` com `onConflict: "user_id,role"`, mas a constraint real da tabela `user_roles` é `UNIQUE(user_id, role, tenant_id, brand_id, branch_id)`. Isso faz o upsert falhar silenciosamente — o perfil é atualizado e a carteira é criada, mas a role `branch_admin` nunca é inserida.
-
-**Usuário afetado:** `franqueado@ubizcar.com.br` (id: `ac826b3b-...`) — perfil OK, carteira OK, mas sem role `branch_admin`.
+O cálculo atual usa `pointsCost = value_rescue * pointsPerReal` (ex: R$20 × 40 = 800 pts), aplicando a mesma taxa de conversão dos produtos de resgate. Mas o modelo de crédito na cidade é **1 ponto = R$1 de crédito** — quem define o valor do crédito e a compra mínima é a empresa parceira, não a regra global.
 
 ## Correção
 
-### 1. `supabase/functions/create-branch-admin/index.ts` (linha ~117-127)
-Substituir o `upsert` por um fluxo de `insert` + tratamento de conflito:
+### 1. `src/components/driver/DriverMarketplace.tsx` (~linha 199)
+Alterar o cálculo de `pointsCost` para usar a relação 1:1:
 
 ```typescript
-// Upsert role — match full unique constraint
-await supabaseAdmin.from("user_roles").upsert(
-  {
-    user_id: userId,
-    role: "branch_admin",
-    brand_id,
-    branch_id,
-    tenant_id: effectiveTenantId,
-  },
-  { onConflict: "user_id,role,tenant_id,brand_id,branch_id", ignoreDuplicates: true },
-);
+// ANTES
+pointsCost: Math.ceil((o.value_rescue || 0) * (pointsPerReal || 40))
+
+// DEPOIS
+pointsCost: Math.ceil(o.value_rescue || 0)  // 1 ponto = R$ 1,00 de crédito
 ```
 
-### 2. Deploy e re-executar
-- Fazer deploy da função corrigida
-- Chamar a função novamente para o usuário existente para inserir a role que ficou faltando
+Isso faz com que uma oferta de R$20 de crédito custe 20 pontos, R$50 custe 50 pontos, etc.
 
-### 3. Provisioning functions (mesma correção)
-Verificar e corrigir o mesmo `onConflict` em:
-- `supabase/functions/provision-brand/index.ts`
-- `supabase/functions/provision-trial/index.ts`
+### 2. `src/components/driver/CityOfferDetailOverlay.tsx`
+Adicionar texto explicativo no overlay de detalhes para deixar claro o modelo de crédito consignado:
+- Incluir uma nota informativa: "Cada ponto vale R$ 1,00 de crédito nesta loja"
+- Destacar visualmente a regra de compra mínima como requisito obrigatório
 
-## Resultado esperado
-O franqueado `franqueado@ubizcar.com.br` terá:
-- ✅ Perfil com `brand_id` e `tenant_id`
-- ✅ Role `branch_admin` vinculada a São João da Boa Vista
-- ✅ Carteira de pontos inicializada
-- Senha: `123456`
+### 3. `src/components/driver/SecaoResgateCidade.tsx`
+Nenhuma alteração de lógica — os cards já exibem `pointsCost` e `value_rescue` corretamente. A mudança no cálculo do marketplace reflete automaticamente.
+
+## Arquivos afetados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/driver/DriverMarketplace.tsx` | Cálculo 1:1 em vez de `× pointsPerReal` |
+| `src/components/driver/CityOfferDetailOverlay.tsx` | Texto explicativo do modelo de crédito |
 
