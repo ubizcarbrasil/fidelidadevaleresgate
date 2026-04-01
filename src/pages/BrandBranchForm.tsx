@@ -48,6 +48,7 @@ export default function BrandBranchForm() {
   const [uf, setUf] = useState("");
   const [ativo, setAtivo] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [telegramChatId, setTelegramChatId] = useState("");
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
@@ -64,6 +65,22 @@ export default function BrandBranchForm() {
     enabled: isEdit,
   });
 
+  // Load existing telegram_chat_id from machine_integrations
+  const { data: existingIntegration } = useQuery({
+    queryKey: ["branch-integration", id, currentBrandId],
+    queryFn: async () => {
+      if (!id || !currentBrandId) return null;
+      const { data } = await supabase
+        .from("machine_integrations")
+        .select("telegram_chat_id")
+        .eq("brand_id", currentBrandId)
+        .eq("branch_id", id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: isEdit && !!currentBrandId,
+  });
+
   useEffect(() => {
     if (existing) {
       setCidade(existing.city || existing.name || "");
@@ -71,6 +88,12 @@ export default function BrandBranchForm() {
       setAtivo(existing.is_active);
     }
   }, [existing]);
+
+  useEffect(() => {
+    if (existingIntegration?.telegram_chat_id) {
+      setTelegramChatId(existingIntegration.telegram_chat_id);
+    }
+  }, [existingIntegration]);
 
   const handleSave = async () => {
     if (!cidade.trim() || !uf) {
@@ -108,6 +131,18 @@ export default function BrandBranchForm() {
         const { error } = await supabase.from("branches").insert(payload);
         if (error) throw error;
         toast.success("Cidade criada com sucesso!");
+      }
+
+      // Update telegram_chat_id in machine_integrations if provided
+      if (telegramChatId.trim()) {
+        const branchId = isEdit ? id : undefined;
+        if (branchId) {
+          await supabase
+            .from("machine_integrations")
+            .update({ telegram_chat_id: telegramChatId.trim() })
+            .eq("brand_id", currentBrandId)
+            .eq("branch_id", branchId);
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
@@ -167,6 +202,18 @@ export default function BrandBranchForm() {
           <div className="flex items-center justify-between">
             <Label>Ativa</Label>
             <Switch checked={ativo} onCheckedChange={setAtivo} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Chat ID do Telegram (opcional)</Label>
+            <Input
+              placeholder="Ex: -1001234567890"
+              value={telegramChatId}
+              onChange={(e) => setTelegramChatId(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Se informado, as notificações de corridas desta cidade serão enviadas para este grupo. Caso contrário, será usado o canal padrão da marca.
+            </p>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
