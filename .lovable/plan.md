@@ -1,75 +1,30 @@
 
 
-# Fluxo Simplificado de Cidades para Empreendedor + Jornada Didática
+# Adicionar campo Telegram (opcional) ao wizard de criação de cidade
 
-## Contexto
-Atualmente, o empreendedor (brand_admin) usa o mesmo formulário de cidades que o root_admin, com campos técnicos como slug, timezone, latitude/longitude. O objetivo é criar uma versão simplificada e uma jornada didática dedicada.
+## Problema
+Hoje o `telegram_chat_id` só pode ser configurado na página de integração root (`MachineIntegrationPage`). O empreendedor não tem como definir um grupo Telegram por cidade no wizard simplificado. Sem isso, todas as notificações caem no canal universal da marca.
 
-## Plano
+## Solução
 
-### 1. Criar formulário simplificado de cidade para brand_admin
-**Arquivo:** `src/pages/BrandBranchForm.tsx`
+### 1. `src/pages/BrandBranchForm.tsx` — Adicionar campo opcional de Telegram
+- Novo estado `telegramChatId`
+- Novo campo de input opcional no formulário (entre o switch "Ativa" e o bloco de resumo):
+  - Label: "Chat ID do Telegram (opcional)"
+  - Placeholder: "Ex: -1001234567890"
+  - Texto auxiliar explicando: "Se informado, as notificações de corridas desta cidade serão enviadas para este grupo. Caso contrário, será usado o canal padrão da marca."
+- No `handleSave`, após criar/atualizar o branch, se `telegramChatId` foi preenchido e existe integração ativa, atualizar `machine_integrations` com o `telegram_chat_id` para aquele `branch_id`
+- Em modo edição, carregar o `telegram_chat_id` existente da `machine_integrations` vinculada ao branch
 
-Formulário com apenas os campos essenciais:
-- **UF** (select) — obrigatório
-- **Cidade** (input) — obrigatório
-- **Ativo** (switch)
+### 2. `supabase/functions/register-machine-webhook/index.ts` — Aceitar `telegram_chat_id`
+- Extrair `telegram_chat_id` do body junto com os outros campos
+- Incluir no objeto `upsertData` (mesmo padrão dos campos `matrix_*`)
 
-Os campos técnicos serão preenchidos automaticamente:
-- `name` → "Cidade - UF" (auto)
-- `slug` → normalizado (auto)
-- `timezone` → "America/Sao_Paulo" (default)
-- `latitude/longitude` → geocodificação automática via Nominatim (já existe a função)
-- `brand_id` → do contexto do usuário (auto)
+### 3. `src/pages/BrandBranchForm.tsx` — Passar `telegram_chat_id` na chamada ao edge function
+- Quando o wizard invoca `register-machine-webhook`, incluir o `telegram_chat_id` no payload
 
-O seletor de marca fica oculto (brand_admin só tem uma marca). Campos como timezone, lat/lon e slug ficam apenas no formulário root.
-
-### 2. Criar listagem simplificada de cidades para brand_admin
-**Arquivo:** `src/pages/BrandBranchesPage.tsx`
-
-Listagem limpa mostrando apenas:
-- Nome da cidade
-- UF
-- Status (ativo/inativo)
-- Botão editar e ativar/desativar
-
-Sem coluna "Marca" (redundante para brand_admin). Com card de resumo no topo mostrando total de cidades ativas.
-
-### 3. Criar jornada didática "Expandindo para Novas Cidades"
-**Arquivo:** `src/pages/BrandCidadesJourneyPage.tsx`
-
-Guia passo a passo no mesmo padrão visual do `BrandJourneyGuidePage`, com fases:
-1. **Entender o conceito** — O que é uma "Cidade" na plataforma e por que criar novas
-2. **Criar sua primeira nova cidade** — Passo a passo do formulário simplificado
-3. **Ativar parceiros na nova cidade** — Como vincular parceiros
-4. **Configurar regras de pontos** — Regras independentes por cidade
-5. **Duplicar configurações** — Usar Clone de Região para copiar tudo
-6. **Verificar no app do cliente** — Testar a troca de cidade no app
-
-### 4. Registrar rotas no App.tsx
-- `/brand-branches` → `BrandBranchesPage`
-- `/brand-branches/new` → `BrandBranchForm`
-- `/brand-branches/:id` → `BrandBranchForm`
-- `/brand-cidades-journey` → `BrandCidadesJourneyPage`
-
-### 5. Adicionar ao menu lateral do empreendedor
-**Arquivo:** `src/components/consoles/BrandSidebar.tsx`
-
-- No grupo "Organização" ou equivalente, substituir o link `/branches` por `/brand-branches` para brand_admin
-- No grupo "Guias Inteligentes", adicionar "Guia de Cidades" apontando para `/brand-cidades-journey`
-
-### 6. Atualizar a jornada principal do empreendedor
-**Arquivo:** `src/pages/BrandJourneyGuidePage.tsx`
-
-Na Fase 3 (Gerenciar Cidades), atualizar a rota de `/branches` para `/brand-branches` e simplificar os passos para refletir o novo formulário.
-
-## Arquivos criados
-- `src/pages/BrandBranchForm.tsx`
-- `src/pages/BrandBranchesPage.tsx`
-- `src/pages/BrandCidadesJourneyPage.tsx`
-
-## Arquivos editados
-- `src/App.tsx` — novas rotas
-- `src/components/consoles/BrandSidebar.tsx` — menu atualizado
-- `src/pages/BrandJourneyGuidePage.tsx` — rota da Fase 3
+## Detalhes técnicos
+- Nenhuma migração necessária — a coluna `telegram_chat_id` já existe em `machine_integrations`
+- A edge function `register-machine-webhook` já faz upsert com campos opcionais (padrão `matrix_*`), basta replicar para `telegram_chat_id`
+- O campo é opcional: se vazio, nada muda no comportamento atual
 
