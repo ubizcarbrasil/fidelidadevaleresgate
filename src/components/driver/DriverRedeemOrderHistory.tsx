@@ -16,7 +16,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }>
 };
 
 export default function DriverRedeemOrderHistory() {
-  const { customer } = useCustomer();
+  const { driver } = useDriverSession();
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["driver-redeem-orders", customer?.id],

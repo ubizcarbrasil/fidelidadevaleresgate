@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function DriverRedeemStorePage({ brandId, branchId, fontHeading, onBack }: Props) {
-  const { customer } = useCustomer();
+  const { driver } = useDriverSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
   const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
