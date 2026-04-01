@@ -181,6 +181,25 @@ export default function BrandBranchForm() {
           .eq("branch_id", branchId);
       }
 
+      // Create franchisee user if requested
+      if (!isEdit && criarFranqueado && franqueadoEmail.trim() && branchId) {
+        const { data: fnResult, error: fnErr } = await supabase.functions.invoke("create-branch-admin", {
+          body: {
+            email: franqueadoEmail.trim(),
+            password: franqueadoPassword || "123456",
+            full_name: franqueadoNome.trim() || "Franqueado",
+            brand_id: currentBrandId,
+            branch_id: branchId,
+          },
+        });
+        if (fnErr) {
+          console.error("Franchisee creation error:", fnErr);
+          toast.error("Cidade criada, mas houve erro ao criar o franqueado.");
+        } else {
+          toast.success(`Franqueado criado: ${franqueadoEmail.trim()}`);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
       navigate("/brand-branches");
     } catch (err: any) {
