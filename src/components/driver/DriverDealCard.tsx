@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, Gift, ShoppingBag, Star } from "lucide-react";
+import { ExternalLink, ShoppingBag, Star } from "lucide-react";
 import { formatPrice, type AffiliateDeal } from "./DriverMarketplace";
 import { formatPoints } from "@/lib/formatPoints";
 
