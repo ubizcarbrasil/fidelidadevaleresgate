@@ -15,6 +15,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { formatPoints } from "@/lib/formatPoints";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import DriverProfileOverlay from "./DriverProfileOverlay";
+import DriverLedgerOverlay from "./DriverLedgerOverlay";
 import { Coins, UserCircle } from "lucide-react";
 
 import DriverBannerCarousel from "./DriverBannerCarousel";
