@@ -154,6 +154,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
   const interstitialBanners: Array<{ id: string; image_url: string; title: string; link_url: string; after_category_id: string; is_active: boolean }> = settings?.driver_interstitial_banners || [];
 
+  const driverRedeemRows = settings?.driver_redeem_rows ?? 1;
+
   const { data: pointsPerReal } = useQuery({
     queryKey: ["driver-points-per-real", brand.id],
     queryFn: async () => {
@@ -166,6 +168,34 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         .maybeSingle();
       return data ? Number(data.points_per_real) : 0;
     },
+  });
+
+  // Fase 3: City offers (REDEEM / BOTH)
+  const { data: cityOffers } = useQuery({
+    queryKey: ["driver-city-offers", brand.id, branch?.id],
+    queryFn: async () => {
+      let q = supabase
+        .from("offers")
+        .select("id, title, image_url, value_rescue, min_purchase, offer_purpose, store_id, stores(name, logo_url)")
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .eq("status", "ACTIVE")
+        .in("offer_purpose", ["REDEEM", "BOTH"]);
+      if (branch) q = q.eq("branch_id", branch.id);
+      const { data } = await q.order("created_at", { ascending: false }).limit(50);
+      return (data || []).map((o: any) => ({
+        id: o.id,
+        title: o.title,
+        image_url: o.image_url,
+        value_rescue: o.value_rescue,
+        min_purchase: o.min_purchase,
+        offer_purpose: o.offer_purpose,
+        store_name: o.stores?.name || null,
+        store_logo_url: o.stores?.logo_url || null,
+        pointsCost: Math.ceil((o.value_rescue || 0) * (pointsPerReal || 40)),
+      })) as OfertaCidade[];
+    },
+    enabled: (pointsPerReal ?? null) !== null,
   });
 
   const { data, isLoading } = useQuery({
