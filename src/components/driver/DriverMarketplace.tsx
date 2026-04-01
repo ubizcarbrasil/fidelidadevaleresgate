@@ -152,7 +152,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
-  const { driver } = useDriverSession();
+  const { driver, refreshDriver } = useDriverSession();
   const whatsappNumber = settings?.whatsapp_number as string | undefined;
   const showBanners = settings?.driver_show_banners !== false;
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
@@ -842,6 +842,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           oferta={selectedCityOffer}
           fontHeading={fontHeading}
           onBack={() => setSelectedCityOffer(null)}
+          onRedeemSuccess={() => refreshDriver()}
         />
       )}
     </div>

@@ -6586,6 +6586,16 @@ export type Database = {
         }[]
       }
       rate_limit_cleanup: { Args: never; Returns: undefined }
+      redeem_city_offer_driver: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_customer_cpf?: string
+          p_customer_id: string
+          p_offer_id: string
+        }
+        Returns: Json
+      }
       rpc_get_store_owner_redemptions: {
         Args: { p_page?: number; p_page_size?: number; p_store_id: string }
         Returns: {
