@@ -148,6 +148,20 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
   const interstitialBanners: Array<{ id: string; image_url: string; title: string; link_url: string; after_category_id: string; is_active: boolean }> = settings?.driver_interstitial_banners || [];
 
+  const { data: pointsPerReal } = useQuery({
+    queryKey: ["driver-points-per-real", brand.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("points_rules")
+        .select("points_per_real")
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      return data ? Number(data.points_per_real) : 0;
+    },
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ["driver-marketplace", brand.id, branch?.id],
     queryFn: async () => {
@@ -523,7 +537,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {searchResults.map((deal, idx) => (
-                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} onClickDeal={handleClickDeal} />
+                <DriverDealCardGrid key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} idx={idx} pointsPerReal={pointsPerReal ?? 0} onClickDeal={handleClickDeal} />
               ))}
             </div>
           )}
@@ -598,7 +612,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
                             style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
                           >
                             {rowDeals.map(deal => (
-                              <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
+                              <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} pointsPerReal={pointsPerReal ?? 0} onClickDeal={handleClickDeal} />
                             ))}
                             <div className="min-w-[16px] flex-shrink-0" />
                           </div>
@@ -622,7 +636,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1" style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}>
               {uncategorized.map(deal => (
-                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} onClickDeal={handleClickDeal} />
+                <DriverDealCard key={deal.id} deal={deal} highlight={highlight} fontHeading={fontHeading} pointsPerReal={pointsPerReal ?? 0} onClickDeal={handleClickDeal} />
               ))}
               <div className="min-w-[16px] flex-shrink-0" />
             </div>

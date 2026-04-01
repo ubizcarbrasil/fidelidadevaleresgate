@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, Gift, ShoppingBag } from "lucide-react";
+import { ExternalLink, Gift, ShoppingBag, Star } from "lucide-react";
 import { formatPrice, type AffiliateDeal } from "./DriverMarketplace";
 import { formatPoints } from "@/lib/formatPoints";
 
@@ -8,15 +8,17 @@ interface Props {
   highlight: string;
   fontHeading: string;
   idx: number;
+  pointsPerReal?: number;
   onClickDeal?: (deal: AffiliateDeal) => void;
 }
 
-function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, onClickDeal }: Props) {
+function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, pointsPerReal, onClickDeal }: Props) {
   const hasDiscount = deal.original_price && deal.price && deal.original_price > deal.price;
   const discountPercent = hasDiscount ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100) : 0;
   const priceStr = formatPrice(deal.price);
   const originalPriceStr = formatPrice(deal.original_price);
   const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
+  const earnedPoints = pointsPerReal && deal.price ? Math.floor(deal.price * pointsPerReal) : 0;
 
   return (
     <div
@@ -52,6 +54,12 @@ function DriverDealCardGridInner({ deal, highlight, fontHeading, idx, onClickDea
           <div className="flex items-baseline gap-1.5">
             {priceStr && <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{priceStr}</span>}
             {hasDiscount && originalPriceStr && <span className="text-[10px] line-through text-muted-foreground">{originalPriceStr}</span>}
+          </div>
+        )}
+        {earnedPoints > 0 && (
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium mt-1 w-fit" style={{ backgroundColor: "#22c55e15", color: "#22c55e" }}>
+            <Star className="w-2.5 h-2.5" fill="#22c55e" />
+            <span>Ganhe {formatPoints(earnedPoints)} pts</span>
           </div>
         )}
         {deal.is_redeemable && deal.redeem_points_cost && deal.redeem_points_cost > 0 && (
