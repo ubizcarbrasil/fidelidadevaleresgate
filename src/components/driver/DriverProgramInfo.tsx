@@ -86,7 +86,7 @@ function StepCard({
 }
 
 /* ── Main ── */
-export default function DriverProgramInfo({ whatsappNumber, fontHeading, onBack }: Props) {
+export default function DriverProgramInfo({ whatsappNumber, fontHeading, onBack, videos }: Props) {
   const faqs = [
     {
       question: "O preço do produto muda?",
