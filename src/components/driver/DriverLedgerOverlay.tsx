@@ -58,12 +58,49 @@ export default function DriverLedgerOverlay({ fontHeading, onBack }: Props) {
 
   useEffect(() => {
     if (!driver) return;
-    supabase
-      .rpc("get_driver_ledger", { p_customer_id: driver.id })
-      .then(({ data }) => {
-        setLedger((data as LedgerEntry[]) || []);
+
+    const carregarExtrato = async () => {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .rpc("get_driver_ledger", { p_customer_id: driver.id });
+
+      if (error) {
+        setLedger([]);
         setLoading(false);
-      });
+        return;
+      }
+
+      let extrato = ((data as LedgerEntry[]) || []);
+
+      if (extrato.length === 0) {
+        const { data: ridesData, error: ridesError } = await (supabase as any)
+          .from("machine_rides")
+          .select("id, driver_points_credited, ride_value, passenger_name, finalized_at, created_at, branches(name)")
+          .eq("driver_customer_id", driver.id)
+          .gt("driver_points_credited", 0)
+          .order("finalized_at", { ascending: false })
+          .limit(200);
+
+        if (!ridesError) {
+          extrato = ((ridesData || []) as any[]).map((ride) => ({
+            id: ride.id,
+            entry_type: "CREDIT",
+            points_amount: Number(ride.driver_points_credited || 0),
+            money_amount: ride.ride_value ? Number(ride.ride_value) : null,
+            reason: `Corrida - ${ride.passenger_name || "Passageiro"}`,
+            reference_type: "MACHINE_RIDE",
+            created_at: ride.finalized_at || ride.created_at,
+            branch_name: ride.branches?.name || null,
+          })) as LedgerEntry[];
+        }
+      }
+
+      setLedger(extrato);
+      setLoading(false);
+    };
+
+    void carregarExtrato();
   }, [driver]);
 
   if (!driver) return null;
