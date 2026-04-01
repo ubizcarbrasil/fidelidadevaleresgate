@@ -134,6 +134,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [redeemDeal, setRedeemDeal] = useState<AffiliateDeal | null>(null);
   const [showProgramInfo, setShowProgramInfo] = useState(false);
   const [showRedeemStore, setShowRedeemStore] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
