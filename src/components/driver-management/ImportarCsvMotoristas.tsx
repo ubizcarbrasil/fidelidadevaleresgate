@@ -23,7 +23,7 @@ interface LinhaCSV {
 interface ResultadoImport {
   linha: number;
   nome: string;
-  status: "atualizado" | "nao_encontrado" | "erro";
+  status: "atualizado" | "criado" | "nao_encontrado" | "erro";
   mensagem?: string;
 }
 
