@@ -26,12 +26,8 @@ export default function DriverLedgerSection({ driverId, driverName }: Props) {
   const { data: ledger, isLoading, error } = useQuery({
     queryKey: ["driver-ledger-detail", driverId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("points_ledger")
-        .select("id, entry_type, points_amount, money_amount, reason, created_at")
-        .eq("customer_id", driverId)
-        .order("created_at", { ascending: false })
-        .limit(200);
+      const { data, error } = await supabase
+        .rpc("get_driver_ledger", { p_customer_id: driverId });
       if (error) throw error;
       return (data || []) as LedgerEntry[];
     },
