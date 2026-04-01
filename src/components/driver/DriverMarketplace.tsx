@@ -842,6 +842,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           oferta={selectedCityOffer}
           fontHeading={fontHeading}
           onBack={() => setSelectedCityOffer(null)}
+          onRedeemSuccess={() => refreshDriver()}
         />
       )}
     </div>

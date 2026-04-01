@@ -1,21 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft, Store, Coins, ShoppingCart } from "lucide-react";
 import { formatPoints } from "@/lib/formatPoints";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { Button } from "@/components/ui/button";
 import type { OfertaCidade } from "./SecaoResgateCidade";
+import DriverCityRedeemFlow from "./DriverCityRedeemFlow";
 
 interface Props {
   oferta: OfertaCidade;
   fontHeading?: string;
   onBack: () => void;
+  onRedeemSuccess?: () => void;
 }
 
-export default function CityOfferDetailOverlay({ oferta, fontHeading, onBack }: Props) {
+export default function CityOfferDetailOverlay({ oferta, fontHeading, onBack, onRedeemSuccess }: Props) {
+  const { driver } = useDriverSession();
+  const [showRedeemFlow, setShowRedeemFlow] = useState(false);
+
+  const pointsBalance = driver?.points_balance || 0;
+  const canAfford = pointsBalance >= oferta.pointsCost;
+
+  if (showRedeemFlow) {
+    return (
+      <DriverCityRedeemFlow
+        oferta={oferta}
+        fontHeading={fontHeading}
+        onClose={() => setShowRedeemFlow(false)}
+        onSuccess={() => {
+          onRedeemSuccess?.();
+          onBack();
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto"
       style={{ backgroundColor: "hsl(var(--background))" }}
     >
-      <div className="max-w-lg mx-auto pb-10">
+      <div className="max-w-lg mx-auto pb-28">
         {/* Header */}
         <header className="sticky top-0 z-10 px-5 pt-4 pb-3" style={{ backgroundColor: "hsl(var(--background))" }}>
           <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -85,7 +109,7 @@ export default function CityOfferDetailOverlay({ oferta, fontHeading, onBack }: 
             </div>
           )}
 
-          {/* Min purchase — obrigatório */}
+          {/* Min purchase */}
           {oferta.min_purchase != null && oferta.min_purchase > 0 && (
             <div
               className="px-4 py-3 rounded-2xl space-y-1"
@@ -105,6 +129,31 @@ export default function CityOfferDetailOverlay({ oferta, fontHeading, onBack }: 
               </p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Sticky footer CTA */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 px-5 py-4"
+        style={{
+          backgroundColor: "hsl(var(--background))",
+          borderTop: "1px solid hsl(var(--border))",
+        }}
+      >
+        <div className="max-w-lg mx-auto">
+          {!canAfford && (
+            <p className="text-xs text-center mb-2" style={{ color: "hsl(0 72% 51%)" }}>
+              Saldo insuficiente — você precisa de mais {formatPoints(oferta.pointsCost - pointsBalance)} pontos
+            </p>
+          )}
+          <Button
+            className="w-full h-12 text-base font-bold rounded-2xl"
+            disabled={!canAfford}
+            onClick={() => setShowRedeemFlow(true)}
+          >
+            <Coins className="h-5 w-5 mr-2" />
+            Resgatar — {formatPoints(oferta.pointsCost)} pts
+          </Button>
         </div>
       </div>
     </div>
