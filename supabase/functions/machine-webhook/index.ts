@@ -491,7 +491,11 @@ async function processFinalized(
     if (advancedRule) {
       const ruleMode = advancedRule.rule_mode || "PER_REAL";
 
-      if (ruleMode === "FIXED") {
+      // Maçaneta override: use macaneta_points_per_ride if configured
+      if (isMacaneta && Number(advancedRule.macaneta_points_per_ride) > 0) {
+        driverPoints = Number(advancedRule.macaneta_points_per_ride);
+        reasonDetail = `Maçaneta: ${driverPoints} pts/corrida`;
+      } else if (ruleMode === "FIXED") {
         driverPoints = Number(advancedRule.fixed_points_per_ride) || 10;
         reasonDetail = `Fixo: ${driverPoints} pts/corrida`;
       } else if (ruleMode === "PERCENT") {
