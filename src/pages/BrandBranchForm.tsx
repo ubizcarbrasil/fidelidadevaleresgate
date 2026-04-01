@@ -65,6 +65,22 @@ export default function BrandBranchForm() {
     enabled: isEdit,
   });
 
+  // Load existing telegram_chat_id from machine_integrations
+  const { data: existingIntegration } = useQuery({
+    queryKey: ["branch-integration", id, currentBrandId],
+    queryFn: async () => {
+      if (!id || !currentBrandId) return null;
+      const { data } = await supabase
+        .from("machine_integrations")
+        .select("telegram_chat_id")
+        .eq("brand_id", currentBrandId)
+        .eq("branch_id", id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: isEdit && !!currentBrandId,
+  });
+
   useEffect(() => {
     if (existing) {
       setCidade(existing.city || existing.name || "");
@@ -72,6 +88,12 @@ export default function BrandBranchForm() {
       setAtivo(existing.is_active);
     }
   }, [existing]);
+
+  useEffect(() => {
+    if (existingIntegration?.telegram_chat_id) {
+      setTelegramChatId(existingIntegration.telegram_chat_id);
+    }
+  }, [existingIntegration]);
 
   const handleSave = async () => {
     if (!cidade.trim() || !uf) {
