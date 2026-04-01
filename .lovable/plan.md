@@ -1,35 +1,48 @@
 
 
-# Corrigir extrato de pontos do motorista — dados vêm de `machine_rides`
+# Revisão geral: Extrato, contagem de corridas e dados de motoristas
 
-## Problema raiz
-Os pontos dos motoristas são creditados via **`machine_rides`** (coluna `driver_points_credited`), mas o extrato busca na tabela **`points_ledger`**, que está praticamente vazia para motoristas. O `points_ledger` só tem 4 registros no total (ajustes manuais e resgates), enquanto as corridas reais estão em `machine_rides`.
+## Problemas encontrados
 
-## Solução
-Atualizar a função `get_driver_ledger` para unir dados de **ambas as tabelas**: `machine_rides` (corridas finalizadas) e `points_ledger` (ajustes manuais e resgates), retornando um extrato completo.
+### 1. Contagem de corridas mostra 0 (bug confirmado)
+A listagem de motoristas faz uma query em `machine_rides` para agregar corridas e pontos, mas **não define `.limit()`**. O Supabase aplica um limite padrão de **1000 linhas**, e a marca tem **4650 corridas**. Resultado: só os primeiros motoristas recebem contagem correta — os demais ficam com `+0` e `🚗 0`.
 
-### 1. Migração — Recriar `get_driver_ledger`
+**Solução**: Criar uma RPC `get_driver_ride_stats` que faz `GROUP BY driver_customer_id` no servidor e retorna já agregado, eliminando o problema do limite de 1000 linhas.
 
-A função precisa fazer UNION entre:
-- **`machine_rides`**: cada corrida finalizada gera uma entrada CREDIT com `driver_points_credited`, mostrando nome do passageiro, valor da corrida e horário
-- **`points_ledger`**: ajustes manuais (CREDIT) e resgates (DEBIT) com `reason` do admin
+### 2. Extrato vazio no painel admin
+A RPC `get_driver_ledger` funciona corretamente no banco (testei e retorna dados). O problema provável é que o erro do RPC no frontend está sendo engolido silenciosamente — o `useQuery` chama o RPC, se falha cai no fallback direto em `machine_rides`, que por sua vez pode falhar por RLS (admin autenticado pode não ter política de SELECT em `machine_rides`).
 
-Colunas retornadas: `id`, `entry_type`, `points_amount`, `money_amount`, `reason`, `reference_type`, `created_at`, `branch_name`
+**Solução**: 
+- Remover o cast `(supabase as any)` e garantir que o RPC é chamado com tipagem correta
+- Melhorar o tratamento de erro para logar o erro no console
+- Garantir que o fallback funciona ou confiar apenas na RPC (que é SECURITY DEFINER)
 
-Para corridas, o `reason` será construído como "Corrida - {nome_passageiro}" e `reference_type` será `'MACHINE_RIDE'`.
+### 3. Dados faltando em alguns motoristas
+Motoristas como "Michel Santiago Cruvinel" não têm CPF, telefone ou e-mail. Isso é um problema de dados — foram importados via webhook sem esses dados. Não é bug de código, mas podemos melhorar a visibilidade mostrando alertas de "dados incompletos".
 
-### 2. Atualizar `DriverLedgerSection.tsx` (aba Extrato do admin)
+## Plano de implementação
 
-Trocar a query direta em `points_ledger` pela chamada RPC `get_driver_ledger`, que já faz o UNION. Adicionar `reference_type` na interface e exibir ícones por tipo de origem.
+### Migração SQL — nova RPC `get_driver_ride_stats`
+```sql
+CREATE FUNCTION get_driver_ride_stats(p_brand_id uuid, p_customer_ids uuid[])
+RETURNS TABLE(customer_id uuid, total_rides bigint, total_ride_points numeric)
+```
+Faz `GROUP BY` no banco e retorna dados já agregados — sem limite de 1000 linhas.
 
-### 3. Sem alteração no `DriverLedgerOverlay.tsx`
+### `DriverManagementPage.tsx`
+- Substituir a query direta em `machine_rides` pela chamada à RPC `get_driver_ride_stats`
+- Isso corrige a contagem de corridas e pontos para todos os motoristas
 
-O overlay do motorista já usa a RPC `get_driver_ledger` — basta a migração atualizar a função para que os dados apareçam automaticamente.
+### `DriverLedgerSection.tsx` (aba Extrato do admin)
+- Remover o fallback direto em `machine_rides` — confiar apenas na RPC `get_driver_ledger` que é SECURITY DEFINER
+- Adicionar `console.error` no tratamento de erro para facilitar debug
+- Remover cast `as any` desnecessário
 
-### Arquivos
+### Arquivos afetados
 
-| Arquivo | Acao |
+| Arquivo | Ação |
 |---------|------|
-| Migracao SQL | Recriar funcao `get_driver_ledger` com UNION |
-| `src/components/driver-management/DriverLedgerSection.tsx` | Usar RPC em vez de query direta |
+| Migração SQL | Nova RPC `get_driver_ride_stats` |
+| `src/pages/DriverManagementPage.tsx` | Usar RPC para contagem de corridas |
+| `src/components/driver-management/DriverLedgerSection.tsx` | Simplificar: usar apenas RPC, logar erros |
 
