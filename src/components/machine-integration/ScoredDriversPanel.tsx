@@ -183,9 +183,10 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
     },
   });
 
-  const maskCpf = (cpf: string | null) => {
+  const formatCpf = (cpf: string | null) => {
     if (!cpf) return "—";
-    if (cpf.length >= 11) return `•••.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+    const digits = cpf.replace(/\D/g, "").padStart(11, "0");
+    if (digits.length === 11) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
     return cpf;
   };
 
@@ -276,7 +277,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
                     <div className="flex-1 min-w-0 space-y-0.5">
                       <div className="font-medium truncate">{cleanDriverName(c.name)}</div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                        {c.cpf && <span>CPF: {maskCpf(c.cpf)}</span>}
+                        {c.cpf && <span>CPF: {formatCpf(c.cpf)}</span>}
                         {c.phone && <span>Tel: {c.phone}</span>}
                         {c.email && <span>{c.email}</span>}
                       </div>
@@ -333,7 +334,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
               <div className="space-y-2 rounded-lg border border-border p-3">
                 <InfoRow icon={User} label="Nome" value={cleanDriverName(selectedDriver.name)} />
                 <InfoRow icon={Hash} label="ID" value={selectedDriver.id.slice(0, 8) + "..."} />
-                <InfoRow icon={CreditCard} label="CPF" value={maskCpf(selectedDriver.cpf)} />
+                <InfoRow icon={CreditCard} label="CPF" value={formatCpf(selectedDriver.cpf)} />
                 <InfoRow icon={Phone} label="Telefone" value={selectedDriver.phone || "—"} />
                 <InfoRow icon={Mail} label="E-mail" value={selectedDriver.email || "—"} />
                 <Separator />

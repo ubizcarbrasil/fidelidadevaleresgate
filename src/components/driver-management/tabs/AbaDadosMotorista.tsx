@@ -30,9 +30,10 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 const cleanName = (name: string | null) =>
   name?.replace(/\[MOTORISTA\]\s*/i, "").trim() || "Sem nome";
 
-const maskCpf = (cpf: string | null) => {
+const formatCpf = (cpf: string | null) => {
   if (!cpf) return "—";
-  if (cpf.length >= 11) return `•••.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+  const digits = cpf.replace(/\D/g, "").padStart(11, "0");
+  if (digits.length === 11) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
   return cpf;
 };
 
@@ -140,7 +141,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
                 maxLength={255}
               />
             </div>
-            <InfoRow icon={CreditCard} label="CPF" value={maskCpf(driver.cpf)} />
+            <InfoRow icon={CreditCard} label="CPF" value={formatCpf(driver.cpf)} />
             <div className="flex gap-2 pt-1">
               <Button size="sm" onClick={handleSave} disabled={saving} className="flex-1">
                 {saving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
@@ -155,7 +156,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
         ) : (
           <>
             <InfoRow icon={User} label="Nome" value={cleanName(driver.name)} />
-            <InfoRow icon={CreditCard} label="CPF" value={maskCpf(driver.cpf)} />
+            <InfoRow icon={CreditCard} label="CPF" value={formatCpf(driver.cpf)} />
             <InfoRow icon={Phone} label="Telefone" value={driver.phone || "—"} />
             <InfoRow icon={Mail} label="E-mail" value={driver.email || "—"} />
           </>
