@@ -1,37 +1,56 @@
 
 
-# Corrigir Cálculo de Pontos para Resgate na Cidade
+# Adicionar Fluxo de Resgate nas Ofertas da Cidade (Driver)
 
 ## Problema
-O cálculo atual usa `pointsCost = value_rescue * pointsPerReal` (ex: R$20 × 40 = 800 pts), aplicando a mesma taxa de conversão dos produtos de resgate. Mas o modelo de crédito na cidade é **1 ponto = R$1 de crédito** — quem define o valor do crédito e a compra mínima é a empresa parceira, não a regra global.
+A tela de detalhes das ofertas de cidade (`CityOfferDetailOverlay`) é apenas informativa — não há botão de resgate. O motorista precisa poder resgatar créditos em lojas parceiras da mesma forma que o cliente faz no `CustomerOfferDetailPage`.
 
-## Correção
+## Diferença Arquitetural
+O motorista usa login via CPF (`useDriverSession`), sem sessão Supabase Auth. Portanto, o fluxo de resgate precisa:
+- Usar `driver.id` como `customer_id`
+- Já ter o CPF disponível no contexto (sem necessidade de pedir novamente)
+- Inserir na tabela `redemptions` + debitar `points_ledger` + atualizar saldo
 
-### 1. `src/components/driver/DriverMarketplace.tsx` (~linha 199)
-Alterar o cálculo de `pointsCost` para usar a relação 1:1:
+## Plano
 
-```typescript
-// ANTES
-pointsCost: Math.ceil((o.value_rescue || 0) * (pointsPerReal || 40))
+### 1. Criar componente `DriverCityRedeemFlow.tsx`
+Novo componente em `src/components/driver/` que encapsula o fluxo de resgate para ofertas de cidade:
+- **Verificação de código** (reutiliza `DriverVerifyCodeStep`)
+- **Tela de confirmação** mostrando: crédito (R$), compra mínima, pontos necessários, saldo atual
+- **Botão "Confirmar Resgate"** que:
+  1. Insere registro na tabela `redemptions` (offer_id, customer_id, brand_id, branch_id, status PENDING, customer_cpf)
+  2. Debita pontos no `points_ledger` (entry_type DEBIT, reference_type REDEMPTION)
+  3. Atualiza `customers.points_balance`
+  4. Exibe PIN/token gerado
+- **Tela de sucesso** com PIN e instrução para apresentar na loja
 
-// DEPOIS
-pointsCost: Math.ceil(o.value_rescue || 0)  // 1 ponto = R$ 1,00 de crédito
+### 2. Atualizar `CityOfferDetailOverlay.tsx`
+- Adicionar botão fixo no rodapé "Resgatar X pts" (estilo igual ao CTA do cliente)
+- Validar saldo insuficiente (bloquear botão + mensagem)
+- Ao clicar, abrir o `DriverCityRedeemFlow`
+- Passar `driver` do contexto para o fluxo
+
+### 3. Atualizar `DriverMarketplace.tsx`
+- Passar callback `onRedeemSuccess` para o overlay para refresh de saldo após resgate
+
+### 4. Expandir tipo `OfertaCidade`
+- Incluir `store_id` no tipo (necessário para o registro de redemption)
+- Ajustar query em `DriverMarketplace` para trazer `store_id`
+
+## Arquivos Afetados
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/driver/DriverCityRedeemFlow.tsx` | **Novo** — fluxo de resgate com verificação, confirmação e PIN |
+| `src/components/driver/CityOfferDetailOverlay.tsx` | Adicionar CTA de resgate no rodapé + integração com fluxo |
+| `src/components/driver/SecaoResgateCidade.tsx` | Adicionar `store_id` ao tipo `OfertaCidade` |
+| `src/components/driver/DriverMarketplace.tsx` | Passar `store_id` na query + callback de sucesso |
+
+## Fluxo do Motorista
+```text
+Oferta Detalhe → Botão "Resgatar X pts"
+  → Verificação (código SMS/WhatsApp)
+    → Confirmação (crédito, compra mín, saldo)
+      → Confirmar → PIN gerado → Apresentar na loja
 ```
-
-Isso faz com que uma oferta de R$20 de crédito custe 20 pontos, R$50 custe 50 pontos, etc.
-
-### 2. `src/components/driver/CityOfferDetailOverlay.tsx`
-Adicionar texto explicativo no overlay de detalhes para deixar claro o modelo de crédito consignado:
-- Incluir uma nota informativa: "Cada ponto vale R$ 1,00 de crédito nesta loja"
-- Destacar visualmente a regra de compra mínima como requisito obrigatório
-
-### 3. `src/components/driver/SecaoResgateCidade.tsx`
-Nenhuma alteração de lógica — os cards já exibem `pointsCost` e `value_rescue` corretamente. A mudança no cálculo do marketplace reflete automaticamente.
-
-## Arquivos afetados
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/driver/DriverMarketplace.tsx` | Cálculo 1:1 em vez de `× pointsPerReal` |
-| `src/components/driver/CityOfferDetailOverlay.tsx` | Texto explicativo do modelo de crédito |
 
