@@ -6599,6 +6599,22 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_get_driver_city_redemptions: {
+        Args: { p_customer_id: string }
+        Returns: {
+          created_at: string
+          expires_at: string
+          id: string
+          min_purchase: number
+          offer_title: string
+          status: string
+          store_logo_url: string
+          store_name: string
+          token: string
+          used_at: string
+          value_rescue: number
+        }[]
+      }
       rpc_get_store_owner_redemptions: {
         Args: { p_page?: number; p_page_size?: number; p_store_id: string }
         Returns: {

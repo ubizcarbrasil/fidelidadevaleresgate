@@ -24,6 +24,7 @@ import DriverDealCard from "./DriverDealCard";
 import DriverDealCardGrid from "./DriverDealCardGrid";
 import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
+import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 
 export interface AffiliateDeal {
   id: string;
@@ -140,6 +141,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showProfile, setShowProfile] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
+  const [showCityRedemptions, setShowCityRedemptions] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -603,6 +605,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
           onClickOferta={(oferta) => setSelectedCityOffer(oferta)}
+          onVerHistorico={() => setShowCityRedemptions(true)}
         />
       )}
 
@@ -843,6 +846,14 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           fontHeading={fontHeading}
           onBack={() => setSelectedCityOffer(null)}
           onRedeemSuccess={() => refreshDriver()}
+        />
+      )}
+
+      {/* City redemption history overlay */}
+      {showCityRedemptions && (
+        <DriverCityRedemptionHistory
+          fontHeading={fontHeading}
+          onBack={() => setShowCityRedemptions(false)}
         />
       )}
     </div>
