@@ -165,7 +165,7 @@ export default function DriverManagementPage() {
     <div className="space-y-6">
       <PageHeader
         title="Gestão de Motoristas"
-        description="Gerencie dados, pontuação e regras de todos os motoristas da marca."
+        description={isBranchScope ? "Gerencie dados, pontuação e regras dos motoristas da sua cidade." : "Gerencie dados, pontuação e regras de todos os motoristas da marca."}
       />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

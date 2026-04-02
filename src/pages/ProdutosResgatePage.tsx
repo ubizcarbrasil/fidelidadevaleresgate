@@ -66,7 +66,8 @@ export default function ProdutosResgatePage() {
         .select("id, is_active, redeem_points_cost", { count: "exact" })
         .eq("is_redeemable", true);
 
-      const query = !isRootAdmin && currentBrandId ? base.eq("brand_id", currentBrandId) : base;
+      let query = !isRootAdmin && currentBrandId ? base.eq("brand_id", currentBrandId) : base;
+      if (isBranchScope) query = query.eq("branch_id", currentBranchId!);
       const { data, count } = await query;
 
       const ativos = data?.filter((d) => d.is_active).length ?? 0;

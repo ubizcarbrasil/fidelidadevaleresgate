@@ -249,8 +249,8 @@ function AppRoutes() {
           <Route path="sponsored-placements" element={<ModuleGuard moduleKey="sponsored"><SponsoredPlacementsPage /></ModuleGuard>} />
           <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
           <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
-          <Route path="driver-points-rules" element={<ModuleGuard moduleKey="machine_integration"><DriverPointsRulesPage /></ModuleGuard>} />
-          <Route path="motoristas" element={<ModuleGuard moduleKey="machine_integration"><DriverManagementPage /></ModuleGuard>} />
+          <Route path="driver-points-rules" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverPointsRulesPage /></ModuleGuard>} />
+          <Route path="motoristas" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverManagementPage /></ModuleGuard>} />
           <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
           <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
           <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />

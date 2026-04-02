@@ -185,19 +185,21 @@ export default function DriverPointsRulesPage() {
       />
 
       <div className="flex items-center gap-4 flex-wrap">
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Cidade/Filial</Label>
-          <Select value={branchId} onValueChange={(v) => { setSelectedBranchId(v); setForm({}); }}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Selecione a filial" />
-            </SelectTrigger>
-            <SelectContent>
-              {branches?.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {!isBranchScope && (
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Cidade/Filial</Label>
+            <Select value={branchId} onValueChange={(v) => { setSelectedBranchId(v); setForm({}); }}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Selecione a filial" />
+              </SelectTrigger>
+              <SelectContent>
+                {branches?.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 ml-auto">
           <Switch checked={merged.is_active} onCheckedChange={(v) => updateForm("is_active", v)} />
