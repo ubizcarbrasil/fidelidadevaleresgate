@@ -274,8 +274,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPIs */}
-      <DashboardKpiSection
+      {/* KPIs — hidden for BRANCH scope */}
+      {consoleScope !== "BRANCH" && <DashboardKpiSection
         redemptionsPeriod={redemptionsPeriod}
         redemptionsTotal={redemptionsTotal}
         customersTotal={customersTotal}
