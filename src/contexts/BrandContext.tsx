@@ -164,25 +164,28 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     restore();
   }, [user, brand, branches]);
 
-  // Auto-detect branch by geolocation
+  // Auto-detect branch by geolocation — deferred to avoid blocking initial render
   useEffect(() => {
     if (!brand || branches.length <= 1 || selectedBranch) return;
-    const autoDetect = async () => {
-      const branchesWithCoords = branches.filter(
-        (b) => b.latitude != null && b.longitude != null
-      );
-      if (branchesWithCoords.length === 0) return;
-      const coords = await getCurrentPosition();
-      if (!coords) return;
-      const nearest = findNearestBranch(branchesWithCoords, coords);
-      if (nearest) {
-        setSelectedBranchState(nearest);
-        if (user) {
-          await supabase.from("profiles").update({ selected_branch_id: nearest.id }).eq("id", user.id);
+    const timer = setTimeout(() => {
+      const autoDetect = async () => {
+        const branchesWithCoords = branches.filter(
+          (b) => b.latitude != null && b.longitude != null
+        );
+        if (branchesWithCoords.length === 0) return;
+        const coords = await getCurrentPosition();
+        if (!coords) return;
+        const nearest = findNearestBranch(branchesWithCoords, coords);
+        if (nearest) {
+          setSelectedBranchState(nearest);
+          if (user) {
+            await supabase.from("profiles").update({ selected_branch_id: nearest.id }).eq("id", user.id);
+          }
         }
-      }
-    };
-    autoDetect();
+      };
+      autoDetect();
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [brand, branches, selectedBranch, user]);
 
   const detectBranchByLocation = async (): Promise<Branch | null> => {
