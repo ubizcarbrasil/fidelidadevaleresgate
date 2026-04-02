@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
