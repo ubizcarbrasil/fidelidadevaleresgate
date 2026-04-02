@@ -115,6 +115,7 @@ export default function BrandBranchForm() {
       setCidade(existing.city || existing.name || "");
       setUf(existing.state || "");
       setAtivo(existing.is_active);
+      if ((existing as any).scoring_model) setScoringModel((existing as any).scoring_model);
     }
   }, [existing]);
 
