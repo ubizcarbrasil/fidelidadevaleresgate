@@ -62,6 +62,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
       { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: ReceiptText, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: UserCheck, moduleKey: "achadinhos_motorista" },
+      { key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.manuais", defaultTitle: "Manuais", url: "/manuais", icon: ScrollText, moduleKey: "achadinhos_motorista" },
     ],
   },

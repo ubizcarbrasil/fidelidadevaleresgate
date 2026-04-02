@@ -446,6 +446,7 @@ export type Database = {
           brand_id: string
           created_at: string | null
           id: string
+          low_balance_threshold: number
           total_distributed: number
           total_loaded: number
           updated_at: string | null
@@ -456,6 +457,7 @@ export type Database = {
           brand_id: string
           created_at?: string | null
           id?: string
+          low_balance_threshold?: number
           total_distributed?: number
           total_loaded?: number
           updated_at?: string | null
@@ -466,6 +468,7 @@ export type Database = {
           brand_id?: string
           created_at?: string | null
           id?: string
+          low_balance_threshold?: number
           total_distributed?: number
           total_loaded?: number
           updated_at?: string | null
@@ -6518,6 +6521,10 @@ export type Database = {
           total_rides: number
           wallet_balance: number
         }[]
+      }
+      get_branch_dashboard_stats_v2: {
+        Args: { p_branch_id: string }
+        Returns: Json
       }
       get_customer_ids_for_store_owner: {
         Args: { _user_id: string }
