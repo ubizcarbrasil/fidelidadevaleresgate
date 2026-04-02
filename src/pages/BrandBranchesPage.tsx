@@ -98,6 +98,21 @@ export default function BrandBranchesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {(branch as any).scoring_model === "DRIVER_ONLY" && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Car className="h-3 w-3" /> Motorista
+                    </Badge>
+                  )}
+                  {(branch as any).scoring_model === "PASSENGER_ONLY" && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Users className="h-3 w-3" /> Cliente
+                    </Badge>
+                  )}
+                  {((branch as any).scoring_model === "BOTH" || !(branch as any).scoring_model) && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <RefreshCw className="h-3 w-3" /> Misto
+                    </Badge>
+                  )}
                   <Badge variant={branch.is_active ? "default" : "secondary"} className="text-[10px]">
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>
