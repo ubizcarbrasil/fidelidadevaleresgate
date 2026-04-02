@@ -263,6 +263,7 @@ export default function DashboardQuickLinksSection({ consoleScope, showBrand, is
     <>
       <AccessHubSection consoleScope={consoleScope} />
       {showBrand && !isRoot && <BrandQuickLinks />}
+      {showBrand && !isRoot && <DemoAccessCard />}
       {showBrand && !isRoot && <DemoStoresSection />}
     </>
   );
