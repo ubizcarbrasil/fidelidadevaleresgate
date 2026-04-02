@@ -299,47 +299,52 @@ export default function Dashboard() {
         <BranchDashboardSection branchId={currentBranchId} />
       )}
 
-      {/* Corridas com seletor de período */}
-      {showBrand && <RidesCounterCard brandId={brandFilter} />}
+      {/* Sections hidden for BRANCH scope */}
+      {consoleScope !== "BRANCH" && (
+        <>
+          {/* Corridas com seletor de período */}
+          {showBrand && <RidesCounterCard brandId={brandFilter} />}
 
-      {/* Charts, Ranking, Alerts, Heatmap, Reports */}
-      <DashboardChartsSection
-        combinedChart={combinedChart}
-        recentRedemptions={recentRedemptions}
-        brandFilter={brandFilter}
-        showBrand={showBrand}
-        isRoot={isRoot}
-        redemptionsPending={redemptionsPending}
-        storeRulesPending={storeRulesPending}
-      />
+          {/* Charts, Ranking, Alerts, Heatmap, Reports */}
+          <DashboardChartsSection
+            combinedChart={combinedChart}
+            recentRedemptions={recentRedemptions}
+            brandFilter={brandFilter}
+            showBrand={showBrand}
+            isRoot={isRoot}
+            redemptionsPending={redemptionsPending}
+            storeRulesPending={storeRulesPending}
+          />
 
-      {/* Tasks + Activity Feed */}
-      <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
-        <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardTasksSection /></Suspense>
-        <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardActivityFeed /></Suspense>
-      </div>
+          {/* Tasks + Activity Feed */}
+          <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
+            <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardTasksSection /></Suspense>
+            <Suspense fallback={<Skeleton className="h-48 w-full" />}><DashboardActivityFeed /></Suspense>
+          </div>
 
-      {/* CRM Banner */}
-      {showBrand && !isRoot && (
-        <Card className="border-primary/20 overflow-hidden">
-          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h3 className="font-semibold text-sm">CRM Estratégico</h3>
-                  <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+          {/* CRM Banner */}
+          {showBrand && !isRoot && (
+            <Card className="border-primary/20 overflow-hidden">
+              <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-semibold text-sm">CRM Estratégico</h3>
+                      <Badge className="text-[10px] px-2 py-0">30 dias grátis</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Diagnóstico do negócio, clientes perdidos e potenciais.</p>
-              </div>
-            </div>
-            <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
-              <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
-            </Button>
-          </CardContent>
-        </Card>
+                <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
+                  <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Quick Links, Access Hub, Demo */}
