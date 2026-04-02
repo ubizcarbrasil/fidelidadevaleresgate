@@ -135,6 +135,20 @@ Deno.serve(async (req) => {
 
     logger.info("Driver notification sent successfully", { machine_ride_id, driver_id: destinatarioId });
 
+    // Record DRIVER notification to prevent duplicates
+    await sb.from("machine_ride_notifications").insert({
+      brand_id,
+      branch_id: branch_id || null,
+      machine_ride_id,
+      customer_id: driver_customer_id,
+      customer_name: cleanName,
+      driver_name: driver_name || null,
+      points_credited: driver_points_credited,
+      ride_value: ride_value || 0,
+      finalized_at: finalized_at || new Date().toISOString(),
+      notification_type: "DRIVER",
+    });
+
     return json({ success: true, machine_ride_id, driver_id: destinatarioId });
   } catch (err) {
     logger.error("Unexpected error", { error: String(err) });
