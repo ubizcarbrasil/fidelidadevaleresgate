@@ -31,22 +31,31 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 
 export default function ProductRedemptionOrdersPage() {
   const qc = useQueryClient();
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [trackingCode, setTrackingCode] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
+  const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
+
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["product-redemption-orders", currentBrandId],
+    queryKey: ["product-redemption-orders", currentBrandId, currentBranchId],
     enabled: !!currentBrandId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("product_redemption_orders")
         .select("*")
         .eq("brand_id", currentBrandId!)
         .order("created_at", { ascending: false })
         .limit(200);
+
+      // Isolamento por cidade para branch_admin
+      if (isBranchScope) {
+        q = q.eq("branch_id", currentBranchId!);
+      }
+
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },

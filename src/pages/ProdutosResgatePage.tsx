@@ -22,8 +22,10 @@ const PAGE_SIZE = 20;
 
 export default function ProdutosResgatePage() {
   const qc = useQueryClient();
-  const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const { currentBrandId, currentBranchId, consoleScope, isRootAdmin } = useBrandGuard();
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
+
+  const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
@@ -41,6 +43,8 @@ export default function ProdutosResgatePage() {
         .eq("is_redeemable", true);
 
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
+      // Isolamento por cidade para branch_admin
+      if (isBranchScope) query = query.eq("branch_id", currentBranchId!);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
       if (statusFilter === "active") query = query.eq("is_active", true);
       if (statusFilter === "inactive") query = query.eq("is_active", false);
@@ -62,7 +66,8 @@ export default function ProdutosResgatePage() {
         .select("id, is_active, redeem_points_cost", { count: "exact" })
         .eq("is_redeemable", true);
 
-      const query = !isRootAdmin && currentBrandId ? base.eq("brand_id", currentBrandId) : base;
+      let query = !isRootAdmin && currentBrandId ? base.eq("brand_id", currentBrandId) : base;
+      if (isBranchScope) query = query.eq("branch_id", currentBranchId!);
       const { data, count } = await query;
 
       const ativos = data?.filter((d) => d.is_active).length ?? 0;

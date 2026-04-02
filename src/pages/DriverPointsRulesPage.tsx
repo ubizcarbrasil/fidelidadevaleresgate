@@ -56,8 +56,10 @@ const DEFAULT_TIERS: VolumeTier[] = [
 
 export default function DriverPointsRulesPage() {
   const qc = useQueryClient();
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+
+  const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
   const { data: branches } = useQuery({
     queryKey: ["branches-driver-rules", currentBrandId],
@@ -67,10 +69,11 @@ export default function DriverPointsRulesPage() {
       const { data } = await q;
       return data || [];
     },
-    enabled: !!currentBrandId,
+    enabled: !!currentBrandId && !isBranchScope,
   });
 
-  const branchId = selectedBranchId || branches?.[0]?.id || "";
+  // branch_admin usa sua própria cidade travada
+  const branchId = isBranchScope ? currentBranchId! : (selectedBranchId || branches?.[0]?.id || "");
 
   const { data: rule, isLoading } = useQuery({
     queryKey: ["driver-points-rules", currentBrandId, branchId],
@@ -182,19 +185,21 @@ export default function DriverPointsRulesPage() {
       />
 
       <div className="flex items-center gap-4 flex-wrap">
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Cidade/Filial</Label>
-          <Select value={branchId} onValueChange={(v) => { setSelectedBranchId(v); setForm({}); }}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Selecione a filial" />
-            </SelectTrigger>
-            <SelectContent>
-              {branches?.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {!isBranchScope && (
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Cidade/Filial</Label>
+            <Select value={branchId} onValueChange={(v) => { setSelectedBranchId(v); setForm({}); }}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Selecione a filial" />
+              </SelectTrigger>
+              <SelectContent>
+                {branches?.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 ml-auto">
           <Switch checked={merged.is_active} onCheckedChange={(v) => updateForm("is_active", v)} />

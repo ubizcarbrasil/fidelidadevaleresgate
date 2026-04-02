@@ -32,14 +32,16 @@ export type DriverRow = {
 };
 
 export default function DriverManagementPage() {
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();
   const [search, setSearch] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<DriverRow | null>(null);
   const [bonusDriver, setBonusDriver] = useState<DriverRow | null>(null);
   const debouncedSearch = useDebounce(search, 400);
 
+  const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
+
   const { data: drivers, isLoading } = useQuery({
-    queryKey: ["driver-management", currentBrandId, debouncedSearch],
+    queryKey: ["driver-management", currentBrandId, currentBranchId, debouncedSearch],
     queryFn: async () => {
       let q = (supabase as any)
         .from("customers")
@@ -48,6 +50,11 @@ export default function DriverManagementPage() {
         .ilike("name", "%[MOTORISTA]%")
         .order("updated_at", { ascending: false })
         .limit(100);
+
+      // Isolamento por cidade para branch_admin
+      if (isBranchScope) {
+        q = q.eq("branch_id", currentBranchId);
+      }
 
       if (debouncedSearch.trim()) {
         const s = debouncedSearch.trim();
@@ -158,7 +165,7 @@ export default function DriverManagementPage() {
     <div className="space-y-6">
       <PageHeader
         title="Gestão de Motoristas"
-        description="Gerencie dados, pontuação e regras de todos os motoristas da marca."
+        description={isBranchScope ? "Gerencie dados, pontuação e regras dos motoristas da sua cidade." : "Gerencie dados, pontuação e regras de todos os motoristas da marca."}
       />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

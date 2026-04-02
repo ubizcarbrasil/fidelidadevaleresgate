@@ -18,6 +18,10 @@ export default function ManuaisPage() {
     if (consoleScope === "BRANCH") {
       return [...gruposManuaisFranqueado, ...gruposManuais];
     }
+    // Empreendedor (BRAND) também vê os manuais do franqueado
+    if (consoleScope === "BRAND") {
+      return [...gruposManuais, ...gruposManuaisFranqueado];
+    }
     return gruposManuais;
   }, [consoleScope]);
 
