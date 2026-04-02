@@ -43,6 +43,8 @@ export default function ProdutosResgatePage() {
         .eq("is_redeemable", true);
 
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
+      // Isolamento por cidade para branch_admin
+      if (isBranchScope) query = query.eq("branch_id", currentBranchId!);
       if (debouncedSearch) query = query.ilike("title", `%${debouncedSearch}%`);
       if (statusFilter === "active") query = query.eq("is_active", true);
       if (statusFilter === "inactive") query = query.eq("is_active", false);
