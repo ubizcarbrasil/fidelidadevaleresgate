@@ -319,16 +319,31 @@ async function processFinalized(
   // Resolve the branch to use for customer creation
   const customerBranchId = branchId || integration.branch_id;
 
-  // --- Cascading customer lookup (skip for maçaneta rides) ---
+  // --- Fetch scoring_model from branch ---
+  let scoringModel = "BOTH";
+  if (customerBranchId) {
+    const { data: branchData } = await sb
+      .from("branches")
+      .select("scoring_model")
+      .eq("id", customerBranchId)
+      .maybeSingle();
+    if (branchData?.scoring_model) scoringModel = branchData.scoring_model;
+  }
+  logger.info("Scoring model resolved", { machineRideId, scoringModel, branchId: customerBranchId });
+
+  const shouldScorePassenger = scoringModel === "PASSENGER_ONLY" || scoringModel === "BOTH";
+  const shouldScoreDriver = scoringModel === "DRIVER_ONLY" || scoringModel === "BOTH";
+
+  // --- Cascading customer lookup (skip for maçaneta rides and DRIVER_ONLY) ---
   let customer: any = null;
   let matchedBy: string | null = null;
 
-  // For maçaneta rides, skip passenger lookup/creation entirely
+  // For maçaneta rides or DRIVER_ONLY, skip passenger lookup/creation entirely
   let customerId: string | null = null;
   let pointsCredited = false;
   let points = 0;
 
-  if (!isMacaneta) {
+  if (!isMacaneta && shouldScorePassenger) {
     const cascadeResult = await findCustomerCascade(sb, brandId, passengerCpf, passengerPhone, passengerName);
     if (cascadeResult) {
       customer = cascadeResult.customer;
@@ -336,7 +351,7 @@ async function processFinalized(
     }
   }
 
-  if (!isMacaneta && !customer) {
+  if (!isMacaneta && shouldScorePassenger && !customer) {
     // Determine which branch to use
     let resolveBranchId = customerBranchId;
     if (!resolveBranchId) {
