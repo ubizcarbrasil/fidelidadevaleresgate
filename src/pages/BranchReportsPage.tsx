@@ -79,7 +79,7 @@ export default function BranchReportsPage() {
         .order("created_at", { ascending: false })
         .limit(5000);
       if (!data || data.length === 0) { toast.info("Nenhum pedido encontrado."); return; }
-      downloadCsv("pedidos_resgate.csv", ["Cliente", "CPF", "Pontos", "Status", "Data"], data.map((d) => [d.customer_name || "", d.customer_cpf || "", String(d.points_spent), d.status, new Date(d.created_at).toLocaleDateString("pt-BR")]));
+      downloadCsv("pedidos_resgate.csv", ["Cliente", "CPF", "Pontos", "Status", "Data"], data.map((d: any) => [d.customer_name || "", d.customer_cpf || "", String(d.points_spent), d.status, new Date(d.created_at).toLocaleDateString("pt-BR")]));
       toast.success("Exportação concluída!");
     } catch { toast.error("Erro ao exportar."); } finally { setExporting(null); }
   };
