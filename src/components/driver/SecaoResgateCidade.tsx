@@ -18,11 +18,12 @@ interface Props {
   ofertas: OfertaCidade[];
   fontHeading?: string;
   onClickOferta: (oferta: OfertaCidade) => void;
+  onVerHistorico?: () => void;
 }
 
 export type { OfertaCidade };
 
-export default function SecaoResgateCidade({ ofertas, fontHeading, onClickOferta }: Props) {
+export default function SecaoResgateCidade({ ofertas, fontHeading, onClickOferta, onVerHistorico }: Props) {
   if (ofertas.length === 0) return null;
 
   return (
