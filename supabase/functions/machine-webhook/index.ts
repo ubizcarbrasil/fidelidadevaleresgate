@@ -487,7 +487,7 @@ async function processFinalized(
   // even when the passenger wasn't credited (e.g. customer creation failed)
   const passengerPointsRef = points > 0 ? points : Math.floor(rideValue * 1);
 
-  if (integration.driver_points_enabled && rideValue > 0 && (driverId || driverName)) {
+  if (shouldScoreDriver && integration.driver_points_enabled && rideValue > 0 && (driverId || driverName)) {
     // 1. Try advanced rules from driver_points_rules table
     const { data: advancedRule } = await sb
       .from("driver_points_rules")
