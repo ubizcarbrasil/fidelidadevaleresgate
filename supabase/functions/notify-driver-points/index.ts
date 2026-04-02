@@ -54,20 +54,18 @@ Deno.serve(async (req) => {
       return json({ error: "No points to notify", skipped: true }, 200);
     }
 
-    // Check for duplicate notification
+    // Check for duplicate DRIVER notification
     const { data: existing } = await sb
       .from("machine_ride_notifications")
       .select("id")
       .eq("machine_ride_id", machine_ride_id)
       .eq("brand_id", brand_id)
-      .eq("driver_name", driver_name || "")
+      .eq("notification_type", "DRIVER")
       .limit(1)
       .maybeSingle();
 
-    // Use a different dedup strategy: check if we already sent a driver message for this ride
-    // We'll look for notifications where driver_name matches and it's the same ride
     if (existing) {
-      logger.info("Duplicate notification skipped", { machine_ride_id, brand_id });
+      logger.info("Duplicate driver notification skipped", { machine_ride_id, brand_id });
       return json({ skipped: true, reason: "already_notified" }, 200);
     }
 

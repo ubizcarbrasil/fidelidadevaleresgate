@@ -830,6 +830,7 @@ async function processFinalized(
       ride_value: rideValue,
       finalized_at: new Date().toISOString(),
       driver_name: driverName || null,
+      notification_type: "PASSENGER",
     });
 
     // Send Telegram notification if chat_id configured (fire-and-forget)
