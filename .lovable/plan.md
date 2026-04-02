@@ -1,31 +1,27 @@
 
 
-# Corrigir controle de duplicidade: separar notificações PASSENGER vs DRIVER
+# Alterar `notify-driver-points` para ler API key da tabela `machine_integrations`
 
-## Problema
-A function `notify-driver-points` verifica duplicidade por `machine_ride_id + brand_id + driver_name`, mas o fluxo do passageiro no `machine-webhook` já insere um registro na `machine_ride_notifications` antes. Dependendo do `driver_name`, o filtro pode conflitar.
+## Resumo
+Remover o uso do secret `TAXIMACHINE_MESSAGE_API_KEY` e buscar a `api_key` diretamente da tabela `machine_integrations` usando o `brand_id` do payload.
 
-## Solução
+## Alteração (único arquivo: `notify-driver-points/index.ts`)
 
-### 1. Migration: adicionar coluna `notification_type`
-```sql
-ALTER TABLE machine_ride_notifications 
-  ADD COLUMN notification_type text NOT NULL DEFAULT 'PASSENGER';
-```
-Registros existentes ficam como `'PASSENGER'` automaticamente.
+1. **Remover** linhas 23-27 (leitura do secret `TAXIMACHINE_MESSAGE_API_KEY` e validação)
+2. **Adicionar** após a validação de campos obrigatórios (após linha 55), uma query:
+   ```typescript
+   const { data: integration } = await sb
+     .from("machine_integrations")
+     .select("api_key")
+     .eq("brand_id", brand_id)
+     .maybeSingle();
 
-### 2. Atualizar `notify-driver-points`
-- Trocar a query de dedup para filtrar por `machine_ride_id + brand_id + notification_type = 'DRIVER'` (remover filtro por `driver_name`).
-- Após envio com sucesso, inserir registro com `notification_type: 'DRIVER'`.
+   if (!integration?.api_key) {
+     logger.error("API key not found in machine_integrations", { brand_id });
+     return json({ error: "API key not configured for brand" }, 500);
+   }
+   ```
+3. **Substituir** na linha 105 `TAXIMACHINE_API_KEY` por `integration.api_key`
 
-### 3. Webhook do passageiro (`machine-webhook`)
-Já grava com o default `'PASSENGER'`, nenhuma alteração necessária. Opcionalmente, adicionar `notification_type: 'PASSENGER'` explicitamente para clareza.
-
-## Arquivos
-
-| Arquivo | Alteração |
-|---|---|
-| DB migration | `ADD COLUMN notification_type` |
-| `supabase/functions/notify-driver-points/index.ts` | Dedup por `notification_type = 'DRIVER'` + inserir com `notification_type: 'DRIVER'` |
-| `supabase/functions/machine-webhook/index.ts` | Adicionar `notification_type: 'PASSENGER'` explícito no insert (opcional) |
+Nenhum outro arquivo será alterado.
 
