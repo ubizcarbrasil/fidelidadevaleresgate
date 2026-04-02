@@ -60,6 +60,8 @@ export default function BrandBranchForm() {
   const [franqueadoEmail, setFranqueadoEmail] = useState("");
   const [franqueadoPassword, setFranqueadoPassword] = useState("123456");
   const [franqueadoNome, setFranqueadoNome] = useState("");
+  const [emailJaExiste, setEmailJaExiste] = useState(false);
+  const [verificandoEmail, setVerificandoEmail] = useState(false);
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
