@@ -22,7 +22,7 @@ export default function BrandBranchesPage() {
       if (!currentBrandId) return [];
       const { data, error } = await supabase
         .from("branches")
-        .select("id, name, city, state, is_active, created_at, scoring_model")
+        .select("id, name, city, state, is_active, created_at, scoring_model, is_city_redemption_enabled")
         .eq("brand_id", currentBrandId)
         .order("name");
       if (error) throw error;
