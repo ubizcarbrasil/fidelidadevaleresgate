@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         initialLoadDone = true;
       }
-    }, 8000);
+    }, 5000);
 
     return () => {
       mountedRef.current = false;
