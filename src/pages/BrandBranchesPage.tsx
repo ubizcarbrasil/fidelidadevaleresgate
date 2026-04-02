@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Plus, Pencil, Globe } from "lucide-react";
+import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BrandBranchesPage() {
