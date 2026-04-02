@@ -20,11 +20,6 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const TAXIMACHINE_API_KEY = Deno.env.get("TAXIMACHINE_MESSAGE_API_KEY");
-  if (!TAXIMACHINE_API_KEY) {
-    logger.error("TAXIMACHINE_MESSAGE_API_KEY not configured");
-    return json({ error: "API key not configured" }, 500);
-  }
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
