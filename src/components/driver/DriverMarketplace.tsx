@@ -605,6 +605,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
           onClickOferta={(oferta) => setSelectedCityOffer(oferta)}
+          onVerHistorico={() => setShowCityRedemptions(true)}
         />
       )}
 
