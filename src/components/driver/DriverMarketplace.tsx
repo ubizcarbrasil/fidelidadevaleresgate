@@ -600,7 +600,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Resgate na Cidade */}
-      {!debouncedSearch.trim() && (cityOffers || []).length > 0 && (
+      {!debouncedSearch.trim() && (branch as any)?.is_city_redemption_enabled === true && (cityOffers || []).length > 0 && (
         <SecaoResgateCidade
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
