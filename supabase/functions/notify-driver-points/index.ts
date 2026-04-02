@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": TAXIMACHINE_API_KEY,
+        "api-key": integration.api_key,
       },
       body: JSON.stringify({
         tipo_chat: "P",
