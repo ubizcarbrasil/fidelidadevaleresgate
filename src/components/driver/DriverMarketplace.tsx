@@ -24,6 +24,7 @@ import DriverDealCard from "./DriverDealCard";
 import DriverDealCardGrid from "./DriverDealCardGrid";
 import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
+import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 
 export interface AffiliateDeal {
   id: string;
