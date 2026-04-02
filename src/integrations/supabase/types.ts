@@ -3088,6 +3088,7 @@ export type Database = {
           finalized_at: string
           id: string
           machine_ride_id: string
+          notification_type: string
           points_credited: number
           ride_value: number
         }
@@ -3104,6 +3105,7 @@ export type Database = {
           finalized_at?: string
           id?: string
           machine_ride_id: string
+          notification_type?: string
           points_credited?: number
           ride_value?: number
         }
@@ -3120,6 +3122,7 @@ export type Database = {
           finalized_at?: string
           id?: string
           machine_ride_id?: string
+          notification_type?: string
           points_credited?: number
           ride_value?: number
         }
