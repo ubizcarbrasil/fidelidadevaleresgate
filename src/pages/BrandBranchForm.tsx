@@ -362,6 +362,43 @@ export default function BrandBranchForm() {
         </CardContent>
       </Card>
 
+      {/* URL do Webhook */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Link className="h-4 w-4" />
+            URL para Eventos (Webhook)
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Use esta URL para configurar o envio de corridas em tempo real para esta cidade.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {webhookUrl ? (
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={webhookUrl}
+                className="font-mono text-xs bg-muted/50"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={handleCopyUrl}
+              >
+                {copiedUrl ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">
+              A URL será gerada automaticamente após salvar a cidade.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Franqueado / Gestor da Cidade */}
       {!isEdit && (
         <Card className="rounded-xl">
