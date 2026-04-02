@@ -101,9 +101,21 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold">Resgates</h1>
-        <p className="text-sm text-muted-foreground">Veja resgates dos clientes e dê baixa</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Resgates</h1>
+          <p className="text-sm text-muted-foreground">Veja resgates dos clientes e dê baixa</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="rounded-xl gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          Atualizar
+        </Button>
       </div>
 
       {isError ? (
