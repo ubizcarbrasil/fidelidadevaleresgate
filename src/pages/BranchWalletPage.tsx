@@ -9,12 +9,71 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { formatPoints } from "@/lib/formatPoints";
-import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Loader2, TrendingUp, TrendingDown, Coins } from "lucide-react";
+import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Loader2, TrendingUp, TrendingDown, Coins, AlertTriangle } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+function AlertaSaldoBaixo({ balance, threshold }: { balance: number; threshold: number }) {
+  if (balance > threshold) return null;
+  return (
+    <Card className="border-destructive/50 bg-destructive/5">
+      <CardContent className="flex items-center gap-3 py-4">
+        <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-destructive">Saldo baixo!</p>
+          <p className="text-xs text-muted-foreground">
+            Seu saldo de {formatPoints(balance)} pts está abaixo do limite de {formatPoints(threshold)} pts. Recarregue para continuar distribuindo pontos.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ListaTransacoes({ transactions, filterType }: { transactions: any[]; filterType: string | null }) {
+  const filtered = filterType ? transactions.filter((tx) => tx.transaction_type === filterType) : transactions;
+
+  if (filtered.length === 0) {
+    return <p className="text-sm text-muted-foreground text-center py-8">Nenhuma transação registrada.</p>;
+  }
+
+  return (
+    <div className="divide-y divide-border">
+      {filtered.map((tx: any) => (
+        <div key={tx.id} className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-3">
+            {tx.transaction_type === "LOAD" ? (
+              <ArrowUpCircle className="h-5 w-5 text-success" />
+            ) : (
+              <ArrowDownCircle className="h-5 w-5 text-destructive" />
+            )}
+            <div>
+              <p className="text-sm font-medium">
+                {tx.transaction_type === "LOAD" ? "Recarga" : "Distribuição"}
+              </p>
+              <p className="text-xs text-muted-foreground">{tx.description || "—"}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className={`text-sm font-semibold ${tx.transaction_type === "LOAD" ? "text-success" : "text-destructive"}`}>
+              {tx.transaction_type === "LOAD" ? "+" : "-"}{formatPoints(tx.amount)} pts
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Saldo: {formatPoints(tx.balance_after)} pts
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {new Date(tx.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function BranchWalletPage() {
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
@@ -25,7 +84,6 @@ export default function BranchWalletPage() {
 
   const canLoad = ["ROOT", "BRAND", "TENANT"].includes(consoleScope);
 
-  // Wallet balance
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["branch-wallet", currentBranchId],
     queryFn: async () => {
@@ -40,7 +98,6 @@ export default function BranchWalletPage() {
     enabled: !!currentBranchId,
   });
 
-  // Transactions
   const { data: transactions, isLoading: txLoading } = useQuery({
     queryKey: ["branch-wallet-transactions", currentBranchId],
     queryFn: async () => {
@@ -56,14 +113,12 @@ export default function BranchWalletPage() {
     enabled: !!currentBranchId,
   });
 
-  // Load (recharge) mutation
   const loadMutation = useMutation({
     mutationFn: async () => {
       const amount = Number(loadAmount);
       if (!amount || amount <= 0) throw new Error("Valor inválido");
       if (!currentBranchId || !currentBrandId) throw new Error("Cidade não identificada");
 
-      // Upsert wallet
       const { data: existing } = await supabase
         .from("branch_points_wallet")
         .select("id, balance, total_loaded")
@@ -74,35 +129,22 @@ export default function BranchWalletPage() {
         const newBalance = Number(existing.balance) + amount;
         await supabase
           .from("branch_points_wallet")
-          .update({
-            balance: newBalance,
-            total_loaded: Number(existing.total_loaded) + amount,
-          })
+          .update({ balance: newBalance, total_loaded: Number(existing.total_loaded) + amount })
           .eq("id", existing.id);
 
         await supabase.from("branch_wallet_transactions").insert({
-          branch_id: currentBranchId,
-          brand_id: currentBrandId,
-          transaction_type: "LOAD",
-          amount,
-          balance_after: newBalance,
+          branch_id: currentBranchId, brand_id: currentBrandId,
+          transaction_type: "LOAD", amount, balance_after: newBalance,
           description: loadDescription || "Recarga de pontos",
         });
       } else {
         await supabase.from("branch_points_wallet").insert({
-          branch_id: currentBranchId,
-          brand_id: currentBrandId,
-          balance: amount,
-          total_loaded: amount,
-          total_distributed: 0,
+          branch_id: currentBranchId, brand_id: currentBrandId,
+          balance: amount, total_loaded: amount, total_distributed: 0,
         });
-
         await supabase.from("branch_wallet_transactions").insert({
-          branch_id: currentBranchId,
-          brand_id: currentBrandId,
-          transaction_type: "LOAD",
-          amount,
-          balance_after: amount,
+          branch_id: currentBranchId, brand_id: currentBrandId,
+          transaction_type: "LOAD", amount, balance_after: amount,
           description: loadDescription || "Recarga inicial de pontos",
         });
       }
@@ -115,18 +157,14 @@ export default function BranchWalletPage() {
       setLoadDescription("");
       setDialogOpen(false);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Erro ao recarregar");
-    },
+    onError: (err: Error) => { toast.error(err.message || "Erro ao recarregar"); },
   });
 
   if (!currentBranchId) {
-    return (
-      <div className="p-6 text-center text-muted-foreground">
-        Nenhuma cidade vinculada ao seu perfil.
-      </div>
-    );
+    return <div className="p-6 text-center text-muted-foreground">Nenhuma cidade vinculada ao seu perfil.</div>;
   }
+
+  const lowThreshold = Number((wallet as any)?.low_balance_threshold ?? 1000);
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto">
@@ -144,44 +182,23 @@ export default function BranchWalletPage() {
         {canLoad && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" /> Recarregar
-              </Button>
+              <Button className="gap-2"><Plus className="h-4 w-4" /> Recarregar</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Recarregar Carteira</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Recarregar Carteira</DialogTitle></DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label>Quantidade de pontos</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="Ex: 10000"
-                    value={loadAmount}
-                    onChange={(e) => setLoadAmount(e.target.value)}
-                  />
+                  <Input type="number" min={1} placeholder="Ex: 10000" value={loadAmount} onChange={(e) => setLoadAmount(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label>Descrição (opcional)</Label>
-                  <Textarea
-                    placeholder="Ex: Recarga mensal Abril/2026"
-                    value={loadDescription}
-                    onChange={(e) => setLoadDescription(e.target.value)}
-                    rows={2}
-                  />
+                  <Textarea placeholder="Ex: Recarga mensal Abril/2026" value={loadDescription} onChange={(e) => setLoadDescription(e.target.value)} rows={2} />
                 </div>
               </div>
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
-                </DialogClose>
-                <Button
-                  onClick={() => loadMutation.mutate()}
-                  disabled={loadMutation.isPending || !loadAmount || Number(loadAmount) <= 0}
-                  className="gap-2"
-                >
+                <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+                <Button onClick={() => loadMutation.mutate()} disabled={loadMutation.isPending || !loadAmount || Number(loadAmount) <= 0} className="gap-2">
                   {loadMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Confirmar Recarga
                 </Button>
@@ -190,6 +207,11 @@ export default function BranchWalletPage() {
           </Dialog>
         )}
       </div>
+
+      {/* Low balance alert */}
+      {!walletLoading && wallet && (
+        <AlertaSaldoBaixo balance={Number(wallet.balance ?? 0)} threshold={lowThreshold} />
+      )}
 
       {/* Balance Cards */}
       {walletLoading ? (
@@ -240,7 +262,7 @@ export default function BranchWalletPage() {
         </div>
       )}
 
-      {/* Transactions */}
+      {/* Transactions with tabs */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium">Histórico de Transações</CardTitle>
@@ -252,36 +274,22 @@ export default function BranchWalletPage() {
           ) : !transactions || transactions.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Nenhuma transação registrada.</p>
           ) : (
-            <div className="divide-y divide-border">
-              {transactions.map((tx: any) => (
-                <div key={tx.id} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    {tx.transaction_type === "LOAD" ? (
-                      <ArrowUpCircle className="h-5 w-5 text-success" />
-                    ) : (
-                      <ArrowDownCircle className="h-5 w-5 text-destructive" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium">
-                        {tx.transaction_type === "LOAD" ? "Recarga" : "Distribuição"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{tx.description || "—"}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-semibold ${tx.transaction_type === "LOAD" ? "text-success" : "text-destructive"}`}>
-                      {tx.transaction_type === "LOAD" ? "+" : "-"}{formatPoints(tx.amount)} pts
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Saldo: {formatPoints(tx.balance_after)} pts
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {new Date(tx.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Tabs defaultValue="all">
+              <TabsList className="mb-3">
+                <TabsTrigger value="all">Todas</TabsTrigger>
+                <TabsTrigger value="LOAD">Recargas</TabsTrigger>
+                <TabsTrigger value="DEBIT">Distribuições</TabsTrigger>
+              </TabsList>
+              <TabsContent value="all">
+                <ListaTransacoes transactions={transactions} filterType={null} />
+              </TabsContent>
+              <TabsContent value="LOAD">
+                <ListaTransacoes transactions={transactions} filterType="LOAD" />
+              </TabsContent>
+              <TabsContent value="DEBIT">
+                <ListaTransacoes transactions={transactions} filterType="DEBIT" />
+              </TabsContent>
+            </Tabs>
           )}
         </CardContent>
       </Card>
