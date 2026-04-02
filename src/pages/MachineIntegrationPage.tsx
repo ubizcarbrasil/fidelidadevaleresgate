@@ -908,7 +908,51 @@ export default function MachineIntegrationPage() {
                     {driverPointsSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveDriverPointsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                     Salvar
                   </Button>
+              </div>
+
+              {/* Driver Message Notification Toggle */}
+              <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Send className="h-3 w-3" /> Notificação ao motorista no app
+                    </Label>
+                    <p className="text-xs text-muted-foreground max-w-md">
+                      Envia uma mensagem automática no app TaxiMachine para o motorista informando os pontos ganhos a cada corrida finalizada.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={driverMessageEnabled}
+                    onCheckedChange={(val) => {
+                      setDriverMessageEnabled(val);
+                      if (!selectedIntegration?.id) return;
+                      (supabase as any)
+                        .from("machine_integrations")
+                        .update({ driver_message_enabled: val })
+                        .eq("id", selectedIntegration.id)
+                        .then(({ error }: any) => {
+                          if (error) {
+                            toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+                            setDriverMessageEnabled(!val);
+                          } else {
+                            setDriverMessageSaved(true);
+                            setTimeout(() => setDriverMessageSaved(false), 2000);
+                            toast({ title: val ? "Notificação ativada" : "Notificação desativada" });
+                            queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+                          }
+                        });
+                    }}
+                  />
                 </div>
+                {driverMessageEnabled && (
+                  <Alert className="border-primary/30 bg-primary/5">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-xs">
+                      Motoristas receberão uma mensagem no app com os pontos ganhos, valor da corrida e saldo atualizado.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
               </div>
 
               {/* Preferred Endpoint */}
