@@ -382,8 +382,23 @@ export default function BrandBranchForm() {
                     type="email"
                     placeholder="franqueado@exemplo.com"
                     value={franqueadoEmail}
-                    onChange={(e) => setFranqueadoEmail(e.target.value)}
+                    onChange={(e) => {
+                      setFranqueadoEmail(e.target.value);
+                      setEmailJaExiste(false);
+                    }}
+                    onBlur={() => verificarEmail(franqueadoEmail)}
+                    className={emailJaExiste ? "border-destructive" : ""}
                   />
+                  {verificandoEmail && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Verificando e-mail...
+                    </p>
+                  )}
+                  {emailJaExiste && (
+                    <p className="text-xs text-destructive">
+                      Este e-mail já está cadastrado no sistema. Use outro e-mail.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Senha</Label>
