@@ -13,6 +13,7 @@ import {
   Globe, Eye, Smartphone, Search, Link2,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
+import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks() {
@@ -262,6 +263,7 @@ export default function DashboardQuickLinksSection({ consoleScope, showBrand, is
     <>
       <AccessHubSection consoleScope={consoleScope} />
       {showBrand && !isRoot && <BrandQuickLinks />}
+      {showBrand && !isRoot && <DemoAccessCard />}
       {showBrand && !isRoot && <DemoStoresSection />}
     </>
   );
