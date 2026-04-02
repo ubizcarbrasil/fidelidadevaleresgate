@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Plus, Pencil, Globe } from "lucide-react";
+import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BrandBranchesPage() {
@@ -22,7 +22,7 @@ export default function BrandBranchesPage() {
       if (!currentBrandId) return [];
       const { data, error } = await supabase
         .from("branches")
-        .select("id, name, city, state, is_active, created_at")
+        .select("id, name, city, state, is_active, created_at, scoring_model")
         .eq("brand_id", currentBrandId)
         .order("name");
       if (error) throw error;
@@ -98,6 +98,21 @@ export default function BrandBranchesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {(branch as any).scoring_model === "DRIVER_ONLY" && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Car className="h-3 w-3" /> Motorista
+                    </Badge>
+                  )}
+                  {(branch as any).scoring_model === "PASSENGER_ONLY" && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Users className="h-3 w-3" /> Cliente
+                    </Badge>
+                  )}
+                  {((branch as any).scoring_model === "BOTH" || !(branch as any).scoring_model) && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <RefreshCw className="h-3 w-3" /> Misto
+                    </Badge>
+                  )}
                   <Badge variant={branch.is_active ? "default" : "secondary"} className="text-[10px]">
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>

@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -26,15 +27,17 @@ interface MenuItem {
   url: string;
   icon: any;
   moduleKey?: string;
+  scoringFilter?: "DRIVER" | "PASSENGER";
 }
 
 const dashboardItem: MenuItem = {
   key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
 };
 
-const groups: { label: string; items: MenuItem[] }[] = [
+const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: MenuItem[] }[] = [
   {
     label: "Gestão Comercial",
+    scoringFilter: "PASSENGER",
     items: [
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
       { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
@@ -52,6 +55,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   },
   {
     label: "Achadinhos Motorista",
+    scoringFilter: "DRIVER",
     items: [
       { key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.regras_motorista", defaultTitle: "Regras de Pontuação", url: "/driver-points-rules", icon: Settings2, moduleKey: "achadinhos_motorista" },
@@ -63,6 +67,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   },
   {
     label: "Programa de Fidelidade",
+    scoringFilter: "PASSENGER",
     items: [
       { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
       { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
@@ -155,13 +160,21 @@ export function BranchSidebar() {
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
+  const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
 
-  const visibleGroups = groups.map((group) => ({
-    ...group,
-    items: group.items.filter(
-      (item) => !item.moduleKey || isModuleEnabled(item.moduleKey)
-    ),
-  }));
+  const visibleGroups = groups
+    .filter((group) => {
+      // Filter groups by scoring model
+      if (group.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
+      if (group.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
+      return true;
+    })
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.moduleKey || isModuleEnabled(item.moduleKey)
+      ),
+    }));
 
   return (
     <Sidebar collapsible="icon">
