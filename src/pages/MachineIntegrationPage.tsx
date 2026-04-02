@@ -303,6 +303,7 @@ export default function MachineIntegrationPage() {
     (selectedIntegration as any)?.driver_points_percent,
     (selectedIntegration as any)?.driver_points_mode,
     (selectedIntegration as any)?.driver_points_per_real,
+    (selectedIntegration as any)?.driver_message_enabled,
   ]);
 
   /* ── Initial events ── */
