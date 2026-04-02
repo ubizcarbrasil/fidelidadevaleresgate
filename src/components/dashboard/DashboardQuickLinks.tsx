@@ -13,6 +13,7 @@ import {
   Globe, Eye, Smartphone, Search, Link2,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
+import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks() {
