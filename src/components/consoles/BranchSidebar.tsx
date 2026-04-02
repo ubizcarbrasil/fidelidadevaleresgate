@@ -160,13 +160,21 @@ export function BranchSidebar() {
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
+  const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
 
-  const visibleGroups = groups.map((group) => ({
-    ...group,
-    items: group.items.filter(
-      (item) => !item.moduleKey || isModuleEnabled(item.moduleKey)
-    ),
-  }));
+  const visibleGroups = groups
+    .filter((group) => {
+      // Filter groups by scoring model
+      if (group.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
+      if (group.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
+      return true;
+    })
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.moduleKey || isModuleEnabled(item.moduleKey)
+      ),
+    }));
 
   return (
     <Sidebar collapsible="icon">
