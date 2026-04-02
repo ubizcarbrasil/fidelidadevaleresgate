@@ -1,0 +1,1 @@
+ALTER TABLE machine_ride_notifications ADD COLUMN notification_type text NOT NULL DEFAULT 'PASSENGER';
