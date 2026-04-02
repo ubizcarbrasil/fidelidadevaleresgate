@@ -1,28 +1,27 @@
 
 
-# Diagnóstico e Correções
+# Deploy do MCP Server existente
 
-## Problema 1: Tela travada no celular (cache)
-O app **carrega normalmente** no teste do browser — a tela de login aparece sem problemas. No celular, está mostrando "preparando ambiente..." por causa de **cache antigo** do navegador mobile. Não é um bug no código.
+## Situação Atual
+O arquivo `supabase/functions/mcp-server/index.ts` já existe com todas as ferramentas pedidas (list_tables, get_schema, query_records, create_record, update_record, delete_record). A autenticação já usa o `AGENT_SECRET` que está configurado nos secrets.
 
-**Ação:** Instruir a limpar cache/dados do navegador no celular, ou forçar hard-refresh.
+**Único problema:** a function não está registrada no `config.toml`, então nunca foi deployada.
 
-## Problema 2: Warning "Function components cannot be given refs"
-O componente `App` é uma arrow function sem `forwardRef`, mas algo está tentando passar uma ref para ele. Isso não bloqueia o app mas pode causar comportamento inesperado.
+## Implementação
 
-**Correção em `src/main.tsx`:** Nenhuma mudança necessária — o `createRoot().render(<App />)` não passa ref. O warning vem do Vite HMR internamente. Não é crítico.
+### 1. Adicionar ao `config.toml`
+Adicionar entrada `[functions.mcp-server]` com `verify_jwt = false` (a autenticação é feita em código via AGENT_SECRET).
 
-## Problema 3: Lojas não aparecendo no Painel da Marca
-Preciso investigar o `StoresPage.tsx` para entender como filtra as lojas e por que podem não estar aparecendo.
+### 2. Deploy
+Deployar a function.
 
-### Arquivos a investigar/modificar
+### 3. Informações de acesso
+- **URL:** `https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/mcp-server`
+- **Bearer Token:** o valor do secret `AGENT_SECRET` já configurado
 
-| Arquivo | Ação |
+## Arquivo modificado
+
+| Arquivo | Alteração |
 |---|---|
-| `src/pages/StoresPage.tsx` | Verificar query de listagem e filtros |
-
-### Plano
-1. **Cache mobile**: Orientar o usuário a limpar cache do navegador no celular e recarregar
-2. **Investigar StoresPage**: Verificar se a query está filtrando corretamente por `brand_id` e se as RLS policies permitem acesso
-3. **Corrigir filtro se necessário**: Ajustar a query ou condições de exibição
+| `supabase/config.toml` | Adicionar `[functions.mcp-server]` |
 
