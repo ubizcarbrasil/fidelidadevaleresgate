@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +60,8 @@ export default function BrandBranchForm() {
   const [franqueadoEmail, setFranqueadoEmail] = useState("");
   const [franqueadoPassword, setFranqueadoPassword] = useState("123456");
   const [franqueadoNome, setFranqueadoNome] = useState("");
+  const [emailJaExiste, setEmailJaExiste] = useState(false);
+  const [verificandoEmail, setVerificandoEmail] = useState(false);
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
@@ -111,6 +113,26 @@ export default function BrandBranchForm() {
     }
   }, [existingIntegration]);
 
+  const verificarEmail = async (email: string) => {
+    if (!email.trim() || !email.includes("@")) {
+      setEmailJaExiste(false);
+      return;
+    }
+    setVerificandoEmail(true);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email.trim().toLowerCase())
+        .maybeSingle();
+      setEmailJaExiste(!!data);
+    } catch {
+      setEmailJaExiste(false);
+    } finally {
+      setVerificandoEmail(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!cidade.trim() || !uf) {
       toast.error("Preencha a cidade e o estado.");
@@ -118,6 +140,10 @@ export default function BrandBranchForm() {
     }
     if (!currentBrandId) {
       toast.error("Marca não identificada.");
+      return;
+    }
+    if (!isEdit && criarFranqueado && emailJaExiste) {
+      toast.error("Este e-mail já está cadastrado. Use outro e-mail para o gestor.");
       return;
     }
 
@@ -356,8 +382,23 @@ export default function BrandBranchForm() {
                     type="email"
                     placeholder="franqueado@exemplo.com"
                     value={franqueadoEmail}
-                    onChange={(e) => setFranqueadoEmail(e.target.value)}
+                    onChange={(e) => {
+                      setFranqueadoEmail(e.target.value);
+                      setEmailJaExiste(false);
+                    }}
+                    onBlur={() => verificarEmail(franqueadoEmail)}
+                    className={emailJaExiste ? "border-destructive" : ""}
                   />
+                  {verificandoEmail && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Verificando e-mail...
+                    </p>
+                  )}
+                  {emailJaExiste && (
+                    <p className="text-xs text-destructive">
+                      Este e-mail já está cadastrado no sistema. Use outro e-mail.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Senha</Label>
