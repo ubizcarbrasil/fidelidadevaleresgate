@@ -13,6 +13,8 @@ if (!rootEl) {
   console.error("[boot] #root não encontrado");
 } else {
   const root = createRoot(rootEl);
-  (window as any).__dismissBootstrap?.();
+
+  // Renderiza App diretamente — o bootstrap overlay será
+  // dismissado pelo MountSignal dentro do App quando estiver pronto
   root.render(<App />);
 }
