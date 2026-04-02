@@ -1,67 +1,31 @@
 
 
-# Edge Function "notify-driver-points"
+# Corrigir controle de duplicidade: separar notificações PASSENGER vs DRIVER
 
-## Resumo
-Criar uma Edge Function que envia uma mensagem de notificação ao motorista via API TaxiMachine quando uma corrida é finalizada com pontos creditados. A function será chamada pelo `machine-webhook` existente (fire-and-forget), não por um database trigger.
+## Problema
+A function `notify-driver-points` verifica duplicidade por `machine_ride_id + brand_id + driver_name`, mas o fluxo do passageiro no `machine-webhook` já insere um registro na `machine_ride_notifications` antes. Dependendo do `driver_name`, o filtro pode conflitar.
 
-## Por que não usar Database Trigger?
-O Supabase Edge Functions não suporta triggers nativos via `pg_net` de forma confiável neste ambiente. A abordagem mais robusta é chamar a function de dentro do `machine-webhook` (que já processa as finalizações), similar ao padrão já usado para `send-telegram-ride-notification`.
+## Solução
 
-## Implementação
-
-### 1. Criar Edge Function `notify-driver-points`
-
-**Arquivo:** `supabase/functions/notify-driver-points/index.ts`
-
-Recebe via POST:
-```json
-{
-  "machine_ride_id": "100012345",
-  "brand_id": "uuid",
-  "branch_id": "uuid",
-  "driver_customer_id": "uuid",
-  "driver_id": "12345",
-  "driver_points_credited": 45,
-  "ride_value": 45.50,
-  "driver_name": "[MOTORISTA] João"
-}
+### 1. Migration: adicionar coluna `notification_type`
+```sql
+ALTER TABLE machine_ride_notifications 
+  ADD COLUMN notification_type text NOT NULL DEFAULT 'PASSENGER';
 ```
+Registros existentes ficam como `'PASSENGER'` automaticamente.
 
-Lógica:
-1. Validar payload (driver_points_credited > 0, driver_id presente)
-2. Verificar duplicidade em `machine_ride_notifications` (busca por `machine_ride_id` + `brand_id`)
-3. Buscar saldo atual do motorista em `customers` via `driver_customer_id`
-4. Montar mensagem removendo prefixo "[MOTORISTA] " do nome
-5. Enviar POST para `https://api-vendas.taximachine.com.br/api/integracao/enviarMensagem` com:
-   - Header: `api-key: mch_api_cioWUFdOptZHBM64Zndt7Rma`
-   - Body: `{ tipo_chat: "P", destinatario_id: parseInt(driver_id), mensagem: "..." }`
-6. Em caso de sucesso: inserir registro em `machine_ride_notifications`
-7. Em caso de erro: inserir em `error_logs` com source "notify-driver-points"
+### 2. Atualizar `notify-driver-points`
+- Trocar a query de dedup para filtrar por `machine_ride_id + brand_id + notification_type = 'DRIVER'` (remover filtro por `driver_name`).
+- Após envio com sucesso, inserir registro com `notification_type: 'DRIVER'`.
 
-Modelo da mensagem:
-> Oi {nome}! Você acaba de ganhar +{pontos_corrida} pontos pela corrida de R${valor}. Seu saldo agora é {saldo_total} pts. Continue acumulando para resgatar ofertas exclusivas!
-
-### 2. Registrar no `config.toml`
-Adicionar `[functions.notify-driver-points]` com `verify_jwt = false`.
-
-### 3. Integrar no `machine-webhook`
-Adicionar chamada fire-and-forget ao final do fluxo de finalização (similar ao padrão existente do Telegram), disparando `notify-driver-points` quando:
-- `ride_status = 'FINALIZED'`
-- `driver_id IS NOT NULL`
-- `driver_points_credited > 0`
-
-### 4. Guardar API key como secret
-Armazenar `mch_api_cioWUFdOptZHBM64Zndt7Rma` como secret `TAXIMACHINE_MESSAGE_API_KEY` para não ficar hardcoded.
+### 3. Webhook do passageiro (`machine-webhook`)
+Já grava com o default `'PASSENGER'`, nenhuma alteração necessária. Opcionalmente, adicionar `notification_type: 'PASSENGER'` explicitamente para clareza.
 
 ## Arquivos
 
-| Arquivo | Ação |
+| Arquivo | Alteração |
 |---|---|
-| `supabase/functions/notify-driver-points/index.ts` | Criar |
-| `supabase/config.toml` | Adicionar entry |
-| `supabase/functions/machine-webhook/index.ts` | Adicionar chamada fire-and-forget |
-
-## Controle de duplicidade
-Usa a tabela `machine_ride_notifications` existente — verifica se já existe registro com mesmo `machine_ride_id` + `brand_id` antes de enviar. Campos preenchidos: `brand_id`, `branch_id`, `machine_ride_id`, `customer_name`, `driver_name`, `points_credited`, `ride_value`, `finalized_at`.
+| DB migration | `ADD COLUMN notification_type` |
+| `supabase/functions/notify-driver-points/index.ts` | Dedup por `notification_type = 'DRIVER'` + inserir com `notification_type: 'DRIVER'` |
+| `supabase/functions/machine-webhook/index.ts` | Adicionar `notification_type: 'PASSENGER'` explícito no insert (opcional) |
 
