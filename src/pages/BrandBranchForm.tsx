@@ -64,6 +64,7 @@ export default function BrandBranchForm() {
   const [emailJaExiste, setEmailJaExiste] = useState(false);
   const [verificandoEmail, setVerificandoEmail] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [scoringModel, setScoringModel] = useState("BOTH");
 
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const webhookUrl = isEdit && id && currentBrandId
