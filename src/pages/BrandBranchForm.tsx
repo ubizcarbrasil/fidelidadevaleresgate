@@ -62,6 +62,20 @@ export default function BrandBranchForm() {
   const [franqueadoNome, setFranqueadoNome] = useState("");
   const [emailJaExiste, setEmailJaExiste] = useState(false);
   const [verificandoEmail, setVerificandoEmail] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const webhookUrl = isEdit && id && currentBrandId
+    ? `https://${projectId}.supabase.co/functions/v1/machine-webhook?brand_id=${currentBrandId}&branch_id=${id}`
+    : null;
+
+  const handleCopyUrl = async () => {
+    if (!webhookUrl) return;
+    await navigator.clipboard.writeText(webhookUrl);
+    setCopiedUrl(true);
+    toast.success("URL copiada!");
+    setTimeout(() => setCopiedUrl(false), 2000);
+  };
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
