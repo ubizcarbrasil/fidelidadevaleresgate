@@ -177,6 +177,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   });
 
   // Fase 3: City offers (REDEEM / BOTH)
+  const isCityRedemptionEnabled = (branch as any)?.is_city_redemption_enabled === true;
   const { data: cityOffers } = useQuery({
     queryKey: ["driver-city-offers", brand.id, branch?.id],
     queryFn: async () => {
@@ -201,7 +202,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         pointsCost: Math.ceil(o.value_rescue || 0), // 1 ponto = R$ 1,00 de crédito na cidade
       })) as OfertaCidade[];
     },
-    enabled: (pointsPerReal ?? null) !== null,
+    enabled: isCityRedemptionEnabled && (pointsPerReal ?? null) !== null,
   });
 
   const { data, isLoading } = useQuery({
@@ -600,7 +601,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Resgate na Cidade */}
-      {!debouncedSearch.trim() && (cityOffers || []).length > 0 && (
+      {!debouncedSearch.trim() && (branch as any)?.is_city_redemption_enabled === true && (cityOffers || []).length > 0 && (
         <SecaoResgateCidade
           ofertas={cityOffers || []}
           fontHeading={fontHeading}

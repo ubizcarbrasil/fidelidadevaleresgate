@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw } from "lucide-react";
+import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw, HandCoins } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BrandBranchesPage() {
@@ -22,7 +22,7 @@ export default function BrandBranchesPage() {
       if (!currentBrandId) return [];
       const { data, error } = await supabase
         .from("branches")
-        .select("id, name, city, state, is_active, created_at, scoring_model")
+        .select("id, name, city, state, is_active, created_at, scoring_model, is_city_redemption_enabled")
         .eq("brand_id", currentBrandId)
         .order("name");
       if (error) throw error;
@@ -111,6 +111,11 @@ export default function BrandBranchesPage() {
                   {((branch as any).scoring_model === "BOTH" || !(branch as any).scoring_model) && (
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <RefreshCw className="h-3 w-3" /> Misto
+                    </Badge>
+                  )}
+                  {(branch as any).is_city_redemption_enabled && (
+                    <Badge variant="outline" className="text-[10px] gap-1 text-green-600 border-green-600/30">
+                      <HandCoins className="h-3 w-3" /> Resgate Cidade
                     </Badge>
                   )}
                   <Badge variant={branch.is_active ? "default" : "secondary"} className="text-[10px]">

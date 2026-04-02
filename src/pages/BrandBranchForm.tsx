@@ -65,6 +65,7 @@ export default function BrandBranchForm() {
   const [verificandoEmail, setVerificandoEmail] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [scoringModel, setScoringModel] = useState("BOTH");
+  const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
 
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const webhookUrl = isEdit && id && currentBrandId
@@ -116,6 +117,7 @@ export default function BrandBranchForm() {
       setUf(existing.state || "");
       setAtivo(existing.is_active);
       if ((existing as any).scoring_model) setScoringModel((existing as any).scoring_model);
+      setIsCityRedemptionEnabled(!!(existing as any).is_city_redemption_enabled);
     }
   }, [existing]);
 
@@ -177,6 +179,7 @@ export default function BrandBranchForm() {
         state: uf,
         is_active: ativo,
         scoring_model: scoringModel,
+        is_city_redemption_enabled: isCityRedemptionEnabled,
         timezone: "America/Sao_Paulo",
         latitude: geo?.lat ?? null,
         longitude: geo?.lon ?? null,
@@ -301,6 +304,16 @@ export default function BrandBranchForm() {
           <div className="flex items-center justify-between">
             <Label>Ativa</Label>
             <Switch checked={ativo} onCheckedChange={setAtivo} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Resgate na Cidade</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Habilita a troca de pontos por créditos em parceiros locais para motoristas.
+              </p>
+            </div>
+            <Switch checked={isCityRedemptionEnabled} onCheckedChange={setIsCityRedemptionEnabled} />
           </div>
 
           <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">

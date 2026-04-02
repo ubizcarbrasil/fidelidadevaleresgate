@@ -1,0 +1,1 @@
+ALTER TABLE public.branches ADD COLUMN is_city_redemption_enabled boolean NOT NULL DEFAULT false;
