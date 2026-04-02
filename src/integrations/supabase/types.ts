@@ -2927,6 +2927,7 @@ export type Database = {
           callback_url: string | null
           created_at: string
           driver_customer_tag: string
+          driver_message_enabled: boolean
           driver_points_enabled: boolean
           driver_points_mode: string
           driver_points_per_real: number
@@ -2955,6 +2956,7 @@ export type Database = {
           callback_url?: string | null
           created_at?: string
           driver_customer_tag?: string
+          driver_message_enabled?: boolean
           driver_points_enabled?: boolean
           driver_points_mode?: string
           driver_points_per_real?: number
@@ -2983,6 +2985,7 @@ export type Database = {
           callback_url?: string | null
           created_at?: string
           driver_customer_tag?: string
+          driver_message_enabled?: boolean
           driver_points_enabled?: boolean
           driver_points_mode?: string
           driver_points_per_real?: number

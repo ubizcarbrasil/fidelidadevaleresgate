@@ -888,7 +888,7 @@ async function processFinalized(
     }
 
     // Send driver points notification via TaxiMachine app (fire-and-forget)
-    if (driverPointsCredited > 0 && driverId && driverCustomerId) {
+    if (driverPointsCredited > 0 && driverId && driverCustomerId && integration.driver_message_enabled) {
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
