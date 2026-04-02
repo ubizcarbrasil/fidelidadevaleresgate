@@ -886,6 +886,34 @@ async function processFinalized(
         logger.error("Telegram notification setup error", { error: String(e) });
       }
     }
+
+    // Send driver points notification via TaxiMachine app (fire-and-forget)
+    if (driverPointsCredited > 0 && driverId && driverCustomerId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        fetch(`${supabaseUrl}/functions/v1/notify-driver-points`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            machine_ride_id: machineRideId,
+            brand_id: brandId,
+            branch_id: branchId,
+            driver_customer_id: driverCustomerId,
+            driver_id: driverId,
+            driver_points_credited: driverPointsCredited,
+            ride_value: rideValue,
+            driver_name: driverName || null,
+            finalized_at: new Date().toISOString(),
+          }),
+        }).catch((e) => logger.error("notify-driver-points error", { error: String(e) }));
+      } catch (e) {
+        logger.error("notify-driver-points setup error", { error: String(e) });
+      }
+    }
   }
 
   // Fire callback URL if configured (fire-and-forget)

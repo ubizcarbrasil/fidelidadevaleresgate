@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.mcp-server]
 verify_jwt = false
+
+[functions.notify-driver-points]
+verify_jwt = false
