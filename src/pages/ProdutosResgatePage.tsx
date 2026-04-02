@@ -22,8 +22,10 @@ const PAGE_SIZE = 20;
 
 export default function ProdutosResgatePage() {
   const qc = useQueryClient();
-  const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const { currentBrandId, currentBranchId, consoleScope, isRootAdmin } = useBrandGuard();
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
+
+  const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
