@@ -1,46 +1,36 @@
 
 
-# Corrigir: Resgates nao aparecem para loja quando acessada por admin
+# Toggle "Resgate na Cidade" no painel da cidade
 
-## Problema
-A RPC `rpc_get_store_owner_redemptions` valida acesso com `stores.owner_user_id = auth.uid()`. Quando um Brand Admin ou Root Admin acessa o painel da loja via `?storeId=xxx`, o `auth.uid()` e do admin, nao do dono da loja. Resultado: a RPC retorna zero linhas e a tela mostra "Nenhum resgate pendente".
+## Resumo
+Adicionar uma flag `is_city_redemption_enabled` na tabela `branches` e um toggle no formulário de cidade, controlando a visibilidade da seção "Resgate na Cidade" no marketplace do motorista.
 
-## Solucao
-Atualizar a RPC para permitir acesso tambem por Brand Admins (que possuem role `brand_admin` na mesma brand da loja) e Root Admins (role `root`).
+## Implementação
 
-## Alteracao
-
-### Migration SQL: atualizar `rpc_get_store_owner_redemptions`
-
-Substituir a verificacao de permissao atual:
-
+### 1. Migration: nova coluna em `branches`
 ```sql
--- Antes: apenas owner
-IF NOT EXISTS (
-  SELECT 1 FROM stores WHERE stores.id = p_store_id AND stores.owner_user_id = auth.uid()
-) THEN RETURN; END IF;
-
--- Depois: owner OU brand_admin OU root
-IF NOT EXISTS (
-  SELECT 1 FROM stores s
-  WHERE s.id = p_store_id
-    AND (
-      s.owner_user_id = auth.uid()
-      OR EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'root')
-      OR EXISTS (
-        SELECT 1 FROM user_roles ur
-        WHERE ur.user_id = auth.uid()
-          AND ur.role = 'brand_admin'
-          AND ur.brand_id = s.brand_id
-      )
-    )
-) THEN RETURN; END IF;
+ALTER TABLE public.branches 
+  ADD COLUMN is_city_redemption_enabled boolean NOT NULL DEFAULT false;
 ```
+Default `false` — o empreendedor ativa manualmente por cidade.
 
-### Arquivos
-| Arquivo | Alteracao |
+### 2. Toggle no formulário de cidade (`BrandBranchForm.tsx`)
+Adicionar um card com Switch similar ao campo "Ativa", com label "Resgate na Cidade" e descrição explicando que habilita a troca de pontos por créditos em parceiros locais para motoristas.
+
+Estado carregado do `existing` e salvo no payload de insert/update.
+
+### 3. Badge na listagem de cidades (`BrandBranchesPage.tsx`)
+Exibir badge visual "Resgate Cidade" quando a flag estiver ativa, para identificação rápida.
+
+### 4. Filtro no marketplace (`DriverMarketplace.tsx`)
+Na condição de exibição da `SecaoResgateCidade`, adicionar verificação: `branch?.is_city_redemption_enabled === true`. A query de `cityOffers` só executa se a flag estiver ativa.
+
+## Arquivos
+
+| Arquivo | Alteração |
 |---|---|
-| Nova migration SQL | Atualizar permissao da RPC |
-
-Nenhuma alteracao no frontend necessaria — o componente `StoreRedeemTab` ja passa o `store.id` corretamente.
+| Nova migration SQL | Coluna `is_city_redemption_enabled` |
+| `src/pages/BrandBranchForm.tsx` | Toggle Switch |
+| `src/pages/BrandBranchesPage.tsx` | Badge visual |
+| `src/components/driver/DriverMarketplace.tsx` | Condicionar seção à flag |
 
