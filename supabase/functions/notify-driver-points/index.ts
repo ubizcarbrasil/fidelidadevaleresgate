@@ -49,6 +49,18 @@ Deno.serve(async (req) => {
       return json({ error: "No points to notify", skipped: true }, 200);
     }
 
+    // Fetch API key from machine_integrations
+    const { data: integration } = await sb
+      .from("machine_integrations")
+      .select("api_key")
+      .eq("brand_id", brand_id)
+      .maybeSingle();
+
+    if (!integration?.api_key) {
+      logger.error("API key not found in machine_integrations", { brand_id });
+      return json({ error: "API key not configured for brand" }, 500);
+    }
+
     // Check for duplicate DRIVER notification
     const { data: existing } = await sb
       .from("machine_ride_notifications")
