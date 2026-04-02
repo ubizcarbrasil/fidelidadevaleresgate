@@ -113,6 +113,26 @@ export default function BrandBranchForm() {
     }
   }, [existingIntegration]);
 
+  const verificarEmail = async (email: string) => {
+    if (!email.trim() || !email.includes("@")) {
+      setEmailJaExiste(false);
+      return;
+    }
+    setVerificandoEmail(true);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email.trim().toLowerCase())
+        .maybeSingle();
+      setEmailJaExiste(!!data);
+    } catch {
+      setEmailJaExiste(false);
+    } finally {
+      setVerificandoEmail(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!cidade.trim() || !uf) {
       toast.error("Preencha a cidade e o estado.");
@@ -120,6 +140,10 @@ export default function BrandBranchForm() {
     }
     if (!currentBrandId) {
       toast.error("Marca não identificada.");
+      return;
+    }
+    if (!isEdit && criarFranqueado && emailJaExiste) {
+      toast.error("Este e-mail já está cadastrado. Use outro e-mail para o gestor.");
       return;
     }
 
