@@ -3,17 +3,10 @@ import TrialBanner from "@/components/TrialBanner";
 import TrialExpiredBlocker from "@/components/TrialExpiredBlocker";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import { RootSidebar } from "@/components/consoles/RootSidebar";
-import { TenantSidebar } from "@/components/consoles/TenantSidebar";
-import { BrandSidebar } from "@/components/consoles/BrandSidebar";
-import { BranchSidebar } from "@/components/consoles/BranchSidebar";
-import { OperatorSidebar } from "@/components/consoles/OperatorSidebar";
-import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
-import { ApiKeyOnboardingDialog } from "@/components/ApiKeyOnboardingDialog";
-import { CommandPalette } from "@/components/CommandPalette";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { Suspense, useEffect, useMemo, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +23,16 @@ import {
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
   BreadcrumbPage, BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+
+// Lazy-load heavy sidebar components
+const RootSidebar = lazyWithRetry(() => import("@/components/consoles/RootSidebar").then(m => ({ default: m.RootSidebar })));
+const TenantSidebar = lazyWithRetry(() => import("@/components/consoles/TenantSidebar").then(m => ({ default: m.TenantSidebar })));
+const BrandSidebar = lazyWithRetry(() => import("@/components/consoles/BrandSidebar").then(m => ({ default: m.BrandSidebar })));
+const BranchSidebar = lazyWithRetry(() => import("@/components/consoles/BranchSidebar").then(m => ({ default: m.BranchSidebar })));
+const OperatorSidebar = lazyWithRetry(() => import("@/components/consoles/OperatorSidebar").then(m => ({ default: m.OperatorSidebar })));
+const ContextualHelpDrawer = lazyWithRetry(() => import("@/components/ContextualHelpDrawer").then(m => ({ default: m.ContextualHelpDrawer })));
+const CommandPalette = lazyWithRetry(() => import("@/components/CommandPalette").then(m => ({ default: m.CommandPalette })));
+const ApiKeyOnboardingDialog = lazyWithRetry(() => import("@/components/ApiKeyOnboardingDialog").then(m => ({ default: m.ApiKeyOnboardingDialog })));
 
 const routeLabels: Record<string, string> = {
   "/": "Visão Geral",
@@ -109,7 +112,6 @@ export default function AppLayout() {
       });
   }, [consoleScope, brandId]);
 
-  // Bell ring animation on mount
   useEffect(() => {
     const timer = setTimeout(() => {
       bellRef.current?.classList.add("bell-ring");
@@ -139,9 +141,10 @@ export default function AppLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <SidebarComponent />
+        <Suspense fallback={<div className="w-16 shrink-0 bg-sidebar" />}>
+          <SidebarComponent />
+        </Suspense>
         <div className="flex-1 flex flex-col min-w-0">
-          {/* ── Premium Topbar ── */}
           <header className="h-14 flex items-center gap-3 px-4 saas-topbar shrink-0 relative z-10">
             <SidebarTrigger className="mr-1" />
 
@@ -157,7 +160,6 @@ export default function AppLayout() {
               </Button>
             )}
 
-            {/* Breadcrumb */}
             <Breadcrumb className="hidden md:flex">
               <BreadcrumbList>
                 {crumbs.map((crumb, i) => (
@@ -175,7 +177,6 @@ export default function AppLayout() {
               </BreadcrumbList>
             </Breadcrumb>
 
-            {/* Search trigger — opens Command Palette */}
             <button
               type="button"
               onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
@@ -190,18 +191,15 @@ export default function AppLayout() {
 
             <div className="flex-1 lg:flex-none" />
 
-            {/* Branch selector */}
             <div className="hidden sm:block">
               <BranchSelector />
             </div>
 
-            {/* Notifications */}
             <Button ref={bellRef} variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground">
               <Bell className="h-4 w-4" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
             </Button>
 
-            {/* User dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 pl-2 border-l border-border hover:bg-accent/30 rounded-md px-2 py-1 transition-colors">
@@ -243,15 +241,21 @@ export default function AppLayout() {
             <Outlet />
           </main>
           <TrialExpiredBlocker />
-          <ContextualHelpDrawer />
+          <Suspense fallback={null}>
+            <ContextualHelpDrawer />
+          </Suspense>
           {showApiKeyOnboarding && brandId && (
-            <ApiKeyOnboardingDialog
-              open={showApiKeyOnboarding}
-              onDismiss={() => setShowApiKeyOnboarding(false)}
-              brandId={brandId}
-            />
+            <Suspense fallback={null}>
+              <ApiKeyOnboardingDialog
+                open={showApiKeyOnboarding}
+                onDismiss={() => setShowApiKeyOnboarding(false)}
+                brandId={brandId}
+              />
+            </Suspense>
           )}
-          <CommandPalette />
+          <Suspense fallback={null}>
+            <CommandPalette />
+          </Suspense>
         </div>
       </div>
     </SidebarProvider>
