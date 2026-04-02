@@ -260,6 +260,7 @@ function AppRoutes() {
           <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
           <Route path="manuais" element={<ManuaisPage />} />
           <Route path="branch-wallet" element={<BranchWalletPage />} />
+          <Route path="branch-reports" element={<BranchReportsPage />} />
           <Route path="brand-branches" element={<BrandBranchesPage />} />
           <Route path="brand-branches/new" element={<BrandBranchForm />} />
           <Route path="brand-branches/:id" element={<BrandBranchForm />} />
