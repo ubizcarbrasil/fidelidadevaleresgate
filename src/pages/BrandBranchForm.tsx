@@ -312,7 +312,52 @@ export default function BrandBranchForm() {
         </CardContent>
       </Card>
 
-      {/* Credenciais de Integração */}
+      {/* Modelo de Negócio */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Modelo de Pontuação
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Define quem será pontuado nesta cidade: motorista, passageiro ou ambos.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={scoringModel} onValueChange={setScoringModel} className="space-y-3">
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="DRIVER_ONLY" id="scoring-driver" />
+              <Label htmlFor="scoring-driver" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Car className="h-4 w-4 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Pontuar apenas Motorista</p>
+                  <p className="text-xs text-muted-foreground">Foco em fidelização de motoristas</p>
+                </div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="PASSENGER_ONLY" id="scoring-passenger" />
+              <Label htmlFor="scoring-passenger" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Users className="h-4 w-4 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium">Pontuar apenas Cliente</p>
+                  <p className="text-xs text-muted-foreground">Foco em fidelização de passageiros</p>
+                </div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="BOTH" id="scoring-both" />
+              <Label htmlFor="scoring-both" className="flex items-center gap-2 cursor-pointer flex-1">
+                <RefreshCw className="h-4 w-4 text-purple-500" />
+                <div>
+                  <p className="text-sm font-medium">Pontuar Ambos</p>
+                  <p className="text-xs text-muted-foreground">Motoristas e passageiros são pontuados</p>
+                </div>
+              </Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

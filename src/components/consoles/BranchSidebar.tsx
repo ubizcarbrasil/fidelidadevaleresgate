@@ -27,6 +27,7 @@ interface MenuItem {
   url: string;
   icon: any;
   moduleKey?: string;
+  scoringFilter?: "DRIVER" | "PASSENGER";
 }
 
 const dashboardItem: MenuItem = {
