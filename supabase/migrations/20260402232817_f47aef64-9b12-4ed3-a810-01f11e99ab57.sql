@@ -1,0 +1,8 @@
+
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES
+  ('a2b5e887-8572-47bf-9780-8f904be8958b', '56ce1446-daf4-4ad6-bae2-8c309c88727a'),
+  ('a2b5e887-8572-47bf-9780-8f904be8958b', 'd60eb224-e59a-4375-bed6-345d964a6a63'),
+  ('a2b5e887-8572-47bf-9780-8f904be8958b', '867a5750-f219-4568-9341-396e5f181b0f'),
+  ('a2b5e887-8572-47bf-9780-8f904be8958b', '34e800da-7adf-43be-a4f8-985fb285ef40')
+ON CONFLICT DO NOTHING;
