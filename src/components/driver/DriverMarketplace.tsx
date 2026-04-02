@@ -848,6 +848,14 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           onRedeemSuccess={() => refreshDriver()}
         />
       )}
+
+      {/* City redemption history overlay */}
+      {showCityRedemptions && (
+        <DriverCityRedemptionHistory
+          fontHeading={fontHeading}
+          onBack={() => setShowCityRedemptions(false)}
+        />
+      )}
     </div>
   );
 }

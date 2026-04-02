@@ -48,6 +48,15 @@ export default function SecaoResgateCidade({ ofertas, fontHeading, onClickOferta
             </p>
           </div>
         </div>
+        {onVerHistorico && (
+          <button
+            onClick={onVerHistorico}
+            className="text-xs font-semibold flex items-center gap-0.5 text-primary"
+          >
+            Meus Resgates
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <div
