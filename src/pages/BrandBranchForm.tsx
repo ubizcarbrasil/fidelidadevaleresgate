@@ -179,6 +179,7 @@ export default function BrandBranchForm() {
         state: uf,
         is_active: ativo,
         scoring_model: scoringModel,
+        is_city_redemption_enabled: isCityRedemptionEnabled,
         timezone: "America/Sao_Paulo",
         latitude: geo?.lat ?? null,
         longitude: geo?.lon ?? null,
