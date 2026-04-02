@@ -46,7 +46,7 @@ export default function BranchReportsPage() {
         .order("name")
         .limit(5000);
       if (!data || data.length === 0) { toast.info("Nenhum motorista encontrado."); return; }
-      downloadCsv("motoristas.csv", ["Nome", "CPF", "Telefone", "Email", "Saldo Pontos", "Ativo", "Cadastro"], data.map((d) => [d.name, d.cpf || "", d.phone || "", d.email || "", String(d.points_balance), d.is_active ? "Sim" : "Não", new Date(d.created_at).toLocaleDateString("pt-BR")]));
+      downloadCsv("motoristas.csv", ["Nome", "CPF", "Telefone", "Email", "Saldo Pontos", "Ativo", "Cadastro"], data.map((d: any) => [d.name, d.cpf || "", d.phone || "", d.email || "", String(d.points_balance), d.is_active ? "Sim" : "Não", new Date(d.created_at).toLocaleDateString("pt-BR")]));
       toast.success("Exportação concluída!");
     } catch { toast.error("Erro ao exportar."); } finally { setExporting(null); }
   };
