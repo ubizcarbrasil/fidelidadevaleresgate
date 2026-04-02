@@ -291,6 +291,7 @@ export default function MachineIntegrationPage() {
     setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
     setDriverPointsMode((selectedIntegration as any)?.driver_points_mode ?? "PERCENT");
     setDriverPointsPerReal(String((selectedIntegration as any)?.driver_points_per_real ?? 1));
+    setDriverMessageEnabled((selectedIntegration as any)?.driver_message_enabled ?? false);
   }, [
     selectedIntegration?.id,
     selectedIntegration?.callback_url,
