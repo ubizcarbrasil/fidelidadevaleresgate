@@ -113,6 +113,11 @@ export default function BrandBranchesPage() {
                       <RefreshCw className="h-3 w-3" /> Misto
                     </Badge>
                   )}
+                  {(branch as any).is_city_redemption_enabled && (
+                    <Badge variant="outline" className="text-[10px] gap-1 text-green-600 border-green-600/30">
+                      <HandCoins className="h-3 w-3" /> Resgate Cidade
+                    </Badge>
+                  )}
                   <Badge variant={branch.is_active ? "default" : "secondary"} className="text-[10px]">
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>

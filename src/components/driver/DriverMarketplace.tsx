@@ -202,7 +202,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         pointsCost: Math.ceil(o.value_rescue || 0), // 1 ponto = R$ 1,00 de crédito na cidade
       })) as OfertaCidade[];
     },
-    enabled: (pointsPerReal ?? null) !== null,
+    enabled: isCityRedemptionEnabled && (pointsPerReal ?? null) !== null,
   });
 
   const { data, isLoading } = useQuery({

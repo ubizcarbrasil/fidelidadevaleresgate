@@ -306,6 +306,16 @@ export default function BrandBranchForm() {
             <Switch checked={ativo} onCheckedChange={setAtivo} />
           </div>
 
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Resgate na Cidade</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Habilita a troca de pontos por créditos em parceiros locais para motoristas.
+              </p>
+            </div>
+            <Switch checked={isCityRedemptionEnabled} onCheckedChange={setIsCityRedemptionEnabled} />
+          </div>
+
           <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
             <p><strong>Nome gerado:</strong> {cidade.trim() && uf ? `${cidade.trim()} - ${uf}` : "—"}</p>
             <p><strong>Slug:</strong> {cidade.trim() && uf ? normalizeSlug(cidade.trim(), uf) : "—"}</p>
