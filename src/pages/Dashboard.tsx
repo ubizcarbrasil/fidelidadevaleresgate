@@ -292,7 +292,7 @@ export default function Dashboard() {
         achadinhosCidades={achadinhosCidades}
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
-      />
+      />}
 
       {/* Branch-specific dashboard */}
       {consoleScope === "BRANCH" && currentBranchId && (
