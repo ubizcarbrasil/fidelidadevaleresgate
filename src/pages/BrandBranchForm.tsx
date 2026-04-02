@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const ESTADOS = [
@@ -62,6 +62,20 @@ export default function BrandBranchForm() {
   const [franqueadoNome, setFranqueadoNome] = useState("");
   const [emailJaExiste, setEmailJaExiste] = useState(false);
   const [verificandoEmail, setVerificandoEmail] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const webhookUrl = isEdit && id && currentBrandId
+    ? `https://${projectId}.supabase.co/functions/v1/machine-webhook?brand_id=${currentBrandId}&branch_id=${id}`
+    : null;
+
+  const handleCopyUrl = async () => {
+    if (!webhookUrl) return;
+    await navigator.clipboard.writeText(webhookUrl);
+    setCopiedUrl(true);
+    toast.success("URL copiada!");
+    setTimeout(() => setCopiedUrl(false), 2000);
+  };
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["brand-branch", id],
@@ -345,6 +359,43 @@ export default function BrandBranchForm() {
               Se informado, as notificações de corridas desta cidade serão enviadas para este grupo.
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* URL do Webhook */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Link className="h-4 w-4" />
+            URL para Eventos (Webhook)
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Use esta URL para configurar o envio de corridas em tempo real para esta cidade.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {webhookUrl ? (
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={webhookUrl}
+                className="font-mono text-xs bg-muted/50"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={handleCopyUrl}
+              >
+                {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">
+              A URL será gerada automaticamente após salvar a cidade.
+            </p>
+          )}
         </CardContent>
       </Card>
 
