@@ -56,8 +56,10 @@ const DEFAULT_TIERS: VolumeTier[] = [
 
 export default function DriverPointsRulesPage() {
   const qc = useQueryClient();
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+
+  const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
   const { data: branches } = useQuery({
     queryKey: ["branches-driver-rules", currentBrandId],
@@ -67,10 +69,11 @@ export default function DriverPointsRulesPage() {
       const { data } = await q;
       return data || [];
     },
-    enabled: !!currentBrandId,
+    enabled: !!currentBrandId && !isBranchScope,
   });
 
-  const branchId = selectedBranchId || branches?.[0]?.id || "";
+  // branch_admin usa sua própria cidade travada
+  const branchId = isBranchScope ? currentBranchId! : (selectedBranchId || branches?.[0]?.id || "");
 
   const { data: rule, isLoading } = useQuery({
     queryKey: ["driver-points-rules", currentBrandId, branchId],
