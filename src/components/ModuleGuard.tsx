@@ -23,7 +23,11 @@ export default function ModuleGuard({ moduleKey, children }: ModuleGuardProps) {
     );
   }
 
-  if (!isModuleEnabled(moduleKey)) {
+  // Suporte a múltiplos módulos com "|" (OR): qualquer um habilitado libera
+  const keys = moduleKey.split("|").map(k => k.trim());
+  const anyEnabled = keys.some(k => isModuleEnabled(k));
+
+  if (!anyEnabled) {
     return <Navigate to="/" replace />;
   }
 
