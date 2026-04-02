@@ -231,6 +231,8 @@ export default function MachineIntegrationPage() {
   const [driverPointsMode, setDriverPointsMode] = useState("PERCENT");
   const [driverPointsPerReal, setDriverPointsPerReal] = useState("1");
   const [driverPointsSaved, setDriverPointsSaved] = useState(false);
+  const [driverMessageEnabled, setDriverMessageEnabled] = useState(false);
+  const [driverMessageSaved, setDriverMessageSaved] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
