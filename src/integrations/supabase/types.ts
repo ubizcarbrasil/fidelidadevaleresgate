@@ -563,6 +563,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
+          scoring_model: string
           slug: string
           state: string | null
           timezone: string
@@ -577,6 +578,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
+          scoring_model?: string
           slug: string
           state?: string | null
           timezone?: string
@@ -591,6 +593,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
+          scoring_model?: string
           slug?: string
           state?: string | null
           timezone?: string
