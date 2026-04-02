@@ -208,7 +208,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
           reference_type: "REDEMPTION",
           reference_id: created.id,
           reason: `Resgate: ${offer.title}`,
-          created_by_user_id: (await supabase.auth.getUser()).data.user!.id,
+          created_by_user_id: (await supabase.auth.getUser()).data.user?.id ?? null,
         });
 
         // 2. Decrement customer balance

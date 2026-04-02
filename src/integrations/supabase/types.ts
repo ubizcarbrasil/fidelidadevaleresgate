@@ -4028,7 +4028,7 @@ export type Database = {
           branch_id: string
           brand_id: string
           created_at: string
-          created_by_user_id: string
+          created_by_user_id: string | null
           customer_id: string
           entry_type: Database["public"]["Enums"]["ledger_entry_type"]
           id: string
@@ -4042,7 +4042,7 @@ export type Database = {
           branch_id: string
           brand_id: string
           created_at?: string
-          created_by_user_id: string
+          created_by_user_id?: string | null
           customer_id: string
           entry_type: Database["public"]["Enums"]["ledger_entry_type"]
           id?: string
@@ -4056,7 +4056,7 @@ export type Database = {
           branch_id?: string
           brand_id?: string
           created_at?: string
-          created_by_user_id?: string
+          created_by_user_id?: string | null
           customer_id?: string
           entry_type?: Database["public"]["Enums"]["ledger_entry_type"]
           id?: string
