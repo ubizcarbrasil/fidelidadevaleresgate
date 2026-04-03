@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Save, Loader2, Coins, ShieldCheck, CalendarClock, Users } from "lucide-react";
+import { Save, Loader2, Coins, ShieldCheck, CalendarClock, Users, Car, RefreshCw } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface RedemptionRules {
   points_per_real: number;
