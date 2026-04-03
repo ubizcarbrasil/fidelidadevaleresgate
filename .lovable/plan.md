@@ -1,56 +1,28 @@
 
 
-# Sincronizar Carteira de Pontos com Pontos Realmente Distribuídos
+# Filtrar Manuais do Franqueado por Modelo de Negócio
 
 ## Problema
-O webhook de corridas (`machine-webhook`) credita pontos aos motoristas (`driver_points_credited`) mas **nunca debita a carteira da cidade** (`branch_points_wallet`). Resultado: a carteira mostra saldo 0, total carregado 0, total distribuído 0 — quando na realidade 13.701 pontos já foram distribuídos.
+A página de Manuais no painel do franqueado (BRANCH) exibe **todos** os manuais da plataforma, incluindo os do empreendedor (Personalização, Gestão Comercial, Programa de Fidelidade, Cashback, etc.) que **não estão disponíveis** para o franqueado. O franqueado deve ver apenas os manuais das funcionalidades que ele realmente tem acesso, filtrados pelo modelo de negócio vigente (Motorista, Passageiro ou Ambos).
 
-O usuário quer que a carteira reflita a realidade: se nada foi carregado e 13.701 pts foram distribuídos, o saldo deve mostrar **-13.701 pts**.
+## Solução
 
-## Solução em 3 partes
+### 1. Adicionar filtro de scoring aos grupos de manuais do franqueado
+Adicionar campo opcional `scoringFilter` ao tipo `GrupoManual` (igual ao sidebar), e marcar os grupos de `gruposManuaisFranqueado` com `scoringFilter: "DRIVER"`.
 
-### 1. Migração: sincronizar o wallet existente com os dados reais
-Atualizar o registro da `branch_points_wallet` para refletir o total já distribuído via `machine_rides`:
-```sql
-UPDATE branch_points_wallet bpw
-SET total_distributed = sub.total,
-    balance = bpw.total_loaded - sub.total
-FROM (
-  SELECT branch_id, COALESCE(SUM(driver_points_credited), 0) AS total
-  FROM machine_rides WHERE ride_status = 'FINALIZED'
-  GROUP BY branch_id
-) sub
-WHERE bpw.branch_id = sub.branch_id;
-```
-Isso vai colocar `balance = 0 - 13701 = -13701` e `total_distributed = 13701`.
+### 2. Filtrar manuais no `ManuaisPage.tsx`
+- Para `BRANCH`: mostrar **somente** `gruposManuaisFranqueado` (remover `gruposManuais` que são do empreendedor)
+- Aplicar filtro por `scoringModel` usando `useBranchScoringModel` para ocultar grupos irrelevantes ao modelo de negócio
+- Para `BRAND`: manter comportamento atual (todos os manuais)
 
-### 2. Webhook: debitar a carteira a cada corrida
-Adicionar chamada à RPC `debit_branch_wallet` no `machine-webhook/index.ts` após persistir a corrida, **mas sem bloquear** a distribuição quando o saldo for insuficiente. Para permitir saldo negativo, a RPC precisa ser ajustada.
+### Arquivos a modificar
+- `src/components/manuais/tipos_manuais.ts` — adicionar `scoringFilter?: "DRIVER" | "PASSENGER"` ao `GrupoManual`
+- `src/components/manuais/dados_manuais.ts` — adicionar `scoringFilter: "DRIVER"` aos grupos do franqueado
+- `src/pages/ManuaisPage.tsx` — para BRANCH, mostrar só manuais do franqueado + filtrar por scoring model
 
-**Ajustar a RPC `debit_branch_wallet`**: remover a validação que impede débito quando `balance < amount`, permitindo saldo negativo.
-
-### 3. Frontend: exibir saldo negativo corretamente
-A `BranchWalletPage.tsx` e `formatPoints` já suportam números negativos. O alerta de saldo baixo já funciona (mostra quando `balance <= threshold`). Apenas garantir que o alerta mostre valores negativos corretamente.
-
-## Arquivos a modificar
-- **Nova migration SQL** — sincronizar wallets + alterar `debit_branch_wallet` para permitir negativo
-- `supabase/functions/machine-webhook/index.ts` — chamar `debit_branch_wallet` após creditar pontos ao motorista
-- `src/lib/formatPoints.ts` — garantir formatação correta para negativos (já funciona, validar)
-
-## Detalhes técnicos
-
-### RPC `debit_branch_wallet` ajustada
-Remove o `IF v_wallet.balance < p_amount` para permitir que o saldo fique negativo. A carteira funciona como um "extrato" que pode ficar devendo.
-
-### Webhook
-Após a linha que persiste a corrida em `machine_rides`, adicionar:
-```typescript
-if (driverPointsCredited > 0 && branchId) {
-  await sb.rpc("debit_branch_wallet", {
-    p_branch_id: branchId,
-    p_amount: driverPointsCredited,
-    p_description: `Corrida ${machineRideId} - ${driverName || 'Motorista'}`
-  });
-}
-```
+### Resultado esperado
+- Franqueado com modelo DRIVER_ONLY: vê apenas "Achadinhos Motorista — Franqueado" e "Gestão da Cidade (Franqueado)"
+- Franqueado com modelo PASSENGER_ONLY: não vê os grupos de motorista (futuramente verá grupos de passageiro quando criados)
+- Franqueado com modelo BOTH: vê todos os grupos do franqueado
+- Empreendedor: continua vendo tudo como antes
 
