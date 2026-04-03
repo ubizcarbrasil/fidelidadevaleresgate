@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Save, Loader2, Coins, ShieldCheck, CalendarClock, Users } from "lucide-react";
+import { Save, Loader2, Coins, ShieldCheck, CalendarClock, Users, Car, RefreshCw } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface RedemptionRules {
   points_per_real: number;
@@ -15,6 +16,8 @@ interface RedemptionRules {
   max_redemptions_per_month: number;
   approval_deadline_hours: number;
 }
+
+type ScoringModel = "DRIVER_ONLY" | "PASSENGER_ONLY" | "BOTH";
 
 const DEFAULTS: RedemptionRules = {
   points_per_real: 40,
@@ -27,6 +30,7 @@ export default function RegrasResgatePage() {
   const qc = useQueryClient();
   const { currentBrandId } = useBrandGuard();
   const [form, setForm] = useState<RedemptionRules>(DEFAULTS);
+  const [scoringModel, setScoringModel] = useState<ScoringModel>("BOTH");
   const [dirty, setDirty] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
@@ -48,12 +52,15 @@ export default function RegrasResgatePage() {
       const saved = settings.redemption_rules as Partial<RedemptionRules>;
       setForm({ ...DEFAULTS, ...saved });
     }
+    if (settings?.default_scoring_model) {
+      setScoringModel(settings.default_scoring_model as ScoringModel);
+    }
   }, [settings]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Marca não identificada");
-      const updated = { ...settings, redemption_rules: form };
+      const updated = { ...settings, redemption_rules: form, default_scoring_model: scoringModel };
       const { error } = await supabase
         .from("brands")
         .update({ brand_settings_json: updated } as any)
@@ -182,6 +189,61 @@ export default function RegrasResgatePage() {
           </Card>
         ))}
       </div>
+
+      {/* Modelo de Negócio Padrão */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-purple-500/15 flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 text-purple-500" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Modelo de Negócio Padrão</CardTitle>
+              <CardDescription className="text-xs">
+                Define o modelo padrão ao criar novas cidades. Cada cidade pode sobrescrever individualmente.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={scoringModel}
+            onValueChange={(v) => { setScoringModel(v as ScoringModel); setDirty(true); }}
+            className="space-y-3"
+          >
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="DRIVER_ONLY" id="scoring-driver" />
+              <Label htmlFor="scoring-driver" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Car className="h-4 w-4 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Apenas Motorista</p>
+                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão apenas motoristas</p>
+                </div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="PASSENGER_ONLY" id="scoring-passenger" />
+              <Label htmlFor="scoring-passenger" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Users className="h-4 w-4 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium">Apenas Cliente</p>
+                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão apenas passageiros</p>
+                </div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="BOTH" id="scoring-both" />
+              <Label htmlFor="scoring-both" className="flex items-center gap-2 cursor-pointer flex-1">
+                <RefreshCw className="h-4 w-4 text-purple-500" />
+                <div>
+                  <p className="text-sm font-medium">Ambos</p>
+                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão motoristas e passageiros</p>
+                </div>
+              </Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
       {/* Info */}
       <Card className="border-dashed">
