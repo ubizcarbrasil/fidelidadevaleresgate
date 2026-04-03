@@ -30,6 +30,7 @@ export default function RegrasResgatePage() {
   const qc = useQueryClient();
   const { currentBrandId } = useBrandGuard();
   const [form, setForm] = useState<RedemptionRules>(DEFAULTS);
+  const [scoringModel, setScoringModel] = useState<ScoringModel>("BOTH");
   const [dirty, setDirty] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
