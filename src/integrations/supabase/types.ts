@@ -2931,6 +2931,8 @@ export type Database = {
           created_at: string
           driver_customer_tag: string
           driver_message_enabled: boolean
+          driver_message_frequency: string
+          driver_message_frequency_value: number | null
           driver_points_enabled: boolean
           driver_points_mode: string
           driver_points_per_real: number
@@ -2960,6 +2962,8 @@ export type Database = {
           created_at?: string
           driver_customer_tag?: string
           driver_message_enabled?: boolean
+          driver_message_frequency?: string
+          driver_message_frequency_value?: number | null
           driver_points_enabled?: boolean
           driver_points_mode?: string
           driver_points_per_real?: number
@@ -2989,6 +2993,8 @@ export type Database = {
           created_at?: string
           driver_customer_tag?: string
           driver_message_enabled?: boolean
+          driver_message_frequency?: string
+          driver_message_frequency_value?: number | null
           driver_points_enabled?: boolean
           driver_points_mode?: string
           driver_points_per_real?: number
