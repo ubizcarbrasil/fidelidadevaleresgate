@@ -196,19 +196,22 @@ export default function ProdutosResgatePage() {
     return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
   };
 
+  const isMobile = useIsMobile();
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Produtos de Resgate</h2>
-          <p className="text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
+          <p className="text-sm text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <BotaoRecalcularPontos />
-          <Button onClick={() => setModalAberto(true)}>
+          <Button onClick={() => setModalAberto(true)} className="flex-1 sm:flex-initial">
             <Plus className="h-4 w-4 mr-1" />
-            Adicionar Produtos
+            <span className="hidden sm:inline">Adicionar Produtos</span>
+            <span className="sm:hidden">Adicionar</span>
           </Button>
         </div>
       </div>
