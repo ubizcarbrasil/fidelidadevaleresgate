@@ -19,25 +19,17 @@ export function useBranchRanking(branchId: string) {
   return useQuery<RankingItem[]>({
     queryKey: ["branch-driver-ranking", branchId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("machine_rides" as any)
-        .select("driver_name, driver_points_credited")
-        .eq("branch_id", branchId)
-        .eq("ride_status", "FINALIZED")
-        .gt("driver_points_credited", 0)
-        .order("driver_points_credited", { ascending: false })
-        .limit(500);
-
-      if (!data) return [];
-      const byDriver: Record<string, number> = {};
-      for (const r of data as any[]) {
-        const name = r.driver_name || "Motorista";
-        byDriver[name] = (byDriver[name] || 0) + Number(r.driver_points_credited || 0);
-      }
-      return Object.entries(byDriver)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([name, points], i) => ({ position: i + 1, name, points }));
+      const { data, error } = await supabase.rpc("get_branch_points_ranking", {
+        p_branch_id: branchId,
+        p_limit: 10,
+      } as any);
+      if (error) throw error;
+      const rows = (data || []) as { participant_name: string; participant_type: string; total_points: number }[];
+      return rows.map((r, i) => ({
+        position: i + 1,
+        name: r.participant_name,
+        points: Number(r.total_points),
+      }));
     },
     enabled: !!branchId,
   });
