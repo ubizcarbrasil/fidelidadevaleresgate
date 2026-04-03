@@ -164,6 +164,10 @@ export default function DriverManagementPage() {
 
   return (
     <div className="space-y-6">
+      {currentBrandId && (
+        <DriverNotificationConfig brandId={currentBrandId} branchId={currentBranchId} />
+      )}
+
       <PageHeader
         title="Gestão de Motoristas"
         description={isBranchScope ? "Gerencie dados, pontuação e regras dos motoristas da sua cidade." : "Gerencie dados, pontuação e regras de todos os motoristas da marca."}
