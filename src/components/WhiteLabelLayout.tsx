@@ -1,19 +1,17 @@
-import { useState } from "react";
+import { Suspense, lazy } from "react";
 import { useBrand } from "@/contexts/BrandContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import BranchSelector from "@/components/BranchSelector";
-import CustomerLayout from "@/components/customer/CustomerLayout";
-import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
-import PublicVouchers from "@/pages/PublicVouchers";
 import { Loader2 } from "lucide-react";
+
+// Lazy-load customer layout to avoid pulling heavy customer modules into admin boot
+const CustomerLayout = lazy(() => import("@/components/customer/CustomerLayout"));
 
 export default function WhiteLabelLayout() {
   const { brand, loading, selectedBranch, branches } = useBrand();
-  const { user, loading: authLoading } = useAuth();
-  const [guestMode, setGuestMode] = useState(false);
+  const { loading: authLoading } = useAuth();
 
-  // Determine what to render without early returns to keep hook tree stable
   const isLoading = loading || authLoading;
   const needsBranchSelection = !isLoading && brand && branches.length > 1 && !selectedBranch;
   const showContent = !isLoading && brand && !needsBranchSelection;
@@ -36,7 +34,15 @@ export default function WhiteLabelLayout() {
 
       {showContent && (
         <CustomerProvider>
-          <CustomerLayout />
+          <Suspense
+            fallback={
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            }
+          >
+            <CustomerLayout />
+          </Suspense>
         </CustomerProvider>
       )}
     </>
