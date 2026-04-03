@@ -6,7 +6,9 @@ import { setBootPhase } from "@/lib/bootStateCore";
 import { createRoot } from "react-dom/client";
 import { Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import App from "./App";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+
+const App = lazyWithRetry(() => import("./App"));
 
 /**
  * Minimal shell: mounts instantly, dismisses bootstrap overlay,
