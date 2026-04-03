@@ -184,12 +184,12 @@ export default function DriverPointsRulesPage() {
         description="Configure como motoristas ganham pontos a cada corrida finalizada"
       />
 
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
         {!isBranchScope && (
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Cidade/Filial</Label>
             <Select value={branchId} onValueChange={(v) => { setSelectedBranchId(v); setForm({}); }}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full sm:w-[220px]">
                 <SelectValue placeholder="Selecione a filial" />
               </SelectTrigger>
               <SelectContent>
@@ -201,12 +201,12 @@ export default function DriverPointsRulesPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <Switch checked={merged.is_active} onCheckedChange={(v) => updateForm("is_active", v)} />
           <Label className="text-sm">{merged.is_active ? "Ativo" : "Inativo"}</Label>
         </div>
 
-        <Button onClick={() => saveMutation.mutate()} disabled={!branchId || saveMutation.isPending}>
+        <Button onClick={() => saveMutation.mutate()} disabled={!branchId || saveMutation.isPending} className="w-full sm:w-auto">
           <Save className="h-4 w-4 mr-2" /> Salvar Regras
         </Button>
       </div>
