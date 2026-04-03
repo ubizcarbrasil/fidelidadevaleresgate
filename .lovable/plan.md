@@ -1,35 +1,48 @@
 
 
-# Modelo de Negócio por Cidade — Seletor na Regras de Resgate
+# Criar Menu "Cidades" no Sidebar do Empreendedor
 
-## Objetivo
-Adicionar um seletor de cidade no card "Modelo de Negócio Padrão" da página Regras de Resgate, permitindo ao empreendedor escolher uma cidade específica e alterar seu `scoring_model` diretamente, sem precisar ir até o formulário de edição da cidade.
+## Problema
+Atualmente, as funcionalidades relacionadas a cidades estão espalhadas em diferentes grupos do menu:
+- **Cidades** → em "Personalização & Vitrine"
+- **Regras de Resgate** (com modelo de negócio por cidade) → em "Resgate com Pontos"
+- **Guia de Cidades** → em "Guias Inteligentes"
+- **Regras de Pontuação Motorista** → em "Programa de Fidelidade"
 
-## Situação Atual
-- O card atual só salva um valor padrão da marca (`brand_settings_json.default_scoring_model`)
-- Para alterar o modelo de uma cidade existente, o empreendedor precisa ir em Cidades > Editar
-- O `scoring_model` de cada cidade é armazenado na coluna `branches.scoring_model`
+Isso dificulta a gestão centralizada das cidades.
 
-## Plano
+## Solução
+Criar um novo grupo **"Cidades"** no sidebar que centralize toda a gestão de cidades.
 
-### 1. Buscar cidades da marca
-Adicionar uma query para listar as branches da marca (`id`, `name`, `scoring_model`), exibindo-as num Select/Combobox dentro do card.
+### Estrutura do novo menu "Cidades"
 
-### 2. Redesenhar o card "Modelo de Negócio"
-- Adicionar um `Select` no topo do card para escolher entre "Padrão da Marca (novas cidades)" e cada cidade existente
-- Quando "Padrão da Marca" estiver selecionado: salva em `brand_settings_json.default_scoring_model` (comportamento atual)
-- Quando uma cidade específica estiver selecionada: o RadioGroup mostra o `scoring_model` atual daquela cidade e salva diretamente na tabela `branches`
+```text
+📍 Cidades
+  ├── Minhas Cidades         (/brand-branches)        — listar e ativar/desativar
+  ├── Nova Cidade             (/brand-branches/new)    — criar cidade
+  ├── Regras da Cidade        (/regras-resgate)        — modelo de negócio + regras de resgate por cidade
+  └── Guia de Cidades         (/brand-cidades-journey) — tutorial passo a passo
+```
 
-### 3. Salvar por cidade
-Ao selecionar uma cidade e alterar o modelo, o save faz `update` em `branches` com o novo `scoring_model` para aquele `branch_id`.
+### Alterações
 
-### Arquivos alterados
-- `src/pages/RegrasResgatePage.tsx` — adicionar query de branches, Select de cidade, lógica condicional de leitura/salvamento
+#### 1. `src/components/consoles/BrandSidebar.tsx`
+- Criar novo grupo `"Cidades"` com os itens acima
+- Remover "Cidades" do grupo "Personalização & Vitrine"
+- Remover "Guia de Cidades" do grupo "Guias Inteligentes"
+- Mover "Regras de Resgate" para o novo grupo (manter também em "Resgate com Pontos" ou só no novo grupo — ver abaixo)
+- Posicionar o grupo logo após "Guias Inteligentes" e "Manuais", antes de "Personalização & Vitrine"
+
+#### 2. Decisão sobre "Regras de Resgate"
+A página `RegrasResgatePage` contém tanto regras globais de resgate (taxa de conversão, mínimo de pontos) quanto o modelo de negócio por cidade. Duas opções:
+
+- **Opção A**: Mover integralmente para o grupo "Cidades" e remover de "Resgate com Pontos"
+- **Opção B**: Manter em "Resgate com Pontos" e adicionar apenas um link "Modelo de Negócio" no grupo "Cidades" (requer separar a página em duas)
+
+**Recomendação**: Opção A — manter simples, sem duplicar links.
 
 ### Detalhes técnicos
-- Query adicional: `branches` filtrada por `brand_id`, campos `id, name, scoring_model`
-- Estado: `selectedBranchId` (null = padrão da marca)
-- Ao trocar de cidade no Select, o RadioGroup reflete o `scoring_model` daquela branch
-- Save condicional: se `selectedBranchId` é null, salva no brand JSON; caso contrário, faz update na branch
-- Invalidar queries de branches após salvar para manter consistência
+- Editar apenas o array `groups` em `BrandSidebar.tsx` para reorganizar os itens
+- Nenhuma rota, página ou lógica de negócio precisa mudar
+- O grupo "Cidades" ficará sempre visível (sem `moduleKey` nos itens essenciais)
 
