@@ -1,25 +1,22 @@
 
 
-# Ativar módulo `achadinhos_motorista` para todas as marcas com motoristas
+# Adicionar módulo `achadinhos_motorista` aos planos Starter, Profissional e Enterprise
 
 ## Situação atual
-- O módulo `achadinhos_motorista` (ID `8587af40-69b3-4021-a4fc-497202d87391`) existe em `module_definitions` mas não tem **nenhum** registro em `brand_modules`.
-- Consequência: o grupo "Achadinhos Motorista" no sidebar do franqueado nunca aparece.
-
-## Marcas afetadas (todas com motoristas ativos)
-
-| Marca | brand_id |
-|---|---|
-| Ubiz Resgata | `db15bd21-9137-4965-a0fb-540d8e8b26f1` |
-| Ubiz Car | `44df8653-2a7a-40d1-b717-c6b09a6f694f` |
-| DomStore | `6880cc3a-4aab-43b1-a4fb-d5062b535f75` |
-| Leo fideliza | `5912631f-2d9c-4a07-a7ab-fc38cee5ff7e` |
-| Vini fideliza | `d33010b1-3b80-437c-9a08-5d07765532c0` |
+O módulo já está cadastrado no template do plano **free**. Faltam os planos **starter**, **profissional** e **enterprise**.
 
 ## Ação
-Inserir 5 registros em `brand_modules` com `is_enabled = true`, um para cada marca, apontando para o `module_definition_id` do `achadinhos_motorista`.
+Inserir 3 registros em `plan_module_templates`:
 
-## Resultado esperado
-- O sidebar do franqueado passa a exibir o grupo completo: Carteira, Regras, Motoristas, Produtos, Pedidos e Manuais.
-- Nenhuma alteração de código ou migração necessária — é apenas inserção de dados.
+```sql
+INSERT INTO plan_module_templates (plan_key, module_definition_id, is_enabled) VALUES
+  ('starter',       '8587af40-69b3-4021-a4fc-497202d87391', true),
+  ('profissional',  '8587af40-69b3-4021-a4fc-497202d87391', true),
+  ('enterprise',    '8587af40-69b3-4021-a4fc-497202d87391', true);
+```
+
+## Resultado
+Todas as novas marcas provisionadas em qualquer plano terão o módulo **Achadinhos Motorista** ativado automaticamente.
+
+Nenhuma alteração de código necessária — apenas inserção de dados.
 
