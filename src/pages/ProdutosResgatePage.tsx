@@ -348,126 +348,196 @@ export default function ProdutosResgatePage() {
             onPageChange={setPage}
           />
 
-          {/* Table */}
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={items.length > 0 && selectedIds.size === items.length}
-                        onCheckedChange={toggleAll}
-                      />
-                    </TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Preço Original</TableHead>
-                    <TableHead>Custo em Pontos</TableHead>
-                    <TableHead>Ativo</TableHead>
-                    <TableHead>Resgatável</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin mx-auto" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!isLoading && !items.length && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Nenhum produto encontrado para essa busca
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {items.map((deal) => {
-                    const isEditing = editingCosts[deal.id] !== undefined;
-                    const costDisplay = deal.redeem_points_cost != null ? formatPoints(deal.redeem_points_cost) : "—";
-
-                    return (
-                      <TableRow key={deal.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedIds.has(deal.id)}
-                            onCheckedChange={() => toggleSelect(deal.id)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {deal.image_url && (
-                              <img src={deal.image_url} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-medium truncate">{deal.title}</p>
-                              {deal.store_name && (
-                                <p className="text-xs text-muted-foreground">{deal.store_name}</p>
-                              )}
-                            </div>
+          {/* Table / Cards */}
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !items.length ? (
+            <p className="text-center py-8 text-muted-foreground">
+              Nenhum produto encontrado para essa busca
+            </p>
+          ) : isMobile ? (
+            /* ── Mobile Card View ── */
+            <div className="space-y-3">
+              {items.map((deal) => {
+                const isEditing = editingCosts[deal.id] !== undefined;
+                const costDisplay = deal.redeem_points_cost != null ? formatPoints(deal.redeem_points_cost) : "—";
+                return (
+                  <Card key={deal.id} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedIds.has(deal.id)}
+                          onCheckedChange={() => toggleSelect(deal.id)}
+                          className="mt-1"
+                        />
+                        {deal.image_url && (
+                          <img src={deal.image_url} alt="" className="h-14 w-14 rounded-lg object-cover shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm line-clamp-2">{deal.title}</p>
+                          {deal.store_name && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{deal.store_name}</p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <span className="text-xs text-muted-foreground">{formatPrice(deal.price)}</span>
+                            <Badge variant={deal.is_active ? "default" : "secondary"} className="text-[10px]">
+                              {deal.is_active ? "Ativo" : "Inativo"}
+                            </Badge>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{formatPrice(deal.price)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {isEditing ? (
-                              <>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  value={editingCosts[deal.id]}
-                                  onChange={(e) =>
-                                    setEditingCosts((prev) => ({ ...prev, [deal.id]: e.target.value }))
-                                  }
-                                  className="w-24 h-8"
-                                  autoFocus
-                                  onKeyDown={(e) => e.key === "Enter" && handleSaveCost(deal.id)}
-                                />
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8"
-                                  onClick={() => handleSaveCost(deal.id)}
-                                  disabled={updateDeal.isPending}
-                                >
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <button
-                                className="text-sm font-medium hover:underline cursor-pointer flex items-center gap-1"
-                                onClick={() =>
-                                  setEditingCosts((prev) => ({
-                                    ...prev,
-                                    [deal.id]: String(deal.redeem_points_cost ?? 0),
-                                  }))
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <div className="flex items-center gap-2">
+                          {isEditing ? (
+                            <>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={editingCosts[deal.id]}
+                                onChange={(e) =>
+                                  setEditingCosts((prev) => ({ ...prev, [deal.id]: e.target.value }))
                                 }
-                              >
-                                <Coins className="h-3.5 w-3.5 text-amber-500" />
-                                {costDisplay} pts
-                              </button>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={deal.is_active ? "default" : "secondary"}>
-                            {deal.is_active ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
+                                className="w-20 h-8 text-sm"
+                                autoFocus
+                                onKeyDown={(e) => e.key === "Enter" && handleSaveCost(deal.id)}
+                              />
+                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleSaveCost(deal.id)} disabled={updateDeal.isPending}>
+                                <Save className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <button
+                              className="text-sm font-medium flex items-center gap-1"
+                              onClick={() => setEditingCosts((prev) => ({ ...prev, [deal.id]: String(deal.redeem_points_cost ?? 0) }))}
+                            >
+                              <Coins className="h-3.5 w-3.5 text-amber-500" />
+                              {costDisplay} pts
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Resgatável</span>
                           <Switch
                             checked={!!deal.is_redeemable}
                             onCheckedChange={() => handleToggleRedeemable(deal.id, !!deal.is_redeemable)}
                             disabled={updateDeal.isPending}
                           />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            /* ── Desktop Table View ── */
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={items.length > 0 && selectedIds.size === items.length}
+                          onCheckedChange={toggleAll}
+                        />
+                      </TableHead>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Preço Original</TableHead>
+                      <TableHead>Custo em Pontos</TableHead>
+                      <TableHead>Ativo</TableHead>
+                      <TableHead>Resgatável</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((deal) => {
+                      const isEditing = editingCosts[deal.id] !== undefined;
+                      const costDisplay = deal.redeem_points_cost != null ? formatPoints(deal.redeem_points_cost) : "—";
+                      return (
+                        <TableRow key={deal.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedIds.has(deal.id)}
+                              onCheckedChange={() => toggleSelect(deal.id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              {deal.image_url && (
+                                <img src={deal.image_url} alt="" className="h-10 w-10 rounded object-cover shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">{deal.title}</p>
+                                {deal.store_name && (
+                                  <p className="text-xs text-muted-foreground">{deal.store_name}</p>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatPrice(deal.price)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {isEditing ? (
+                                <>
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    value={editingCosts[deal.id]}
+                                    onChange={(e) =>
+                                      setEditingCosts((prev) => ({ ...prev, [deal.id]: e.target.value }))
+                                    }
+                                    className="w-24 h-8"
+                                    autoFocus
+                                    onKeyDown={(e) => e.key === "Enter" && handleSaveCost(deal.id)}
+                                  />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={() => handleSaveCost(deal.id)}
+                                    disabled={updateDeal.isPending}
+                                  >
+                                    <Save className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <button
+                                  className="text-sm font-medium hover:underline cursor-pointer flex items-center gap-1"
+                                  onClick={() =>
+                                    setEditingCosts((prev) => ({
+                                      ...prev,
+                                      [deal.id]: String(deal.redeem_points_cost ?? 0),
+                                    }))
+                                  }
+                                >
+                                  <Coins className="h-3.5 w-3.5 text-amber-500" />
+                                  {costDisplay} pts
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={deal.is_active ? "default" : "secondary"}>
+                              {deal.is_active ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Switch
+                              checked={!!deal.is_redeemable}
+                              onCheckedChange={() => handleToggleRedeemable(deal.id, !!deal.is_redeemable)}
+                              disabled={updateDeal.isPending}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>
