@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RankingPontuacaoProps {
   brandId?: string;
+  isDriverEnabled?: boolean;
+  isPassengerEnabled?: boolean;
 }
 
 interface RankingEntry {
@@ -56,7 +58,7 @@ function RankingList({ items, icon: Icon, emptyMsg }: { items: RankingEntry[]; i
   );
 }
 
-const RankingPontuacao = memo(function RankingPontuacao({ brandId }: RankingPontuacaoProps) {
+const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabled = true, isPassengerEnabled = true }: RankingPontuacaoProps) {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -114,21 +116,27 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId }: RankingPont
             {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
           </div>
         ) : (
-          <Tabs defaultValue="passengers" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-3">
-              <TabsTrigger value="passengers" className="text-xs gap-1.5">
-                <User className="h-3.5 w-3.5" /> Passageiros
-              </TabsTrigger>
-              <TabsTrigger value="drivers" className="text-xs gap-1.5">
-                <Car className="h-3.5 w-3.5" /> Motoristas
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="passengers">
-              <RankingList items={data?.passengers || []} icon={User} emptyMsg="Nenhum passageiro pontuou ainda." />
-            </TabsContent>
-            <TabsContent value="drivers">
-              <RankingList items={data?.drivers || []} icon={Car} emptyMsg="Nenhum motorista pontuou ainda." />
-            </TabsContent>
+          <Tabs defaultValue={isPassengerEnabled ? "passengers" : "drivers"} className="w-full">
+            {isPassengerEnabled && isDriverEnabled && (
+              <TabsList className="grid w-full grid-cols-2 mb-3">
+                <TabsTrigger value="passengers" className="text-xs gap-1.5">
+                  <User className="h-3.5 w-3.5" /> Passageiros
+                </TabsTrigger>
+                <TabsTrigger value="drivers" className="text-xs gap-1.5">
+                  <Car className="h-3.5 w-3.5" /> Motoristas
+                </TabsTrigger>
+              </TabsList>
+            )}
+            {isPassengerEnabled && (
+              <TabsContent value="passengers">
+                <RankingList items={data?.passengers || []} icon={User} emptyMsg="Nenhum passageiro pontuou ainda." />
+              </TabsContent>
+            )}
+            {isDriverEnabled && (
+              <TabsContent value="drivers">
+                <RankingList items={data?.drivers || []} icon={Car} emptyMsg="Nenhum motorista pontuou ainda." />
+              </TabsContent>
+            )}
           </Tabs>
         )}
       </CardContent>

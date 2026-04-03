@@ -6,6 +6,7 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Smartphone } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,6 +131,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
+  const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
 
   useRealtimeRefresh();
 
@@ -292,6 +294,8 @@ export default function Dashboard() {
         achadinhosCidades={achadinhosCidades}
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
+        isDriverEnabled={isDriverEnabled}
+        isPassengerEnabled={isPassengerEnabled}
       />}
 
       {/* Branch-specific dashboard */}
@@ -314,6 +318,8 @@ export default function Dashboard() {
             isRoot={isRoot}
             redemptionsPending={redemptionsPending}
             storeRulesPending={storeRulesPending}
+            isDriverEnabled={isDriverEnabled}
+            isPassengerEnabled={isPassengerEnabled}
           />
 
           {/* Tasks + Activity Feed */}
@@ -348,7 +354,7 @@ export default function Dashboard() {
       )}
 
       {/* Quick Links, Access Hub, Demo */}
-      <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} />
+      <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
 
       {/* FAB */}
       {currentBrandId && (

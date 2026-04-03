@@ -13,6 +13,7 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,6 +30,7 @@ interface MenuItem {
   url: string;
   icon: any;
   moduleKey?: string;
+  scoringFilter?: "DRIVER" | "PASSENGER";
 }
 
 const dashboardItem: MenuItem = {
@@ -83,8 +85,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Resgate com Pontos",
     items: [
-      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag },
-      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package },
+      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, scoringFilter: "DRIVER" },
+      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package, scoringFilter: "DRIVER" },
     ],
   },
   {
@@ -98,24 +100,24 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Gestão Comercial",
     items: [
-      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
-      { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
-      { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
-      { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
-      { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
-      { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
-      { key: "sidebar.motoristas", defaultTitle: "Motorista", url: "/motoristas", icon: Truck, moduleKey: "machine_integration" },
+      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
+      { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers", scoringFilter: "PASSENGER" },
+      { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr", scoringFilter: "PASSENGER" },
+      { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers", scoringFilter: "PASSENGER" },
+      { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores", scoringFilter: "PASSENGER" },
+      { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet", scoringFilter: "PASSENGER" },
+      { key: "sidebar.motoristas", defaultTitle: "Motorista", url: "/motoristas", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER" },
       { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap, moduleKey: "sponsored" },
     ],
   },
   {
     label: "Programa de Fidelidade",
     items: [
-      { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
-      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
-      { key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: Crown, moduleKey: "earn_points_store" },
-      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
-      { key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration" },
+      { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
+      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
+      { key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: Crown, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
+      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
+      { key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER" },
     ],
   },
   {
@@ -247,6 +249,7 @@ export function BrandSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
+  const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
 
@@ -262,7 +265,13 @@ export function BrandSidebar() {
         return item;
       })
       .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
-      .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? "")),
+      .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? ""))
+      .filter(item => {
+        if (!item.scoringFilter) return true;
+        if (item.scoringFilter === "DRIVER") return isDriverEnabled;
+        if (item.scoringFilter === "PASSENGER") return isPassengerEnabled;
+        return true;
+      }),
   }));
 
   // Auto-open the group containing the active route

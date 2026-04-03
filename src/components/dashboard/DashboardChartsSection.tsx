@@ -172,11 +172,14 @@ interface DashboardChartsSectionProps {
   isRoot: boolean;
   redemptionsPending?: number;
   storeRulesPending?: number;
+  isDriverEnabled?: boolean;
+  isPassengerEnabled?: boolean;
 }
 
 export default function DashboardChartsSection({
   combinedChart, recentRedemptions, brandFilter,
   showBrand, isRoot, redemptionsPending, storeRulesPending,
+  isDriverEnabled = true, isPassengerEnabled = true,
 }: DashboardChartsSectionProps) {
   return (
     <>
@@ -235,7 +238,7 @@ export default function DashboardChartsSection({
       {showBrand && !isRoot && (
         <div className="animate-slide-up delay-5">
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-            <RankingPontuacao brandId={brandFilter} />
+            <RankingPontuacao brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
           </Suspense>
         </div>
       )}
