@@ -6,7 +6,9 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-const isPreview = process.env.LOVABLE_PREVIEW === "true" || mode === "development";
+const isLovablePreview = process.env.LOVABLE_PREVIEW === "true";
+const isDevelopment = mode === "development";
+const disableComponentTagger = isLovablePreview;
 
 return ({
   server: {
@@ -18,8 +20,8 @@ return ({
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
-    !isPreview && VitePWA({
+    isDevelopment && !disableComponentTagger && componentTagger(),
+    !isDevelopment && VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png", "logo-vale-resgate.png"],
       manifest: {
