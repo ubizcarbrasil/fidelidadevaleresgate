@@ -352,7 +352,7 @@ export default function Dashboard() {
       )}
 
       {/* Quick Links, Access Hub, Demo */}
-      <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} />
+      <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
 
       {/* FAB */}
       {currentBrandId && (
