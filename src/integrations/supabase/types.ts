@@ -6526,6 +6526,14 @@ export type Database = {
         Args: { p_branch_id: string }
         Returns: Json
       }
+      get_branch_points_ranking: {
+        Args: { p_branch_id: string; p_limit?: number }
+        Returns: {
+          participant_name: string
+          participant_type: string
+          total_points: number
+        }[]
+      }
       get_customer_ids_for_store_owner: {
         Args: { _user_id: string }
         Returns: string[]
