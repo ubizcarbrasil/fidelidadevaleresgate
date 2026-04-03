@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed } from "./branch/hook_branch_dashboard";
+import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import BranchKpiResgates from "./branch/BranchKpiResgates";
 import BranchKpiPontuacao from "./branch/BranchKpiPontuacao";
 import BranchKpiMotoristas from "./branch/BranchKpiMotoristas";
@@ -19,6 +20,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const { data: stats, isLoading } = useBranchDashboardStats(branchId);
   const { data: ranking } = useBranchRanking(branchId);
   const feed = useBranchRealtimeFeed(branchId);
+  const { isDriverEnabled } = useBranchScoringModel();
 
   if (isLoading) {
     return (
@@ -34,29 +36,33 @@ export default function BranchDashboardSection({ branchId }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* KPIs principais — grid 2x2 */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* KPIs principais */}
+      <div className={`grid gap-4 ${isDriverEnabled ? "grid-cols-2" : "grid-cols-1"}`}>
         <BranchKpiResgates stats={stats} />
-        <BranchKpiPontuacao stats={stats} />
-        <BranchKpiMotoristas stats={stats} />
-        <BranchKpiCorridas stats={stats} />
+        {isDriverEnabled && <BranchKpiPontuacao stats={stats} />}
+        {isDriverEnabled && <BranchKpiMotoristas stats={stats} />}
+        {isDriverEnabled && <BranchKpiCorridas stats={stats} />}
       </div>
 
-      {/* KPIs detalhes — grid 3 cols */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <BranchKpiPontosHoje stats={stats} />
-        <BranchKpiPontosMes stats={stats} />
-        <BranchKpiMediaMotorista stats={stats} />
-      </div>
+      {/* KPIs detalhes — só motorista */}
+      {isDriverEnabled && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <BranchKpiPontosHoje stats={stats} />
+          <BranchKpiPontosMes stats={stats} />
+          <BranchKpiMediaMotorista stats={stats} />
+        </div>
+      )}
 
       {/* Visão geral da cidade */}
       <BranchVisaoGeral stats={stats} />
 
-      {/* Ranking + Feed */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <BranchRankingMotoristas ranking={ranking || []} />
-        <BranchFeedTempoReal feed={feed} />
-      </div>
+      {/* Ranking + Feed — só motorista */}
+      {isDriverEnabled && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <BranchRankingMotoristas ranking={ranking || []} />
+          <BranchFeedTempoReal feed={feed} />
+        </div>
+      )}
     </div>
   );
 }
