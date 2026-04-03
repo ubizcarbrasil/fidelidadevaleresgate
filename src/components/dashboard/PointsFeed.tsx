@@ -10,6 +10,8 @@ import { ptBR } from "date-fns/locale";
 
 interface PointsFeedProps {
   brandId?: string;
+  isDriverEnabled?: boolean;
+  isPassengerEnabled?: boolean;
 }
 
 interface RideEntry {
@@ -23,7 +25,7 @@ interface RideEntry {
   ride_status: string;
 }
 
-const PointsFeed = memo(function PointsFeed({ brandId }: PointsFeedProps) {
+const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, isPassengerEnabled = true }: PointsFeedProps) {
   const queryClient = useQueryClient();
   const [liveCount, setLiveCount] = useState(0);
 
@@ -59,6 +61,12 @@ const PointsFeed = memo(function PointsFeed({ brandId }: PointsFeedProps) {
     return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 
+  const visibleRides = (rides || []).filter((ride) => {
+    const hasPassengerPoints = isPassengerEnabled && ride.points_credited > 0;
+    const hasDriverPoints = isDriverEnabled && ride.driver_points_credited > 0;
+    return hasPassengerPoints || hasDriverPoints;
+  });
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -87,18 +95,18 @@ const PointsFeed = memo(function PointsFeed({ brandId }: PointsFeedProps) {
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
           </div>
-        ) : !rides || rides.length === 0 ? (
+        ) : visibleRides.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">Nenhuma pontuação registrada ainda.</p>
         ) : (
           <div className="max-h-[400px] overflow-y-auto space-y-2">
-            {rides.map((ride) => (
+            {visibleRides.map((ride) => (
               <div key={ride.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-accent/30 border border-border hover:border-primary/20 transition-colors">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Car className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
                   {/* Passageiro */}
-                  {ride.points_credited > 0 && (
+                  {isPassengerEnabled && ride.points_credited > 0 && (
                     <div className="flex items-center gap-2">
                       <User className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span className="text-xs font-medium truncate">
@@ -110,7 +118,7 @@ const PointsFeed = memo(function PointsFeed({ brandId }: PointsFeedProps) {
                     </div>
                   )}
                   {/* Motorista */}
-                  {ride.driver_points_credited > 0 && (
+                  {isDriverEnabled && ride.driver_points_credited > 0 && (
                     <div className="flex items-center gap-2">
                       <Car className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span className="text-xs font-medium truncate">

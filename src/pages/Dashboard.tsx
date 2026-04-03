@@ -307,7 +307,7 @@ export default function Dashboard() {
       {consoleScope !== "BRANCH" && (
         <>
           {/* Corridas com seletor de período */}
-          {showBrand && <RidesCounterCard brandId={brandFilter} />}
+          {showBrand && isDriverEnabled && <RidesCounterCard brandId={brandFilter} />}
 
           {/* Charts, Ranking, Alerts, Heatmap, Reports */}
           <DashboardChartsSection

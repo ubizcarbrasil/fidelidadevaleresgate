@@ -79,7 +79,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento Achadinho", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals" },
       { key: "sidebar.governanca_ofertas", defaultTitle: "Governança Achadinho", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals" },
-      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car, scoringFilter: "DRIVER" },
     ],
   },
   {
