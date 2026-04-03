@@ -306,8 +306,8 @@ export default function Dashboard() {
       {/* Sections hidden for BRANCH scope */}
       {consoleScope !== "BRANCH" && (
         <>
-          {/* Corridas com seletor de período */}
-          {showBrand && <RidesCounterCard brandId={brandFilter} />}
+          {/* Corridas com seletor de período — só motorista */}
+          {showBrand && isDriverEnabled && <RidesCounterCard brandId={brandFilter} />}
 
           {/* Charts, Ranking, Alerts, Heatmap, Reports */}
           <DashboardChartsSection
