@@ -84,8 +84,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Resgate com Pontos",
     items: [
-      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag },
-      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package },
+      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, scoringFilter: "DRIVER" },
+      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: Package, scoringFilter: "DRIVER" },
     ],
   },
   {
