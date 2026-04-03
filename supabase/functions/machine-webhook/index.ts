@@ -888,17 +888,26 @@ async function processFinalized(
       }
     }
 
-    // Send driver points notification via TaxiMachine app (fire-and-forget)
+    // Send driver points notification via TaxiMachine app (awaited with timeout)
     if (driverPointsCredited > 0 && driverId && driverCustomerId && integration.driver_message_enabled) {
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        fetch(`${supabaseUrl}/functions/v1/notify-driver-points`, {
+
+        logger.info("Dispatching notify-driver-points", {
+          machineRideId, driverId, driverPointsCredited, driverCustomerId
+        });
+
+        const ctrl = new AbortController();
+        const timeoutId = setTimeout(() => ctrl.abort(), 5000);
+
+        const notifyRes = await fetch(`${supabaseUrl}/functions/v1/notify-driver-points`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${supabaseAnonKey}`,
           },
+          signal: ctrl.signal,
           body: JSON.stringify({
             machine_ride_id: machineRideId,
             brand_id: brandId,
@@ -910,9 +919,13 @@ async function processFinalized(
             driver_name: driverName || null,
             finalized_at: new Date().toISOString(),
           }),
-        }).catch((e) => logger.error("notify-driver-points error", { error: String(e) }));
+        });
+
+        clearTimeout(timeoutId);
+        logger.info("notify-driver-points response", { status: notifyRes.status });
+        await notifyRes.text();
       } catch (e) {
-        logger.error("notify-driver-points setup error", { error: String(e) });
+        logger.error("notify-driver-points error", { error: String(e) });
       }
     }
   }
