@@ -16,7 +16,7 @@ import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
 
 /* ── Brand Quick Links ── */
-function BrandQuickLinks() {
+function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
   const { currentBrandId } = useBrandGuard();
   const { data: brand } = useQuery({
     queryKey: ["brand-quick-links", currentBrandId],
