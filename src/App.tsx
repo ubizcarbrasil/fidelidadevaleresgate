@@ -278,7 +278,7 @@ const App = () => (
       <AuthProvider>
         <BrandProvider>
           <TooltipProvider>
-            <MountSignal />
+            {/* MountSignal now in BootShell (main.tsx) for instant overlay dismissal */}
             <Toaster />
             <Sonner />
             <BrowserRouter>
