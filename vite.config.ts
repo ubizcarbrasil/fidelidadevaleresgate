@@ -1,12 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-const isPreview = process.env.LOVABLE_PREVIEW === "true" || mode === "development";
+const isDevelopment = mode === "development";
 
 return ({
   server: {
@@ -18,8 +17,7 @@ return ({
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
-    !isPreview && VitePWA({
+    !isDevelopment && VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png", "logo-vale-resgate.png"],
       manifest: {
