@@ -1,48 +1,100 @@
 
 
-# Criar Menu "Cidades" no Sidebar do Empreendedor
+# Filtrar Sidebar e Dashboard do Empreendedor pelo Modelo de Negócio
 
 ## Problema
-Atualmente, as funcionalidades relacionadas a cidades estão espalhadas em diferentes grupos do menu:
-- **Cidades** → em "Personalização & Vitrine"
-- **Regras de Resgate** (com modelo de negócio por cidade) → em "Resgate com Pontos"
-- **Guia de Cidades** → em "Guias Inteligentes"
-- **Regras de Pontuação Motorista** → em "Programa de Fidelidade"
+O empreendedor (Brand Admin) vê todos os itens de menu e KPIs, independentemente do modelo de negócio configurado para suas cidades. Se opera apenas com motoristas, ainda vê menus de clientes (Pontuar, Resgates, Ofertas, etc.) e vice-versa.
 
-Isso dificulta a gestão centralizada das cidades.
+## Mapeamento de cores das imagens
+
+Baseado nas imagens enviadas:
+
+### BrandSidebar — Gestão Comercial (IMG_5327)
+| Item | Modelo |
+|------|--------|
+| Caixa PDV | PASSENGER |
+| Ofertas | PASSENGER |
+| Resgates | PASSENGER |
+| Cupons | PASSENGER |
+| Parceiros | PASSENGER |
+| Clientes | PASSENGER |
+| Motorista | DRIVER |
+| Produtos de Resgate | DRIVER |
+| Pedidos de Resgate | DRIVER |
+
+### BrandSidebar — Programa de Fidelidade (IMG_5328)
+| Item | Modelo |
+|------|--------|
+| Pontuar | PASSENGER |
+| Regras de Fidelidade | PASSENGER |
+| Pontuação por Tier | PASSENGER |
+| Extrato de Fidelidade | PASSENGER |
+| Regras de Pontuação Motorista | DRIVER |
+
+### Dashboard KPIs (IMG_5317)
+| KPI | Modelo |
+|-----|--------|
+| Resgates | PASSENGER |
+| Clientes | PASSENGER |
+| Pontuações | PASSENGER |
+| Ofertas Ativas | PASSENGER |
+| Pontos Clientes | PASSENGER |
+| Motoristas | DRIVER |
+| Pontos Motoristas | DRIVER |
+| Achadinhos Ativos | DRIVER |
+
+### Dashboard extras (IMG_5319, IMG_5324)
+| Componente | Modelo |
+|------------|--------|
+| Corridas Realizadas | BOTH (azul) |
+| Ranking Passageiros tab | PASSENGER |
+| Ranking Motoristas tab | DRIVER |
+
+### Links Úteis (IMG_5326)
+| Link | Modelo |
+|------|--------|
+| App do Cliente | PASSENGER |
+| Cadastro Parceiro | PASSENGER |
+| Painel Parceiro | PASSENGER |
+| Achadinho Motorista | DRIVER |
+
+### Painéis dos Parceiros (IMG_5325)
+| Componente | Modelo |
+|------------|--------|
+| Seção inteira | PASSENGER |
+
+Items sem marcação de cor = apenas empreendedor (sempre visíveis).
 
 ## Solução
-Criar um novo grupo **"Cidades"** no sidebar que centralize toda a gestão de cidades.
 
-### Estrutura do novo menu "Cidades"
+### 1. Criar hook `useBrandScoringModels`
+Novo hook que busca os `scoring_model` de todas as branches da marca e calcula se a marca opera com motoristas, passageiros ou ambos (baseado na união de todos os modelos das cidades ativas).
 
-```text
-📍 Cidades
-  ├── Minhas Cidades         (/brand-branches)        — listar e ativar/desativar
-  ├── Nova Cidade             (/brand-branches/new)    — criar cidade
-  ├── Regras da Cidade        (/regras-resgate)        — modelo de negócio + regras de resgate por cidade
-  └── Guia de Cidades         (/brand-cidades-journey) — tutorial passo a passo
-```
+**Arquivo:** `src/hooks/useBrandScoringModels.ts`
 
-### Alterações
+### 2. Adicionar `scoringFilter` aos itens do BrandSidebar
+Adicionar a propriedade `scoringFilter: "DRIVER" | "PASSENGER"` nos itens de menu do empreendedor (igual já existe no BranchSidebar) e filtrar usando o hook acima.
 
-#### 1. `src/components/consoles/BrandSidebar.tsx`
-- Criar novo grupo `"Cidades"` com os itens acima
-- Remover "Cidades" do grupo "Personalização & Vitrine"
-- Remover "Guia de Cidades" do grupo "Guias Inteligentes"
-- Mover "Regras de Resgate" para o novo grupo (manter também em "Resgate com Pontos" ou só no novo grupo — ver abaixo)
-- Posicionar o grupo logo após "Guias Inteligentes" e "Manuais", antes de "Personalização & Vitrine"
+**Arquivo:** `src/components/consoles/BrandSidebar.tsx`
 
-#### 2. Decisão sobre "Regras de Resgate"
-A página `RegrasResgatePage` contém tanto regras globais de resgate (taxa de conversão, mínimo de pontos) quanto o modelo de negócio por cidade. Duas opções:
+### 3. Filtrar KPIs do Dashboard por modelo
+Passar flags `isDriverEnabled`/`isPassengerEnabled` ao `DashboardKpiSection` e condicionar a renderização de cada bloco de KPI.
 
-- **Opção A**: Mover integralmente para o grupo "Cidades" e remover de "Resgate com Pontos"
-- **Opção B**: Manter em "Resgate com Pontos" e adicionar apenas um link "Modelo de Negócio" no grupo "Cidades" (requer separar a página em duas)
+**Arquivos:**
+- `src/pages/Dashboard.tsx` — consumir hook e passar flags
+- `src/components/dashboard/DashboardKpiSection.tsx` — condicionar blocos
 
-**Recomendação**: Opção A — manter simples, sem duplicar links.
+### 4. Filtrar componentes do Dashboard
+- `RidesCounterCard` — mostrar sempre (azul = BOTH)
+- `RankingPontuacao` — filtrar tabs por modelo
+- `DashboardQuickLinks` — filtrar links e seção "Painéis dos Parceiros" por modelo
+
+**Arquivos:**
+- `src/components/dashboard/RankingPontuacao.tsx`
+- `src/components/dashboard/DashboardQuickLinks.tsx`
 
 ### Detalhes técnicos
-- Editar apenas o array `groups` em `BrandSidebar.tsx` para reorganizar os itens
-- Nenhuma rota, página ou lógica de negócio precisa mudar
-- O grupo "Cidades" ficará sempre visível (sem `moduleKey` nos itens essenciais)
+- O hook `useBrandScoringModels` faz `SELECT scoring_model FROM branches WHERE brand_id = X AND is_active = true` e retorna `{ isDriverEnabled, isPassengerEnabled }` baseado na união dos modelos
+- Se nenhuma cidade existe, ambos ficam `true` (padrão permissivo)
+- A filtragem é visual — nenhuma permissão ou RLS muda, apenas a visibilidade dos itens
 
