@@ -91,7 +91,6 @@ export default function DashboardKpiSection({
             <KpiCard title="Cidades Ativas" value={achadinhosCidades} icon={MapPin} color="primary" />
           </div>
         </div>
-      )}
     </>
   );
 }
