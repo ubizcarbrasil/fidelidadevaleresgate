@@ -67,6 +67,24 @@ export default function BrandBranchForm() {
   const [scoringModel, setScoringModel] = useState("BOTH");
   const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
 
+  // Load brand's default scoring model for new cities
+  useEffect(() => {
+    if (isEdit || !currentBrandId) return;
+    supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", currentBrandId)
+      .single()
+      .then(({ data }) => {
+        if (data?.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
+          const settings = data.brand_settings_json as Record<string, any>;
+          if (settings.default_scoring_model) {
+            setScoringModel(settings.default_scoring_model);
+          }
+        }
+      });
+  }, [isEdit, currentBrandId]);
+
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const webhookUrl = isEdit && id && currentBrandId
     ? `https://${projectId}.supabase.co/functions/v1/machine-webhook?brand_id=${currentBrandId}&branch_id=${id}`
