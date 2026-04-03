@@ -1,48 +1,56 @@
 
 
-# Ranking Diferente entre Empreendedor e Franqueado — Diagnóstico e Correção
+# Sincronizar Carteira de Pontos com Pontos Realmente Distribuídos
 
 ## Problema
+O webhook de corridas (`machine-webhook`) credita pontos aos motoristas (`driver_points_credited`) mas **nunca debita a carteira da cidade** (`branch_points_wallet`). Resultado: a carteira mostra saldo 0, total carregado 0, total distribuído 0 — quando na realidade 13.701 pontos já foram distribuídos.
 
-Os rankings mostram pontuações diferentes para os mesmos motoristas porque usam **métodos de consulta diferentes**:
+O usuário quer que a carteira reflita a realidade: se nada foi carregado e 13.701 pts foram distribuídos, o saldo deve mostrar **-13.701 pts**.
 
-| Painel | Método | Filtro | Limite de linhas |
-|--------|--------|--------|------------------|
-| **Empreendedor** | RPC `get_points_ranking` | `brand_id` (todas as cidades) | Sem limite (SQL direto) |
-| **Franqueado** | Query client-side `.from("machine_rides")` | `branch_id` (uma cidade) | **500 linhas** antes de agregar |
+## Solução em 3 partes
 
-### Causa raiz
-O ranking do franqueado (`useBranchRanking`) busca apenas **500 linhas** de `machine_rides` ordenadas por `driver_points_credited DESC` e depois agrega no client-side. Se um motorista tem muitas corridas com pontos menores, várias delas ficam de fora do limite de 500, resultando em totais **subestimados**.
-
-Por exemplo, "Elias Francisco" tem 1.495 pts no total (brand) mas o ranking da cidade mostra apenas 1.105 pts porque nem todas as corridas dele cabem nas 500 linhas retornadas.
-
-### Problema secundário
-O ranking do empreendedor filtra por `brand_id` (agrupa todas as cidades), enquanto o do franqueado filtra por `branch_id`. Se a marca tem apenas uma cidade, os valores deveriam ser iguais — mas não são por causa do limite de 500 linhas.
-
-## Solução
-
-Criar uma **RPC server-side** `get_branch_points_ranking` que faz a agregação diretamente no PostgreSQL (sem limite de linhas), análoga à `get_points_ranking` mas filtrando por `branch_id`.
-
-### 1. Criar RPC `get_branch_points_ranking`
-Nova migration SQL:
+### 1. Migração: sincronizar o wallet existente com os dados reais
+Atualizar o registro da `branch_points_wallet` para refletir o total já distribuído via `machine_rides`:
 ```sql
-CREATE OR REPLACE FUNCTION public.get_branch_points_ranking(p_branch_id uuid, p_limit integer DEFAULT 10)
-RETURNS TABLE(participant_name text, participant_type text, total_points bigint)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  (SELECT COALESCE(driver_name, 'Motorista'), 'driver',
-          SUM(driver_points_credited)::bigint
-   FROM machine_rides
-   WHERE ride_status = 'FINALIZED' AND branch_id = p_branch_id
-     AND driver_points_credited > 0 AND driver_name IS NOT NULL
-   GROUP BY driver_name ORDER BY 3 DESC LIMIT p_limit)
-$$;
+UPDATE branch_points_wallet bpw
+SET total_distributed = sub.total,
+    balance = bpw.total_loaded - sub.total
+FROM (
+  SELECT branch_id, COALESCE(SUM(driver_points_credited), 0) AS total
+  FROM machine_rides WHERE ride_status = 'FINALIZED'
+  GROUP BY branch_id
+) sub
+WHERE bpw.branch_id = sub.branch_id;
 ```
+Isso vai colocar `balance = 0 - 13701 = -13701` e `total_distributed = 13701`.
 
-### 2. Atualizar `useBranchRanking` em `hook_branch_dashboard.ts`
-Substituir a query client-side (`.from("machine_rides").limit(500)`) por chamada à nova RPC, eliminando o truncamento de dados.
+### 2. Webhook: debitar a carteira a cada corrida
+Adicionar chamada à RPC `debit_branch_wallet` no `machine-webhook/index.ts` após persistir a corrida, **mas sem bloquear** a distribuição quando o saldo for insuficiente. Para permitir saldo negativo, a RPC precisa ser ajustada.
 
-### Arquivos a modificar
-- **Nova migration** — criar RPC `get_branch_points_ranking`
-- `src/components/dashboard/branch/hook_branch_dashboard.ts` — usar a nova RPC
+**Ajustar a RPC `debit_branch_wallet`**: remover a validação que impede débito quando `balance < amount`, permitindo saldo negativo.
+
+### 3. Frontend: exibir saldo negativo corretamente
+A `BranchWalletPage.tsx` e `formatPoints` já suportam números negativos. O alerta de saldo baixo já funciona (mostra quando `balance <= threshold`). Apenas garantir que o alerta mostre valores negativos corretamente.
+
+## Arquivos a modificar
+- **Nova migration SQL** — sincronizar wallets + alterar `debit_branch_wallet` para permitir negativo
+- `supabase/functions/machine-webhook/index.ts` — chamar `debit_branch_wallet` após creditar pontos ao motorista
+- `src/lib/formatPoints.ts` — garantir formatação correta para negativos (já funciona, validar)
+
+## Detalhes técnicos
+
+### RPC `debit_branch_wallet` ajustada
+Remove o `IF v_wallet.balance < p_amount` para permitir que o saldo fique negativo. A carteira funciona como um "extrato" que pode ficar devendo.
+
+### Webhook
+Após a linha que persiste a corrida em `machine_rides`, adicionar:
+```typescript
+if (driverPointsCredited > 0 && branchId) {
+  await sb.rpc("debit_branch_wallet", {
+    p_branch_id: branchId,
+    p_amount: driverPointsCredited,
+    p_description: `Corrida ${machineRideId} - ${driverName || 'Motorista'}`
+  });
+}
+```
 
