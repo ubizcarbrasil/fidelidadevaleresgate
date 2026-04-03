@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     // Fetch API key from machine_integrations
     const { data: integration } = await sb
       .from("machine_integrations")
-      .select("api_key")
+      .select("api_key, basic_auth_user, basic_auth_password")
       .eq("brand_id", brand_id)
       .maybeSingle();
 
