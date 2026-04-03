@@ -17,6 +17,8 @@ interface RedemptionRules {
   approval_deadline_hours: number;
 }
 
+type ScoringModel = "DRIVER_ONLY" | "PASSENGER_ONLY" | "BOTH";
+
 const DEFAULTS: RedemptionRules = {
   points_per_real: 40,
   min_points_to_redeem: 100,
