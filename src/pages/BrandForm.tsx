@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Key, Trash2, Save, Car, Users, RefreshCw } from "lucide-react";
+import { ArrowLeft, Loader2, Key, Trash2, Save } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
 import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
