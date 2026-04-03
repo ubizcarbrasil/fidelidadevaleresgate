@@ -79,9 +79,8 @@ export default function DashboardKpiSection({
         </div>
       )}
 
-      {/* KPIs Achadinhos — DRIVER */}
-      {isDriverEnabled && (
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+      {/* KPIs Achadinhos — sempre visíveis */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           <div className="animate-slide-up delay-1">
             <KpiCard title="Achadinhos Ativos" value={achadinhosAtivas} icon={ShoppingBag} color="warning" />
           </div>
@@ -92,7 +91,6 @@ export default function DashboardKpiSection({
             <KpiCard title="Cidades Ativas" value={achadinhosCidades} icon={MapPin} color="primary" />
           </div>
         </div>
-      )}
     </>
   );
 }
