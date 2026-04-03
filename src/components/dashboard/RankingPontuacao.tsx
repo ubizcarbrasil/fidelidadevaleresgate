@@ -58,7 +58,7 @@ function RankingList({ items, icon: Icon, emptyMsg }: { items: RankingEntry[]; i
   );
 }
 
-const RankingPontuacao = memo(function RankingPontuacao({ brandId }: RankingPontuacaoProps) {
+const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabled = true, isPassengerEnabled = true }: RankingPontuacaoProps) {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
