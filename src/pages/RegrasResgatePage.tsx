@@ -52,6 +52,9 @@ export default function RegrasResgatePage() {
       const saved = settings.redemption_rules as Partial<RedemptionRules>;
       setForm({ ...DEFAULTS, ...saved });
     }
+    if (settings?.default_scoring_model) {
+      setScoringModel(settings.default_scoring_model as ScoringModel);
+    }
   }, [settings]);
 
   const save = useMutation({
