@@ -294,6 +294,8 @@ export default function Dashboard() {
         achadinhosCidades={achadinhosCidades}
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
+        isDriverEnabled={isDriverEnabled}
+        isPassengerEnabled={isPassengerEnabled}
       />}
 
       {/* Branch-specific dashboard */}
