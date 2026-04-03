@@ -318,6 +318,8 @@ export default function Dashboard() {
             isRoot={isRoot}
             redemptionsPending={redemptionsPending}
             storeRulesPending={storeRulesPending}
+            isDriverEnabled={isDriverEnabled}
+            isPassengerEnabled={isPassengerEnabled}
           />
 
           {/* Tasks + Activity Feed */}

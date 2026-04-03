@@ -238,7 +238,7 @@ export default function DashboardChartsSection({
       {showBrand && !isRoot && (
         <div className="animate-slide-up delay-5">
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-            <RankingPontuacao brandId={brandFilter} />
+            <RankingPontuacao brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
           </Suspense>
         </div>
       )}
