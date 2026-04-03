@@ -135,8 +135,46 @@
           window.history.replaceState(null,"","/"+window.location.search+window.location.hash);
         }
       })();
+
+      /* Limpeza defensiva de caches legados que podem travar o preview */
+      (function(){
+        try{
+          if('serviceWorker' in navigator){
+            navigator.serviceWorker.getRegistrations().then(function(registrations){
+              registrations.forEach(function(reg){ reg.unregister(); });
+            }).catch(function(){});
+          }
+          if('caches' in window){
+            caches.keys().then(function(keys){
+              keys.forEach(function(key){
+                if(/workbox|vite|pwa|precache/i.test(key)) caches.delete(key);
+              });
+            }).catch(function(){});
+          }
+        }catch(e){}
+      })();
+
+      (function(){
+        var script=document.createElement('script');
+        script.type='module';
+        script.src='/src/main.tsx?v=' + Date.now();
+        script.onerror=function(){
+          window.__BOOT_PHASE__='ENTRY_IMPORT_FAILED';
+          var spinner=document.getElementById('bootstrap-spinner');
+          var phaseEl=document.getElementById('bootstrap-phase');
+          var err=document.getElementById('bootstrap-error');
+          if(spinner)spinner.style.display='none';
+          if(phaseEl)phaseEl.style.display='none';
+          if(err){
+            err.style.display='block';
+            err.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Falha ao carregar o painel</p>'
+              +'<p style="margin:0 0 12px;font-size:14px;">Os arquivos iniciais não responderam corretamente.</p>'
+              +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
+          }
+        };
+        document.body.appendChild(script);
+      })();
     </script>
-    <script type="module" src="/src/main.tsx"></script>
     <script>
       (function(){
         var TIMEOUT_MS=15000;
