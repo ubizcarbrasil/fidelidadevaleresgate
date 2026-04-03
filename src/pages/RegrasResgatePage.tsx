@@ -119,6 +119,7 @@ export default function RegrasResgatePage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["brand-settings"] });
       qc.invalidateQueries({ queryKey: ["brand-branches-scoring"] });
+      qc.invalidateQueries({ queryKey: ["branch-scoring-model"] });
       toast.success(isBranchScope ? "Modelo da cidade atualizado!" : "Regras de resgate salvas!");
       setDirty(false);
     },
