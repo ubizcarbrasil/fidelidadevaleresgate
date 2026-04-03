@@ -24,12 +24,12 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const { data: stats, isLoading } = useBranchDashboardStats(branchId);
   const { data: ranking } = useBranchRanking(branchId);
   const feed = useBranchRealtimeFeed(branchId);
-  const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
+  const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel();
   const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
 
   const passengerOnly = isPassengerEnabled && !isDriverEnabled;
 
-  if (isLoading || (passengerOnly && isPassengerLoading)) {
+  if (isLoading || isScoringLoading || (passengerOnly && isPassengerLoading)) {
     return (
       <div className="space-y-4">
         {[1, 2, 3, 4].map((i) => (
