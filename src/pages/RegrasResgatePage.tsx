@@ -190,6 +190,61 @@ export default function RegrasResgatePage() {
         ))}
       </div>
 
+      {/* Modelo de Negócio Padrão */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-purple-500/15 flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 text-purple-500" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Modelo de Negócio Padrão</CardTitle>
+              <CardDescription className="text-xs">
+                Define o modelo padrão ao criar novas cidades. Cada cidade pode sobrescrever individualmente.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={scoringModel}
+            onValueChange={(v) => { setScoringModel(v as ScoringModel); setDirty(true); }}
+            className="space-y-3"
+          >
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="DRIVER_ONLY" id="scoring-driver" />
+              <Label htmlFor="scoring-driver" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Car className="h-4 w-4 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Apenas Motorista</p>
+                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão apenas motoristas</p>
+                </div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="PASSENGER_ONLY" id="scoring-passenger" />
+              <Label htmlFor="scoring-passenger" className="flex items-center gap-2 cursor-pointer flex-1">
+                <Users className="h-4 w-4 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium">Apenas Cliente</p>
+                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão apenas passageiros</p>
+                </div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="BOTH" id="scoring-both" />
+              <Label htmlFor="scoring-both" className="flex items-center gap-2 cursor-pointer flex-1">
+                <RefreshCw className="h-4 w-4 text-purple-500" />
+                <div>
+                  <p className="text-sm font-medium">Ambos</p>
+                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão motoristas e passageiros</p>
+                </div>
+              </Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
+
       {/* Info */}
       <Card className="border-dashed">
         <CardContent className="p-4">
