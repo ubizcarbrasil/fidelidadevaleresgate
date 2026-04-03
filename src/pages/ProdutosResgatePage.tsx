@@ -25,6 +25,7 @@ export default function ProdutosResgatePage() {
   const qc = useQueryClient();
   const { currentBrandId, currentBranchId, consoleScope, isRootAdmin } = useBrandGuard();
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
+  const isMobile = useIsMobile();
 
   const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
