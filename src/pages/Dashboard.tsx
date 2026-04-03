@@ -131,6 +131,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
+  const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
 
   useRealtimeRefresh();
 
