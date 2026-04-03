@@ -184,12 +184,12 @@ export default function DriverPointsRulesPage() {
         description="Configure como motoristas ganham pontos a cada corrida finalizada"
       />
 
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
         {!isBranchScope && (
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Cidade/Filial</Label>
             <Select value={branchId} onValueChange={(v) => { setSelectedBranchId(v); setForm({}); }}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full sm:w-[220px]">
                 <SelectValue placeholder="Selecione a filial" />
               </SelectTrigger>
               <SelectContent>
@@ -201,12 +201,12 @@ export default function DriverPointsRulesPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <Switch checked={merged.is_active} onCheckedChange={(v) => updateForm("is_active", v)} />
           <Label className="text-sm">{merged.is_active ? "Ativo" : "Inativo"}</Label>
         </div>
 
-        <Button onClick={() => saveMutation.mutate()} disabled={!branchId || saveMutation.isPending}>
+        <Button onClick={() => saveMutation.mutate()} disabled={!branchId || saveMutation.isPending} className="w-full sm:w-auto">
           <Save className="h-4 w-4 mr-2" /> Salvar Regras
         </Button>
       </div>
@@ -324,67 +324,71 @@ export default function DriverPointsRulesPage() {
 
             <div className="space-y-3">
               {merged.volume_tiers.map((tier, i) => (
-                <div key={i} className="flex items-end gap-3 rounded-lg border border-border p-3 bg-muted/30">
-                  <div className="space-y-1">
-                    <Label className="text-xs">De (corridas)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      className="w-24"
-                      value={tier.min}
-                      onChange={(e) => updateTier(i, "min", parseInt(e.target.value) || 0)}
-                    />
+                <div key={i} className="rounded-lg border border-border p-3 bg-muted/30 space-y-3">
+                  <div className="grid grid-cols-2 sm:flex sm:items-end gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">De (corridas)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        className="w-full sm:w-24"
+                        value={tier.min}
+                        onChange={(e) => updateTier(i, "min", parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Até</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        className="w-full sm:w-24"
+                        placeholder="∞"
+                        value={tier.max ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          updateTier(i, "max", v === "" ? null : parseInt(v) || 0);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tipo</Label>
+                      <Select
+                        value={tier.mode}
+                        onValueChange={(v) => updateTier(i, "mode", v)}
+                      >
+                        <SelectTrigger className="w-full sm:w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIER_MODES.map((m) => (
+                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Valor</Label>
+                      <div className="flex items-end gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          className="w-full sm:w-24"
+                          value={tier.value}
+                          onChange={(e) => updateTier(i, "value", parseFloat(e.target.value) || 0)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 text-destructive"
+                          onClick={() => removeTier(i)}
+                          disabled={merged.volume_tiers.length <= 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Até</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      className="w-24"
-                      placeholder="∞"
-                      value={tier.max ?? ""}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        updateTier(i, "max", v === "" ? null : parseInt(v) || 0);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Tipo</Label>
-                    <Select
-                      value={tier.mode}
-                      onValueChange={(v) => updateTier(i, "mode", v)}
-                    >
-                      <SelectTrigger className="w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIER_MODES.map((m) => (
-                          <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Valor</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      step={0.1}
-                      className="w-24"
-                      value={tier.value}
-                      onChange={(e) => updateTier(i, "value", parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-destructive"
-                    onClick={() => removeTier(i)}
-                    disabled={merged.volume_tiers.length <= 1}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               ))}
             </div>
