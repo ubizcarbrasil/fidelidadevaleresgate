@@ -256,9 +256,11 @@ interface DashboardQuickLinksProps {
   consoleScope: string;
   showBrand: boolean;
   isRoot: boolean;
+  isDriverEnabled?: boolean;
+  isPassengerEnabled?: boolean;
 }
 
-export default function DashboardQuickLinksSection({ consoleScope, showBrand, isRoot }: DashboardQuickLinksProps) {
+export default function DashboardQuickLinksSection({ consoleScope, showBrand, isRoot, isDriverEnabled = true, isPassengerEnabled = true }: DashboardQuickLinksProps) {
   return (
     <>
       <AccessHubSection consoleScope={consoleScope} />
