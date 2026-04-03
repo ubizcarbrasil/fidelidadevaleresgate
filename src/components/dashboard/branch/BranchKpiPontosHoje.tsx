@@ -7,12 +7,11 @@ interface Props {
   stats: BranchDashboardStats;
 }
 
-export default function BranchKpiPontuacao({ stats }: Props) {
+export default function BranchKpiPontosHoje({ stats }: Props) {
   return (
     <KpiCard
-      title="Pontuação Motorista"
-      value={formatPoints(stats.points_total)}
-      sub={`hoje: ${formatPoints(stats.points_today)} · mês: ${formatPoints(stats.points_month)}`}
+      title="Pontos Hoje"
+      value={formatPoints(stats.points_today)}
       icon={Coins}
       color="success"
     />
