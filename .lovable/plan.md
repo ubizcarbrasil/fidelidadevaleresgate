@@ -1,22 +1,37 @@
 
 
-# Adicionar módulo `achadinhos_motorista` aos planos Starter, Profissional e Enterprise
+# Configuração do Modelo de Negócio padrão no nível da Marca
+
+## Objetivo
+Permitir que o empreendedor defina o modelo de negócio padrão (Motorista, Cliente ou Ambos) nas configurações da marca. Esse valor será usado como padrão ao criar novas cidades.
 
 ## Situação atual
-O módulo já está cadastrado no template do plano **free**. Faltam os planos **starter**, **profissional** e **enterprise**.
+- O `scoring_model` existe apenas na tabela `branches` (por cidade)
+- Ao criar uma cidade, o padrão é hardcoded como `"BOTH"` no formulário
+- Não há campo equivalente no nível da marca
 
-## Ação
-Inserir 3 registros em `plan_module_templates`:
+## Plano
 
-```sql
-INSERT INTO plan_module_templates (plan_key, module_definition_id, is_enabled) VALUES
-  ('starter',       '8587af40-69b3-4021-a4fc-497202d87391', true),
-  ('profissional',  '8587af40-69b3-4021-a4fc-497202d87391', true),
-  ('enterprise',    '8587af40-69b3-4021-a4fc-497202d87391', true);
-```
+### 1. Armazenar o modelo padrão em `brand_settings_json`
+Usar o campo JSON existente na tabela `brands`, adicionando a chave `default_scoring_model` (valores: `BOTH`, `DRIVER_ONLY`, `PASSENGER_ONLY`). Sem necessidade de migração de banco.
 
-## Resultado
-Todas as novas marcas provisionadas em qualquer plano terão o módulo **Achadinhos Motorista** ativado automaticamente.
+### 2. Adicionar seletor no formulário da marca (`BrandForm.tsx`)
+Na aba **Geral** (Root Admin) e na aba **Tema Visual** (Brand Admin), adicionar um card/seção "Modelo de Negócio Padrão" com RadioGroup de 3 opções:
+- Motorista (DRIVER_ONLY)
+- Cliente (PASSENGER_ONLY)  
+- Ambos (BOTH)
 
-Nenhuma alteração de código necessária — apenas inserção de dados.
+Salvar dentro de `brand_settings_json.default_scoring_model`.
+
+### 3. Usar o padrão da marca ao criar nova cidade (`BrandBranchForm.tsx`)
+No formulário de criação de cidade, ao inicializar o estado `scoringModel`, buscar o valor de `brand_settings_json.default_scoring_model` da marca corrente. Se não existir, manter `"BOTH"` como fallback.
+
+### Arquivos alterados
+- `src/pages/BrandForm.tsx` — adicionar estado e UI para `default_scoring_model`
+- `src/pages/BrandBranchForm.tsx` — ler o padrão da marca ao criar nova cidade
+
+### Detalhes técnicos
+- O valor é persistido como parte do JSON existente, sem schema change
+- O formulário de cidade continua permitindo sobrescrever o modelo por cidade
+- Compatibilidade total: marcas sem a chave continuam funcionando com fallback `BOTH`
 
