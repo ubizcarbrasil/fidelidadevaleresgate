@@ -249,6 +249,7 @@ export function BrandSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
+  const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
 
