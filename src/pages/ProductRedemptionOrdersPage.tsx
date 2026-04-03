@@ -33,6 +33,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 export default function ProductRedemptionOrdersPage() {
   const qc = useQueryClient();
   const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();
+  const isMobile = useIsMobile();
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [trackingCode, setTrackingCode] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
