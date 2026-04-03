@@ -12,4 +12,5 @@ export interface GrupoManual {
   categoria: string;
   icone: string;
   manuais: ManualEntry[];
+  scoringFilter?: "DRIVER" | "PASSENGER";
 }
