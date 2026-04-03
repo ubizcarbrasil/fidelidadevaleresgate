@@ -1,36 +1,34 @@
 
 
-# Filtrar Dashboard do Franqueado por Modelo de Negócio
+# Corrigir Dashboard do Empreendedor para Modelo Cliente (PASSENGER_ONLY)
 
 ## Problema
-O dashboard do franqueado exibe KPIs, ranking e feed de motoristas mesmo quando o modelo de negócio está configurado como PASSENGER_ONLY (cliente). Os componentes de motorista (Motoristas, Corridas, Pontos Hoje/Mês/Média, Ranking Motoristas, Feed Tempo Real) devem ser ocultados quando o modelo não inclui motoristas.
+Ao alterar o modelo de negócio para "Cliente" (PASSENGER_ONLY), o dashboard do empreendedor (Brand Admin) não reflete corretamente as mudanças. Existem dois problemas:
 
-## Solução
-Usar o hook `useBranchScoringModel` no `BranchDashboardSection` para condicionar a exibição dos componentes por modelo de negócio.
+1. **Cache não invalidado**: A query `brand-scoring-models` (usada pelo hook `useBrandScoringModels` no dashboard e sidebar do empreendedor) não é invalidada ao salvar em `RegrasResgatePage.tsx`. Apenas `branch-scoring-model` foi adicionado na correção anterior.
 
-## Arquivo a modificar
-- `src/components/dashboard/BranchDashboardSection.tsx`
+2. **KPIs de Achadinhos escondidos indevidamente**: Os KPIs "Achadinhos Ativos", "Lojas Ativas" e "Cidades Ativas" estão dentro de um bloco `isDriverEnabled`, mas devem ser visíveis independentemente do modelo (são dados operacionais gerais, não exclusivos de motorista).
 
-## Mudanças
+3. **AccessHubSection (Painéis dos Parceiros) escondido indevidamente**: O bloco está gated por `isPassengerEnabled`, mas deveria aparecer sempre — é uma ferramenta administrativa, não depende do modelo.
 
-### BranchDashboardSection.tsx
-1. Importar `useBranchScoringModel`
-2. Obter `isDriverEnabled` e `isPassengerEnabled`
-3. Condicionar a renderização:
+## Arquivos a modificar
 
-**Componentes de MOTORISTA** (só aparecem se `isDriverEnabled`):
-- `BranchKpiMotoristas`
-- `BranchKpiCorridas`
-- `BranchKpiPontuacao` (pontos de motorista)
-- `BranchKpiPontosHoje`
-- `BranchKpiPontosMes`
-- `BranchKpiMediaMotorista`
-- `BranchRankingMotoristas`
-- `BranchFeedTempoReal`
+### 1. `src/pages/RegrasResgatePage.tsx`
+Adicionar invalidação da query `brand-scoring-models` no `onSuccess`:
+```typescript
+qc.invalidateQueries({ queryKey: ["brand-scoring-models"] });
+```
 
-**Componentes NEUTROS** (sempre visíveis):
-- `BranchKpiResgates`
-- `BranchVisaoGeral`
+### 2. `src/components/dashboard/DashboardKpiSection.tsx`
+Remover o gate `isDriverEnabled` do bloco de Achadinhos (linhas 82-95). Os KPIs de Achadinhos, Lojas e Cidades devem aparecer sempre.
 
-4. Ajustar o grid para se adaptar quando há menos cards (ex: se só tem Resgates no grid principal, usar `grid-cols-1` em vez de `grid-cols-2`)
+### 3. `src/components/dashboard/DashboardQuickLinks.tsx`
+Remover o gate `isPassengerEnabled` do `AccessHubSection` (linha 273) para que "Painéis dos Parceiros" apareça sempre.
+
+## Resultado esperado
+- Ao salvar modelo PASSENGER_ONLY, o dashboard e sidebar do empreendedor atualizam imediatamente
+- KPIs de Achadinhos/Lojas/Cidades sempre visíveis
+- Painéis dos Parceiros sempre visível
+- Motoristas e Pontos Motoristas continuam ocultos quando `isDriverEnabled=false`
+- Ranking mostra apenas aba Passageiros quando `isDriverEnabled=false`
 
