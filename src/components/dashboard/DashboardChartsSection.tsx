@@ -172,11 +172,14 @@ interface DashboardChartsSectionProps {
   isRoot: boolean;
   redemptionsPending?: number;
   storeRulesPending?: number;
+  isDriverEnabled?: boolean;
+  isPassengerEnabled?: boolean;
 }
 
 export default function DashboardChartsSection({
   combinedChart, recentRedemptions, brandFilter,
   showBrand, isRoot, redemptionsPending, storeRulesPending,
+  isDriverEnabled = true, isPassengerEnabled = true,
 }: DashboardChartsSectionProps) {
   return (
     <>
