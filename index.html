@@ -136,9 +136,12 @@
         }
       })();
     </script>
+    <script type="module" src="/src/main.tsx"></script>
     <script>
       (function(){
-        function showFatalError(message, buttonLabel){
+        var TIMEOUT_MS=15000;
+
+        function showFatalError(message){
           window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
           var spinner=document.getElementById("bootstrap-spinner");
           var phaseEl=document.getElementById("bootstrap-phase");
@@ -148,19 +151,17 @@
           if(errDiv){
             errDiv.style.display="block";
             errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Falha ao iniciar a aplicação</p>'
-              +'<p style="margin:0 0 12px;font-size:14px;">'+(message||'O carregamento está demorando mais que o esperado.')+'</p>'
-              +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">'+(buttonLabel||'Recarregar')+'</button>';
+              +'<p style="margin:0 0 12px;font-size:14px;">'+message+'</p>'
+              +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
           }
         }
 
-        var script=document.createElement("script");
-        script.type="module";
-        script.src="/src/main.tsx";
-        script.onerror=function(){
-          console.error("[boot] entry script failed");
-          showFatalError("Não foi possível carregar os arquivos iniciais do painel.", "Tentar novamente");
-        };
-        document.body.appendChild(script);
+        setTimeout(function(){
+          if(window.__bootstrapDismissed||window.__APP_MOUNTED__)return;
+          var phase=window.__BOOT_PHASE__||"desconhecido";
+          console.error("[boot] mount timeout", phase);
+          showFatalError("A aplicação não concluiu a inicialização a tempo. Fase atual: "+phase+".");
+        },TIMEOUT_MS);
       })();
     </script>
   </body>
