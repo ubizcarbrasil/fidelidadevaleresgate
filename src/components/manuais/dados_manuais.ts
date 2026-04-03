@@ -1234,6 +1234,7 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
   {
     categoria: "Gestão da Cidade (Franqueado)",
     icone: "Building2",
+    scoringFilter: "DRIVER",
     manuais: [
       {
         id: "carteira-pontos-cidade",
