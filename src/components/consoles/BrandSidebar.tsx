@@ -265,7 +265,13 @@ export function BrandSidebar() {
         return item;
       })
       .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
-      .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? "")),
+      .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? ""))
+      .filter(item => {
+        if (!item.scoringFilter) return true;
+        if (item.scoringFilter === "DRIVER") return isDriverEnabled;
+        if (item.scoringFilter === "PASSENGER") return isPassengerEnabled;
+        return true;
+      }),
   }));
 
   // Auto-open the group containing the active route
