@@ -39,6 +39,7 @@ export default function BrandForm() {
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
   const [theme, setTheme] = useState<BrandTheme>({});
   const [offerCardConfig, setOfferCardConfig] = useState<OfferCardConfig>(DEFAULT_CONFIG);
+  const [defaultScoringModel, setDefaultScoringModel] = useState("BOTH");
   const [loading, setLoading] = useState(false);
 
   // Password reset state
