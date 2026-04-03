@@ -175,7 +175,7 @@ export default function ProductRedemptionOrdersPage() {
           <Package className="h-6 w-6" />
           Pedidos de Resgate
         </h2>
-        <p className="text-muted-foreground">Gerencie pedidos de resgate de produtos com pontos</p>
+        <p className="text-sm text-muted-foreground">Gerencie pedidos de resgate de produtos com pontos</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -196,83 +196,123 @@ export default function ProductRedemptionOrdersPage() {
         ))}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Produto</TableHead>
-                <TableHead>Motorista</TableHead>
-                <TableHead>Pontos</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading && !orders.length && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum pedido de resgate encontrado
-                  </TableCell>
-                </TableRow>
-              )}
-              {filteredOrders.map((order: any) => {
-                const snap = snapshot(order);
-                const st = STATUS_MAP[order.status] || STATUS_MAP.PENDING;
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {snap.image_url && (
-                          <img src={snap.image_url} alt="" className="h-8 w-8 rounded object-cover" />
-                        )}
-                        <span className="font-medium text-sm line-clamp-1">{snap.title || "Produto"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p className="font-medium">{order.customer_name}</p>
+      {isLoading ? (
+        <p className="text-center py-8 text-muted-foreground">Carregando...</p>
+      ) : !orders.length ? (
+        <p className="text-center py-8 text-muted-foreground">Nenhum pedido de resgate encontrado</p>
+      ) : isMobile ? (
+        /* ── Mobile Card View ── */
+        <div className="space-y-3">
+          {filteredOrders.map((order: any) => {
+            const snap = snapshot(order);
+            const st = STATUS_MAP[order.status] || STATUS_MAP.PENDING;
+            return (
+              <Card key={order.id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    {snap.image_url && (
+                      <img src={snap.image_url} alt="" className="h-14 w-14 rounded-lg object-cover shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm line-clamp-2">{snap.title || "Produto"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{order.customer_name}</p>
+                      {order.customer_phone && (
                         <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-bold text-sm">{order.points_spent} pts</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={st.variant}>{st.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">{order.points_spent} pts</span>
+                      <Badge variant={st.variant} className="text-[10px]">{st.label}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {format(new Date(order.created_at), "dd/MM HH:mm", { locale: ptBR })}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openDetail(order)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(order)}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       {order.affiliate_url && (
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                           <a href={order.affiliate_url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         </Button>
                       )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* ── Desktop Table View ── */
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Produto</TableHead>
+                  <TableHead>Motorista</TableHead>
+                  <TableHead>Pontos</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.map((order: any) => {
+                  const snap = snapshot(order);
+                  const st = STATUS_MAP[order.status] || STATUS_MAP.PENDING;
+                  return (
+                    <TableRow key={order.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {snap.image_url && (
+                            <img src={snap.image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                          )}
+                          <span className="font-medium text-sm line-clamp-1">{snap.title || "Produto"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <p className="font-medium">{order.customer_name}</p>
+                          <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-bold text-sm">{order.points_spent} pts</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={st.variant}>{st.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => openDetail(order)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {order.affiliate_url && (
+                          <Button variant="ghost" size="icon" asChild>
+                            <a href={order.affiliate_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detail dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
