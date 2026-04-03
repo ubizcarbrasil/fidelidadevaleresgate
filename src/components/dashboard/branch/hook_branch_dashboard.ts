@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { BranchDashboardStats, RankingItem, FeedItem } from "./tipos_branch_dashboard";
+import type { BranchDashboardStats, RankingItem, FeedItem, BranchPassengerStats } from "./tipos_branch_dashboard";
 import { useEffect, useState } from "react";
 
 export function useBranchDashboardStats(branchId: string) {
@@ -92,4 +92,16 @@ export function useBranchRealtimeFeed(branchId: string) {
   }, [branchId]);
 
   return feed;
+}
+
+export function useBranchPassengerStats(branchId: string) {
+  return useQuery({
+    queryKey: ["branch-passenger-stats", branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_branch_passenger_stats", { p_branch_id: branchId } as any);
+      if (error) throw error;
+      return (data as unknown) as BranchPassengerStats;
+    },
+    enabled: !!branchId,
+  });
 }

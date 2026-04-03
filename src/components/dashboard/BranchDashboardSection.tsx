@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed } from "./branch/hook_branch_dashboard";
+import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats } from "./branch/hook_branch_dashboard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import BranchKpiResgates from "./branch/BranchKpiResgates";
 import BranchKpiPontuacao from "./branch/BranchKpiPontuacao";
@@ -11,6 +11,10 @@ import BranchKpiMediaMotorista from "./branch/BranchKpiMediaMotorista";
 import BranchVisaoGeral from "./branch/BranchVisaoGeral";
 import BranchRankingMotoristas from "./branch/BranchRankingMotoristas";
 import BranchFeedTempoReal from "./branch/BranchFeedTempoReal";
+import BranchKpiClientesCadastrados from "./branch/BranchKpiClientesCadastrados";
+import BranchKpiClientesAtivos from "./branch/BranchKpiClientesAtivos";
+import BranchKpiOfertasAtivas from "./branch/BranchKpiOfertasAtivas";
+import BranchKpiLojasParceiras from "./branch/BranchKpiLojasParceiras";
 
 interface Props {
   branchId: string;
@@ -20,9 +24,12 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const { data: stats, isLoading } = useBranchDashboardStats(branchId);
   const { data: ranking } = useBranchRanking(branchId);
   const feed = useBranchRealtimeFeed(branchId);
-  const { isDriverEnabled } = useBranchScoringModel();
+  const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
+  const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
 
-  if (isLoading) {
+  const passengerOnly = isPassengerEnabled && !isDriverEnabled;
+
+  if (isLoading || (passengerOnly && isPassengerLoading)) {
     return (
       <div className="space-y-4">
         {[1, 2, 3, 4].map((i) => (
@@ -36,25 +43,36 @@ export default function BranchDashboardSection({ branchId }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* KPIs principais */}
-      <div className={`grid gap-4 ${isDriverEnabled ? "grid-cols-2" : "grid-cols-1"}`}>
-        <BranchKpiResgates stats={stats} />
-        {isDriverEnabled && <BranchKpiPontuacao stats={stats} />}
-        {isDriverEnabled && <BranchKpiMotoristas stats={stats} />}
-        {isDriverEnabled && <BranchKpiCorridas stats={stats} />}
-      </div>
-
-      {/* KPIs detalhes — só motorista */}
-      {isDriverEnabled && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <BranchKpiPontosHoje stats={stats} />
-          <BranchKpiPontosMes stats={stats} />
-          <BranchKpiMediaMotorista stats={stats} />
+      {/* KPIs passageiro — modelo PASSENGER_ONLY */}
+      {passengerOnly && passengerStats && (
+        <div className="grid grid-cols-2 gap-4">
+          <BranchKpiResgates stats={stats} />
+          <BranchKpiClientesCadastrados stats={passengerStats} />
+          <BranchKpiOfertasAtivas stats={passengerStats} />
+          <BranchKpiLojasParceiras stats={passengerStats} />
         </div>
       )}
 
-      {/* Visão geral da cidade */}
-      <BranchVisaoGeral stats={stats} />
+      {/* KPIs motorista — modelo DRIVER_ONLY ou BOTH */}
+      {isDriverEnabled && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <BranchKpiResgates stats={stats} />
+            <BranchKpiPontuacao stats={stats} />
+            <BranchKpiMotoristas stats={stats} />
+            <BranchKpiCorridas stats={stats} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <BranchKpiPontosHoje stats={stats} />
+            <BranchKpiPontosMes stats={stats} />
+            <BranchKpiMediaMotorista stats={stats} />
+          </div>
+        </>
+      )}
+
+      {/* Visão geral da cidade — só motorista */}
+      {isDriverEnabled && <BranchVisaoGeral stats={stats} />}
 
       {/* Ranking + Feed — só motorista */}
       {isDriverEnabled && (
