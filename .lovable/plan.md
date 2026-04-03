@@ -1,97 +1,25 @@
 
-Diagnóstico: sim, eu sei onde está o problema.
 
-O travamento frequente não está vindo do dashboard da cidade em si nem dos 3 KPIs novos. Ele acontece no bootstrap inicial, antes da tela realmente montar. Pelos arquivos e pelos sinais de runtime:
-- a tela fica presa no overlay do `index.html` (“preparando ambiente…”)
-- o app só chega em `APP_MOUNTED` depois de ~6,6s
-- depois que monta, `BRAND_READY` e `AUTH_READY` acontecem rápido
-- isso indica que o gargalo principal está no carregamento/importação do app, não na autenticação nem na RPC do dashboard
+# Ativar módulo `achadinhos_motorista` para todas as marcas com motoristas
 
-O ponto mais forte da investigação:
-- `App.tsx` ainda puxa um grafo inicial muito grande
-- `WhiteLabelLayout` é importado cedo e traz o lado customer junto
-- `WhiteLabelLayout.tsx` tem imports desnecessários (`CustomerAuthPage`, `PublicVouchers`) e importa `CustomerLayout` direto
-- o perfil mostra muitos recursos carregados já no boot, inclusive bibliotecas pesadas que nem deveriam ser críticas na entrada
+## Situação atual
+- O módulo `achadinhos_motorista` (ID `8587af40-69b3-4021-a4fc-497202d87391`) existe em `module_definitions` mas não tem **nenhum** registro em `brand_modules`.
+- Consequência: o grupo "Achadinhos Motorista" no sidebar do franqueado nunca aparece.
 
-Plano de correção definitiva
+## Marcas afetadas (todas com motoristas ativos)
 
-1. Reduzir o peso do boot crítico
-- Transformar o carregamento inicial em duas camadas:
-```text
-index.html overlay
-  -> shell React mínima monta rápido
-     -> overlay externo some
-        -> app completo carrega com loader interno
-```
-- Objetivo: o usuário nunca mais ficar preso no overlay externo por causa do módulo inteiro.
+| Marca | brand_id |
+|---|---|
+| Ubiz Resgata | `db15bd21-9137-4965-a0fb-540d8e8b26f1` |
+| Ubiz Car | `44df8653-2a7a-40d1-b717-c6b09a6f694f` |
+| DomStore | `6880cc3a-4aab-43b1-a4fb-d5062b535f75` |
+| Leo fideliza | `5912631f-2d9c-4a07-a7ab-fc38cee5ff7e` |
+| Vini fideliza | `d33010b1-3b80-437c-9a08-5d07765532c0` |
 
-2. Quebrar o `App.tsx` em shell leve + app pesado
-- Manter no entry apenas o mínimo:
-  - providers essenciais
-  - `MountSignal`
-  - roteamento mínimo
-  - fallback interno
-- Mover o resto para chunks lazy:
-  - árvore principal de rotas admin
-  - `AppLayout`
-  - `WhiteLabelLayout`
-  - blocos não críticos
+## Ação
+Inserir 5 registros em `brand_modules` com `is_enabled = true`, um para cada marca, apontando para o `module_definition_id` do `achadinhos_motorista`.
 
-3. Corrigir o acoplamento desnecessário do lado customer no boot admin
-- Em `src/components/WhiteLabelLayout.tsx`:
-  - remover imports não usados
-  - lazy-load de `CustomerLayout`
-- Isso evita carregar partes grandes do app customer quando o usuário só está entrando no painel admin/auth.
+## Resultado esperado
+- O sidebar do franqueado passa a exibir o grupo completo: Carteira, Regras, Motoristas, Produtos, Pedidos e Manuais.
+- Nenhuma alteração de código ou migração necessária — é apenas inserção de dados.
 
-4. Tornar o bootstrap observável e resiliente
-- Refinar fases em `bootStateCore` para separar:
-  - shell montada
-  - rotas carregadas
-  - auth pronta
-  - brand pronta
-- Atualizar o fallback do `index.html` para mostrar fase real e não mascarar tudo como “preparando ambiente”.
-- Manter reload automático apenas para erro de chunk; para lentidão, mostrar estado claro sem parecer travamento infinito.
-
-5. Garantir que o overlay externo desapareça no momento certo
-- Hoje ele depende do `MountSignal` dentro da árvore pesada.
-- Vou reposicionar a estratégia para o sinal de montagem acontecer com uma shell mínima, antes de carregar o restante da aplicação.
-- Resultado esperado: mesmo se dashboard/layout/customer demorarem, o usuário verá loader interno do app e não uma tela “morta”.
-
-6. Limpar imports que aumentam o boot sem necessidade
-Arquivos prioritários:
-- `src/main.tsx`
-- `src/App.tsx`
-- `src/components/WhiteLabelLayout.tsx`
-- `src/lib/lazyWithRetry.ts`
-- `src/lib/bootStateCore.ts`
-- `index.html`
-
-7. Validação da correção
-Vou considerar resolvido quando estes cenários estiverem estáveis:
-- `/index` no mobile não fica preso em “preparando ambiente…”
-- login abre sem travar
-- painel branch continua carregando normalmente
-- o overlay externo some cedo e qualquer demora restante aparece como loader interno do app
-- nenhuma regressão em white-label, auth e rotas protegidas
-
-Detalhes técnicos
-- O último diff dos KPIs branch não parece ser a causa raiz.
-- O problema é estrutural no boot, por isso ele “acontece com frequência”.
-- Não precisa mudança de banco.
-- A correção ideal é de arquitetura de entrada/performance, não de dados.
-
-Implementação resumida
-```text
-main.tsx
-  -> renderiza shell mínima
-App.tsx
-  -> vira orquestrador leve
-Admin/WhiteLabel
-  -> lazy
-CustomerLayout
-  -> lazy
-index.html
-  -> overlay apenas até shell montar
-bootState
-  -> fases mais precisas
-```
