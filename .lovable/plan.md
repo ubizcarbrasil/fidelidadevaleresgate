@@ -1,31 +1,35 @@
 
 
-# Corrigir Dashboard do Franqueado — Mostrar Apenas KPIs da Cidade
+# Corrigir URL e adicionar Basic Auth no `notify-driver-points`
 
-## Problema
+## Alteracoes no arquivo `supabase/functions/notify-driver-points/index.ts`
 
-Quando o franqueado (BRANCH) acessa o Dashboard, o sistema renderiza os KPIs genéricos (`DashboardKpiSection`) que fazem queries diretas nas tabelas. Mesmo com as permissões adicionadas, esses KPIs são genéricos e não representam a operação da cidade. O `BranchDashboardSection` (que usa a RPC SECURITY DEFINER com dados corretos) aparece abaixo, mas o franqueado vê zeros no topo.
+### 1. Corrigir URL da API
+Trocar `https://api-vendas.taximachine.com.br/api/integracao/enviarMensagem` por `https://api.taximachine.com.br/api/integracao/enviarMensagem` (linha 108).
 
-## Solução
+### 2. Buscar credenciais de Basic Auth
+Na query da tabela `machine_integrations` (linha 55), adicionar `basic_auth_user` e `basic_auth_password` ao `.select()`:
+```typescript
+.select("api_key, basic_auth_user, basic_auth_password")
+```
 
-Quando `consoleScope === "BRANCH"`, ocultar os componentes genéricos (KPIs, Charts, RidesCounter, CRM banner, Tasks/Activity) e exibir **somente** o `BranchDashboardSection` com o header e seletor de tempo real. Isso garante que o franqueado veja apenas os dados da sua cidade, processados pela RPC dedicada.
+### 3. Adicionar header Authorization com Basic Auth
+No bloco do `fetch` (linhas 108-119), gerar o token Base64 e incluir o header `Authorization`:
+```typescript
+const basicToken = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
 
-## Arquivo a Modificar
+const apiResponse = await fetch("https://api.taximachine.com.br/api/integracao/enviarMensagem", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "api-key": integration.api_key,
+    "Authorization": `Basic ${basicToken}`,
+  },
+  body: JSON.stringify({ ... }),
+});
+```
 
-| Arquivo | Acao |
-|---|---|
-| `src/pages/Dashboard.tsx` | Condicionar renderização: se BRANCH, mostrar apenas header + BranchDashboardSection. Ocultar DashboardKpiSection, Charts, RidesCounter, Tasks/Activity e CRM banner. |
-
-## Detalhamento Tecnico
-
-No `Dashboard.tsx`, envolver os blocos genéricos com `{consoleScope !== "BRANCH" && (...)}`:
-- `DashboardKpiSection` (linha ~278)
-- `RidesCounterCard` (linha ~303)
-- `DashboardChartsSection` (linha ~306)
-- `Tasks + Activity Feed` (linha ~317)
-- `CRM Banner` (linha ~323)
-
-O `BranchDashboardSection` (linha ~298) permanece como está, renderizado quando `consoleScope === "BRANCH"`.
-
-Impacto: 1 arquivo, apenas condicionais de renderização. Nenhuma mudança de banco ou componentes.
+## Resumo
+- 1 arquivo alterado: `supabase/functions/notify-driver-points/index.ts`
+- Nenhuma mudanca de banco necessaria
 
