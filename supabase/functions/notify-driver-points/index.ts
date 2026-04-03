@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     // Fetch API key from machine_integrations
     const { data: integration } = await sb
       .from("machine_integrations")
-      .select("api_key")
+      .select("api_key, basic_auth_user, basic_auth_password")
       .eq("brand_id", brand_id)
       .maybeSingle();
 
@@ -105,11 +105,14 @@ Deno.serve(async (req) => {
 
     logger.info("Sending driver notification", { machine_ride_id, driver_id: destinatarioId, points: driver_points_credited });
 
-    const apiResponse = await fetch("https://api-vendas.taximachine.com.br/api/integracao/enviarMensagem", {
+    const basicToken = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
+
+    const apiResponse = await fetch("https://api.taximachine.com.br/api/integracao/enviarMensagem", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "api-key": integration.api_key,
+        "Authorization": `Basic ${basicToken}`,
       },
       body: JSON.stringify({
         tipo_chat: "P",
