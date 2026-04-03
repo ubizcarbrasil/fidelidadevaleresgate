@@ -181,6 +181,8 @@ export default function DashboardChartsSection({
   showBrand, isRoot, redemptionsPending, storeRulesPending,
   isDriverEnabled = true, isPassengerEnabled = true,
 }: DashboardChartsSectionProps) {
+  const shouldShowPointsFeed = isDriverEnabled || isPassengerEnabled;
+
   return (
     <>
       {/* Chart + Ranking */}
@@ -244,10 +246,10 @@ export default function DashboardChartsSection({
       )}
 
       {/* Pontuações em Tempo Real + Achadinhos Alertas */}
-      {showBrand && !isRoot && (
+      {showBrand && !isRoot && shouldShowPointsFeed && (
         <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-5">
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-            <PointsFeed brandId={brandFilter} />
+            <PointsFeed brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
           </Suspense>
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
             <AchadinhosAlerts brandId={brandFilter} />
