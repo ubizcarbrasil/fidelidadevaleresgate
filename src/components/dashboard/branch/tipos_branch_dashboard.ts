@@ -40,3 +40,11 @@ export interface FeedItem {
   points: number;
   finalized_at: string;
 }
+
+export interface BranchPassengerStats {
+  customers_total: number;
+  customers_active_30d: number;
+  redemptions_month: number;
+  offers_active: number;
+  stores_active: number;
+}
