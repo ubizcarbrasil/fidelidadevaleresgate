@@ -1,37 +1,28 @@
 
 
-# Configuração do Modelo de Negócio padrão no nível da Marca
+# Modelo de Negócio Padrão - Correção de Acesso
 
-## Objetivo
-Permitir que o empreendedor defina o modelo de negócio padrão (Motorista, Cliente ou Ambos) nas configurações da marca. Esse valor será usado como padrão ao criar novas cidades.
+## Problema Identificado
 
-## Situação atual
-- O `scoring_model` existe apenas na tabela `branches` (por cidade)
-- Ao criar uma cidade, o padrão é hardcoded como `"BOTH"` no formulário
-- Não há campo equivalente no nível da marca
+O campo "Modelo de Negócio Padrão" foi adicionado dentro da página **Aparência da Marca** (`/brands`), que fica no grupo **Personalização & Vitrine** e depende do módulo `brand_theme` estar ativo. Isso causa dois problemas:
 
-## Plano
+1. Se o módulo `brand_theme` não estiver habilitado, o item de menu nem aparece no sidebar
+2. Mesmo com o módulo ativo, a configuração de modelo de negócio não tem relação semântica com "Tema Visual" - fica escondido num lugar inesperado
 
-### 1. Armazenar o modelo padrão em `brand_settings_json`
-Usar o campo JSON existente na tabela `brands`, adicionando a chave `default_scoring_model` (valores: `BOTH`, `DRIVER_ONLY`, `PASSENGER_ONLY`). Sem necessidade de migração de banco.
+## Solução
 
-### 2. Adicionar seletor no formulário da marca (`BrandForm.tsx`)
-Na aba **Geral** (Root Admin) e na aba **Tema Visual** (Brand Admin), adicionar um card/seção "Modelo de Negócio Padrão" com RadioGroup de 3 opções:
-- Motorista (DRIVER_ONLY)
-- Cliente (PASSENGER_ONLY)  
-- Ambos (BOTH)
+Mover o campo "Modelo de Negócio Padrão" para a página **Regras de Resgate** (`/regras-resgate`), que já está sempre visível no sidebar do empreendedor (grupo "Resgate com Pontos") e é o local mais intuitivo para configurar o modelo de pontuação da marca.
 
-Salvar dentro de `brand_settings_json.default_scoring_model`.
+### Alterações
 
-### 3. Usar o padrão da marca ao criar nova cidade (`BrandBranchForm.tsx`)
-No formulário de criação de cidade, ao inicializar o estado `scoringModel`, buscar o valor de `brand_settings_json.default_scoring_model` da marca corrente. Se não existir, manter `"BOTH"` como fallback.
+1. **`src/pages/RegrasResgatePage.tsx`** - Adicionar uma seção/card "Modelo de Negócio Padrão" com RadioGroup (DRIVER_ONLY, PASSENGER_ONLY, BOTH), lendo e salvando em `brand_settings_json.default_scoring_model`
 
-### Arquivos alterados
-- `src/pages/BrandForm.tsx` — adicionar estado e UI para `default_scoring_model`
-- `src/pages/BrandBranchForm.tsx` — ler o padrão da marca ao criar nova cidade
+2. **`src/pages/BrandForm.tsx`** - Remover o card "Modelo de Negócio Padrão" da aba "Tema Visual" para evitar duplicidade
 
-### Detalhes técnicos
-- O valor é persistido como parte do JSON existente, sem schema change
-- O formulário de cidade continua permitindo sobrescrever o modelo por cidade
-- Compatibilidade total: marcas sem a chave continuam funcionando com fallback `BOTH`
+3. **`src/pages/BrandBranchForm.tsx`** - Sem alteração (já lê o `default_scoring_model` corretamente)
+
+### Benefícios
+- Sempre acessível sem depender de módulos opcionais
+- Localizado junto às outras regras de pontuação/resgate
+- Visível diretamente no menu lateral para qualquer empreendedor
 
