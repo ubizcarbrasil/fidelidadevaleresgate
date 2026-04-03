@@ -1113,6 +1113,7 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
   {
     categoria: "Achadinhos Motorista — Franqueado",
     icone: "Coins",
+    scoringFilter: "DRIVER",
     manuais: [
       {
         id: "carteira-pontos",

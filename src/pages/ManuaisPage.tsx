@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ManualRenderer } from "@/components/manuais/ManualRenderer";
 import { gruposManuais, gruposManuaisFranqueado } from "@/components/manuais/dados_manuais";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 
 const iconesPorNome: Record<string, any> = {
   Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2,
@@ -11,19 +12,25 @@ const iconesPorNome: Record<string, any> = {
 
 export default function ManuaisPage() {
   const { consoleScope } = useBrandGuard();
+  const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
   const [busca, setBusca] = useState("");
   const [manualAberto, setManualAberto] = useState<string | null>(null);
 
   const todosGrupos = useMemo(() => {
     if (consoleScope === "BRANCH") {
-      return [...gruposManuaisFranqueado, ...gruposManuais];
+      // Franqueado vê somente manuais do franqueado, filtrados pelo scoring model
+      return gruposManuaisFranqueado.filter((g) => {
+        if (g.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
+        if (g.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
+        return true;
+      });
     }
-    // Empreendedor (BRAND) também vê os manuais do franqueado
+    // Empreendedor (BRAND) vê todos
     if (consoleScope === "BRAND") {
       return [...gruposManuais, ...gruposManuaisFranqueado];
     }
     return gruposManuais;
-  }, [consoleScope]);
+  }, [consoleScope, isDriverEnabled, isPassengerEnabled]);
 
   const gruposFiltrados = useMemo(() => {
     if (!busca.trim()) return todosGrupos;
