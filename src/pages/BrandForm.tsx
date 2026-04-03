@@ -130,7 +130,7 @@ export default function BrandForm() {
     if (isRootAdmin && !tenantId) { toast.error("Selecione um tenant"); return; }
     setLoading(true);
     const cleanTheme = JSON.parse(JSON.stringify(theme, (_, v) => (v === "" || v === undefined ? undefined : v)));
-    const mergedSettings = { ...(Object.keys(cleanTheme).length > 0 ? cleanTheme : {}), offer_card_config: offerCardConfig };
+    const mergedSettings = { ...(Object.keys(cleanTheme).length > 0 ? cleanTheme : {}), offer_card_config: offerCardConfig, default_scoring_model: defaultScoringModel };
     const basePayload = { name, brand_settings_json: mergedSettings };
 
     const { error } = isEdit
