@@ -1,4 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { formatPoints } from "@/lib/formatPoints";
 import type { RankingItem } from "./tipos_branch_dashboard";
 
@@ -6,7 +8,11 @@ interface Props {
   ranking: RankingItem[];
 }
 
+const MEDALS = ["🥇", "🥈", "🥉"];
+
 export default function BranchRankingMotoristas({ ranking }: Props) {
+  const maxPoints = ranking.length > 0 ? Math.max(...ranking.map((r) => r.points), 1) : 1;
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -16,16 +22,30 @@ export default function BranchRankingMotoristas({ ranking }: Props) {
         {ranking.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">Nenhum motorista pontuado ainda.</p>
         ) : (
-          <div className="divide-y divide-border">
-            {ranking.map((r) => (
-              <div key={r.name} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-muted-foreground w-6">{r.position}º</span>
-                  <span className="text-sm font-medium truncate">{r.name}</span>
+          <div className="space-y-3">
+            {ranking.map((r) => {
+              const medal = r.position <= 3 ? MEDALS[r.position - 1] : null;
+              const pct = Math.round((r.points / maxPoints) * 100);
+
+              return (
+                <div key={r.name} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {medal ? (
+                        <span className="text-lg leading-none">{medal}</span>
+                      ) : (
+                        <span className="text-xs font-bold text-muted-foreground w-6 text-center">{r.position}º</span>
+                      )}
+                      <span className="text-sm font-medium truncate max-w-[160px]">{r.name}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs font-semibold shrink-0">
+                      {formatPoints(r.points)} pts
+                    </Badge>
+                  </div>
+                  <Progress value={pct} className="h-1.5" />
                 </div>
-                <span className="text-sm font-semibold">{formatPoints(r.points)} pts</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
