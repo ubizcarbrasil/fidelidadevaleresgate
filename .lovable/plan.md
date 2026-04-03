@@ -1,70 +1,97 @@
 
+Diagnóstico: sim, eu sei onde está o problema.
 
-# Redesign Visual do Dashboard da Cidade (Branch) — Estilo Premium
+O travamento frequente não está vindo do dashboard da cidade em si nem dos 3 KPIs novos. Ele acontece no bootstrap inicial, antes da tela realmente montar. Pelos arquivos e pelos sinais de runtime:
+- a tela fica presa no overlay do `index.html` (“preparando ambiente…”)
+- o app só chega em `APP_MOUNTED` depois de ~6,6s
+- depois que monta, `BRAND_READY` e `AUTH_READY` acontecem rápido
+- isso indica que o gargalo principal está no carregamento/importação do app, não na autenticação nem na RPC do dashboard
 
-## Objetivo
-Atualizar o dashboard do franqueado para usar o mesmo visual premium do painel do empreendedor (referência nas imagens enviadas), usando o componente `KpiCard` com ícones coloridos, spark lines e layout em grid consistente.
+O ponto mais forte da investigação:
+- `App.tsx` ainda puxa um grafo inicial muito grande
+- `WhiteLabelLayout` é importado cedo e traz o lado customer junto
+- `WhiteLabelLayout.tsx` tem imports desnecessários (`CustomerAuthPage`, `PublicVouchers`) e importa `CustomerLayout` direto
+- o perfil mostra muitos recursos carregados já no boot, inclusive bibliotecas pesadas que nem deveriam ser críticas na entrada
 
-## Estado Atual
-O dashboard da cidade (`BranchDashboardSection`) usa Cards simples com texto plano e grids internos. O visual é funcional mas não tem o acabamento premium do painel do empreendedor que usa `KpiCard` com gradientes, spark lines e ícones em badges coloridos.
+Plano de correção definitiva
 
-## Alterações
-
-### 1. Refatorar `BranchDashboardSection.tsx` — Layout em KpiCards
-Substituir os 4 blocos de KPIs agrupados (Resgates, Pontuação, Motoristas, Corridas) por KpiCards individuais no estilo do empreendedor:
-
-**Linha superior (grid 2x2):**
-- Resgates (total) — ícone `ReceiptText`, cor primary, sub com pendentes
-- Pontuação Motorista (total) — ícone `Coins`, cor success
-- Motoristas (cadastrados) — ícone `Car`, cor warning
-- Corridas Realizadas (total) — ícone `Car`, cor primary
-
-**Linha de detalhes (grid 1x3):**
-- Pontos Hoje — ícone `Coins`, cor success
-- Pontos Mês — ícone `Coins`, cor primary
-- Média/Motorista — ícone `UserCheck`, cor violet
-
-Manter `BranchVisaoGeral`, `BranchRankingMotoristas` e `BranchFeedTempoReal` como estão (já têm boa qualidade visual).
-
-### 2. Atualizar componentes KPI individuais
-- `BranchKpiResgates.tsx` → Simplificar para usar `KpiCard` com valor principal + sub com breakdown
-- `BranchKpiPontuacao.tsx` → Usar `KpiCard` com total e sub "hoje: X | mês: Y"
-- `BranchKpiMotoristas.tsx` → Usar `KpiCard` com total e sub "X pontuados | Y resgataram"
-- `BranchKpiCorridas.tsx` → Usar `KpiCard` com total e sub "hoje: X | mês: Y"
-
-### 3. Melhorar `BranchRankingMotoristas.tsx`
-Adicionar medalhas (🥇🥈🥉), barra de progresso e badge de pontos — mesma aparência do `RankingPontuacao` do empreendedor.
-
-### 4. Layout responsivo em `BranchDashboardSection.tsx`
+1. Reduzir o peso do boot crítico
+- Transformar o carregamento inicial em duas camadas:
 ```text
-┌──────────────┬──────────────┐
-│  Resgates    │  Pontuação   │  ← KpiCard grid 2x2
-├──────────────┼──────────────┤     (mobile: 2 cols)
-│  Motoristas  │  Corridas    │
-└──────────────┴──────────────┘
-┌────────┬────────┬──────────┐
-│Pts Hoje│Pts Mês │Méd/Motor │  ← KpiCard grid 3 cols
-└────────┴────────┴──────────┘     (mobile: 1 col)
-┌─────────────────────────────┐
-│  Visão Geral da Cidade      │  ← Carteira (já existente)
-└─────────────────────────────┘
-┌──────────────┬──────────────┐
-│  Ranking     │  Feed Tempo  │  ← Já existentes
-│  Motoristas  │  Real        │
-└──────────────┴──────────────┘
+index.html overlay
+  -> shell React mínima monta rápido
+     -> overlay externo some
+        -> app completo carrega com loader interno
 ```
+- Objetivo: o usuário nunca mais ficar preso no overlay externo por causa do módulo inteiro.
 
-## Arquivos Modificados
+2. Quebrar o `App.tsx` em shell leve + app pesado
+- Manter no entry apenas o mínimo:
+  - providers essenciais
+  - `MountSignal`
+  - roteamento mínimo
+  - fallback interno
+- Mover o resto para chunks lazy:
+  - árvore principal de rotas admin
+  - `AppLayout`
+  - `WhiteLabelLayout`
+  - blocos não críticos
 
-| Arquivo | Ação |
-|---|---|
-| `src/components/dashboard/BranchDashboardSection.tsx` | Reorganizar layout, usar KpiCard |
-| `src/components/dashboard/branch/BranchKpiResgates.tsx` | Refatorar para KpiCard |
-| `src/components/dashboard/branch/BranchKpiPontuacao.tsx` | Refatorar para KpiCard |
-| `src/components/dashboard/branch/BranchKpiMotoristas.tsx` | Refatorar para KpiCard |
-| `src/components/dashboard/branch/BranchKpiCorridas.tsx` | Refatorar para KpiCard |
-| `src/components/dashboard/branch/BranchRankingMotoristas.tsx` | Adicionar medalhas e barras de progresso |
+3. Corrigir o acoplamento desnecessário do lado customer no boot admin
+- Em `src/components/WhiteLabelLayout.tsx`:
+  - remover imports não usados
+  - lazy-load de `CustomerLayout`
+- Isso evita carregar partes grandes do app customer quando o usuário só está entrando no painel admin/auth.
 
-## Sem alterações de banco
-Nenhuma migração necessária — os dados já são fornecidos pela RPC `get_branch_dashboard_stats_v2`.
+4. Tornar o bootstrap observável e resiliente
+- Refinar fases em `bootStateCore` para separar:
+  - shell montada
+  - rotas carregadas
+  - auth pronta
+  - brand pronta
+- Atualizar o fallback do `index.html` para mostrar fase real e não mascarar tudo como “preparando ambiente”.
+- Manter reload automático apenas para erro de chunk; para lentidão, mostrar estado claro sem parecer travamento infinito.
 
+5. Garantir que o overlay externo desapareça no momento certo
+- Hoje ele depende do `MountSignal` dentro da árvore pesada.
+- Vou reposicionar a estratégia para o sinal de montagem acontecer com uma shell mínima, antes de carregar o restante da aplicação.
+- Resultado esperado: mesmo se dashboard/layout/customer demorarem, o usuário verá loader interno do app e não uma tela “morta”.
+
+6. Limpar imports que aumentam o boot sem necessidade
+Arquivos prioritários:
+- `src/main.tsx`
+- `src/App.tsx`
+- `src/components/WhiteLabelLayout.tsx`
+- `src/lib/lazyWithRetry.ts`
+- `src/lib/bootStateCore.ts`
+- `index.html`
+
+7. Validação da correção
+Vou considerar resolvido quando estes cenários estiverem estáveis:
+- `/index` no mobile não fica preso em “preparando ambiente…”
+- login abre sem travar
+- painel branch continua carregando normalmente
+- o overlay externo some cedo e qualquer demora restante aparece como loader interno do app
+- nenhuma regressão em white-label, auth e rotas protegidas
+
+Detalhes técnicos
+- O último diff dos KPIs branch não parece ser a causa raiz.
+- O problema é estrutural no boot, por isso ele “acontece com frequência”.
+- Não precisa mudança de banco.
+- A correção ideal é de arquitetura de entrada/performance, não de dados.
+
+Implementação resumida
+```text
+main.tsx
+  -> renderiza shell mínima
+App.tsx
+  -> vira orquestrador leve
+Admin/WhiteLabel
+  -> lazy
+CustomerLayout
+  -> lazy
+index.html
+  -> overlay apenas até shell montar
+bootState
+  -> fases mais precisas
+```
