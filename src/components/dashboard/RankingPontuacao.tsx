@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RankingPontuacaoProps {
   brandId?: string;
+  isDriverEnabled?: boolean;
+  isPassengerEnabled?: boolean;
 }
 
 interface RankingEntry {
