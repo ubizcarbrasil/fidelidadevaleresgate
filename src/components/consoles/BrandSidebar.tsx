@@ -13,6 +13,7 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { Badge } from "@/components/ui/badge";
 import {
