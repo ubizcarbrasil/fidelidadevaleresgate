@@ -1,34 +1,35 @@
 
+Objetivo: corrigir o travamento no bootstrap que voltou a deixar a tela em “preparando ambiente...”.
 
-# Corrigir Dashboard do Empreendedor para Modelo Cliente (PASSENGER_ONLY)
+1. Confirmar a causa raiz no bootstrap
+- O problema está concentrado em `src/main.tsx`.
+- Hoje o arquivo diz que faz lazy-load do app, mas na prática faz `import App from "./App"` de forma estática.
+- Isso quebra a estratégia de bootstrap: o módulo `main.tsx` só executa depois que toda a árvore de imports de `App.tsx` é resolvida, então `MAIN_MODULE_START`, `BOOTSTRAP` e `APP_MOUNTED` ficam atrasados ou nem chegam a disparar a tempo.
+- Esse comportamento bate com o sintoma do print: a overlay do `index.html` continua visível e cai no timeout de “preparando ambiente...”.
 
-## Problema
-Ao alterar o modelo de negócio para "Cliente" (PASSENGER_ONLY), o dashboard do empreendedor (Brand Admin) não reflete corretamente as mudanças. Existem dois problemas:
+2. Restaurar a estratégia correta de carregamento
+- Alterar `src/main.tsx` para voltar a carregar `App` de forma lazy.
+- Manter o `BootShell` mínimo, montando instantaneamente.
+- Fazer o `useEffect` do `BootShell` disparar `setBootPhase("APP_MOUNTED")` e `__dismissBootstrap()` logo após o primeiro commit do React, sem depender do carregamento completo do app administrativo.
 
-1. **Cache não invalidado**: A query `brand-scoring-models` (usada pelo hook `useBrandScoringModels` no dashboard e sidebar do empreendedor) não é invalidada ao salvar em `RegrasResgatePage.tsx`. Apenas `branch-scoring-model` foi adicionado na correção anterior.
+3. Usar o padrão resiliente já adotado no projeto
+- Preferir `lazyWithRetry` para o `App`, em vez de import estático.
+- Assim, se houver erro de chunk/caching, o app segue o mesmo padrão de recuperação usado no restante da base.
 
-2. **KPIs de Achadinhos escondidos indevidamente**: Os KPIs "Achadinhos Ativos", "Lojas Ativas" e "Cidades Ativas" estão dentro de um bloco `isDriverEnabled`, mas devem ser visíveis independentemente do modelo (são dados operacionais gerais, não exclusivos de motorista).
+4. Evitar nova regressão
+- Não mexer agora nos arquivos de dashboard (`PointsFeed`, `DashboardChartsSection`, `BrandSidebar`, etc.) nesta correção de boot.
+- O foco é isolar o problema no ponto de entrada e voltar ao desenho original de bootstrap em duas camadas.
 
-3. **AccessHubSection (Painéis dos Parceiros) escondido indevidamente**: O bloco está gated por `isPassengerEnabled`, mas deveria aparecer sempre — é uma ferramenta administrativa, não depende do modelo.
+5. Validação após implementar
+- Verificar carregamento em `/index` e `/`.
+- Confirmar que a fase sai de `ENTRY_LOADING` rapidamente.
+- Confirmar que a overlay some mesmo que páginas internas ainda estejam carregando.
+- Confirmar que login e dashboard continuam abrindo normalmente depois do ajuste.
 
-## Arquivos a modificar
+Arquivos a ajustar
+- `src/main.tsx`
 
-### 1. `src/pages/RegrasResgatePage.tsx`
-Adicionar invalidação da query `brand-scoring-models` no `onSuccess`:
-```typescript
-qc.invalidateQueries({ queryKey: ["brand-scoring-models"] });
-```
-
-### 2. `src/components/dashboard/DashboardKpiSection.tsx`
-Remover o gate `isDriverEnabled` do bloco de Achadinhos (linhas 82-95). Os KPIs de Achadinhos, Lojas e Cidades devem aparecer sempre.
-
-### 3. `src/components/dashboard/DashboardQuickLinks.tsx`
-Remover o gate `isPassengerEnabled` do `AccessHubSection` (linha 273) para que "Painéis dos Parceiros" apareça sempre.
-
-## Resultado esperado
-- Ao salvar modelo PASSENGER_ONLY, o dashboard e sidebar do empreendedor atualizam imediatamente
-- KPIs de Achadinhos/Lojas/Cidades sempre visíveis
-- Painéis dos Parceiros sempre visível
-- Motoristas e Pontos Motoristas continuam ocultos quando `isDriverEnabled=false`
-- Ranking mostra apenas aba Passageiros quando `isDriverEnabled=false`
-
+Detalhe técnico
+- O erro não parece ser “dashboard quebrado” em si; o travamento acontece antes do primeiro commit do React.
+- A regressão foi introduzida ao trocar o app root de lazy para import estático.
+- Em um projeto grande como este, isso reata o bootstrap ao grafo pesado de módulos e volta exatamente o problema que a arquitetura de boot foi criada para evitar.
