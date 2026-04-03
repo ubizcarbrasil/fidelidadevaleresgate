@@ -1,35 +1,56 @@
 
-Objetivo: corrigir o travamento no bootstrap que voltou a deixar a tela em “preparando ambiente...”.
 
-1. Confirmar a causa raiz no bootstrap
-- O problema está concentrado em `src/main.tsx`.
-- Hoje o arquivo diz que faz lazy-load do app, mas na prática faz `import App from "./App"` de forma estática.
-- Isso quebra a estratégia de bootstrap: o módulo `main.tsx` só executa depois que toda a árvore de imports de `App.tsx` é resolvida, então `MAIN_MODULE_START`, `BOOTSTRAP` e `APP_MOUNTED` ficam atrasados ou nem chegam a disparar a tempo.
-- Esse comportamento bate com o sintoma do print: a overlay do `index.html` continua visível e cai no timeout de “preparando ambiente...”.
+## Plano: Dashboard do Franqueado — Modelo Passageiro (PASSENGER_ONLY)
 
-2. Restaurar a estratégia correta de carregamento
-- Alterar `src/main.tsx` para voltar a carregar `App` de forma lazy.
-- Manter o `BootShell` mínimo, montando instantaneamente.
-- Fazer o `useEffect` do `BootShell` disparar `setBootPhase("APP_MOUNTED")` e `__dismissBootstrap()` logo após o primeiro commit do React, sem depender do carregamento completo do app administrativo.
+### Problema
+No modelo PASSENGER_ONLY, o dashboard mostra apenas 1 KPI (Resgates) isolado e o card "Visão Geral da Cidade" com dados de carteira de motorista — irrelevantes nesse contexto. A tela fica praticamente vazia.
 
-3. Usar o padrão resiliente já adotado no projeto
-- Preferir `lazyWithRetry` para o `App`, em vez de import estático.
-- Assim, se houver erro de chunk/caching, o app segue o mesmo padrão de recuperação usado no restante da base.
+### Solução
 
-4. Evitar nova regressão
-- Não mexer agora nos arquivos de dashboard (`PointsFeed`, `DashboardChartsSection`, `BrandSidebar`, etc.) nesta correção de boot.
-- O foco é isolar o problema no ponto de entrada e voltar ao desenho original de bootstrap em duas camadas.
+#### 1. Ocultar card "Visão Geral da Cidade" quando não há motorista
+No `BranchDashboardSection.tsx`, renderizar `BranchVisaoGeral` apenas quando `isDriverEnabled === true`.
 
-5. Validação após implementar
-- Verificar carregamento em `/index` e `/`.
-- Confirmar que a fase sai de `ENTRY_LOADING` rapidamente.
-- Confirmar que a overlay some mesmo que páginas internas ainda estejam carregando.
-- Confirmar que login e dashboard continuam abrindo normalmente depois do ajuste.
+#### 2. Criar RPC para stats de passageiro
+Criar uma migration com a função `get_branch_passenger_stats(p_branch_id)` que retorna:
+- **Clientes cadastrados** — `COUNT(*)` de `customers` da branch
+- **Clientes ativos** — clientes com pelo menos 1 resgate nos últimos 30 dias
+- **Resgates do mês** — contagem de resgates do mês atual
+- **Ofertas ativas** — contagem de `offers` ativas da branch
+- **Lojas parceiras** — contagem de `stores` ativas da branch
 
-Arquivos a ajustar
-- `src/main.tsx`
+#### 3. Criar KPIs de passageiro (novos componentes)
+Dentro de `src/components/dashboard/branch/`:
+- `BranchKpiClientesCadastrados.tsx` — total de clientes
+- `BranchKpiClientesAtivos.tsx` — clientes ativos (30 dias)
+- `BranchKpiOfertasAtivas.tsx` — ofertas disponíveis
+- `BranchKpiLojasParceiras.tsx` — lojas parceiras
 
-Detalhe técnico
-- O erro não parece ser “dashboard quebrado” em si; o travamento acontece antes do primeiro commit do React.
-- A regressão foi introduzida ao trocar o app root de lazy para import estático.
-- Em um projeto grande como este, isso reata o bootstrap ao grafo pesado de módulos e volta exatamente o problema que a arquitetura de boot foi criada para evitar.
+Todos usando o componente `KpiCard` existente, com ícones e cores diferenciados.
+
+#### 4. Atualizar `BranchDashboardSection.tsx`
+- Quando `isPassengerEnabled && !isDriverEnabled`: exibir grid 2x2 com Resgates + Clientes Cadastrados + Clientes Ativos + Ofertas Ativas
+- Quando `isDriverEnabled && isPassengerEnabled` (BOTH): exibir ambos os grids
+- Manter lógica atual para `isDriverEnabled`
+
+#### 5. Criar hook e tipos
+- Novo hook `useBranchPassengerStats(branchId)` para buscar a RPC
+- Expandir `tipos_branch_dashboard.ts` com interface `BranchPassengerStats`
+
+### Arquivos
+
+| Ação | Arquivo |
+|------|---------|
+| Criar | Migration SQL com RPC `get_branch_passenger_stats` |
+| Criar | `src/components/dashboard/branch/BranchKpiClientesCadastrados.tsx` |
+| Criar | `src/components/dashboard/branch/BranchKpiClientesAtivos.tsx` |
+| Criar | `src/components/dashboard/branch/BranchKpiOfertasAtivas.tsx` |
+| Criar | `src/components/dashboard/branch/BranchKpiLojasParceiras.tsx` |
+| Editar | `src/components/dashboard/branch/tipos_branch_dashboard.ts` |
+| Editar | `src/components/dashboard/branch/hook_branch_dashboard.ts` |
+| Editar | `src/components/dashboard/BranchDashboardSection.tsx` |
+
+### Detalhe técnico
+- A RPC `get_branch_passenger_stats` é separada da `get_branch_dashboard_stats_v2` para manter retrocompatibilidade
+- O hook `useBranchScoringModel()` já existe e retorna `isDriverEnabled` e `isPassengerEnabled` — será usado para controlar a visibilidade
+- Nenhuma alteração em Edge Functions ou lógica de backend existente
+
