@@ -93,3 +93,15 @@ export function useBranchRealtimeFeed(branchId: string) {
 
   return feed;
 }
+
+export function useBranchPassengerStats(branchId: string) {
+  return useQuery({
+    queryKey: ["branch-passenger-stats", branchId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_branch_passenger_stats", { p_branch_id: branchId } as any);
+      if (error) throw error;
+      return (data as unknown) as BranchPassengerStats;
+    },
+    enabled: !!branchId,
+  });
+}
