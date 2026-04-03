@@ -6532,6 +6532,10 @@ export type Database = {
         Args: { p_branch_id: string }
         Returns: Json
       }
+      get_branch_passenger_stats: {
+        Args: { p_branch_id: string }
+        Returns: Json
+      }
       get_branch_points_ranking: {
         Args: { p_branch_id: string; p_limit?: number }
         Returns: {
