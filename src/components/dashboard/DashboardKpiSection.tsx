@@ -71,7 +71,7 @@ export default function DashboardKpiSection({
               <KpiCard title="Pontos Motoristas" value={pontosMotoristas !== undefined ? pontosMotoristas.toLocaleString("pt-BR") : undefined} icon={Coins} color="success" />
             </div>
           )}
-          {isPassengerEnabled && (
+          {isPassengerEnabled && isDriverEnabled && (
             <div className="animate-slide-up delay-3">
               <KpiCard title="Pontos Clientes" value={pontosClientes !== undefined ? pontosClientes.toLocaleString("pt-BR") : undefined} icon={UserCheck} color="primary" />
             </div>
