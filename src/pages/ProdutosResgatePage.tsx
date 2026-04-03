@@ -197,7 +197,6 @@ export default function ProdutosResgatePage() {
     return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
   };
 
-  const isMobile = useIsMobile();
 
   return (
     <div className="space-y-6">
