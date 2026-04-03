@@ -4,11 +4,9 @@ console.info("[boot] MAIN_MODULE_START");
 import "./index.css";
 import { setBootPhase } from "@/lib/bootStateCore";
 import { createRoot } from "react-dom/client";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-
-// Lazy-load the heavy App module — keeps shell mount instant
-const App = lazy(() => import("./App"));
+import App from "./App";
 
 /**
  * Minimal shell: mounts instantly, dismisses bootstrap overlay,
