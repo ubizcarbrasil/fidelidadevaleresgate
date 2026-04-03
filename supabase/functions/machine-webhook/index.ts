@@ -770,6 +770,22 @@ async function processFinalized(
     driver_customer_id: driverCustomerId,
   }, { onConflict: "brand_id,machine_ride_id", ignoreDuplicates: false });
 
+  // Debit branch wallet when driver points were credited
+  if (driverPointsCredited > 0 && branchId) {
+    try {
+      const { data: walletResult } = await sb.rpc("debit_branch_wallet", {
+        p_branch_id: branchId,
+        p_amount: driverPointsCredited,
+        p_description: `Corrida #${machineRideId} - ${driverName || 'Motorista'}`,
+      });
+      if (walletResult && !walletResult.success) {
+        logger.error("Wallet debit failed", { machineRideId, branchId, error: walletResult.error });
+      }
+    } catch (e) {
+      logger.error("Wallet debit exception", { machineRideId, branchId, error: String(e) });
+    }
+  }
+
   // Update integration counters
   const { error: updateErr } = await sb
     .from("machine_integrations")
