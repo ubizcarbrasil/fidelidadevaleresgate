@@ -79,9 +79,8 @@ export default function BrandForm() {
         setSubscriptionPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
           const settings = data.brand_settings_json as Record<string, any>;
-          const { offer_card_config: occ, default_scoring_model: dsm, ...themeData } = settings;
+          const { offer_card_config: occ, default_scoring_model: _dsm, ...themeData } = settings;
           setTheme(themeData as unknown as BrandTheme);
-          if (dsm) setDefaultScoringModel(dsm);
           if (occ) {
             setOfferCardConfig({
               store: { ...DEFAULT_CONFIG.store, ...(occ.store || {}) },
