@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Save, Loader2, Coins, ShieldCheck, CalendarClock, Users, Car, RefreshCw } from "lucide-react";
+import { Save, Loader2, Coins, ShieldCheck, CalendarClock, Users, Car, RefreshCw, MapPin } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RedemptionRules {
   points_per_real: number;
@@ -26,13 +27,17 @@ const DEFAULTS: RedemptionRules = {
   approval_deadline_hours: 48,
 };
 
+const BRAND_DEFAULT_KEY = "__brand_default__";
+
 export default function RegrasResgatePage() {
   const qc = useQueryClient();
   const { currentBrandId } = useBrandGuard();
   const [form, setForm] = useState<RedemptionRules>(DEFAULTS);
   const [scoringModel, setScoringModel] = useState<ScoringModel>("BOTH");
+  const [selectedScope, setSelectedScope] = useState<string>(BRAND_DEFAULT_KEY);
   const [dirty, setDirty] = useState(false);
 
+  // Brand settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ["brand-settings", currentBrandId],
     queryFn: async () => {
@@ -47,6 +52,23 @@ export default function RegrasResgatePage() {
     enabled: !!currentBrandId,
   });
 
+  // Branches list
+  const { data: branches } = useQuery({
+    queryKey: ["brand-branches-scoring", currentBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("branches")
+        .select("id, name, scoring_model")
+        .eq("brand_id", currentBrandId!)
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentBrandId,
+  });
+
+  // Sync brand default scoring model from settings
   useEffect(() => {
     if (settings?.redemption_rules) {
       const saved = settings.redemption_rules as Partial<RedemptionRules>;
@@ -57,19 +79,47 @@ export default function RegrasResgatePage() {
     }
   }, [settings]);
 
+  // When scope changes, update the radio to reflect the selected branch or brand default
+  useEffect(() => {
+    if (selectedScope === BRAND_DEFAULT_KEY) {
+      const brandDefault = (settings?.default_scoring_model as ScoringModel) || "BOTH";
+      setScoringModel(brandDefault);
+    } else {
+      const branch = branches?.find((b) => b.id === selectedScope);
+      if (branch) {
+        setScoringModel((branch.scoring_model as ScoringModel) || "BOTH");
+      }
+    }
+    setDirty(false);
+  }, [selectedScope, branches, settings]);
+
+  const isBranchScope = selectedScope !== BRAND_DEFAULT_KEY;
+
   const save = useMutation({
     mutationFn: async () => {
       if (!currentBrandId) throw new Error("Marca não identificada");
-      const updated = { ...settings, redemption_rules: form, default_scoring_model: scoringModel };
-      const { error } = await supabase
-        .from("brands")
-        .update({ brand_settings_json: updated } as any)
-        .eq("id", currentBrandId);
-      if (error) throw error;
+
+      if (isBranchScope) {
+        // Save to branch
+        const { error } = await supabase
+          .from("branches")
+          .update({ scoring_model: scoringModel })
+          .eq("id", selectedScope);
+        if (error) throw error;
+      } else {
+        // Save to brand settings
+        const updated = { ...settings, redemption_rules: form, default_scoring_model: scoringModel };
+        const { error } = await supabase
+          .from("brands")
+          .update({ brand_settings_json: updated } as any)
+          .eq("id", currentBrandId);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["brand-settings"] });
-      toast.success("Regras de resgate salvas!");
+      qc.invalidateQueries({ queryKey: ["brand-branches-scoring"] });
+      toast.success(isBranchScope ? "Modelo da cidade atualizado!" : "Regras de resgate salvas!");
       setDirty(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -81,6 +131,11 @@ export default function RegrasResgatePage() {
     setForm((prev) => ({ ...prev, [key]: num }));
     setDirty(true);
   };
+
+  const selectedBranchName = useMemo(() => {
+    if (!isBranchScope) return null;
+    return branches?.find((b) => b.id === selectedScope)?.name || "";
+  }, [selectedScope, branches, isBranchScope]);
 
   if (isLoading) {
     return (
@@ -190,22 +245,51 @@ export default function RegrasResgatePage() {
         ))}
       </div>
 
-      {/* Modelo de Negócio Padrão */}
+      {/* Modelo de Negócio */}
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-purple-500/15 flex items-center justify-center">
               <RefreshCw className="h-5 w-5 text-purple-500" />
             </div>
-            <div>
-              <CardTitle className="text-base">Modelo de Negócio Padrão</CardTitle>
+            <div className="flex-1">
+              <CardTitle className="text-base">Modelo de Negócio</CardTitle>
               <CardDescription className="text-xs">
-                Define o modelo padrão ao criar novas cidades. Cada cidade pode sobrescrever individualmente.
+                Selecione uma cidade para alterar seu modelo, ou configure o padrão para novas cidades.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Scope selector */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              Aplicar para
+            </Label>
+            <Select value={selectedScope} onValueChange={(v) => setSelectedScope(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={BRAND_DEFAULT_KEY}>
+                  🏢 Padrão da Marca (novas cidades)
+                </SelectItem>
+                {branches?.map((branch) => (
+                  <SelectItem key={branch.id} value={branch.id}>
+                    📍 {branch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {isBranchScope && (
+            <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+              Alterando o modelo de negócio da cidade <strong>{selectedBranchName}</strong>.
+            </p>
+          )}
+
           <RadioGroup
             value={scoringModel}
             onValueChange={(v) => { setScoringModel(v as ScoringModel); setDirty(true); }}
@@ -217,7 +301,9 @@ export default function RegrasResgatePage() {
                 <Car className="h-4 w-4 text-blue-500" />
                 <div>
                   <p className="text-sm font-medium">Apenas Motorista</p>
-                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão apenas motoristas</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isBranchScope ? "Esta cidade pontuará apenas motoristas" : "Novas cidades pontuarão apenas motoristas"}
+                  </p>
                 </div>
               </Label>
             </div>
@@ -227,7 +313,9 @@ export default function RegrasResgatePage() {
                 <Users className="h-4 w-4 text-green-500" />
                 <div>
                   <p className="text-sm font-medium">Apenas Cliente</p>
-                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão apenas passageiros</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isBranchScope ? "Esta cidade pontuará apenas passageiros" : "Novas cidades pontuarão apenas passageiros"}
+                  </p>
                 </div>
               </Label>
             </div>
@@ -237,7 +325,9 @@ export default function RegrasResgatePage() {
                 <RefreshCw className="h-4 w-4 text-purple-500" />
                 <div>
                   <p className="text-sm font-medium">Ambos</p>
-                  <p className="text-xs text-muted-foreground">Novas cidades pontuarão motoristas e passageiros</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isBranchScope ? "Esta cidade pontuará motoristas e passageiros" : "Novas cidades pontuarão motoristas e passageiros"}
+                  </p>
                 </div>
               </Label>
             </div>
