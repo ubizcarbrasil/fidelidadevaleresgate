@@ -102,6 +102,23 @@
       },12000);
     </script>
 
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.__BOOT_PHASE__ = "ENTRY_SCRIPT_ATTACH";
+
+      (function () {
+        var entry = document.createElement('script');
+        entry.type = 'module';
+        entry.src = '/src/main.tsx?t=' + Date.now();
+        entry.onload = function () {
+          if (window.__BOOT_PHASE__ === 'ENTRY_SCRIPT_ATTACH') {
+            window.__BOOT_PHASE__ = 'ENTRY_SCRIPT_LOADED';
+          }
+        };
+        entry.onerror = function () {
+          window.__showBootError('ENTRY_SCRIPT_ERROR', 'Falha ao carregar o módulo inicial.');
+        };
+        document.body.appendChild(entry);
+      })();
+    </script>
   </body>
 </html>
