@@ -127,7 +127,7 @@ export default function FeatureFlagsPage() {
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(f)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove.mutate(f.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => askConfirm({ title: "Excluir flag?", description: "Essa ação não pode ser desfeita.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => remove.mutate(f.id) })}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
