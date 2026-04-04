@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { haptics } from "@/lib/haptics";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
