@@ -64,6 +64,27 @@ const journeySteps: JourneyStep[] = [
   },
   {
     id: "3",
+    phase: "Modelo",
+    phaseIcon: Settings2,
+    phaseColor: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+    title: "Definir o modelo de negócio da Cidade",
+    description: "Escolha se a cidade opera com motoristas, passageiros ou ambos.",
+    route: "/regras-resgate",
+    steps: [
+      "Acesse Cidades → Regras de Resgate.",
+      "Selecione a cidade recém-criada no filtro.",
+      "Escolha o modelo de negócio: Apenas Motorista, Apenas Passageiro ou Ambos.",
+      "O modelo define quais funcionalidades e menus ficam disponíveis na cidade.",
+      "Clique em 'Salvar' para aplicar.",
+    ],
+    tips: [
+      "Novas cidades herdam o modelo padrão da marca automaticamente.",
+      "Você pode alterar o modelo a qualquer momento em Regras de Resgate.",
+      "O modelo 'Ambos' habilita funcionalidades de motorista e passageiro simultaneamente.",
+    ],
+  },
+  {
+    id: "4",
     phase: "Parceiros",
     phaseIcon: ShoppingBag,
     phaseColor: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
