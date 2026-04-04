@@ -30,7 +30,7 @@ export default function CustomerWalletPage() {
 
   // Fetch all pages up to current page
   const { data: entries = [], isLoading: loading } = useQuery({
-    queryKey: ["customer-wallet-ledger", customer?.id, page],
+    queryKey: queryKeys.customerWallet.ledger(customer?.id, page),
     enabled: !!customer,
     queryFn: async () => {
       const to = (page + 1) * PAGE_SIZE - 1;
