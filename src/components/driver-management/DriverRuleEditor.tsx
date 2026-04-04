@@ -188,14 +188,15 @@ export default function DriverRuleEditor({ driverId, brandId }: Props) {
             />
           </div>
           <div className="flex gap-2">
-            <Button
+            <LoadingButton
               size="sm"
               onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
+              isLoading={saveMutation.isPending}
+              loadingText="Salvando..."
             >
-              {saveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+              <Save className="h-3.5 w-3.5 mr-1" />
               Salvar
-            </Button>
+            </LoadingButton>
             {rule && (
               <Button
                 size="sm"

@@ -236,20 +236,21 @@ export default function RedeemPinInput({ storeId, onConfirmed }: RedeemPinInputP
                   />
                 </div>
 
-                <Button
+                <LoadingButton
                   onClick={() => confirmMutation.mutate({
                     redemptionId: result.id,
                     purchaseValue: Number(purchaseValue) || null,
                     creditValueApplied: result.value_rescue,
                     minPurchase: result.min_purchase,
                   })}
-                  disabled={confirmMutation.isPending}
+                  isLoading={confirmMutation.isPending}
+                  loadingText="Resgatando..."
                   className="w-full rounded-xl bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 text-success-foreground"
                   size="lg"
                 >
-                  {confirmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
                   Confirmar Resgate
-                </Button>
+                </LoadingButton>
               </CardContent>
             </Card>
           )}

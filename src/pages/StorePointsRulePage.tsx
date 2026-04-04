@@ -240,9 +240,9 @@ export default function StorePointsRulePage() {
                     </div>
                   </div>
 
-                  <Button onClick={() => save.mutate()} disabled={save.isPending} className="w-full">
-                    {save.isPending ? "Salvando..." : baseRule.store_rule_requires_approval ? "Enviar para Aprovação" : "Ativar Regra"}
-                  </Button>
+                   <LoadingButton onClick={() => save.mutate()} isLoading={save.isPending} loadingText="Salvando..." className="w-full">
+                    {baseRule.store_rule_requires_approval ? "Enviar para Aprovação" : "Ativar Regra"}
+                  </LoadingButton>
                 </CardContent>
               </Card>
 

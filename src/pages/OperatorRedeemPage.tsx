@@ -199,10 +199,10 @@ export default function OperatorRedeemPage() {
               />
             </div>
 
-            <Button onClick={() => confirm.mutate()} disabled={confirm.isPending} className="w-full" size="lg">
-              {confirm.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+            <LoadingButton onClick={() => confirm.mutate()} isLoading={confirm.isPending} loadingText="Resgatando..." className="w-full" size="lg">
+              <CheckCircle2 className="h-4 w-4 mr-2" />
               Confirmar Resgate (USED)
-            </Button>
+            </LoadingButton>
           </CardContent>
         </Card>
       )}

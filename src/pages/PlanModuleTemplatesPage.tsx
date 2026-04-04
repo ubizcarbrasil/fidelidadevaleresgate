@@ -216,10 +216,10 @@ export default function PlanModuleTemplatesPage() {
       )}
 
       <div className="flex justify-end">
-        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
-          {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        <LoadingButton onClick={() => saveMutation.mutate()} disabled={isLoading} isLoading={saveMutation.isPending} loadingText="Salvando...">
+          <Save className="h-4 w-4 mr-2" />
           Salvar Configuração
-        </Button>
+        </LoadingButton>
       </div>
 
       {/* Retroactive Apply Section */}

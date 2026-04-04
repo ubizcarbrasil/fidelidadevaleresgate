@@ -2,6 +2,7 @@ import { useState } from "react";
 import { brandAlpha } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 
 interface CancelRedemptionButtonProps {
