@@ -102,6 +102,19 @@
       },12000);
     </script>
 
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module">
+      window.__BOOT_PHASE__ = "ENTRY_IMPORT_START";
+      const entryCacheBust = Date.now();
+
+      import(`/src/main.tsx?t=${entryCacheBust}`)
+        .then(() => {
+          if (window.__BOOT_PHASE__ === "ENTRY_IMPORT_START") {
+            window.__BOOT_PHASE__ = "ENTRY_IMPORT_RESOLVED";
+          }
+        })
+        .catch((error) => {
+          window.__showBootError("ENTRY_IMPORT_FAILED", error?.message || String(error));
+        });
+    </script>
   </body>
 </html>
