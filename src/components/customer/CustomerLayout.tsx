@@ -19,6 +19,7 @@ import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
 import { useBrandModules } from "@/hooks/useBrandModules";
+import { usePrefetchRoutes } from "@/hooks/usePrefetchRoutes";
 import { hslToCss } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
@@ -130,6 +131,7 @@ export default function CustomerLayout() {
   const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
+  usePrefetchRoutes();
 
   const filteredTabs = useMemo(() =>
     TABS.filter(t => {
