@@ -111,7 +111,7 @@ export default function ForYouSection() {
               backgroundColor: "hsl(var(--card))",
               scrollSnapAlign: "start",
             }}
-            onClick={() => openOffer?.(o)}
+            onClick={() => { haptics.light(); openOffer?.(o); }}
           >
             <div className="relative h-28 w-full" style={{ backgroundColor: "hsl(var(--muted))" }}>
               {o.image_url || o.stores?.logo_url ? (
