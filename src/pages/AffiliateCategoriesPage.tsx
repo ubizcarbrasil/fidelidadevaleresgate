@@ -445,7 +445,7 @@ export default function AffiliateCategoriesPage() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditId(cat.id); setEditForm(cat); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(cat.id)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => askConfirm({ title: "Excluir categoria?", description: "Essa ação não pode ser desfeita. Banners e ofertas vinculados perderão a categoria.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => deleteMutation.mutate(cat.id) })}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
