@@ -14,7 +14,7 @@ export default function BranchFeedTempoReal({ feed }: Props) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-500" /> Pontuação em Tempo Real
+            <Zap className="h-4 w-4 text-primary" /> Pontuação em Tempo Real
           </CardTitle>
           <Badge variant="outline" className="gap-1.5 text-[10px] border-success/30 text-success">
             <span className="relative flex h-2 w-2">
@@ -40,7 +40,7 @@ export default function BranchFeedTempoReal({ feed }: Props) {
                     })}
                   </p>
                 </div>
-                <Badge variant="secondary" className="shrink-0 font-semibold">
+                <Badge variant="outline" className="shrink-0 font-semibold border-primary/30 text-primary">
                   +{formatPoints(item.points)} pts
                 </Badge>
               </div>
