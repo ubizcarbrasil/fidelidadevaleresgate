@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.driver-notifications-cron]
 verify_jwt = false
+
+[functions.check-onboarding-alerts]
+verify_jwt = false
