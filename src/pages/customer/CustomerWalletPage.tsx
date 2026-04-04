@@ -69,8 +69,8 @@ export default function CustomerWalletPage() {
   const queryClient = useQueryClient();
   const handleRefresh = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["customer-wallet-ledger"] }),
-      queryClient.invalidateQueries({ queryKey: ["customer-wallet-count"] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerWallet.ledger() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerWallet.count() }),
     ]);
   }, [queryClient]);
 

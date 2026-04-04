@@ -234,7 +234,7 @@ export default function CustomerRedemptionsPage() {
             onBack={() => setSelectedRedemption(null)}
             onCanceled={() => {
               setSelectedRedemption(null);
-              queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] });
+              queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all });
             }}
           />
         )}
