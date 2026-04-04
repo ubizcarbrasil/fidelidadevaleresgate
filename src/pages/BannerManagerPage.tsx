@@ -219,7 +219,7 @@ export default function BannerManagerPage() {
                       checked={banner.is_active}
                       onCheckedChange={(v) => toggleMutation.mutate({ id: banner.id, active: v })}
                     />
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMutation.mutate(banner.id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => askConfirm({ title: "Excluir banner?", description: "Essa ação não pode ser desfeita.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => deleteMutation.mutate(banner.id) })}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
                   </div>
