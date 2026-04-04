@@ -45,7 +45,7 @@ export default function CustomerRedemptionsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const { isLoading } = useQuery({
-    queryKey: ["customer-redemptions", customer?.id],
+    queryKey: queryKeys.customerRedemptions.list(customer?.id),
     queryFn: async () => {
       if (!customer?.id) return [];
       const { data, error } = await supabase
