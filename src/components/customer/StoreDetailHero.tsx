@@ -61,6 +61,7 @@ const StoreDetailHero = React.memo(function StoreDetailHero({
 
       <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
         <SafeImage
+          preset="thumbnail"
           src={logoUrl}
           alt={storeName}
           className="h-20 w-20 rounded-2xl object-cover shadow-lg border-4 border-background"
