@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
