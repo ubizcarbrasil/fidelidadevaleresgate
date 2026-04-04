@@ -45,7 +45,7 @@ export default function CustomerWalletPage() {
   });
 
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ["customer-wallet-count", customer?.id],
+    queryKey: queryKeys.customerWallet.count(customer?.id),
     enabled: !!customer,
     queryFn: async () => {
       const { count } = await supabase
