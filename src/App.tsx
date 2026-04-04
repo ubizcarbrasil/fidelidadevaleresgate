@@ -275,6 +275,7 @@ function AnimatedRoutes() {
               <Route path="brand-branches/:id" element={<BrandBranchForm />} />
               <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
               <Route path="brand-api-journey" element={<BrandApiJourneyPage />} />
+              <Route path="city-onboarding" element={<PaginaOnboardingCidade />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
