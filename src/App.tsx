@@ -14,7 +14,7 @@ import ModuleGuard from "@/components/ModuleGuard";
 import RootGuard from "@/components/RootGuard";
 const AppLayout = lazyWithRetry(() => import("@/components/AppLayout"));
 const WhiteLabelLayout = lazyWithRetry(() => import("@/components/WhiteLabelLayout"));
-import NotFound from "./pages/NotFound";
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 import { Loader2 } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
