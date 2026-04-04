@@ -11,6 +11,7 @@ import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDet
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
