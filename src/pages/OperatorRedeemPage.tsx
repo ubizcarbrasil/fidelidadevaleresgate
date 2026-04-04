@@ -39,6 +39,7 @@ const maskCpf = (cpf: string) => {
 
 export default function OperatorRedeemPage() {
   const qc = useQueryClient();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [pin, setPin] = useState("");
   const [cpf, setCpf] = useState("");
   const [purchaseValue, setPurchaseValue] = useState("");

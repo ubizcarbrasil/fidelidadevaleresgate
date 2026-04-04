@@ -31,6 +31,7 @@ interface VoucherData {
 
 export default function VoucherRedeem() {
   const navigate = useNavigate();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const { user } = useAuth();
   const [code, setCode] = useState("");
   const [notes, setNotes] = useState("");
