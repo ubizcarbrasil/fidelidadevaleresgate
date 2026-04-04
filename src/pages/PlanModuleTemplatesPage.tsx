@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -215,10 +216,10 @@ export default function PlanModuleTemplatesPage() {
       )}
 
       <div className="flex justify-end">
-        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
-          {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        <LoadingButton onClick={() => saveMutation.mutate()} disabled={isLoading} isLoading={saveMutation.isPending} loadingText="Salvando...">
+          <Save className="h-4 w-4 mr-2" />
           Salvar Configuração
-        </Button>
+        </LoadingButton>
       </div>
 
       {/* Retroactive Apply Section */}

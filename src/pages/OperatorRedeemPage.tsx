@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,14 +147,16 @@ export default function OperatorRedeemPage() {
               inputMode="numeric"
             />
           </div>
-          <Button
+          <LoadingButton
             onClick={() => lookup.mutate({ pinInput: pin, cpfInput: cpf })}
-            disabled={!canSearch || lookup.isPending}
+            disabled={!canSearch}
+            isLoading={lookup.isPending}
+            loadingText="Buscando..."
             className="w-full h-12"
           >
-            {lookup.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ScanLine className="h-4 w-4 mr-2" />}
+            <ScanLine className="h-4 w-4 mr-2" />
             Buscar Resgate
-          </Button>
+          </LoadingButton>
 
           {error && (
             <div className="flex items-center gap-2 text-destructive text-sm">
@@ -196,10 +199,10 @@ export default function OperatorRedeemPage() {
               />
             </div>
 
-            <Button onClick={() => confirm.mutate()} disabled={confirm.isPending} className="w-full" size="lg">
-              {confirm.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+            <LoadingButton onClick={() => confirm.mutate()} isLoading={confirm.isPending} loadingText="Resgatando..." className="w-full" size="lg">
+              <CheckCircle2 className="h-4 w-4 mr-2" />
               Confirmar Resgate (USED)
-            </Button>
+            </LoadingButton>
           </CardContent>
         </Card>
       )}

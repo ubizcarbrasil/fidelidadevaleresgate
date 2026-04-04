@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -169,14 +170,16 @@ export default function RedeemPinInput({ storeId, onConfirmed }: RedeemPinInputP
             />
           </div>
 
-          <Button
+          <LoadingButton
             onClick={() => lookup.mutate({ pinInput: pin, cpfInput: cpf })}
-            disabled={!canSearch || lookup.isPending}
+            disabled={!canSearch}
+            isLoading={lookup.isPending}
+            loadingText="Buscando..."
             className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
           >
-            {lookup.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ScanLine className="h-4 w-4 mr-2" />}
+            <ScanLine className="h-4 w-4 mr-2" />
             Buscar Resgate
-          </Button>
+          </LoadingButton>
 
           {error && (
             <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/5 rounded-xl p-3">
@@ -233,20 +236,21 @@ export default function RedeemPinInput({ storeId, onConfirmed }: RedeemPinInputP
                   />
                 </div>
 
-                <Button
+                <LoadingButton
                   onClick={() => confirmMutation.mutate({
                     redemptionId: result.id,
                     purchaseValue: Number(purchaseValue) || null,
                     creditValueApplied: result.value_rescue,
                     minPurchase: result.min_purchase,
                   })}
-                  disabled={confirmMutation.isPending}
+                  isLoading={confirmMutation.isPending}
+                  loadingText="Resgatando..."
                   className="w-full rounded-xl bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 text-success-foreground"
                   size="lg"
                 >
-                  {confirmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
                   Confirmar Resgate
-                </Button>
+                </LoadingButton>
               </CardContent>
             </Card>
           )}

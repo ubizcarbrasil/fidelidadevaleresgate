@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -198,10 +199,9 @@ export default function BranchWalletPage() {
               </div>
               <DialogFooter>
                 <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
-                <Button onClick={() => loadMutation.mutate()} disabled={loadMutation.isPending || !loadAmount || Number(loadAmount) <= 0} className="gap-2">
-                  {loadMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                <LoadingButton onClick={() => loadMutation.mutate()} disabled={!loadAmount || Number(loadAmount) <= 0} isLoading={loadMutation.isPending} loadingText="Salvando..." className="gap-2">
                   Confirmar Recarga
-                </Button>
+                </LoadingButton>
               </DialogFooter>
             </DialogContent>
           </Dialog>

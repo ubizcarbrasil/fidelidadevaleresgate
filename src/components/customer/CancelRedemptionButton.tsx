@@ -2,6 +2,7 @@ import { useState } from "react";
 import { brandAlpha } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 
 interface CancelRedemptionButtonProps {
@@ -75,14 +76,16 @@ export function CancelRedemptionButton({ redemptionId, token, onCanceled, fg }: 
         >
           Cancelar
         </button>
-        <button
+        <LoadingButton
           onClick={handleCancel}
-          disabled={pinInput.length < 6 || loading}
-          className="flex-1 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50"
+          isLoading={loading}
+          loadingText="Estornando..."
+          disabled={pinInput.length < 6}
+          className="flex-1 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50 h-auto"
           style={{ backgroundColor: "#DC2626" }}
         >
-          {loading ? "Estornando..." : "Confirmar"}
-        </button>
+          Confirmar
+        </LoadingButton>
       </div>
     </div>
   );

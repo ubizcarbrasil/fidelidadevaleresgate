@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -209,10 +210,10 @@ export default function RegrasResgatePage() {
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Regras de Resgate</h2>
           <p className="text-muted-foreground">Configure as regras do programa de resgate com pontos</p>
         </div>
-        <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-          {save.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        <LoadingButton onClick={() => save.mutate()} disabled={!dirty} isLoading={save.isPending} loadingText="Salvando...">
+          <Save className="h-4 w-4 mr-2" />
           Salvar Regras
-        </Button>
+        </LoadingButton>
       </div>
 
       {/* Cards */}
