@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { ArrowLeft, Search, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
