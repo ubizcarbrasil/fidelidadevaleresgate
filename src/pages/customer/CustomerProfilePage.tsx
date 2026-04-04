@@ -101,10 +101,10 @@ export default function CustomerProfilePage() {
           <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">Email</Label>
           <Input value={user?.email || ""} disabled className="rounded-xl h-11 border-0 opacity-60 bg-muted" />
         </div>
-        <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-2xl font-bold text-sm" style={{ backgroundColor: primary, color: "#fff" }}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        <LoadingButton onClick={handleSave} isLoading={saving} loadingText="Salvando..." className="w-full h-11 rounded-2xl font-bold text-sm" style={{ backgroundColor: primary, color: "#fff" }}>
+          <Save className="h-4 w-4 mr-2" />
           Salvar alterações
-        </Button>
+        </LoadingButton>
       </div>
 
       {/* Branch Selector */}
