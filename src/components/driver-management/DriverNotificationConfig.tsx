@@ -236,14 +236,23 @@ export default function DriverNotificationConfig({ brandId, branchId }: Props) {
             })}
           </RadioGroup>
 
-          {frequency !== "EVERY_RIDE" && (
-            <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 flex items-start gap-2">
-              <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                Modelo do resumo: "Oi {'{'} nome{'}'}! Hoje você fez {'{'} total_corridas{'}'} corridas e acumulou +{'{'} pontos{'}'} pontos. Seu saldo agora é {'{'} saldo{'}'} pts."
-              </p>
-            </div>
-          )}
+          <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 flex items-start gap-2">
+            <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              {frequency === "EVERY_RIDE" && (
+                <>Modelo: "Oi {'{'}nome{'}'}! Você acaba de ganhar +{'{'}pontos{'}'} pontos pela corrida de R${'{'}valor{'}'}. Seu saldo agora é {'{'}saldo{'}'} pts."</>
+              )}
+              {frequency === "EVERY_X_RIDES" && (
+                <>Modelo: "Oi {'{'}nome{'}'}! Nas últimas {'{'}total_corridas{'}'} corridas você acumulou +{'{'}pontos{'}'} pontos. Seu saldo agora é {'{'}saldo{'}'} pts."</>
+              )}
+              {frequency === "EVERY_X_POINTS" && (
+                <>Modelo: "Oi {'{'}nome{'}'}! Você acumulou +{'{'}pontos{'}'} pontos nas últimas {'{'}total_corridas{'}'} corridas. Seu saldo agora é {'{'}saldo{'}'} pts."</>
+              )}
+              {(frequency === "DAILY" || frequency === "EVERY_X_HOURS") && (
+                <>Modelo: "Oi {'{'}nome{'}'}! Hoje você fez {'{'}total_corridas{'}'} corridas e acumulou +{'{'}pontos{'}'} pontos. Seu saldo agora é {'{'}saldo{'}'} pts."</>
+              )}
+            </p>
+          </div>
         </div>
       )}
     </div>
