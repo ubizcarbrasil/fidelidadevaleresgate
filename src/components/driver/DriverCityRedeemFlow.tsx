@@ -49,6 +49,7 @@ export default function DriverCityRedeemFlow({ oferta, fontHeading, onClose, onS
       setResult({ token: res.token, pointsDebited: res.points_debited });
       celebrateRedeem({ title: "Resgate realizado! 🎉", description: "Aproveite seu benefício." });
     } catch (err: any) {
+      haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
     }
     setLoading(false);

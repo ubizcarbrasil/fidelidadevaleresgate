@@ -140,6 +140,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       setSuccess(true);
       celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
     } catch (err: any) {
+      haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
     }
     setLoading(false);
