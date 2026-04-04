@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";

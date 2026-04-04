@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { supabase } from "@/integrations/supabase/client";
