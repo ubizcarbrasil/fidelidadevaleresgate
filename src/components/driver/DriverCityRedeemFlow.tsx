@@ -47,7 +47,7 @@ export default function DriverCityRedeemFlow({ oferta, fontHeading, onClose, onS
 
       await refreshDriver();
       setResult({ token: res.token, pointsDebited: res.points_debited });
-      toast.success("Resgate realizado com sucesso!");
+      celebrateRedeem({ title: "Resgate realizado! 🎉", description: "Aproveite seu benefício." });
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar resgate");
     }

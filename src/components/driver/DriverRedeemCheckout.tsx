@@ -138,7 +138,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       await refreshDriver();
 
       setSuccess(true);
-      toast.success("Resgate solicitado com sucesso!");
+      celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar resgate");
     }
