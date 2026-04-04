@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -46,6 +48,7 @@ interface CategoryBanner {
 export default function AffiliateCategoriesPage() {
   const qc = useQueryClient();
   const { currentBrandId } = useBrandGuard();
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category> | null>(null);
   const [newForm, setNewForm] = useState<Partial<Category> | null>(null);
@@ -442,7 +445,7 @@ export default function AffiliateCategoriesPage() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditId(cat.id); setEditForm(cat); }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(cat.id)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => askConfirm({ title: "Excluir categoria?", description: "Essa ação não pode ser desfeita. Banners e ofertas vinculados perderão a categoria.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => deleteMutation.mutate(cat.id) })}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -454,6 +457,7 @@ export default function AffiliateCategoriesPage() {
           </Card>
         ))}
       </div>
+      <ConfirmDialog open={confirmState.open} title={confirmState.title} description={confirmState.description} confirmLabel={confirmState.confirmLabel} variant={confirmState.variant} onConfirm={confirmState.onConfirm} onClose={closeConfirm} />
     </div>
   );
 }

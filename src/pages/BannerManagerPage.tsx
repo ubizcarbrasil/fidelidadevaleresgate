@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +43,7 @@ const INITIAL_FORM = {
 export default function BannerManagerPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -216,7 +219,7 @@ export default function BannerManagerPage() {
                       checked={banner.is_active}
                       onCheckedChange={(v) => toggleMutation.mutate({ id: banner.id, active: v })}
                     />
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMutation.mutate(banner.id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => askConfirm({ title: "Excluir banner?", description: "Essa ação não pode ser desfeita.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => deleteMutation.mutate(banner.id) })}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
                   </div>
@@ -352,6 +355,7 @@ export default function BannerManagerPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog open={confirmState.open} title={confirmState.title} description={confirmState.description} confirmLabel={confirmState.confirmLabel} variant={confirmState.variant} onConfirm={confirmState.onConfirm} onClose={closeConfirm} />
     </div>
   );
 }

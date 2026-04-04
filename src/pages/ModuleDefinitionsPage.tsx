@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,7 @@ const emptyForm: ModForm = { key: "", name: "", description: "", category: "gene
 export default function ModuleDefinitionsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<ModForm>(emptyForm);
 
@@ -212,7 +215,7 @@ export default function ModuleDefinitionsPage() {
 
                     {!m.is_core && (
                       <button
-                        onClick={() => remove.mutate(m.id)}
+                        onClick={() => askConfirm({ title: "Excluir módulo?", description: "Essa ação não pode ser desfeita.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => remove.mutate(m.id) })}
                         className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-destructive/10 active:scale-95 transition-all touch-manipulation"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -231,6 +234,7 @@ export default function ModuleDefinitionsPage() {
           Nenhum módulo cadastrado ainda.
         </div>
       )}
+      <ConfirmDialog open={confirmState.open} title={confirmState.title} description={confirmState.description} confirmLabel={confirmState.confirmLabel} variant={confirmState.variant} onConfirm={confirmState.onConfirm} onClose={closeConfirm} />
     </div>
   );
 }
