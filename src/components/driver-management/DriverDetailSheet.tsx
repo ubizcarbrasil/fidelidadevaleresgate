@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Truck } from "lucide-react";
-import type { DriverRow } from "@/pages/DriverManagementPage";
+import type { DriverRow } from "@/types/driver";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import AbaDadosMotorista from "./tabs/AbaDadosMotorista";
 import AbaPontuacaoMotorista from "./tabs/AbaPontuacaoMotorista";

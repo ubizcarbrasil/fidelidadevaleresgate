@@ -1,8 +1,8 @@
 # 📋 Débitos Técnicos — Vale Resgate
 
-**Última atualização**: 2026-03-14  
-**Total de débitos**: 13 itens  
-**Distribuição**: 12 Resolvidos · 1 Pendente (baixa prioridade)
+**Última atualização**: 2026-04-04  
+**Total de débitos**: 18 itens  
+**Distribuição**: 17 Resolvidos · 1 Pendente (baixa prioridade)
 
 ---
 
@@ -64,6 +64,21 @@
 
 ### TD-013: Sem testes de segurança automatizados ✅ RESOLVIDO
 - **Correção**: Suite `rlsCrossTenant.test.ts` com 25+ testes cobrindo 25 tabelas
+
+### TD-014: Query keys centralizadas ✅ RESOLVIDO
+- **Correção**: `src/lib/queryKeys.ts` expandido com 30+ key factories; 6 arquivos migrados para keys centralizadas
+
+### TD-015: Constantes centralizadas ✅ RESOLVIDO
+- **Correção**: `src/config/constants.ts` criado com PAGINATION, CACHE, TIMEOUTS, LIMITS; queryClient e prefetch migrados
+
+### TD-016: Hook useMutationWithFeedback ✅ RESOLVIDO
+- **Correção**: `src/hooks/useMutationWithFeedback.ts` criado; aplicado em Branches e DriverScoringToggle
+
+### TD-017: Tipos centralizados ✅ RESOLVIDO
+- **Correção**: `DriverRow` movido de `DriverManagementPage.tsx` para `src/types/driver.ts`; 6 imports atualizados
+
+### TD-018: CI/CD com GitHub Actions ✅ RESOLVIDO
+- **Correção**: `.github/workflows/ci.yml` e `pr-check.yml` criados com tsc, lint, test e build
 
 ---
 

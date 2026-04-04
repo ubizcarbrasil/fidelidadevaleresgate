@@ -15,6 +15,7 @@ import { RedemptionCard } from "@/components/customer/RedemptionCard";
 import type { RedemptionWithOffer } from "@/types/customer";
 import { hslToCss, brandAlpha } from "@/lib/utils";
 import { RedemptionCardSkeleton } from "@/components/customer/RedemptionCardSkeleton";
+import { queryKeys } from "@/lib/queryKeys";
 
 type StatusFilter = "ALL" | "PENDING" | "USED" | "EXPIRED";
 
@@ -44,7 +45,7 @@ export default function CustomerRedemptionsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const { isLoading } = useQuery({
-    queryKey: ["customer-redemptions", customer?.id],
+    queryKey: queryKeys.customerRedemptions.list(customer?.id),
     queryFn: async () => {
       if (!customer?.id) return [];
       const { data, error } = await supabase
@@ -121,7 +122,7 @@ export default function CustomerRedemptionsPage() {
   const formatDate = (d: string) =>
     format(new Date(d), "dd/MM/yyyy, HH:mm", { locale: ptBR });
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all });
   }, [queryClient]);
 
   return (
@@ -208,7 +209,7 @@ export default function CustomerRedemptionsPage() {
                 formatCurrency={formatCurrency}
                 formatDate={formatDate}
                 onViewDetail={() => setSelectedRedemption(r)}
-                onCanceled={() => queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] })}
+                onCanceled={() => queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all })}
               />
             ))}
             {hasMore && (
@@ -233,7 +234,7 @@ export default function CustomerRedemptionsPage() {
             onBack={() => setSelectedRedemption(null)}
             onCanceled={() => {
               setSelectedRedemption(null);
-              queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] });
+              queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all });
             }}
           />
         )}

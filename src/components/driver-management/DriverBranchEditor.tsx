@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { MapPin } from "lucide-react";
-import type { DriverRow } from "@/pages/DriverManagementPage";
+import type { DriverRow } from "@/types/driver";
 
 interface Props {
   driver: DriverRow;

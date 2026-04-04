@@ -147,3 +147,29 @@
 - **Motivo**: Incremental — corrigir null-safety sem quebrar 1450+ usos de `any`; 15+ bugs reais encontrados e corrigidos
 - **Trade-offs aceitos**: `noImplicitAny` ainda desabilitado (Fase 2); algumas asserções `!` usadas temporariamente
 - **Revisitar quando**: Fase 2 — habilitar `noImplicitAny` após resolver maioria dos `: any`
+
+---
+
+## ADR-013: Constantes centralizadas em src/config/constants.ts
+
+- **Data**: 2026-04-04
+- **Status**: Aceita
+- **Contexto**: Valores como staleTime, gcTime e page sizes estavam hardcoded em dezenas de arquivos.
+- **Decisão**: Criar `src/config/constants.ts` com namespaces PAGINATION, CACHE, TIMEOUTS e LIMITS.
+- **Alternativas consideradas**: Variáveis de ambiente; configuração em runtime
+- **Motivo**: Alterações de configuração ficam em um único ponto; tipagem forte com `as const`.
+- **Trade-offs aceitos**: Migração incremental — nem todos os valores hardcoded foram substituídos ainda.
+- **Revisitar quando**: Necessidade de configuração por ambiente ou por tenant
+
+---
+
+## ADR-014: CI/CD com GitHub Actions
+
+- **Data**: 2026-04-04
+- **Status**: Aceita
+- **Contexto**: Não havia validação automática a cada push/PR.
+- **Decisão**: Criar `.github/workflows/ci.yml` (tsc + lint + test + build) e `pr-check.yml` (tsc + test).
+- **Alternativas consideradas**: GitLab CI; CircleCI; sem CI
+- **Motivo**: GitHub Actions integrado nativamente com o repositório; zero custo para repos open source.
+- **Trade-offs aceitos**: Depende de npm ci (lento ~60s); sem cache de build.
+- **Revisitar quando**: Build time exceder 5 minutos

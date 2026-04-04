@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -268,7 +269,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
 
   const { data: favorites = [], isLoading: loading } = useQuery({
-    queryKey: ["customer-favorites", customer?.id],
+    queryKey: queryKeys.customerFavorites.list(customer?.id),
     enabled: !!customer,
     queryFn: async () => {
       const { data } = await supabase

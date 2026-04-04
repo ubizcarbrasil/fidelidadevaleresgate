@@ -16,21 +16,8 @@ import ImportarCsvMotoristas from "@/components/driver-management/ImportarCsvMot
 import DriverNotificationConfig from "@/components/driver-management/DriverNotificationConfig";
 import { formatPoints } from "@/lib/formatPoints";
 
-export type DriverRow = {
-  id: string;
-  name: string | null;
-  cpf: string | null;
-  phone: string | null;
-  email: string | null;
-  points_balance: number;
-  user_id: string | null;
-  branch_id: string | null;
-  customer_tier: string | null;
-  scoring_disabled: boolean;
-  total_ride_points: number;
-  total_rides: number;
-  branch_name: string | null;
-};
+import type { DriverRow } from "@/types/driver";
+export type { DriverRow } from "@/types/driver";
 
 export default function DriverManagementPage() {
   const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();

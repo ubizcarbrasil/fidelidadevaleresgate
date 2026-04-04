@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Coins, Gift, Car } from "lucide-react";
-import type { DriverRow } from "@/pages/DriverManagementPage";
+import type { DriverRow } from "@/types/driver";
 import DriverScoringToggle from "../DriverScoringToggle";
 import { formatPoints } from "@/lib/formatPoints";
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ export default function CustomerLedgerDrawer({ customer, open, onOpenChange }: C
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customer-ledger", customer?.id, page, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryKey: queryKeys.customerLedger.list(customer?.id, page, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()),
     queryFn: async () => {
       let query = supabase
         .from("points_ledger")

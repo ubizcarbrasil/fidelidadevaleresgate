@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import { formatPoints } from "@/lib/formatPoints";
+import { queryKeys } from "@/lib/queryKeys";
 
 type LedgerEntry = Tables<"points_ledger">;
 
@@ -29,7 +30,7 @@ export default function CustomerWalletPage() {
 
   // Fetch all pages up to current page
   const { data: entries = [], isLoading: loading } = useQuery({
-    queryKey: ["customer-wallet-ledger", customer?.id, page],
+    queryKey: queryKeys.customerWallet.ledger(customer?.id, page),
     enabled: !!customer,
     queryFn: async () => {
       const to = (page + 1) * PAGE_SIZE - 1;
@@ -44,7 +45,7 @@ export default function CustomerWalletPage() {
   });
 
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ["customer-wallet-count", customer?.id],
+    queryKey: queryKeys.customerWallet.count(customer?.id),
     enabled: !!customer,
     queryFn: async () => {
       const { count } = await supabase
@@ -68,8 +69,8 @@ export default function CustomerWalletPage() {
   const queryClient = useQueryClient();
   const handleRefresh = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["customer-wallet-ledger"] }),
-      queryClient.invalidateQueries({ queryKey: ["customer-wallet-count"] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerWallet.ledger() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerWallet.count() }),
     ]);
   }, [queryClient]);
 
