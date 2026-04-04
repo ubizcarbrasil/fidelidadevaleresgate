@@ -18,6 +18,7 @@ interface Props {
 
 export default function DriverCityRedeemFlow({ oferta, fontHeading, onClose, onSuccess }: Props) {
   const { driver, refreshDriver } = useDriverSession();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ token: string; pointsDebited: number } | null>(null);
