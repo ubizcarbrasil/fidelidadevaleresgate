@@ -152,6 +152,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
       { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car, moduleKey: "machine_integration" },
       { key: "sidebar.machine_test", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical, moduleKey: "machine_integration" },
+      { key: "sidebar.api_journey", defaultTitle: "Guia da API", url: "/brand-api-journey", icon: BookOpen, moduleKey: "machine_integration" },
     ],
   },
   {

@@ -132,6 +132,7 @@ const ManuaisPage = lazyWithRetry(() => import("@/pages/ManuaisPage"));
 const BrandBranchesPage = lazyWithRetry(() => import("@/pages/BrandBranchesPage"));
 const BrandBranchForm = lazyWithRetry(() => import("@/pages/BrandBranchForm"));
 const BrandCidadesJourneyPage = lazyWithRetry(() => import("@/pages/BrandCidadesJourneyPage"));
+const BrandApiJourneyPage = lazyWithRetry(() => import("@/pages/BrandApiJourneyPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
@@ -272,6 +273,7 @@ function AnimatedRoutes() {
               <Route path="brand-branches/new" element={<BrandBranchForm />} />
               <Route path="brand-branches/:id" element={<BrandBranchForm />} />
               <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
+              <Route path="brand-api-journey" element={<BrandApiJourneyPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
