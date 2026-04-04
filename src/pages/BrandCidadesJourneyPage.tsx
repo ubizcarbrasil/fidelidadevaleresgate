@@ -181,7 +181,7 @@ export default function BrandCidadesJourneyPage() {
             <div>
               <h3 className="font-bold text-sm mb-1">Expandindo para Novas Cidades</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Siga as 6 etapas abaixo para adicionar uma nova cidade à sua operação.
+                Siga as 7 etapas abaixo para adicionar uma nova cidade à sua operação.
                 Cada etapa inclui passos detalhados e dicas práticas.
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
