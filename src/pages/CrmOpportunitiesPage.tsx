@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, Zap, TrendingDown, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Target, Zap, TrendingDown, Sparkles, ChevronUp } from "lucide-react";
 
 const ICON_MAP: Record<string, any> = { Target, Zap, TrendingDown, Sparkles };
 

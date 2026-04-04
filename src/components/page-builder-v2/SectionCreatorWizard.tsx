@@ -9,13 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
-import {
-  ArrowLeft, ArrowRight, Check, Loader2,
-  ShoppingBag, Store, Tag, Link2, Image as ImageIcon,
-  Info, LayoutGrid, LayoutList, GalleryHorizontal,
-  Columns2, Columns3, Columns4, RectangleHorizontal,
-  Square, CircleDot, Rows3, Star, FolderTree, Smartphone
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, ShoppingBag, Store, Tag, Link2, Image as ImageIcon, Info, LayoutGrid, LayoutList, GalleryHorizontal, CircleDot, Star, FolderTree, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SectionWizardPreview from "./SectionWizardPreview";

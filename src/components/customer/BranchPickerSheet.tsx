@@ -27,7 +27,6 @@ export default function BranchPickerSheet() {
   const primaryColor = "hsl(var(--primary))";
   const fg = "hsl(var(--foreground))";
 
-
   // Group branches by state > city
   const grouped = useMemo<GroupedBranches>(() => {
     const map: GroupedBranches = {};

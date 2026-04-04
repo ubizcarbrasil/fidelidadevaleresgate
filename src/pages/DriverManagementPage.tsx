@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Truck, Eye, Gift, Download, Loader2, Users } from "lucide-react";
+import { Search, Truck, Eye, Gift, Download, Users } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import ImportarCsvMotoristas from "@/components/driver-management/ImportarCsvMotoristas";

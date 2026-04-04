@@ -5,11 +5,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables, Json } from "@/integrations/supabase/types";
 import type { RedemptionWithOffer } from "@/types/customer";
-import {
-  ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2,
-  CheckCircle2, AlertTriangle, Share2, Copy, Sparkles, ThumbsUp,
-  MapPin, Ban, Globe, MessageCircle, DollarSign, Tag, ChevronRight,
-} from "lucide-react";
+import { ArrowLeft, Clock, ShoppingBag, Heart, CalendarDays, Store, Loader2, CheckCircle2, AlertTriangle, Share2, ThumbsUp, MapPin, Ban, Globe, MessageCircle, DollarSign, Tag, ChevronRight } from "lucide-react";
 import RedemptionSignupCarousel from "@/components/customer/RedemptionSignupCarousel";
 import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDetailPage";
 import { motion, AnimatePresence } from "framer-motion";

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Image as ImageIcon, Lock } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff, Copy, Settings2, Loader2, Layers, Link2, Lock } from "lucide-react";
 import SectionEditor from "./SectionEditor";
 import ManualLinksEditor from "./ManualLinksEditor";
 import SectionCreatorWizard from "./SectionCreatorWizard";
@@ -69,7 +69,6 @@ interface Props {
   page: PageRow | null; // null = Home mode
   onBack: () => void;
 }
-
 
 export default function PageSectionsEditor({ page, onBack }: Props) {
   const isHomeMode = page === null;

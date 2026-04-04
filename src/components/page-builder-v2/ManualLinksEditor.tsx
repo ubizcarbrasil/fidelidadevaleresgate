@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Pencil, Loader2, Link2, ExternalLink, Globe, GripVertical } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Pencil, Loader2, Link2, ExternalLink, Globe } from "lucide-react";
 
 interface ManualLink {
   id: string;

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { formatPoints } from "@/lib/formatPoints";
-import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Loader2, TrendingUp, TrendingDown, Coins, AlertTriangle } from "lucide-react";
+import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, TrendingUp, TrendingDown, Coins, AlertTriangle } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";

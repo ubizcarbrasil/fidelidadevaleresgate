@@ -1,5 +1,5 @@
 import { useBrand } from "@/contexts/BrandContext";
-import { MapPin, MessageCircle, Globe, Instagram, Clock, AlertTriangle, Store, Copy, Check, ArrowLeft, Home, RotateCcw } from "lucide-react";
+import { MapPin, MessageCircle, Globe, Instagram, Clock, AlertTriangle, Store, Copy, Check, ArrowLeft, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";

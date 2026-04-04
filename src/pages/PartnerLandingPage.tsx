@@ -2,14 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, useInView } from "framer-motion";
-import {
-  Eye, Heart, Zap, BarChart3, Star, ChevronDown,
-  ArrowRight, Users, Store, Gift, Shield, TrendingUp, Sparkles,
-  CheckCircle2, Loader2, Menu, X, Rocket, Target, Award,
-  Smartphone, PieChart, MessageSquare, Clock, DollarSign,
-  Check, Play, ShoppingCart, Repeat, QrCode, BarChart, Settings,
-  BadgeCheck, Crown, Quote, Instagram, Mail,
-} from "lucide-react";
+import { Eye, Heart, Zap, BarChart3, Star, ChevronDown, ArrowRight, Users, Store, Gift, Shield, TrendingUp, Sparkles, CheckCircle2, Loader2, Menu, X, Rocket, Target, Award, Smartphone, PieChart, MessageSquare, Clock, DollarSign, Check, ShoppingCart, Repeat, QrCode, BarChart, Settings, BadgeCheck, Crown, Quote, Instagram, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ICON_MAP: Record<string, any> = {

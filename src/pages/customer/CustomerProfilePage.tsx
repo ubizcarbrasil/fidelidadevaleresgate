@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Loader2, ChevronRight, Moon, Sun, Heart, Tag, X, icons } from "lucide-react";
+import { Save, ChevronRight, Moon, Sun, Heart, Tag, X, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";

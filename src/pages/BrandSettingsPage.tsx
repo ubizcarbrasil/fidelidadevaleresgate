@@ -5,7 +5,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import PlatformLogo from "@/components/PlatformLogo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag, Car } from "lucide-react";
+import { Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag, Car } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 

@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tag, Store, ShoppingBag, Zap, Eye, RotateCcw, Info, Sparkles, Star, Percent, Gift, Heart, Award } from "lucide-react";
+import { Tag, Store, ShoppingBag, Zap, RotateCcw, Info, Sparkles, Star, Percent, Gift, Heart, Award } from "lucide-react";
 import type { OfferCardConfig, OfferTypeCardConfig } from "@/hooks/useOfferCardConfig";
 import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import type { BadgeConfig } from "@/hooks/useBrandTheme";

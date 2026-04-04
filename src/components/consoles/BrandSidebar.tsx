@@ -1,10 +1,4 @@
-import {
-  Store, MapPin, LayoutDashboard, LogOut, Palette, Users,
-  FileSpreadsheet, Blocks, Settings2, ScrollText, ShieldCheck, Image, Tag,
-  FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw,
-  Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown,
-  ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package,
-} from "lucide-react";
+import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, Image, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";

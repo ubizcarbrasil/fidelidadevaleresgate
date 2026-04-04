@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, User, Mail, Phone, KeyRound, Lock, CreditCard } from "lucide-react";
+import { Loader2, User, Mail, Phone, KeyRound, Lock, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
 import { brandAlpha } from "@/lib/utils";

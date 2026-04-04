@@ -271,7 +271,6 @@ export default function BrandForm() {
               </Card>
             )}
 
-
             <BrandThemeEditor value={theme} onChange={setTheme} brandId={id} brandName={name} offerCardConfig={offerCardConfig} onOfferCardConfigChange={setOfferCardConfig} isModuleEnabled={isModuleEnabled} />
           </TabsContent>
 

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, FileText, ExternalLink, Layers, GripVertical, Copy, Settings2, ChevronDown, ChevronUp, ToggleLeft, Smartphone } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Loader2, FileText, Layers, Smartphone } from "lucide-react";
 import PageSectionsEditor from "@/components/page-builder-v2/PageSectionsEditor";
 
 interface PageRow {

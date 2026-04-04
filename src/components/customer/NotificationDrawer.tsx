@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Bell, Check, CheckCheck, Tag, Clock } from "lucide-react";
+import { X, Bell, CheckCheck, Tag, Clock } from "lucide-react";
 import { useCustomerNotifications, CustomerNotification } from "@/hooks/useCustomerNotifications";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { useBrand } from "@/contexts/BrandContext";

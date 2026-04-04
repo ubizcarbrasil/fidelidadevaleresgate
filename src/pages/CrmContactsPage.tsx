@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCrmContacts, useCrmContactEvents, useCrmContactStats, SOURCE_LABELS, SOURCE_COLORS } from "@/modules/crm";
-import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight, Coins } from "lucide-react";
+import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { getTierInfo } from "@/lib/tierUtils";
 
 export default function CrmContactsPage() {

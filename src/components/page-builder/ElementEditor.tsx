@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, GripVertical, Eye, Save, Image, Type, Minus, Square, MousePointer, Copy } from "lucide-react";
+import { ArrowLeft, Trash2, GripVertical, Eye, Save, Image, Type, Minus, Square, MousePointer, Copy } from "lucide-react";
 import type { PageElement, PageElementStyle } from "./types";
 import { DEFAULT_ELEMENT, ELEMENT_TYPE_LABELS } from "./types";
 import PagePreview from "./PagePreview";
