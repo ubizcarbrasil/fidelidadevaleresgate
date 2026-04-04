@@ -306,6 +306,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 <div className="relative">
                   {offer.stores?.banner_url ? (
                     <SafeImage
+                      preset="banner"
+                      loading="eager"
                       src={offer.stores.banner_url}
                       alt={offer.stores?.name || "Loja"}
                       className="w-full h-48 object-cover"
