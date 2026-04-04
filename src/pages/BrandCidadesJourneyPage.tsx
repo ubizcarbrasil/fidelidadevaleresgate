@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   MapPin, Plus, ShoppingBag, Coins, Copy, Eye,
-  Check, ChevronRight, ChevronDown, BookOpen,
+  Check, ChevronRight, ChevronDown, BookOpen, Settings2,
 } from "lucide-react";
 
 interface JourneyStep {
@@ -64,6 +64,27 @@ const journeySteps: JourneyStep[] = [
   },
   {
     id: "3",
+    phase: "Modelo",
+    phaseIcon: Settings2,
+    phaseColor: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+    title: "Definir o modelo de negócio da Cidade",
+    description: "Escolha se a cidade opera com motoristas, passageiros ou ambos.",
+    route: "/regras-resgate",
+    steps: [
+      "Acesse Cidades → Regras de Resgate.",
+      "Selecione a cidade recém-criada no filtro.",
+      "Escolha o modelo de negócio: Apenas Motorista, Apenas Passageiro ou Ambos.",
+      "O modelo define quais funcionalidades e menus ficam disponíveis na cidade.",
+      "Clique em 'Salvar' para aplicar.",
+    ],
+    tips: [
+      "Novas cidades herdam o modelo padrão da marca automaticamente.",
+      "Você pode alterar o modelo a qualquer momento em Regras de Resgate.",
+      "O modelo 'Ambos' habilita funcionalidades de motorista e passageiro simultaneamente.",
+    ],
+  },
+  {
+    id: "4",
     phase: "Parceiros",
     phaseIcon: ShoppingBag,
     phaseColor: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
@@ -82,7 +103,7 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "4",
+    id: "5",
     phase: "Pontos",
     phaseIcon: Coins,
     phaseColor: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
@@ -101,7 +122,7 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "5",
+    id: "6",
     phase: "Clonar",
     phaseIcon: Copy,
     phaseColor: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
@@ -119,7 +140,7 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "6",
+    id: "7",
     phase: "Testar",
     phaseIcon: Eye,
     phaseColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
@@ -160,11 +181,11 @@ export default function BrandCidadesJourneyPage() {
             <div>
               <h3 className="font-bold text-sm mb-1">Expandindo para Novas Cidades</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Siga as 6 etapas abaixo para adicionar uma nova cidade à sua operação.
+                Siga as 7 etapas abaixo para adicionar uma nova cidade à sua operação.
                 Cada etapa inclui passos detalhados e dicas práticas.
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
-                <Badge variant="secondary" className="text-xs">6 Etapas</Badge>
+                <Badge variant="secondary" className="text-xs">7 Etapas</Badge>
                 <Badge variant="secondary" className="text-xs">~10 min</Badge>
               </div>
             </div>
