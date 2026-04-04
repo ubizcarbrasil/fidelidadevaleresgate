@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -118,10 +119,13 @@ export default function CustomerRedemptionsPage() {
 
   const formatDate = (d: string) =>
     format(new Date(d), "dd/MM/yyyy, HH:mm", { locale: ptBR });
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] });
+  }, [queryClient]);
 
   return (
     <>
-      <div className="max-w-lg mx-auto pb-4 pt-1">
+      <PullToRefresh onRefresh={handleRefresh} className="max-w-lg mx-auto pb-4 pt-1">
         {/* Header with gradient */}
         <div className="px-5 pt-8 pb-6 mb-4" style={{ background: `linear-gradient(135deg, ${primary}, ${brandAlpha(primary, 0.87)})`, borderRadius: '0 0 1.5rem 1.5rem' }}>
           <div className="flex items-center gap-3 mb-4">
@@ -218,7 +222,7 @@ export default function CustomerRedemptionsPage() {
             )}
           </div>
         )}
-      </div>
+      </PullToRefresh>
 
       {/* Redemption Detail Overlay */}
       <AnimatePresence>

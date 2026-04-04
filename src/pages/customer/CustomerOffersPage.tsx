@@ -1,5 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
@@ -98,6 +100,11 @@ export default function CustomerOffersPage() {
     return result;
   }, [offers, selectedSegmentId, query, isDriver]);
 
+  const queryClient = useQueryClient();
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.offers.all });
+  }, [queryClient]);
+
   if (loading) {
     return (
       <div className="max-w-lg mx-auto px-5 py-4 space-y-3">
@@ -110,7 +117,7 @@ export default function CustomerOffersPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-5 py-4">
+    <PullToRefresh onRefresh={handleRefresh} className="max-w-lg mx-auto px-5 py-4">
       {/* Search */}
       <div className="flex items-center gap-2.5 rounded-full px-4 py-2.5 mb-4 bg-muted">
         <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -276,6 +283,6 @@ export default function CustomerOffersPage() {
           })}
         </div>
       )}
-    </div>
+    </PullToRefresh>
   );
 }
