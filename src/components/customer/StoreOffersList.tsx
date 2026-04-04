@@ -1,4 +1,5 @@
 import React from "react";
+import { haptics } from "@/lib/haptics";
 import { ShoppingBag, Clock, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
