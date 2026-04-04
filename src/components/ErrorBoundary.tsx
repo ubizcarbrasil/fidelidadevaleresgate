@@ -1,4 +1,5 @@
 import React from "react";
+import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/errorTracker";
 import { setBootPhase, dismissBootstrap } from "@/lib/bootState";
