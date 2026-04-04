@@ -15,6 +15,8 @@ import {
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import PlatformLogo from "@/components/PlatformLogo";
+import { useBrandInfo } from "@/hooks/useBrandName";
+import { useBranchCityName } from "@/hooks/hook_branch_city";
 
 interface MenuItem {
   key: string;
