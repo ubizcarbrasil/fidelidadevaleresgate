@@ -71,7 +71,7 @@ export function usePrefetchRoutes() {
 
     // Prefetch contagem do ledger de pontos (tab Wallet)
     queryClient.prefetchQuery({
-      queryKey: ["customer-wallet-count", customerId],
+      queryKey: queryKeys.customerWallet.count(customerId),
       staleTime: PREFETCH_STALE_TIME,
       queryFn: async () => {
         const { count } = await supabase
