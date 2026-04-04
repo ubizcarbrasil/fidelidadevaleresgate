@@ -40,7 +40,7 @@ export default function BranchFeedTempoReal({ feed }: Props) {
                     })}
                   </p>
                 </div>
-                <Badge variant="secondary" className="shrink-0 font-semibold">
+                <Badge variant="outline" className="shrink-0 font-semibold border-primary/30 text-primary">
                   +{formatPoints(item.points)} pts
                 </Badge>
               </div>

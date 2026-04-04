@@ -38,7 +38,7 @@ export default function BranchRankingMotoristas({ ranking }: Props) {
                       )}
                       <span className="text-sm font-medium truncate max-w-[160px]">{r.name}</span>
                     </div>
-                    <Badge variant="secondary" className="text-xs font-semibold shrink-0">
+                    <Badge variant="outline" className="text-xs font-semibold shrink-0 border-primary/30 text-primary">
                       {formatPoints(r.points)} pts
                     </Badge>
                   </div>
