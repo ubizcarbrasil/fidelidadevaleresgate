@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
+import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 

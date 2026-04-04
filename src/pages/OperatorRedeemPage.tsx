@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScanLine, CheckCircle2, XCircle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
+import { haptics } from "@/lib/haptics";
 
 interface RedemptionResult {
   id: string;
