@@ -100,6 +100,11 @@ export default function CustomerOffersPage() {
     return result;
   }, [offers, selectedSegmentId, query, isDriver]);
 
+  const queryClient = useQueryClient();
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.offers.all });
+  }, [queryClient]);
+
   if (loading) {
     return (
       <div className="max-w-lg mx-auto px-5 py-4 space-y-3">
@@ -110,10 +115,6 @@ export default function CustomerOffersPage() {
       </div>
     );
   }
-  const queryClient = useQueryClient();
-  const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.offers.all });
-  }, [queryClient]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="max-w-lg mx-auto px-5 py-4">
