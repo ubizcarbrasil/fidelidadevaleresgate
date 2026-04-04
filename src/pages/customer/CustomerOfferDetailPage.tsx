@@ -35,6 +35,7 @@ interface Props {
 export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, onOpenStore }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [showConfirm, setShowConfirm] = useState(false);
   const [redemptionStep, setRedemptionStep] = useState<"terms" | "cpf">("terms");
   const [termsAccepted, setTermsAccepted] = useState(false);
