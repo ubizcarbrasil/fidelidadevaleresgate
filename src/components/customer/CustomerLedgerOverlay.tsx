@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -321,7 +322,7 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
                     <div>
                       <span className="text-xs opacity-70">Saldo disponível</span>
                       <div className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-                        {Number(customer.points_balance).toLocaleString("pt-BR")} <span className="text-sm font-normal opacity-70">pts</span>
+                        <AnimatedCounter value={Number(customer.points_balance)} duration={1200} /> <span className="text-sm font-normal opacity-70">pts</span>
                       </div>
                     </div>
                     {Number(customer.money_balance) > 0 && (

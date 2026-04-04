@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { useQueryClient } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,7 +102,7 @@ export default function CustomerWalletPage() {
                 <span className="text-xs font-medium">Pontos</span>
               </div>
               <span className="text-2xl font-bold" style={{ fontFamily: fontHeading }}>
-                {Number(customer.points_balance).toLocaleString("pt-BR")}
+                <AnimatedCounter value={Number(customer.points_balance)} duration={1200} />
               </span>
             </div>
           </div>
