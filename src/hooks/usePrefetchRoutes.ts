@@ -26,7 +26,7 @@ export function usePrefetchRoutes() {
     // Prefetch ofertas ativas (tab Ofertas)
     queryClient.prefetchQuery({
       queryKey: queryKeys.offers.list(brandId, branchId, "all-offers"),
-      staleTime: PREFETCH_STALE_TIME,
+      staleTime: CACHE.PREFETCH_STALE_TIME,
       queryFn: async () => {
         const { data } = await supabase
           .from("offers")
@@ -47,7 +47,7 @@ export function usePrefetchRoutes() {
     // Prefetch resgates do cliente (tab Resgates)
     queryClient.prefetchQuery({
       queryKey: queryKeys.customerRedemptions.list(customerId),
-      staleTime: PREFETCH_STALE_TIME,
+      staleTime: CACHE.PREFETCH_STALE_TIME,
       queryFn: async () => {
         const { data } = await supabase
           .from("redemptions")
@@ -71,7 +71,7 @@ export function usePrefetchRoutes() {
     // Prefetch contagem do ledger de pontos (tab Wallet)
     queryClient.prefetchQuery({
       queryKey: queryKeys.customerWallet.count(customerId),
-      staleTime: PREFETCH_STALE_TIME,
+      staleTime: CACHE.PREFETCH_STALE_TIME,
       queryFn: async () => {
         const { count } = await supabase
           .from("points_ledger")
