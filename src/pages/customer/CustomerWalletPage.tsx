@@ -180,6 +180,6 @@ export default function CustomerWalletPage() {
           )}
         </div>
       )}
-    </div>
+    </PullToRefresh>
   );
 }
