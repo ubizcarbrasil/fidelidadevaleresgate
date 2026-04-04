@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { haptics } from "@/lib/haptics";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +30,11 @@ export function ConfirmDialog({
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
+  // Haptic feedback ao abrir
+  useEffect(() => {
+    if (open) haptics.light();
+  }, [open]);
+
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
       <AlertDialogContent>
@@ -39,6 +46,8 @@ export function ConfirmDialog({
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
+              if (variant === "destructive") haptics.heavy();
+              else haptics.medium();
               onConfirm();
               onClose();
             }}

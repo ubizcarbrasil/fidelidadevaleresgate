@@ -40,6 +40,7 @@ export function useRedeemMutation(onSuccess?: () => void) {
       onSuccess?.();
     },
     onError: (e: Error) => {
+      haptics.error();
       toast.error(e.message || "Erro ao confirmar resgate");
     },
   });
