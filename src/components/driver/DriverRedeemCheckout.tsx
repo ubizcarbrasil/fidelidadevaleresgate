@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { formatPoints } from "@/lib/formatPoints";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 
@@ -26,6 +27,7 @@ interface Props {
 
 export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { driver, refreshDriver } = useDriverSession();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -136,7 +138,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       await refreshDriver();
 
       setSuccess(true);
-      toast.success("Resgate solicitado com sucesso!");
+      celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar resgate");
     }

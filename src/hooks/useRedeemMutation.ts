@@ -4,6 +4,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 
 interface ConfirmRedeemParams {
   redemptionId: string;
@@ -13,6 +14,8 @@ interface ConfirmRedeemParams {
 }
 
 export function useRedeemMutation(onSuccess?: () => void) {
+  const { celebrate } = useRedeemCelebration();
+
   return useMutation({
     mutationFn: async ({ redemptionId, purchaseValue, creditValueApplied, minPurchase }: ConfirmRedeemParams) => {
       if (minPurchase > 0 && (purchaseValue ?? 0) < minPurchase) {
@@ -32,7 +35,7 @@ export function useRedeemMutation(onSuccess?: () => void) {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Resgate confirmado!");
+      celebrate({ title: "Resgate confirmado! 🎉", description: "Voucher utilizado com sucesso." });
       onSuccess?.();
     },
     onError: (e: Error) => {

@@ -11,6 +11,7 @@ import CustomerRedemptionDetailPage from "@/pages/customer/CustomerRedemptionDet
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/translateError";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import SafeImage from "@/components/customer/SafeImage";
 import { useOfferCardConfig } from "@/hooks/useOfferCardConfig";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
@@ -34,6 +35,7 @@ interface Props {
 export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, onOpenStore }: Props) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [showConfirm, setShowConfirm] = useState(false);
   const [redemptionStep, setRedemptionStep] = useState<"terms" | "cpf">("terms");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -238,7 +240,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
         });
       }
 
-      toast({ title: "Resgate solicitado!", description: "Apresente o PIN ao estabelecimento." });
+      celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Apresente o PIN ao estabelecimento." });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
       toast({ title: "Erro ao resgatar", description: translateError(message), variant: "destructive" });

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { ArrowLeft, Search, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,6 +31,7 @@ interface VoucherData {
 
 export default function VoucherRedeem() {
   const navigate = useNavigate();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const { user } = useAuth();
   const [code, setCode] = useState("");
   const [notes, setNotes] = useState("");
@@ -88,7 +90,7 @@ export default function VoucherRedeem() {
 
     setRedeemed(true);
     setVoucher({ ...voucher, current_uses: newUses, status: newStatus });
-    toast.success("Voucher resgatado com sucesso!");
+    celebrateRedeem({ title: "Voucher resgatado! 🎉", description: "Aproveite seu benefício." });
     setRedeeming(false);
   };
 

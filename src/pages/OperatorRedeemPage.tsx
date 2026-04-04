@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScanLine, CheckCircle2, XCircle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 
 interface RedemptionResult {
   id: string;
@@ -38,6 +39,7 @@ const maskCpf = (cpf: string) => {
 
 export default function OperatorRedeemPage() {
   const qc = useQueryClient();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [pin, setPin] = useState("");
   const [cpf, setCpf] = useState("");
   const [purchaseValue, setPurchaseValue] = useState("");
@@ -98,7 +100,7 @@ export default function OperatorRedeemPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Resgate confirmado!");
+      celebrateRedeem({ title: "Resgate confirmado! 🎉", description: "Voucher utilizado com sucesso." });
       setResult(null); setPin(""); setCpf(""); setPurchaseValue(""); setError(null);
       qc.invalidateQueries({ queryKey: ["redemptions"] });
     },

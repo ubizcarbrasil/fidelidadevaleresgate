@@ -4,6 +4,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, CheckCircle2, Coins, ShoppingCart, Store, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { formatPoints } from "@/lib/formatPoints";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 import type { OfertaCidade } from "./SecaoResgateCidade";
@@ -17,6 +18,7 @@ interface Props {
 
 export default function DriverCityRedeemFlow({ oferta, fontHeading, onClose, onSuccess }: Props) {
   const { driver, refreshDriver } = useDriverSession();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ token: string; pointsDebited: number } | null>(null);
@@ -45,7 +47,7 @@ export default function DriverCityRedeemFlow({ oferta, fontHeading, onClose, onS
 
       await refreshDriver();
       setResult({ token: res.token, pointsDebited: res.points_debited });
-      toast.success("Resgate realizado com sucesso!");
+      celebrateRedeem({ title: "Resgate realizado! 🎉", description: "Aproveite seu benefício." });
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar resgate");
     }
