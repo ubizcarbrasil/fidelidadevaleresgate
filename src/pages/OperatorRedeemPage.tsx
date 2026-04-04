@@ -147,14 +147,16 @@ export default function OperatorRedeemPage() {
               inputMode="numeric"
             />
           </div>
-          <Button
+          <LoadingButton
             onClick={() => lookup.mutate({ pinInput: pin, cpfInput: cpf })}
-            disabled={!canSearch || lookup.isPending}
+            disabled={!canSearch}
+            isLoading={lookup.isPending}
+            loadingText="Buscando..."
             className="w-full h-12"
           >
-            {lookup.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ScanLine className="h-4 w-4 mr-2" />}
+            <ScanLine className="h-4 w-4 mr-2" />
             Buscar Resgate
-          </Button>
+          </LoadingButton>
 
           {error && (
             <div className="flex items-center gap-2 text-destructive text-sm">
