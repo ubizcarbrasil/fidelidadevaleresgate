@@ -1,8 +1,8 @@
 # 📋 Débitos Técnicos — Vale Resgate
 
-**Última atualização**: 2026-03-14  
-**Total de débitos**: 13 itens  
-**Distribuição**: 12 Resolvidos · 1 Pendente (baixa prioridade)
+**Última atualização**: 2026-04-04  
+**Total de débitos**: 18 itens  
+**Distribuição**: 17 Resolvidos · 1 Pendente (baixa prioridade)
 
 ---
 
