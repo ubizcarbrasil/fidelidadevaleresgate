@@ -27,6 +27,7 @@ interface Props {
 
 export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { driver, refreshDriver } = useDriverSession();
+  const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
