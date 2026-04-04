@@ -4,6 +4,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, CheckCircle2, Coins, ShoppingCart, Store, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { formatPoints } from "@/lib/formatPoints";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 import type { OfertaCidade } from "./SecaoResgateCidade";
