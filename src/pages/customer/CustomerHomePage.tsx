@@ -183,7 +183,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
             style={{ backgroundColor: accent ? `${accent}20` : "hsl(var(--primary) / 0.1)", color: accent || "hsl(var(--primary))" }}
           >
             <Coins className="h-3.5 w-3.5" />
-            {customer.points_balance ?? 0} pts
+            <AnimatedCounter value={customer.points_balance ?? 0} duration={600} suffix=" pts" />
           </button>
         )}
       </div>
