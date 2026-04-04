@@ -22,6 +22,7 @@ const emptyForm: ReleaseForm = { version: "", title: "", description: "", payloa
 export default function ReleasesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<ReleaseForm>(emptyForm);
 
