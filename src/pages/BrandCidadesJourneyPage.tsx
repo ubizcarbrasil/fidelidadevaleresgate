@@ -140,7 +140,7 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "6",
+    id: "7",
     phase: "Testar",
     phaseIcon: Eye,
     phaseColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
