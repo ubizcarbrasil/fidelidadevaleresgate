@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import type { DriverRow } from "@/pages/DriverManagementPage";
+import type { DriverRow } from "@/types/driver";
 import { useMutationWithFeedback } from "@/hooks/useMutationWithFeedback";
 import { queryKeys } from "@/lib/queryKeys";
 

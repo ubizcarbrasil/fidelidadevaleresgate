@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, CreditCard, Phone, Mail, ExternalLink, Pencil, X, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { DriverRow } from "@/pages/DriverManagementPage";
+import type { DriverRow } from "@/types/driver";
 import DriverPasswordReset from "../DriverPasswordReset";
 import DriverBranchEditor from "../DriverBranchEditor";
 
