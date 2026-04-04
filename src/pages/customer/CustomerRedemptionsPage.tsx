@@ -209,7 +209,7 @@ export default function CustomerRedemptionsPage() {
                 formatCurrency={formatCurrency}
                 formatDate={formatDate}
                 onViewDetail={() => setSelectedRedemption(r)}
-                onCanceled={() => queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] })}
+                onCanceled={() => queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all })}
               />
             ))}
             {hasMore && (
