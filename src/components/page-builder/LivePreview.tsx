@@ -4,7 +4,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import type { UnifiedBlock, PageElement } from "./types";
 import ElementRenderer from "./ElementRenderer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight, Globe, ExternalLink, ShoppingBag, Clock, Percent, Home, Tag, Ticket, Wallet, UserCircle, Bell, Search } from "lucide-react";
+import { ChevronRight, ShoppingBag, Clock, Percent, Home, Tag, Ticket, Wallet, UserCircle, Bell, Search } from "lucide-react";
 import { openLink } from "@/lib/openLink";
 
 interface LivePreviewProps {

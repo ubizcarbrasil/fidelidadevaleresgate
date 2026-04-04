@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useQuery } from "@tanstack/react-query";
-import { Car, TrendingUp, Trophy, Coins, Gift, Clock, ChevronRight } from "lucide-react";
+import { Car, TrendingUp, Coins, Gift, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hslToCss } from "@/lib/utils";
 import DriverRedeemOrderHistory from "@/components/driver/DriverRedeemOrderHistory";

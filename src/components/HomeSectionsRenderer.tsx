@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import type { Tables } from "@/integrations/supabase/types";
-import { Ticket, MapPin, Clock, Percent, Gift, ChevronLeft, ChevronRight, Store, Heart, Sparkles, ShoppingBag, DollarSign, Zap, Star } from "lucide-react";
+import { Clock, Percent, ChevronRight, Store, ShoppingBag, Zap, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import OfferBadge from "@/components/customer/OfferBadge";

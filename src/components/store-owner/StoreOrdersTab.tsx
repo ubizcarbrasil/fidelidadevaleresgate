@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, ShoppingBag, User, FileText, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, ShoppingBag, Loader2 } from "lucide-react";
 
 interface Props {
   store: any;

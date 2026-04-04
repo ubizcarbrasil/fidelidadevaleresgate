@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Handshake, DollarSign, TrendingUp, ArrowDownCircle, ArrowUpCircle, Download, Loader2, Search, Settings } from "lucide-react";
+import { Handshake, DollarSign, TrendingUp, ArrowDownCircle, ArrowUpCircle, Download, Loader2, Settings } from "lucide-react";
 import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
 import { useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -28,9 +28,6 @@ export default function GanhaGanhaBillingPage() {
   const { config: ggConfig, isLoading: ggLoading } = useGanhaGanhaConfig();
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonth());
   const [storeFilter, setStoreFilter] = useState<string>("all");
-
-
-
 
   // Fetch all billing events for period
   const { data: events, isLoading } = useQuery({
@@ -269,7 +266,6 @@ export default function GanhaGanhaBillingPage() {
           </CardContent>
         </Card>
       )}
-
 
       <Card>
         <CardHeader>

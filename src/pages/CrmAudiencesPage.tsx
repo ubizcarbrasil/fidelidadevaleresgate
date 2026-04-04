@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Users, Trash2, Filter } from "lucide-react";
+import { Plus, Trash2, Filter } from "lucide-react";
 
 export default function CrmAudiencesPage() {
   const { currentBrandId } = useBrandGuard();

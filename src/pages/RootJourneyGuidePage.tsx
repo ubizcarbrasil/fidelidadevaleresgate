@@ -5,11 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Building2, Store, MapPin, Rocket, ShoppingBag, Tag, UserCheck, Coins,
-  Check, ChevronRight, ChevronDown, Eye, Zap, Shield, LayoutDashboard,
-  Globe, Image, Layers, Settings2, BarChart3, BookOpen,
-} from "lucide-react";
+import { Building2, MapPin, Rocket, ShoppingBag, Tag, UserCheck, Coins, Check, ChevronRight, ChevronDown, Eye, Zap, Shield, Image, Settings2, BookOpen } from "lucide-react";
 
 interface JourneyStep {
   id: string;

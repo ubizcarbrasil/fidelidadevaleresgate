@@ -10,12 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
-import {
-  LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2,
-  HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus,
-  ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2,
-  Menu, ChevronLeft, Settings, Bell, Lock
-} from "lucide-react";
+import { LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2, HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus, ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2, Menu, ChevronLeft, Bell, Lock } from "lucide-react";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreProfileWizard from "@/components/store-owner/StoreProfileWizard";

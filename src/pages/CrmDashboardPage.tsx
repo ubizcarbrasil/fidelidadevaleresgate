@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
-import { Users, UserX, Target, TrendingUp, Sparkles, AlertTriangle, UserPlus, Flame, Snowflake, UserMinus, ShoppingBag } from "lucide-react";
+import { Users, UserX, Target, TrendingUp, Sparkles, AlertTriangle, Flame, Snowflake, UserMinus, ShoppingBag } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--destructive))", "hsl(142 76% 36%)", "hsl(38 92% 50%)"];

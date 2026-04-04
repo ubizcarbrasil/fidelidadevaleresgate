@@ -1,4 +1,4 @@
-import { Clock, Plus, Trash2 } from "lucide-react";
+import { Clock, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

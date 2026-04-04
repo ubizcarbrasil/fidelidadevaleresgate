@@ -4,7 +4,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Copy, ExternalLink, TestTube } from "lucide-react";
+import { Copy, ExternalLink, TestTube } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DemoAccessCard() {

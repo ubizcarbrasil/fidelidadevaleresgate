@@ -5,11 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Zap, ShoppingBag, Send, ClipboardList, Coins, Settings2, UserCheck,
-  Check, ChevronRight, ChevronDown, BookOpen, ScanLine, BarChart3,
-  Shield, Tag, Eye, ScrollText, Star,
-} from "lucide-react";
+import { ShoppingBag, Send, ClipboardList, Coins, Settings2, Check, ChevronRight, ChevronDown, BookOpen, ScanLine, BarChart3, Tag, ScrollText, Star } from "lucide-react";
 
 interface JourneyStep {
   id: string;

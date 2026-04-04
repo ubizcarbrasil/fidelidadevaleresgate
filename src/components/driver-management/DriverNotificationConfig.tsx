@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Send, CheckCircle, Clock, Hash, Zap, Bell } from "lucide-react";
+import { CheckCircle, Clock, Hash, Zap, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type FrequencyType = "EVERY_RIDE" | "DAILY" | "EVERY_X_HOURS" | "EVERY_X_RIDES" | "EVERY_X_POINTS";

@@ -259,7 +259,6 @@ export default function GanhaGanhaRootDashboardPage() {
         </Card>
       )}
 
-
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Resumo por Marca</CardTitle>

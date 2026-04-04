@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, ExternalLink, Store, Users, Search, Building2, Smartphone } from "lucide-react";
+import { Eye, ExternalLink, Store, Search, Building2, Smartphone } from "lucide-react";
 
 /* ─── ROOT: brands list ─── */
 function RootBrandsTab() {

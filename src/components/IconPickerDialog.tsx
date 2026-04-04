@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { icons, type LucideProps } from "lucide-react";
+import { icons } from "lucide-react";
 import { Search } from "lucide-react";
 
 interface IconPickerDialogProps {

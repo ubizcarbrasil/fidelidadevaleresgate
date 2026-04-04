@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Upload, Loader2, X, Image as ImageIcon, Link2 } from "lucide-react";
+import { Upload, Loader2, X, Link2 } from "lucide-react";
 import ImageAiActions from "@/components/ImageAiActions";
 
 interface Props {

@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Eye, MapPin, Bell, Search, Wallet, House, Tag, Ticket, CircleUser,
-  Coins, Percent, Store, Gift, Sparkles, ChevronRight, Heart, Star,
-  Shield, CircleHelp, LogOut, Moon, ArrowUpRight, ArrowDownRight, Sun,
-  TicketCheck,
-} from "lucide-react";
+import { Eye, MapPin, Bell, Search, Wallet, House, Tag, Ticket, CircleUser, Coins, Sparkles, ChevronRight, Heart, Star, Shield, CircleHelp, LogOut, Moon, ArrowUpRight, ArrowDownRight, Sun, TicketCheck } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 
 interface Props {
@@ -250,7 +245,6 @@ function HomeScreen({ accent, accentParsed, fg, muted, cardBg, fontHeading, disp
           <span className="text-[10px] font-bold">1.250 pts</span>
         </div>
       </div>
-
 
       {/* For you section */}
       <div>

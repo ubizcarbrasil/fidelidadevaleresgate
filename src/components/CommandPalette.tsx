@@ -11,12 +11,7 @@ import {
   CommandItem,
   CommandSeparator,
 } from "@/components/ui/command";
-import {
-  LayoutDashboard, MapPin, Palette, Tag, Gift, Store, Users,
-  BarChart3, Settings, Shield, Megaphone, Star, CreditCard,
-  FileText, Key, BookOpen, Coins, Receipt, Search, ShoppingBag,
-  User, Ticket, Layers, Globe, Zap, Heart,
-} from "lucide-react";
+import { LayoutDashboard, MapPin, Palette, Tag, Gift, Store, Users, BarChart3, Settings, Shield, Megaphone, Star, CreditCard, FileText, Key, BookOpen, Coins, Receipt, ShoppingBag, User, Ticket, Layers, Globe, Zap, Heart } from "lucide-react";
 
 /* ── Static page entries ── */
 const pages = [
