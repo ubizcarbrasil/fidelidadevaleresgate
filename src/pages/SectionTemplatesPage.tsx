@@ -118,7 +118,7 @@ export default function SectionTemplatesPage() {
                   <TableCell><Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove.mutate(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => askConfirm({ title: "Excluir template?", description: "Essa ação não pode ser desfeita.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => remove.mutate(t.id) })}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
