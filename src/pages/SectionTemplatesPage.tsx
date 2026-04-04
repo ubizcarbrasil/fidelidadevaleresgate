@@ -26,6 +26,7 @@ const emptyForm: TemplateForm = { name: "", key: "", type: "BANNER_CAROUSEL", sc
 export default function SectionTemplatesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<TemplateForm>(emptyForm);
 
