@@ -4,7 +4,7 @@
  */
 
 import * as Sentry from "@sentry/react";
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } from "web-vitals";
+import { onCLS, onFCP, onLCP, onTTFB, onINP } from "web-vitals";
 
 type Rating = "good" | "needs-improvement" | "poor";
 
