@@ -1,4 +1,4 @@
-import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, Image, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, Sparkles, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, Crown, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package } from "lucide-react";
+import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, Image, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package, Bell, ShoppingCart, FolderHeart, CreditCard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -56,7 +56,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Personalização & Vitrine",
     items: [
-      { key: "sidebar.tema_marca", defaultTitle: "Aparência da Marca", url: "/brands", icon: Palette, moduleKey: "brand_theme" },
+      { key: "sidebar.tema_marca", defaultTitle: "Identidade Visual", url: "/brands", icon: Palette, moduleKey: "brand_theme" },
       { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
       { key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing" },
       { key: "sidebar.welcome_tour", defaultTitle: "Boas-Vindas", url: "/welcome-tour", icon: Rocket, moduleKey: "welcome_tour" },
@@ -69,11 +69,11 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Achadinhos",
     items: [
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
+      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart, moduleKey: "affiliate_deals" },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart, moduleKey: "affiliate_deals" },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento Achadinho", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals" },
       { key: "sidebar.governanca_ofertas", defaultTitle: "Governança Achadinho", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals" },
-      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car, scoringFilter: "DRIVER" },
+      { key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER" },
     ],
   },
   {
@@ -92,6 +92,12 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    label: "Comunicação",
+    items: [
+      { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell, moduleKey: "notifications" },
+    ],
+  },
+  {
     label: "Gestão Comercial",
     items: [
       { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
@@ -100,7 +106,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers", scoringFilter: "PASSENGER" },
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores", scoringFilter: "PASSENGER" },
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet", scoringFilter: "PASSENGER" },
-      { key: "sidebar.motoristas", defaultTitle: "Motorista", url: "/motoristas", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER" },
+      { key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER" },
       { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap, moduleKey: "sponsored" },
     ],
   },
@@ -109,9 +115,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
       { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
-      { key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: Crown, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
+      { key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: CreditCard, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
       { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store", scoringFilter: "PASSENGER" },
-      { key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER" },
     ],
   },
   {
@@ -147,7 +152,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen, moduleKey: "api_keys" },
       { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car, moduleKey: "machine_integration" },
       { key: "sidebar.machine_test", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical, moduleKey: "machine_integration" },
-      
     ],
   },
   {
@@ -155,7 +159,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings" },
-      { key: "sidebar.subscription", defaultTitle: "Meu Plano", url: "/subscription", icon: Crown, moduleKey: "subscription" },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car, scoringFilter: "DRIVER" },
+      { key: "sidebar.subscription", defaultTitle: "Meu Plano", url: "/subscription", icon: CreditCard, moduleKey: "subscription" },
     ],
   },
 ];

@@ -1,4 +1,4 @@
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, Sparkles, PackageSearch, BarChart3, Bell, ChevronRight } from "lucide-react";
+import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, PackageSearch, BarChart3, Bell, ChevronRight, BookOpen, ShoppingCart, FolderHeart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,22 +34,39 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
     label: "Gestão Comercial",
     scoringFilter: "PASSENGER",
     items: [
+      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
       { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
       { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
-      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
-      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles, moduleKey: "affiliate_deals" },
-      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
-      { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell, moduleKey: "notifications" },
-      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
     ],
   },
   {
-    label: "Achadinhos Motorista",
+    label: "Aprovações",
+    scoringFilter: "PASSENGER",
+    items: [
+      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
+      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
+    ],
+  },
+  {
+    label: "Achadinhos",
+    scoringFilter: "PASSENGER",
+    items: [
+      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart, moduleKey: "affiliate_deals" },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart, moduleKey: "affiliate_deals" },
+    ],
+  },
+  {
+    label: "Comunicação",
+    scoringFilter: "PASSENGER",
+    items: [
+      { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell, moduleKey: "notifications" },
+    ],
+  },
+  {
+    label: "Motoristas & Resgate",
     scoringFilter: "DRIVER",
     items: [
       { key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "achadinhos_motorista" },
@@ -58,7 +75,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
       { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: ReceiptText, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: UserCheck, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.manuais", defaultTitle: "Manuais", url: "/manuais", icon: ScrollText, moduleKey: "achadinhos_motorista" },
+      { key: "sidebar.manuais", defaultTitle: "Manuais", url: "/manuais", icon: BookOpen, moduleKey: "achadinhos_motorista" },
     ],
   },
   {
@@ -75,6 +92,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
     items: [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3, moduleKey: "reports" },
       { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList, moduleKey: "audit" },
+      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
     ],
   },
 ];
@@ -160,7 +178,6 @@ export function BranchSidebar() {
 
   const visibleGroups = groups
     .filter((group) => {
-      // Filter groups by scoring model
       if (group.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
       if (group.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
       return true;

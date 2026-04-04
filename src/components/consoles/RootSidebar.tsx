@@ -1,7 +1,8 @@
 import {
   Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, Sparkles, PackageSearch, BarChart3, Bell, Image, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
-  TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen, Crown, Car, ExternalLink,
+  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, PackageSearch, BarChart3, Bell, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
+  TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen, Car, ExternalLink,
+  Palette, AppWindow, GalleryHorizontal, CreditCard, DollarSign, ShoppingCart, FolderHeart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -56,9 +57,9 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Personalização & Vitrine",
     items: [
-      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Image },
-      { key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: Image },
-      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image },
+      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Palette },
+      { key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: AppWindow },
+      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: GalleryHorizontal },
       { key: "sidebar.nomes_rotulos", defaultTitle: "Nomenclaturas", url: "/menu-labels", icon: Type },
       { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers },
       { key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2 },
@@ -68,29 +69,34 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
-    label: "Aprovações",
-    items: [
-      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: Shield },
-      { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Upgrade", url: "/emitter-requests", icon: Zap },
-      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch },
-    ],
-  },
-  {
     label: "Gestão Comercial",
     items: [
+      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine },
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag },
       { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag },
       { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck },
       { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText },
       { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket },
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: Sparkles },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: Sparkles },
+      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart },
+      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart },
+      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet },
+      { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap },
+    ],
+  },
+  {
+    label: "Aprovações",
+    items: [
+      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: Shield },
+      { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Upgrade", url: "/emitter-requests", icon: Zap },
+      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch },
       { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: Copy },
       { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield },
+    ],
+  },
+  {
+    label: "Comunicação",
+    items: [
       { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
-      { key: "sidebar.gg_store_summary", defaultTitle: "Resumo Cashback", url: "/ganha-ganha-store-summary", icon: Handshake },
-      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine },
-      { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap },
     ],
   },
   {
@@ -108,6 +114,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.gg_config", defaultTitle: "Config. Cashback", url: "/ganha-ganha-config", icon: Settings2 },
       { key: "sidebar.gg_billing", defaultTitle: "Financeiro Cashback", url: "/ganha-ganha-billing", icon: ReceiptText },
       { key: "sidebar.gg_closing", defaultTitle: "Fechamento Financeiro", url: "/ganha-ganha-closing", icon: ScrollText },
+      { key: "sidebar.gg_store_summary", defaultTitle: "Resumo por Parceiro", url: "/ganha-ganha-store-summary", icon: Handshake },
     ],
   },
   {
@@ -123,7 +130,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.crm", defaultTitle: "Inteligência CRM", url: "/crm", icon: TrendingUp },
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
       { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ScrollText },
-      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet },
       { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
     ],
   },
@@ -139,8 +145,8 @@ const groups: { label: string; items: MenuItem[] }[] = [
   {
     label: "Configurações",
     items: [
-      { key: "sidebar.funcionalidades", defaultTitle: "Módulos", url: "/modules", icon: Blocks },
-      { key: "sidebar.modulos", defaultTitle: "Gerenciar Módulos", url: "/brand-modules", icon: Blocks },
+      { key: "sidebar.funcionalidades", defaultTitle: "Tipos de Módulo", url: "/modules", icon: Blocks },
+      { key: "sidebar.modulos", defaultTitle: "Módulos das Marcas", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.permissoes_globais", defaultTitle: "Políticas de Acesso", url: "/permissions", icon: Shield },
       { key: "sidebar.secoes_home", defaultTitle: "Seções Iniciais", url: "/templates", icon: Layout },
       { key: "sidebar.modelos_home", defaultTitle: "Templates", url: "/home-templates", icon: LayoutList },
@@ -148,9 +154,9 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.atualizacoes", defaultTitle: "Novidades", url: "/releases", icon: Rocket },
       { key: "sidebar.kit_inicial", defaultTitle: "Starter Kit", url: "/starter-kit", icon: PackageSearch },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
-      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: Crown },
-      { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: Crown },
-      { key: "sidebar.plan_pricing", defaultTitle: "Preços dos Planos", url: "/plan-pricing", icon: Crown },
+      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: CreditCard },
+      { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: LayoutList },
+      { key: "sidebar.plan_pricing", defaultTitle: "Preços dos Planos", url: "/plan-pricing", icon: DollarSign },
     ],
   },
 ];
