@@ -1,103 +1,95 @@
 
-Objetivo: sim, eu já consegui isolar melhor o problema e o próximo ajuste precisa atacar o ponto certo.
+Objetivo: corrigir de vez o travamento de boot que acontece antes do React iniciar.
 
-O que o código mostra hoje:
-- O travamento acontece antes do React montar.
-- O log disponível confirma isso: `ENTRY_IMPORT_FAILED`.
-- O replay mostra que a tela nunca sai de `preparando…`, então `main.tsx` não está chegando a executar de forma útil no preview do usuário.
-- O `BootShell` de `src/main.tsx` só remove o overlay depois que o React monta; como isso nunca acontece, o defeito está no carregamento do módulo de entrada ou em alguma dependência imediata dele.
+Diagnóstico
+- O problema real não está nas páginas, rotas ou regras de negócio.
+- O app está morrendo antes de `main.tsx` executar de forma confiável.
+- A evidência é forte:
+  - o console mostra timeout ainda em fase `ENTRY_SCRIPT_ATTACH`
+  - o replay mostra só o overlay do HTML
+  - não há sinal útil de execução do `main.tsx`
+  - a tela mais recente menciona `ENTRY_SCRIPT_ERROR`, o que indica falha no carregamento do entry ou versão antiga/cacheada do bootstrap
 
-Arquivos mais suspeitos:
-- `index.html`
-- `src/main.tsx`
-- `src/App.tsx`
-- `src/lib/lazyWithRetry.ts`
-- importações imediatas de `main.tsx` (`index.css`, `bootStateCore`, `react-dom/client`, `App`)
+Do I know what the issue is?
+- Sim: o gargalo principal está no bootstrap do `index.html` e no carregamento do módulo de entrada no ambiente de preview, não no React em si.
 
-Diagnóstico provável:
-- O bootstrap atual está tratando tudo como “falha de import do entry”, mas o problema pode ser um erro dentro da cadeia inicial de imports do `main.tsx`.
-- Como `App` é lazy, o erro pode estar:
-  1. no próprio carregamento do `main.tsx`
-  2. em imports síncronos do `main.tsx`
-  3. no primeiro lazy import de `./App` sem fallback de erro visível no HTML
-- Também há um detalhe importante: a rota atual do usuário está em `/index`, e hoje existe normalização manual no `index.html` + redirecionamento no router. Isso precisa ser simplificado para evitar comportamento inconsistente no preview.
+Causa provável
+- O loader atual com `<script type="module" src="/src/main.tsx?...">` não está sendo resiliente no preview.
+- Existe forte indício de cache/stale bootstrap entre versões, porque a mensagem vista pelo usuário não bate 100% com o HTML atual.
+- Enquanto isso não for estabilizado, qualquer ajuste em `App.tsx` ou rotas é secundário.
 
-Plano de correção:
-1. Simplificar o bootstrap do `index.html`
-- Remover a lógica excessiva de carregamento defensivo que hoje mascara a origem real da falha.
-- Manter apenas:
-  - overlay inicial
-  - timeout simples
-  - carregamento direto do entry
-  - exibição explícita do erro real no HTML quando houver falha
+Plano de correção
+1. Reescrever o bootstrap do `index.html`
+- Trocar o `<script type="module" src="...">` externo por um loader inline com `type="module"` + `import(...)`.
+- Fazer o import com cache-busting real por timestamp.
+- Capturar explicitamente:
+  - falha de import
+  - falha de avaliação
+  - promise rejection
+  - erro global de runtime
 
-2. Separar “falha do entry” de “falha do App lazy”
-- Fazer `main.tsx` montar uma casca mínima sem depender do `App` logo de cara.
-- Mover o carregamento de `App` para uma etapa com captura de erro visível.
-- Assim ficará claro se o problema é:
-  - import do entry
-  - import do App
-  - erro de runtime após mount
-
-3. Criar um fallback de diagnóstico real
-- Em vez de mostrar sempre “falha ao carregar arquivos iniciais”, exibir a etapa exata:
-  - `ENTRY_SCRIPT_ERROR`
+2. Separar fases de boot de verdade
+- Padronizar fases como:
+  - `BOOT_HTML_READY`
+  - `ENTRY_IMPORT_START`
+  - `ENTRY_IMPORT_OK`
   - `MAIN_MODULE_START`
+  - `REACT_MOUNT_START`
+  - `APP_IMPORT_START`
   - `APP_IMPORT_ERROR`
   - `APP_RENDER_ERROR`
-- Isso evita novos ciclos de tentativa-cega.
+- Assim o overlay mostrará exatamente onde morreu, sem mascarar tudo como timeout genérico.
 
-4. Reduzir o grafo crítico de boot
-- Tirar do caminho inicial tudo que não precisa acontecer antes da primeira pintura útil.
-- A ideia é carregar primeiro uma shell mínima e só depois:
-  - router
-  - providers pesados
-  - páginas lazy
-- Isso deve evitar que qualquer dependência grande derrube a inicialização inteira.
+3. Reduzir ainda mais o entry crítico
+- Simplificar `src/main.tsx` para depender do mínimo possível antes do primeiro mount.
+- Se necessário, criar uma camada mínima de entrada que:
+  - monta uma shell simples
+  - só depois importa o app completo
+- Não mexer no domínio da aplicação até o boot ficar estável.
 
-5. Revisar a normalização `/index`
-- Consolidar o tratamento para uma única camada.
-- Preferência: resolver isso no bootstrap inicial e não duplicar em vários pontos.
-- Objetivo: impedir que o preview fique num estado estranho entre `/index`, `/index.html` e `/`.
+4. Remover duplicidade de normalização de rota
+- Consolidar o tratamento de `/index`, `/index.html` e `/`.
+- Deixar essa correção em um único lugar no bootstrap.
+- Evitar comportamento inconsistente entre preview e router.
 
-6. Instrumentação temporária de boot
-- Adicionar logs/estados explícitos nas transições:
-  - script anexado
-  - script carregado
-  - main executado
-  - root encontrado
-  - shell montada
-  - App lazy iniciado
-  - App lazy concluído
-- Se ainda falhar, a próxima mensagem já trará a etapa exata.
+5. Blindar contra ambiente stale
+- Exibir no overlay a versão do bootstrap e a fase atual.
+- Fazer o loader sempre buscar uma versão fresca do entry.
+- Garantir que falhas do módulo mostrem a mensagem real do browser, e não só “não carregou a tempo”.
 
-Resultado esperado após a implementação:
-- O overlay sai pelo menos para uma shell mínima.
-- Se o `App` falhar, o usuário verá uma tela de erro clara em vez de ficar preso em “preparando…”.
-- Se o entry falhar de verdade, o HTML mostrará a causa exata e não uma mensagem genérica.
+6. Limpar o escopo desta correção
+- Nesta rodada, focar só em:
+  - `index.html`
+  - `src/main.tsx`
+  - possivelmente `src/lib/lazyWithRetry.ts`
+- Não tocar em páginas internas, auth, dashboard ou componentes de negócio até o boot abrir normalmente.
 
-Detalhes técnicos:
-```text
-Hoje
-index.html -> injeta /src/main.tsx -> main.tsx -> lazy(App) -> providers/routes
-                |
-                -> qualquer falha acaba parecendo ENTRY_IMPORT_FAILED
+Resultado esperado
+- O preview deixa de ficar preso em tela roxa sem diagnóstico útil.
+- Se o entry falhar, o erro aparece imediatamente com causa real.
+- Se o entry carregar, o React monta ao menos uma shell mínima.
+- Se o `App` falhar depois, o erro será exibido como `APP_IMPORT_ERROR` ou `APP_RENDER_ERROR`.
 
-Depois
-index.html -> carrega entry mínimo -> monta shell -> tenta importar App
-                                      |             |
-                                      |             -> erro visível "APP_IMPORT_ERROR"
-                                      -> overlay some cedo
-```
-
-Escopo de arquivos para mexer quando eu implementar:
+Arquivos-alvo
 - `index.html`
 - `src/main.tsx`
-- possivelmente `src/App.tsx`
-- possivelmente `src/lib/lazyWithRetry.ts`
+- `src/lib/lazyWithRetry.ts` (se precisar ajustar comportamento de falha)
+- `src/App.tsx` apenas se for necessário tirar algo pesado do caminho inicial
 
-Risco principal:
-- Baixo a médio. É uma refatoração do boot, não da regra de negócio.
-- O maior cuidado será não quebrar o fluxo de login/rotas enquanto simplifico a inicialização.
+Estratégia resumida
+```text
+Hoje
+index.html -> script module externo -> falha silenciosa/instável -> timeout
 
-Se eu seguir com a implementação, vou atacar primeiro o bootstrap mínimo + separação entre erro do entry e erro do App, porque isso é o que deve finalmente tirar o app do loop cego de `ENTRY_IMPORT_FAILED`.
+Depois
+index.html -> loader inline com import() e catch real
+           -> entry mínimo
+           -> mount da shell
+           -> import do App
+           -> erro específico por fase
+```
+
+Risco
+- Baixo a médio.
+- É uma correção estrutural de bootstrap, com baixo impacto nas regras de negócio.
+- O principal cuidado é não introduzir mais uma camada confusa de fallback; a solução precisa ficar mais simples, não mais “defensiva” demais.
