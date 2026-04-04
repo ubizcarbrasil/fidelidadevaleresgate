@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useRegisterSW } from "virtual:pwa-register/react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -7,22 +6,40 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function usePWA() {
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegisteredSW(_swUrl, registration) {
-      if (registration) {
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000);
-      }
-    },
-  });
-
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
   const [installDismissed, setInstallDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (!reg) return;
+      setRegistration(reg);
+
+      const checkWaiting = () => {
+        if (reg.waiting) setNeedRefresh(true);
+      };
+
+      checkWaiting();
+
+      reg.addEventListener("updatefound", () => {
+        const newSW = reg.installing;
+        if (!newSW) return;
+        newSW.addEventListener("statechange", () => {
+          if (newSW.state === "installed" && navigator.serviceWorker.controller) {
+            setNeedRefresh(true);
+          }
+        });
+      });
+
+      // Check for updates every hour
+      const interval = setInterval(() => reg.update(), 60 * 60 * 1000);
+      return () => clearInterval(interval);
+    });
+  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -44,6 +61,13 @@ export function usePWA() {
     };
   }, []);
 
+  const updateServiceWorker = useCallback(() => {
+    const waiting = registration?.waiting;
+    if (!waiting) return;
+    waiting.postMessage({ type: "SKIP_WAITING" });
+    window.location.reload();
+  }, [registration]);
+
   const installApp = useCallback(async () => {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
@@ -54,13 +78,8 @@ export function usePWA() {
     setDeferredPrompt(null);
   }, [deferredPrompt]);
 
-  const dismissInstall = useCallback(() => {
-    setInstallDismissed(true);
-  }, []);
-
-  const dismissUpdate = useCallback(() => {
-    setNeedRefresh(false);
-  }, [setNeedRefresh]);
+  const dismissInstall = useCallback(() => setInstallDismissed(true), []);
+  const dismissUpdate = useCallback(() => setNeedRefresh(false), []);
 
   return {
     needRefresh,
