@@ -64,6 +64,14 @@ export default function CustomerWalletPage() {
     setTimeout(() => setLoadingMore(false), 300);
   }, []);
 
+  const queryClient = useQueryClient();
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["customer-wallet-ledger"] }),
+      queryClient.invalidateQueries({ queryKey: ["customer-wallet-count"] }),
+    ]);
+  }, [queryClient]);
+
   if (customerLoading) {
     return (
       <div className="max-w-lg mx-auto px-5 py-6 flex items-center justify-center min-h-[50vh]">
@@ -73,7 +81,7 @@ export default function CustomerWalletPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-5 py-6">
+    <PullToRefresh onRefresh={handleRefresh} className="max-w-lg mx-auto px-5 py-6">
       <h2 className="text-xl font-bold mb-5" style={{ fontFamily: fontHeading }}>Carteira</h2>
 
       {/* Balance Cards */}
