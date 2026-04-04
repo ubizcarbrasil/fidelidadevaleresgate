@@ -93,7 +93,15 @@
 
       setTimeout(function(){
         if(window.__bootstrapDismissed || window.__APP_MOUNTED__) return;
-        window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + (window.__BOOT_PHASE__ || 'desconhecida'));
+        var phase = window.__BOOT_PHASE__ || 'desconhecida';
+        if(phase === 'APP_IMPORT_START' || phase === 'AUTH_LOADING' || phase === 'BRAND_LOADING'){
+          setTimeout(function(){
+            if(window.__bootstrapDismissed || window.__APP_MOUNTED__) return;
+            window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + (window.__BOOT_PHASE__ || 'desconhecida'));
+          }, 15000);
+          return;
+        }
+        window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + phase);
       }, 15000);
     </script>
 
