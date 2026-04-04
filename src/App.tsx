@@ -358,7 +358,7 @@ function AppContent() {
     return <WhiteLabelLayout />;
   }
 
-  return <AppRoutes />;
+  return <AnimatedRoutes />;
 }
 
 export default App;
