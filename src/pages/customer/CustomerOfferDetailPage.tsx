@@ -342,6 +342,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
                       <div className="h-16 w-16 rounded-2xl bg-card shadow-lg border-2 border-card overflow-hidden">
                         <SafeImage
+                          preset="thumbnail"
                           src={offer.stores.logo_url}
                           alt={offer.stores?.name || ""}
                           className="w-full h-full object-cover"
