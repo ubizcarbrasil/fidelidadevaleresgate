@@ -1,45 +1,63 @@
 
+## Plano: Onboarding de Cidade com Validação Automática
 
-## Plano: Criar Guia de Ativação da API de Mobilidade
+### Conceito
+Página similar ao Guia de Cidades existente, mas com **validação em tempo real** — cada etapa consulta o banco para verificar se foi concluída. Inclui um **painel de teste final** que valida toda a configuração antes de considerar a cidade pronta.
 
-Página dedicada com o mesmo padrão visual do Guia de Cidades (`BrandCidadesJourneyPage.tsx`), focada na ativação da integração com a API de mobilidade (TaxiMachine).
+### Estrutura de Arquivos
 
-### Estrutura
+```
+src/features/city_onboarding/
+├── pagina_onboarding_cidade.tsx          (página principal)
+├── hooks/
+│   └── hook_validacao_cidade.ts          (hook que consulta o banco para cada etapa)
+├── components/
+│   ├── etapa_onboarding.tsx              (card de etapa com status de validação)
+│   ├── seletor_cidade.tsx                (dropdown para selecionar a cidade a validar)
+│   ├── painel_teste_final.tsx            (card final com resumo de validações)
+│   └── indicador_progresso.tsx           (barra de progresso geral)
+├── constants/
+│   └── constantes_etapas.ts             (definição das etapas e mensagens)
+└── types/
+    └── tipos_onboarding.ts              (interfaces)
+```
 
-**Novo arquivo: `src/pages/BrandApiJourneyPage.tsx`**
+### Etapas com Validação
 
-Página com timeline vertical e 7 etapas expansíveis, reutilizando o mesmo layout (Card + accordion + numbered steps + tips + navigation buttons):
+| # | Etapa | Validação Automática |
+|---|-------|---------------------|
+| 1 | Criar Cidade | Verifica se `branches` tem a cidade selecionada |
+| 2 | Modelo de Negócio | Verifica `scoring_model` no branch |
+| 3 | Parceiros | Conta `stores` ativas no branch (≥ 1) |
+| 4 | Regras de Pontos | Verifica regras em `points_rules` ou `driver_points_rules` conforme modelo |
+| 5 | Integração Mobilidade | Se modelo DRIVER/BOTH: verifica `machine_integrations` configurada |
+| 6 | Carteira de Pontos | Se modelo DRIVER/BOTH: verifica `branch_points_wallet` com saldo > 0 |
+| 7 | Ofertas Ativas | Conta `offers` ativas no branch (≥ 1) — apenas se PASSENGER/BOTH |
+| 8 | Teste Final | Executa todas as validações e mostra resultado consolidado |
 
-| # | Fase | Ícone | Título | Rota |
-|---|------|-------|--------|------|
-| 1 | Conceito | `BookOpen` | O que é a integração de mobilidade? | — |
-| 2 | Módulo | `Power` | Ativar o módulo de integração | `/brand-modules` |
-| 3 | Cidade | `MapPin` | Selecionar a cidade para integrar | `/machine-integration` |
-| 4 | Credenciais | `KeyRound` | Configurar credenciais da API | `/machine-integration` |
-| 5 | Webhook | `Link2` | Registrar o webhook automático | `/machine-integration` |
-| 6 | Teste | `Activity` | Testar com o Lab de Webhook | `/machine-webhook-test` |
-| 7 | Validar | `CheckCircle` | Verificar corridas e pontuação | `/machine-integration` |
+### Indicadores Visuais
+- ✅ Verde: Etapa concluída (validação passou)
+- ⏳ Amarelo: Etapa pendente
+- ❌ Vermelho: Etapa com problema (ex: carteira sem saldo)
+- Barra de progresso no topo (X de Y etapas concluídas)
 
-Cada etapa terá passos detalhados e dicas, similar ao guia de cidades.
+### Fluxo do Usuário
+1. Seleciona a cidade no dropdown
+2. O hook consulta todas as validações em paralelo
+3. Cada etapa mostra status + botão "Ir configurar"
+4. O painel final mostra checklist consolidado + status "Cidade Pronta" ou "Pendências"
 
-### Alterações em arquivos existentes
+### Alterações em Arquivos Existentes
+1. **`src/App.tsx`**: Nova rota `/city-onboarding`
+2. **`src/components/consoles/BrandSidebar.tsx`**: Novo item "Onboarding Cidade" no grupo Cidades
 
-1. **`src/App.tsx`**: Adicionar lazy import e rota `brand-api-journey`
-2. **`src/components/consoles/BrandSidebar.tsx`**: Adicionar item "Guia da API" no grupo de integração, com ícone `BookOpen` e rota `/brand-api-journey`
+### Hook de Validação (`hook_validacao_cidade.ts`)
+Usa `useQuery` com a cidade selecionada para consultar:
+- `branches` (dados do branch)
+- `stores` (count where branch_id and is_active)
+- `offers` (count where branch_id and is_active and status = ACTIVE)
+- `branch_points_wallet` (balance)
+- `machine_integrations` (where branch_id)
+- `points_rules` / `driver_points_rules` (where branch_id)
 
-### Conteúdo das etapas
-
-**Etapa 1 — Conceito:** Explica que a integração conecta o sistema de mobilidade ao programa de fidelidade, pontuando automaticamente passageiros e motoristas a cada corrida finalizada.
-
-**Etapa 2 — Módulo:** Acessar Configurações → Módulos e ativar "Integração Mobilidade".
-
-**Etapa 3 — Cidade:** Na tela de Integração, selecionar a cidade onde a API será ativada.
-
-**Etapa 4 — Credenciais:** Preencher Basic Auth (usuário/senha) e API Key fornecidos pelo sistema de mobilidade. Opcionalmente configurar credenciais Matrix para consulta de recibos.
-
-**Etapa 5 — Webhook:** Com a API Key preenchida, o webhook é registrado automaticamente. Copiar a URL do webhook para configurar no sistema externo se necessário.
-
-**Etapa 6 — Teste:** Usar o Lab de Webhook para simular eventos de corrida e verificar se os pontos são creditados corretamente.
-
-**Etapa 7 — Validar:** Verificar no painel de diagnóstico se as corridas estão sendo processadas, checar o feed de eventos em tempo real e confirmar pontuação nos clientes.
-
+Retorna um objeto com status de cada etapa.
