@@ -103,7 +103,7 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "4",
+    id: "5",
     phase: "Pontos",
     phaseIcon: Coins,
     phaseColor: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
