@@ -28,6 +28,7 @@ const emptyForm: ModForm = { key: "", name: "", description: "", category: "gene
 export default function ModuleDefinitionsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<ModForm>(emptyForm);
 
