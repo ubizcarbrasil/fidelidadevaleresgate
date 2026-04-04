@@ -5,6 +5,9 @@
 console.info("[boot] main.tsx executing");
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
 
+import { initSentry } from "@/lib/sentry";
+initSentry();
+
 import "./index.css";
 import { createRoot } from "react-dom/client";
 import { Suspense, useEffect, Component, type ReactNode } from "react";

@@ -86,8 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (newSession?.user) {
           const reqId = ++fetchIdRef.current;
           void fetchRoles(newSession.user.id, reqId);
+          Sentry.setUser({ id: newSession.user.id, email: newSession.user.email });
         } else {
           setRoles([]);
+          Sentry.setUser(null);
         }
 
         // Só libera loading se o bootstrap inicial ainda não terminou
