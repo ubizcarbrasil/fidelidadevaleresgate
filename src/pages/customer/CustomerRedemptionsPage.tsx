@@ -182,8 +182,8 @@ export default function CustomerRedemptionsPage() {
         {/* Redemption cards */}
         {isLoading ? (
           <div className="px-5 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-2xl h-40 animate-pulse bg-muted" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <RedemptionCardSkeleton key={i} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
