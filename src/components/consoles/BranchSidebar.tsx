@@ -197,11 +197,11 @@ export function BranchSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-2">
-          <PlatformLogo className="h-8 w-8 rounded-lg" />
+          <PlatformLogo src={logoUrl} alt={brandName || "Logo"} className="h-8 w-8 rounded-lg" fallbackLabel={(brandName || "VR").substring(0, 2).toUpperCase()} />
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-foreground">Vale Resgate</span>
-              <span className="text-xs text-sidebar-foreground/60">Gestão Regional</span>
+              <span className="text-sm font-bold text-sidebar-foreground">{brandName || "Marca"}</span>
+              <span className="text-xs text-sidebar-foreground/60">{cityName || "Gestão Regional"}</span>
             </div>
           )}
         </div>
