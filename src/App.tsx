@@ -5,6 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/ui/page-transition";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -143,134 +145,139 @@ const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_props, ref) {
   );
 });
 
-function AppRoutes() {
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route path="/index" element={<Navigate to="/" replace />} />
-        <Route path="/index.html" element={<Navigate to="/" replace />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/customer-preview" element={<CustomerPreviewPage />} />
-        <Route path="/webview" element={<WebviewPage />} />
-        <Route path="/p/:slug" element={<CustomPage />} />
-        <Route path="/trial" element={<TrialSignupPage />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/driver" element={<DriverPanelPage />} />
-        <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
-        <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
-        <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
-        <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
-          <Route path="tenants" element={<Tenants />} />
-          <Route path="tenants/new" element={<TenantForm />} />
-          <Route path="tenants/:id" element={<TenantForm />} />
-          <Route path="brands" element={<Brands />} />
-          <Route path="brands/new" element={<BrandForm />} />
-          <Route path="brands/:id" element={<BrandForm />} />
-          <Route path="branches" element={<Branches />} />
-          <Route path="branches/new" element={<BranchForm />} />
-          <Route path="branches/:id" element={<BranchForm />} />
-          <Route path="vouchers" element={<ModuleGuard moduleKey="vouchers"><Vouchers /></ModuleGuard>} />
-          <Route path="vouchers/new" element={<ModuleGuard moduleKey="vouchers"><VoucherWizardPage /></ModuleGuard>} />
-          <Route path="vouchers/redeem" element={<ModuleGuard moduleKey="vouchers"><VoucherRedeem /></ModuleGuard>} />
-          <Route path="vouchers/:id" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
-          <Route path="domains" element={<RootGuard><BrandDomains /></RootGuard>} />
-          <Route path="users" element={<UsersPage />} />
-          <Route path="stores" element={<ModuleGuard moduleKey="stores"><StoresPage /></ModuleGuard>} />
-          <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />
-          <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
-          <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
-          <Route path="templates" element={<RootGuard><SectionTemplatesPage /></RootGuard>} />
-          <Route path="modules" element={<RootGuard><ModuleDefinitionsPage /></RootGuard>} />
-          <Route path="permissions" element={<PermissionsPage />} />
-          <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
-          <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
-          <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
-          <Route path="home-templates" element={<RootGuard><HomeTemplatesPage /></RootGuard>} />
-          <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
-          <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />
-          <Route path="brand-modules" element={<BrandModulesPage />} />
-          <Route path="pdv" element={<ModuleGuard moduleKey="earn_points_store"><OperatorRedeemPage /></ModuleGuard>} />
-          <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />
-          <Route path="earn-points" element={<ModuleGuard moduleKey="earn_points_store"><EarnPointsPage /></ModuleGuard>} />
-          <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
-          <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
-          <Route path="approve-store-rules" element={<ModuleGuard moduleKey="multi_emitter"><ApproveStoreRulesPage /></ModuleGuard>} />
-          <Route path="tier-points-rules" element={<ModuleGuard moduleKey="earn_points_store"><TierPointsRulesPage /></ModuleGuard>} />
-          
-          <Route path="affiliate-deals" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateDealsPage /></ModuleGuard>} />
-          <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="affiliate_deals"><AchadinhosMobileImportPage /></ModuleGuard>} />
-          <Route path="affiliate-categories" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateCategoriesPage /></ModuleGuard>} />
-          <Route path="mirror-sync" element={<ModuleGuard moduleKey="affiliate_deals"><MirrorSyncPage /></ModuleGuard>} />
-          <Route path="offer-governance" element={<ModuleGuard moduleKey="affiliate_deals"><OfferGovernancePage /></ModuleGuard>} />
-          <Route path="product-redemption-orders" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProductRedemptionOrdersPage /></ModuleGuard>} />
-          <Route path="produtos-resgate" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProdutosResgatePage /></ModuleGuard>} />
-          <Route path="regras-resgate" element={<ModuleGuard moduleKey="affiliate_deals"><RegrasResgatePage /></ModuleGuard>} />
-          <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
-          <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
-          <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
-          <Route path="icon-library" element={<ModuleGuard moduleKey="icon_library"><IconLibraryPage /></ModuleGuard>} />
-          <Route path="banner-manager" element={<ModuleGuard moduleKey="banners"><BannerManagerPage /></ModuleGuard>} />
-          <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
-          <Route path="page-builder" element={<ModuleGuard moduleKey="page_builder"><PageBuilderPage /></ModuleGuard>} />
-          <Route path="page-builder-v2" element={<ModuleGuard moduleKey="page_builder"><PageBuilderV2Page /></ModuleGuard>} />
-          <Route path="public-vouchers" element={<PublicVouchers />} />
-          
-          <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
-          <Route path="brand-permissions" element={<ModuleGuard moduleKey="store_permissions"><BrandPermissionOverflowPage /></ModuleGuard>} />
-          <Route path="taxonomy" element={<ModuleGuard moduleKey="taxonomy"><TaxonomyPage /></ModuleGuard>} />
-          <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
-          <Route path="emitter-requests" element={<ModuleGuard moduleKey="multi_emitter"><EmitterRequestsPage /></ModuleGuard>} />
-          <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
-          <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
-          <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
-          <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
-          <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
-          <Route path="welcome-tour" element={<ModuleGuard moduleKey="welcome_tour"><WelcomeTourConfigPage /></ModuleGuard>} />
-          <Route path="profile-links" element={<ModuleGuard moduleKey="profile_links"><ProfileLinksConfigPage /></ModuleGuard>} />
-          <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
-          <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
-          <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
-          <Route path="ganha-ganha-dashboard" element={<RootGuard><GanhaGanhaRootDashboardPage /></RootGuard>} />
-          <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
-          
-          <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
-          <Route path="api-docs" element={<ModuleGuard moduleKey="api_keys"><ApiDocsPage /></ModuleGuard>} />
-          <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="partner-landing-config" element={<ModuleGuard moduleKey="partner_landing"><PartnerLandingConfigPage /></ModuleGuard>} />
-          <Route path="access-hub" element={<ModuleGuard moduleKey="access_hub"><AccessHubPage /></ModuleGuard>} />
-          <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
-          <Route path="sponsored-placements" element={<ModuleGuard moduleKey="sponsored"><SponsoredPlacementsPage /></ModuleGuard>} />
-          <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
-          <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
-          <Route path="driver-points-rules" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverPointsRulesPage /></ModuleGuard>} />
-          <Route path="motoristas" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverManagementPage /></ModuleGuard>} />
-          <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
-          <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
-          <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
-          {/* Driver panel configuration */}
-          <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
-          <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
-          <Route path="manuais" element={<ManuaisPage />} />
-          <Route path="branch-wallet" element={<BranchWalletPage />} />
-          <Route path="branch-reports" element={<BranchReportsPage />} />
-          <Route path="brand-branches" element={<BrandBranchesPage />} />
-          <Route path="brand-branches/new" element={<BrandBranchForm />} />
-          <Route path="brand-branches/:id" element={<BrandBranchForm />} />
-          <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+    <AnimatePresence mode="wait">
+      <PageTransition key={location.pathname}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes location={location}>
+            <Route path="/index" element={<Navigate to="/" replace />} />
+            <Route path="/index.html" element={<Navigate to="/" replace />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/customer-preview" element={<CustomerPreviewPage />} />
+            <Route path="/webview" element={<WebviewPage />} />
+            <Route path="/p/:slug" element={<CustomPage />} />
+            <Route path="/trial" element={<TrialSignupPage />} />
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/driver" element={<DriverPanelPage />} />
+            <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
+            <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
+            <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
+            <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+              <Route path="tenants" element={<Tenants />} />
+              <Route path="tenants/new" element={<TenantForm />} />
+              <Route path="tenants/:id" element={<TenantForm />} />
+              <Route path="brands" element={<Brands />} />
+              <Route path="brands/new" element={<BrandForm />} />
+              <Route path="brands/:id" element={<BrandForm />} />
+              <Route path="branches" element={<Branches />} />
+              <Route path="branches/new" element={<BranchForm />} />
+              <Route path="branches/:id" element={<BranchForm />} />
+              <Route path="vouchers" element={<ModuleGuard moduleKey="vouchers"><Vouchers /></ModuleGuard>} />
+              <Route path="vouchers/new" element={<ModuleGuard moduleKey="vouchers"><VoucherWizardPage /></ModuleGuard>} />
+              <Route path="vouchers/redeem" element={<ModuleGuard moduleKey="vouchers"><VoucherRedeem /></ModuleGuard>} />
+              <Route path="vouchers/:id" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
+              <Route path="domains" element={<RootGuard><BrandDomains /></RootGuard>} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="stores" element={<ModuleGuard moduleKey="stores"><StoresPage /></ModuleGuard>} />
+              <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />
+              <Route path="customers" element={<ModuleGuard moduleKey="wallet"><CustomersPage /></ModuleGuard>} />
+              <Route path="redemptions" element={<ModuleGuard moduleKey="redemption_qr"><RedemptionsPage /></ModuleGuard>} />
+              <Route path="templates" element={<RootGuard><SectionTemplatesPage /></RootGuard>} />
+              <Route path="modules" element={<RootGuard><ModuleDefinitionsPage /></RootGuard>} />
+              <Route path="permissions" element={<PermissionsPage />} />
+              <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
+              <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
+              <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
+              <Route path="home-templates" element={<RootGuard><HomeTemplatesPage /></RootGuard>} />
+              <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
+              <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />
+              <Route path="brand-modules" element={<BrandModulesPage />} />
+              <Route path="pdv" element={<ModuleGuard moduleKey="earn_points_store"><OperatorRedeemPage /></ModuleGuard>} />
+              <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />
+              <Route path="earn-points" element={<ModuleGuard moduleKey="earn_points_store"><EarnPointsPage /></ModuleGuard>} />
+              <Route path="points-ledger" element={<ModuleGuard moduleKey="earn_points_store"><PointsLedgerPage /></ModuleGuard>} />
+              <Route path="store-points-rule" element={<ModuleGuard moduleKey="earn_points_store"><StorePointsRulePage /></ModuleGuard>} />
+              <Route path="approve-store-rules" element={<ModuleGuard moduleKey="multi_emitter"><ApproveStoreRulesPage /></ModuleGuard>} />
+              <Route path="tier-points-rules" element={<ModuleGuard moduleKey="earn_points_store"><TierPointsRulesPage /></ModuleGuard>} />
+              
+              <Route path="affiliate-deals" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateDealsPage /></ModuleGuard>} />
+              <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="affiliate_deals"><AchadinhosMobileImportPage /></ModuleGuard>} />
+              <Route path="affiliate-categories" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateCategoriesPage /></ModuleGuard>} />
+              <Route path="mirror-sync" element={<ModuleGuard moduleKey="affiliate_deals"><MirrorSyncPage /></ModuleGuard>} />
+              <Route path="offer-governance" element={<ModuleGuard moduleKey="affiliate_deals"><OfferGovernancePage /></ModuleGuard>} />
+              <Route path="product-redemption-orders" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProductRedemptionOrdersPage /></ModuleGuard>} />
+              <Route path="produtos-resgate" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProdutosResgatePage /></ModuleGuard>} />
+              <Route path="regras-resgate" element={<ModuleGuard moduleKey="affiliate_deals"><RegrasResgatePage /></ModuleGuard>} />
+              <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
+              <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
+              <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
+              <Route path="icon-library" element={<ModuleGuard moduleKey="icon_library"><IconLibraryPage /></ModuleGuard>} />
+              <Route path="banner-manager" element={<ModuleGuard moduleKey="banners"><BannerManagerPage /></ModuleGuard>} />
+              <Route path="menu-labels" element={<RootGuard><MenuLabelsPage /></RootGuard>} />
+              <Route path="page-builder" element={<ModuleGuard moduleKey="page_builder"><PageBuilderPage /></ModuleGuard>} />
+              <Route path="page-builder-v2" element={<ModuleGuard moduleKey="page_builder"><PageBuilderV2Page /></ModuleGuard>} />
+              <Route path="public-vouchers" element={<PublicVouchers />} />
+              
+              <Route path="provision-brand" element={<RootGuard><ProvisionBrandWizard /></RootGuard>} />
+              <Route path="brand-permissions" element={<ModuleGuard moduleKey="store_permissions"><BrandPermissionOverflowPage /></ModuleGuard>} />
+              <Route path="taxonomy" element={<ModuleGuard moduleKey="taxonomy"><TaxonomyPage /></ModuleGuard>} />
+              <Route path="starter-kit" element={<RootGuard><StarterKitConfigPage /></RootGuard>} />
+              <Route path="emitter-requests" element={<ModuleGuard moduleKey="multi_emitter"><EmitterRequestsPage /></ModuleGuard>} />
+              <Route path="root-journey" element={<RootGuard><RootJourneyGuidePage /></RootGuard>} />
+              <Route path="brand-journey" element={<BrandJourneyGuidePage />} />
+              <Route path="emitter-journey" element={<EmitterJourneyGuidePage />} />
+              <Route path="platform-theme" element={<RootGuard><PlatformThemePage /></RootGuard>} />
+              <Route path="app-icons" element={<RootGuard><AppIconsConfigPage /></RootGuard>} />
+              <Route path="welcome-tour" element={<ModuleGuard moduleKey="welcome_tour"><WelcomeTourConfigPage /></ModuleGuard>} />
+              <Route path="profile-links" element={<ModuleGuard moduleKey="profile_links"><ProfileLinksConfigPage /></ModuleGuard>} />
+              <Route path="ganha-ganha-config" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaConfigPage /></ModuleGuard>} />
+              <Route path="ganha-ganha-billing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaBillingPage /></ModuleGuard>} />
+              <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
+              <Route path="ganha-ganha-dashboard" element={<RootGuard><GanhaGanhaRootDashboardPage /></RootGuard>} />
+              <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
+              
+              <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
+              <Route path="api-docs" element={<ModuleGuard moduleKey="api_keys"><ApiDocsPage /></ModuleGuard>} />
+              <Route path="subscription" element={<SubscriptionPage />} />
+              <Route path="partner-landing-config" element={<ModuleGuard moduleKey="partner_landing"><PartnerLandingConfigPage /></ModuleGuard>} />
+              <Route path="access-hub" element={<ModuleGuard moduleKey="access_hub"><AccessHubPage /></ModuleGuard>} />
+              <Route path="brand-settings" element={<ModuleGuard moduleKey="brand_settings"><BrandSettingsPage /></ModuleGuard>} />
+              <Route path="sponsored-placements" element={<ModuleGuard moduleKey="sponsored"><SponsoredPlacementsPage /></ModuleGuard>} />
+              <Route path="machine-integration" element={<ModuleGuard moduleKey="machine_integration"><MachineIntegrationPage /></ModuleGuard>} />
+              <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
+              <Route path="driver-points-rules" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverPointsRulesPage /></ModuleGuard>} />
+              <Route path="motoristas" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverManagementPage /></ModuleGuard>} />
+              <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
+              <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
+              <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
+              <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
+              <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
+              <Route path="manuais" element={<ManuaisPage />} />
+              <Route path="branch-wallet" element={<BranchWalletPage />} />
+              <Route path="branch-reports" element={<BranchReportsPage />} />
+              <Route path="brand-branches" element={<BrandBranchesPage />} />
+              <Route path="brand-branches/new" element={<BrandBranchForm />} />
+              <Route path="brand-branches/:id" element={<BrandBranchForm />} />
+              <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </PageTransition>
+    </AnimatePresence>
   );
 }
 
@@ -351,7 +358,7 @@ function AppContent() {
     return <WhiteLabelLayout />;
   }
 
-  return <AppRoutes />;
+  return <AnimatedRoutes />;
 }
 
 export default App;
