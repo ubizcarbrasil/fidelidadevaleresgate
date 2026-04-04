@@ -151,9 +151,9 @@ export default function VoucherRedeem() {
                   <div className="space-y-2 pt-2 border-t">
                     <Label>Observações do resgate</Label>
                     <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas opcionais..." />
-                    <Button onClick={handleRedeem} disabled={redeeming} className="w-full">
-                      {redeeming ? "Resgatando..." : "Confirmar Resgate"}
-                    </Button>
+                    <LoadingButton onClick={handleRedeem} isLoading={redeeming} loadingText="Resgatando..." className="w-full">
+                      Confirmar Resgate
+                    </LoadingButton>
                   </div>
                 )}
 
