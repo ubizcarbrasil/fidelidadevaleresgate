@@ -373,6 +373,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     </span>
                   )}
                   <SafeImage
+                    preset="detail"
+                    loading="eager"
                     src={offer.image_url}
                     fallbackSrc={offer.stores?.logo_url}
                     alt={offer.title}
