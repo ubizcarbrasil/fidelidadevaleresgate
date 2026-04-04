@@ -177,6 +177,8 @@ export function BranchSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
   const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
+  const { name: brandName, logoUrl } = useBrandInfo();
+  const cityName = useBranchCityName();
 
   const visibleGroups = groups
     .filter((group) => {
