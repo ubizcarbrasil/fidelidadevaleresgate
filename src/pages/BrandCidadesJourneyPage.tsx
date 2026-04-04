@@ -122,7 +122,7 @@ const journeySteps: JourneyStep[] = [
     ],
   },
   {
-    id: "5",
+    id: "6",
     phase: "Clonar",
     phaseIcon: Copy,
     phaseColor: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
