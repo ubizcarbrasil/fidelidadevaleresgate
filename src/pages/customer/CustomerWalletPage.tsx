@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import { formatPoints } from "@/lib/formatPoints";
+import { queryKeys } from "@/lib/queryKeys";
 
 type LedgerEntry = Tables<"points_ledger">;
 
