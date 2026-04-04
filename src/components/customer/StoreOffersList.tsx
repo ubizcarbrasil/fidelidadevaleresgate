@@ -1,4 +1,5 @@
 import React from "react";
+import { haptics } from "@/lib/haptics";
 import { ShoppingBag, Clock, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -162,7 +163,7 @@ export const StoreOffersList = React.memo(function StoreOffersList({
               isDark={isDark}
               isNew={idx < 2}
               index={idx}
-              onClick={() => onOfferClick?.(Object.assign({}, offer, { stores: { name: storeName, logo_url: storeLogoUrl } }) as Offer & { stores: { name: string; logo_url: string | null } })}
+              onClick={() => { haptics.light(); onOfferClick?.(Object.assign({}, offer, { stores: { name: storeName, logo_url: storeLogoUrl } }) as Offer & { stores: { name: string; logo_url: string | null } }); }}
             />
           ))}
         </div>

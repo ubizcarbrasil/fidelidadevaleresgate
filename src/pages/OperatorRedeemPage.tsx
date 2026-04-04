@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScanLine, CheckCircle2, XCircle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
+import { haptics } from "@/lib/haptics";
 
 interface RedemptionResult {
   id: string;
@@ -104,7 +105,7 @@ export default function OperatorRedeemPage() {
       setResult(null); setPin(""); setCpf(""); setPurchaseValue(""); setError(null);
       qc.invalidateQueries({ queryKey: ["redemptions"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => { haptics.error(); toast.error(e.message); },
   });
 
   const canSearch = pin.length === 6 && cpf.replace(/\D/g, "").length === 11;

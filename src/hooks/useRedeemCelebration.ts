@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { haptics } from "@/lib/haptics";
 
 interface CelebrationOptions {
   title?: string;
@@ -9,7 +10,7 @@ interface CelebrationOptions {
 /**
  * Hook que dispara feedback visual e háptico após resgate bem-sucedido.
  * - Toast motivacional com ícone de troféu
- * - Vibração leve (se disponível)
+ * - Vibração de celebração
  */
 export function useRedeemCelebration() {
   const celebrate = useCallback(
@@ -25,9 +26,7 @@ export function useRedeemCelebration() {
         icon: "🏆",
       });
 
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate([100, 50, 100]);
-      }
+      haptics.success();
     },
     [],
   );

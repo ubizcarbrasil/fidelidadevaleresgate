@@ -4,6 +4,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { haptics } from "@/lib/haptics";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 
 interface ConfirmRedeemParams {
@@ -39,6 +40,7 @@ export function useRedeemMutation(onSuccess?: () => void) {
       onSuccess?.();
     },
     onError: (e: Error) => {
+      haptics.error();
       toast.error(e.message || "Erro ao confirmar resgate");
     },
   });

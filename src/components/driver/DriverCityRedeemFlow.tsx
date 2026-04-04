@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, CheckCircle2, Coins, ShoppingCart, Store, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
+import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 import type { OfertaCidade } from "./SecaoResgateCidade";
@@ -49,6 +50,7 @@ export default function DriverCityRedeemFlow({ oferta, fontHeading, onClose, onS
       setResult({ token: res.token, pointsDebited: res.points_debited });
       celebrateRedeem({ title: "Resgate realizado! 🎉", description: "Aproveite seu benefício." });
     } catch (err: any) {
+      haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
     }
     setLoading(false);

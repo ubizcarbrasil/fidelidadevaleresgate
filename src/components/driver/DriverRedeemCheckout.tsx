@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
+import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 
@@ -140,6 +141,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       setSuccess(true);
       celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
     } catch (err: any) {
+      haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
     }
     setLoading(false);
