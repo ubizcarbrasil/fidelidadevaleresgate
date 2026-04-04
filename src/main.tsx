@@ -11,21 +11,19 @@ import { Suspense, useEffect, Component, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 
-// Lazy-load the entire App tree so a crash there won't kill the entry
 const App = lazyWithRetry(() => {
-  console.info("[boot] App import started");
+  console.info("[boot] App dynamic import started");
+  (window as any).__BOOT_PHASE__ = "APP_IMPORT_START";
   return import("./App").then((m) => {
-    console.info("[boot] App import succeeded");
+    console.info("[boot] App dynamic import succeeded");
+    (window as any).__BOOT_PHASE__ = "APP_IMPORT_OK";
     return m;
   });
 });
 
-/* ── Error Boundary that reports to bootstrap overlay ── */
+/* ── Error Boundary ── */
 
-interface BootErrorState {
-  hasError: boolean;
-  error: Error | null;
-}
+interface BootErrorState { hasError: boolean; error: Error | null; }
 
 class BootErrorBoundary extends Component<{ children: ReactNode }, BootErrorState> {
   state: BootErrorState = { hasError: false, error: null };
@@ -84,8 +82,8 @@ function BootShell() {
 
 /* ── Mount ── */
 
-(window as any).__BOOT_PHASE__ = "MOUNTING";
-console.info("[boot] MOUNTING");
+(window as any).__BOOT_PHASE__ = "REACT_MOUNT_START";
+console.info("[boot] REACT_MOUNT_START");
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {
