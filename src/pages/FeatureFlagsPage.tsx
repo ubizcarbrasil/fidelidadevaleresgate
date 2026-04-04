@@ -135,6 +135,7 @@ export default function FeatureFlagsPage() {
           </Table>
         </CardContent>
       </Card>
+      <ConfirmDialog open={confirmState.open} title={confirmState.title} description={confirmState.description} confirmLabel={confirmState.confirmLabel} variant={confirmState.variant} onConfirm={confirmState.onConfirm} onClose={closeConfirm} />
     </div>
   );
 }
