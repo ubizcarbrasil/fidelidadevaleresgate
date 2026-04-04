@@ -12,6 +12,7 @@ import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
 import { RedemptionCard } from "@/components/customer/RedemptionCard";
 import type { RedemptionWithOffer } from "@/types/customer";
 import { hslToCss, brandAlpha } from "@/lib/utils";
+import { RedemptionCardSkeleton } from "@/components/customer/RedemptionCardSkeleton";
 
 type StatusFilter = "ALL" | "PENDING" | "USED" | "EXPIRED";
 
@@ -182,8 +183,8 @@ export default function CustomerRedemptionsPage() {
         {/* Redemption cards */}
         {isLoading ? (
           <div className="px-5 space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-2xl h-40 animate-pulse bg-muted" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <RedemptionCardSkeleton key={i} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
