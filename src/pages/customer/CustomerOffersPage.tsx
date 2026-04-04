@@ -282,6 +282,6 @@ export default function CustomerOffersPage() {
           })}
         </div>
       )}
-    </div>
+    </PullToRefresh>
   );
 }
