@@ -128,7 +128,7 @@ export default function CustomerWalletPage() {
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <EmptyState type="points" primary={primary} />
+        <EmptyState type="wallet" primary={primary} />
       ) : (
         <div className="space-y-2">
           {entries.map((entry) => {

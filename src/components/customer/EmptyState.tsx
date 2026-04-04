@@ -1,9 +1,19 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { PackageOpen, Coins, Ticket, Tag } from "lucide-react";
+import { PackageOpen, Coins, Ticket, Tag, SearchX, Store, Users } from "lucide-react";
+
+type EmptyStateVariant =
+  | "offers"
+  | "points"
+  | "redemptions"
+  | "wallet"
+  | "search"
+  | "stores"
+  | "customers"
+  | "generic";
 
 interface EmptyStateProps {
-  type?: "offers" | "points" | "redemptions" | "generic";
+  type?: EmptyStateVariant;
   title?: string;
   description?: string;
   ctaLabel?: string;
@@ -11,11 +21,11 @@ interface EmptyStateProps {
   primary?: string;
 }
 
-const PRESETS = {
+const PRESETS: Record<EmptyStateVariant, { icon: React.ElementType; title: string; description: string }> = {
   offers: {
     icon: Tag,
     title: "Nenhuma oferta disponível",
-    description: "Em breve novas ofertas serão publicadas pelos nossos parceiros. Fique de olho!",
+    description: "Novas ofertas aparecerão aqui em breve.",
   },
   points: {
     icon: Coins,
@@ -24,8 +34,28 @@ const PRESETS = {
   },
   redemptions: {
     icon: Ticket,
-    title: "Nenhum resgate ainda",
-    description: "Resgate cupons e ofertas para vê-los aqui. Comece explorando as ofertas disponíveis!",
+    title: "Você ainda não resgatou nada",
+    description: "Explore as ofertas disponíveis e resgate seu primeiro benefício!",
+  },
+  wallet: {
+    icon: Coins,
+    title: "Sem movimentação ainda",
+    description: "Complete corridas para acumular pontos.",
+  },
+  search: {
+    icon: SearchX,
+    title: "Nenhum resultado encontrado",
+    description: "Tente buscar com outros termos.",
+  },
+  stores: {
+    icon: Store,
+    title: "Nenhum parceiro encontrado",
+    description: "Cadastre uma loja parceira para começar.",
+  },
+  customers: {
+    icon: Users,
+    title: "Nenhum cliente encontrado",
+    description: "Cadastre clientes ou aguarde o primeiro acesso.",
   },
   generic: {
     icon: PackageOpen,
