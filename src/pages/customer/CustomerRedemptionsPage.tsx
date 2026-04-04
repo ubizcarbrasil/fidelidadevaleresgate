@@ -222,7 +222,7 @@ export default function CustomerRedemptionsPage() {
             )}
           </div>
         )}
-      </div>
+      </PullToRefresh>
 
       {/* Redemption Detail Overlay */}
       <AnimatePresence>
