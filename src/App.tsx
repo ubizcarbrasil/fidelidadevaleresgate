@@ -280,7 +280,7 @@ function PWABanners() {
   return (
     <>
       {needRefresh && (
-        <PWAUpdateBanner onUpdate={() => updateServiceWorker(true)} onDismiss={dismissUpdate} />
+        <PWAUpdateBanner onUpdate={() => updateServiceWorker()} onDismiss={dismissUpdate} />
       )}
       {canInstall && !needRefresh && (
         <PWAInstallBanner onInstall={installApp} onDismiss={dismissInstall} />
