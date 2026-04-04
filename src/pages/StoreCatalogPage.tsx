@@ -38,6 +38,7 @@ const emptyForm: CatalogForm = {
 
 export default function StoreCatalogPage() {
   const qc = useQueryClient();
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const { currentBrandId, applyBrandFilter } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
