@@ -1,4 +1,5 @@
 import React from "react";
+import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/errorTracker";
 import { setBootPhase, dismissBootstrap } from "@/lib/bootState";
@@ -42,6 +43,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     setBootPhase("FAILED", error.message);
     dismissBootstrap();
+
+    // Reportar ao Sentry
+    Sentry.captureException(error, {
+      contexts: { react: { componentStack: errorInfo.componentStack?.slice(0, 2000) } },
+    });
+
     reportError({
       message: error.message,
       stack: error.stack,

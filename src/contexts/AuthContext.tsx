@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
+import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
 import { logAudit } from "@/lib/auditLogger";
@@ -85,8 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (newSession?.user) {
           const reqId = ++fetchIdRef.current;
           void fetchRoles(newSession.user.id, reqId);
+          Sentry.setUser({ id: newSession.user.id, email: newSession.user.email });
         } else {
           setRoles([]);
+          Sentry.setUser(null);
         }
 
         // Só libera loading se o bootstrap inicial ainda não terminou
