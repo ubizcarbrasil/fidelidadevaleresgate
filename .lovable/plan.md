@@ -1,41 +1,45 @@
 
-## Plano: Adicionar etapa "Modelo de Negócio" ao Guia de Cidades
 
-### Contexto
-O Guia de Cidades (`BrandCidadesJourneyPage.tsx`) tem 6 etapas. Falta uma etapa explicando como configurar o `scoring_model` (DRIVER_ONLY, PASSENGER_ONLY, BOTH) da nova cidade. Essa configuração é feita em **Regras de Resgate** (`/regras-resgate`).
+## Plano: Criar Guia de Ativação da API de Mobilidade
 
-### Alteração
+Página dedicada com o mesmo padrão visual do Guia de Cidades (`BrandCidadesJourneyPage.tsx`), focada na ativação da integração com a API de mobilidade (TaxiMachine).
 
-**Arquivo: `src/pages/BrandCidadesJourneyPage.tsx`**
+### Estrutura
 
-1. Adicionar import do ícone `Settings2` (já disponível no lucide-react)
+**Novo arquivo: `src/pages/BrandApiJourneyPage.tsx`**
 
-2. Inserir nova etapa **após a etapa 2 (Criar)** e **antes da etapa 3 (Parceiros)**, com os seguintes dados:
+Página com timeline vertical e 7 etapas expansíveis, reutilizando o mesmo layout (Card + accordion + numbered steps + tips + navigation buttons):
 
-| Campo | Valor |
-|---|---|
-| id | "3" (renumerar etapas seguintes para 4–7) |
-| phase | "Modelo" |
-| phaseIcon | `Settings2` |
-| phaseColor | `bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300` |
-| title | "Definir o modelo de negócio da Cidade" |
-| description | "Escolha se a cidade opera com motoristas, passageiros ou ambos." |
-| route | `/regras-resgate` |
+| # | Fase | Ícone | Título | Rota |
+|---|------|-------|--------|------|
+| 1 | Conceito | `BookOpen` | O que é a integração de mobilidade? | — |
+| 2 | Módulo | `Power` | Ativar o módulo de integração | `/brand-modules` |
+| 3 | Cidade | `MapPin` | Selecionar a cidade para integrar | `/machine-integration` |
+| 4 | Credenciais | `KeyRound` | Configurar credenciais da API | `/machine-integration` |
+| 5 | Webhook | `Link2` | Registrar o webhook automático | `/machine-integration` |
+| 6 | Teste | `Activity` | Testar com o Lab de Webhook | `/machine-webhook-test` |
+| 7 | Validar | `CheckCircle` | Verificar corridas e pontuação | `/machine-integration` |
 
-**Passos:**
-- "Acesse Cidades → Regras de Resgate."
-- "Selecione a cidade recém-criada no filtro."
-- "Escolha o modelo de negócio: Apenas Motorista, Apenas Passageiro ou Ambos."
-- "O modelo define quais funcionalidades e menus ficam disponíveis na cidade."
-- "Clique em 'Salvar' para aplicar."
+Cada etapa terá passos detalhados e dicas, similar ao guia de cidades.
 
-**Dicas:**
-- "Novas cidades herdam o modelo padrão da marca automaticamente."
-- "Você pode alterar o modelo a qualquer momento em Regras de Resgate."
-- "O modelo 'Ambos' habilita funcionalidades de motorista e passageiro simultaneamente."
+### Alterações em arquivos existentes
 
-3. Renumerar as etapas seguintes (Parceiros→4, Pontos→5, Clonar→6, Testar→7)
+1. **`src/App.tsx`**: Adicionar lazy import e rota `brand-api-journey`
+2. **`src/components/consoles/BrandSidebar.tsx`**: Adicionar item "Guia da API" no grupo de integração, com ícone `BookOpen` e rota `/brand-api-journey`
 
-4. Atualizar o texto do banner introdutório de "6 etapas" para "7 Etapas"
+### Conteúdo das etapas
 
-### Nenhum outro arquivo é alterado
+**Etapa 1 — Conceito:** Explica que a integração conecta o sistema de mobilidade ao programa de fidelidade, pontuando automaticamente passageiros e motoristas a cada corrida finalizada.
+
+**Etapa 2 — Módulo:** Acessar Configurações → Módulos e ativar "Integração Mobilidade".
+
+**Etapa 3 — Cidade:** Na tela de Integração, selecionar a cidade onde a API será ativada.
+
+**Etapa 4 — Credenciais:** Preencher Basic Auth (usuário/senha) e API Key fornecidos pelo sistema de mobilidade. Opcionalmente configurar credenciais Matrix para consulta de recibos.
+
+**Etapa 5 — Webhook:** Com a API Key preenchida, o webhook é registrado automaticamente. Copiar a URL do webhook para configurar no sistema externo se necessário.
+
+**Etapa 6 — Teste:** Usar o Lab de Webhook para simular eventos de corrida e verificar se os pontos são creditados corretamente.
+
+**Etapa 7 — Validar:** Verificar no painel de diagnóstico se as corridas estão sendo processadas, checar o feed de eventos em tempo real e confirmar pontuação nos clientes.
+
