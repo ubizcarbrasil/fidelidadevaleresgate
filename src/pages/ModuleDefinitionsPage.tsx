@@ -215,7 +215,7 @@ export default function ModuleDefinitionsPage() {
 
                     {!m.is_core && (
                       <button
-                        onClick={() => remove.mutate(m.id)}
+                        onClick={() => askConfirm({ title: "Excluir módulo?", description: "Essa ação não pode ser desfeita.", confirmLabel: "Sim, excluir", variant: "destructive", onConfirm: () => remove.mutate(m.id) })}
                         className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-destructive/10 active:scale-95 transition-all touch-manipulation"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
