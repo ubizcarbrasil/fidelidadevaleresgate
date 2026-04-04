@@ -1,4 +1,4 @@
-import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, Image, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package, Bell, ShoppingCart, FolderHeart, CreditCard } from "lucide-react";
+import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, GalleryHorizontal, Grip, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package, Bell, ShoppingCart, FolderHeart, CreditCard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -57,13 +57,13 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Personalização & Vitrine",
     items: [
       { key: "sidebar.tema_marca", defaultTitle: "Identidade Visual", url: "/brands", icon: Palette, moduleKey: "brand_theme" },
-      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Image, moduleKey: "icon_library" },
+      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Grip, moduleKey: "icon_library" },
       { key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing" },
       { key: "sidebar.welcome_tour", defaultTitle: "Boas-Vindas", url: "/welcome-tour", icon: Rocket, moduleKey: "welcome_tour" },
       { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText, moduleKey: "profile_links" },
       { key: "sidebar.offer_card_config", defaultTitle: "Layout de Ofertas", url: "/offer-card-config", icon: LayoutTemplate, moduleKey: "offer_card_config" },
       { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers, moduleKey: "page_builder" },
-      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: Image, moduleKey: "banners" },
+      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: GalleryHorizontal, moduleKey: "banners" },
     ],
   },
   {
