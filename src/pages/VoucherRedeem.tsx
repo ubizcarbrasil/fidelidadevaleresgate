@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -151,9 +152,9 @@ export default function VoucherRedeem() {
                   <div className="space-y-2 pt-2 border-t">
                     <Label>Observações do resgate</Label>
                     <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas opcionais..." />
-                    <Button onClick={handleRedeem} disabled={redeeming} className="w-full">
-                      {redeeming ? "Resgatando..." : "Confirmar Resgate"}
-                    </Button>
+                    <LoadingButton onClick={handleRedeem} isLoading={redeeming} loadingText="Resgatando..." className="w-full">
+                      Confirmar Resgate
+                    </LoadingButton>
                   </div>
                 )}
 
