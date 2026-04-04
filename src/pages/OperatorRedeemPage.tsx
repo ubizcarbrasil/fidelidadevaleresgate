@@ -98,7 +98,7 @@ export default function OperatorRedeemPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Resgate confirmado!");
+      celebrateRedeem({ title: "Resgate confirmado! 🎉", description: "Voucher utilizado com sucesso." });
       setResult(null); setPin(""); setCpf(""); setPurchaseValue(""); setError(null);
       qc.invalidateQueries({ queryKey: ["redemptions"] });
     },

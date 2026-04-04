@@ -88,7 +88,7 @@ export default function VoucherRedeem() {
 
     setRedeemed(true);
     setVoucher({ ...voucher, current_uses: newUses, status: newStatus });
-    toast.success("Voucher resgatado com sucesso!");
+    celebrateRedeem({ title: "Voucher resgatado! 🎉", description: "Aproveite seu benefício." });
     setRedeeming(false);
   };
 
