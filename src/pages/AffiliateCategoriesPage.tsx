@@ -48,6 +48,7 @@ interface CategoryBanner {
 export default function AffiliateCategoriesPage() {
   const qc = useQueryClient();
   const { currentBrandId } = useBrandGuard();
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category> | null>(null);
   const [newForm, setNewForm] = useState<Partial<Category> | null>(null);
