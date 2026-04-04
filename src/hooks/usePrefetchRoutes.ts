@@ -47,7 +47,7 @@ export function usePrefetchRoutes() {
 
     // Prefetch resgates do cliente (tab Resgates)
     queryClient.prefetchQuery({
-      queryKey: ["customer-redemptions", customerId],
+      queryKey: queryKeys.customerRedemptions.list(customerId),
       staleTime: PREFETCH_STALE_TIME,
       queryFn: async () => {
         const { data } = await supabase
