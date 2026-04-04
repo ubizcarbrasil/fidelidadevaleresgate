@@ -185,7 +185,7 @@ export default function BrandCidadesJourneyPage() {
                 Cada etapa inclui passos detalhados e dicas práticas.
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
-                <Badge variant="secondary" className="text-xs">6 Etapas</Badge>
+                <Badge variant="secondary" className="text-xs">7 Etapas</Badge>
                 <Badge variant="secondary" className="text-xs">~10 min</Badge>
               </div>
             </div>
