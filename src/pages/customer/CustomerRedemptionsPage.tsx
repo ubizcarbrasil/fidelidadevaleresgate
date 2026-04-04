@@ -122,7 +122,7 @@ export default function CustomerRedemptionsPage() {
   const formatDate = (d: string) =>
     format(new Date(d), "dd/MM/yyyy, HH:mm", { locale: ptBR });
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["customer-redemptions"] });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all });
   }, [queryClient]);
 
   return (
