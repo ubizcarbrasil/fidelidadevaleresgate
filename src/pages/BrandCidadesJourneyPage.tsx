@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   MapPin, Plus, ShoppingBag, Coins, Copy, Eye,
-  Check, ChevronRight, ChevronDown, BookOpen,
+  Check, ChevronRight, ChevronDown, BookOpen, Settings2,
 } from "lucide-react";
 
 interface JourneyStep {
