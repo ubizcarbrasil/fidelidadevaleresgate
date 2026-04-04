@@ -8,6 +8,9 @@ console.info("[boot] main.tsx executing");
 import { initSentry } from "@/lib/sentry";
 initSentry();
 
+import { reportWebVitals } from "@/lib/webVitals";
+reportWebVitals();
+
 import "./index.css";
 import { createRoot } from "react-dom/client";
 import { Suspense, useEffect, Component, type ReactNode } from "react";
