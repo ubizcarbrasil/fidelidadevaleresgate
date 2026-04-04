@@ -268,7 +268,7 @@ function FavoritesSection({ customer, primary, fg, fontHeading }: { customer: { 
   const { openOffer, isFavorite, toggleFavorite } = useCustomerNav();
 
   const { data: favorites = [], isLoading: loading } = useQuery({
-    queryKey: ["customer-favorites", customer?.id],
+    queryKey: queryKeys.customerFavorites.list(customer?.id),
     enabled: !!customer,
     queryFn: async () => {
       const { data } = await supabase

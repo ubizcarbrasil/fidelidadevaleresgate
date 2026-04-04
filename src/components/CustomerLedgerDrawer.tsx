@@ -30,7 +30,7 @@ export default function CustomerLedgerDrawer({ customer, open, onOpenChange }: C
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customer-ledger", customer?.id, page, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryKey: queryKeys.customerLedger.list(customer?.id, page, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()),
     queryFn: async () => {
       let query = supabase
         .from("points_ledger")
