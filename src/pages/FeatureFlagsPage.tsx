@@ -21,6 +21,7 @@ const emptyForm: FlagForm = { key: "", label: "", description: "", is_enabled: f
 export default function FeatureFlagsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FlagForm>(emptyForm);
 
