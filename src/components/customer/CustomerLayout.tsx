@@ -131,6 +131,7 @@ export default function CustomerLayout() {
   const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
+  usePrefetchRoutes();
 
   const filteredTabs = useMemo(() =>
     TABS.filter(t => {
