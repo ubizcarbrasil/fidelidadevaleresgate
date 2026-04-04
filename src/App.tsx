@@ -274,6 +274,21 @@ function AppRoutes() {
   );
 }
 
+function PWABanners() {
+  const { needRefresh, updateServiceWorker, dismissUpdate, canInstall, installApp, dismissInstall } = usePWA();
+
+  return (
+    <>
+      {needRefresh && (
+        <PWAUpdateBanner onUpdate={() => updateServiceWorker(true)} onDismiss={dismissUpdate} />
+      )}
+      {canInstall && !needRefresh && (
+        <PWAInstallBanner onInstall={installApp} onDismiss={dismissInstall} />
+      )}
+    </>
+  );
+}
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -286,6 +301,7 @@ const App = () => (
             <BrowserRouter>
               <AppContent />
             </BrowserRouter>
+            <PWABanners />
           </TooltipProvider>
         </BrandProvider>
       </AuthProvider>
