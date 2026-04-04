@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { queryKeys } from "@/lib/queryKeys";
-
-const PREFETCH_STALE_TIME = 30_000; // 30s
+import { CACHE } from "@/config/constants";
 
 /**
  * Prefetch inteligente: carrega em background as queries mais acessadas

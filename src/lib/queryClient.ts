@@ -6,6 +6,7 @@
  * - refetchOnWindowFocus desabilitado
  */
 import { QueryClient } from "@tanstack/react-query";
+import { CACHE } from "@/config/constants";
 
 function retryDelay(attemptIndex: number): number {
   return Math.min(1000 * 2 ** attemptIndex, 10_000);
@@ -14,8 +15,8 @@ function retryDelay(attemptIndex: number): number {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,        // 30s — dados operacionais
-      gcTime: 10 * 60_000,      // 10min — libera memória
+      staleTime: CACHE.STALE_TIME_SHORT,
+      gcTime: CACHE.GC_TIME,
       retry: 2,
       retryDelay,
       refetchOnWindowFocus: false,
