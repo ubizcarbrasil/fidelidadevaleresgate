@@ -306,6 +306,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                 <div className="relative">
                   {offer.stores?.banner_url ? (
                     <SafeImage
+                      preset="banner"
+                      loading="eager"
                       src={offer.stores.banner_url}
                       alt={offer.stores?.name || "Loja"}
                       className="w-full h-48 object-cover"
@@ -340,6 +342,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
                       <div className="h-16 w-16 rounded-2xl bg-card shadow-lg border-2 border-card overflow-hidden">
                         <SafeImage
+                          preset="thumbnail"
                           src={offer.stores.logo_url}
                           alt={offer.stores?.name || ""}
                           className="w-full h-full object-cover"
@@ -370,6 +373,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     </span>
                   )}
                   <SafeImage
+                    preset="detail"
+                    loading="eager"
                     src={offer.image_url}
                     fallbackSrc={offer.stores?.logo_url}
                     alt={offer.title}
