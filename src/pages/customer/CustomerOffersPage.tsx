@@ -6,6 +6,7 @@ import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Search, Heart, ShoppingBag, Store, Sparkles, Clock, ThumbsUp } from "lucide-react";
 import OfferPurposeBadge from "@/components/customer/OfferPurposeBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StoreOfferCardSkeleton } from "@/components/customer/StoreOfferCardSkeleton";
 import EmptyState from "@/components/customer/EmptyState";
 import SafeImage from "@/components/customer/SafeImage";
 import type { OfferWithStore } from "@/types/customer";
