@@ -16,6 +16,7 @@ import ImportarCsvMotoristas from "@/components/driver-management/ImportarCsvMot
 import DriverNotificationConfig from "@/components/driver-management/DriverNotificationConfig";
 import { formatPoints } from "@/lib/formatPoints";
 
+import type { DriverRow } from "@/types/driver";
 export type { DriverRow } from "@/types/driver";
 
 export default function DriverManagementPage() {
