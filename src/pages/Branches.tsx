@@ -34,14 +34,16 @@ export default function Branches() {
     },
   });
 
-  const toggleActive = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+  const toggleActive = useMutationWithFeedback<void, Error, { id: string; is_active: boolean }>(
+    async ({ id, is_active }) => {
       const { error } = await supabase.from("branches").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["branches"] }); toast.success("Status atualizado!"); },
-    onError: (e: Error) => toast.error(e.message),
-  });
+    {
+      successMessage: "Status atualizado!",
+      onSuccessCallback: () => queryClient.invalidateQueries({ queryKey: queryKeys.branches.all }),
+    },
+  );
 
   return (
     <div className="space-y-6">
