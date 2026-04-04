@@ -26,7 +26,6 @@ export function reportWebVitals(): void {
   };
 
   onCLS(send);
-  onFID(send);
   onFCP(send);
   onLCP(send);
   onTTFB(send);
