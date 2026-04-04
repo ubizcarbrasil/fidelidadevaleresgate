@@ -1,8 +1,7 @@
 import React from "react";
-import { ArrowLeft, Share2, Heart } from "lucide-react";
+import { ArrowLeft, Share2, Heart, Store as StoreIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import SafeImage from "@/components/customer/SafeImage";
-import { Store as StoreIcon } from "lucide-react";
 import { brandAlpha } from "@/lib/utils";
 
 interface Props {
