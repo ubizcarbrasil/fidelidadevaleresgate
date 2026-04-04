@@ -15,6 +15,7 @@ import { RedemptionCard } from "@/components/customer/RedemptionCard";
 import type { RedemptionWithOffer } from "@/types/customer";
 import { hslToCss, brandAlpha } from "@/lib/utils";
 import { RedemptionCardSkeleton } from "@/components/customer/RedemptionCardSkeleton";
+import { queryKeys } from "@/lib/queryKeys";
 
 type StatusFilter = "ALL" | "PENDING" | "USED" | "EXPIRED";
 
