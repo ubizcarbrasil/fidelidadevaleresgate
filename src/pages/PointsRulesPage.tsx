@@ -54,6 +54,7 @@ const emptyForm: RuleForm = {
 
 export default function PointsRulesPage() {
   const qc = useQueryClient();
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const { currentBrandId, currentBranchId, isRootAdmin, applyBrandFilter } = useBrandGuard();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
