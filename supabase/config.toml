@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.notify-driver-points]
 verify_jwt = false
+
+[functions.driver-notifications-cron]
+verify_jwt = false
