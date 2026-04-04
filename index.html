@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- cache-bust 2026-04-02a -->
+<!-- cache-bust 2026-04-04a -->
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
@@ -17,62 +17,42 @@
     <meta name="apple-mobile-web-app-title" content="Vale Resgate" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a6cfa" />
-    <meta name="app-version" content="2026-04-02-v1" />
-    <!-- manifest removed to avoid stale SW interference in preview -->
+    <meta name="app-version" content="2026-04-04-v1" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
-    
-    
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/499c94d3-cc18-4c40-92ba-c12abdf2ed63/id-preview-e4f29599--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app-1772648810378.png">
-
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/499c94d3-cc18-4c40-92ba-c12abdf2ed63/id-preview-e4f29599--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app-1772648810378.png">
     <meta property="og:title" content="Vale Resgate — Painel Admin">
-  <meta name="twitter:title" content="Vale Resgate — Painel Admin">
-  <meta property="og:description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
-  <meta name="twitter:description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
-</head>
+    <meta name="twitter:title" content="Vale Resgate — Painel Admin">
+    <meta property="og:description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
+    <meta name="twitter:description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
+  </head>
 
   <body>
-    <!-- Bootstrap overlay: OUTSIDE #root so React never touches it -->
+    <!-- Bootstrap overlay -->
     <div id="bootstrap-fallback" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0f0a2e;flex-direction:column;gap:16px;transition:opacity 300ms ease-out;">
       <svg id="bootstrap-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6d4aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><style>@keyframes spin{to{transform:rotate(360deg)}}</style></svg>
       <div id="bootstrap-phase" style="display:none;text-align:center;color:#7c6faa;font-family:system-ui,sans-serif;font-size:11px;letter-spacing:0.03em;"></div>
       <div id="bootstrap-error" style="display:none;text-align:center;color:#c4b5fd;font-family:system-ui,sans-serif;padding:0 24px;"></div>
     </div>
 
-    <!-- React mount point: completely empty -->
     <div id="root"></div>
 
-    <!-- Storage shim: prevent SecurityError in iframe/preview environments -->
+    <!-- Storage shim -->
     <script>
       (function(){
-        function makeMemoryStorage(){
-          var s={};
-          return {
-            getItem:function(k){return s.hasOwnProperty(k)?s[k]:null},
-            setItem:function(k,v){s[k]=String(v)},
-            removeItem:function(k){delete s[k]},
-            clear:function(){s={}},
-            key:function(i){return Object.keys(s)[i]||null},
-            get length(){return Object.keys(s).length}
-          };
-        }
-        try{var t='__st__';window.localStorage.setItem(t,t);window.localStorage.removeItem(t)}catch(e){
-          console.warn('localStorage indisponível, usando fallback em memória');
-          try{Object.defineProperty(window,'localStorage',{value:makeMemoryStorage(),writable:true})}catch(e2){window.localStorage=makeMemoryStorage()}
-        }
-        try{var t2='__ss__';window.sessionStorage.setItem(t2,t2);window.sessionStorage.removeItem(t2)}catch(e){
-          console.warn('sessionStorage indisponível, usando fallback em memória');
-          try{Object.defineProperty(window,'sessionStorage',{value:makeMemoryStorage(),writable:true})}catch(e2){window.sessionStorage=makeMemoryStorage()}
-        }
+        function m(){var s={};return{getItem:function(k){return s.hasOwnProperty(k)?s[k]:null},setItem:function(k,v){s[k]=String(v)},removeItem:function(k){delete s[k]},clear:function(){s={}},key:function(i){return Object.keys(s)[i]||null},get length(){return Object.keys(s).length}};}
+        try{var t='__st__';window.localStorage.setItem(t,t);window.localStorage.removeItem(t)}catch(e){try{Object.defineProperty(window,'localStorage',{value:m(),writable:true})}catch(e2){window.localStorage=m()}}
+        try{var t2='__ss__';window.sessionStorage.setItem(t2,t2);window.sessionStorage.removeItem(t2)}catch(e){try{Object.defineProperty(window,'sessionStorage',{value:m(),writable:true})}catch(e2){window.sessionStorage=m()}}
       })();
     </script>
 
-    <!-- Safety timeout: show reload button with boot phase diagnostic -->
     <script>
+      window.__BOOT_PHASE__="INIT";
       window.__bootstrapDismissed=false;
+
       window.__dismissBootstrap=function(){
         if(window.__bootstrapDismissed)return;
         window.__bootstrapDismissed=true;
@@ -83,34 +63,9 @@
         setTimeout(function(){if(el&&el.parentNode)el.parentNode.removeChild(el)},350);
       };
 
-      /* Progresso intermediário: mostra fase amigável após 4s */
-      var phaseLabels={
-        ENTRY_LOADING:'preparando ambiente…',
-        MAIN_MODULE_START:'carregando módulos…',
-        BOOTSTRAP:'iniciando aplicação…',
-        AUTH_LOADING:'verificando sessão…',
-        BRAND_LOADING:'carregando configurações…',
-        BRAND_READY:'quase pronto…',
-        APP_MOUNTED:'pronto'
-      };
-      setTimeout(function(){
-        if(window.__bootstrapDismissed)return;
-        var phaseEl=document.getElementById('bootstrap-phase');
-        if(!phaseEl)return;
-        phaseEl.style.display='block';
-        phaseEl.textContent=phaseLabels[window.__BOOT_PHASE__]||'preparando…';
-        var iv=setInterval(function(){
-          if(window.__bootstrapDismissed){clearInterval(iv);return}
-          phaseEl.textContent=phaseLabels[window.__BOOT_PHASE__]||'preparando…';
-        },1000);
-      },4000);
-
-      /* Timeout de segurança: botão de reload após 10s */
-      setTimeout(function(){
-        if(window.__bootstrapDismissed)return;
-        var el=document.getElementById('bootstrap-fallback');
-        if(!el)return;
-        var phase=window.__BOOT_PHASE__||'desconhecido';
+      window.__showBootError=function(phase,detail){
+        window.__BOOT_PHASE__=phase;
+        console.error('[boot] '+phase,detail);
         var spinner=document.getElementById('bootstrap-spinner');
         var phaseEl=document.getElementById('bootstrap-phase');
         var err=document.getElementById('bootstrap-error');
@@ -118,17 +73,13 @@
         if(phaseEl)phaseEl.style.display='none';
         if(err){
           err.style.display='block';
-          err.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">'+(phaseLabels[phase]||phase)+'</p>'
-            +'<p style="margin:0 0 12px;font-size:14px;">O carregamento está demorando mais que o esperado.</p>'
+          err.innerHTML='<p style="margin:0 0 8px;font-size:11px;color:#7c6faa;">'+phase+'</p>'
+            +'<p style="margin:0 0 12px;font-size:14px;">'+(detail||'Erro ao carregar a aplicação.')+'</p>'
             +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
         }
-      },10000);
-    </script>
+      };
 
-    <script>
-      window.__BOOT_PHASE__="ENTRY_LOADING";
-
-      /* Normalização de /index → / antes do import */
+      // Normalize /index routes
       (function(){
         var p=window.location.pathname;
         if(p==="/index"||p==="/index.html"||p==="/index/"){
@@ -136,71 +87,21 @@
         }
       })();
 
-      /* Limpeza defensiva de caches legados que podem travar o preview */
+      // Cleanup legacy SW/caches
       (function(){
         try{
-          if('serviceWorker' in navigator){
-            navigator.serviceWorker.getRegistrations().then(function(registrations){
-              registrations.forEach(function(reg){ reg.unregister(); });
-            }).catch(function(){});
-          }
-          if('caches' in window){
-            caches.keys().then(function(keys){
-              keys.forEach(function(key){
-                if(/workbox|vite|pwa|precache/i.test(key)) caches.delete(key);
-              });
-            }).catch(function(){});
-          }
+          if('serviceWorker' in navigator)navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister()})}).catch(function(){});
+          if('caches' in window)caches.keys().then(function(k){k.forEach(function(key){if(/workbox|vite|pwa|precache/i.test(key))caches.delete(key)})}).catch(function(){});
         }catch(e){}
       })();
 
-      (function(){
-        var script=document.createElement('script');
-        script.type='module';
-        script.src='/src/main.tsx?v=' + Date.now();
-        script.onerror=function(){
-          window.__BOOT_PHASE__='ENTRY_IMPORT_FAILED';
-          var spinner=document.getElementById('bootstrap-spinner');
-          var phaseEl=document.getElementById('bootstrap-phase');
-          var err=document.getElementById('bootstrap-error');
-          if(spinner)spinner.style.display='none';
-          if(phaseEl)phaseEl.style.display='none';
-          if(err){
-            err.style.display='block';
-            err.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Falha ao carregar o painel</p>'
-              +'<p style="margin:0 0 12px;font-size:14px;">Os arquivos iniciais não responderam corretamente.</p>'
-              +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
-          }
-        };
-        document.body.appendChild(script);
-      })();
+      // Safety timeout
+      setTimeout(function(){
+        if(window.__bootstrapDismissed||window.__APP_MOUNTED__)return;
+        window.__showBootError('TIMEOUT','A aplicação não carregou a tempo. Fase: '+(window.__BOOT_PHASE__||'desconhecida'));
+      },12000);
     </script>
-    <script>
-      (function(){
-        var TIMEOUT_MS=15000;
 
-        function showFatalError(message){
-          window.__BOOT_PHASE__="ENTRY_IMPORT_FAILED";
-          var spinner=document.getElementById("bootstrap-spinner");
-          var phaseEl=document.getElementById("bootstrap-phase");
-          var errDiv=document.getElementById("bootstrap-error");
-          if(spinner)spinner.style.display="none";
-          if(phaseEl)phaseEl.style.display="none";
-          if(errDiv){
-            errDiv.style.display="block";
-            errDiv.innerHTML='<p style="margin:0 0 8px;font-size:13px;color:#a78bfa;">Falha ao iniciar a aplicação</p>'
-              +'<p style="margin:0 0 12px;font-size:14px;">'+message+'</p>'
-              +'<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
-          }
-        }
-
-        setTimeout(function(){
-          if(window.__bootstrapDismissed||window.__APP_MOUNTED__)return;
-          var phase=window.__BOOT_PHASE__||"desconhecido";
-          console.error("[boot] mount timeout", phase);
-          showFatalError("A aplicação não concluiu a inicialização a tempo. Fase atual: "+phase+".");
-        },TIMEOUT_MS);
-      })();
-    </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
