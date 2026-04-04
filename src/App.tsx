@@ -8,6 +8,9 @@ import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-route
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { usePWA } from "@/hooks/usePWA";
+import PWAUpdateBanner from "@/components/pwa/PWAUpdateBanner";
+import PWAInstallBanner from "@/components/pwa/PWAInstallBanner";
 import { useBrand } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ModuleGuard from "@/components/ModuleGuard";
