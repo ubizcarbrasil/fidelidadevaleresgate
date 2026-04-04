@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import type { DriverRow } from "@/pages/DriverManagementPage";
+import { useMutationWithFeedback } from "@/hooks/useMutationWithFeedback";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   driver: DriverRow;
@@ -12,20 +13,19 @@ interface Props {
 export default function DriverScoringToggle({ driver }: Props) {
   const qc = useQueryClient();
 
-  const mutation = useMutation({
-    mutationFn: async (disabled: boolean) => {
+  const mutation = useMutationWithFeedback<void, Error, boolean>(
+    async (disabled) => {
       const { error } = await (supabase as any)
         .from("customers")
         .update({ scoring_disabled: disabled })
         .eq("id", driver.id);
       if (error) throw error;
     },
-    onSuccess: (_, disabled) => {
-      toast.success(disabled ? "Pontuação desativada" : "Pontuação reativada");
-      qc.invalidateQueries({ queryKey: ["driver-management"] });
+    {
+      successMessage: "Status de pontuação atualizado!",
+      onSuccessCallback: () => qc.invalidateQueries({ queryKey: queryKeys.driverManagement.all }),
     },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  );
 
   return (
     <div className="rounded-lg border border-border p-3">
