@@ -43,6 +43,7 @@ const INITIAL_FORM = {
 export default function BannerManagerPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
+  const { state: confirmState, confirm: askConfirm, close: closeConfirm } = useConfirmDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
