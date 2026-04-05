@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Vale Resgate" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a6cfa" />
-    <meta name="app-version" content="2026-04-04-v3" />
+    <meta name="app-version" content="2026-04-05-v1" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
     <meta property="og:type" content="website" />
@@ -86,7 +86,6 @@
 
       (function(){
         try{
-          if('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister()})}).catch(function(){});
           if('caches' in window) caches.keys().then(function(k){k.forEach(function(key){if(/workbox|vite|pwa|precache/i.test(key))caches.delete(key)})}).catch(function(){});
         }catch(e){}
       })();
@@ -98,17 +97,19 @@
           setTimeout(function(){
             if(window.__bootstrapDismissed || window.__APP_MOUNTED__) return;
             window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + (window.__BOOT_PHASE__ || 'desconhecida'));
-          }, 15000);
+          }, 20000);
           return;
         }
         window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + phase);
-      }, 15000);
+      }, 25000);
     </script>
 
     <script type="module">
       window.__BOOT_PHASE__ = "ENTRY_IMPORT_START";
       console.info("[boot] ENTRY_IMPORT_START");
-      import("/src/main.tsx").catch(function(e){
+      var v = document.querySelector('meta[name="app-version"]');
+      var ver = v ? v.getAttribute('content') : Date.now();
+      import("/src/main.tsx?v=" + ver).catch(function(e){
         console.error("[boot] ENTRY_IMPORT_FAILED", e);
         if(typeof window.__showBootError === "function"){
           window.__showBootError("ENTRY_IMPORT_FAILED", e && e.message ? e.message : String(e));
