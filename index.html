@@ -97,11 +97,11 @@
           setTimeout(function(){
             if(window.__bootstrapDismissed || window.__APP_MOUNTED__) return;
             window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + (window.__BOOT_PHASE__ || 'desconhecida'));
-          }, 15000);
+          }, 20000);
           return;
         }
         window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + phase);
-      }, 15000);
+      }, 25000);
     </script>
 
     <script type="module">
