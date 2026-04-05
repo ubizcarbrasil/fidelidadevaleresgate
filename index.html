@@ -86,7 +86,6 @@
 
       (function(){
         try{
-          if('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister()})}).catch(function(){});
           if('caches' in window) caches.keys().then(function(k){k.forEach(function(key){if(/workbox|vite|pwa|precache/i.test(key))caches.delete(key)})}).catch(function(){});
         }catch(e){}
       })();
