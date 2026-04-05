@@ -107,7 +107,9 @@
     <script type="module">
       window.__BOOT_PHASE__ = "ENTRY_IMPORT_START";
       console.info("[boot] ENTRY_IMPORT_START");
-      import("/src/main.tsx").catch(function(e){
+      var v = document.querySelector('meta[name="app-version"]');
+      var ver = v ? v.getAttribute('content') : Date.now();
+      import("/src/main.tsx?v=" + ver).catch(function(e){
         console.error("[boot] ENTRY_IMPORT_FAILED", e);
         if(typeof window.__showBootError === "function"){
           window.__showBootError("ENTRY_IMPORT_FAILED", e && e.message ? e.message : String(e));
