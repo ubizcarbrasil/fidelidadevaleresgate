@@ -28,6 +28,7 @@ import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
+import BannerPromoDuelos from "./duels/BannerPromoDuelos";
 
 export interface AffiliateDeal {
   id: string;
@@ -538,6 +539,16 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
+
+      {/* Banner promo Duelos */}
+      {!debouncedSearch.trim() && driver && configDuelos.duelosAtivos && (
+        <div className="px-5 pt-4">
+          <BannerPromoDuelos
+            fontHeading={fontHeading}
+            onAbrir={() => setShowDuels(true)}
+          />
+        </div>
+      )}
 
       {/* Redeemable section */}
       {!debouncedSearch.trim() && redeemableDeals.length > 0 && (
