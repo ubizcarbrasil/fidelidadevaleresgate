@@ -1,4 +1,4 @@
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, PackageSearch, BarChart3, Bell, ChevronRight, BookOpen, ShoppingCart, FolderHeart } from "lucide-react";
+import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, PackageSearch, BarChart3, Bell, ChevronRight, BookOpen, ShoppingCart, FolderHeart, Swords } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
