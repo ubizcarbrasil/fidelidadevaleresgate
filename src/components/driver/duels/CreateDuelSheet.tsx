@@ -115,33 +115,15 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
               <p className="text-sm text-muted-foreground text-center py-8">Nenhum motorista disponível para duelo na sua cidade</p>
             ) : (
               <div className="space-y-2">
-                {filtered.map((op) => {
-                  const name = cleanDriverName((op.customers as any)?.name);
-                  const isSelected = selectedOpponent === op.customer_id;
-                  return (
-                    <button
-                      key={op.id}
-                      onClick={() => setSelectedOpponent(op.customer_id)}
-                      className="w-full flex items-center gap-3 rounded-xl p-3 transition-all"
-                      style={{
-                        backgroundColor: isSelected ? "hsl(var(--primary) / 0.1)" : "hsl(var(--card))",
-                        border: isSelected ? "1px solid hsl(var(--primary) / 0.4)" : "1px solid hsl(var(--border))",
-                      }}
-                    >
-                      <div
-                        className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold"
-                        style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
-                      >
-                        {name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-foreground">{name}</p>
-                        <p className="text-[11px] text-muted-foreground">{op.public_nickname || "Motorista"}</p>
-                      </div>
-                      {isSelected && <Swords className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />}
-                    </button>
-                  );
-                })}
+                {filtered.map((op) => (
+                  <OpponentCard
+                    key={op.id}
+                    participant={op}
+                    isSelected={selectedOpponent === op.customer_id}
+                    onSelect={() => setSelectedOpponent(op.customer_id)}
+                    onViewProfile={() => setViewingProfile(op)}
+                  />
+                ))}
               </div>
             )}
 
