@@ -67,6 +67,12 @@ export default function BrandBranchForm() {
   const [scoringModel, setScoringModel] = useState("BOTH");
   const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
 
+  // Gamificação de Motoristas
+  const [enableDriverDuels, setEnableDriverDuels] = useState(false);
+  const [enableCityRanking, setEnableCityRanking] = useState(false);
+  const [enableCityBelt, setEnableCityBelt] = useState(false);
+  const [allowPublicDuelViewing, setAllowPublicDuelViewing] = useState(false);
+
   // Load brand's default scoring model for new cities
   useEffect(() => {
     if (isEdit || !currentBrandId) return;
