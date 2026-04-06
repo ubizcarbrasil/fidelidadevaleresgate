@@ -11,7 +11,9 @@ import DuelCard from "./DuelCard";
 import DuelChallengeCard from "./DuelChallengeCard";
 import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
+import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart3 } from "lucide-react";
 
 interface Props {
   onBack: () => void;
