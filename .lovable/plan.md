@@ -1,43 +1,44 @@
 
-## Plano: Avaliação entre Motoristas após Duelo
 
-### 1. Migração SQL
+## Plano: Cron de Auto-Finalização de Duelos e Atualização do Cinturão
 
-**Nova tabela `driver_duel_ratings`:**
-- `duel_id`, `rater_customer_id`, `rated_customer_id`
-- `rating` (1-5), `tags` (text[]), `comment` (text, opcional)
-- Unique constraint: (duel_id, rater_customer_id) — avalia apenas uma vez
-- RLS: motorista só pode inserir avaliação se participou do duelo e o duelo está `finished`
+### O que será feito
 
-**Nova RPC `get_driver_reputation`:**
-- Recebe `p_customer_id`, retorna `avg_rating`, `total_ratings`, `tags_summary` (tags mais frequentes)
+Uma função backend executada automaticamente a cada 5 minutos para:
+1. Encontrar duelos expirados (status `accepted` ou `live` com `end_at` no passado) e finalizá-los chamando `finalize_duel`
+2. Atualizar o cinturão da cidade chamando `update_city_belt` para cada cidade com duelos finalizados
+3. Registrar logs estruturados de cada operação
 
-### 2. Hook `useAvaliacaoDuelo`
+### Etapas
 
-- `useSubmitRating`: mutation para inserir avaliação
-- `useDuelRating`: query para verificar se já avaliou
-- `useDriverReputation`: query para buscar reputação de um motorista
+**1. Criar Edge Function `finalize-duels-cron`**
+- Arquivo: `supabase/functions/finalize-duels-cron/index.ts`
+- Autenticação via `SUPABASE_SERVICE_ROLE_KEY` ou `AGENT_SECRET` (mesmo padrão do `driver-notifications-cron`)
+- Lógica:
+  - Buscar duelos com `status IN ('accepted','live') AND end_at < now()`
+  - Para cada duelo, chamar `finalize_duel(p_duel_id)` via RPC
+  - Coletar `branch_id` + `brand_id` distintos dos duelos finalizados
+  - Para cada branch, chamar `update_city_belt(p_branch_id, p_brand_id)` via RPC
+  - Retornar resumo: `{ duelsFinalized, beltsUpdated, errors }`
 
-### 3. Componente `AvaliacaoDueloSheet.tsx`
+**2. Registrar config.toml**
+- Adicionar bloco `[functions.finalize-duels-cron]` com `verify_jwt = false`
 
-Sheet com:
-- Estrelas 1-5 (toque para selecionar)
-- Tags rápidas como chips selecionáveis (competitivo, respeitoso, bom adversário, foi pra cima, pediu revanche, pontual)
-- Campo de comentário curto opcional (max 200 chars)
-- Botão "Enviar Avaliação"
+**3. Criar cron job via SQL (pg_cron + pg_net)**
+- Habilitar extensões `pg_cron` e `pg_net`
+- Agendar execução a cada 5 minutos chamando a Edge Function via `net.http_post`
 
-### 4. Integração
+### Detalhes técnicos
 
-- No card de duelo finalizado (`DuelFinishedCard` ou similar), adicionar botão "Avaliar adversário" que abre o sheet
-- Mostrar badge "Já avaliado ✓" se já avaliou
-- Integrar reputação no `PerfilCompetitivoSheet` existente
+```text
+Fluxo:
+  pg_cron (cada 5 min)
+    → net.http_post → /functions/v1/finalize-duels-cron
+      → SELECT de duelos expirados
+      → RPC finalize_duel() para cada um
+      → RPC update_city_belt() para cada branch afetada
+      → Retorna resumo JSON
+```
 
-### Arquivos
+A função reutiliza o padrão de autenticação e logging já existente no projeto (`edgeLogger`, `corsHeaders`, validação de Bearer token).
 
-| Arquivo | Ação |
-|---------|------|
-| Migração SQL (tabela + RPC) | Criar |
-| `hook_avaliacao_duelo.ts` | Criar |
-| `AvaliacaoDueloSheet.tsx` | Criar |
-| `DuelCardActions` ou card de duelo finalizado | Modificar |
-| `PerfilCompetitivoSheet.tsx` | Modificar (adicionar reputação) |
