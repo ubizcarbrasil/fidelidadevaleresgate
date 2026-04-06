@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { toast } from "sonner";
+import { eventBus } from "@/lib/eventBus";
+import { enviarNotificacaoDuelo } from "./servico_notificacoes_duelo";
 
 export interface DuelParticipant {
   id: string;
@@ -145,11 +147,28 @@ export function useCreateDuel() {
       if (error) throw error;
       const result = data as any;
       if (!result?.success) throw new Error(result?.error || "Erro ao criar desafio");
-      return result;
+      return { ...result, challengedCustomerId: params.challengedCustomerId };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       toast.success("Desafio enviado! 🥊");
+
+      const driverName = cleanDriverName(driver?.name);
+      const duelId = result.duel_id;
+
+      eventBus.emit("DUEL_CHALLENGE_RECEIVED", {
+        brandId: driver!.brand_id,
+        challengedCustomerId: result.challengedCustomerId,
+        challengerName: driverName,
+        duelId,
+      });
+
+      enviarNotificacaoDuelo({
+        tipo: "DUEL_CHALLENGE_RECEIVED",
+        customerIds: [result.challengedCustomerId],
+        duelId,
+        nomeOponente: driverName,
+      });
     },
     onError: (err: any) => toast.error(err.message || "Erro ao criar desafio"),
   });
@@ -160,7 +179,7 @@ export function useRespondDuel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { duelId: string; accept: boolean }) => {
+    mutationFn: async (params: { duelId: string; accept: boolean; challengerCustomerId?: string; challengerName?: string }) => {
       if (!driver) throw new Error("Sem sessão");
       const { data, error } = await supabase.rpc("respond_to_duel", {
         p_duel_id: params.duelId,
@@ -175,6 +194,40 @@ export function useRespondDuel() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       toast.success(vars.accept ? "Desafio aceito! 💪" : "Você arregou... 😅");
+
+      const driverName = cleanDriverName(driver?.name);
+
+      if (vars.accept) {
+        eventBus.emit("DUEL_CHALLENGE_ACCEPTED", {
+          brandId: driver!.brand_id,
+          challengerCustomerId: vars.challengerCustomerId || "",
+          challengedName: driverName,
+          duelId: vars.duelId,
+        });
+        if (vars.challengerCustomerId) {
+          enviarNotificacaoDuelo({
+            tipo: "DUEL_CHALLENGE_ACCEPTED",
+            customerIds: [vars.challengerCustomerId],
+            duelId: vars.duelId,
+            nomeOponente: driverName,
+          });
+        }
+      } else {
+        eventBus.emit("DUEL_CHALLENGE_DECLINED", {
+          brandId: driver!.brand_id,
+          challengerCustomerId: vars.challengerCustomerId || "",
+          challengedName: driverName,
+          duelId: vars.duelId,
+        });
+        if (vars.challengerCustomerId) {
+          enviarNotificacaoDuelo({
+            tipo: "DUEL_CHALLENGE_DECLINED",
+            customerIds: [vars.challengerCustomerId],
+            duelId: vars.duelId,
+            nomeOponente: driverName,
+          });
+        }
+      }
     },
     onError: (err: any) => toast.error(err.message || "Erro ao responder"),
   });
@@ -184,16 +237,62 @@ export function useFinalizeDuel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (duelId: string) => {
-      const { data, error } = await supabase.rpc("finalize_duel", { p_duel_id: duelId });
+    mutationFn: async (params: { duelId: string; brandId: string; challengerCustomerId: string; challengedCustomerId: string; challengerName: string; challengedName: string }) => {
+      const { data, error } = await supabase.rpc("finalize_duel", { p_duel_id: params.duelId });
       if (error) throw error;
       const result = data as any;
       if (!result?.success) throw new Error(result?.error || "Erro ao finalizar duelo");
-      return result;
+      return { ...result, ...params };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       toast.success("Duelo finalizado! 🏆");
+
+      const bothIds = [result.challengerCustomerId, result.challengedCustomerId];
+
+      eventBus.emit("DUEL_FINISHED", {
+        brandId: result.brandId,
+        customerIds: bothIds,
+        duelId: result.duelId,
+        winnerId: result.winner_id,
+      });
+
+      // Notificar ambos que o duelo encerrou
+      enviarNotificacaoDuelo({
+        tipo: "DUEL_FINISHED",
+        customerIds: bothIds,
+        duelId: result.duelId,
+      });
+
+      // Notificações individuais de vitória/derrota
+      if (result.winner_id) {
+        const winnerId = result.winner_id === result.challengerCustomerId
+          ? result.challengerCustomerId
+          : result.challengedCustomerId;
+        const loserId = winnerId === result.challengerCustomerId
+          ? result.challengedCustomerId
+          : result.challengerCustomerId;
+        const winnerName = winnerId === result.challengerCustomerId
+          ? result.challengerName
+          : result.challengedName;
+        const loserName = winnerId === result.challengerCustomerId
+          ? result.challengedName
+          : result.challengerName;
+
+        enviarNotificacaoDuelo({
+          tipo: "DUEL_VICTORY",
+          customerIds: [winnerId],
+          duelId: result.duelId,
+          nomeOponente: loserName,
+        });
+
+        enviarNotificacaoDuelo({
+          tipo: "DUEL_DEFEAT",
+          customerIds: [loserId],
+          duelId: result.duelId,
+          nomeOponente: winnerName,
+        });
+      }
     },
     onError: (err: any) => toast.error(err.message || "Erro ao finalizar"),
   });

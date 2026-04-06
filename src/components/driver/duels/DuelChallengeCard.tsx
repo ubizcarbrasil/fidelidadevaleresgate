@@ -46,7 +46,7 @@ export default function DuelChallengeCard({ duel }: Props) {
 
       <div className="flex gap-2">
         <Button
-          onClick={() => respond({ duelId: duel.id, accept: true })}
+          onClick={() => respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName: challengerName })}
           disabled={isPending}
           className="flex-1 gap-1.5"
           size="sm"
@@ -55,7 +55,7 @@ export default function DuelChallengeCard({ duel }: Props) {
           Aceitar
         </Button>
         <Button
-          onClick={() => respond({ duelId: duel.id, accept: false })}
+          onClick={() => respond({ duelId: duel.id, accept: false, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName: challengerName })}
           disabled={isPending}
           variant="outline"
           className="flex-1 gap-1.5"

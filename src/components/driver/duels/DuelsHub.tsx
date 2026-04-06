@@ -2,6 +2,7 @@
  * Tela principal do módulo de Duelos entre Motoristas.
  */
 import React, { useState, useMemo } from "react";
+import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
 import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +26,7 @@ interface Props {
 
 export default function DuelsHub({ onBack, configDuelos }: Props) {
   const { driver } = useDriverSession();
+  useListenerNotificacoesDuelo();
   const { participant, isLoading: loadingPart, toggleParticipation, toggling } = useDuelParticipation();
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
 
