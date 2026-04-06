@@ -237,16 +237,62 @@ export function useFinalizeDuel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (duelId: string) => {
-      const { data, error } = await supabase.rpc("finalize_duel", { p_duel_id: duelId });
+    mutationFn: async (params: { duelId: string; brandId: string; challengerCustomerId: string; challengedCustomerId: string; challengerName: string; challengedName: string }) => {
+      const { data, error } = await supabase.rpc("finalize_duel", { p_duel_id: params.duelId });
       if (error) throw error;
       const result = data as any;
       if (!result?.success) throw new Error(result?.error || "Erro ao finalizar duelo");
-      return result;
+      return { ...result, ...params };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       toast.success("Duelo finalizado! 🏆");
+
+      const bothIds = [result.challengerCustomerId, result.challengedCustomerId];
+
+      eventBus.emit("DUEL_FINISHED", {
+        brandId: result.brandId,
+        customerIds: bothIds,
+        duelId: result.duelId,
+        winnerId: result.winner_id,
+      });
+
+      // Notificar ambos que o duelo encerrou
+      enviarNotificacaoDuelo({
+        tipo: "DUEL_FINISHED",
+        customerIds: bothIds,
+        duelId: result.duelId,
+      });
+
+      // Notificações individuais de vitória/derrota
+      if (result.winner_id) {
+        const winnerId = result.winner_id === result.challengerCustomerId
+          ? result.challengerCustomerId
+          : result.challengedCustomerId;
+        const loserId = winnerId === result.challengerCustomerId
+          ? result.challengedCustomerId
+          : result.challengerCustomerId;
+        const winnerName = winnerId === result.challengerCustomerId
+          ? result.challengerName
+          : result.challengedName;
+        const loserName = winnerId === result.challengerCustomerId
+          ? result.challengedName
+          : result.challengerName;
+
+        enviarNotificacaoDuelo({
+          tipo: "DUEL_VICTORY",
+          customerIds: [winnerId],
+          duelId: result.duelId,
+          nomeOponente: loserName,
+        });
+
+        enviarNotificacaoDuelo({
+          tipo: "DUEL_DEFEAT",
+          customerIds: [loserId],
+          duelId: result.duelId,
+          nomeOponente: winnerName,
+        });
+      }
     },
     onError: (err: any) => toast.error(err.message || "Erro ao finalizar"),
   });
