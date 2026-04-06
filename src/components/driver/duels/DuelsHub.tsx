@@ -2,7 +2,7 @@
  * Tela principal do módulo de Duelos entre Motoristas.
  */
 import React, { useState, useMemo } from "react";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
