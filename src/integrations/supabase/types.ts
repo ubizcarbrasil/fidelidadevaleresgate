@@ -1238,6 +1238,78 @@ export type Database = {
           },
         ]
       }
+      city_belt_champions: {
+        Row: {
+          achieved_at: string
+          branch_id: string
+          brand_id: string
+          champion_customer_id: string
+          created_at: string
+          id: string
+          record_type: string
+          record_value: number
+          updated_at: string
+        }
+        Insert: {
+          achieved_at?: string
+          branch_id: string
+          brand_id: string
+          champion_customer_id: string
+          created_at?: string
+          id?: string
+          record_type?: string
+          record_value?: number
+          updated_at?: string
+        }
+        Update: {
+          achieved_at?: string
+          branch_id?: string
+          brand_id?: string
+          champion_customer_id?: string
+          created_at?: string
+          id?: string
+          record_type?: string
+          record_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_belt_champions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_belt_champions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_belt_champions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_belt_champions_champion_customer_id_fkey"
+            columns: ["champion_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_belt_champions_champion_customer_id_fkey"
+            columns: ["champion_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           branch_id: string
@@ -6737,6 +6809,20 @@ export type Database = {
           total_points: number
         }[]
       }
+      get_city_belt_champion: {
+        Args: { p_branch_id: string }
+        Returns: {
+          achieved_at: string
+          branch_id: string
+          champion_avatar_url: string
+          champion_customer_id: string
+          champion_name: string
+          champion_nickname: string
+          id: string
+          record_type: string
+          record_value: number
+        }[]
+      }
       get_city_driver_ranking: {
         Args: { p_branch_id: string; p_limit?: number }
         Returns: {
@@ -6895,6 +6981,10 @@ export type Database = {
           p_customer_id: string
           p_enabled: boolean
         }
+        Returns: Json
+      }
+      update_city_belt: {
+        Args: { p_branch_id: string; p_brand_id: string }
         Returns: Json
       }
       user_has_permission: {
