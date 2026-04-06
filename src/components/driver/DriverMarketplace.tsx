@@ -28,6 +28,7 @@ import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
+import BannerPromoDuelos from "./duels/BannerPromoDuelos";
 
 export interface AffiliateDeal {
   id: string;
