@@ -2532,6 +2532,75 @@ export type Database = {
           },
         ]
       }
+      driver_duel_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          duel_id: string
+          id: string
+          rated_customer_id: string
+          rater_customer_id: string
+          rating: number
+          tags: string[]
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          duel_id: string
+          id?: string
+          rated_customer_id: string
+          rater_customer_id: string
+          rating: number
+          tags?: string[]
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          duel_id?: string
+          id?: string
+          rated_customer_id?: string
+          rater_customer_id?: string
+          rating?: number
+          tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_duel_ratings_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_ratings_rated_customer_id_fkey"
+            columns: ["rated_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_ratings_rated_customer_id_fkey"
+            columns: ["rated_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_ratings_rater_customer_id_fkey"
+            columns: ["rater_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_ratings_rater_customer_id_fkey"
+            columns: ["rater_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_duels: {
         Row: {
           accepted_at: string | null
@@ -7136,6 +7205,7 @@ export type Database = {
           reference_type: string
         }[]
       }
+      get_driver_reputation: { Args: { p_customer_id: string }; Returns: Json }
       get_driver_ride_stats: {
         Args: { p_brand_id: string; p_customer_ids: string[] }
         Returns: {

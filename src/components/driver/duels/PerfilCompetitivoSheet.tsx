@@ -13,8 +13,10 @@ import {
   Coins,
   Swords,
   Minus,
+  Star,
 } from "lucide-react";
 import { useDriverCompetitiveProfile, cleanDriverName } from "./hook_duelos";
+import { useDriverReputation } from "./hook_avaliacao_duelo";
 import type { DuelParticipant } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
@@ -29,6 +31,7 @@ export default function PerfilCompetitivoSheet({ participant, onBack }: Props) {
   const name = cleanDriverName((participant.customers as any)?.name);
   const nickname = participant.public_nickname;
   const { data: profile, isLoading } = useDriverCompetitiveProfile(participant.customer_id);
+  const { data: reputation } = useDriverReputation(participant.customer_id);
 
   return (
     <div
@@ -78,6 +81,44 @@ export default function PerfilCompetitivoSheet({ participant, onBack }: Props) {
           </div>
         </div>
 
+        {/* Reputation */}
+        {reputation && reputation.total_ratings > 0 && (
+          <div
+            className="rounded-xl p-4 space-y-2"
+            style={{
+              backgroundColor: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Star className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+                Reputação
+              </h3>
+              <div className="flex items-center gap-1">
+                <span className="text-lg font-bold text-foreground">{reputation.avg_rating}</span>
+                <Star className="h-4 w-4" fill="hsl(var(--warning))" style={{ color: "hsl(var(--warning))" }} />
+                <span className="text-xs text-muted-foreground">({reputation.total_ratings})</span>
+              </div>
+            </div>
+            {reputation.top_tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {reputation.top_tags.map((t) => (
+                  <span
+                    key={t.tag}
+                    className="rounded-full px-2.5 py-1 text-[10px] font-medium"
+                    style={{
+                      backgroundColor: "hsl(var(--primary) / 0.1)",
+                      color: "hsl(var(--primary))",
+                    }}
+                  >
+                    {t.tag} ({t.count})
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {isLoading ? (
           <p className="text-sm text-muted-foreground text-center py-8">
             Carregando perfil...

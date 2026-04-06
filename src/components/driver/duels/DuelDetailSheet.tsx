@@ -2,13 +2,16 @@
  * Detalhe de um duelo — placar, countdown, vencedor, pontos em jogo.
  */
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins } from "lucide-react";
+import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
 import { cleanDriverName, useFinalizeDuel } from "./hook_duelos";
+import { useDuelRating } from "./hook_avaliacao_duelo";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format, differenceInSeconds, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import AvaliacaoDueloSheet from "./AvaliacaoDueloSheet";
 
 interface Props {
   duel: Duel;
@@ -28,13 +31,25 @@ function formatCountdown(seconds: number): string {
 }
 
 export default function DuelDetailSheet({ duel, participantId, onBack }: Props) {
+  const { driver } = useDriverSession();
   const { mutate: finalize, isPending: finalizing } = useFinalizeDuel();
   const [remaining, setRemaining] = useState(0);
+  const [showRating, setShowRating] = useState(false);
+
+  const isChallenger = participantId === duel.challenger_id;
+  const opponentCustomerId = isChallenger
+    ? (duel.challenged as any)?.customer_id
+    : (duel.challenger as any)?.customer_id;
+
+  const { data: existingRating } = useDuelRating(
+    duel.status === "finished" ? duel.id : null,
+    driver?.id || null
+  );
 
   const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
   const challengedName = cleanDriverName((duel.challenged as any)?.customers?.name);
 
-  const isChallenger = participantId === duel.challenger_id;
+  const opponentName = isChallenger ? challengedName : challengerName;
   const winnerId = duel.winner_id;
   const hasBet = (duel.challenger_points_bet || 0) > 0;
   const totalBet = (duel.challenger_points_bet || 0) + (duel.challenged_points_bet || 0);
@@ -209,7 +224,41 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
             Apurar Resultado
           </Button>
         )}
+
+        {/* Rate opponent button */}
+        {duel.status === "finished" && driver?.id && opponentCustomerId && !existingRating && (
+          <Button
+            onClick={() => setShowRating(true)}
+            variant="outline"
+            className="w-full gap-2"
+          >
+            <Star className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+            Avaliar Adversário
+          </Button>
+        )}
+
+        {duel.status === "finished" && existingRating && (
+          <div
+            className="flex items-center justify-center gap-2 rounded-xl p-3"
+            style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
+          >
+            <CheckCircle className="h-4 w-4" style={{ color: "hsl(var(--success))" }} />
+            <span className="text-sm text-muted-foreground">Avaliação enviada ⭐ {(existingRating as any).rating}/5</span>
+          </div>
+        )}
       </div>
+
+      {/* Rating sheet */}
+      {showRating && driver?.id && opponentCustomerId && (
+        <AvaliacaoDueloSheet
+          duelId={duel.id}
+          raterCustomerId={driver.id}
+          ratedCustomerId={opponentCustomerId}
+          opponentName={opponentName}
+          onBack={() => setShowRating(false)}
+          onSuccess={() => setShowRating(false)}
+        />
+      )}
     </div>
   );
 }
