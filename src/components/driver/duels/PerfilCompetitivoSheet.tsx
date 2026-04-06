@@ -13,8 +13,10 @@ import {
   Coins,
   Swords,
   Minus,
+  Star,
 } from "lucide-react";
 import { useDriverCompetitiveProfile, cleanDriverName } from "./hook_duelos";
+import { useDriverReputation } from "./hook_avaliacao_duelo";
 import type { DuelParticipant } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
