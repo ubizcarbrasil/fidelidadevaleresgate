@@ -1,7 +1,8 @@
 /**
- * Card resumido do ranking da cidade para o dashboard.
+ * Card compacto do ranking — design de pódio vertical.
  */
-import { Trophy, ChevronRight, Medal } from "lucide-react";
+import { Trophy, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { type RankingEntry, type MinhaColocacao } from "../hook_ranking_cidade";
 
 interface Props {
@@ -11,60 +12,51 @@ interface Props {
   fontHeading?: string;
 }
 
-const MEDAL_COLORS = ["#fbbf24", "#a0a0a0", "#cd7f32"];
+const PODIUM = ["🥇", "🥈", "🥉"];
 
 export default function CardRankingCidade({ ranking, minhaPosicao, onAbrir, fontHeading }: Props) {
   const top3 = ranking.slice(0, 3);
   if (top3.length === 0) return null;
 
   return (
-    <div
-      className="rounded-2xl p-4 space-y-3 cursor-pointer active:scale-[0.98] transition-transform"
-      style={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+    <motion.div
+      whileTap={{ scale: 0.96 }}
+      className="rounded-2xl p-3.5 flex flex-col cursor-pointer"
+      style={{
+        background: "linear-gradient(160deg, hsl(var(--card)) 0%, hsl(217 91% 60% / 0.06) 100%)",
+        border: "1px solid hsl(217 91% 60% / 0.2)",
+      }}
       onClick={onAbrir}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "hsl(217 91% 60% / 0.12)" }}>
-            <Trophy className="h-4 w-4" style={{ color: "hsl(217 91% 60%)" }} />
-          </div>
-          <span className="text-xs font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-            Ranking da Cidade
-          </span>
-        </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <Trophy className="h-4 w-4" style={{ color: "hsl(217 91% 60%)" }} />
+        <span className="text-[11px] font-extrabold text-foreground tracking-tight" style={{ fontFamily: fontHeading }}>
+          Ranking
+        </span>
       </div>
 
-      {/* Top 3 */}
-      <div className="space-y-2">
+      <div className="space-y-1.5 flex-1">
         {top3.map((entry, i) => (
-          <div key={entry.customerId} className="flex items-center gap-2.5">
-            <span className="text-sm" style={{ color: MEDAL_COLORS[i] }}>
-              {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
-            </span>
-            <span className="text-xs font-medium text-foreground flex-1 truncate">
+          <div key={entry.customerId} className="flex items-center gap-1.5">
+            <span className="text-xs">{PODIUM[i]}</span>
+            <span className="text-[10px] font-medium text-foreground flex-1 truncate">
               {entry.nickname || entry.driverName}
             </span>
-            <span className="text-xs font-bold tabular-nums" style={{ color: "hsl(var(--primary))" }}>
+            <span className="text-[10px] font-black tabular-nums" style={{ color: "hsl(var(--primary))" }}>
               {entry.totalRides}
             </span>
-            <span className="text-[9px] text-muted-foreground">corridas</span>
           </div>
         ))}
       </div>
 
-      {/* Minha posição */}
       {minhaPosicao && (
-        <div
-          className="rounded-lg p-2.5 flex items-center gap-2"
-          style={{ backgroundColor: "hsl(var(--primary) / 0.08)", border: "1px solid hsl(var(--primary) / 0.15)" }}
-        >
-          <Medal className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
-          <span className="text-[11px] font-medium text-foreground">
-            Você está em <b className="text-primary">{minhaPosicao.rankPosition}º</b> com {minhaPosicao.totalRides} corridas
+        <div className="mt-2 pt-2 border-t flex items-center gap-1" style={{ borderColor: "hsl(var(--border))" }}>
+          <span className="text-[9px] text-muted-foreground">Você:</span>
+          <span className="text-[10px] font-extrabold" style={{ color: "hsl(var(--primary))" }}>
+            {minhaPosicao.rankPosition}º
           </span>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
