@@ -35,7 +35,7 @@ export async function registrarEventoFeed({
       customer_id: customerId ?? null,
       title,
       description: description ?? null,
-      metadata_json: metadata ?? {},
+      metadata_json: (metadata ?? {}) as any,
     }]);
   } catch (err) {
     console.error("[FeedCidade] Falha ao registrar evento:", err);
