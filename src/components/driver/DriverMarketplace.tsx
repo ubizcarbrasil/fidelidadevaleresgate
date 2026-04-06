@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -25,6 +25,7 @@ import DriverDealCardGrid from "./DriverDealCardGrid";
 import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
+import DuelsHub from "./duels/DuelsHub";
 
 export interface AffiliateDeal {
   id: string;
@@ -142,6 +143,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showLedger, setShowLedger] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const [showCityRedemptions, setShowCityRedemptions] = useState(false);
+  const [showDuels, setShowDuels] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -417,6 +419,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <div className="flex items-center gap-1.5">
+              {driver && (
+                <button
+                  onClick={() => setShowDuels(true)}
+                  className="h-9 w-9 flex items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "hsl(var(--muted))" }}
+                >
+                  <Swords className="h-4.5 w-4.5 text-foreground" />
+                </button>
+              )}
               {driver && (
                 <button
                   onClick={() => setShowProfile(true)}
@@ -856,6 +867,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           fontHeading={fontHeading}
           onBack={() => setShowCityRedemptions(false)}
         />
+      )}
+
+      {/* Duels overlay */}
+      {showDuels && (
+        <DuelsHub onBack={() => setShowDuels(false)} />
       )}
     </div>
   );
