@@ -7305,6 +7305,22 @@ export type Database = {
       get_user_branch_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_brand_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
+      grant_achievement: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_customer_id: string
+          p_icon?: string
+          p_key: string
+          p_label: string
+          p_metadata?: Json
+        }
+        Returns: boolean
+      }
+      grant_duel_achievements: {
+        Args: { p_duel_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
