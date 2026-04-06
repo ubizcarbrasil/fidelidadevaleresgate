@@ -12,6 +12,7 @@ import DuelChallengeCard from "./DuelChallengeCard";
 import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
+import RankingCidadeSheet from "./RankingCidadeSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
 
@@ -26,6 +27,7 @@ export default function DuelsHub({ onBack }: Props) {
 
   const [showCreate, setShowCreate] = useState(false);
   const [showDesempenho, setShowDesempenho] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
@@ -62,6 +64,10 @@ export default function DuelsHub({ onBack }: Props) {
 
   if (showDesempenho) {
     return <MeuDesempenhoSheet duels={duels} participantId={participantId} onBack={() => setShowDesempenho(false)} />;
+  }
+
+  if (showRanking) {
+    return <RankingCidadeSheet onBack={() => setShowRanking(false)} />;
   }
 
   if (selectedDuelData) {
@@ -117,18 +123,28 @@ export default function DuelsHub({ onBack }: Props) {
 
         {/* Action buttons */}
         {isEnabled && (
-          <div className="flex gap-2">
-            <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
-              <Plus className="h-4 w-4" />
-              Desafiar
-            </Button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
+                <Plus className="h-4 w-4" />
+                Desafiar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDesempenho(true)}
+                className="gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Desempenho
+              </Button>
+            </div>
             <Button
               variant="outline"
-              onClick={() => setShowDesempenho(true)}
-              className="gap-2"
+              onClick={() => setShowRanking(true)}
+              className="w-full gap-2"
             >
-              <BarChart3 className="h-4 w-4" />
-              Meu Desempenho
+              <Trophy className="h-4 w-4" />
+              Ranking da Cidade
             </Button>
           </div>
         )}

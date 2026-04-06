@@ -6737,9 +6737,25 @@ export type Database = {
           total_points: number
         }[]
       }
+      get_city_driver_ranking: {
+        Args: { p_branch_id: string; p_limit?: number }
+        Returns: {
+          customer_id: string
+          driver_name: string
+          rank_position: number
+          total_rides: number
+        }[]
+      }
       get_customer_ids_for_store_owner: {
         Args: { _user_id: string }
         Returns: string[]
+      }
+      get_driver_city_position: {
+        Args: { p_branch_id: string; p_customer_id: string }
+        Returns: {
+          rank_position: number
+          total_rides: number
+        }[]
       }
       get_driver_ledger: {
         Args: { p_customer_id: string }
