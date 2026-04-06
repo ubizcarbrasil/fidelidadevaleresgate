@@ -1,44 +1,33 @@
 
+## Plano: Completar Notificações Push de Duelos
 
-## Plano: Cron de Auto-Finalização de Duelos e Atualização do Cinturão
+### Diagnóstico atual
+- ✅ `servico_notificacoes_duelo.ts` já dispara notificações in-app para: desafio, aceite, recusa, início, resultado
+- ✅ `send-push-notification` edge function salva em `customer_notifications`
+- ❌ Contraproposta usa tipo genérico `DUEL_CHALLENGE_RECEIVED` ao invés de tipo próprio
+- ❌ O `finalize-duels-cron` NÃO envia notificações quando auto-finaliza duelos
+- ❌ Notificações de duelo NÃO são enviadas via TaxiMachine (só ficam no app)
 
 ### O que será feito
 
-Uma função backend executada automaticamente a cada 5 minutos para:
-1. Encontrar duelos expirados (status `accepted` ou `live` com `end_at` no passado) e finalizá-los chamando `finalize_duel`
-2. Atualizar o cinturão da cidade chamando `update_city_belt` para cada cidade com duelos finalizados
-3. Registrar logs estruturados de cada operação
+**1. Novo tipo `DUEL_COUNTER_PROPOSAL`** no serviço de notificações
+- Mensagem: "Fulano fez uma contraproposta de X pontos"
+- Atualizar `useCounterPropose` para usar o novo tipo
 
-### Etapas
+**2. Notificações no `finalize-duels-cron`**
+- Após auto-finalizar cada duelo, chamar `send-push-notification` para ambos os participantes
+- Enviar notificação de vitória/derrota/empate conforme resultado
 
-**1. Criar Edge Function `finalize-duels-cron`**
-- Arquivo: `supabase/functions/finalize-duels-cron/index.ts`
-- Autenticação via `SUPABASE_SERVICE_ROLE_KEY` ou `AGENT_SECRET` (mesmo padrão do `driver-notifications-cron`)
-- Lógica:
-  - Buscar duelos com `status IN ('accepted','live') AND end_at < now()`
-  - Para cada duelo, chamar `finalize_duel(p_duel_id)` via RPC
-  - Coletar `branch_id` + `brand_id` distintos dos duelos finalizados
-  - Para cada branch, chamar `update_city_belt(p_branch_id, p_brand_id)` via RPC
-  - Retornar resumo: `{ duelsFinalized, beltsUpdated, errors }`
+**3. Entrega via TaxiMachine no `send-push-notification`**
+- Quando o `reference_type` for de duelo (`duel_*`), buscar `external_driver_id` e `machine_integrations`
+- Enviar mensagem via API TaxiMachine como complemento à notificação in-app
+- Reutilizar o padrão de envio já existente no `notify-driver-points`
 
-**2. Registrar config.toml**
-- Adicionar bloco `[functions.finalize-duels-cron]` com `verify_jwt = false`
+### Arquivos
 
-**3. Criar cron job via SQL (pg_cron + pg_net)**
-- Habilitar extensões `pg_cron` e `pg_net`
-- Agendar execução a cada 5 minutos chamando a Edge Function via `net.http_post`
-
-### Detalhes técnicos
-
-```text
-Fluxo:
-  pg_cron (cada 5 min)
-    → net.http_post → /functions/v1/finalize-duels-cron
-      → SELECT de duelos expirados
-      → RPC finalize_duel() para cada um
-      → RPC update_city_belt() para cada branch afetada
-      → Retorna resumo JSON
-```
-
-A função reutiliza o padrão de autenticação e logging já existente no projeto (`edgeLogger`, `corsHeaders`, validação de Bearer token).
-
+| Arquivo | Ação |
+|---------|------|
+| `servico_notificacoes_duelo.ts` | Adicionar `DUEL_COUNTER_PROPOSAL` |
+| `hook_duelos.ts` | Atualizar `useCounterPropose` |
+| `finalize-duels-cron/index.ts` | Adicionar envio de notificações |
+| `send-push-notification/index.ts` | Adicionar entrega TaxiMachine para duelos |

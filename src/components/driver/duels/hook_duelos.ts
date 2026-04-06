@@ -264,7 +264,7 @@ export function useCounterPropose() {
 
       if (vars.opponentCustomerId) {
         enviarNotificacaoDuelo({
-          tipo: "DUEL_CHALLENGE_RECEIVED",
+          tipo: "DUEL_COUNTER_PROPOSAL",
           customerIds: [vars.opponentCustomerId],
           duelId: vars.duelId,
           nomeOponente: cleanDriverName(driver?.name),

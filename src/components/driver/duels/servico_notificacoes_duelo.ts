@@ -8,11 +8,13 @@ type TipoNotificacaoDuelo =
   | "DUEL_CHALLENGE_RECEIVED"
   | "DUEL_CHALLENGE_ACCEPTED"
   | "DUEL_CHALLENGE_DECLINED"
+  | "DUEL_COUNTER_PROPOSAL"
   | "DUEL_STARTED"
   | "DUEL_LEAD_CHANGE"
   | "DUEL_FINISHED"
   | "DUEL_VICTORY"
   | "DUEL_DEFEAT"
+  | "DUEL_DRAW"
   | "RANKING_TOP10_ENTRY"
   | "BELT_NEW_CHAMPION";
 
@@ -38,6 +40,11 @@ const MAPEAMENTO: Record<TipoNotificacaoDuelo, MapeamentoNotificacao> = {
     corpo: (nome) => `${nome || "O adversário"} arregou do seu desafio`,
     referenceType: "duel_declined",
   },
+  DUEL_COUNTER_PROPOSAL: {
+    titulo: () => "Contraproposta recebida! 💬",
+    corpo: (nome) => `${nome || "O adversário"} fez uma contraproposta de pontos`,
+    referenceType: "duel_counter_proposal",
+  },
   DUEL_STARTED: {
     titulo: () => "Duelo começou! 🔥",
     corpo: () => "Seu duelo está ao vivo. Bora correr!",
@@ -62,6 +69,11 @@ const MAPEAMENTO: Record<TipoNotificacaoDuelo, MapeamentoNotificacao> = {
     titulo: () => "Derrota no duelo 😤",
     corpo: () => "Mas a próxima é sua! Desafie de novo 🥊",
     referenceType: "duel_defeat",
+  },
+  DUEL_DRAW: {
+    titulo: () => "Empate no duelo! 🤝",
+    corpo: () => "Vocês empataram! Pontos devolvidos. Que tal uma revanche?",
+    referenceType: "duel_draw",
   },
   RANKING_TOP10_ENTRY: {
     titulo: () => "Você entrou no Top 10! 🌟",
