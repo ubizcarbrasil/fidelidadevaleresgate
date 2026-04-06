@@ -1,84 +1,119 @@
 
 
-## Etapa 5 — Cinturão da Cidade
+## Etapa 6 — Painel Administrativo do Módulo de Gamificação
 
-### O que será feito
-Criar o sistema de "Cinturão da Cidade" — um troféu permanente que destaca o motorista com o maior recorde de corridas (mensal ou histórico, configurável). Inclui nova tabela, RPC de apuração, hook de dados e tela premium.
+### Resumo
+Criar uma página administrativa completa para gerenciar o módulo de Duelos/Ranking/Cinturão no console Branch. Inclui configuração avançada, visualização de duelos, ranking, cinturão, moderação de apelidos e estatísticas. Rota `/gamificacao-admin` no BranchSidebar.
 
 ---
 
-### 1. Banco de dados — Nova tabela + RPC
+### 1. Banco de dados — Novas colunas em `branch_settings_json`
 
-**Tabela `city_belt_champions`**
+Nenhuma tabela nova. Expandir o JSON existente com campos adicionais:
 
-```sql
-CREATE TABLE public.city_belt_champions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  branch_id uuid NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
-  brand_id uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
-  champion_customer_id uuid NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-  record_value bigint NOT NULL DEFAULT 0,
-  record_type text NOT NULL DEFAULT 'monthly',
-  achieved_at timestamptz NOT NULL DEFAULT now(),
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (branch_id, record_type)
-);
-
-ALTER TABLE public.city_belt_champions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can view belt champions"
-  ON public.city_belt_champions FOR SELECT
-  TO anon, authenticated
-  USING (true);
+```json
+{
+  "enable_driver_duels": true,
+  "enable_city_ranking": true,
+  "enable_city_belt": true,
+  "allow_public_duel_viewing": true,
+  "duel_min_duration_hours": 24,
+  "duel_max_duration_hours": 168,
+  "duel_max_simultaneous": 3,
+  "ranking_metric": "rides",
+  "belt_metric": "rides",
+  "decline_phrases": ["Hoje não, parceiro! 😅", "Tô de boa por agora 🙏", "Quem sabe na próxima? 😂"]
+}
 ```
 
-Trigger de validação para `record_type` (apenas `monthly` ou `all_time`).
+---
 
-**RPC `get_city_belt_champion`** (SECURITY DEFINER, STABLE)
+### 2. Nova rota e página
 
-Parâmetros: `p_branch_id uuid`
+**`src/pages/GamificacaoAdminPage.tsx`**
+- Página wrapper que carrega dados do branch atual e renderiza os sub-componentes
+- Usa `useBrandGuard` para obter `currentBranchId`
 
-Retorna os dados do cinturão atual: champion info + record. Faz join com `customers` para nome e com `driver_duel_participants` para apelido/avatar.
-
-**RPC `update_city_belt`** (SECURITY DEFINER)
-
-Parâmetros: `p_branch_id uuid, p_brand_id uuid`
-
-Verifica quem tem o maior número de corridas no mês (via `machine_rides`), compara com o campeão atual, e atualiza se houve mudança. Upsert na tabela `city_belt_champions`.
+**Rota**: `/gamificacao-admin` no `App.tsx`, sem ModuleGuard (a própria página valida)
 
 ---
 
-### 2. Novos arquivos
+### 3. Componentes do painel (dentro de `src/components/admin/gamificacao/`)
 
-**`src/components/driver/duels/hook_cinturao_cidade.ts`**
-- Hook `useCinturaoCidade(branchId)` — chama RPC `get_city_belt_champion`, retorna dados do campeão atual (nome, apelido, avatar, recorde, data, tipo)
-- Refetch a cada 60s
+**`ConfiguracaoModulo.tsx`** — Card com todos os toggles e campos:
+- Toggles: duelos, ranking, cinturão, visualização pública
+- Campos numéricos: duração mín/máx dos duelos (horas), máx duelos simultâneos
+- Selects: métrica do ranking, métrica do cinturão (inicialmente "rides")
+- Editor de frases de recusa (lista editável com add/remove)
+- Botão salvar que atualiza `branch_settings_json`
 
-**`src/components/driver/duels/CinturaoCidadeSheet.tsx`**
-- Tela fullscreen premium com visual de troféu/cinturão
-- Layout: header com ícone de coroa, card central dourado com avatar do campeão, nome/apelido, recorde, data da conquista, tipo do recorde
-- Gradiente dourado, sombras, ícones de coroa e estrelas
-- Bloco motivacional: "Supere o recorde e conquiste o cinturão!"
-- Se não há campeão ainda: empty state convidativo
+**`ListaDuelosAdmin.tsx`** — Tabela com todos os duelos da cidade:
+- Colunas: desafiante, desafiado, status, período, corridas, vencedor
+- Filtros por status (pendente, ao vivo, encerrado, etc.)
+- Usa query em `driver_duels` filtrado por `branch_id`
 
-**`src/components/driver/duels/CardCampeao.tsx`**
-- Card premium do campeão: borda dourada, avatar grande, badge de cinturão, recorde em destaque, data formatada
+**`EstatisticasGamificacao.tsx`** — Cards de KPIs:
+- Total de duelos, duelos ativos, participantes habilitados, taxa de aceite
+- Total de corridas no mês (via ranking RPC)
+- Campeão atual do cinturão
+
+**`RankingAdminView.tsx`** — Visualização do ranking top 10:
+- Reutiliza `useRankingCidade` do hook existente
+- Botão "Resetar ranking mensal" (chama delete/update se necessário)
+
+**`CinturaoAdminView.tsx`** — Visualização do cinturão:
+- Reutiliza `useCinturaoCidade` do hook existente
+- Mostra campeão atual, recorde, tipo
+- Botão "Atualizar cinturão" que chama RPC `update_city_belt`
+
+**`ModeracaoApelidos.tsx`** — Tabela de participantes:
+- Lista `driver_duel_participants` da cidade
+- Colunas: nome real (via customers), apelido público, avatar, duelos habilitado
+- Botão inline para editar apelido (update direto no campo `public_nickname`)
 
 ---
 
-### 3. Integração
+### 4. Integração no sidebar
 
-**`src/components/driver/duels/DuelsHub.tsx`** (modificado)
-- Novo estado `showCinturao` e botão "🏅 Cinturão da Cidade" visível quando `configDuelos?.cinturaoAtivo !== false`
-- Renderizar `CinturaoCidadeSheet` quando ativo
+**`src/components/consoles/BranchSidebar.tsx`** (modificado)
+- Adicionar grupo "Gamificação" com `scoringFilter: "DRIVER"`:
+  ```ts
+  {
+    label: "Gamificação",
+    scoringFilter: "DRIVER",
+    items: [
+      { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista" },
+    ],
+  }
+  ```
+
+**`src/App.tsx`** (modificado)
+- Adicionar rota: `<Route path="gamificacao-admin" element={<GamificacaoAdminPage />} />`
 
 ---
 
-### Arquivos envolvidos
-- Migration SQL (tabela + 2 RPCs + RLS)
-- `src/components/driver/duels/hook_cinturao_cidade.ts` (novo)
-- `src/components/driver/duels/CinturaoCidadeSheet.tsx` (novo)
-- `src/components/driver/duels/CardCampeao.tsx` (novo)
-- `src/components/driver/duels/DuelsHub.tsx` (modificado)
+### 5. Estrutura de arquivos
+
+```
+src/pages/GamificacaoAdminPage.tsx (novo)
+src/components/admin/gamificacao/ConfiguracaoModulo.tsx (novo)
+src/components/admin/gamificacao/ListaDuelosAdmin.tsx (novo)
+src/components/admin/gamificacao/EstatisticasGamificacao.tsx (novo)
+src/components/admin/gamificacao/RankingAdminView.tsx (novo)
+src/components/admin/gamificacao/CinturaoAdminView.tsx (novo)
+src/components/admin/gamificacao/ModeracaoApelidos.tsx (novo)
+src/components/consoles/BranchSidebar.tsx (modificado)
+src/App.tsx (modificado)
+```
+
+### 6. Layout da página
+
+A página usará um layout tabulado (Tabs) com 5 abas:
+1. **Configuração** — ConfiguracaoModulo
+2. **Duelos** — ListaDuelosAdmin
+3. **Ranking** — RankingAdminView
+4. **Cinturão** — CinturaoAdminView
+5. **Moderação** — ModeracaoApelidos
+
+Header com EstatisticasGamificacao (KPI cards) visível em todas as abas.
 
