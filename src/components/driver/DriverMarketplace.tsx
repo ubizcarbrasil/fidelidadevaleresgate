@@ -422,7 +422,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              {driver && (
+              {driver && configDuelos.duelosAtivos && (
                 <button
                   onClick={() => setShowDuels(true)}
                   className="h-9 w-9 flex items-center justify-center rounded-xl"
