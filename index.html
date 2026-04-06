@@ -84,24 +84,50 @@
         }
       })();
 
-      // One-time recovery: unregister stale SWs and clear broken caches from previous deploy
+      // SW recovery: detect _sw_cleared param and clean URL without reload
       (function(){
         try {
-          var recovered = sessionStorage.getItem('__sw_recovered__');
+          var params = new URLSearchParams(window.location.search);
+          if (params.has('_sw_cleared')) {
+            params.delete('_sw_cleared');
+            var clean = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+            window.history.replaceState(null, '', clean);
+          }
+        } catch(e){}
+      })();
+
+      // Unregister stale SWs and clear broken caches from previous deploy
+      (function(){
+        try {
+          // Skip if already cleared this navigation
+          if (new URLSearchParams(window.location.search).has('_sw_cleared')) return;
+
+          // In iframe or preview host: always unregister, never cache
+          var isInIframe = false;
+          try { isInIframe = window.self !== window.top; } catch(e) { isInIframe = true; }
+          var isPreview = window.location.hostname.indexOf('id-preview--') !== -1 || window.location.hostname.indexOf('lovableproject.com') !== -1;
+
+          if ((isInIframe || isPreview) && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs){
+              regs.forEach(function(r){ r.unregister(); });
+            }).catch(function(){});
+            return;
+          }
+
+          // Production: one-time recovery with hard navigation to bypass active SW
+          var recovered = sessionStorage.getItem('__sw_recovered_v2__');
           if (!recovered && 'serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(regs){
               if (regs.length > 0) {
                 regs.forEach(function(r){ r.unregister(); });
-                if ('caches' in window) {
-                  caches.keys().then(function(keys){
-                    keys.forEach(function(k){ caches.delete(k); });
-                    sessionStorage.setItem('__sw_recovered__', '1');
-                    window.location.reload();
-                  });
-                } else {
-                  sessionStorage.setItem('__sw_recovered__', '1');
-                  window.location.reload();
-                }
+                var clearCaches = 'caches' in window
+                  ? caches.keys().then(function(keys){ return Promise.all(keys.map(function(k){ return caches.delete(k); })); })
+                  : Promise.resolve();
+                clearCaches.then(function(){
+                  sessionStorage.setItem('__sw_recovered_v2__', '1');
+                  // Hard navigate with cache-bust param to escape the still-active SW
+                  window.location.href = window.location.pathname + '?_sw_cleared=' + Date.now() + window.location.hash;
+                });
               }
             }).catch(function(){});
           }
