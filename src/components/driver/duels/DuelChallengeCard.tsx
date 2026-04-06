@@ -23,6 +23,7 @@ export default function DuelChallengeCard({ duel }: Props) {
   const { mutate: counterPropose, isPending: proposing } = useCounterPropose();
   const [showCounter, setShowCounter] = useState(false);
   const [counterValue, setCounterValue] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
   const hasBet = duel.challenger_points_bet > 0;
