@@ -1,12 +1,6 @@
 /**
  * Event Bus leve e tipado para comunicação entre módulos.
  * Todos os handlers executam em microtask (não-bloqueante).
- *
- * Uso:
- *   import { eventBus } from "@/lib/eventBus";
- *   eventBus.emit("EARNING_CREATED", { brandId, points });
- *   const unsub = eventBus.on("EARNING_CREATED", (data) => { ... });
- *   unsub(); // cleanup
  */
 
 export interface AppEvents {
@@ -17,6 +11,18 @@ export interface AppEvents {
   VOUCHER_CREATED: { brandId: string; code: string };
   STORE_APPROVED: { brandId: string; storeId: string };
   CUSTOMER_CREATED: { brandId: string; customerId: string };
+
+  // Duelos — Etapa 7
+  DUEL_CHALLENGE_RECEIVED: { brandId: string; challengedCustomerId: string; challengerName: string; duelId: string };
+  DUEL_CHALLENGE_ACCEPTED: { brandId: string; challengerCustomerId: string; challengedName: string; duelId: string };
+  DUEL_CHALLENGE_DECLINED: { brandId: string; challengerCustomerId: string; challengedName: string; duelId: string };
+  DUEL_STARTED: { brandId: string; customerIds: string[]; duelId: string };
+  DUEL_LEAD_CHANGE: { brandId: string; trailingCustomerId: string; leaderName: string; duelId: string };
+  DUEL_FINISHED: { brandId: string; customerIds: string[]; duelId: string; winnerId: string | null };
+  DUEL_VICTORY: { brandId: string; winnerCustomerId: string; opponentName: string; duelId: string };
+  DUEL_DEFEAT: { brandId: string; loserCustomerId: string; opponentName: string; duelId: string };
+  RANKING_TOP10_ENTRY: { brandId: string; customerId: string; position: number };
+  BELT_NEW_CHAMPION: { brandId: string; championCustomerId: string; branchId: string; record: number };
 }
 
 export type AppEventName = keyof AppEvents;
@@ -32,7 +38,6 @@ class EventBus {
     }
     this.listeners.get(event)!.add(handler);
 
-    // Return unsubscribe function
     return () => {
       this.listeners.get(event)?.delete(handler);
     };
@@ -42,7 +47,6 @@ class EventBus {
     const handlers = this.listeners.get(event);
     if (!handlers || handlers.size === 0) return;
 
-    // Execute in microtask to avoid blocking
     queueMicrotask(() => {
       handlers.forEach((handler) => {
         try {
