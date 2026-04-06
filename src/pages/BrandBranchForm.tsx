@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -66,6 +66,12 @@ export default function BrandBranchForm() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [scoringModel, setScoringModel] = useState("BOTH");
   const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
+
+  // Gamificação de Motoristas
+  const [enableDriverDuels, setEnableDriverDuels] = useState(false);
+  const [enableCityRanking, setEnableCityRanking] = useState(false);
+  const [enableCityBelt, setEnableCityBelt] = useState(false);
+  const [allowPublicDuelViewing, setAllowPublicDuelViewing] = useState(false);
 
   // Load brand's default scoring model for new cities
   useEffect(() => {
@@ -136,6 +142,14 @@ export default function BrandBranchForm() {
       setAtivo(existing.is_active);
       if ((existing as any).scoring_model) setScoringModel((existing as any).scoring_model);
       setIsCityRedemptionEnabled(!!(existing as any).is_city_redemption_enabled);
+      // Gamificação flags
+      const bs = existing.branch_settings_json as Record<string, any> | null;
+      if (bs && typeof bs === "object") {
+        setEnableDriverDuels(bs.enable_driver_duels === true);
+        setEnableCityRanking(bs.enable_city_ranking === true);
+        setEnableCityBelt(bs.enable_city_belt === true);
+        setAllowPublicDuelViewing(bs.allow_public_duel_viewing === true);
+      }
     }
   }, [existing]);
 
@@ -190,6 +204,18 @@ export default function BrandBranchForm() {
       const slug = normalizeSlug(cidade.trim(), uf);
       const geo = await geocode(cidade.trim(), uf);
 
+      // Merge existing branch_settings_json with gamification flags
+      const existingSettings = (existing?.branch_settings_json && typeof existing.branch_settings_json === "object")
+        ? (existing.branch_settings_json as Record<string, any>)
+        : {};
+      const branchSettingsJson = {
+        ...existingSettings,
+        enable_driver_duels: enableDriverDuels,
+        enable_city_ranking: enableCityRanking,
+        enable_city_belt: enableCityBelt,
+        allow_public_duel_viewing: allowPublicDuelViewing,
+      };
+
       const payload = {
         name,
         slug,
@@ -198,6 +224,7 @@ export default function BrandBranchForm() {
         is_active: ativo,
         scoring_model: scoringModel,
         is_city_redemption_enabled: isCityRedemptionEnabled,
+        branch_settings_json: branchSettingsJson,
         timezone: "America/Sao_Paulo",
         latitude: geo?.lat ?? null,
         longitude: geo?.lon ?? null,
@@ -339,6 +366,60 @@ export default function BrandBranchForm() {
             <p><strong>Slug:</strong> {cidade.trim() && uf ? normalizeSlug(cidade.trim(), uf) : "—"}</p>
             <p><strong>Timezone:</strong> America/Sao_Paulo</p>
             <p><strong>Coordenadas:</strong> preenchidas automaticamente ao salvar</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gamificação de Motoristas */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Swords className="h-4 w-4" />
+            Gamificação de Motoristas
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Configure quais funcionalidades competitivas estarão disponíveis para os motoristas desta cidade.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar módulo de Duelos</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permite que motoristas desafiem uns aos outros em competições de corridas.
+              </p>
+            </div>
+            <Switch checked={enableDriverDuels} onCheckedChange={setEnableDriverDuels} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar Ranking da Cidade</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe o ranking mensal de corridas entre os motoristas da cidade.
+              </p>
+            </div>
+            <Switch checked={enableCityRanking} onCheckedChange={setEnableCityRanking} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar Cinturão da Cidade</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe o cinturão competitivo para o líder da cidade.
+              </p>
+            </div>
+            <Switch checked={enableCityBelt} onCheckedChange={setEnableCityBelt} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Visualização pública dos duelos</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permite que todos os motoristas vejam os duelos em andamento na vitrine da cidade.
+              </p>
+            </div>
+            <Switch checked={allowPublicDuelViewing} onCheckedChange={setAllowPublicDuelViewing} />
           </div>
         </CardContent>
       </Card>

@@ -27,6 +27,7 @@ import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
+import { useConfigDuelos } from "./duels/hook_config_duelos";
 
 export interface AffiliateDeal {
   id: string;
@@ -55,7 +56,7 @@ export interface DealCategory {
 
 interface Props {
   brand: { id: string; name: string; brand_settings_json?: any };
-  branch: { id: string } | null;
+  branch: { id: string; branch_settings_json?: any } | null;
   theme: any;
   initialCategoryId?: string | null;
   initialDealId?: string | null;
@@ -154,6 +155,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const configDuelos = useConfigDuelos(branch);
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
@@ -420,7 +422,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              {driver && (
+              {driver && configDuelos.duelosAtivos && (
                 <button
                   onClick={() => setShowDuels(true)}
                   className="h-9 w-9 flex items-center justify-center rounded-xl"
@@ -613,11 +615,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Duelos rolando na cidade */}
-      {!debouncedSearch.trim() && (
+      {!debouncedSearch.trim() && configDuelos.visualizacaoPublica && (
         <SecaoDuelosCidade
           branchId={branch?.id}
           fontHeading={fontHeading}
-          onVerTodos={() => setShowDuels(true)}
+          onVerTodos={configDuelos.duelosAtivos ? () => setShowDuels(true) : undefined}
         />
       )}
 
@@ -880,8 +882,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Duels overlay */}
-      {showDuels && (
-        <DuelsHub onBack={() => setShowDuels(false)} />
+      {showDuels && configDuelos.duelosAtivos && (
+        <DuelsHub onBack={() => setShowDuels(false)} configDuelos={configDuelos} />
       )}
     </div>
   );

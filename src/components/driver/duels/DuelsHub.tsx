@@ -15,12 +15,14 @@ import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
+import type { ConfigDuelos } from "./hook_config_duelos";
 
 interface Props {
   onBack: () => void;
+  configDuelos?: ConfigDuelos;
 }
 
-export default function DuelsHub({ onBack }: Props) {
+export default function DuelsHub({ onBack, configDuelos }: Props) {
   const { driver } = useDriverSession();
   const { participant, isLoading: loadingPart, toggleParticipation, toggling } = useDuelParticipation();
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
@@ -138,14 +140,16 @@ export default function DuelsHub({ onBack }: Props) {
                 Desempenho
               </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowRanking(true)}
-              className="w-full gap-2"
-            >
-              <Trophy className="h-4 w-4" />
-              Ranking da Cidade
-            </Button>
+            {configDuelos?.rankingAtivo !== false && (
+              <Button
+                variant="outline"
+                onClick={() => setShowRanking(true)}
+                className="w-full gap-2"
+              >
+                <Trophy className="h-4 w-4" />
+                Ranking da Cidade
+              </Button>
+            )}
           </div>
         )}
 
