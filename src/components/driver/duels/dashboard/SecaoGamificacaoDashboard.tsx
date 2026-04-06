@@ -1,10 +1,10 @@
 /**
  * Seção de gamificação do dashboard do motorista.
- * Reúne os 5 cards de duelos, ranking, cinturão, desempenho e palpites.
- * Respeita a configuração do módulo de duelos da cidade.
+ * Visual de arena competitiva com gradientes e clima de disputa.
  */
 import { useState } from "react";
-import { Swords, Zap } from "lucide-react";
+import { Swords, Zap, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { useDuelosCidade } from "../hook_duelos_publicos";
 import { useDriverDuels, useDuelParticipation } from "../hook_duelos";
 import { useConfigDuelos } from "../hook_config_duelos";
@@ -32,7 +32,6 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
   const config = useConfigDuelos(branch);
   const { participant } = useDuelParticipation();
 
-  // Data hooks
   const { data: duelosCidade = [] } = useDuelosCidade(branch?.id);
   const { data: meusDuelos = [] } = useDriverDuels();
   const { data: ranking = [] } = useRankingCidade(config.rankingAtivo ? branch?.id : undefined);
@@ -40,19 +39,16 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
   const { data: campeoes = [] } = useCinturaoCidade(config.cinturaoAtivo ? branch?.id : undefined);
   const { data: reputacao } = useDriverReputation(customerId || null);
 
-  // Overlays
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   const [showCinturao, setShowCinturao] = useState(false);
   const [showDuelsHub, setShowDuelsHub] = useState(false);
 
-  // Module off => nothing
   if (!config.duelosAtivos) return null;
 
   const participou = !!participant?.duels_enabled;
   const participantId = participant?.id || null;
 
-  // Overlays
   if (arenaDuel) {
     const updated = duelosCidade.find((d) => d.id === arenaDuel.id) || arenaDuel;
     return <ArenaAoVivo duel={updated} onBack={() => setArenaDuel(null)} />;
@@ -62,84 +58,87 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
   if (showDuelsHub) return <DuelsHub onBack={() => setShowDuelsHub(false)} />;
 
   return (
-    <div className="space-y-3 mt-5">
-      {/* Section header */}
-      <div className="flex items-center gap-2">
-        <Swords className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
-        <h2 className="text-sm font-bold text-foreground" style={{ fontFamily: fontHeading }}>
-          Arena Competitiva
-        </h2>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="mt-6 space-y-3"
+    >
+      {/* Section header — arena banner */}
+      <div
+        className="rounded-2xl px-4 py-3 flex items-center gap-3 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--destructive) / 0.08) 50%, hsl(var(--warning) / 0.1) 100%)",
+          border: "1px solid hsl(var(--primary) / 0.2)",
+        }}
+      >
+        {/* Decorative glow */}
+        <div
+          className="absolute -top-8 -right-8 h-24 w-24 rounded-full blur-2xl opacity-30"
+          style={{ backgroundColor: "hsl(var(--primary))" }}
+        />
+        <div className="h-9 w-9 rounded-xl flex items-center justify-center relative z-10" style={{ backgroundColor: "hsl(var(--primary) / 0.2)" }}>
+          <Swords className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
+        </div>
+        <div className="flex-1 relative z-10">
+          <h2 className="text-sm font-extrabold tracking-tight text-foreground" style={{ fontFamily: fontHeading }}>
+            ⚔️ Arena Competitiva
+          </h2>
+          <p className="text-[10px] text-muted-foreground">Duelos, ranking e conquistas da cidade</p>
+        </div>
       </div>
 
-      {/* Convite para ativar se não participou */}
+      {/* Convite para ativar */}
       {!participou && (
-        <div
-          className="rounded-2xl p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+        <motion.div
+          whileTap={{ scale: 0.97 }}
+          className="rounded-2xl p-5 relative overflow-hidden cursor-pointer"
           style={{
-            background: "linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.03))",
-            border: "1px solid hsl(var(--primary) / 0.25)",
+            background: "linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.04) 100%)",
+            border: "1px dashed hsl(var(--primary) / 0.4)",
           }}
           onClick={() => setShowDuelsHub(true)}
         >
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.15)" }}>
-            <Zap className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
+          <div className="absolute -bottom-6 -right-6 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "hsl(var(--primary))" }} />
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))" }}>
+              <Zap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-extrabold text-foreground">Entre na arena! 🥊</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Ative os duelos e mostre quem manda nessa cidade
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-foreground">Entre na arena!</p>
-            <p className="text-[11px] text-muted-foreground">
-              Ative os duelos e desafie outros motoristas da cidade
-            </p>
-          </div>
-        </div>
+        </motion.div>
       )}
 
       {/* 1. Duelos ao vivo */}
       {config.visualizacaoPublica && (
-        <CardDuelosAoVivo
-          duelos={duelosCidade}
-          onAbrirArena={setArenaDuel}
-          fontHeading={fontHeading}
-        />
+        <CardDuelosAoVivo duelos={duelosCidade} onAbrirArena={setArenaDuel} fontHeading={fontHeading} />
       )}
 
-      {/* 2. Ranking */}
-      {config.rankingAtivo && ranking.length > 0 && (
-        <CardRankingCidade
-          ranking={ranking}
-          minhaPosicao={minhaPosicao || null}
-          onAbrir={() => setShowRanking(true)}
-          fontHeading={fontHeading}
-        />
-      )}
-
-      {/* 3. Cinturão */}
-      {config.cinturaoAtivo && campeoes.length > 0 && (
-        <CardCinturaoCidade
-          campeoes={campeoes}
-          onAbrir={() => setShowCinturao(true)}
-          fontHeading={fontHeading}
-        />
-      )}
+      {/* 2+3: Ranking + Cinturão side by side on mobile */}
+      <div className="grid grid-cols-2 gap-3">
+        {config.rankingAtivo && ranking.length > 0 && (
+          <CardRankingCidade ranking={ranking} minhaPosicao={minhaPosicao || null} onAbrir={() => setShowRanking(true)} fontHeading={fontHeading} />
+        )}
+        {config.cinturaoAtivo && campeoes.length > 0 && (
+          <CardCinturaoCidade campeoes={campeoes} onAbrir={() => setShowCinturao(true)} fontHeading={fontHeading} />
+        )}
+      </div>
 
       {/* 4. Desempenho pessoal */}
       {participou && (
-        <CardDesempenhoPessoal
-          duels={meusDuelos}
-          participantId={participantId}
-          reputacao={reputacao || null}
-          onAbrir={() => setShowDuelsHub(true)}
-          fontHeading={fontHeading}
-        />
+        <CardDesempenhoPessoal duels={meusDuelos} participantId={participantId} reputacao={reputacao || null} onAbrir={() => setShowDuelsHub(true)} fontHeading={fontHeading} />
       )}
 
       {/* 5. Palpites / Torcida */}
       {config.visualizacaoPublica && (
-        <CardPalpitesTorcida
-          duelos={duelosCidade}
-          onAbrirArena={setArenaDuel}
-          fontHeading={fontHeading}
-        />
+        <CardPalpitesTorcida duelos={duelosCidade} onAbrirArena={setArenaDuel} fontHeading={fontHeading} />
       )}
-    </div>
+    </motion.div>
   );
 }
