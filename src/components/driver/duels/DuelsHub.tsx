@@ -15,9 +15,11 @@ import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
+import type { ConfigDuelos } from "./hook_config_duelos";
 
 interface Props {
   onBack: () => void;
+  configDuelos?: ConfigDuelos;
 }
 
 export default function DuelsHub({ onBack }: Props) {
