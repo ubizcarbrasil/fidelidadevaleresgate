@@ -6,6 +6,7 @@ import { cleanDriverName, type Duel } from "./hook_duelos";
 
 interface Props {
   duelo: Duel;
+  onOpenArena?: (duel: Duel) => void;
 }
 
 function tempoRestante(endAt: string): string {
