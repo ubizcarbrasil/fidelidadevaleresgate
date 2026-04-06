@@ -22,7 +22,7 @@ interface Props {
   configDuelos?: ConfigDuelos;
 }
 
-export default function DuelsHub({ onBack }: Props) {
+export default function DuelsHub({ onBack, configDuelos }: Props) {
   const { driver } = useDriverSession();
   const { participant, isLoading: loadingPart, toggleParticipation, toggling } = useDuelParticipation();
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
