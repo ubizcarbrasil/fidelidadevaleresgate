@@ -134,6 +134,7 @@ const BrandBranchForm = lazyWithRetry(() => import("@/pages/BrandBranchForm"));
 const BrandCidadesJourneyPage = lazyWithRetry(() => import("@/pages/BrandCidadesJourneyPage"));
 const BrandApiJourneyPage = lazyWithRetry(() => import("@/pages/BrandApiJourneyPage"));
 const PaginaOnboardingCidade = lazyWithRetry(() => import("@/features/city_onboarding/pagina_onboarding_cidade"));
+const GamificacaoAdminPage = lazyWithRetry(() => import("@/pages/GamificacaoAdminPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
 // Initialize event bus → query bridge for automatic cache invalidation
