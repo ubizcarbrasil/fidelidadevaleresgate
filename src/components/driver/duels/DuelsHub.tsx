@@ -25,6 +25,7 @@ export default function DuelsHub({ onBack }: Props) {
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showDesempenho, setShowDesempenho] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
