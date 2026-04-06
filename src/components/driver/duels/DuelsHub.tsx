@@ -208,7 +208,19 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           </section>
         )}
 
-        {/* Live duels */}
+        {/* Counter-proposals received */}
+        {counterProposals.length > 0 && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
+              Contrapropostas
+            </h2>
+            {counterProposals.map((d) => (
+              <NegociacaoContrapropostaCard key={d.id} duel={d} participantId={participantId} />
+            ))}
+          </section>
+        )}
+
         {liveDuels.length > 0 && (
           <section className="space-y-2">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
