@@ -31,7 +31,20 @@ function formatCountdown(seconds: number): string {
 }
 
 export default function DuelDetailSheet({ duel, participantId, onBack }: Props) {
+  const { driver } = useDriverSession();
   const { mutate: finalize, isPending: finalizing } = useFinalizeDuel();
+  const [remaining, setRemaining] = useState(0);
+  const [showRating, setShowRating] = useState(false);
+
+  const isChallenger = participantId === duel.challenger_id;
+  const opponentCustomerId = isChallenger
+    ? (duel.challenged as any)?.customer_id
+    : (duel.challenger as any)?.customer_id;
+
+  const { data: existingRating } = useDuelRating(
+    duel.status === "finished" ? duel.id : null,
+    driver?.id || null
+  );
   const [remaining, setRemaining] = useState(0);
 
   const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
