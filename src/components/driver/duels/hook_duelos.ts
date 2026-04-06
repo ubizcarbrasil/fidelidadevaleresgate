@@ -381,3 +381,40 @@ export function cleanDriverName(name?: string | null): string {
   if (!name) return "Motorista";
   return name.replace(/\[MOTORISTA\]\s*/gi, "").trim() || "Motorista";
 }
+
+export interface CompetitiveProfile {
+  total_duels: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  win_rate: number;
+  current_streak: number;
+  best_streak: number;
+  points_won: number;
+  points_lost: number;
+  recent: Array<{
+    id: string;
+    finished_at: string;
+    result: "win" | "loss" | "draw";
+    opponent_name: string;
+    challenger_points_bet: number;
+    challenged_points_bet: number;
+    challenger_rides_count: number;
+    challenged_rides_count: number;
+  }>;
+}
+
+export function useDriverCompetitiveProfile(customerId: string | null) {
+  return useQuery({
+    queryKey: ["driver-competitive-profile", customerId],
+    queryFn: async () => {
+      if (!customerId) return null;
+      const { data, error } = await supabase.rpc("get_driver_competitive_profile", {
+        p_customer_id: customerId,
+      });
+      if (error) throw error;
+      return data as unknown as CompetitiveProfile;
+    },
+    enabled: !!customerId,
+  });
+}

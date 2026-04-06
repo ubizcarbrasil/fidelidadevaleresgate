@@ -7119,6 +7119,10 @@ export type Database = {
           total_rides: number
         }[]
       }
+      get_driver_competitive_profile: {
+        Args: { p_customer_id: string }
+        Returns: Json
+      }
       get_driver_ledger: {
         Args: { p_customer_id: string }
         Returns: {

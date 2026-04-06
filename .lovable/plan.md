@@ -1,40 +1,59 @@
 
-
-## Plano: Tela de Confirmação com Aviso de Risco ao Aceitar Duelo
+## Plano: Perfil Competitivo dos Motoristas
 
 ### Resumo
-Adicionar um modal de confirmação obrigatório antes de aceitar um duelo (tanto no `DuelChallengeCard` quanto no `NegociacaoContrapropostaCard`). O modal exibe um resumo visual completo do risco e exige confirmação explícita.
+Permitir que o motorista visualize o histórico competitivo de cada adversário antes de desafiá-lo, com perfil resumido na listagem e perfil completo em tela dedicada.
 
-### Novo componente: `ConfirmacaoAceiteDuelo.tsx`
+---
 
-Criar um componente que usa `AlertDialog` (já existe no projeto) com conteúdo customizado:
+### 1. Nova RPC no banco: `get_driver_competitive_profile`
 
-- **Cabeçalho**: icone de alerta + "Confirmar Aceite do Duelo"
-- **Resumo visual** (card estilizado dentro do modal):
-  - Adversário: nome
-  - Período: data início — data fim
-  - Seus pontos comprometidos: X pts
-  - Total em disputa: 2X pts
-  - Regra: "Quem fizer mais corridas no período vence"
-- **Texto de aviso** (destaque visual, fundo warning):
-  > "Ao aceitar este duelo, seus pontos ficarão reservados até o encerramento da disputa. Se você vencer, receberá os pontos totais em jogo. Se perder, perderá os pontos reservados neste duelo. Deseja continuar?"
-- **Botões**: "Cancelar" e "Aceitar Duelo"
+Criar uma RPC que recebe `p_customer_id` e retorna:
+- `total_duels`: total de duelos finalizados
+- `wins`: vitórias
+- `losses`: derrotas
+- `draws`: empates
+- `win_rate`: taxa de vitória (%)
+- `current_streak`: sequência atual (positiva = vitórias, negativa = derrotas)
+- `best_streak`: maior sequência de vitórias
+- `points_won`: total de pontos ganhos em duelos
+- `points_lost`: total de pontos perdidos em duelos
 
-### Alterações em arquivos existentes
+Calculados via query nos `driver_duels` finalizados + `points_ledger` com `reference_type IN ('DUEL_RESERVE', 'DUEL_SETTLEMENT')`.
 
-**`DuelChallengeCard.tsx`**:
-- Ao clicar "Aceitar", em vez de chamar `respond()` diretamente, abrir o modal `ConfirmacaoAceiteDuelo`
-- Passar props: nome do adversário, período, pontos, callback de confirmação
+---
 
-**`NegociacaoContrapropostaCard.tsx`**:
-- Mesmo padrão: ao clicar "Aceitar (X pts)", abrir o modal antes de chamar `respondCounter()`
-- Adaptar props para usar o valor da contraproposta
+### 2. Novo hook: `useDriverCompetitiveProfile`
 
-### Arquivos
+Em `hook_duelos.ts`, adicionar hook que chama a RPC acima para um dado `customer_id`.
+
+---
+
+### 3. Novo componente: `PerfilCompetitivoSheet.tsx`
+
+Tela completa (full-screen sheet) com:
+- Avatar + nome/apelido + cidade
+- Cards de estatísticas: duelos, vitórias, derrotas, empates, win rate
+- Sequência atual + maior sequência
+- Pontos ganhos vs perdidos em duelos
+- Histórico recente (últimos 5 duelos com resultado)
+
+---
+
+### 4. Alteração em `CreateDuelSheet.tsx`
+
+Na listagem de adversários (step "select"):
+- Adicionar mini-badge com win rate e total de duelos
+- Adicionar botão "Ver perfil" que abre `PerfilCompetitivoSheet`
+- Manter a seleção funcional
+
+---
+
+### 5. Arquivos
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/driver/duels/ConfirmacaoAceiteDuelo.tsx` | Criar |
-| `src/components/driver/duels/DuelChallengeCard.tsx` | Modificar (adicionar state do modal + renderizar componente) |
-| `src/components/driver/duels/NegociacaoContrapropostaCard.tsx` | Modificar (mesmo padrão) |
-
+| Migração SQL (RPC `get_driver_competitive_profile`) | Criar |
+| `hook_duelos.ts` | Modificar (novo hook) |
+| `PerfilCompetitivoSheet.tsx` | Criar |
+| `CreateDuelSheet.tsx` | Modificar (badges + botão perfil) |
