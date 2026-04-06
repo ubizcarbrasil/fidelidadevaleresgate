@@ -1,82 +1,105 @@
 
 
-## Etapa 4 — Ranking Geral da Cidade
+## Ajuste Estratégico — Ativação Opcional do Módulo de Duelos
 
-### O que será feito
-Criar um ranking mensal de corridas por cidade, visível no módulo de duelos. Top 10 público + posição individual do motorista logado. Processado via RPC no servidor para evitar limites de fetch.
+### Resumo
+Tornar o módulo de Duelos totalmente opcional em dois níveis: cidade (branch) e motorista individual. A cidade controla quais sub-funcionalidades ativar via `branch_settings_json`, e o motorista decide se participa via toggle existente.
 
 ---
 
-### 1. Banco de dados — 1 nova RPC
+### 1. Banco de dados
+Nenhuma migração necessária. O campo `branch_settings_json` (JSONB) já existe na tabela `branches` e está vazio. Será utilizado para armazenar as flags:
 
-**Função `get_city_driver_ranking`** (SECURITY DEFINER, STABLE)
-
-Parâmetros: `p_branch_id uuid`, `p_limit int DEFAULT 10`
-
-Retorna: `position, customer_id, driver_name, total_rides` para os top N motoristas com corridas FINALIZED no mês atual, agrupados por `driver_customer_id`.
-
-```sql
-SELECT
-  ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS position,
-  driver_customer_id AS customer_id,
-  MAX(driver_name) AS driver_name,
-  COUNT(*)::bigint AS total_rides
-FROM machine_rides
-WHERE branch_id = p_branch_id
-  AND ride_status = 'FINALIZED'
-  AND finalized_at >= date_trunc('month', now())
-GROUP BY driver_customer_id
-ORDER BY total_rides DESC
-LIMIT p_limit
+```json
+{
+  "enable_driver_duels": true,
+  "enable_city_ranking": true,
+  "enable_city_belt": false,
+  "allow_public_duel_viewing": true
+}
 ```
 
-Nenhuma tabela nova necessária. O ranking é calculado em tempo real a partir de `machine_rides`.
+---
 
-Para a posição individual do motorista logado (caso não esteja no Top 10), uma segunda query via RPC ou sub-select com CTE que retorna a posição exata dele.
+### 2. Painel administrativo da cidade
 
-**Função `get_driver_city_position`** (SECURITY DEFINER, STABLE)
+**Arquivo modificado: `src/pages/BrandBranchForm.tsx`**
 
-Parâmetros: `p_branch_id uuid`, `p_customer_id uuid`
+Adicionar nova seção "Gamificação de Motoristas" no formulário de edição da cidade, com 4 toggles (Switch):
+- Ativar módulo de Duelos (`enable_driver_duels`)
+- Ativar Ranking da Cidade (`enable_city_ranking`)
+- Ativar Cinturão da Cidade (`enable_city_belt`)
+- Permitir visualização pública dos duelos (`allow_public_duel_viewing`)
 
-Retorna: `position bigint, total_rides bigint` — a posição do motorista no ranking e sua contagem de corridas.
+Carregar valores do `branch_settings_json` ao editar; salvar de volta no JSON ao submeter. Seguir o mesmo padrão visual das demais seções do formulário.
 
 ---
 
-### 2. Novos arquivos
+### 3. Hook de configuração da cidade
 
-**`src/components/driver/duels/hook_ranking_cidade.ts`**
-- Hook `useRankingCidade(branchId)` — chama a RPC `get_city_driver_ranking` com limit 10, refetch a cada 60s
-- Hook `useMinhaposicaoRanking(branchId, customerId)` — chama a RPC `get_driver_city_position` para posição individual
-- Combina dados do top 10 com participantes de duelo (apelido/avatar via join em `driver_duel_participants`)
+**Novo arquivo: `src/components/driver/duels/hook_config_duelos.ts`**
 
-**`src/components/driver/duels/RankingCidadeSheet.tsx`**
-- Tela fullscreen (padrão existente com header + botão voltar)
-- Seção pódio top 3: cards grandes com medalhas 🥇🥈🥉, avatar, apelido, corridas
-- Lista top 4-10: cards menores com posição, nome, corridas, barra de progresso
-- Bloco "Sua Colocação": card destacado com posição do motorista logado, corridas e distância para o próximo acima
-- Badge "Mês atual" no header
-
-**`src/components/driver/duels/CardPodio.tsx`**
-- Card visual para top 3 (tamanho maior, ícone de medalha, destaque de cor)
-
-**`src/components/driver/duels/CardRankingItem.tsx`**
-- Card reutilizável para posições 4-10 e posição individual
+Hook `useConfigDuelos(branch)` que extrai as flags do `branch_settings_json` e retorna:
+```ts
+{
+  duelosAtivos: boolean,
+  rankingAtivo: boolean,
+  cinturaoAtivo: boolean,
+  visualizacaoPublica: boolean
+}
+```
+Valores padrão: todos `false` (módulo desligado se não configurado).
 
 ---
 
-### 3. Integração
+### 4. Condicionais no DriverMarketplace
 
-**`src/components/driver/duels/DuelsHub.tsx`** (modificado)
-- Adicionar botão "🏆 Ranking da Cidade" ao lado de "Meu Desempenho", visível quando participação ativada
-- Novo estado `showRanking` que renderiza `RankingCidadeSheet`
+**Arquivo modificado: `src/components/driver/DriverMarketplace.tsx`**
+
+- Importar `useConfigDuelos` e extrair flags do `branch`
+- Botão de Duelos no header: visível somente se `duelosAtivos === true`
+- `SecaoDuelosCidade`: visível somente se `visualizacaoPublica === true`
+- Quando `duelosAtivos` é false e motorista não tem acesso, esconder completamente
+
+---
+
+### 5. Condicionais no DuelsHub
+
+**Arquivo modificado: `src/components/driver/duels/DuelsHub.tsx`**
+
+- Receber prop `config` com as flags da cidade (ou usar o hook)
+- Botão "Ranking da Cidade": visível somente se `rankingAtivo === true`
+- Seções de duelo (criar, desafiar, aceitar): visíveis somente se `duelosAtivos === true`
+- Se motorista acessa DuelsHub mas não ativou participação: mostrar convite "Ative os Duelos e participe das competições da sua cidade"
+
+---
+
+### 6. Condicionais no RankingCidadeSheet
+
+**Arquivo modificado: `src/components/driver/duels/RankingCidadeSheet.tsx`**
+
+- Verificar `rankingAtivo` antes de renderizar; se false, não exibir
+
+---
+
+### 7. Condicionais na SecaoDuelosCidade
+
+**Arquivo modificado: `src/components/driver/duels/SecaoDuelosCidade.tsx`**
+
+- Receber e verificar `visualizacaoPublica`; se false, retornar null
 
 ---
 
 ### Arquivos envolvidos
-- Migration SQL (2 RPCs)
-- `src/components/driver/duels/hook_ranking_cidade.ts` (novo)
-- `src/components/driver/duels/RankingCidadeSheet.tsx` (novo)
-- `src/components/driver/duels/CardPodio.tsx` (novo)
-- `src/components/driver/duels/CardRankingItem.tsx` (novo)
-- `src/components/driver/duels/DuelsHub.tsx` (modificado)
+- `src/components/driver/duels/hook_config_duelos.ts` (novo)
+- `src/pages/BrandBranchForm.tsx` (modificado — seção de gamificação)
+- `src/components/driver/DriverMarketplace.tsx` (modificado — condicionais)
+- `src/components/driver/duels/DuelsHub.tsx` (modificado — condicionais por feature flag)
+- `src/components/driver/duels/SecaoDuelosCidade.tsx` (modificado — condicional)
+- `src/components/driver/duels/RankingCidadeSheet.tsx` (modificado — condicional)
+
+### UX
+- Cidade sem módulo ativado: motorista nunca vê nada relacionado a duelos
+- Cidade com módulo ativado mas motorista sem participação: vê convite amigável
+- Cada sub-funcionalidade (ranking, cinturão, visualização pública) controlada independentemente
 
