@@ -117,7 +117,7 @@ export function useDriverDuels() {
 
       const { data, error } = await supabase
         .from("driver_duels")
-        .select("*, challenger:challenger_id(*, customers(name, cpf)), challenged:challenged_id(*, customers(name, cpf))")
+        .select("*, challenger:driver_duel_participants!driver_duels_challenger_id_fkey(*, customers(name, cpf)), challenged:driver_duel_participants!driver_duels_challenged_id_fkey(*, customers(name, cpf))")
         .or(`challenger_id.eq.${part.id},challenged_id.eq.${part.id}`)
         .order("created_at", { ascending: false });
       if (error) throw error;
