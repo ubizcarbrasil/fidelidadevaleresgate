@@ -155,7 +155,14 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
 
         {/* Finalize button */}
         {canFinalize && (
-          <Button onClick={() => finalize(duel.id)} disabled={finalizing} className="w-full gap-2">
+          <Button onClick={() => finalize({
+            duelId: duel.id,
+            brandId: duel.brand_id,
+            challengerCustomerId: (duel.challenger as any)?.customer_id || "",
+            challengedCustomerId: (duel.challenged as any)?.customer_id || "",
+            challengerName: cleanDriverName((duel.challenger as any)?.customers?.name),
+            challengedName: cleanDriverName((duel.challenged as any)?.customers?.name),
+          })} disabled={finalizing} className="w-full gap-2">
             <Trophy className="h-4 w-4" />
             Apurar Resultado
           </Button>
