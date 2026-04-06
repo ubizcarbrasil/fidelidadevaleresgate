@@ -68,9 +68,9 @@ export default function BrandBranchForm() {
   const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
 
   // Gamificação de Motoristas
-  const [enableDriverDuels, setEnableDriverDuels] = useState(false);
-  const [enableCityRanking, setEnableCityRanking] = useState(false);
-  const [enableCityBelt, setEnableCityBelt] = useState(false);
+  const [enableDriverDuels, setEnableDriverDuels] = useState(true);
+  const [enableCityRanking, setEnableCityRanking] = useState(true);
+  const [enableCityBelt, setEnableCityBelt] = useState(true);
   const [allowPublicDuelViewing, setAllowPublicDuelViewing] = useState(false);
 
   // Load brand's default scoring model for new cities
