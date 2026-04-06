@@ -1,36 +1,48 @@
 
+## Diagnóstico
+Do I know what the issue is? Sim.
 
-## Diagnóstico: Boot Timeout em BOOT_HTML_READY
+O erro atual não está mais no React nem no timeout do boot. Ele acontece antes da aplicação iniciar:
+- `index.html` faz `import("/src/main.tsx?v=" + ver)`.
+- Em preview e publicação, `/src/main.tsx` não existe como arquivo público; o build do Vite só reescreve entradas estáticas para bundles em `/assets/...`.
+- Como esse import é dinâmico e montado em runtime, ele não é transformado pelo build. O navegador então tenta carregar um módulo inválido e dispara `ENTRY_IMPORT_FAILED` / `Importing a module script failed.`.
+- Isso explica por que `main.tsx` nunca executa e por que a tela para logo no começo.
 
-### Problema identificado
-O app fica preso na fase `BOOT_HTML_READY`, o que significa que o `<script type="module">` que importa `/src/main.tsx` **nunca executa**. Isso acontece na URL publicada no celular.
+## O que vou implementar
+1. Corrigir a entrada da aplicação em `index.html`
+- Remover o `import("/src/main.tsx?v=" + ver)`.
+- Voltar para uma entrada estática gerenciada pelo Vite.
+- Manter o bootstrap overlay e os logs de fase.
 
-**Causa raiz**: Conflito entre o PWA Service Worker e o código de limpeza no `index.html`:
-1. O `vite-plugin-pwa` com `registerType: "autoUpdate"` registra um Service Worker que cacheia todos os assets (JS, CSS, HTML)
-2. O `index.html` (linhas 87-92) **desregistra todos os Service Workers** a cada carregamento
-3. Isso cria um ciclo: o SW é desregistrado, mas antes disso já serviu um HTML/JS cacheado antigo que não é mais válido
-4. O módulo JS cacheado falha silenciosamente, e o timeout de 15s dispara
+2. Criar uma entrada segura para o boot
+- Usar um arquivo de entrada dedicado (ex.: `src/entry-client.ts`) para:
+  - marcar `ENTRY_IMPORT_START`
+  - importar `main.tsx` com import estático
+- Assim o Vite gera o bundle correto e o navegador passa a carregar o asset compilado certo.
 
-### Solução proposta
-Remover o código de desregistro forçado de Service Workers do `index.html` e confiar no mecanismo `autoUpdate` do `vite-plugin-pwa` para gerenciar atualizações corretamente.
+3. Remover o cache-busting que quebrou o build
+- Parar de usar `?v=` no caminho de `/src/main.tsx`.
+- Deixar o cache-busting com o hash nativo do Vite.
+- O meta `app-version` pode continuar apenas para diagnóstico.
 
-### Alterações
+4. Blindar o fluxo de PWA para não repetir o problema
+- Ajustar `vite.config.ts` para não depender de registro automático de service worker em contextos de preview/iframe.
+- Se necessário, trocar para registro manual e condicional.
+- Manter apenas limpeza pontual de caches antigos, sem voltar ao desregistro global em todo carregamento.
 
-**1. `index.html`** — Remover o bloco de limpeza forçada de SW (linhas 87-92)
-- Remover `navigator.serviceWorker.getRegistrations()...unregister()`
-- Manter a limpeza de caches legados (workbox/vite/pwa/precache) que é segura
-- Aumentar o timeout inicial de 15s para 25s para conexões lentas
+5. Recuperação para clientes presos na versão quebrada
+- Adicionar uma recuperação controlada para limpar cache/SW antigos onde ainda existir a versão ruim em cache.
+- Essa recuperação será escopada para não recriar o ciclo de atualização quebrado.
 
-**2. `vite.config.ts`** — Adicionar `cleanupOutdatedCaches: true` no workbox
-- Isso garante que caches antigos sejam removidos automaticamente pelo próprio workbox
-- Mais seguro que a limpeza manual no HTML
+## Arquivos envolvidos
+- `index.html`
+- `vite.config.ts`
+- `src/main.tsx`
+- novo arquivo de entrada do cliente, se necessário
+- possivelmente o fluxo de PWA/registro do SW
 
-**3. `index.html`** — Adicionar cache-busting no import do main.tsx
-- Usar o meta tag `app-version` como query param para forçar download de nova versão: `import("/src/main.tsx?v=" + version)`
-
-### Impacto
-- Resolve o ciclo de desregistro/registro do SW
-- Atualizações são gerenciadas pelo mecanismo nativo do workbox
-- Timeout mais generoso para redes lentas
-- Cache-busting garante que o módulo correto é carregado
-
+## Validação
+- Abrir preview e URL publicada.
+- Confirmar a sequência no console: `ENTRY_IMPORT_START` → `main.tsx executing` → `REACT_MOUNT_START` → `APP_MOUNTED`.
+- Confirmar que `ENTRY_IMPORT_FAILED` desapareceu.
+- Testar recarga no mobile e acesso direto em `/` e `/index`.
