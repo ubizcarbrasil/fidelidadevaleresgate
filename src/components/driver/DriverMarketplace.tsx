@@ -615,11 +615,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Duelos rolando na cidade */}
-      {!debouncedSearch.trim() && (
+      {!debouncedSearch.trim() && configDuelos.visualizacaoPublica && (
         <SecaoDuelosCidade
           branchId={branch?.id}
           fontHeading={fontHeading}
-          onVerTodos={() => setShowDuels(true)}
+          onVerTodos={configDuelos.duelosAtivos ? () => setShowDuels(true) : undefined}
         />
       )}
 
