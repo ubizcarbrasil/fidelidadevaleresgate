@@ -160,6 +160,8 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
             brandId: duel.brand_id,
             challengerCustomerId: (duel.challenger as any)?.customer_id || "",
             challengedCustomerId: (duel.challenged as any)?.customer_id || "",
+            challengerParticipantId: duel.challenger_id,
+            challengedParticipantId: duel.challenged_id,
             challengerName: cleanDriverName((duel.challenger as any)?.customers?.name),
             challengedName: cleanDriverName((duel.challenged as any)?.customers?.name),
           })} disabled={finalizing} className="w-full gap-2">
