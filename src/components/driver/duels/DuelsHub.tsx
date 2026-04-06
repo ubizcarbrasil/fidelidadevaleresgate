@@ -3,7 +3,7 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -15,8 +15,9 @@ import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
 import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
+import AjudaDuelosSheet from "./AjudaDuelosSheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ConfigDuelos } from "./hook_config_duelos";
 
 interface Props {
@@ -34,6 +35,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const [showDesempenho, setShowDesempenho] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
   const [showCinturao, setShowCinturao] = useState(false);
+  const [showAjuda, setShowAjuda] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
@@ -95,6 +97,15 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           <Swords className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
           Duelos
         </h1>
+        <div className="flex-1" />
+        <button
+          onClick={() => setShowAjuda(true)}
+          className="h-9 w-9 flex items-center justify-center rounded-xl"
+          style={{ backgroundColor: "hsl(var(--muted))" }}
+          aria-label="Como funciona?"
+        >
+          <HelpCircle className="h-5 w-5 text-muted-foreground" />
+        </button>
       </header>
 
       <div className="flex-1 px-4 pb-8 space-y-5 max-w-lg mx-auto w-full">
@@ -242,6 +253,8 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           </div>
         )}
       </div>
+
+      <AjudaDuelosSheet open={showAjuda} onOpenChange={setShowAjuda} />
     </div>
   );
 }

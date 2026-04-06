@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   branchId: string;
@@ -81,10 +82,10 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
       <CardContent className="space-y-6">
         {/* Toggles */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <ToggleRow label="Duelos entre motoristas" checked={enableDuels} onChange={setEnableDuels} />
-          <ToggleRow label="Ranking da cidade" checked={enableRanking} onChange={setEnableRanking} />
-          <ToggleRow label="Cinturão da cidade" checked={enableBelt} onChange={setEnableBelt} />
-          <ToggleRow label="Visualização pública de duelos" checked={publicViewing} onChange={setPublicViewing} />
+          <ToggleRow label="Duelos entre motoristas" checked={enableDuels} onChange={setEnableDuels} hint="Permite que motoristas se desafiem em competições de corridas." />
+          <ToggleRow label="Ranking da cidade" checked={enableRanking} onChange={setEnableRanking} hint="Exibe uma classificação mensal dos motoristas mais ativos." />
+          <ToggleRow label="Cinturão da cidade" checked={enableBelt} onChange={setEnableBelt} hint="Concede o título de campeão ao motorista com melhor desempenho." />
+          <ToggleRow label="Visualização pública de duelos" checked={publicViewing} onChange={setPublicViewing} hint="Permite que todos os motoristas vejam os duelos em andamento." />
         </div>
 
         {/* Numeric fields */}
@@ -149,10 +150,24 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   );
 }
 
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({ label, checked, onChange, hint }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-      <span className="text-sm">{label}</span>
+      <span className="text-sm flex items-center gap-1.5">
+        {label}
+        {hint && (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[220px] text-xs">
+                {hint}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </span>
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
