@@ -7,6 +7,7 @@ import { Car, TrendingUp, Coins, Gift, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hslToCss } from "@/lib/utils";
 import DriverRedeemOrderHistory from "@/components/driver/DriverRedeemOrderHistory";
+import SecaoGamificacaoDashboard from "@/components/driver/duels/dashboard/SecaoGamificacaoDashboard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -330,6 +331,13 @@ export default function CustomerDriverDashboardPage() {
         monthlyRides={monthlyRides}
         cycleStart={cycleStart}
         accent={accent}
+      />
+
+      {/* Gamificação — Duelos, Ranking, Cinturão */}
+      <SecaoGamificacaoDashboard
+        branch={selectedBranch as any}
+        customerId={customer?.id}
+        fontHeading={fontHeading}
       />
 
       {/* Redemption Order History */}
