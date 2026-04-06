@@ -45,12 +45,11 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
     duel.status === "finished" ? duel.id : null,
     driver?.id || null
   );
-  const [remaining, setRemaining] = useState(0);
 
   const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
   const challengedName = cleanDriverName((duel.challenged as any)?.customers?.name);
 
-  const isChallenger = participantId === duel.challenger_id;
+  const opponentName = isChallenger ? challengedName : challengerName;
   const winnerId = duel.winner_id;
   const hasBet = (duel.challenger_points_bet || 0) > 0;
   const totalBet = (duel.challenger_points_bet || 0) + (duel.challenged_points_bet || 0);
