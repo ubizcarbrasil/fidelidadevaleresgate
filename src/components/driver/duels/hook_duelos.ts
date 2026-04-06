@@ -35,6 +35,13 @@ export interface Duel {
   declined_at: string | null;
   finished_at: string | null;
   created_at: string;
+  challenger_points_bet: number;
+  challenged_points_bet: number;
+  negotiation_status: string;
+  counter_proposal_points: number | null;
+  counter_proposal_by: string | null;
+  points_reserved: boolean;
+  points_settled: boolean;
   challenger?: DuelParticipant;
   challenged?: DuelParticipant;
 }
@@ -109,7 +116,6 @@ export function useDriverDuels() {
     queryKey: ["driver-duels", driver?.id],
     queryFn: async () => {
       if (!driver) return [];
-      // Get participant id first
       const { data: part } = await supabase
         .from("driver_duel_participants")
         .select("id")
@@ -134,7 +140,7 @@ export function useCreateDuel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { challengedCustomerId: string; startAt: string; endAt: string }) => {
+    mutationFn: async (params: { challengedCustomerId: string; startAt: string; endAt: string; pointsBet?: number }) => {
       if (!driver) throw new Error("Sem sessão");
       const { data, error } = await supabase.rpc("create_duel_challenge", {
         p_challenger_customer_id: driver.id,
@@ -143,6 +149,7 @@ export function useCreateDuel() {
         p_brand_id: driver.brand_id,
         p_start_at: params.startAt,
         p_end_at: params.endAt,
+        p_points_bet: params.pointsBet || 0,
       });
       if (error) throw error;
       const result = data as any;
@@ -193,6 +200,7 @@ export function useRespondDuel() {
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      queryClient.invalidateQueries({ queryKey: ["driver-session"] });
       toast.success(vars.accept ? "Desafio aceito! 💪" : "Você arregou... 😅");
 
       const driverName = cleanDriverName(driver?.name);
@@ -233,6 +241,75 @@ export function useRespondDuel() {
   });
 }
 
+export function useCounterPropose() {
+  const { driver } = useDriverSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { duelId: string; counterPoints: number; opponentCustomerId?: string }) => {
+      if (!driver) throw new Error("Sem sessão");
+      const { data, error } = await supabase.rpc("counter_propose_duel", {
+        p_duel_id: params.duelId,
+        p_customer_id: driver.id,
+        p_counter_points: params.counterPoints,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.error || "Erro ao enviar contraproposta");
+      return result;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      toast.success("Contraproposta enviada! 💬");
+
+      if (vars.opponentCustomerId) {
+        enviarNotificacaoDuelo({
+          tipo: "DUEL_CHALLENGE_RECEIVED",
+          customerIds: [vars.opponentCustomerId],
+          duelId: vars.duelId,
+          nomeOponente: cleanDriverName(driver?.name),
+        });
+      }
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao enviar contraproposta"),
+  });
+}
+
+export function useRespondCounterProposal() {
+  const { driver } = useDriverSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { duelId: string; accept: boolean; opponentCustomerId?: string }) => {
+      if (!driver) throw new Error("Sem sessão");
+      const { data, error } = await supabase.rpc("respond_counter_proposal", {
+        p_duel_id: params.duelId,
+        p_customer_id: driver.id,
+        p_accept: params.accept,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) throw new Error(result?.error || "Erro ao responder contraproposta");
+      return result;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      queryClient.invalidateQueries({ queryKey: ["driver-session"] });
+      toast.success(vars.accept ? "Contraproposta aceita! Pontos reservados 🔒" : "Negociação encerrada");
+
+      if (vars.opponentCustomerId) {
+        enviarNotificacaoDuelo({
+          tipo: vars.accept ? "DUEL_CHALLENGE_ACCEPTED" : "DUEL_CHALLENGE_DECLINED",
+          customerIds: [vars.opponentCustomerId],
+          duelId: vars.duelId,
+          nomeOponente: cleanDriverName(driver?.name),
+        });
+      }
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao responder contraproposta"),
+  });
+}
+
 export function useFinalizeDuel() {
   const queryClient = useQueryClient();
 
@@ -255,6 +332,7 @@ export function useFinalizeDuel() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      queryClient.invalidateQueries({ queryKey: ["driver-session"] });
       toast.success("Duelo finalizado! 🏆");
 
       const bothIds = [result.challengerCustomerId, result.challengedCustomerId];
@@ -266,15 +344,12 @@ export function useFinalizeDuel() {
         winnerId: result.winner_id,
       });
 
-      // Notificar ambos que o duelo encerrou
       enviarNotificacaoDuelo({
         tipo: "DUEL_FINISHED",
         customerIds: bothIds,
         duelId: result.duelId,
       });
 
-      // Notificações individuais de vitória/derrota
-      // winner_id da RPC é um participant_id, então comparamos com participant IDs
       if (result.winner_id) {
         const isChallenger = result.winner_id === result.challengerParticipantId;
         const winnerCustomerId = isChallenger ? result.challengerCustomerId : result.challengedCustomerId;
