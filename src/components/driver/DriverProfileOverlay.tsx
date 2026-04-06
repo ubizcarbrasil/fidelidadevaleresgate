@@ -38,6 +38,7 @@ export default function DriverProfileOverlay({ fontHeading, onBack }: Props) {
   const { driver, logout } = useDriverSession();
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [loadingLedger, setLoadingLedger] = useState(true);
+  const [conquistasOpen, setConquistasOpen] = useState(false);
 
   useEffect(() => {
     if (!driver) return;
