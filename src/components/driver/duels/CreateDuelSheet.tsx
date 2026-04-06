@@ -285,3 +285,70 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
     </div>
   );
 }
+
+/** Card de adversário na listagem com mini-stats */
+function OpponentCard({
+  participant,
+  isSelected,
+  onSelect,
+  onViewProfile,
+}: {
+  participant: DuelParticipant;
+  isSelected: boolean;
+  onSelect: () => void;
+  onViewProfile: () => void;
+}) {
+  const name = cleanDriverName((participant.customers as any)?.name);
+  const { data: profile } = useDriverCompetitiveProfile(participant.customer_id);
+
+  return (
+    <div
+      className="w-full flex items-center gap-3 rounded-xl p-3 transition-all"
+      style={{
+        backgroundColor: isSelected ? "hsl(var(--primary) / 0.1)" : "hsl(var(--card))",
+        border: isSelected ? "1px solid hsl(var(--primary) / 0.4)" : "1px solid hsl(var(--border))",
+      }}
+    >
+      <button onClick={onSelect} className="flex items-center gap-3 flex-1 text-left">
+        <div
+          className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+          style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
+        >
+          {participant.avatar_url ? (
+            <img src={participant.avatar_url} alt={name} className="h-10 w-10 rounded-full object-cover" />
+          ) : (
+            name.charAt(0).toUpperCase()
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+          <p className="text-[11px] text-muted-foreground">{participant.public_nickname || "Motorista"}</p>
+          {profile && profile.total_duels > 0 && (
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }}>
+                {profile.wins}V {profile.losses}D
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                {profile.win_rate}% win
+              </span>
+              {profile.current_streak > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: "hsl(var(--warning) / 0.1)", color: "hsl(var(--warning))" }}>
+                  🔥 {profile.current_streak}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        {isSelected && <Swords className="h-4 w-4 shrink-0" style={{ color: "hsl(var(--primary))" }} />}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onViewProfile(); }}
+        className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+        style={{ backgroundColor: "hsl(var(--muted))" }}
+        title="Ver perfil competitivo"
+      >
+        <User className="h-4 w-4 text-muted-foreground" />
+      </button>
+    </div>
+  );
+}
