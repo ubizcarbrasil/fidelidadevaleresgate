@@ -421,6 +421,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             <div className="flex items-center gap-1.5">
               {driver && (
                 <button
+                  onClick={() => setShowDuels(true)}
+                  className="h-9 w-9 flex items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "hsl(var(--muted))" }}
+                >
+                  <Swords className="h-4.5 w-4.5 text-foreground" />
+                </button>
+              )}
+              {driver && (
+                <button
                   onClick={() => setShowProfile(true)}
                   className="h-9 w-9 flex items-center justify-center rounded-xl"
                   style={{ backgroundColor: "hsl(var(--muted))" }}
