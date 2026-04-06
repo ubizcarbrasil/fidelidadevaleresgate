@@ -28,7 +28,7 @@ export async function registrarEventoFeed({
   metadata,
 }: ParamsFeedEvento): Promise<void> {
   try {
-    await supabase.from("city_feed_events").insert({
+    await supabase.from("city_feed_events").insert([{
       branch_id: branchId,
       brand_id: brandId,
       event_type: eventType,
@@ -36,7 +36,7 @@ export async function registrarEventoFeed({
       title,
       description: description ?? null,
       metadata_json: metadata ?? {},
-    });
+    }]);
   } catch (err) {
     console.error("[FeedCidade] Falha ao registrar evento:", err);
   }

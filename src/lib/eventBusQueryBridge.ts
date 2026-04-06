@@ -52,6 +52,13 @@ const EVENT_INVALIDATION_MAP: Record<AppEventName, readonly (readonly string[])[
   DUEL_DEFEAT: DUEL_INVALIDATIONS,
   RANKING_TOP10_ENTRY: [],
   BELT_NEW_CHAMPION: [],
+  // Escalabilidade futura — Etapa 8
+  SEASON_STARTED: [],
+  SEASON_ENDED: [],
+  ACHIEVEMENT_UNLOCKED: [],
+  FEED_EVENT_CREATED: [],
+  DUEL_REMATCH_REQUESTED: DUEL_INVALIDATIONS,
+  DUEL_PRIZE_AWARDED: DUEL_INVALIDATIONS,
 };
 
 let initialized = false;
