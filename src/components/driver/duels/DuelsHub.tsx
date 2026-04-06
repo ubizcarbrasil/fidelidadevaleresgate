@@ -123,18 +123,28 @@ export default function DuelsHub({ onBack }: Props) {
 
         {/* Action buttons */}
         {isEnabled && (
-          <div className="flex gap-2">
-            <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
-              <Plus className="h-4 w-4" />
-              Desafiar
-            </Button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
+                <Plus className="h-4 w-4" />
+                Desafiar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDesempenho(true)}
+                className="gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Desempenho
+              </Button>
+            </div>
             <Button
               variant="outline"
-              onClick={() => setShowDesempenho(true)}
-              className="gap-2"
+              onClick={() => setShowRanking(true)}
+              className="w-full gap-2"
             >
-              <BarChart3 className="h-4 w-4" />
-              Meu Desempenho
+              <Trophy className="h-4 w-4" />
+              Ranking da Cidade
             </Button>
           </div>
         )}
