@@ -18,6 +18,7 @@ interface Props {
 
 export default function NegociacaoContrapropostaCard({ duel, participantId }: Props) {
   const { mutate: respondCounter, isPending } = useRespondCounterProposal();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentName = isChallenger
