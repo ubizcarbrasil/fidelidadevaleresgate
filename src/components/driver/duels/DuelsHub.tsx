@@ -74,6 +74,10 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
     return <RankingCidadeSheet onBack={() => setShowRanking(false)} />;
   }
 
+  if (showCinturao) {
+    return <CinturaoCidadeSheet onBack={() => setShowCinturao(false)} />;
+  }
+
   if (selectedDuelData) {
     return <DuelDetailSheet duel={selectedDuelData} participantId={participantId} onBack={() => setSelectedDuel(null)} />;
   }
