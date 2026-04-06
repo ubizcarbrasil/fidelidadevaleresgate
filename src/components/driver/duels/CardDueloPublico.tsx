@@ -171,6 +171,6 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
       <p className="text-center text-[10px] text-muted-foreground mt-auto">
         corridas concluídas
       </p>
-    </div>
+    </button>
   );
 }
