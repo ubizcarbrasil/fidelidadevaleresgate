@@ -156,6 +156,17 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
                 Ranking da Cidade
               </Button>
             )}
+            {configDuelos?.cinturaoAtivo !== false && (
+              <Button
+                variant="outline"
+                onClick={() => setShowCinturao(true)}
+                className="w-full gap-2"
+                style={{ borderColor: "hsl(45 100% 50% / 0.3)", color: "hsl(45, 100%, 50%)" }}
+              >
+                <Crown className="h-4 w-4" />
+                Cinturão da Cidade
+              </Button>
+            )}
           </div>
         )}
 
