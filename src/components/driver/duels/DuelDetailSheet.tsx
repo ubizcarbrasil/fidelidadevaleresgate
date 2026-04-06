@@ -224,7 +224,41 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
             Apurar Resultado
           </Button>
         )}
+
+        {/* Rate opponent button */}
+        {duel.status === "finished" && driver?.id && opponentCustomerId && !existingRating && (
+          <Button
+            onClick={() => setShowRating(true)}
+            variant="outline"
+            className="w-full gap-2"
+          >
+            <Star className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+            Avaliar Adversário
+          </Button>
+        )}
+
+        {duel.status === "finished" && existingRating && (
+          <div
+            className="flex items-center justify-center gap-2 rounded-xl p-3"
+            style={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
+          >
+            <CheckCircle className="h-4 w-4" style={{ color: "hsl(var(--success))" }} />
+            <span className="text-sm text-muted-foreground">Avaliação enviada ⭐ {(existingRating as any).rating}/5</span>
+          </div>
+        )}
       </div>
+
+      {/* Rating sheet */}
+      {showRating && driver?.id && opponentCustomerId && (
+        <AvaliacaoDueloSheet
+          duelId={duel.id}
+          raterCustomerId={driver.id}
+          ratedCustomerId={opponentCustomerId}
+          opponentName={opponentName}
+          onBack={() => setShowRating(false)}
+          onSuccess={() => setShowRating(false)}
+        />
+      )}
     </div>
   );
 }
