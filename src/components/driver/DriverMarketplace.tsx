@@ -155,6 +155,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const configDuelos = useConfigDuelos(branch);
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
