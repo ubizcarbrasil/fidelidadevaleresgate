@@ -1,7 +1,7 @@
 /**
  * Card exibido quando o motorista recebe uma contraproposta de pontos.
  */
-import React from "react";
+import React, { useState } from "react";
 import { MessageSquare, ShieldCheck, XCircle, Coins, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
@@ -9,6 +9,7 @@ import { cleanDriverName, useRespondCounterProposal } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ConfirmacaoAceiteDuelo from "./ConfirmacaoAceiteDuelo";
 
 interface Props {
   duel: Duel;
@@ -17,6 +18,7 @@ interface Props {
 
 export default function NegociacaoContrapropostaCard({ duel, participantId }: Props) {
   const { mutate: respondCounter, isPending } = useRespondCounterProposal();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentName = isChallenger
@@ -79,7 +81,7 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
 
       <div className="flex gap-2">
         <Button
-          onClick={() => respondCounter({ duelId: duel.id, accept: true, opponentCustomerId })}
+          onClick={() => setShowConfirm(true)}
           disabled={isPending}
           className="flex-1 gap-1.5"
           size="sm"
@@ -98,6 +100,20 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
           Recusar e Encerrar
         </Button>
       </div>
+
+      <ConfirmacaoAceiteDuelo
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        onConfirm={() => {
+          setShowConfirm(false);
+          respondCounter({ duelId: duel.id, accept: true, opponentCustomerId });
+        }}
+        opponentName={opponentName}
+        startAt={duel.start_at}
+        endAt={duel.end_at}
+        pointsBet={counterBet}
+        isPending={isPending}
+      />
     </div>
   );
 }

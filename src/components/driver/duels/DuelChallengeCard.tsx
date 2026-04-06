@@ -11,6 +11,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ConfirmacaoAceiteDuelo from "./ConfirmacaoAceiteDuelo";
 
 interface Props {
   duel: Duel;
@@ -22,6 +23,7 @@ export default function DuelChallengeCard({ duel }: Props) {
   const { mutate: counterPropose, isPending: proposing } = useCounterPropose();
   const [showCounter, setShowCounter] = useState(false);
   const [counterValue, setCounterValue] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
   const hasBet = duel.challenger_points_bet > 0;
@@ -99,7 +101,7 @@ export default function DuelChallengeCard({ duel }: Props) {
       {!showCounter ? (
         <div className="flex gap-2">
           <Button
-            onClick={() => respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
+            onClick={() => hasBet ? setShowConfirm(true) : respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
             disabled={responding || proposing || (hasBet && balance < duel.challenger_points_bet)}
             className="flex-1 gap-1.5"
             size="sm"
@@ -156,6 +158,21 @@ export default function DuelChallengeCard({ duel }: Props) {
             Cancelar
           </button>
         </div>
+      )}
+      {hasBet && (
+        <ConfirmacaoAceiteDuelo
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          onConfirm={() => {
+            setShowConfirm(false);
+            respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName });
+          }}
+          opponentName={challengerName}
+          startAt={duel.start_at}
+          endAt={duel.end_at}
+          pointsBet={duel.challenger_points_bet}
+          isPending={responding}
+        />
       )}
     </div>
   );
