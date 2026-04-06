@@ -29,6 +29,7 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
   const [endTime, setEndTime] = useState("");
   const [pointsBet, setPointsBet] = useState("");
   const [step, setStep] = useState<"select" | "schedule" | "bet" | "confirm">("select");
+  const [viewingProfile, setViewingProfile] = useState<DuelParticipant | null>(null);
 
   const filtered = (opponents || []).filter((o) => {
     if (!search.trim()) return true;
