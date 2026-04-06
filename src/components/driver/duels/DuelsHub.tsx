@@ -27,6 +27,7 @@ export default function DuelsHub({ onBack }: Props) {
 
   const [showCreate, setShowCreate] = useState(false);
   const [showDesempenho, setShowDesempenho] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
