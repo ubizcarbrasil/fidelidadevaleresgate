@@ -333,6 +333,13 @@ export default function CustomerDriverDashboardPage() {
         accent={accent}
       />
 
+      {/* Gamificação — Duelos, Ranking, Cinturão */}
+      <SecaoGamificacaoDashboard
+        branch={selectedBranch as any}
+        customerId={customer?.id}
+        fontHeading={fontHeading}
+      />
+
       {/* Redemption Order History */}
       <DriverRedeemOrderHistory />
 
