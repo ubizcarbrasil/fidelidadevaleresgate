@@ -11,6 +11,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ConfirmacaoAceiteDuelo from "./ConfirmacaoAceiteDuelo";
 
 interface Props {
   duel: Duel;
