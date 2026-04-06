@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPoints } from "@/lib/formatPoints";
-import { ArrowLeft, LogOut, Coins, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, Coins, Loader2, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ConquistasMotoristaSheet from "./duels/ConquistasMotoristaSheet";
 
 interface LedgerEntry {
   id: string;
