@@ -26,6 +26,7 @@ import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import DuelsHub from "./duels/DuelsHub";
+import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 
 export interface AffiliateDeal {
   id: string;
