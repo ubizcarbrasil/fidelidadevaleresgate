@@ -142,6 +142,14 @@ export default function BrandBranchForm() {
       setAtivo(existing.is_active);
       if ((existing as any).scoring_model) setScoringModel((existing as any).scoring_model);
       setIsCityRedemptionEnabled(!!(existing as any).is_city_redemption_enabled);
+      // Gamificação flags
+      const bs = existing.branch_settings_json as Record<string, any> | null;
+      if (bs && typeof bs === "object") {
+        setEnableDriverDuels(bs.enable_driver_duels === true);
+        setEnableCityRanking(bs.enable_city_ranking === true);
+        setEnableCityBelt(bs.enable_city_belt === true);
+        setAllowPublicDuelViewing(bs.allow_public_duel_viewing === true);
+      }
     }
   }, [existing]);
 
