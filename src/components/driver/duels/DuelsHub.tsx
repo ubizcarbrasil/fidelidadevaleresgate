@@ -253,6 +253,8 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           </div>
         )}
       </div>
+
+      <AjudaDuelosSheet open={showAjuda} onOpenChange={setShowAjuda} />
     </div>
   );
 }
