@@ -26,6 +26,7 @@ interface Props {
 
 export default function DuelsHub({ onBack, configDuelos }: Props) {
   const { driver } = useDriverSession();
+  useListenerNotificacoesDuelo();
   const { participant, isLoading: loadingPart, toggleParticipation, toggling } = useDuelParticipation();
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
 
