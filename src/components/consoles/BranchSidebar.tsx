@@ -90,6 +90,13 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
     ],
   },
   {
+    label: "Gamificação",
+    scoringFilter: "DRIVER",
+    items: [
+      { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista" },
+    ],
+  },
+  {
     label: "Inteligência & Dados",
     items: [
       { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3, moduleKey: "reports" },
