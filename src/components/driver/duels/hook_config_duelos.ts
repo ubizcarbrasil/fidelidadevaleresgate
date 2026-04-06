@@ -20,10 +20,10 @@ export interface ConfigDuelos {
 }
 
 const DEFAULTS: ConfigDuelos = {
-  duelosAtivos: false,
-  rankingAtivo: false,
-  cinturaoAtivo: false,
-  visualizacaoPublica: false,
+  duelosAtivos: true,
+  rankingAtivo: true,
+  cinturaoAtivo: true,
+  visualizacaoPublica: true,
   modosDuelo: ["rides"],
   revanchaHabilitada: false,
   temporadasAtivas: false,
