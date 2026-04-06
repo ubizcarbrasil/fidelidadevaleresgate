@@ -78,6 +78,7 @@ const DEFAULT_LABELS: Record<string, Record<string, string>> = {
      "sidebar.regras_motorista": "Regras de Pontuação",
      "sidebar.relatorios_cidade": "Relatórios",
      "sidebar.manuais": "Manuais",
+     "sidebar.gamificacao": "Duelos & Ranking",
   },
   customer_app: {
     "app.ofertas": "Ofertas",
