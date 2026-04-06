@@ -33,7 +33,7 @@ function AvatarMini({ nome }: { nome: string }) {
   );
 }
 
-export default function CardDueloPublico({ duelo }: Props) {
+export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
   const [, setTick] = useState(0);
 
   const aoVivo = duelo.status === "live";
