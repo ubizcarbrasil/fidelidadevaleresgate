@@ -3,7 +3,7 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
