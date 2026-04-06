@@ -71,6 +71,15 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
 
   const today = format(new Date(), "yyyy-MM-dd");
 
+  if (viewingProfile) {
+    return (
+      <PerfilCompetitivoSheet
+        participant={viewingProfile}
+        onBack={() => setViewingProfile(null)}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-auto" style={{ backgroundColor: "hsl(var(--background))" }}>
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3" style={{ backgroundColor: "hsl(var(--background))" }}>
