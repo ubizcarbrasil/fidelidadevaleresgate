@@ -60,6 +60,11 @@ export default function DuelsHub({ onBack }: Props) {
     return <CreateDuelSheet onBack={() => setShowCreate(false)} onSuccess={() => setShowCreate(false)} />;
   }
 
+  if (showDesempenho) {
+    return <MeuDesempenhoSheet duels={duels} participantId={participantId} onBack={() => setShowDesempenho(false)} />;
+  }
+  }
+
   if (selectedDuelData) {
     return <DuelDetailSheet duel={selectedDuelData} participantId={participantId} onBack={() => setSelectedDuel(null)} />;
   }
