@@ -56,7 +56,7 @@ export interface DealCategory {
 
 interface Props {
   brand: { id: string; name: string; brand_settings_json?: any };
-  branch: { id: string } | null;
+  branch: { id: string; branch_settings_json?: any } | null;
   theme: any;
   initialCategoryId?: string | null;
   initialDealId?: string | null;
