@@ -15,8 +15,9 @@ import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
 import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
+import AjudaDuelosSheet from "./AjudaDuelosSheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ConfigDuelos } from "./hook_config_duelos";
 
 interface Props {
