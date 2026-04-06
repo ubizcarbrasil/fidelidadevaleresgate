@@ -100,6 +100,20 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
           Recusar e Encerrar
         </Button>
       </div>
+
+      <ConfirmacaoAceiteDuelo
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        onConfirm={() => {
+          setShowConfirm(false);
+          respondCounter({ duelId: duel.id, accept: true, opponentCustomerId });
+        }}
+        opponentName={opponentName}
+        startAt={duel.start_at}
+        endAt={duel.end_at}
+        pointsBet={counterBet}
+        isPending={isPending}
+      />
     </div>
   );
 }

@@ -159,6 +159,21 @@ export default function DuelChallengeCard({ duel }: Props) {
           </button>
         </div>
       )}
+      {hasBet && (
+        <ConfirmacaoAceiteDuelo
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          onConfirm={() => {
+            setShowConfirm(false);
+            respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName });
+          }}
+          opponentName={challengerName}
+          startAt={duel.start_at}
+          endAt={duel.end_at}
+          pointsBet={duel.challenger_points_bet}
+          isPending={responding}
+        />
+      )}
     </div>
   );
 }
