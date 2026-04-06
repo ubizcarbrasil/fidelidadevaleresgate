@@ -370,6 +370,60 @@ export default function BrandBranchForm() {
         </CardContent>
       </Card>
 
+      {/* Gamificação de Motoristas */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Swords className="h-4 w-4" />
+            Gamificação de Motoristas
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Configure quais funcionalidades competitivas estarão disponíveis para os motoristas desta cidade.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar módulo de Duelos</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permite que motoristas desafiem uns aos outros em competições de corridas.
+              </p>
+            </div>
+            <Switch checked={enableDriverDuels} onCheckedChange={setEnableDriverDuels} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar Ranking da Cidade</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe o ranking mensal de corridas entre os motoristas da cidade.
+              </p>
+            </div>
+            <Switch checked={enableCityRanking} onCheckedChange={setEnableCityRanking} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar Cinturão da Cidade</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe o cinturão competitivo para o líder da cidade.
+              </p>
+            </div>
+            <Switch checked={enableCityBelt} onCheckedChange={setEnableCityBelt} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Visualização pública dos duelos</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permite que todos os motoristas vejam os duelos em andamento na vitrine da cidade.
+              </p>
+            </div>
+            <Switch checked={allowPublicDuelViewing} onCheckedChange={setAllowPublicDuelViewing} />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Modelo de Negócio */}
       <Card className="rounded-xl">
         <CardHeader className="pb-3">

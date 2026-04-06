@@ -27,6 +27,7 @@ import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
+import { useConfigDuelos } from "./duels/hook_config_duelos";
 
 export interface AffiliateDeal {
   id: string;
