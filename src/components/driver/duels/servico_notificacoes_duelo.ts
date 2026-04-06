@@ -70,6 +70,11 @@ const MAPEAMENTO: Record<TipoNotificacaoDuelo, MapeamentoNotificacao> = {
     corpo: () => "Mas a próxima é sua! Desafie de novo 🥊",
     referenceType: "duel_defeat",
   },
+  DUEL_DRAW: {
+    titulo: () => "Empate no duelo! 🤝",
+    corpo: () => "Vocês empataram! Pontos devolvidos. Que tal uma revanche?",
+    referenceType: "duel_draw",
+  },
   RANKING_TOP10_ENTRY: {
     titulo: () => "Você entrou no Top 10! 🌟",
     corpo: () => "Sua posição no ranking da cidade subiu!",
