@@ -540,6 +540,16 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
+      {/* Banner promo Duelos */}
+      {!debouncedSearch.trim() && driver && configDuelos.duelosAtivos && (
+        <div className="px-5 pt-4">
+          <BannerPromoDuelos
+            fontHeading={fontHeading}
+            onAbrir={() => setShowDuels(true)}
+          />
+        </div>
+      )}
+
       {/* Redeemable section */}
       {!debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
