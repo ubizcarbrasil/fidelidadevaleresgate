@@ -2,13 +2,15 @@
  * Tela de criação de desafio — seleção de adversário, período e aposta de pontos.
  */
 import React, { useState } from "react";
-import { ArrowLeft, Swords, Search, Calendar, Clock, Send, Coins, Wallet } from "lucide-react";
+import { ArrowLeft, Swords, Search, Calendar, Clock, Send, Coins, Wallet, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDuelOpponents, useCreateDuel, cleanDriverName } from "./hook_duelos";
+import { useDuelOpponents, useCreateDuel, cleanDriverName, useDriverCompetitiveProfile } from "./hook_duelos";
+import type { DuelParticipant } from "./hook_duelos";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
+import PerfilCompetitivoSheet from "./PerfilCompetitivoSheet";
 
 interface Props {
   onBack: () => void;
