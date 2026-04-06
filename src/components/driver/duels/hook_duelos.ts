@@ -237,7 +237,16 @@ export function useFinalizeDuel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { duelId: string; brandId: string; challengerCustomerId: string; challengedCustomerId: string; challengerName: string; challengedName: string }) => {
+    mutationFn: async (params: {
+      duelId: string;
+      brandId: string;
+      challengerCustomerId: string;
+      challengedCustomerId: string;
+      challengerParticipantId: string;
+      challengedParticipantId: string;
+      challengerName: string;
+      challengedName: string;
+    }) => {
       const { data, error } = await supabase.rpc("finalize_duel", { p_duel_id: params.duelId });
       if (error) throw error;
       const result = data as any;
@@ -265,30 +274,24 @@ export function useFinalizeDuel() {
       });
 
       // Notificações individuais de vitória/derrota
+      // winner_id da RPC é um participant_id, então comparamos com participant IDs
       if (result.winner_id) {
-        const winnerId = result.winner_id === result.challengerCustomerId
-          ? result.challengerCustomerId
-          : result.challengedCustomerId;
-        const loserId = winnerId === result.challengerCustomerId
-          ? result.challengedCustomerId
-          : result.challengerCustomerId;
-        const winnerName = winnerId === result.challengerCustomerId
-          ? result.challengerName
-          : result.challengedName;
-        const loserName = winnerId === result.challengerCustomerId
-          ? result.challengedName
-          : result.challengerName;
+        const isChallenger = result.winner_id === result.challengerParticipantId;
+        const winnerCustomerId = isChallenger ? result.challengerCustomerId : result.challengedCustomerId;
+        const loserCustomerId = isChallenger ? result.challengedCustomerId : result.challengerCustomerId;
+        const winnerName = isChallenger ? result.challengerName : result.challengedName;
+        const loserName = isChallenger ? result.challengedName : result.challengerName;
 
         enviarNotificacaoDuelo({
           tipo: "DUEL_VICTORY",
-          customerIds: [winnerId],
+          customerIds: [winnerCustomerId],
           duelId: result.duelId,
           nomeOponente: loserName,
         });
 
         enviarNotificacaoDuelo({
           tipo: "DUEL_DEFEAT",
-          customerIds: [loserId],
+          customerIds: [loserCustomerId],
           duelId: result.duelId,
           nomeOponente: winnerName,
         });
