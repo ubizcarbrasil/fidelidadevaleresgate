@@ -8,11 +8,6 @@ export default defineConfig(({ mode }) => {
 const isDevelopment = mode === "development";
 
 return ({
-  build: {
-    rollupOptions: {
-      input: "./index.html",
-    },
-  },
   server: {
     host: "::",
     port: 8080,
