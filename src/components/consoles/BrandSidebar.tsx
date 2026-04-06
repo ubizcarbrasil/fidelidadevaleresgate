@@ -121,6 +121,12 @@ const groups: { label: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    label: "Gamificação",
+    items: [
+      { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista", scoringFilter: "DRIVER" },
+    ],
+  },
+  {
     label: "Cashback Inteligente",
     items: [
       { key: "sidebar.gg_config", defaultTitle: "Config. Cashback", url: "/ganha-ganha-config", icon: Settings2, moduleKey: "ganha_ganha" },
