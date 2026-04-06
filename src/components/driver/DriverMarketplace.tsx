@@ -882,8 +882,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Duels overlay */}
-      {showDuels && (
-        <DuelsHub onBack={() => setShowDuels(false)} />
+      {showDuels && configDuelos.duelosAtivos && (
+        <DuelsHub onBack={() => setShowDuels(false)} configDuelos={configDuelos} />
       )}
     </div>
   );
