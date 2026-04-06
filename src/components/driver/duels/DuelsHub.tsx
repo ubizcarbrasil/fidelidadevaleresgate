@@ -10,6 +10,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useDuelParticipation, useDriverDuels } from "./hook_duelos";
 import DuelCard from "./DuelCard";
 import DuelChallengeCard from "./DuelChallengeCard";
+import NegociacaoContrapropostaCard from "./NegociacaoContrapropostaCard";
 import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
