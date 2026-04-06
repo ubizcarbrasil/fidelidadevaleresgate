@@ -23,6 +23,14 @@ export interface AppEvents {
   DUEL_DEFEAT: { brandId: string; loserCustomerId: string; opponentName: string; duelId: string };
   RANKING_TOP10_ENTRY: { brandId: string; customerId: string; position: number };
   BELT_NEW_CHAMPION: { brandId: string; championCustomerId: string; branchId: string; record: number };
+
+  // Escalabilidade futura — Etapa 8
+  SEASON_STARTED: { brandId: string; branchId: string; seasonId: string; seasonName: string };
+  SEASON_ENDED: { brandId: string; branchId: string; seasonId: string };
+  ACHIEVEMENT_UNLOCKED: { brandId: string; customerId: string; achievementKey: string };
+  FEED_EVENT_CREATED: { brandId: string; branchId: string; eventType: string };
+  DUEL_REMATCH_REQUESTED: { brandId: string; duelId: string; originalDuelId: string };
+  DUEL_PRIZE_AWARDED: { brandId: string; customerId: string; points: number; duelId: string };
 }
 
 export type AppEventName = keyof AppEvents;
