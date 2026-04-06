@@ -612,6 +612,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         </section>
       )}
 
+      {/* Duelos rolando na cidade */}
+      {!debouncedSearch.trim() && (
+        <SecaoDuelosCidade
+          branchId={branch?.id}
+          fontHeading={fontHeading}
+          onVerTodos={() => setShowDuels(true)}
+        />
+      )}
+
       {/* Resgate na Cidade */}
       {!debouncedSearch.trim() && (branch as any)?.is_city_redemption_enabled === true && (cityOffers || []).length > 0 && (
         <SecaoResgateCidade
