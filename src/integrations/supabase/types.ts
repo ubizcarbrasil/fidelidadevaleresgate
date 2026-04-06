@@ -2460,6 +2460,59 @@ export type Database = {
           },
         ]
       }
+      driver_duel_guesses: {
+        Row: {
+          created_at: string
+          customer_id: string
+          duel_id: string
+          id: string
+          predicted_winner_participant_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          duel_id: string
+          id?: string
+          predicted_winner_participant_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          duel_id?: string
+          id?: string
+          predicted_winner_participant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_duel_guesses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_guesses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_guesses_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_guesses_predicted_winner_participant_id_fkey"
+            columns: ["predicted_winner_participant_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_duel_participants: {
         Row: {
           avatar_url: string | null
@@ -7212,6 +7265,13 @@ export type Database = {
           customer_id: string
           total_ride_points: number
           total_rides: number
+        }[]
+      }
+      get_duel_guesses_summary: {
+        Args: { p_duel_id: string }
+        Returns: {
+          guess_count: number
+          participant_id: string
         }[]
       }
       get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }

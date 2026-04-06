@@ -18,6 +18,7 @@ import { cleanDriverName, type Duel } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { differenceInSeconds } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import PalpitesDuelo from "./PalpitesDuelo";
 
 interface Props {
   duel: Duel;
@@ -336,6 +337,11 @@ export default function ArenaAoVivo({ duel, onBack }: Props) {
               {formatPoints(totalBet)} pts
             </p>
           </div>
+        )}
+
+        {/* Palpites sociais */}
+        {(aoVivo || duel.status === "accepted") && (
+          <PalpitesDuelo duel={duel} />
         )}
 
         {/* Leader status */}
