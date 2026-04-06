@@ -24,10 +24,10 @@ const DEFAULT_PHRASES = [
 export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   const qc = useQueryClient();
 
-  const [enableDuels, setEnableDuels] = useState(settings.enable_driver_duels === true);
-  const [enableRanking, setEnableRanking] = useState(settings.enable_city_ranking === true);
-  const [enableBelt, setEnableBelt] = useState(settings.enable_city_belt === true);
-  const [publicViewing, setPublicViewing] = useState(settings.allow_public_duel_viewing === true);
+  const [enableDuels, setEnableDuels] = useState(settings.enable_driver_duels !== false);
+  const [enableRanking, setEnableRanking] = useState(settings.enable_city_ranking !== false);
+  const [enableBelt, setEnableBelt] = useState(settings.enable_city_belt !== false);
+  const [publicViewing, setPublicViewing] = useState(settings.allow_public_duel_viewing !== false);
   const [minDuration, setMinDuration] = useState<number>(settings.duel_min_duration_hours ?? 24);
   const [maxDuration, setMaxDuration] = useState<number>(settings.duel_max_duration_hours ?? 168);
   const [maxSimultaneous, setMaxSimultaneous] = useState<number>(settings.duel_max_simultaneous ?? 3);

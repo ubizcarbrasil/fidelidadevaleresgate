@@ -42,10 +42,10 @@ export function useConfigDuelos(branch: { branch_settings_json?: any } | null | 
   const s = branch.branch_settings_json as Record<string, unknown>;
 
   return {
-    duelosAtivos: s.enable_driver_duels === true,
-    rankingAtivo: s.enable_city_ranking === true,
-    cinturaoAtivo: s.enable_city_belt === true,
-    visualizacaoPublica: s.allow_public_duel_viewing === true,
+    duelosAtivos: s.enable_driver_duels !== false,
+    rankingAtivo: s.enable_city_ranking !== false,
+    cinturaoAtivo: s.enable_city_belt !== false,
+    visualizacaoPublica: s.allow_public_duel_viewing !== false,
     modosDuelo: Array.isArray(s.duel_modes) ? (s.duel_modes as string[]) : ["rides"],
     revanchaHabilitada: s.enable_rematch === true,
     temporadasAtivas: s.enable_seasons === true,

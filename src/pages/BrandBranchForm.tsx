@@ -145,9 +145,9 @@ export default function BrandBranchForm() {
       // Gamificação flags
       const bs = existing.branch_settings_json as Record<string, any> | null;
       if (bs && typeof bs === "object") {
-        setEnableDriverDuels(bs.enable_driver_duels === true);
-        setEnableCityRanking(bs.enable_city_ranking === true);
-        setEnableCityBelt(bs.enable_city_belt === true);
+        setEnableDriverDuels(bs.enable_driver_duels !== false);
+        setEnableCityRanking(bs.enable_city_ranking !== false);
+        setEnableCityBelt(bs.enable_city_belt !== false);
         setAllowPublicDuelViewing(bs.allow_public_duel_viewing === true);
       }
     }
