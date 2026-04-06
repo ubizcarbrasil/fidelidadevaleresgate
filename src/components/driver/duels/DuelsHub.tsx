@@ -140,14 +140,16 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
                 Desempenho
               </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowRanking(true)}
-              className="w-full gap-2"
-            >
-              <Trophy className="h-4 w-4" />
-              Ranking da Cidade
-            </Button>
+            {configDuelos?.rankingAtivo !== false && (
+              <Button
+                variant="outline"
+                onClick={() => setShowRanking(true)}
+                className="w-full gap-2"
+              >
+                <Trophy className="h-4 w-4" />
+                Ranking da Cidade
+              </Button>
+            )}
           </div>
         )}
 
