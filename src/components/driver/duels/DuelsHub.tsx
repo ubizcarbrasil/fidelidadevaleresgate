@@ -3,13 +3,14 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3 } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useDuelParticipation, useDriverDuels } from "./hook_duelos";
 import DuelCard from "./DuelCard";
 import DuelChallengeCard from "./DuelChallengeCard";
+import NegociacaoContrapropostaCard from "./NegociacaoContrapropostaCard";
 import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
@@ -42,7 +43,18 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const participantId = participant?.id || null;
 
   const pendingChallenges = useMemo(
-    () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId),
+    () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId && d.negotiation_status !== "counter_proposed"),
+    [duels, participantId]
+  );
+
+  const counterProposals = useMemo(
+    () => (duels || []).filter((d) => {
+      if (d.status !== "pending" || d.negotiation_status !== "counter_proposed") return false;
+      // Show to the person who needs to respond (NOT the one who proposed)
+      if (d.counter_proposal_by === "challenged" && participantId === d.challenger_id) return true;
+      if (d.counter_proposal_by === "challenger" && participantId === d.challenged_id) return true;
+      return false;
+    }),
     [duels, participantId]
   );
 
@@ -52,7 +64,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   );
 
   const scheduledDuels = useMemo(
-    () => (duels || []).filter((d) => d.status === "pending" && d.challenger_id === participantId),
+    () => (duels || []).filter((d) => d.status === "pending" && d.challenger_id === participantId && d.negotiation_status !== "counter_proposed"),
     [duels, participantId]
   );
 
@@ -196,7 +208,19 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           </section>
         )}
 
-        {/* Live duels */}
+        {/* Counter-proposals received */}
+        {counterProposals.length > 0 && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
+              Contrapropostas
+            </h2>
+            {counterProposals.map((d) => (
+              <NegociacaoContrapropostaCard key={d.id} duel={d} participantId={participantId} />
+            ))}
+          </section>
+        )}
+
         {liveDuels.length > 0 && (
           <section className="space-y-2">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">

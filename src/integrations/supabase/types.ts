@@ -2538,9 +2538,13 @@ export type Database = {
           branch_id: string
           brand_id: string
           challenged_id: string
+          challenged_points_bet: number
           challenged_rides_count: number
           challenger_id: string
+          challenger_points_bet: number
           challenger_rides_count: number
+          counter_proposal_by: string | null
+          counter_proposal_points: number | null
           created_at: string
           declined_at: string | null
           duel_mode: string
@@ -2548,6 +2552,9 @@ export type Database = {
           finished_at: string | null
           id: string
           is_rematch: boolean
+          negotiation_status: string
+          points_reserved: boolean
+          points_settled: boolean
           prize_points: number
           rematch_of: string | null
           season_id: string | null
@@ -2561,9 +2568,13 @@ export type Database = {
           branch_id: string
           brand_id: string
           challenged_id: string
+          challenged_points_bet?: number
           challenged_rides_count?: number
           challenger_id: string
+          challenger_points_bet?: number
           challenger_rides_count?: number
+          counter_proposal_by?: string | null
+          counter_proposal_points?: number | null
           created_at?: string
           declined_at?: string | null
           duel_mode?: string
@@ -2571,6 +2582,9 @@ export type Database = {
           finished_at?: string | null
           id?: string
           is_rematch?: boolean
+          negotiation_status?: string
+          points_reserved?: boolean
+          points_settled?: boolean
           prize_points?: number
           rematch_of?: string | null
           season_id?: string | null
@@ -2584,9 +2598,13 @@ export type Database = {
           branch_id?: string
           brand_id?: string
           challenged_id?: string
+          challenged_points_bet?: number
           challenged_rides_count?: number
           challenger_id?: string
+          challenger_points_bet?: number
           challenger_rides_count?: number
+          counter_proposal_by?: string | null
+          counter_proposal_points?: number | null
           created_at?: string
           declined_at?: string | null
           duel_mode?: string
@@ -2594,6 +2612,9 @@ export type Database = {
           finished_at?: string | null
           id?: string
           is_rematch?: boolean
+          negotiation_status?: string
+          points_reserved?: boolean
+          points_settled?: boolean
           prize_points?: number
           rematch_of?: string | null
           season_id?: string | null
@@ -7001,17 +7022,38 @@ export type Database = {
         }
         Returns: number
       }
-      create_duel_challenge: {
+      counter_propose_duel: {
         Args: {
-          p_branch_id: string
-          p_brand_id: string
-          p_challenged_customer_id: string
-          p_challenger_customer_id: string
-          p_end_at: string
-          p_start_at: string
+          p_counter_points: number
+          p_customer_id: string
+          p_duel_id: string
         }
         Returns: Json
       }
+      create_duel_challenge:
+        | {
+            Args: {
+              p_branch_id: string
+              p_brand_id: string
+              p_challenged_customer_id: string
+              p_challenger_customer_id: string
+              p_end_at: string
+              p_start_at: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_branch_id: string
+              p_brand_id: string
+              p_challenged_customer_id: string
+              p_challenger_customer_id: string
+              p_end_at: string
+              p_points_bet?: number
+              p_start_at: string
+            }
+            Returns: Json
+          }
       debit_branch_wallet: {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
@@ -7160,6 +7202,10 @@ export type Database = {
           p_customer_id: string
           p_offer_id: string
         }
+        Returns: Json
+      }
+      respond_counter_proposal: {
+        Args: { p_accept: boolean; p_customer_id: string; p_duel_id: string }
         Returns: Json
       }
       respond_to_duel: {

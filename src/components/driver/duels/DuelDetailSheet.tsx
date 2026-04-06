@@ -1,11 +1,12 @@
 /**
- * Detalhe de um duelo — placar, countdown, vencedor.
+ * Detalhe de um duelo — placar, countdown, vencedor, pontos em jogo.
  */
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Swords, Trophy, Timer, Crown } from "lucide-react";
+import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
 import { cleanDriverName, useFinalizeDuel } from "./hook_duelos";
+import { formatPoints } from "@/lib/formatPoints";
 import { format, differenceInSeconds, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -35,6 +36,8 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
 
   const isChallenger = participantId === duel.challenger_id;
   const winnerId = duel.winner_id;
+  const hasBet = (duel.challenger_points_bet || 0) > 0;
+  const totalBet = (duel.challenger_points_bet || 0) + (duel.challenged_points_bet || 0);
 
   useEffect(() => {
     if (duel.status !== "live" && duel.status !== "accepted") return;
@@ -54,7 +57,6 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
       className="fixed inset-0 z-50 flex flex-col overflow-auto"
       style={{ backgroundColor: "hsl(var(--background))" }}
     >
-      {/* Header */}
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3" style={{ backgroundColor: "hsl(var(--background))" }}>
         <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-xl" style={{ backgroundColor: "hsl(var(--muted))" }}>
           <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -79,16 +81,42 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
           </div>
         )}
 
+        {/* Points at stake */}
+        {hasBet && duel.points_reserved && (
+          <div
+            className="rounded-xl p-4 text-center"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--warning) / 0.1), hsl(var(--warning) / 0.05))",
+              border: "1px solid hsl(var(--warning) / 0.3)",
+            }}
+          >
+            <Coins className="h-6 w-6 mx-auto mb-1" style={{ color: "hsl(var(--warning))" }} />
+            <p className="text-xs text-muted-foreground">Pontos em disputa</p>
+            <p className="text-2xl font-extrabold" style={{ color: "hsl(var(--warning))" }}>
+              {formatPoints(totalBet)} pts
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {formatPoints(duel.challenger_points_bet)} pts de cada lado • Pontos reservados 🔒
+            </p>
+          </div>
+        )}
+
+        {hasBet && !duel.points_reserved && duel.status === "pending" && (
+          <div
+            className="rounded-xl p-3 text-center"
+            style={{ backgroundColor: "hsl(var(--muted) / 0.5)", border: "1px solid hsl(var(--border))" }}
+          >
+            <p className="text-xs text-muted-foreground">Aposta proposta: <strong>{formatPoints(duel.challenger_points_bet)} pts</strong> cada</p>
+            <p className="text-[10px] text-muted-foreground">Aguardando acordo para reservar pontos</p>
+          </div>
+        )}
+
         {/* Scoreboard */}
         <div
           className="rounded-2xl p-5"
-          style={{
-            backgroundColor: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-          }}
+          style={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
         >
           <div className="flex items-center justify-between">
-            {/* Challenger */}
             <div className="flex-1 text-center">
               <p className="text-xs text-muted-foreground mb-1">Desafiante</p>
               <p className="text-sm font-bold text-foreground truncate">{challengerName}</p>
@@ -101,12 +129,10 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
               )}
             </div>
 
-            {/* VS divider */}
             <div className="px-3">
               <span className="text-lg font-extrabold text-muted-foreground">×</span>
             </div>
 
-            {/* Challenged */}
             <div className="flex-1 text-center">
               <p className="text-xs text-muted-foreground mb-1">Desafiado</p>
               <p className="text-sm font-bold text-foreground truncate">{challengedName}</p>
@@ -132,11 +158,25 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
           >
             <Trophy className="h-8 w-8 mx-auto mb-2" style={{ color: "hsl(var(--warning))" }} />
             {winnerId ? (
-              <p className="text-sm font-bold text-foreground">
-                🏆 {winnerId === duel.challenger_id ? challengerName : challengedName} venceu!
-              </p>
+              <>
+                <p className="text-sm font-bold text-foreground">
+                  🏆 {winnerId === duel.challenger_id ? challengerName : challengedName} venceu!
+                </p>
+                {hasBet && duel.points_settled && (
+                  <p className="text-xs mt-1" style={{ color: "hsl(var(--success))" }}>
+                    Prêmio: +{formatPoints(totalBet)} pts
+                  </p>
+                )}
+              </>
             ) : (
-              <p className="text-sm font-bold text-foreground">🤝 Empate!</p>
+              <>
+                <p className="text-sm font-bold text-foreground">🤝 Empate!</p>
+                {hasBet && duel.points_settled && (
+                  <p className="text-xs mt-1 text-muted-foreground">
+                    Pontos devolvidos: {formatPoints(duel.challenger_points_bet)} pts para cada
+                  </p>
+                )}
+              </>
             )}
           </div>
         )}
