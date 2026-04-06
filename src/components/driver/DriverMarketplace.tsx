@@ -143,6 +143,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showLedger, setShowLedger] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const [showCityRedemptions, setShowCityRedemptions] = useState(false);
+  const [showDuels, setShowDuels] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
