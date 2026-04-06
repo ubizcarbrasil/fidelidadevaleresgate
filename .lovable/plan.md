@@ -1,48 +1,109 @@
 
-## Diagnóstico
-Do I know what the issue is? Sim.
 
-O erro atual não está mais no React nem no timeout do boot. Ele acontece antes da aplicação iniciar:
-- `index.html` faz `import("/src/main.tsx?v=" + ver)`.
-- Em preview e publicação, `/src/main.tsx` não existe como arquivo público; o build do Vite só reescreve entradas estáticas para bundles em `/assets/...`.
-- Como esse import é dinâmico e montado em runtime, ele não é transformado pelo build. O navegador então tenta carregar um módulo inválido e dispara `ENTRY_IMPORT_FAILED` / `Importing a module script failed.`.
-- Isso explica por que `main.tsx` nunca executa e por que a tela para logo no começo.
+## Módulo: Duelos entre Motoristas — Etapa 1
 
-## O que vou implementar
-1. Corrigir a entrada da aplicação em `index.html`
-- Remover o `import("/src/main.tsx?v=" + ver)`.
-- Voltar para uma entrada estática gerenciada pelo Vite.
-- Manter o bootstrap overlay e os logs de fase.
+### Visão geral
+Criar um sistema de duelos entre motoristas da mesma cidade, acessível pelo painel do motorista (`/driver`). O motorista pode ativar participação, desafiar outro, aceitar/recusar desafios, e acompanhar o placar em tempo real baseado em corridas concluídas.
 
-2. Criar uma entrada segura para o boot
-- Usar um arquivo de entrada dedicado (ex.: `src/entry-client.ts`) para:
-  - marcar `ENTRY_IMPORT_START`
-  - importar `main.tsx` com import estático
-- Assim o Vite gera o bundle correto e o navegador passa a carregar o asset compilado certo.
+---
 
-3. Remover o cache-busting que quebrou o build
-- Parar de usar `?v=` no caminho de `/src/main.tsx`.
-- Deixar o cache-busting com o hash nativo do Vite.
-- O meta `app-version` pode continuar apenas para diagnóstico.
+### 1. Banco de dados — 2 novas tabelas + 1 função RPC
 
-4. Blindar o fluxo de PWA para não repetir o problema
-- Ajustar `vite.config.ts` para não depender de registro automático de service worker em contextos de preview/iframe.
-- Se necessário, trocar para registro manual e condicional.
-- Manter apenas limpeza pontual de caches antigos, sem voltar ao desregistro global em todo carregamento.
+**Tabela `driver_duel_participants`**
+- `id` (uuid, PK)
+- `customer_id` (uuid, FK → customers.id, NOT NULL) — o motorista
+- `branch_id` (uuid, FK → branches.id, NOT NULL) — cidade
+- `brand_id` (uuid, FK → brands.id, NOT NULL)
+- `duels_enabled` (boolean, default false)
+- `public_nickname` (text, nullable)
+- `avatar_url` (text, nullable)
+- `created_at`, `updated_at` (timestamptz)
+- UNIQUE(customer_id)
 
-5. Recuperação para clientes presos na versão quebrada
-- Adicionar uma recuperação controlada para limpar cache/SW antigos onde ainda existir a versão ruim em cache.
-- Essa recuperação será escopada para não recriar o ciclo de atualização quebrado.
+**Tabela `driver_duels`**
+- `id` (uuid, PK)
+- `branch_id`, `brand_id` (uuid, FK, NOT NULL)
+- `challenger_id` (uuid, FK → driver_duel_participants.id)
+- `challenged_id` (uuid, FK → driver_duel_participants.id)
+- `start_at`, `end_at` (timestamptz, NOT NULL)
+- `status` (text, NOT NULL, default 'pending') — valores: pending, accepted, declined, live, finished, canceled
+- `challenger_rides_count` (int, default 0)
+- `challenged_rides_count` (int, default 0)
+- `winner_id` (uuid, FK → driver_duel_participants.id, nullable)
+- `accepted_at`, `declined_at`, `finished_at` (timestamptz, nullable)
+- `created_at`, `updated_at` (timestamptz)
 
-## Arquivos envolvidos
-- `index.html`
-- `vite.config.ts`
-- `src/main.tsx`
-- novo arquivo de entrada do cliente, se necessário
-- possivelmente o fluxo de PWA/registro do SW
+**Trigger de validação de status** (em vez de CHECK constraint)
 
-## Validação
-- Abrir preview e URL publicada.
-- Confirmar a sequência no console: `ENTRY_IMPORT_START` → `main.tsx executing` → `REACT_MOUNT_START` → `APP_MOUNTED`.
-- Confirmar que `ENTRY_IMPORT_FAILED` desapareceu.
-- Testar recarga no mobile e acesso direto em `/` e `/index`.
+**Função RPC `count_duel_rides`** — conta corridas concluídas de um motorista dentro de uma janela de tempo e cidade:
+```sql
+SELECT COUNT(*) FROM machine_rides
+WHERE driver_customer_id = p_customer_id
+  AND branch_id = p_branch_id
+  AND ride_status = 'FINALIZED'
+  AND finalized_at >= p_start_at
+  AND finalized_at <= p_end_at
+```
+
+**RLS**: Leitura pública (anon) filtrada por brand_id/branch_id. Escrita via security definer functions.
+
+**Funções RPC adicionais**:
+- `toggle_duel_participation(p_customer_id, p_branch_id, p_brand_id, p_enabled)` — ativa/desativa participação
+- `create_duel_challenge(p_challenger_customer_id, p_challenged_customer_id, p_branch_id, p_brand_id, p_start_at, p_end_at)` — cria desafio com validações
+- `respond_to_duel(p_duel_id, p_customer_id, p_accept boolean)` — aceitar ou "arregar"
+- `finalize_duel(p_duel_id)` — apura vencedor contando corridas
+
+---
+
+### 2. Componentes React — dentro de `src/components/driver/duels/`
+
+**`DuelsHub.tsx`** — Tela principal
+- Toggle "Participar dos Duelos"
+- Botão "Desafiar Motorista"
+- Seções: Duelos ao Vivo, Agendados, Histórico
+- Cards com nomes, placar, status, tempo restante
+
+**`CreateDuelSheet.tsx`** — Bottom sheet para criar desafio
+- Lista de motoristas da mesma cidade com `duels_enabled = true`
+- Seletores de data/hora início e fim
+- Resumo e confirmação
+
+**`DuelChallengeCard.tsx`** — Card de desafio recebido
+- Nome do desafiante, período
+- Botões "Aceitar" e "Arregar" (tom leve/divertido)
+
+**`DuelDetailSheet.tsx`** — Detalhe do duelo
+- Nomes dos dois motoristas
+- Placar atual (corridas concluídas)
+- Status e tempo restante (countdown)
+- Vencedor ao final
+
+**`DuelCard.tsx`** — Card resumido para listas
+
+---
+
+### 3. Integração no painel do motorista
+
+- Adicionar aba/seção "Duelos" no `DriverMarketplace.tsx` (nova tab na navegação inferior ou seção no perfil)
+- Acessível apenas quando o motorista está logado e tem `branch_id` definido
+- Não depende de módulo administrativo — é feature do painel público do motorista
+
+---
+
+### 4. Apuração de corridas
+
+- Usar a tabela `machine_rides` existente
+- Filtrar por `driver_customer_id`, `branch_id`, `ride_status = 'FINALIZED'`, `finalized_at` dentro do intervalo
+- Nenhum dado sensível (rota, passageiro, valor) é exposto — apenas contagem
+
+---
+
+### Arquivos envolvidos
+- Migration SQL (2 tabelas, trigger, 4 RPCs)
+- `src/components/driver/duels/DuelsHub.tsx` (novo)
+- `src/components/driver/duels/CreateDuelSheet.tsx` (novo)
+- `src/components/driver/duels/DuelChallengeCard.tsx` (novo)
+- `src/components/driver/duels/DuelDetailSheet.tsx` (novo)
+- `src/components/driver/duels/DuelCard.tsx` (novo)
+- `src/components/driver/DriverMarketplace.tsx` (adicionar navegação para Duelos)
+
