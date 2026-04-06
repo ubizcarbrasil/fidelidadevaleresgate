@@ -868,6 +868,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           onBack={() => setShowCityRedemptions(false)}
         />
       )}
+
+      {/* Duels overlay */}
+      {showDuels && (
+        <DuelsHub onBack={() => setShowDuels(false)} />
+      )}
     </div>
   );
 }
