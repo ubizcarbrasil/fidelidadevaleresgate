@@ -1,35 +1,27 @@
 
 
-## Problemas identificados
+## Plano: Ativar duelos por padrão para todas as cidades
 
-A tela mostra "Nenhuma cidade selecionada" e o menu exibe o texto cru "sidebar.gamificacao" em vez de "Duelos & Ranking". São dois bugs:
+### Problema atual
+O hook `useConfigDuelos` retorna `false` como padrão para `duelosAtivos`, `rankingAtivo` e `cinturaoAtivo` quando a cidade não tem configuração explícita no `branch_settings_json`. Isso exige que o admin ative manualmente cada recurso em cada cidade.
 
-1. **Label faltando**: A chave `sidebar.gamificacao` não existe no mapa `DEFAULT_LABELS` em `src/hooks/useMenuLabels.ts`, então o `getLabel()` retorna a própria chave como fallback.
+### Solução
+Inverter a lógica dos defaults: em vez de desativado por padrão, ativar por padrão. O admin ainda poderá desativar manualmente se quiser.
 
-2. **Sem seletor de cidade para Brand Admin**: A `GamificacaoAdminPage` depende de `currentBranchId` (disponível apenas para franqueados/Branch Admin). Quando o empreendedor (Brand Admin) acessa, não há `currentBranchId`, então a query nem executa e cai no fallback "Nenhuma cidade selecionada". A página precisa de um seletor de cidade para o escopo BRAND.
+### Arquivos a modificar
 
-## Correções
+**1. `src/components/driver/duels/hook_config_duelos.ts`**
+- Alterar `DEFAULTS` para `duelosAtivos: true`, `rankingAtivo: true`, `cinturaoAtivo: true`, `visualizacaoPublica: true`
+- Alterar a lógica de leitura: em vez de `s.enable_driver_duels === true`, usar `s.enable_driver_duels !== false` (ou seja, é ativo a menos que explicitamente desativado)
 
-### 1. Adicionar label no mapa de defaults
+**2. `src/pages/BrandBranchForm.tsx`**
+- Alterar os `useState` iniciais de `enableDriverDuels`, `enableCityRanking`, `enableCityBelt` para `true` por padrão (quando não há configuração existente)
 
-**Arquivo**: `src/hooks/useMenuLabels.ts`
+**3. `src/components/admin/gamificacao/ConfiguracaoModulo.tsx`**
+- Alterar os `useState` iniciais para considerar `!== false` em vez de `=== true`, mantendo coerência com a nova lógica
 
-Adicionar na seção `admin` do `DEFAULT_LABELS`:
-```ts
-"sidebar.gamificacao": "Duelos & Ranking",
-```
-
-### 2. Adicionar seletor de cidade na GamificacaoAdminPage
-
-**Arquivo**: `src/pages/GamificacaoAdminPage.tsx`
-
-Quando `consoleScope === "BRAND"` e não há `currentBranchId`, buscar a lista de cidades da marca e exibir um `<Select>` para o usuário escolher qual cidade gerenciar. Usar `useState` para armazenar o `branchId` selecionado e passar para a query existente.
-
-Fluxo:
-- Se `consoleScope === "BRANCH"` → usa `currentBranchId` direto (comportamento atual)
-- Se `consoleScope === "BRAND"` → busca cidades da marca, exibe dropdown, usa o ID selecionado
-
-### Arquivos modificados
-- `src/hooks/useMenuLabels.ts` — adicionar `"sidebar.gamificacao": "Duelos & Ranking"`
-- `src/pages/GamificacaoAdminPage.tsx` — adicionar seletor de cidade para Brand Admin
+### Comportamento resultante
+- Cidades **sem** configuração explícita → duelos, ranking e cinturão **ativos**
+- Cidades com `enable_driver_duels: false` explícito → duelos **desativados**
+- Admin pode desativar a qualquer momento pela tela de Configuração
 
