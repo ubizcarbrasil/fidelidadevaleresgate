@@ -2,7 +2,7 @@
  * Tela principal do módulo de Duelos entre Motoristas.
  */
 import React, { useState, useMemo } from "react";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -13,6 +13,7 @@ import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
+import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
 import type { ConfigDuelos } from "./hook_config_duelos";
@@ -30,6 +31,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const [showCreate, setShowCreate] = useState(false);
   const [showDesempenho, setShowDesempenho] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
+  const [showCinturao, setShowCinturao] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
@@ -70,6 +72,10 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
 
   if (showRanking) {
     return <RankingCidadeSheet onBack={() => setShowRanking(false)} />;
+  }
+
+  if (showCinturao) {
+    return <CinturaoCidadeSheet onBack={() => setShowCinturao(false)} />;
   }
 
   if (selectedDuelData) {
@@ -148,6 +154,17 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
               >
                 <Trophy className="h-4 w-4" />
                 Ranking da Cidade
+              </Button>
+            )}
+            {configDuelos?.cinturaoAtivo !== false && (
+              <Button
+                variant="outline"
+                onClick={() => setShowCinturao(true)}
+                className="w-full gap-2"
+                style={{ borderColor: "hsl(45 100% 50% / 0.3)", color: "hsl(45, 100%, 50%)" }}
+              >
+                <Crown className="h-4 w-4" />
+                Cinturão da Cidade
               </Button>
             )}
           </div>
