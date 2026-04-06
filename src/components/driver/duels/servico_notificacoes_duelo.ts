@@ -40,6 +40,11 @@ const MAPEAMENTO: Record<TipoNotificacaoDuelo, MapeamentoNotificacao> = {
     corpo: (nome) => `${nome || "O adversário"} arregou do seu desafio`,
     referenceType: "duel_declined",
   },
+  DUEL_COUNTER_PROPOSAL: {
+    titulo: () => "Contraproposta recebida! 💬",
+    corpo: (nome) => `${nome || "O adversário"} fez uma contraproposta de pontos`,
+    referenceType: "duel_counter_proposal",
+  },
   DUEL_STARTED: {
     titulo: () => "Duelo começou! 🔥",
     corpo: () => "Seu duelo está ao vivo. Bora correr!",
