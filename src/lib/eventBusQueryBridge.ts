@@ -10,6 +10,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { eventBus, type AppEventName } from "./eventBus";
 import { queryKeys } from "./queryKeys";
 
+const DUEL_INVALIDATIONS = [["driver-duels"], ["duel-participant"]] as const;
+
 const EVENT_INVALIDATION_MAP: Record<AppEventName, readonly (readonly string[])[]> = {
   EARNING_CREATED: [
     queryKeys.loyalty.earnings.all,
@@ -39,6 +41,17 @@ const EVENT_INVALIDATION_MAP: Record<AppEventName, readonly (readonly string[])[
     queryKeys.customers.all,
     queryKeys.dashboard.all,
   ],
+  // Duelos
+  DUEL_CHALLENGE_RECEIVED: DUEL_INVALIDATIONS,
+  DUEL_CHALLENGE_ACCEPTED: DUEL_INVALIDATIONS,
+  DUEL_CHALLENGE_DECLINED: DUEL_INVALIDATIONS,
+  DUEL_STARTED: DUEL_INVALIDATIONS,
+  DUEL_LEAD_CHANGE: DUEL_INVALIDATIONS,
+  DUEL_FINISHED: DUEL_INVALIDATIONS,
+  DUEL_VICTORY: DUEL_INVALIDATIONS,
+  DUEL_DEFEAT: DUEL_INVALIDATIONS,
+  RANKING_TOP10_ENTRY: [],
+  BELT_NEW_CHAMPION: [],
 };
 
 let initialized = false;
