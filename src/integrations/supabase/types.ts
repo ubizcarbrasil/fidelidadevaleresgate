@@ -1310,6 +1310,78 @@ export type Database = {
           },
         ]
       }
+      city_feed_events: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          event_type: string
+          id: string
+          metadata_json: Json | null
+          title: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          metadata_json?: Json | null
+          title: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata_json?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_feed_events_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_feed_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_feed_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_feed_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_feed_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           branch_id: string
@@ -2316,6 +2388,78 @@ export type Database = {
           },
         ]
       }
+      driver_achievements: {
+        Row: {
+          achieved_at: string
+          achievement_key: string
+          achievement_label: string
+          branch_id: string
+          brand_id: string
+          customer_id: string
+          icon_name: string | null
+          id: string
+          metadata_json: Json | null
+        }
+        Insert: {
+          achieved_at?: string
+          achievement_key: string
+          achievement_label: string
+          branch_id: string
+          brand_id: string
+          customer_id: string
+          icon_name?: string | null
+          id?: string
+          metadata_json?: Json | null
+        }
+        Update: {
+          achieved_at?: string
+          achievement_key?: string
+          achievement_label?: string
+          branch_id?: string
+          brand_id?: string
+          customer_id?: string
+          icon_name?: string | null
+          id?: string
+          metadata_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_achievements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_achievements_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_achievements_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_achievements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_achievements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_duel_participants: {
         Row: {
           avatar_url: string | null
@@ -2399,9 +2543,14 @@ export type Database = {
           challenger_rides_count: number
           created_at: string
           declined_at: string | null
+          duel_mode: string
           end_at: string
           finished_at: string | null
           id: string
+          is_rematch: boolean
+          prize_points: number
+          rematch_of: string | null
+          season_id: string | null
           start_at: string
           status: string
           updated_at: string
@@ -2417,9 +2566,14 @@ export type Database = {
           challenger_rides_count?: number
           created_at?: string
           declined_at?: string | null
+          duel_mode?: string
           end_at: string
           finished_at?: string | null
           id?: string
+          is_rematch?: boolean
+          prize_points?: number
+          rematch_of?: string | null
+          season_id?: string | null
           start_at: string
           status?: string
           updated_at?: string
@@ -2435,9 +2589,14 @@ export type Database = {
           challenger_rides_count?: number
           created_at?: string
           declined_at?: string | null
+          duel_mode?: string
           end_at?: string
           finished_at?: string | null
           id?: string
+          is_rematch?: boolean
+          prize_points?: number
+          rematch_of?: string | null
+          season_id?: string | null
           start_at?: string
           status?: string
           updated_at?: string
@@ -2477,6 +2636,20 @@ export type Database = {
             columns: ["challenger_id"]
             isOneToOne: false
             referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_rematch_of_fkey"
+            columns: ["rematch_of"]
+            isOneToOne: false
+            referencedRelation: "driver_duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_seasons"
             referencedColumns: ["id"]
           },
           {
@@ -2781,6 +2954,67 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      gamification_seasons: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          config_json: Json | null
+          created_at: string
+          end_at: string
+          id: string
+          name: string
+          start_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          config_json?: Json | null
+          created_at?: string
+          end_at: string
+          id?: string
+          name: string
+          start_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          config_json?: Json | null
+          created_at?: string
+          end_at?: string
+          id?: string
+          name?: string
+          start_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gamification_seasons_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gamification_seasons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gamification_seasons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ganha_ganha_billing_events: {
         Row: {
