@@ -86,6 +86,13 @@ Deno.serve(async (req) => {
         branchesAffected.set(duel.branch_id, duel.brand_id);
         logger.info("Duel finalized", { duel_id: duel.id, winner_id: result.winner_id });
 
+        // 2.5 Grant achievements
+        try {
+          await sb.rpc("grant_duel_achievements", { p_duel_id: duel.id });
+        } catch (achErr) {
+          logger.error("Failed to grant achievements", { duel_id: duel.id, error: String(achErr) });
+        }
+
         // 3. Send notifications to participants
         const challenger = duel.challenger as any;
         const challenged = duel.challenged as any;

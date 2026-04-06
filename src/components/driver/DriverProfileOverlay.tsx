@@ -129,13 +129,32 @@ export default function DriverProfileOverlay({ fontHeading, onBack }: Props) {
           )}
         </div>
 
+        {/* Conquistas */}
+        <div className="mx-4 mt-5">
+          <Button
+            variant="outline"
+            className="w-full h-11 rounded-xl gap-2 border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+            onClick={() => setConquistasOpen(true)}
+          >
+            <Trophy className="h-4 w-4" />
+            Minhas Conquistas
+          </Button>
+        </div>
+
         {/* Logout */}
-        <div className="mx-4 mt-8">
+        <div className="mx-4 mt-4">
           <Button variant="outline" className="w-full h-11 rounded-xl gap-2" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Sair da conta
           </Button>
         </div>
+
+        <ConquistasMotoristaSheet
+          open={conquistasOpen}
+          onOpenChange={setConquistasOpen}
+          customerId={driver?.id}
+          fontHeading={fontHeading}
+        />
       </div>
     </div>
   );
