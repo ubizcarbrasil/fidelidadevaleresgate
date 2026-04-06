@@ -147,11 +147,28 @@ export function useCreateDuel() {
       if (error) throw error;
       const result = data as any;
       if (!result?.success) throw new Error(result?.error || "Erro ao criar desafio");
-      return result;
+      return { ...result, challengedCustomerId: params.challengedCustomerId };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       toast.success("Desafio enviado! 🥊");
+
+      const driverName = cleanDriverName(driver?.name);
+      const duelId = result.duel_id;
+
+      eventBus.emit("DUEL_CHALLENGE_RECEIVED", {
+        brandId: driver!.brand_id,
+        challengedCustomerId: result.challengedCustomerId,
+        challengerName: driverName,
+        duelId,
+      });
+
+      enviarNotificacaoDuelo({
+        tipo: "DUEL_CHALLENGE_RECEIVED",
+        customerIds: [result.challengedCustomerId],
+        duelId,
+        nomeOponente: driverName,
+      });
     },
     onError: (err: any) => toast.error(err.message || "Erro ao criar desafio"),
   });
