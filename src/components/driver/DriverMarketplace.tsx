@@ -26,6 +26,7 @@ import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import DuelsHub from "./duels/DuelsHub";
+import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 
 export interface AffiliateDeal {
   id: string;
@@ -609,6 +610,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             );
           })()}
         </section>
+      )}
+
+      {/* Duelos rolando na cidade */}
+      {!debouncedSearch.trim() && (
+        <SecaoDuelosCidade
+          branchId={branch?.id}
+          fontHeading={fontHeading}
+          onVerTodos={() => setShowDuels(true)}
+        />
       )}
 
       {/* Resgate na Cidade */}
