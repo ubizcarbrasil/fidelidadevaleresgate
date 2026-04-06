@@ -101,7 +101,7 @@ export default function DuelChallengeCard({ duel }: Props) {
       {!showCounter ? (
         <div className="flex gap-2">
           <Button
-            onClick={() => respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
+            onClick={() => hasBet ? setShowConfirm(true) : respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
             disabled={responding || proposing || (hasBet && balance < duel.challenger_points_bet)}
             className="flex-1 gap-1.5"
             size="sm"
