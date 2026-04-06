@@ -179,7 +179,7 @@ export function useRespondDuel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { duelId: string; accept: boolean }) => {
+    mutationFn: async (params: { duelId: string; accept: boolean; challengerCustomerId?: string; challengerName?: string }) => {
       if (!driver) throw new Error("Sem sessão");
       const { data, error } = await supabase.rpc("respond_to_duel", {
         p_duel_id: params.duelId,
@@ -194,6 +194,40 @@ export function useRespondDuel() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       toast.success(vars.accept ? "Desafio aceito! 💪" : "Você arregou... 😅");
+
+      const driverName = cleanDriverName(driver?.name);
+
+      if (vars.accept) {
+        eventBus.emit("DUEL_CHALLENGE_ACCEPTED", {
+          brandId: driver!.brand_id,
+          challengerCustomerId: vars.challengerCustomerId || "",
+          challengedName: driverName,
+          duelId: vars.duelId,
+        });
+        if (vars.challengerCustomerId) {
+          enviarNotificacaoDuelo({
+            tipo: "DUEL_CHALLENGE_ACCEPTED",
+            customerIds: [vars.challengerCustomerId],
+            duelId: vars.duelId,
+            nomeOponente: driverName,
+          });
+        }
+      } else {
+        eventBus.emit("DUEL_CHALLENGE_DECLINED", {
+          brandId: driver!.brand_id,
+          challengerCustomerId: vars.challengerCustomerId || "",
+          challengedName: driverName,
+          duelId: vars.duelId,
+        });
+        if (vars.challengerCustomerId) {
+          enviarNotificacaoDuelo({
+            tipo: "DUEL_CHALLENGE_DECLINED",
+            customerIds: [vars.challengerCustomerId],
+            duelId: vars.duelId,
+            nomeOponente: driverName,
+          });
+        }
+      }
     },
     onError: (err: any) => toast.error(err.message || "Erro ao responder"),
   });
