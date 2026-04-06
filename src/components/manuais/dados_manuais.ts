@@ -1106,6 +1106,70 @@ export const gruposManuais: GrupoManual[] = [
       },
     ],
   },
+  {
+    categoria: "Gamificação — Administração",
+    icone: "Swords",
+    manuais: [
+      {
+        id: "gamif-admin-visao-geral",
+        titulo: "Visão Geral da Gamificação",
+        descricao: "Entenda o módulo completo de gamificação: duelos entre motoristas, ranking mensal e cinturão da cidade. Saiba como cada funcionalidade funciona e como ativá-las.",
+        comoAtivar: "Acesse 'Gamificação' no menu lateral. O módulo está disponível para cidades com scoring model de motoristas.",
+        passos: [
+          "Acesse 'Gamificação' no menu lateral.",
+          "O módulo inclui 5 abas: Configuração, Duelos, Ranking, Cinturão e Moderação.",
+          "Na aba Configuração, ative as funcionalidades desejadas.",
+          "Acompanhe as estatísticas gerais no topo da página.",
+          "Monitore a atividade em cada aba individualmente.",
+        ],
+        dicas: [
+          "A gamificação aumenta significativamente o engajamento dos motoristas.",
+          "Comece ativando apenas duelos e observe o impacto antes de ativar tudo.",
+          "O módulo respeita a privacidade — dados operacionais nunca são expostos.",
+        ],
+        rota: "/gamificacao-admin",
+      },
+      {
+        id: "gamif-admin-regras-privacidade",
+        titulo: "Regras de Privacidade e Anonimato",
+        descricao: "Entenda como o módulo de gamificação protege a privacidade dos motoristas. Dados operacionais são mantidos em sigilo enquanto a competição acontece de forma segura.",
+        comoAtivar: "As regras de privacidade são aplicadas automaticamente.",
+        passos: [
+          "Motoristas usam apelidos públicos — o nome real nunca é exibido nos duelos.",
+          "A contagem de corridas usa apenas dados agregados (total), sem detalhes de rotas ou valores.",
+          "Apenas corridas com status FINALIZED são contabilizadas.",
+          "A API RPC `count_duel_rides` retorna apenas o número total, sem expor dados individuais.",
+          "Administradores podem moderar apelidos inadequados na aba Moderação.",
+        ],
+        dicas: [
+          "O anonimato total garante que motoristas se sintam seguros para competir.",
+          "Nenhum dado financeiro ou de rota é compartilhado entre participantes.",
+          "Em caso de dúvida sobre privacidade, consulte a política de dados da plataforma.",
+        ],
+        rota: "/gamificacao-admin",
+      },
+      {
+        id: "gamif-admin-duvidas-frequentes",
+        titulo: "Dúvidas Frequentes (FAQ)",
+        descricao: "Respostas para as perguntas mais comuns sobre o módulo de gamificação, incluindo contagem de corridas, limites e resolução de problemas.",
+        comoAtivar: "Consulte este manual sempre que tiver dúvidas sobre o funcionamento.",
+        passos: [
+          "Como são contadas as corridas? → Apenas corridas FINALIZED dentro do período do duelo.",
+          "E se der empate? → Ambos motoristas são considerados vencedores.",
+          "Motorista pode recusar um duelo? → Sim, sem nenhuma penalidade.",
+          "Quantos duelos simultâneos? → Configurável (padrão: 3 por motorista).",
+          "O ranking reseta todo mês? → Depende da configuração da cidade.",
+          "Quem pode ver os duelos? → Depende do toggle 'Visualização pública'.",
+        ],
+        dicas: [
+          "Incentive motoristas a experimentarem pelo menos um duelo curto (24h).",
+          "Em caso de problemas técnicos, verifique se o scoring model da cidade inclui motoristas.",
+          "O módulo funciona melhor com pelo menos 5 motoristas ativos na cidade.",
+        ],
+        rota: "/gamificacao-admin",
+      },
+    ],
+  },
 ];
 
 // Grupo de manuais do franqueado (Achadinhos Motorista)

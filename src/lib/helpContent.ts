@@ -858,6 +858,76 @@ const helpContent: Record<string, HelpEntry> = {
       },
     ],
   },
+
+  /* ═══════════════════════════════════════════════
+     GAMIFICAÇÃO — DUELOS ENTRE MOTORISTAS
+     ═══════════════════════════════════════════════ */
+  "/gamificacao-admin": {
+    pageTitle: "Gamificação — Duelos entre Motoristas",
+    sections: [
+      {
+        title: "Configuração do Módulo",
+        summary: "Ative e configure duelos, ranking e cinturão individualmente para cada cidade.",
+        steps: [
+          "Na aba 'Configuração', use os toggles para ativar ou desativar cada funcionalidade.",
+          "Defina a duração mínima e máxima dos duelos em horas.",
+          "Configure o número máximo de duelos simultâneos por motorista.",
+          "Escolha a métrica de competição: corridas ou pontos.",
+          "Personalize as frases de recusa com humor leve.",
+          "Clique em 'Salvar configuração' para aplicar.",
+        ],
+        tips: [
+          "Cada funcionalidade é independente — ative apenas o que fizer sentido para sua cidade.",
+          "Comece com duelos curtos (24h) para testar o engajamento.",
+        ],
+      },
+      {
+        title: "Gerenciamento de Duelos",
+        summary: "Acompanhe todos os duelos criados na cidade, filtre por status e monitore placares.",
+        steps: [
+          "Acesse a aba 'Duelos' para ver todos os desafios.",
+          "Duelos são organizados por status: Pendente, Ao Vivo, Encerrado, Recusado.",
+          "Placares ao vivo são atualizados automaticamente a cada 30 segundos.",
+          "Apenas corridas FINALIZED dentro do período do duelo são contabilizadas.",
+        ],
+        tips: [
+          "A contagem de corridas é totalmente automática — não é necessária intervenção manual.",
+          "Dados operacionais dos motoristas são preservados em sigilo.",
+        ],
+      },
+      {
+        title: "Ranking e Cinturão",
+        summary: "Acompanhe o ranking mensal dos motoristas e o campeão do cinturão da cidade.",
+        steps: [
+          "Na aba 'Ranking', veja a classificação dos motoristas por corridas ou pontos.",
+          "Na aba 'Cinturão', visualize o campeão atual e seu recorde.",
+          "O cinturão é atualizado automaticamente quando um novo recordista surge.",
+        ],
+        tips: [
+          "Divulgue o top 3 do ranking e o campeão do cinturão para aumentar o engajamento.",
+          "Motoristas usam apelidos públicos, preservando a identidade real.",
+        ],
+      },
+      {
+        title: "Moderação de Apelidos",
+        summary: "Edite apelidos públicos inadequados para manter um ambiente respeitoso.",
+        steps: [
+          "Na aba 'Moderação', visualize todos os apelidos dos motoristas participantes.",
+          "Identifique e edite apelidos ofensivos ou inadequados.",
+          "As alterações são aplicadas imediatamente.",
+        ],
+      },
+      {
+        title: "Privacidade e Segurança",
+        summary: "O módulo preserva completamente a privacidade dos dados operacionais dos motoristas.",
+        steps: [
+          "Motoristas competem usando apelidos — nomes reais não são exibidos.",
+          "Apenas totais agregados de corridas são usados, sem detalhes de rotas ou valores.",
+          "A API retorna somente contagens, sem expor dados individuais de viagens.",
+        ],
+      },
+    ],
+  },
 };
 
 export function getHelpForRoute(pathname: string): HelpEntry | null {

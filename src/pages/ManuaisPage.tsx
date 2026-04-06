@@ -7,7 +7,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 
 const iconesPorNome: Record<string, any> = {
-  Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2,
+  Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2, Swords,
 };
 
 export default function ManuaisPage() {

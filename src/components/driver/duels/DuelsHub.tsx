@@ -97,6 +97,15 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           <Swords className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
           Duelos
         </h1>
+        <div className="flex-1" />
+        <button
+          onClick={() => setShowAjuda(true)}
+          className="h-9 w-9 flex items-center justify-center rounded-xl"
+          style={{ backgroundColor: "hsl(var(--muted))" }}
+          aria-label="Como funciona?"
+        >
+          <HelpCircle className="h-5 w-5 text-muted-foreground" />
+        </button>
       </header>
 
       <div className="flex-1 px-4 pb-8 space-y-5 max-w-lg mx-auto w-full">
