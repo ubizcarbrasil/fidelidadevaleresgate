@@ -81,7 +81,7 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
 
       <div className="flex gap-2">
         <Button
-          onClick={() => respondCounter({ duelId: duel.id, accept: true, opponentCustomerId })}
+          onClick={() => setShowConfirm(true)}
           disabled={isPending}
           className="flex-1 gap-1.5"
           size="sm"
