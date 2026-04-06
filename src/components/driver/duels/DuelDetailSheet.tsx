@@ -2,13 +2,16 @@
  * Detalhe de um duelo — placar, countdown, vencedor, pontos em jogo.
  */
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins } from "lucide-react";
+import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
 import { cleanDriverName, useFinalizeDuel } from "./hook_duelos";
+import { useDuelRating } from "./hook_avaliacao_duelo";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format, differenceInSeconds, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import AvaliacaoDueloSheet from "./AvaliacaoDueloSheet";
 
 interface Props {
   duel: Duel;
