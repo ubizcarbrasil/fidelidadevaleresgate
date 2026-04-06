@@ -1,4 +1,4 @@
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, PackageSearch, BarChart3, Bell, ChevronRight, BookOpen, ShoppingCart, FolderHeart } from "lucide-react";
+import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, PackageSearch, BarChart3, Bell, ChevronRight, BookOpen, ShoppingCart, FolderHeart, Swords } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,6 +87,13 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
       { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
       { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
       { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
+    ],
+  },
+  {
+    label: "Gamificação",
+    scoringFilter: "DRIVER",
+    items: [
+      { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista" },
     ],
   },
   {
