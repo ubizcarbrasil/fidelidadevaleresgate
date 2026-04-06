@@ -31,6 +31,7 @@ export default function PerfilCompetitivoSheet({ participant, onBack }: Props) {
   const name = cleanDriverName((participant.customers as any)?.name);
   const nickname = participant.public_nickname;
   const { data: profile, isLoading } = useDriverCompetitiveProfile(participant.customer_id);
+  const { data: reputation } = useDriverReputation(participant.customer_id);
 
   return (
     <div
