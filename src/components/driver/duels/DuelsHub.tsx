@@ -115,12 +115,22 @@ export default function DuelsHub({ onBack }: Props) {
           )}
         </div>
 
-        {/* Create challenge button */}
+        {/* Action buttons */}
         {isEnabled && (
-          <Button onClick={() => setShowCreate(true)} className="w-full gap-2">
-            <Plus className="h-4 w-4" />
-            Desafiar Motorista
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
+              <Plus className="h-4 w-4" />
+              Desafiar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDesempenho(true)}
+              className="gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Meu Desempenho
+            </Button>
+          </div>
         )}
 
         {/* Pending challenges received */}
