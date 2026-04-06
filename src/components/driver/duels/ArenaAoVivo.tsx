@@ -339,6 +339,11 @@ export default function ArenaAoVivo({ duel, onBack }: Props) {
           </div>
         )}
 
+        {/* Palpites sociais */}
+        {(aoVivo || duel.status === "accepted") && (
+          <PalpitesDuelo duel={duel} />
+        )}
+
         {/* Leader status */}
         {aFrente && aoVivo && (
           <div
