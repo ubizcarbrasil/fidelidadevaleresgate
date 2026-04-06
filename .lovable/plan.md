@@ -1,39 +1,35 @@
 
 
-## Diagnóstico: Timeout `BOOT_HTML_READY` na versão publicada
+## Problemas identificados
 
-### Causa raiz
+A tela mostra "Nenhuma cidade selecionada" e o menu exibe o texto cru "sidebar.gamificacao" em vez de "Duelos & Ranking". São dois bugs:
 
-O **Service Worker do PWA** (gerado pelo `vite-plugin-pwa`) está servindo assets JavaScript cacheados de um deploy anterior. Quando o build gera novos hashes de arquivo (ex: `entry-client-abc123.js` → `entry-client-def456.js`), o SW tenta servir o hash antigo do cache — que pode não existir mais ou estar corrompido. Resultado: o `<script type="module">` nunca executa, a fase fica em `BOOT_HTML_READY` e o timeout dispara.
+1. **Label faltando**: A chave `sidebar.gamificacao` não existe no mapa `DEFAULT_LABELS` em `src/hooks/useMenuLabels.ts`, então o `getLabel()` retorna a própria chave como fallback.
 
-O script de recuperação no `index.html` (linhas 88-109) tenta corrigir isso fazendo `unregister()` + `caches.delete()` + reload. Porém, o `unregister()` **não desativa o SW imediatamente** — ele continua ativo até a próxima navegação. Então o reload é interceptado pelo mesmo SW quebrado, criando um ciclo.
+2. **Sem seletor de cidade para Brand Admin**: A `GamificacaoAdminPage` depende de `currentBranchId` (disponível apenas para franqueados/Branch Admin). Quando o empreendedor (Brand Admin) acessa, não há `currentBranchId`, então a query nem executa e cai no fallback "Nenhuma cidade selecionada". A página precisa de um seletor de cidade para o escopo BRAND.
 
-### Correção (2 passos)
+## Correções
 
-**Passo 1 — Tornar a recuperação de SW efetiva**
+### 1. Adicionar label no mapa de defaults
 
-No `index.html`, melhorar o script de recuperação para usar **hard reload** após limpar caches, e adicionar um fallback com `?nocache` no query string para forçar bypass do SW:
+**Arquivo**: `src/hooks/useMenuLabels.ts`
 
-```js
-// Ao invés de window.location.reload()
-// Usar navegação com cache-bust para escapar do SW
-window.location.href = window.location.pathname + '?_sw_cleared=' + Date.now();
+Adicionar na seção `admin` do `DEFAULT_LABELS`:
+```ts
+"sidebar.gamificacao": "Duelos & Ranking",
 ```
 
-E no início do script, detectar o parâmetro `_sw_cleared` para limpar o URL sem recarregar novamente.
+### 2. Adicionar seletor de cidade na GamificacaoAdminPage
 
-**Passo 2 — Adicionar guard anti-iframe no registro do PWA**
+**Arquivo**: `src/pages/GamificacaoAdminPage.tsx`
 
-No `vite.config.ts`, adicionar `navigateFallbackDenylist` mais robusto e no `index.html` prevenir que o SW seja registrado em preview/iframe (conforme as regras do projeto). Isso evita que o problema se repita em contextos de preview.
+Quando `consoleScope === "BRAND"` e não há `currentBranchId`, buscar a lista de cidades da marca e exibir um `<Select>` para o usuário escolher qual cidade gerenciar. Usar `useState` para armazenar o `branchId` selecionado e passar para a query existente.
+
+Fluxo:
+- Se `consoleScope === "BRANCH"` → usa `currentBranchId` direto (comportamento atual)
+- Se `consoleScope === "BRAND"` → busca cidades da marca, exibe dropdown, usa o ID selecionado
 
 ### Arquivos modificados
-
-- `index.html` — Script de recuperação de SW mais robusto
-- Nenhuma outra mudança necessária
-
-### Impacto
-
-- Usuários que já têm o SW quebrado cacheado: o novo script de recuperação vai funcionar no primeiro reload
-- Novos usuários: não serão afetados
-- O PWA continuará funcionando normalmente após a recuperação
+- `src/hooks/useMenuLabels.ts` — adicionar `"sidebar.gamificacao": "Duelos & Ranking"`
+- `src/pages/GamificacaoAdminPage.tsx` — adicionar seletor de cidade para Brand Admin
 
