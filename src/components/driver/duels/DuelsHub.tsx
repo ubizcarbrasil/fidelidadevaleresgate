@@ -13,6 +13,7 @@ import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
+import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
 import type { ConfigDuelos } from "./hook_config_duelos";
