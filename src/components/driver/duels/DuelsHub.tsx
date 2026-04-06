@@ -12,6 +12,7 @@ import DuelChallengeCard from "./DuelChallengeCard";
 import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
 import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
+import RankingCidadeSheet from "./RankingCidadeSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3 } from "lucide-react";
 
