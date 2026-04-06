@@ -1,7 +1,7 @@
 /**
  * Card exibido quando o motorista recebe uma contraproposta de pontos.
  */
-import React from "react";
+import React, { useState } from "react";
 import { MessageSquare, ShieldCheck, XCircle, Coins, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
@@ -9,6 +9,7 @@ import { cleanDriverName, useRespondCounterProposal } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ConfirmacaoAceiteDuelo from "./ConfirmacaoAceiteDuelo";
 
 interface Props {
   duel: Duel;
