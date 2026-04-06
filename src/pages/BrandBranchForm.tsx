@@ -204,6 +204,18 @@ export default function BrandBranchForm() {
       const slug = normalizeSlug(cidade.trim(), uf);
       const geo = await geocode(cidade.trim(), uf);
 
+      // Merge existing branch_settings_json with gamification flags
+      const existingSettings = (existing?.branch_settings_json && typeof existing.branch_settings_json === "object")
+        ? (existing.branch_settings_json as Record<string, any>)
+        : {};
+      const branchSettingsJson = {
+        ...existingSettings,
+        enable_driver_duels: enableDriverDuels,
+        enable_city_ranking: enableCityRanking,
+        enable_city_belt: enableCityBelt,
+        allow_public_duel_viewing: allowPublicDuelViewing,
+      };
+
       const payload = {
         name,
         slug,
@@ -212,6 +224,7 @@ export default function BrandBranchForm() {
         is_active: ativo,
         scoring_model: scoringModel,
         is_city_redemption_enabled: isCityRedemptionEnabled,
+        branch_settings_json: branchSettingsJson,
         timezone: "America/Sao_Paulo",
         latitude: geo?.lat ?? null,
         longitude: geo?.lon ?? null,
