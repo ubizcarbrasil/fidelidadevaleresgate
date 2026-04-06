@@ -6,6 +6,7 @@ import { cleanDriverName, type Duel } from "./hook_duelos";
 
 interface Props {
   duelo: Duel;
+  onOpenArena?: (duel: Duel) => void;
 }
 
 function tempoRestante(endAt: string): string {
@@ -32,7 +33,7 @@ function AvatarMini({ nome }: { nome: string }) {
   );
 }
 
-export default function CardDueloPublico({ duelo }: Props) {
+export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
   const [, setTick] = useState(0);
 
   const aoVivo = duelo.status === "live";
@@ -63,10 +64,11 @@ export default function CardDueloPublico({ duelo }: Props) {
   const empate = encerrado && !vencedorId;
 
   return (
-    <div
-      className={`relative flex flex-col gap-2 rounded-xl border p-3 min-w-[260px] max-w-[280px] snap-start shrink-0 bg-card ${
+    <button
+      onClick={() => (aoVivo || encerrado) && onOpenArena?.(duelo)}
+      className={`relative flex flex-col gap-2 rounded-xl border p-3 min-w-[260px] max-w-[280px] snap-start shrink-0 bg-card text-left transition-all ${
         aoVivo ? "border-green-500/60 shadow-[0_0_12px_-3px_rgba(34,197,94,0.35)]" : "border-border"
-      }`}
+      } ${(aoVivo || encerrado) ? "active:scale-[0.98] cursor-pointer" : ""}`}
     >
       {/* Badge status */}
       <div className="flex items-center justify-between">
@@ -169,6 +171,6 @@ export default function CardDueloPublico({ duelo }: Props) {
       <p className="text-center text-[10px] text-muted-foreground mt-auto">
         corridas concluídas
       </p>
-    </div>
+    </button>
   );
 }
