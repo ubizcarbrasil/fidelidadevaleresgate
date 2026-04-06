@@ -1,13 +1,43 @@
 /**
  * Hook para buscar duelos públicos da cidade (visível para todos os motoristas).
+ * Usa Realtime para atualização automática sem refresh.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Duel } from "./hook_duelos";
 
 export function useDuelosCidade(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+  const queryKey = ["duelos-cidade", branchId];
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!branchId) return;
+
+    const channel = supabase
+      .channel(`duelos-cidade-${branchId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "driver_duels",
+          filter: `branch_id=eq.${branchId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [branchId, queryClient]);
+
   return useQuery({
-    queryKey: ["duelos-cidade", branchId],
+    queryKey,
     queryFn: async () => {
       if (!branchId) return [];
 
@@ -27,7 +57,6 @@ export function useDuelosCidade(branchId: string | undefined) {
 
       if (error) throw error;
 
-      // Ordenar: live primeiro, depois accepted/pending, depois finished
       const ordemStatus: Record<string, number> = {
         live: 0,
         accepted: 1,
@@ -40,6 +69,6 @@ export function useDuelosCidade(branchId: string | undefined) {
       );
     },
     enabled: !!branchId,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000, // fallback mais longo, Realtime é primário
   });
 }
