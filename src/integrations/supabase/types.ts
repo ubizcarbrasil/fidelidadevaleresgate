@@ -2244,6 +2244,178 @@ export type Database = {
           },
         ]
       }
+      driver_duel_participants: {
+        Row: {
+          avatar_url: string | null
+          branch_id: string
+          brand_id: string
+          created_at: string
+          customer_id: string
+          duels_enabled: boolean
+          id: string
+          public_nickname: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          customer_id: string
+          duels_enabled?: boolean
+          id?: string
+          public_nickname?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          customer_id?: string
+          duels_enabled?: boolean
+          id?: string
+          public_nickname?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_duel_participants_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_participants_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_participants_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_participants_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duel_participants_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_duels: {
+        Row: {
+          accepted_at: string | null
+          branch_id: string
+          brand_id: string
+          challenged_id: string
+          challenged_rides_count: number
+          challenger_id: string
+          challenger_rides_count: number
+          created_at: string
+          declined_at: string | null
+          end_at: string
+          finished_at: string | null
+          id: string
+          start_at: string
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          branch_id: string
+          brand_id: string
+          challenged_id: string
+          challenged_rides_count?: number
+          challenger_id: string
+          challenger_rides_count?: number
+          created_at?: string
+          declined_at?: string | null
+          end_at: string
+          finished_at?: string | null
+          id?: string
+          start_at: string
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          branch_id?: string
+          brand_id?: string
+          challenged_id?: string
+          challenged_rides_count?: number
+          challenger_id?: string
+          challenger_rides_count?: number
+          created_at?: string
+          declined_at?: string | null
+          end_at?: string
+          finished_at?: string | null
+          id?: string
+          start_at?: string
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_duels_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_challenged_id_fkey"
+            columns: ["challenged_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_challenger_id_fkey"
+            columns: ["challenger_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_duels_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_points_rules: {
         Row: {
           branch_id: string | null
@@ -6514,10 +6686,31 @@ export type Database = {
       }
     }
     Functions: {
+      count_duel_rides: {
+        Args: {
+          p_branch_id: string
+          p_customer_id: string
+          p_end_at: string
+          p_start_at: string
+        }
+        Returns: number
+      }
+      create_duel_challenge: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_challenged_customer_id: string
+          p_challenger_customer_id: string
+          p_end_at: string
+          p_start_at: string
+        }
+        Returns: Json
+      }
       debit_branch_wallet: {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
       }
+      finalize_duel: { Args: { p_duel_id: string }; Returns: Json }
       get_branch_dashboard_stats: {
         Args: { p_branch_id: string }
         Returns: {
@@ -6633,6 +6826,10 @@ export type Database = {
         }
         Returns: Json
       }
+      respond_to_duel: {
+        Args: { p_accept: boolean; p_customer_id: string; p_duel_id: string }
+        Returns: Json
+      }
       rpc_get_driver_city_redemptions: {
         Args: { p_customer_id: string }
         Returns: {
@@ -6674,6 +6871,15 @@ export type Database = {
       seed_affiliate_categories: {
         Args: { p_brand_id: string }
         Returns: undefined
+      }
+      toggle_duel_participation: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_customer_id: string
+          p_enabled: boolean
+        }
+        Returns: Json
       }
       user_has_permission: {
         Args: {
