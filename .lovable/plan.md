@@ -1,119 +1,64 @@
 
 
-## Etapa 6 — Painel Administrativo do Módulo de Gamificação
+## Etapa 7 — Notificações e Engajamento do Módulo de Duelos
 
 ### Resumo
-Criar uma página administrativa completa para gerenciar o módulo de Duelos/Ranking/Cinturão no console Branch. Inclui configuração avançada, visualização de duelos, ranking, cinturão, moderação de apelidos e estatísticas. Rota `/gamificacao-admin` no BranchSidebar.
+Criar a infraestrutura de notificações internas para todos os eventos do módulo de duelos, usando a tabela `customer_notifications` já existente e a edge function `send-push-notification` já disponível. O trabalho consiste em: (1) definir os tipos de evento no EventBus, (2) criar um hook que escuta esses eventos e dispara notificações via edge function, (3) integrar os disparos nos pontos corretos do código existente (RPCs e hooks).
 
 ---
 
-### 1. Banco de dados — Novas colunas em `branch_settings_json`
+### 1. Tipos de evento no EventBus
 
-Nenhuma tabela nova. Expandir o JSON existente com campos adicionais:
+**Arquivo modificado: `src/lib/eventBus.ts`**
 
-```json
-{
-  "enable_driver_duels": true,
-  "enable_city_ranking": true,
-  "enable_city_belt": true,
-  "allow_public_duel_viewing": true,
-  "duel_min_duration_hours": 24,
-  "duel_max_duration_hours": 168,
-  "duel_max_simultaneous": 3,
-  "ranking_metric": "rides",
-  "belt_metric": "rides",
-  "decline_phrases": ["Hoje não, parceiro! 😅", "Tô de boa por agora 🙏", "Quem sabe na próxima? 😂"]
-}
+Adicionar 10 novos eventos ao `AppEvents`:
+
+```ts
+DUEL_CHALLENGE_RECEIVED: { brandId: string; challengedCustomerId: string; challengerName: string; duelId: string };
+DUEL_CHALLENGE_ACCEPTED: { brandId: string; challengerCustomerId: string; challengedName: string; duelId: string };
+DUEL_CHALLENGE_DECLINED: { brandId: string; challengerCustomerId: string; challengedName: string; duelId: string };
+DUEL_STARTED: { brandId: string; customerIds: string[]; duelId: string };
+DUEL_LEAD_CHANGE: { brandId: string; trailingCustomerId: string; leaderName: string; duelId: string };
+DUEL_FINISHED: { brandId: string; customerIds: string[]; duelId: string; winnerId: string | null };
+DUEL_VICTORY: { brandId: string; winnerCustomerId: string; opponentName: string; duelId: string };
+DUEL_DEFEAT: { brandId: string; loserCustomerId: string; opponentName: string; duelId: string };
+RANKING_TOP10_ENTRY: { brandId: string; customerId: string; position: number };
+BELT_NEW_CHAMPION: { brandId: string; championCustomerId: string; branchId: string; record: number };
 ```
 
 ---
 
-### 2. Nova rota e página
+### 2. Serviço de disparo de notificações de duelo
 
-**`src/pages/GamificacaoAdminPage.tsx`**
-- Página wrapper que carrega dados do branch atual e renderiza os sub-componentes
-- Usa `useBrandGuard` para obter `currentBranchId`
+**Novo arquivo: `src/components/driver/duels/servico_notificacoes_duelo.ts`**
 
-**Rota**: `/gamificacao-admin` no `App.tsx`, sem ModuleGuard (a própria página valida)
+Função utilitária `enviarNotificacaoDuelo` que chama a edge function `send-push-notification` com os parâmetros corretos para cada tipo de evento. Mapeamento interno de evento → título/body em português.
 
----
-
-### 3. Componentes do painel (dentro de `src/components/admin/gamificacao/`)
-
-**`ConfiguracaoModulo.tsx`** — Card com todos os toggles e campos:
-- Toggles: duelos, ranking, cinturão, visualização pública
-- Campos numéricos: duração mín/máx dos duelos (horas), máx duelos simultâneos
-- Selects: métrica do ranking, métrica do cinturão (inicialmente "rides")
-- Editor de frases de recusa (lista editável com add/remove)
-- Botão salvar que atualiza `branch_settings_json`
-
-**`ListaDuelosAdmin.tsx`** — Tabela com todos os duelos da cidade:
-- Colunas: desafiante, desafiado, status, período, corridas, vencedor
-- Filtros por status (pendente, ao vivo, encerrado, etc.)
-- Usa query em `driver_duels` filtrado por `branch_id`
-
-**`EstatisticasGamificacao.tsx`** — Cards de KPIs:
-- Total de duelos, duelos ativos, participantes habilitados, taxa de aceite
-- Total de corridas no mês (via ranking RPC)
-- Campeão atual do cinturão
-
-**`RankingAdminView.tsx`** — Visualização do ranking top 10:
-- Reutiliza `useRankingCidade` do hook existente
-- Botão "Resetar ranking mensal" (chama delete/update se necessário)
-
-**`CinturaoAdminView.tsx`** — Visualização do cinturão:
-- Reutiliza `useCinturaoCidade` do hook existente
-- Mostra campeão atual, recorde, tipo
-- Botão "Atualizar cinturão" que chama RPC `update_city_belt`
-
-**`ModeracaoApelidos.tsx`** — Tabela de participantes:
-- Lista `driver_duel_participants` da cidade
-- Colunas: nome real (via customers), apelido público, avatar, duelos habilitado
-- Botão inline para editar apelido (update direto no campo `public_nickname`)
+Exemplo de mapeamento:
+- `DUEL_CHALLENGE_RECEIVED` → título: "Você recebeu um desafio! 🥊", body: "{nome} quer te desafiar"
+- `DUEL_CHALLENGE_ACCEPTED` → título: "Desafio aceito! 💪", body: "{nome} aceitou seu desafio"
+- `DUEL_CHALLENGE_DECLINED` → título: "Desafio recusado 😅", body: "{nome} arregou do seu desafio"
+- `DUEL_FINISHED` → título: "Duelo encerrado! 🏁"
+- `DUEL_VICTORY` → título: "Você venceu! 🏆"
+- `DUEL_DEFEAT` → título: "Derrota no duelo 😤", body: "Mas a próxima é sua!"
+- `BELT_NEW_CHAMPION` → título: "Novo dono do cinturão! 👑"
 
 ---
 
-### 4. Integração no sidebar
+### 3. Integração nos hooks existentes
 
-**`src/components/consoles/BranchSidebar.tsx`** (modificado)
-- Adicionar grupo "Gamificação" com `scoringFilter: "DRIVER"`:
-  ```ts
-  {
-    label: "Gamificação",
-    scoringFilter: "DRIVER",
-    items: [
-      { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista" },
-    ],
-  }
-  ```
+**Arquivo modificado: `src/components/driver/duels/hook_duelos.ts`**
 
-**`src/App.tsx`** (modificado)
-- Adicionar rota: `<Route path="gamificacao-admin" element={<GamificacaoAdminPage />} />`
+Nos callbacks `onSuccess` das mutations existentes, emitir os eventos correspondentes via `eventBus.emit()`:
+
+- `useCreateDuel` → emitir `DUEL_CHALLENGE_RECEIVED` + chamar `enviarNotificacaoDuelo` para o adversário
+- `useRespondDuel` → emitir `DUEL_CHALLENGE_ACCEPTED` ou `DUEL_CHALLENGE_DECLINED` + notificar o desafiante
+- `useFinalizeDuel` → emitir `DUEL_FINISHED` + `DUEL_VICTORY`/`DUEL_DEFEAT` + notificar ambos
 
 ---
 
-### 5. Estrutura de arquivos
+### 4. Hook de listener centralizado (extensibilidade futura)
 
-```
-src/pages/GamificacaoAdminPage.tsx (novo)
-src/components/admin/gamificacao/ConfiguracaoModulo.tsx (novo)
-src/components/admin/gamificacao/ListaDuelosAdmin.tsx (novo)
-src/components/admin/gamificacao/EstatisticasGamificacao.tsx (novo)
-src/components/admin/gamificacao/RankingAdminView.tsx (novo)
-src/components/admin/gamificacao/CinturaoAdminView.tsx (novo)
-src/components/admin/gamificacao/ModeracaoApelidos.tsx (novo)
-src/components/consoles/BranchSidebar.tsx (modificado)
-src/App.tsx (modificado)
-```
+**Novo arquivo: `src/components/driver/duels/hook_listener_notificacoes.ts`**
 
-### 6. Layout da página
-
-A página usará um layout tabulado (Tabs) com 5 abas:
-1. **Configuração** — ConfiguracaoModulo
-2. **Duelos** — ListaDuelosAdmin
-3. **Ranking** — RankingAdminView
-4. **Cinturão** — CinturaoAdminView
-5. **Moderação** — ModeracaoApelidos
-
-Header com EstatisticasGamificacao (KPI cards) visível em todas as abas.
-
+Hook `useListenerNotificacoesDuelo()` que registra listeners no EventBus para todos os eventos de duelo. Atualmente apenas loga no console (preparação para futuras ações como badges, animações, sons). Pode ser montado no
