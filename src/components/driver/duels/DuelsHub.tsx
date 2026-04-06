@@ -11,7 +11,9 @@ import DuelCard from "./DuelCard";
 import DuelChallengeCard from "./DuelChallengeCard";
 import DuelDetailSheet from "./DuelDetailSheet";
 import CreateDuelSheet from "./CreateDuelSheet";
+import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart3 } from "lucide-react";
 
 interface Props {
   onBack: () => void;
@@ -23,6 +25,7 @@ export default function DuelsHub({ onBack }: Props) {
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showDesempenho, setShowDesempenho] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
@@ -55,6 +58,10 @@ export default function DuelsHub({ onBack }: Props) {
 
   if (showCreate) {
     return <CreateDuelSheet onBack={() => setShowCreate(false)} onSuccess={() => setShowCreate(false)} />;
+  }
+
+  if (showDesempenho) {
+    return <MeuDesempenhoSheet duels={duels} participantId={participantId} onBack={() => setShowDesempenho(false)} />;
   }
 
   if (selectedDuelData) {
@@ -108,12 +115,22 @@ export default function DuelsHub({ onBack }: Props) {
           )}
         </div>
 
-        {/* Create challenge button */}
+        {/* Action buttons */}
         {isEnabled && (
-          <Button onClick={() => setShowCreate(true)} className="w-full gap-2">
-            <Plus className="h-4 w-4" />
-            Desafiar Motorista
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
+              <Plus className="h-4 w-4" />
+              Desafiar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDesempenho(true)}
+              className="gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Meu Desempenho
+            </Button>
+          </div>
         )}
 
         {/* Pending challenges received */}
