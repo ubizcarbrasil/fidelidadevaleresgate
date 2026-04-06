@@ -43,7 +43,18 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const participantId = participant?.id || null;
 
   const pendingChallenges = useMemo(
-    () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId),
+    () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId && d.negotiation_status !== "counter_proposed"),
+    [duels, participantId]
+  );
+
+  const counterProposals = useMemo(
+    () => (duels || []).filter((d) => {
+      if (d.status !== "pending" || d.negotiation_status !== "counter_proposed") return false;
+      // Show to the person who needs to respond (NOT the one who proposed)
+      if (d.counter_proposal_by === "challenged" && participantId === d.challenger_id) return true;
+      if (d.counter_proposal_by === "challenger" && participantId === d.challenged_id) return true;
+      return false;
+    }),
     [duels, participantId]
   );
 
@@ -53,7 +64,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   );
 
   const scheduledDuels = useMemo(
-    () => (duels || []).filter((d) => d.status === "pending" && d.challenger_id === participantId),
+    () => (duels || []).filter((d) => d.status === "pending" && d.challenger_id === participantId && d.negotiation_status !== "counter_proposed"),
     [duels, participantId]
   );
 
