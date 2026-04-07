@@ -149,6 +149,29 @@ export function AbaPontuarMotorista({
         </AlertDescription>
       </Alert>
 
+      {/* Sem cidades ativas: card de adicionar no topo */}
+      {!hasActiveCities && (
+        <CardAdicionarCidade
+          brandId={brandId}
+          availableBranches={availableBranches}
+          branches={branches}
+          activeIntegrations={activeIntegrations}
+        />
+      )}
+
+      {/* Com cidades ativas: botão de atalho */}
+      {hasActiveCities && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => addCidadeRef.current?.scrollIntoView({ behavior: "smooth" })}
+        >
+          <Car className="h-4 w-4" />
+          + Adicionar cidade
+        </Button>
+      )}
+
       {/* Cidades conectadas */}
       <CardCidadesConectadas
         activeIntegrations={activeIntegrations}
@@ -168,12 +191,12 @@ export function AbaPontuarMotorista({
       )}
 
       {/* Diagnóstico */}
-      {activeIntegrations.length > 0 && (
+      {hasActiveCities && (
         <DiagnosticoWebhook rides={diagRides} retryMutation={retryMutation} />
       )}
 
       {/* Eventos em tempo real */}
-      {activeIntegrations.length > 0 && (
+      {hasActiveCities && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -219,17 +242,21 @@ export function AbaPontuarMotorista({
       )}
 
       {/* Scored Drivers */}
-      {activeIntegrations.length > 0 && integrations.some((i: any) => i.driver_points_enabled) && (
+      {hasActiveCities && integrations.some((i: any) => i.driver_points_enabled) && (
         <ScoredDriversPanel brandId={brandId} />
       )}
 
-      {/* Adicionar nova cidade */}
-      <CardAdicionarCidade
-        brandId={brandId}
-        availableBranches={availableBranches}
-        branches={branches}
-        activeIntegrations={activeIntegrations}
-      />
+      {/* Adicionar nova cidade (no final, quando já há cidades) */}
+      {hasActiveCities && (
+        <div ref={addCidadeRef}>
+          <CardAdicionarCidade
+            brandId={brandId}
+            availableBranches={availableBranches}
+            branches={branches}
+            activeIntegrations={activeIntegrations}
+          />
+        </div>
+      )}
     </div>
   );
 }
