@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
-  Car, Activity, Radio, AlertTriangle, RefreshCw, Loader2, Info,
+  Car, Activity, Radio, AlertTriangle, RefreshCw, Loader2, Info, MapPin, Plus,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
 import { CardCidadesConectadas } from "./card_cidades_conectadas";
