@@ -38,7 +38,7 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
   });
 
   const selectedOpponentData = opponents?.find((o) => o.customer_id === selectedOpponent);
-  const opponentName = cleanDriverName((selectedOpponentData?.customers as any)?.name);
+  const opponentName = selectedOpponentData?.public_nickname || selectedOpponentData?.display_name || "Motorista";
 
   const canSchedule = selectedOpponent !== null;
   const startAt = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
