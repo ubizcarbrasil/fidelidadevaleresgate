@@ -1,35 +1,55 @@
 
-## Corrigir nomes e fotos nos cards e detalhes de duelos
 
-### Problema
-Todos os cards de duelo (lista "Aguardando Resposta", "Ao Vivo na cidade", detalhe do duelo) mostram "Motorista" porque usam `cleanDriverName((duel.challenger as any)?.customers?.name)`, que depende do join com `customers` — bloqueado por RLS.
+## Duelos em Massa — Seleção múltipla de adversários com validação de saldo e horário
 
-Os dados corretos já estão disponíveis na query: `challenger.display_name`, `challenger.public_nickname` e `challenger.avatar_url` vêm da tabela `driver_duel_participants` (que o select `*` já traz).
+### O que muda
 
-### Solução
-Criar uma função helper centralizada que resolve o nome a partir do participante do duelo, priorizando: `public_nickname` > `display_name` > `customers.name` (fallback). Usar `avatar_url` do participante para mostrar foto.
+A tela "Escolha o Adversário" passará a permitir **seleção múltipla** de motoristas. O motorista define período e aposta **uma vez**, e o sistema cria um duelo para cada adversário selecionado, validando que o saldo total de pontos comporta todas as apostas simultâneas e que o horário respeita uma duração mínima configurável.
 
-### Arquivos a editar
+### Plano
 
-**1. `hook_duelos.ts`** — Nova helper `resolveParticipantName(participant)`
-```ts
-export function resolveParticipantName(p: any): string {
-  return p?.public_nickname || p?.display_name || cleanDriverName(p?.customers?.name);
-}
-export function resolveParticipantAvatar(p: any): string | null {
-  return p?.avatar_url || null;
-}
-```
+**1. Adicionar configuração de duração mínima no `hook_config_duelos.ts`**
+- Novo campo `duracaoMinimaHoras` (default: 1h) lido de `branch_settings_json.duel_min_duration_hours`
+- Permitir que admin configure esse valor no painel de gamificação
 
-**2. `DuelCard.tsx`** — Usar `resolveParticipantName` e mostrar avatar do oponente
+**2. Refatorar `CreateDuelSheet.tsx` para multi-select**
+- Trocar `selectedOpponent: string | null` por `selectedOpponents: Set<string>`
+- Step "select": checkbox/toggle visual em cada `OpponentCard`, com contador de selecionados no botão "Avançar"
+- Step "bet": mostrar cálculo dinâmico:
+  - Aposta por duelo: X pts
+  - Qtd de duelos: N
+  - Total reservado: X * N pts
+  - Saldo disponível: Y pts
+  - Validação: `betValue * selectedOpponents.size <= balance`
+- Step "confirm": listar todos adversários selecionados com resumo consolidado
+- Botão "Enviar Desafios" cria os duelos sequencialmente via `useCreateDuel`
 
-**3. `DuelDetailSheet.tsx`** — Usar helpers para challengerName/challengedName + mostrar avatares no placar
+**3. Validação de horário no step "schedule"**
+- Calcular diferença entre início e fim em horas
+- Bloquear avanço se duração < `duracaoMinimaHoras`
+- Bloquear se data de início < agora (não permitir datas passadas)
+- Exibir mensagem de erro contextual: "Duração mínima: Xh" ou "Data de início inválida"
 
-**4. `CardDueloPublico.tsx`** — Usar helpers + mostrar `avatar_url` no `AvatarMini`
+**4. Criar hook `useCreateDuelsBatch` em `hook_duelos.ts`**
+- Recebe array de `challengedCustomerId` + período + aposta
+- Valida saldo total antes de iniciar: `pointsBet * opponents.length <= balance`
+- Executa `create_duel_challenge` para cada adversário sequencialmente
+- Coleta resultados (sucesso/falha por oponente)
+- Invalida queries e exibe toast com resumo: "X duelos criados com sucesso"
 
-**5. `DuelChallengeCard.tsx`** — Usar helpers para nome do desafiante
+**5. Ajustes visuais no `OpponentCard`**
+- Adicionar indicador de seleção (checkbox ou borda highlight) compatível com multi-select
+- Mostrar contador flutuante na parte inferior: "3 motoristas selecionados"
 
-**6. `NegociacaoContrapropostaCard.tsx`** — Usar helpers para nome do oponente
+### Validações obrigatórias
+- `pointsBet * qtdSelecionados <= balance` — nunca apostar mais do que tem
+- `endAt - startAt >= duracaoMinimaHoras` — duração mínima
+- `startAt > now()` — não permitir início no passado
+- `endAt > startAt` — fim deve ser após início (já existe)
 
-### Resultado
-Todos os cards e telas de duelo mostrarão o apelido ou nome real do motorista (nunca "Motorista") e a foto de perfil quando disponível.
+### Arquivos
+- **Editar**: `src/components/driver/duels/CreateDuelSheet.tsx` — multi-select + validações
+- **Editar**: `src/components/driver/duels/hook_duelos.ts` — novo `useCreateDuelsBatch`
+- **Editar**: `src/components/driver/duels/hook_config_duelos.ts` — campo `duracaoMinimaHoras`
+- **Editar**: `src/components/admin/gamificacao/ConfiguracaoModulo.tsx` — campo de config de duração mínima (opcional)
+
