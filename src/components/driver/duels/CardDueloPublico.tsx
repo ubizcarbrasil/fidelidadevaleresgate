@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Flame, Clock, Trophy, User, Swords } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { cleanDriverName, type Duel } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, type Duel } from "./hook_duelos";
 
 interface Props {
   duelo: Duel;
