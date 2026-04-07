@@ -9,6 +9,7 @@ import { format } from "date-fns";
 
 interface Props {
   branchId: string;
+  onCriarDuelo?: () => void;
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
