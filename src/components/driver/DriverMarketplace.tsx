@@ -544,6 +544,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
+      {/* Banner duelo ao vivo — visível para todos */}
+      {!debouncedSearch.trim() && configDuelos.duelosAtivos && (
+        <BannerDueloAoVivo branchId={branch?.id} fontHeading={fontHeading} />
+      )}
+
       {/* Banner promo Duelos */}
       {!debouncedSearch.trim() && driver && configDuelos.duelosAtivos && (
         <div className="px-5 pt-4">
