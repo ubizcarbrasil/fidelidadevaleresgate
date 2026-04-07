@@ -142,7 +142,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
         </div>
 
         {/* Action buttons */}
-        {isEnabled && (
+        <div className="space-y-2">
           <div className="space-y-2">
             <div className="flex gap-2">
               <Button onClick={() => setShowCreate(true)} className="flex-1 gap-2">
