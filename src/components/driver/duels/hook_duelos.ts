@@ -8,6 +8,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { toast } from "sonner";
 import { eventBus } from "@/lib/eventBus";
 import { enviarNotificacaoDuelo } from "./servico_notificacoes_duelo";
+import { registrarEventoFeed } from "./servico_feed_cidade";
 
 export interface DuelParticipant {
   id: string;
