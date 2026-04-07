@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { MessageSquare, ShieldCheck, XCircle, Coins, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
-import { cleanDriverName, useRespondCounterProposal } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, useRespondCounterProposal } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,9 +21,9 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
   const [showConfirm, setShowConfirm] = useState(false);
 
   const isChallenger = participantId === duel.challenger_id;
-  const opponentName = isChallenger
-    ? cleanDriverName((duel.challenged as any)?.customers?.name)
-    : cleanDriverName((duel.challenger as any)?.customers?.name);
+  const opponent = isChallenger ? duel.challenged : duel.challenger;
+  const opponentName = resolveParticipantName(opponent);
+  const opponentAvatar = resolveParticipantAvatar(opponent);
   const opponentCustomerId = isChallenger
     ? (duel.challenged as any)?.customer_id
     : (duel.challenger as any)?.customer_id;
@@ -40,12 +40,16 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
       }}
     >
       <div className="flex items-center gap-2">
-        <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "hsl(var(--info) / 0.15)" }}
-        >
-          <MessageSquare className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
-        </div>
+        {opponentAvatar ? (
+          <img src={opponentAvatar} alt={opponentName} className="h-8 w-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: "hsl(var(--info) / 0.15)" }}
+          >
+            <MessageSquare className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
+          </div>
+        )}
         <div>
           <p className="text-sm font-bold text-foreground">Contraproposta de {opponentName}</p>
           <p className="text-[11px] text-muted-foreground">

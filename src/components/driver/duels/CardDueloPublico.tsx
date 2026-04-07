@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Flame, Clock, Trophy, User, Swords } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { cleanDriverName, type Duel } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, type Duel } from "./hook_duelos";
 
 interface Props {
   duelo: Duel;
@@ -19,7 +19,10 @@ function tempoRestante(endAt: string): string {
   return `${m}min`;
 }
 
-function AvatarMini({ nome }: { nome: string }) {
+function AvatarMini({ nome, avatarUrl }: { nome: string; avatarUrl?: string | null }) {
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={nome} className="w-9 h-9 rounded-full object-cover shrink-0" />;
+  }
   const iniciais = nome
     .split(" ")
     .slice(0, 2)
@@ -47,12 +50,10 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
     return () => clearInterval(id);
   }, [aoVivo]);
 
-  const nomeA = cleanDriverName(
-    duelo.challenger?.public_nickname || duelo.challenger?.customers?.name
-  );
-  const nomeB = cleanDriverName(
-    duelo.challenged?.public_nickname || duelo.challenged?.customers?.name
-  );
+  const nomeA = resolveParticipantName(duelo.challenger);
+  const nomeB = resolveParticipantName(duelo.challenged);
+  const avatarA = resolveParticipantAvatar(duelo.challenger);
+  const avatarB = resolveParticipantAvatar(duelo.challenged);
 
   const ridesA = duelo.challenger_rides_count;
   const ridesB = duelo.challenged_rides_count;
@@ -100,7 +101,7 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
       <div className="flex items-center justify-between gap-2">
         {/* Motorista A */}
         <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <AvatarMini nome={nomeA} />
+          <AvatarMini nome={nomeA} avatarUrl={avatarA} />
           <span className="text-[11px] font-medium text-foreground truncate w-full text-center">
             {nomeA}
           </span>
@@ -135,7 +136,7 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
 
         {/* Motorista B */}
         <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <AvatarMini nome={nomeB} />
+          <AvatarMini nome={nomeB} avatarUrl={avatarB} />
           <span className="text-[11px] font-medium text-foreground truncate w-full text-center">
             {nomeB}
           </span>

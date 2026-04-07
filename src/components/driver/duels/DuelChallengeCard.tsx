@@ -6,7 +6,7 @@ import { Swords, ShieldCheck, Flag, MessageSquare, Coins, Wallet, Send } from "l
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Duel } from "./hook_duelos";
-import { cleanDriverName, useRespondDuel, useCounterPropose } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, useRespondDuel, useCounterPropose } from "./hook_duelos";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
@@ -25,7 +25,8 @@ export default function DuelChallengeCard({ duel }: Props) {
   const [counterValue, setCounterValue] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
+  const challengerName = resolveParticipantName(duel.challenger);
+  const challengerAvatar = resolveParticipantAvatar(duel.challenger);
   const hasBet = duel.challenger_points_bet > 0;
   const balance = driver?.points_balance ?? 0;
   const counterNum = parseInt(counterValue) || 0;
@@ -48,12 +49,16 @@ export default function DuelChallengeCard({ duel }: Props) {
       }}
     >
       <div className="flex items-center gap-2">
-        <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "hsl(var(--warning) / 0.15)" }}
-        >
-          <Swords className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
-        </div>
+        {challengerAvatar ? (
+          <img src={challengerAvatar} alt={challengerName} className="h-8 w-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: "hsl(var(--warning) / 0.15)" }}
+          >
+            <Swords className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+          </div>
+        )}
         <div className="flex-1">
           <p className="text-sm font-bold text-foreground">Desafio de {challengerName}</p>
           <p className="text-[11px] text-muted-foreground">

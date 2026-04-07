@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
-import { cleanDriverName, useFinalizeDuel } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, cleanDriverName, useFinalizeDuel } from "./hook_duelos";
 import { useDuelRating } from "./hook_avaliacao_duelo";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
@@ -46,8 +46,10 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
     driver?.id || null
   );
 
-  const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
-  const challengedName = cleanDriverName((duel.challenged as any)?.customers?.name);
+  const challengerName = resolveParticipantName(duel.challenger);
+  const challengedName = resolveParticipantName(duel.challenged);
+  const challengerAvatar = resolveParticipantAvatar(duel.challenger);
+  const challengedAvatar = resolveParticipantAvatar(duel.challenged);
 
   const opponentName = isChallenger ? challengedName : challengerName;
   const winnerId = duel.winner_id;
@@ -133,6 +135,13 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
         >
           <div className="flex items-start">
             <div className="flex-1 min-w-0 text-center">
+              {challengerAvatar ? (
+                <img src={challengerAvatar} alt={challengerName} className="h-10 w-10 rounded-full object-cover mx-auto mb-1" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-1 text-xs font-bold text-muted-foreground">
+                  {challengerName.charAt(0).toUpperCase()}
+                </div>
+              )}
               <p className="text-[11px] text-muted-foreground mb-0.5">Desafiante</p>
               <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengerName}</p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenger_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>
@@ -149,6 +158,13 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
             </div>
 
             <div className="flex-1 min-w-0 text-center">
+              {challengedAvatar ? (
+                <img src={challengedAvatar} alt={challengedName} className="h-10 w-10 rounded-full object-cover mx-auto mb-1" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-1 text-xs font-bold text-muted-foreground">
+                  {challengedName.charAt(0).toUpperCase()}
+                </div>
+              )}
               <p className="text-[11px] text-muted-foreground mb-0.5">Desafiado</p>
               <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengedName}</p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenged_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>

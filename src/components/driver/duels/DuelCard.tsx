@@ -6,7 +6,7 @@ import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare, Eye } from 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Duel } from "./hook_duelos";
-import { cleanDriverName } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -29,11 +29,12 @@ interface Props {
 export default function DuelCard({ duel, participantId, onClick }: Props) {
   const cfg = statusConfig[duel.status] || statusConfig.pending;
 
-  const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
-  const challengedName = cleanDriverName((duel.challenged as any)?.customers?.name);
+  const challengerName = resolveParticipantName(duel.challenger);
+  const challengedName = resolveParticipantName(duel.challenged);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentName = isChallenger ? challengedName : challengerName;
+  const opponentAvatar = resolveParticipantAvatar(isChallenger ? duel.challenged : duel.challenger);
   const myRides = isChallenger ? duel.challenger_rides_count : duel.challenged_rides_count;
   const theirRides = isChallenger ? duel.challenged_rides_count : duel.challenger_rides_count;
 
@@ -52,7 +53,11 @@ export default function DuelCard({ duel, participantId, onClick }: Props) {
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Swords className="h-4 w-4" style={{ color: cfg.color }} />
+          {opponentAvatar ? (
+            <img src={opponentAvatar} alt={opponentName} className="h-6 w-6 rounded-full object-cover shrink-0" />
+          ) : (
+            <Swords className="h-4 w-4" style={{ color: cfg.color }} />
+          )}
           <span className="text-sm font-bold text-foreground">vs {opponentName}</span>
         </div>
         <div className="flex items-center gap-1.5">
