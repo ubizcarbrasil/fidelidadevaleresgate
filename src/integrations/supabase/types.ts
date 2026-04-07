@@ -7347,6 +7347,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_branch_drivers_for_duels: {
+        Args: { p_branch_id: string; p_exclude_customer_id: string }
+        Returns: {
+          avatar_url: string
+          customer_id: string
+          display_name: string
+          is_enrolled: boolean
+          public_nickname: string
+        }[]
+      }
       lookup_driver_by_cpf: {
         Args: { p_brand_id: string; p_cpf: string }
         Returns: {

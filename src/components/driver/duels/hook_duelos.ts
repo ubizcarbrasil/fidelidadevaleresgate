@@ -18,6 +18,7 @@ export interface DuelParticipant {
   public_nickname: string | null;
   avatar_url: string | null;
   display_name: string | null;
+  is_enrolled?: boolean;
   customers?: { name: string; cpf: string | null } | null;
 }
 
@@ -114,14 +115,22 @@ export function useDuelOpponents() {
     queryKey: ["duel-opponents", driver?.branch_id],
     queryFn: async () => {
       if (!driver) return [];
-      const { data, error } = await supabase
-        .from("driver_duel_participants")
-        .select("id, customer_id, branch_id, brand_id, duels_enabled, public_nickname, avatar_url, display_name")
-        .eq("branch_id", driver.branch_id)
-        .eq("duels_enabled", true)
-        .neq("customer_id", driver.id);
+      const { data, error } = await supabase.rpc("list_branch_drivers_for_duels", {
+        p_branch_id: driver.branch_id,
+        p_exclude_customer_id: driver.id,
+      });
       if (error) throw error;
-      return (data || []) as DuelParticipant[];
+      return (data || []).map((d: any) => ({
+        id: d.customer_id,
+        customer_id: d.customer_id,
+        branch_id: driver.branch_id,
+        brand_id: driver.brand_id,
+        duels_enabled: d.is_enrolled ?? false,
+        public_nickname: d.public_nickname,
+        avatar_url: d.avatar_url,
+        display_name: d.display_name,
+        is_enrolled: d.is_enrolled ?? false,
+      })) as DuelParticipant[];
     },
     enabled: !!driver,
   });
