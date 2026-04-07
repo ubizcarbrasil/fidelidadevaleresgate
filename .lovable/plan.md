@@ -1,28 +1,35 @@
 
 
-## Plano: Melhorar clareza do fluxo de ativação de cidade
+## Plano: Monitoramento de Pontuação por Cidade em Tempo Real
 
-### Situação atual
-A cidade **Leme - SP** existe na tabela `branches` mas não tem registro em `machine_integrations`. Isso significa que ela foi criada como filial mas ainda não foi "ativada" na aba Pontuar Motorista. O dropdown do card "Ativar integração" mostra Leme corretamente — basta preencher as credenciais e clicar "Ativar cidade".
-
-O problema é de **UX**: não está óbvio que a cidade precisa ser ativada para aparecer em "Cidades conectadas".
+### Problema
+O feed de pontuação em tempo real (`PointsFeed`) e o ranking (`RankingPontuacao`) mostram dados agregados de toda a marca, sem indicar de qual cidade cada pontuação veio. Não há como filtrar ou identificar visualmente a cidade.
 
 ### Mudanças propostas
 
-**1. Adicionar indicador visual de cidades pendentes**
-No topo da aba, exibir um alerta amarelo quando existirem cidades criadas mas não ativadas, tipo:
-> "Você tem 1 cidade pendente de ativação (Leme - SP). Configure as credenciais abaixo para conectá-la."
+**1. Adicionar nome da cidade em cada item do feed (`PointsFeed.tsx`)**
+- Incluir `branch_id` e fazer join com `branches(name)` na query de `machine_rides`
+- Exibir um badge/chip com o nome da cidade em cada registro do feed (ex: "Leme", "Pirassununga")
+- Visual: badge discreto com ícone `MapPin` ao lado do horário
 
-**2. Destacar o card "Ativar integração" quando houver pendentes**
-Adicionar borda destacada (amarela/primary) e scroll automático para o card quando houver cidades não ativadas.
+**2. Adicionar filtro por cidade no feed (`PointsFeed.tsx`)**
+- Receber lista de branches disponíveis (query simples ou prop)
+- Adicionar um `Select` no header do card: "Todas as cidades" + lista de cidades com integração ativa
+- Filtrar a query de `machine_rides` por `branch_id` quando uma cidade for selecionada
 
-**3. Lista de cidades pendentes no card**
-Mostrar as cidades pendentes como chips/badges acima do select para dar visibilidade.
+**3. Adicionar nome da cidade no ranking (`RankingPontuacao.tsx`)**
+- Mesma lógica: mostrar de qual cidade é cada participante do ranking
+- Opcional: filtro por cidade no ranking também
+
+**4. Buscar lista de cidades com integração ativa**
+- Query em `machine_integrations` join `branches` para listar apenas cidades que realmente têm integração configurada
+- Reutilizar nos dois componentes via prop passada de `DashboardChartsSection`
 
 ### Arquivos modificados
-- `src/features/integracao_mobilidade/components/aba_pontuar_motorista.tsx` — alerta de pendentes
-- `src/features/integracao_mobilidade/components/card_adicionar_cidade.tsx` — destaque visual e chips de pendentes
+- `src/components/dashboard/PointsFeed.tsx` — adicionar branch name na query, badge de cidade, filtro select
+- `src/components/dashboard/RankingPontuacao.tsx` — adicionar indicação de cidade (se aplicável ao ranking por brand)
+- `src/components/dashboard/DashboardChartsSection.tsx` — buscar branches integradas e passar como prop
 
 ### Resumo
-Ajustes puramente visuais/UX para deixar claro que cidades recém-criadas precisam ser ativadas com credenciais antes de aparecerem como conectadas. Sem mudança de lógica de negócio.
+O feed e ranking passam a mostrar o nome da cidade em cada pontuação e permitem filtrar por cidade específica, tudo em tempo real.
 
