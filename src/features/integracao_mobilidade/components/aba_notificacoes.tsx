@@ -171,8 +171,8 @@ export function AbaNotificacoes({
                 Notificação ao motorista no app
               </CardTitle>
               <CardDescription>
-                Envia uma mensagem automática no app TaxiMachine para o motorista informando os pontos ganhos,
-                valor da corrida e saldo atualizado a cada corrida finalizada.
+                Envia uma mensagem automática no app TaxiMachine para o motorista usando as <strong>credenciais da cidade</strong> cadastradas na aba Motorista.
+                Informa pontos ganhos, valor da corrida e saldo atualizado a cada corrida finalizada.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

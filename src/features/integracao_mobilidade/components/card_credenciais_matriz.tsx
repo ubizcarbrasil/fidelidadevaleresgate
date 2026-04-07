@@ -129,7 +129,7 @@ export function CardCredenciaisMatriz({ brandId, brandMatrix }: Props) {
               <Alert className="border-primary/30 bg-primary/5">
                 <CheckCircle className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-xs">
-                  Matriz configurada. Todas as cidades usarão estas credenciais para buscar recibos e pontuar passageiros.
+                  Matriz configurada. Essas credenciais serão usadas para buscar recibos e <strong>pontuar passageiros</strong> em todas as cidades. As credenciais de cada cidade (aba Motorista) são independentes.
                 </AlertDescription>
               </Alert>
             )}

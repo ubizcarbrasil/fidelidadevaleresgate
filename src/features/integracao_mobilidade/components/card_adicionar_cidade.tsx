@@ -130,7 +130,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
               {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="text-xs text-muted-foreground">Usuário e senha são usados para buscar recibos e identificar passageiros desta cidade.</p>
+          <p className="text-xs text-muted-foreground">Usuário e senha da cidade são usados para receber corridas via webhook (pontuar motorista) e enviar mensagens no app (notificações).</p>
         </div>
 
         {/* Modo do webhook */}

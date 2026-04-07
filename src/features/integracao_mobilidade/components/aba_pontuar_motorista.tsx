@@ -141,8 +141,8 @@ export function AbaPontuarMotorista({
       <Alert className="border-primary/20 bg-primary/5">
         <Car className="h-4 w-4 text-primary" />
         <AlertDescription className="text-sm">
-          <strong>Pontuar Motorista</strong> — Aqui você conecta cada cidade à TaxiMachine para receber status de corridas via webhook.
-          O sistema calcula os pontos do motorista automaticamente com base na configuração de cada cidade.
+          <strong>Pontuar Motorista</strong> — Cada cidade possui suas <strong>próprias credenciais</strong> (API Key, Usuário e Senha da cidade na TaxiMachine).
+          Essas credenciais são usadas para receber status de corridas via webhook e calcular os pontos do motorista. São independentes das credenciais da Matriz.
         </AlertDescription>
       </Alert>
 
