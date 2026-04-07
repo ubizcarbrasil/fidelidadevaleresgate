@@ -17,6 +17,7 @@ export interface DuelParticipant {
   duels_enabled: boolean;
   public_nickname: string | null;
   avatar_url: string | null;
+  display_name: string | null;
   customers?: { name: string; cpf: string | null } | null;
 }
 
@@ -115,7 +116,7 @@ export function useDuelOpponents() {
       if (!driver) return [];
       const { data, error } = await supabase
         .from("driver_duel_participants")
-        .select("*, customers(name, cpf)")
+        .select("id, customer_id, branch_id, brand_id, duels_enabled, public_nickname, avatar_url, display_name")
         .eq("branch_id", driver.branch_id)
         .eq("duels_enabled", true)
         .neq("customer_id", driver.id);
@@ -123,6 +124,34 @@ export function useDuelOpponents() {
       return (data || []) as DuelParticipant[];
     },
     enabled: !!driver,
+  });
+}
+
+export function useUpdateNickname() {
+  const { driver } = useDriverSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (nickname: string | null) => {
+      if (!driver) throw new Error("Sem sessão");
+      const { data: part } = await supabase
+        .from("driver_duel_participants")
+        .select("id")
+        .eq("customer_id", driver.id)
+        .maybeSingle();
+      if (!part) throw new Error("Participante não encontrado");
+      const { error } = await supabase
+        .from("driver_duel_participants")
+        .update({ public_nickname: nickname })
+        .eq("id", part.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["duel-participant"] });
+      queryClient.invalidateQueries({ queryKey: ["duel-opponents"] });
+      toast.success("Apelido atualizado! 🎯");
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao salvar apelido"),
   });
 }
 

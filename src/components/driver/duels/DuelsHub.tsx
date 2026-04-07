@@ -3,7 +3,7 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -20,6 +20,7 @@ import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
 import AjudaDuelosSheet from "./AjudaDuelosSheet";
 import CardDueloPublico from "./CardDueloPublico";
 import ArenaAoVivo from "./ArenaAoVivo";
+import PerfilMotoristaSheet from "./PerfilMotoristaSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ConfigDuelos } from "./hook_config_duelos";
 import type { Duel } from "./hook_duelos";
@@ -43,6 +44,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const [showAjuda, setShowAjuda] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
+  const [showPerfil, setShowPerfil] = useState(false);
 
   const isEnabled = participant?.duels_enabled === true;
   const participantId = participant?.id || null;
@@ -112,6 +114,10 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
     return <RankingCidadeSheet onBack={() => setShowRanking(false)} />;
   }
 
+  if (showPerfil) {
+    return <PerfilMotoristaSheet onBack={() => setShowPerfil(false)} />;
+  }
+
   if (showCinturao) {
     return <CinturaoCidadeSheet onBack={() => setShowCinturao(false)} />;
   }
@@ -178,6 +184,15 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
               >
                 <BarChart3 className="h-4 w-4" />
                 Desempenho
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowPerfil(true)}
+                className="gap-2"
+                size="icon"
+                title="Meu perfil de duelos"
+              >
+                <UserCircle className="h-4 w-4" />
               </Button>
             </div>
             {configDuelos?.rankingAtivo !== false && (

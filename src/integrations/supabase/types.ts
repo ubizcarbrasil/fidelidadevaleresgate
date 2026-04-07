@@ -2520,6 +2520,7 @@ export type Database = {
           brand_id: string
           created_at: string
           customer_id: string
+          display_name: string | null
           duels_enabled: boolean
           id: string
           public_nickname: string | null
@@ -2531,6 +2532,7 @@ export type Database = {
           brand_id: string
           created_at?: string
           customer_id: string
+          display_name?: string | null
           duels_enabled?: boolean
           id?: string
           public_nickname?: string | null
@@ -2542,6 +2544,7 @@ export type Database = {
           brand_id?: string
           created_at?: string
           customer_id?: string
+          display_name?: string | null
           duels_enabled?: boolean
           id?: string
           public_nickname?: string | null

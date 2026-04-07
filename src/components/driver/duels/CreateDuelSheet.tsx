@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { ArrowLeft, Swords, Search, Calendar, Clock, Send, Coins, Wallet, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDuelOpponents, useCreateDuel, cleanDriverName, useDriverCompetitiveProfile } from "./hook_duelos";
+import { useDuelOpponents, useCreateDuel, useDriverCompetitiveProfile } from "./hook_duelos";
 import type { DuelParticipant } from "./hook_duelos";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
@@ -33,12 +33,12 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
 
   const filtered = (opponents || []).filter((o) => {
     if (!search.trim()) return true;
-    const name = cleanDriverName((o.customers as any)?.name);
+    const name = o.public_nickname || o.display_name || "Motorista";
     return name.toLowerCase().includes(search.toLowerCase());
   });
 
   const selectedOpponentData = opponents?.find((o) => o.customer_id === selectedOpponent);
-  const opponentName = cleanDriverName((selectedOpponentData?.customers as any)?.name);
+  const opponentName = selectedOpponentData?.public_nickname || selectedOpponentData?.display_name || "Motorista";
 
   const canSchedule = selectedOpponent !== null;
   const startAt = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
@@ -298,7 +298,8 @@ function OpponentCard({
   onSelect: () => void;
   onViewProfile: () => void;
 }) {
-  const name = cleanDriverName((participant.customers as any)?.name);
+  const displayName = participant.public_nickname || participant.display_name || "Motorista";
+  const subtitle = participant.public_nickname ? (participant.display_name || "Motorista") : null;
   const { data: profile } = useDriverCompetitiveProfile(participant.customer_id);
 
   return (
@@ -315,14 +316,14 @@ function OpponentCard({
           style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
         >
           {participant.avatar_url ? (
-            <img src={participant.avatar_url} alt={name} className="h-10 w-10 rounded-full object-cover" />
+            <img src={participant.avatar_url} alt={displayName} className="h-10 w-10 rounded-full object-cover" />
           ) : (
-            name.charAt(0).toUpperCase()
+            displayName.charAt(0).toUpperCase()
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{name}</p>
-          <p className="text-[11px] text-muted-foreground">{participant.public_nickname || "Motorista"}</p>
+          <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+          {subtitle && <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>}
           {profile && profile.total_duels > 0 && (
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }}>
