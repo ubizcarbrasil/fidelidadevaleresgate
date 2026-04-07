@@ -1,30 +1,35 @@
 
 
-## Adicionar botão "Acompanhar Duelo" nos cards ao vivo
+## Corrigir botão "Acessar Conta" para abrir a conta do motorista
 
 ### Problema
-Os cards de duelos ao vivo não têm um botão visível de ação — o card inteiro é clicável mas não há indicação visual clara para o motorista acompanhar o duelo.
+O botão "Acessar Conta" abre `/customer-preview?brandId=X&customerId=Y`, mas a página ignora o parâmetro `customerId`. O sistema de sessão de motorista é baseado em CPF salvo no `localStorage` (chave `driver_session_cpf_{brandId}`), então o motorista não é logado automaticamente.
 
 ### Solução
-Adicionar um botão "Acompanhar" no `DuelCard.tsx` que aparece apenas para duelos com status `live` ou `accepted`.
+Alterar o `handleOpenPwa` em `AbaDadosMotorista.tsx` para, antes de abrir a nova aba, salvar o CPF do motorista no localStorage com a chave correta (`driver_session_cpf_{brandId}`). Assim, quando a página `/customer-preview` carregar, o `DriverSessionProvider` restaura a sessão automaticamente.
 
 ### Alteração
 
-**Arquivo**: `src/components/driver/duels/DuelCard.tsx`
+**Arquivo**: `src/components/driver-management/tabs/AbaDadosMotorista.tsx`
 
-- Importar `Eye` do lucide-react e `Button` do shadcn
-- Adicionar uma terceira linha no card com um botão estilizado:
+Modificar `handleOpenPwa`:
 
 ```tsx
-{(duel.status === "live" || duel.status === "accepted") && (
-  <div className="mt-2 pt-2" style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}>
-    <Button size="sm" variant="outline" className="w-full gap-2 text-xs">
-      <Eye className="h-3.5 w-3.5" />
-      Acompanhar Duelo
-    </Button>
-  </div>
-)}
+const handleOpenPwa = () => {
+  // Pre-seed driver session in localStorage so DriverSessionProvider auto-restores
+  if (driver.cpf) {
+    const cleanCpf = driver.cpf.replace(/\D/g, "");
+    localStorage.setItem(`driver_session_cpf_${brandId}`, cleanCpf);
+  }
+  const url = `/customer-preview?brandId=${brandId}`;
+  window.open(url, "_blank");
+};
 ```
 
-O botão herda o `onClick` do card pai (abre o `DuelDetailSheet`), mantendo a mesma funcionalidade mas com um CTA visual claro.
+Mudanças:
+- Salva o CPF limpo no localStorage antes de abrir a aba
+- Remove o parâmetro `customerId` da URL (não era usado)
+- O `DriverSessionProvider` detecta o CPF salvo e carrega o motorista automaticamente
+
+Impacto: apenas 4 linhas alteradas, sem novos arquivos.
 
