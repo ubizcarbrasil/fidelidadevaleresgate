@@ -50,12 +50,10 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
     return () => clearInterval(id);
   }, [aoVivo]);
 
-  const nomeA = cleanDriverName(
-    duelo.challenger?.public_nickname || duelo.challenger?.customers?.name
-  );
-  const nomeB = cleanDriverName(
-    duelo.challenged?.public_nickname || duelo.challenged?.customers?.name
-  );
+  const nomeA = resolveParticipantName(duelo.challenger);
+  const nomeB = resolveParticipantName(duelo.challenged);
+  const avatarA = resolveParticipantAvatar(duelo.challenger);
+  const avatarB = resolveParticipantAvatar(duelo.challenged);
 
   const ridesA = duelo.challenger_rides_count;
   const ridesB = duelo.challenged_rides_count;
