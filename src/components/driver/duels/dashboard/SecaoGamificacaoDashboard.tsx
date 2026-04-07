@@ -3,7 +3,7 @@
  * Visual de arena competitiva com gradientes e clima de disputa.
  */
 import { useState } from "react";
-import { Swords, Zap, ChevronRight } from "lucide-react";
+import { Swords, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDuelosCidade } from "../hook_duelos_publicos";
 import { useDriverDuels, useDuelParticipation } from "../hook_duelos";

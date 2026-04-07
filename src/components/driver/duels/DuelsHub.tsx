@@ -193,7 +193,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
               <DuelChallengeCard key={d.id} duel={d} />
             ))}
           </section>
-        )}
+        </div>
 
         {/* Counter-proposals received */}
         {counterProposals.length > 0 && (
