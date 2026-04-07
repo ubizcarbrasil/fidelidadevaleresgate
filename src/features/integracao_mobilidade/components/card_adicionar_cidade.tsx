@@ -84,8 +84,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
           {activeIntegrations.length > 0 ? "Adicionar nova cidade" : "Ativar integração"}
         </CardTitle>
         <CardDescription>
-          Cada cidade possui suas próprias credenciais (API Key, Usuário e Senha) na TaxiMachine.
-          Informe abaixo os dados da cidade que deseja integrar e escolha como registrar o webhook.
+          Informe as credenciais da <strong>cidade</strong> na TaxiMachine. Essas credenciais são usadas para <strong>pontuar motoristas</strong> e <strong>enviar notificações</strong> — são diferentes das credenciais da Matriz (usadas para pontuar passageiros).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 max-w-md">
