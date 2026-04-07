@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, Smartphone } from "lucide-react";
+import { TrendingUp, Smartphone, Swords } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
