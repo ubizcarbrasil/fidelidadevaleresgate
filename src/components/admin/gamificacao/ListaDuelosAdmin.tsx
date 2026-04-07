@@ -4,11 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Plus, Trophy } from "lucide-react";
 import { format } from "date-fns";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
   branchId: string;
+  onCriarDuelo?: () => void;
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -22,7 +25,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
 
 const FILTER_OPTIONS = ["all", "pending", "accepted", "live", "finished", "declined", "canceled"] as const;
 
-export default function ListaDuelosAdmin({ branchId }: Props) {
+export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: duelos, isLoading } = useQuery({
@@ -32,7 +35,7 @@ export default function ListaDuelosAdmin({ branchId }: Props) {
         .from("driver_duels")
         .select(`
           id, status, start_at, end_at, challenger_rides_count, challenged_rides_count,
-          winner_id, created_at,
+          winner_id, created_at, prize_points, challenger_points_bet, challenged_points_bet,
           challenger:driver_duel_participants!driver_duels_challenger_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name)),
           challenged:driver_duel_participants!driver_duels_challenged_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name))
         `)
@@ -59,16 +62,23 @@ export default function ListaDuelosAdmin({ branchId }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Duelos da Cidade</CardTitle>
-        <select
-          className="rounded-md border bg-background px-3 py-1.5 text-sm"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-        >
-          <option value="all">Todos</option>
-          {FILTER_OPTIONS.filter(o => o !== "all").map(s => (
-            <option key={s} value={s}>{STATUS_LABELS[s]?.label || s}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            className="rounded-md border bg-background px-3 py-1.5 text-sm"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="all">Todos</option>
+            {FILTER_OPTIONS.filter(o => o !== "all").map(s => (
+              <option key={s} value={s}>{STATUS_LABELS[s]?.label || s}</option>
+            ))}
+          </select>
+          {onCriarDuelo && (
+            <Button size="sm" onClick={onCriarDuelo} className="gap-1">
+              <Plus className="h-4 w-4" /> Criar
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -85,11 +95,13 @@ export default function ListaDuelosAdmin({ branchId }: Props) {
                   <TableHead>Status</TableHead>
                   <TableHead>Período</TableHead>
                   <TableHead className="text-right">Placar</TableHead>
+                  <TableHead className="text-right">Prêmio</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {duelos.map((d: any) => {
                   const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
+                  const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
                   return (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm">{getNome(d.challenger)}</TableCell>
@@ -100,6 +112,14 @@ export default function ListaDuelosAdmin({ branchId }: Props) {
                       </TableCell>
                       <TableCell className="text-right text-sm font-medium">
                         {d.challenger_rides_count ?? "—"} × {d.challenged_rides_count ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {totalPrize > 0 ? (
+                          <span className="flex items-center justify-end gap-1">
+                            <Trophy className="h-3.5 w-3.5 text-yellow-500" />
+                            {formatPoints(totalPrize)}
+                          </span>
+                        ) : "—"}
                       </TableCell>
                     </TableRow>
                   );

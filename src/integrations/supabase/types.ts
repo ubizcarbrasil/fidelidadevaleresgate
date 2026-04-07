@@ -7135,6 +7135,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_boost_duel: {
+        Args: { p_amount: number; p_branch_id: string; p_duel_id: string }
+        Returns: Json
+      }
+      admin_create_duel: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_challenged_customer_id: string
+          p_challenger_customer_id: string
+          p_end_at: string
+          p_prize_points?: number
+          p_start_at: string
+        }
+        Returns: Json
+      }
       count_duel_rides: {
         Args: {
           p_branch_id: string
