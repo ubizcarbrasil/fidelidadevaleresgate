@@ -8,6 +8,7 @@ export interface ConfigDuelos {
   rankingAtivo: boolean;
   cinturaoAtivo: boolean;
   visualizacaoPublica: boolean;
+  duracaoMinimaHoras: number;
   // Escalabilidade futura — Etapa 8
   modosDuelo: string[];
   revanchaHabilitada: boolean;
@@ -24,6 +25,7 @@ const DEFAULTS: ConfigDuelos = {
   rankingAtivo: true,
   cinturaoAtivo: true,
   visualizacaoPublica: true,
+  duracaoMinimaHoras: 1,
   modosDuelo: ["rides"],
   revanchaHabilitada: false,
   temporadasAtivas: false,
@@ -46,6 +48,7 @@ export function useConfigDuelos(branch: { branch_settings_json?: any } | null | 
     rankingAtivo: s.enable_city_ranking !== false,
     cinturaoAtivo: s.enable_city_belt !== false,
     visualizacaoPublica: s.allow_public_duel_viewing !== false,
+    duracaoMinimaHoras: typeof s.duel_min_duration_hours === "number" ? (s.duel_min_duration_hours as number) : 1,
     modosDuelo: Array.isArray(s.duel_modes) ? (s.duel_modes as string[]) : ["rides"],
     revanchaHabilitada: s.enable_rematch === true,
     temporadasAtivas: s.enable_seasons === true,

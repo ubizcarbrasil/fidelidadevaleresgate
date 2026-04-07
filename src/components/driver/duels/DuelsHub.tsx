@@ -103,7 +103,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   }
 
   if (showCreate) {
-    return <CreateDuelSheet onBack={() => setShowCreate(false)} onSuccess={() => setShowCreate(false)} />;
+    return <CreateDuelSheet onBack={() => setShowCreate(false)} onSuccess={() => setShowCreate(false)} duracaoMinimaHoras={configDuelos?.duracaoMinimaHoras} />;
   }
 
   if (showDesempenho) {
