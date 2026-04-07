@@ -567,6 +567,7 @@ export function useFinalizeDuel() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       queryClient.invalidateQueries({ queryKey: ["driver-session"] });
+      queryClient.invalidateQueries({ queryKey: ["feed-cidade"] });
       toast.success("Duelo finalizado! 🏆");
 
       const bothIds = [result.challengerCustomerId, result.challengedCustomerId];
