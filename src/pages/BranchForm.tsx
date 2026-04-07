@@ -150,7 +150,7 @@ export default function BranchForm() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl px-1 sm:px-0">
       <Button variant="ghost" onClick={() => navigate("/branches")} className="gap-2">
         <ArrowLeft className="h-4 w-4" />Voltar
       </Button>
