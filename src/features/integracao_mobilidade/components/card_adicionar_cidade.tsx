@@ -77,11 +77,16 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
   });
 
   return (
-    <Card>
+    <Card className={availableBranches.length > 0 ? "border-yellow-500/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.1)]" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Plus className="h-5 w-5" />
           {activeIntegrations.length > 0 ? "Adicionar nova cidade" : "Ativar integração"}
+          {availableBranches.length > 0 && (
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 border-yellow-400 text-xs ml-1">
+              {availableBranches.length} pendente{availableBranches.length > 1 ? "s" : ""}
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription>
           Informe as credenciais da <strong>cidade</strong> na TaxiMachine. Essas credenciais são usadas para <strong>pontuar motoristas</strong> e <strong>enviar notificações</strong> — são diferentes das credenciais da Matriz (usadas para pontuar passageiros).

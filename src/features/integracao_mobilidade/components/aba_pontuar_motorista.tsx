@@ -149,6 +149,31 @@ export function AbaPontuarMotorista({
         </AlertDescription>
       </Alert>
 
+      {/* Alerta de cidades pendentes de ativação */}
+      {availableBranches.length > 0 && hasActiveCities && (
+        <Alert className="border-yellow-500/30 bg-yellow-500/5">
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-sm">
+            <strong>
+              {availableBranches.length === 1
+                ? "1 cidade pendente de ativação"
+                : `${availableBranches.length} cidades pendentes de ativação`}
+            </strong>
+            {" — "}
+            {availableBranches.map((b) => b.name).join(", ")}.
+            {" "}
+            <button
+              type="button"
+              className="underline font-medium text-yellow-700 hover:text-yellow-800"
+              onClick={() => addCidadeRef.current?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Configure as credenciais abaixo
+            </button>{" "}
+            para conectá-{availableBranches.length === 1 ? "la" : "las"}.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Sem cidades ativas: empty state + card de adicionar */}
       {!hasActiveCities && (
         <Card className="border-dashed border-2 border-primary/30">
