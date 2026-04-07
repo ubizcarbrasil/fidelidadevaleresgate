@@ -33,7 +33,7 @@ export default function CreateDuelSheet({ onBack, onSuccess }: Props) {
 
   const filtered = (opponents || []).filter((o) => {
     if (!search.trim()) return true;
-    const name = cleanDriverName((o.customers as any)?.name);
+    const name = o.public_nickname || o.display_name || "Motorista";
     return name.toLowerCase().includes(search.toLowerCase());
   });
 
