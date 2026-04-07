@@ -87,7 +87,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
           Informe as credenciais da <strong>cidade</strong> na TaxiMachine. Essas credenciais são usadas para <strong>pontuar motoristas</strong> e <strong>enviar notificações</strong> — são diferentes das credenciais da Matriz (usadas para pontuar passageiros).
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 max-w-md">
+      <CardContent className="space-y-4">
         {/* Cidade */}
         <div className="space-y-2">
           <Label>Cidade</Label>
@@ -136,7 +136,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
         {/* Modo do webhook */}
         <div className="space-y-2">
           <Label>Como registrar o webhook?</Label>
-          <RadioGroup value={webhookMode} onValueChange={(v) => setWebhookMode(v as "auto" | "manual")} className="flex gap-4">
+          <RadioGroup value={webhookMode} onValueChange={(v) => setWebhookMode(v as "auto" | "manual")} className="flex flex-col gap-2 sm:flex-row sm:gap-4">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="auto" id="webhook-auto" />
               <Label htmlFor="webhook-auto" className="text-sm font-normal cursor-pointer">Automático</Label>
@@ -153,7 +153,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
           </p>
         </div>
 
-        <Button onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
+        <Button className="w-full sm:w-auto" onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
           {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           <Power className="h-4 w-4 mr-1" /> Ativar cidade
         </Button>

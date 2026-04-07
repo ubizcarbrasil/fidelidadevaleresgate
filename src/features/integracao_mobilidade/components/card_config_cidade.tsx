@@ -166,7 +166,7 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
         </div>
 
         {/* Webhook status + test */}
-        <div className="flex items-center gap-3 text-sm flex-wrap">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 text-sm">
           {integration.webhook_registered ? (
             <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /><span>Webhook registrado</span></div>
           ) : (
@@ -202,7 +202,7 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
         {/* Callback URL */}
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">URL de retorno (opcional) — receba uma notificação HTTP a cada corrida processada</Label>
-          <div className="flex items-center gap-2 max-w-lg">
+          <div className="flex items-center gap-2">
             <Input value={callbackUrl} onChange={(e) => setCallbackUrl(e.target.value)} placeholder="https://seu-sistema.com/webhook/pontuacao" type="url" />
             <Button variant="outline" size="icon" onClick={() => saveCallbackMutation.mutate()} disabled={saveCallbackMutation.isPending}>
               {callbackSaved ? <Check className="h-4 w-4 text-primary" /> : saveCallbackMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -212,7 +212,7 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
 
         {/* Driver Points Config */}
         <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label className="text-sm flex items-center gap-1.5">
                 <Truck className="h-4 w-4 text-primary" /> Pontuação do Motorista
@@ -270,12 +270,12 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border">
-          <Button variant="destructive" size="sm" onClick={() => { if (confirm("Remover esta conexão?")) deleteIntegrationMutation.mutate(); }} disabled={deleteIntegrationMutation.isPending}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center pt-2 border-t border-border">
+          <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => { if (confirm("Remover esta conexão?")) deleteIntegrationMutation.mutate(); }} disabled={deleteIntegrationMutation.isPending}>
             {deleteIntegrationMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             <XCircle className="h-4 w-4 mr-1" /> Remover conexão
           </Button>
-          <Button variant="outline" size="sm" onClick={() => integration.branch_id && deactivateMutation.mutate()} disabled={deactivateMutation.isPending}>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => integration.branch_id && deactivateMutation.mutate()} disabled={deactivateMutation.isPending}>
             {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             <PowerOff className="h-4 w-4 mr-1" /> Desativar
           </Button>

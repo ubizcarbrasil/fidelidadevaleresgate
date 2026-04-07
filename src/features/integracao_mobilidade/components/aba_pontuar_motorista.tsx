@@ -180,7 +180,7 @@ export function AbaPontuarMotorista({
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
           onClick={() => addCidadeRef.current?.scrollIntoView({ behavior: "smooth" })}
         >
           <Car className="h-4 w-4" />
@@ -238,7 +238,7 @@ export function AbaPontuarMotorista({
                     const isFinalized = ev.status_code === "F";
                     const payload = ev.raw_payload;
                     return (
-                      <div key={ev.id} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${isFinalized ? "border-primary/30 bg-primary/5" : "border-border"}`}>
+                      <div key={ev.id} className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${isFinalized ? "border-primary/30 bg-primary/5" : "border-border"}`}>
                         <Badge variant="outline" className={`text-xs shrink-0 ${st.color}`}>{st.label}</Badge>
                         <span className="font-mono text-xs text-muted-foreground shrink-0">#{ev.machine_ride_id}</span>
                         {isFinalized && payload?.ride_value !== undefined && (
@@ -285,7 +285,7 @@ function DiagnosticoWebhook({ rides, retryMutation }: { rides: any[]; retryMutat
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-sm">
               <Activity className="h-4 w-4 text-primary" />
@@ -295,7 +295,7 @@ function DiagnosticoWebhook({ rides, retryMutation }: { rides: any[]; retryMutat
             <CardDescription>Últimas 10 corridas processadas — identifica erros de credencial ou API.</CardDescription>
           </div>
           {hasErrors && (
-            <Button variant="outline" size="sm" onClick={() => retryMutation.mutate()} disabled={retryMutation.isPending} className="shrink-0">
+            <Button variant="outline" size="sm" onClick={() => retryMutation.mutate()} disabled={retryMutation.isPending} className="w-full sm:w-auto shrink-0">
               {retryMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
               Reprocessar falhas ({failedCount})
             </Button>
