@@ -29,6 +29,7 @@ import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
 import BannerPromoDuelos from "./duels/BannerPromoDuelos";
+import BannerDueloAoVivo from "./duels/BannerDueloAoVivo";
 import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
 import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
 
@@ -542,6 +543,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
       {/* Banners */}
       {showBanners && <DriverBannerCarousel brandId={brand.id} />}
+
+      {/* Banner duelo ao vivo — visível para todos */}
+      {!debouncedSearch.trim() && configDuelos.duelosAtivos && (
+        <BannerDueloAoVivo branchId={branch?.id} fontHeading={fontHeading} />
+      )}
 
       {/* Banner promo Duelos */}
       {!debouncedSearch.trim() && driver && configDuelos.duelosAtivos && (
