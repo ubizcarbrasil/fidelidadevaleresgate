@@ -1,49 +1,36 @@
 
 
-## Corrigir layout mobile completo da rota /gamificacao-admin
+## Diagnóstico e Plano de Correção
 
-### Problema
-A tela de Gamificação Admin ainda apresenta elementos cortados e deformados no viewport mobile (430px), como visível na screenshot: cards de estatísticas cortados à esquerda, nomes de motoristas transbordando, tabs parcialmente ocultas, e tabelas das abas internas (Ranking, Moderação) sem versão mobile.
+### Problema 1: Onde o motorista define o apelido?
+Atualmente **nao existe** uma tela para o motorista definir seu proprio apelido. Somente o admin pode editar apelidos na aba "Moderacao de Apelidos" (`ModeracaoApelidos.tsx`). Todos os `public_nickname` no banco estao `null`.
 
-### Correções por componente
+### Problema 2: Por que todos mostram "Motorista"?
+A lista de adversarios (`CreateDuelSheet.tsx`) faz join com a tabela `customers` para buscar o nome real. Os nomes existem no banco (ex: `[MOTORISTA] Jorge Aparecido de Souza Oliveira`), mas provavelmente uma politica RLS na tabela `customers` impede que um motorista logado via sessao CPF leia os nomes de outros motoristas. Resultado: o join retorna `null` e o fallback exibe "Motorista".
 
-**1. `EstatisticasGamificacao.tsx` — Cards KPI**
-- O grid `grid-cols-2` está ok, mas os cards internos precisam de `min-w-0` e o texto precisa de `truncate` para não estourar o container
-- Adicionar `overflow-hidden` no Card para evitar o corte lateral visível na screenshot
+### Solucao proposta
 
-**2. `DuelosAoVivoAdmin.tsx` — Refinamentos**
-- Nomes dos motoristas no scoreboard: adicionar `max-w-[100px]` no mobile com `truncate` para nomes longos como "Aparecido de Souza Oliveira"
-- Reduzir o font-size do placar de `text-2xl` para `text-xl` no mobile
-- Seção de prize breakdown: usar `flex-wrap` para não transbordar
+**1. Criar tela de perfil do motorista com campo de apelido**
+- Novo componente no fluxo do motorista (ex: dentro do menu/perfil do DuelsHub ou como sheet acessivel)
+- Campo para o motorista digitar e salvar seu `public_nickname` na tabela `driver_duel_participants`
+- Validacao simples (max 20 caracteres, sem palavras ofensivas basicas)
 
-**3. `RankingAdminView.tsx` — Tabela sem versão mobile**
-- Adicionar card-list mobile (igual padrão do `ListaDuelosAdmin`): posição + nome + apelido + corridas empilhados em card
-- Manter Table apenas em `md+`
+**2. Corrigir exibicao de nomes na lista de adversarios**
+- Copiar o `public_nickname` e o nome do customer para a propria tabela `driver_duel_participants` (ja existe `public_nickname`; o nome real pode ser populado via trigger ou no momento do enrollment)
+- Alterar a query de `useDuelOpponents` para usar os dados ja presentes em `driver_duel_participants` em vez de depender do join com `customers`
+- Alternativa mais simples: ajustar RLS da tabela `customers` para permitir leitura do campo `name` por motoristas autenticados via sessao CPF
 
-**4. `ModeracaoApelidos.tsx` — Tabela sem versão mobile**
-- Adicionar card-list mobile: nome real, apelido (editável inline), status badge e botão de ação
-- Manter Table apenas em `md+`
+**3. Priorizar nickname > nome real na lista**
+- No `OpponentCard`, inverter a logica: mostrar `public_nickname` como titulo principal (quando existir) e o nome real como subtitulo
+- Isso incentiva os motoristas a definirem apelidos e preserva a privacidade
 
-**5. `CinturaoAdminView.tsx` — Header do card**
-- O `flex-row` no CardHeader pode quebrar no mobile com botão "Atualizar" — mudar para `flex-col gap-2 sm:flex-row sm:items-center sm:justify-between`
+### Arquivos a criar/editar
+- **Novo:** `src/components/driver/duels/PerfilMotoristaSheet.tsx` — tela para o motorista editar apelido e avatar
+- **Editar:** `src/components/driver/duels/DuelsHub.tsx` — adicionar botao de acesso ao perfil
+- **Editar:** `src/components/driver/duels/hook_duelos.ts` — hook para salvar apelido + ajustar `useDuelOpponents` para nao depender do join `customers`
+- **Editar:** `src/components/driver/duels/CreateDuelSheet.tsx` — `OpponentCard` priorizar nickname
+- **Migracoes SQL:** Avaliar se precisa ajustar RLS de `customers` ou adicionar coluna `display_name` em `driver_duel_participants`
 
-**6. `ConfiguracaoModulo.tsx` — Formulários**
-- Grid de parâmetros `sm:grid-cols-3`: já responsivo, mas confirmar que funciona em 430px (sm = 640px, então será 1 coluna no mobile — ok)
-- Grid de métricas `sm:grid-cols-2`: mesmo caso, ok
-- Botão "Habilitar todos": adicionar `w-full sm:w-auto`
-
-**7. `GamificacaoAdminPage.tsx` — Tabs**
-- A TabsList com `flex overflow-x-auto` pode não mostrar indicação de scroll — adicionar `scrollbar-none` e padding para hint visual
-
-### Arquivos a editar
-- `src/components/admin/gamificacao/EstatisticasGamificacao.tsx`
-- `src/components/admin/gamificacao/DuelosAoVivoAdmin.tsx`
-- `src/components/admin/gamificacao/RankingAdminView.tsx`
-- `src/components/admin/gamificacao/ModeracaoApelidos.tsx`
-- `src/components/admin/gamificacao/CinturaoAdminView.tsx`
-- `src/components/admin/gamificacao/ConfiguracaoModulo.tsx`
-- `src/pages/GamificacaoAdminPage.tsx`
-
-### Resultado
-Toda a rota `/gamificacao-admin` ficará perfeitamente legível e funcional em viewport de 430px (PWA mobile), com cards empilhados no lugar de tabelas, textos truncados, botões de largura total e scroll horizontal nas tabs.
+### Abordagem recomendada
+A opcao mais segura e rapida: **popular o `public_nickname` automaticamente** com o primeiro nome do motorista no momento do enrollment (upsert), e permitir que o motorista edite depois. Assim a lista nunca mostra "Motorista" para todos.
 
