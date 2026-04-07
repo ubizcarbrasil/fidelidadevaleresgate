@@ -166,7 +166,7 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
         </div>
 
         {/* Webhook status + test */}
-        <div className="flex items-center gap-3 text-sm flex-wrap">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 text-sm">
           {integration.webhook_registered ? (
             <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /><span>Webhook registrado</span></div>
           ) : (
