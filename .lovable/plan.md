@@ -1,23 +1,28 @@
 
 
-## Plano: Responsividade do BranchForm para mobile 430px
+## Plano: Melhorar clareza do fluxo de ativação de cidade
 
-### Problemas identificados
+### Situação atual
+A cidade **Leme - SP** existe na tabela `branches` mas não tem registro em `machine_integrations`. Isso significa que ela foi criada como filial mas ainda não foi "ativada" na aba Pontuar Motorista. O dropdown do card "Ativar integração" mostra Leme corretamente — basta preencher as credenciais e clicar "Ativar cidade".
 
-1. **Container `max-w-2xl`** — OK para desktop mas pode ser melhorado com padding lateral em mobile
-2. **Grids `md:grid-cols-2`** — Em 430px ficam em 1 coluna (correto), mas o breakpoint `md` (768px) é adequado
-3. **Botões Salvar/Cancelar** — `flex gap-2` sem largura total em mobile, ficam pequenos e difíceis de clicar
-4. **Switch "Ativo"** — Layout funcional mas pode ter melhor alinhamento inline
-5. **CardContent sem padding mobile** — Padding padrão pode comprimir campos em telas estreitas
+O problema é de **UX**: não está óbvio que a cidade precisa ser ativada para aparecer em "Cidades conectadas".
 
-### Mudanças em `src/pages/BranchForm.tsx`
+### Mudanças propostas
 
-1. **Container principal**: trocar `max-w-2xl` para `max-w-2xl px-1 sm:px-0` para micro-ajuste de margem mobile
-2. **Botões de ação (Salvar/Cancelar)**: trocar `flex gap-2` para `flex flex-col gap-2 sm:flex-row` com `w-full sm:w-auto` em cada botão — empilha verticalmente em mobile, botões ocupam largura total
-3. **Switch "Ativo"**: trocar layout para `flex items-center justify-between` com Label e Switch na mesma linha, mais ergonômico
-4. **Timezone grid**: remover grid wrapper desnecessário (campo único não precisa de grid)
-5. **Botão Voltar**: adicionar `w-full sm:w-auto` para consistência mobile
+**1. Adicionar indicador visual de cidades pendentes**
+No topo da aba, exibir um alerta amarelo quando existirem cidades criadas mas não ativadas, tipo:
+> "Você tem 1 cidade pendente de ativação (Leme - SP). Configure as credenciais abaixo para conectá-la."
+
+**2. Destacar o card "Ativar integração" quando houver pendentes**
+Adicionar borda destacada (amarela/primary) e scroll automático para o card quando houver cidades não ativadas.
+
+**3. Lista de cidades pendentes no card**
+Mostrar as cidades pendentes como chips/badges acima do select para dar visibilidade.
+
+### Arquivos modificados
+- `src/features/integracao_mobilidade/components/aba_pontuar_motorista.tsx` — alerta de pendentes
+- `src/features/integracao_mobilidade/components/card_adicionar_cidade.tsx` — destaque visual e chips de pendentes
 
 ### Resumo
-Ajustes puramente de classes Tailwind — sem mudança de lógica. Foco em botões clicáveis com largura total e layout mais limpo em 430px.
+Ajustes puramente visuais/UX para deixar claro que cidades recém-criadas precisam ser ativadas com credenciais antes de aparecerem como conectadas. Sem mudança de lógica de negócio.
 
