@@ -282,6 +282,7 @@ export function useCreateDuel() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      queryClient.invalidateQueries({ queryKey: ["feed-cidade"] });
       toast.success("Desafio enviado! 🥊");
 
       const driverName = cleanDriverName(driver?.name);
@@ -299,6 +300,16 @@ export function useCreateDuel() {
         customerIds: [result.challengedCustomerId],
         duelId,
         nomeOponente: driverName,
+      });
+
+      registrarEventoFeed({
+        branchId: driver!.branch_id,
+        brandId: driver!.brand_id,
+        eventType: "DUEL_CHALLENGE_SENT",
+        customerId: driver!.id,
+        title: `${driverName} desafiou um motorista para um duelo!`,
+        description: "Novo desafio enviado na cidade",
+        metadata: { duelId },
       });
     },
     onError: (err: any) => toast.error(err.message || "Erro ao criar desafio"),
