@@ -8,6 +8,7 @@ export interface ConfigDuelos {
   rankingAtivo: boolean;
   cinturaoAtivo: boolean;
   visualizacaoPublica: boolean;
+  duracaoMinimaHoras: number;
   // Escalabilidade futura — Etapa 8
   modosDuelo: string[];
   revanchaHabilitada: boolean;
@@ -24,6 +25,7 @@ const DEFAULTS: ConfigDuelos = {
   rankingAtivo: true,
   cinturaoAtivo: true,
   visualizacaoPublica: true,
+  duracaoMinimaHoras: 1,
   modosDuelo: ["rides"],
   revanchaHabilitada: false,
   temporadasAtivas: false,
