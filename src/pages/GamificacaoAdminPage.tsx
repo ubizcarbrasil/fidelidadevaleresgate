@@ -11,6 +11,8 @@ import ListaDuelosAdmin from "@/components/admin/gamificacao/ListaDuelosAdmin";
 import RankingAdminView from "@/components/admin/gamificacao/RankingAdminView";
 import CinturaoAdminView from "@/components/admin/gamificacao/CinturaoAdminView";
 import ModeracaoApelidos from "@/components/admin/gamificacao/ModeracaoApelidos";
+import DuelosAoVivoAdmin from "@/components/admin/gamificacao/DuelosAoVivoAdmin";
+import ModalCriarDueloAdmin from "@/components/admin/gamificacao/ModalCriarDueloAdmin";
 
 export default function GamificacaoAdminPage() {
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
