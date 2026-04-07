@@ -2,7 +2,8 @@
  * Card resumido de duelo para listas.
  */
 import React from "react";
-import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare } from "lucide-react";
+import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Duel } from "./hook_duelos";
 import { cleanDriverName } from "./hook_duelos";
@@ -96,6 +97,15 @@ export default function DuelCard({ duel, participantId, onClick }: Props) {
           </span>
         )}
       </div>
+
+      {(duel.status === "live" || duel.status === "accepted") && (
+        <div className="mt-2 pt-2" style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}>
+          <Button size="sm" variant="outline" className="w-full gap-2 text-xs">
+            <Eye className="h-3.5 w-3.5" />
+            Acompanhar Duelo
+          </Button>
+        </div>
+      )}
     </button>
   );
 }
