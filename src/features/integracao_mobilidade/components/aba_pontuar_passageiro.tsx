@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
-  Trophy, User, Phone, MapPin, Coins, Radio,
+  Trophy, User, Phone, MapPin, Coins, Radio, Info,
 } from "lucide-react";
 import type { Integration } from "../hooks/hook_integracoes";
 
@@ -31,7 +32,6 @@ export function AbaPontuarPassageiro({
 }: Props) {
   const queryClient = useQueryClient();
 
-  // Notifications feed
   const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
   const [identifyNotif, setIdentifyNotif] = useState<any>(null);
   const [identifyForm, setIdentifyForm] = useState({ name: "", cpf: "", phone: "" });
@@ -84,6 +84,15 @@ export function AbaPontuarPassageiro({
 
   return (
     <div className="space-y-6">
+      {/* Explicação da aba */}
+      <Alert className="border-primary/20 bg-primary/5">
+        <Trophy className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-sm">
+          <strong>Pontuar Passageiro</strong> — Aqui são exibidas as pontuações creditadas aos passageiros em tempo real.
+          As credenciais da Matriz (no topo da página) são usadas para buscar recibos e identificar os passageiros automaticamente.
+        </AlertDescription>
+      </Alert>
+
       {/* Endpoint primário */}
       {selectedIntegration && (
         <Card>
@@ -92,6 +101,10 @@ export function AbaPontuarPassageiro({
               <Radio className="h-4 w-4 text-primary" />
               Endpoint primário da API
             </CardTitle>
+            <CardDescription>
+              Define qual endpoint o sistema tenta primeiro para buscar os dados do passageiro.
+              Se o primário falhar, o outro é usado como fallback automaticamente.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 max-w-lg">
             <Select
@@ -106,22 +119,21 @@ export function AbaPontuarPassageiro({
                 <SelectItem value="request_v1">Request v1 — retorna telefone do passageiro</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
-              O sistema tenta o endpoint primário primeiro. Se falhar, usa o outro como fallback.
-            </p>
           </CardContent>
         </Card>
       )}
 
       {/* Últimas pontuações */}
-      {activeIntegrations.length > 0 && (
+      {activeIntegrations.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <Trophy className="h-4 w-4 text-primary" />
               Últimas pontuações de passageiros
             </CardTitle>
-            <CardDescription>Pontuações creditadas em tempo real, todas as cidades.</CardDescription>
+            <CardDescription>
+              Pontuações creditadas em tempo real, de todas as cidades. Passageiros não identificados podem ser vinculados manualmente.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-80">
@@ -129,6 +141,7 @@ export function AbaPontuarPassageiro({
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
                   <Trophy className="h-8 w-8 mb-2 opacity-40" />
                   <p className="text-sm">Nenhuma pontuação registrada ainda.</p>
+                  <p className="text-xs mt-1">As pontuações aparecerão aqui conforme corridas forem finalizadas.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -173,6 +186,13 @@ export function AbaPontuarPassageiro({
                 </div>
               )}
             </ScrollArea>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <Trophy className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">Nenhuma cidade ativa. Ative uma cidade na aba "Pontuar Motorista" para começar a pontuar passageiros.</p>
           </CardContent>
         </Card>
       )}

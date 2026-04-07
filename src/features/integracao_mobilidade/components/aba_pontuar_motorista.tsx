@@ -3,22 +3,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ScoredDriversPanel from "@/components/machine-integration/ScoredDriversPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
-  Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
-  Eye, EyeOff, Copy, Check, Radio, Save, KeyRound, AlertTriangle,
-  MapPin, Plus, Power, PowerOff, RefreshCw, Truck,
+  Car, Activity, Radio, AlertTriangle, RefreshCw, Loader2, Info,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
+import { CardCidadesConectadas } from "./card_cidades_conectadas";
+import { CardConfigCidade } from "./card_config_cidade";
+import { CardAdicionarCidade } from "./card_adicionar_cidade";
 
 /* Status labels */
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -52,18 +48,6 @@ type RideEvent = {
   created_at: string;
 };
 
-function StatusCard({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
-  return (
-    <Card>
-      <CardContent className="pt-4 flex flex-col items-center gap-1">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">{label}</span>
-        {children}
-      </CardContent>
-    </Card>
-  );
-}
-
 interface Props {
   brandId: string;
   integrations: Integration[];
@@ -85,47 +69,12 @@ export function AbaPontuarMotorista({
   const webhookBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/machine-webhook`;
 
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
-  const [copiedUrl, setCopiedUrl] = useState(false);
-
-  // Unified add city form
-  const [activatingBranchId, setActivatingBranchId] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [basicUser, setBasicUser] = useState("");
-  const [basicPass, setBasicPass] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [webhookMode, setWebhookMode] = useState<"auto" | "manual">("auto");
-  const [activatedWebhookUrl, setActivatedWebhookUrl] = useState<string | null>(null);
-
-  // Driver points config
-  const [driverPointsEnabled, setDriverPointsEnabled] = useState(false);
-  const [driverPointsPercent, setDriverPointsPercent] = useState("50");
-  const [driverPointsMode, setDriverPointsMode] = useState("PERCENT");
-  const [driverPointsPerReal, setDriverPointsPerReal] = useState("1");
-  const [driverPointsSaved, setDriverPointsSaved] = useState(false);
-
-  // Diagnostics & cred test
-  const [credTestResult, setCredTestResult] = useState<any>(null);
-  const [callbackUrl, setCallbackUrl] = useState("");
-  const [callbackSaved, setCallbackSaved] = useState(false);
-
-  // Live events
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const selectedIntegration = selectedBranchId
     ? integrations.find((i) => i.branch_id === selectedBranchId && i.is_active)
     : null;
-
-  useEffect(() => {
-    if (selectedIntegration) {
-      setCallbackUrl(selectedIntegration.callback_url || "");
-      setDriverPointsEnabled((selectedIntegration as any)?.driver_points_enabled ?? false);
-      setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
-      setDriverPointsMode((selectedIntegration as any)?.driver_points_mode ?? "PERCENT");
-      setDriverPointsPerReal(String((selectedIntegration as any)?.driver_points_per_real ?? 1));
-    }
-  }, [selectedIntegration?.id]);
 
   // Load initial events
   useEffect(() => {
@@ -155,138 +104,6 @@ export function AbaPontuarMotorista({
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [brandId, queryClient]);
-
-  const handleCopyUrl = (branchId?: string) => {
-    let url = `${webhookBaseUrl}?brand_id=${encodeURIComponent(brandId!)}`;
-    if (branchId) url += `&branch_id=${encodeURIComponent(branchId)}`;
-    navigator.clipboard.writeText(url);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), 2000);
-  };
-
-  /* Mutations */
-  const activateMutation = useMutation({
-    mutationFn: async () => {
-      if (!activatingBranchId) throw new Error("Selecione uma cidade");
-      const body: Record<string, string> = {
-        brand_id: brandId,
-        branch_id: activatingBranchId,
-        basic_auth_user: basicUser,
-        basic_auth_password: basicPass,
-      };
-      if (apiKey) body.api_key = apiKey;
-      const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
-    },
-    onSuccess: (data) => {
-      if (webhookMode === "manual") {
-        const url = `${webhookBaseUrl}?brand_id=${encodeURIComponent(brandId)}&branch_id=${encodeURIComponent(activatingBranchId)}`;
-        setActivatedWebhookUrl(data.webhook_url || url);
-        toast({ title: "Cidade ativada!", description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine." });
-      } else {
-        toast({
-          title: "Integração ativada!",
-          description: data.webhook_registered ? "Webhook registrado com sucesso." : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
-        });
-        if (!data.webhook_registered) {
-          const url = `${webhookBaseUrl}?brand_id=${encodeURIComponent(brandId)}&branch_id=${encodeURIComponent(activatingBranchId)}`;
-          setActivatedWebhookUrl(url);
-        }
-      }
-      setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
-      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Erro ao ativar", description: err.message || "Falha ao ativar.", variant: "destructive" });
-    },
-  });
-
-  const deactivateMutation = useMutation({
-    mutationFn: async (branchId: string) => {
-      const { data, error } = await supabase.functions.invoke("register-machine-webhook", {
-        body: { brand_id: brandId, branch_id: branchId, action: "deactivate" },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
-    },
-    onSuccess: () => {
-      toast({ title: "Integração desativada" });
-      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    },
-  });
-
-  const deleteIntegrationMutation = useMutation({
-    mutationFn: async (integrationId: string) => {
-      const { error } = await (supabase as any).from("machine_integrations").delete().eq("id", integrationId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: "Conexão removida" });
-      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Erro ao remover", description: err.message, variant: "destructive" });
-    },
-  });
-
-  const saveCallbackMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedIntegration?.id) throw new Error("Integration not found");
-      const { error } = await (supabase as any).from("machine_integrations").update({ callback_url: callbackUrl || null }).eq("id", selectedIntegration.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setCallbackSaved(true); setTimeout(() => setCallbackSaved(false), 2000);
-      toast({ title: "URL de retorno salva!" });
-      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
-    },
-  });
-
-  const testCredentialsMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedIntegration?.id) throw new Error("No integration selected");
-      setCredTestResult(null);
-      const { data, error } = await supabase.functions.invoke("test-machine-credentials", {
-        body: { integration_id: selectedIntegration.id },
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data: any) => setCredTestResult(data),
-    onError: (err: any) => setCredTestResult({ success: false, error: err.message }),
-  });
-
-  const saveDriverPointsMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedIntegration?.id) throw new Error("Integration not found");
-      const percent = Math.min(100, Math.max(1, Number(driverPointsPercent) || 50));
-      const perReal = Math.max(0.01, Number(driverPointsPerReal) || 1);
-      const { error } = await (supabase as any).from("machine_integrations").update({
-        driver_points_enabled: driverPointsEnabled,
-        driver_points_percent: percent,
-        driver_points_mode: driverPointsMode,
-        driver_points_per_real: perReal,
-      }).eq("id", selectedIntegration.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setDriverPointsSaved(true); setTimeout(() => setDriverPointsSaved(false), 2000);
-      toast({ title: "Pontuação do motorista salva!" });
-      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
-    },
-  });
 
   const retryMutation = useMutation({
     mutationFn: async () => {
@@ -320,185 +137,34 @@ export function AbaPontuarMotorista({
 
   return (
     <div className="space-y-6">
+      {/* Explicação da aba */}
+      <Alert className="border-primary/20 bg-primary/5">
+        <Car className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-sm">
+          <strong>Pontuar Motorista</strong> — Aqui você conecta cada cidade à TaxiMachine para receber status de corridas via webhook.
+          O sistema calcula os pontos do motorista automaticamente com base na configuração de cada cidade.
+        </AlertDescription>
+      </Alert>
+
       {/* Cidades conectadas */}
-      {activeIntegrations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="h-5 w-5 text-primary" />
-              Cidades conectadas ({activeIntegrations.length})
-            </CardTitle>
-            <CardDescription>Selecione uma cidade para configurar a pontuação do motorista.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {activeIntegrations.map((integ) => {
-                const hasCredentials = Boolean(integ.basic_auth_user && integ.basic_auth_password);
-                const isSelected = selectedBranchId === integ.branch_id;
-                return (
-                  <div
-                    key={integ.id}
-                    onClick={() => setSelectedBranchId(integ.branch_id)}
-                    className={`cursor-pointer rounded-lg border p-4 transition-all hover:shadow-md ${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border"}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-sm">{getBranchName(integ.branch_id)}</span>
-                      <Badge variant={hasCredentials ? "default" : "destructive"} className="text-xs">
-                        {hasCredentials ? "Ativo" : "Sem credenciais"}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1"><Hash className="h-3 w-3" /><span>{integ.total_rides} corridas</span></div>
-                      <div className="flex items-center gap-1"><Coins className="h-3 w-3" /><span>{integ.total_points} pts</span></div>
-                    </div>
-                    {integ.last_ride_processed_at && (
-                      <p className="text-xs text-muted-foreground mt-1">Última: {new Date(integ.last_ride_processed_at).toLocaleDateString("pt-BR")}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <CardCidadesConectadas
+        activeIntegrations={activeIntegrations}
+        selectedBranchId={selectedBranchId}
+        onSelectBranch={setSelectedBranchId}
+        getBranchName={getBranchName}
+      />
 
-      {/* Selected city details */}
+      {/* Config da cidade selecionada */}
       {selectedIntegration && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle className="h-5 w-5 text-primary" />
-              {getBranchName(selectedIntegration.branch_id)} — Pontuação do Motorista
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* KPIs */}
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-              <StatusCard icon={Clock} label="Último evento">
-                <span className="text-xs font-medium">{selectedIntegration.last_webhook_at ? new Date(selectedIntegration.last_webhook_at).toLocaleString("pt-BR") : "—"}</span>
-              </StatusCard>
-              <StatusCard icon={Car} label="Última corrida">
-                <span className="text-xs font-medium">{selectedIntegration.last_ride_processed_at ? new Date(selectedIntegration.last_ride_processed_at).toLocaleString("pt-BR") : "—"}</span>
-              </StatusCard>
-              <StatusCard icon={Hash} label="Corridas"><span className="text-2xl font-bold">{selectedIntegration.total_rides}</span></StatusCard>
-              <StatusCard icon={Coins} label="Pontos gerados"><span className="text-2xl font-bold">{selectedIntegration.total_points}</span></StatusCard>
-            </div>
-
-            {/* Webhook status */}
-            <div className="flex items-center gap-3 text-sm flex-wrap">
-              {selectedIntegration.webhook_registered ? (
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /><span>Webhook registrado</span></div>
-              ) : (
-                <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-destructive" /><span>Webhook não registrado</span></div>
-              )}
-              <Button variant="outline" size="sm" onClick={() => testCredentialsMutation.mutate()} disabled={testCredentialsMutation.isPending}>
-                {testCredentialsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <KeyRound className="h-4 w-4 mr-1" />}
-                Testar Credenciais
-              </Button>
-            </div>
-
-            {credTestResult && (
-              <Alert variant={credTestResult.success ? "default" : "destructive"}>
-                {credTestResult.success ? <CheckCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-                <AlertTitle>{credTestResult.success ? "Sucesso" : "Falha"}</AlertTitle>
-                <AlertDescription className="text-xs">{credTestResult.message || credTestResult.error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Webhook URL */}
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">URL do Webhook</Label>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">
-                  {`${webhookBaseUrl}?brand_id=${encodeURIComponent(brandId)}&branch_id=${encodeURIComponent(selectedIntegration.branch_id || "")}`}
-                </code>
-                <Button variant="outline" size="icon" onClick={() => handleCopyUrl(selectedIntegration.branch_id || undefined)}>
-                  {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            {/* Callback URL */}
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">URL de retorno (opcional)</Label>
-              <div className="flex items-center gap-2 max-w-lg">
-                <Input value={callbackUrl} onChange={(e) => setCallbackUrl(e.target.value)} placeholder="https://seu-sistema.com/webhook/pontuacao" type="url" />
-                <Button variant="outline" size="icon" onClick={() => saveCallbackMutation.mutate()} disabled={saveCallbackMutation.isPending}>
-                  {callbackSaved ? <Check className="h-4 w-4 text-primary" /> : saveCallbackMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            {/* Driver Points Config */}
-            <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs text-muted-foreground flex items-center gap-1"><Truck className="h-3 w-3" /> Pontuação do Motorista</Label>
-                <Switch checked={driverPointsEnabled} onCheckedChange={setDriverPointsEnabled} />
-              </div>
-              {!driverPointsEnabled && (
-                <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-500/10 text-yellow-700 [&>svg]:text-yellow-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle className="text-xs font-semibold">Pontuação desativada</AlertTitle>
-                  <AlertDescription className="text-xs">Os motoristas <strong>não estão sendo pontuados</strong>. Ative o switch e salve.</AlertDescription>
-                </Alert>
-              )}
-              {driverPointsEnabled && (
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Modo de cálculo</Label>
-                    <Select value={driverPointsMode} onValueChange={setDriverPointsMode}>
-                      <SelectTrigger className="w-full max-w-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PERCENT">Percentual do passageiro</SelectItem>
-                        <SelectItem value="PER_REAL">Pontos por R$ da corrida</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {driverPointsMode === "PERCENT" ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 max-w-xs">
-                        <Label className="text-xs whitespace-nowrap">Percentual</Label>
-                        <Input type="number" min={1} max={100} value={driverPointsPercent} onChange={(e) => setDriverPointsPercent(e.target.value)} className="w-20" />
-                        <span className="text-xs text-muted-foreground">%</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Motorista receberá <strong>{driverPointsPercent || 50}%</strong> dos pontos do passageiro.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 max-w-xs">
-                        <Label className="text-xs whitespace-nowrap">Pontos por R$</Label>
-                        <Input type="number" min={0.01} step={0.1} value={driverPointsPerReal} onChange={(e) => setDriverPointsPerReal(e.target.value)} className="w-24" />
-                        <span className="text-xs text-muted-foreground">pts/R$</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Motorista receberá <strong>{driverPointsPerReal || 1} ponto(s)</strong> por R$ 1,00.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => saveDriverPointsMutation.mutate()} disabled={saveDriverPointsMutation.isPending}>
-                  {driverPointsSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveDriverPointsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                  Salvar
-                </Button>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 pt-2 border-t border-border">
-              <Button variant="destructive" size="sm" onClick={() => { if (confirm("Remover esta conexão?")) deleteIntegrationMutation.mutate(selectedIntegration.id); }} disabled={deleteIntegrationMutation.isPending}>
-                {deleteIntegrationMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                <XCircle className="h-4 w-4 mr-1" /> Remover conexão
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => selectedIntegration.branch_id && deactivateMutation.mutate(selectedIntegration.branch_id)} disabled={deactivateMutation.isPending}>
-                {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                <PowerOff className="h-4 w-4 mr-1" /> Desativar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <CardConfigCidade
+          brandId={brandId}
+          integration={selectedIntegration}
+          getBranchName={getBranchName}
+          webhookBaseUrl={webhookBaseUrl}
+        />
       )}
 
-      {/* Diagnóstico do Webhook */}
+      {/* Diagnóstico */}
       {activeIntegrations.length > 0 && (
         <DiagnosticoWebhook rides={diagRides} retryMutation={retryMutation} />
       )}
@@ -509,9 +175,11 @@ export function AbaPontuarMotorista({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <Radio className="h-4 w-4 text-primary animate-pulse" />
-              Eventos em tempo real (todas as cidades)
+              Eventos em tempo real
             </CardTitle>
-            <CardDescription>Corridas recebidas ao vivo. Finalizadas com pontuação são destacadas.</CardDescription>
+            <CardDescription>
+              Corridas recebidas ao vivo de todas as cidades. Corridas finalizadas com pontuação são destacadas em verde.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-80">
@@ -519,6 +187,7 @@ export function AbaPontuarMotorista({
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
                   <Radio className="h-8 w-8 mb-2 opacity-40" />
                   <p className="text-sm">Aguardando eventos...</p>
+                  <p className="text-xs mt-1">Eventos aparecerão aqui quando corridas forem processadas.</p>
                 </div>
               ) : (
                 <div className="space-y-2" ref={scrollRef}>
@@ -551,97 +220,13 @@ export function AbaPontuarMotorista({
         <ScoredDriversPanel brandId={brandId} />
       )}
 
-      {/* Adicionar nova cidade — formulário unificado */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            {activeIntegrations.length > 0 ? "Adicionar nova cidade" : "Ativar integração"}
-          </CardTitle>
-          <CardDescription>
-            Preencha as credenciais da cidade e escolha o modo de registro do webhook.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 max-w-md">
-          <div className="space-y-2">
-            <Label>Cidade</Label>
-            {availableBranches.length > 0 ? (
-              <Select value={activatingBranchId} onValueChange={(v) => { setActivatingBranchId(v); setActivatedWebhookUrl(null); }}>
-                <SelectTrigger><SelectValue placeholder="Selecione a cidade..." /></SelectTrigger>
-                <SelectContent>{availableBranches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-              </Select>
-            ) : (
-              <p className="text-sm text-muted-foreground">{branches.length === 0 ? "Nenhuma cidade cadastrada." : "Todas as cidades já estão conectadas."}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>API Key da Cidade</Label>
-            <div className="relative">
-              <Input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Token da cidade" />
-              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
-                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Usuário da Cidade</Label>
-            <Input value={basicUser} onChange={(e) => setBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Senha da Cidade</Label>
-            <div className="relative">
-              <Input type={showPass ? "text" : "password"} value={basicPass} onChange={(e) => setBasicPass(e.target.value)} placeholder="Senha de autenticação" />
-              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPass(!showPass)}>
-                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Modo do webhook */}
-          <div className="space-y-2">
-            <Label>Modo de registro do webhook</Label>
-            <RadioGroup value={webhookMode} onValueChange={(v) => setWebhookMode(v as "auto" | "manual")} className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="auto" id="webhook-auto" />
-                <Label htmlFor="webhook-auto" className="text-sm font-normal cursor-pointer">Automático</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="manual" id="webhook-manual" />
-                <Label htmlFor="webhook-manual" className="text-sm font-normal cursor-pointer">Manual (copiar URL)</Label>
-              </div>
-            </RadioGroup>
-            <p className="text-xs text-muted-foreground">
-              {webhookMode === "auto"
-                ? "O sistema registrará o webhook automaticamente via API. Requer API Key."
-                : "Após ativar, copie a URL gerada e cole no roteador de status da TaxiMachine."}
-            </p>
-          </div>
-
-          <Button onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
-            {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            <Power className="h-4 w-4 mr-1" /> Ativar cidade
-          </Button>
-
-          {activatedWebhookUrl && (
-            <Alert className="border-primary/30 bg-primary/5">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <AlertTitle>Cidade ativada!</AlertTitle>
-              <AlertDescription className="space-y-2">
-                <p className="text-sm">Copie a URL abaixo e cole no roteador de status da TaxiMachine:</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">{activatedWebhookUrl}</code>
-                  <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(activatedWebhookUrl); setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }}>
-                    {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      {/* Adicionar nova cidade */}
+      <CardAdicionarCidade
+        brandId={brandId}
+        availableBranches={availableBranches}
+        branches={branches}
+        activeIntegrations={activeIntegrations}
+      />
     </div>
   );
 }
@@ -661,7 +246,7 @@ function DiagnosticoWebhook({ rides, retryMutation }: { rides: any[]; retryMutat
               Diagnóstico do Webhook
               {hasErrors && <AlertTriangle className="h-4 w-4 text-destructive" />}
             </CardTitle>
-            <CardDescription>Últimas 10 corridas processadas.</CardDescription>
+            <CardDescription>Últimas 10 corridas processadas — identifica erros de credencial ou API.</CardDescription>
           </div>
           {hasErrors && (
             <Button variant="outline" size="sm" onClick={() => retryMutation.mutate()} disabled={retryMutation.isPending} className="shrink-0">

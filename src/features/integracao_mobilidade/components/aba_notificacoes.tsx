@@ -5,13 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import {
-  Send, Save, Check, Loader2, CheckCircle, MapPin,
+  Send, Save, Check, Loader2, CheckCircle, MapPin, MessageSquare,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
 
@@ -119,7 +118,8 @@ export function AbaNotificacoes({
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
           <Send className="h-8 w-8 mx-auto mb-2 opacity-40" />
-          <p className="text-sm">Nenhuma cidade ativa. Ative uma cidade na aba "Pontuar Motorista" primeiro.</p>
+          <p className="text-sm">Nenhuma cidade ativa.</p>
+          <p className="text-xs mt-1">Ative uma cidade na aba "Pontuar Motorista" para configurar notificações.</p>
         </CardContent>
       </Card>
     );
@@ -127,6 +127,15 @@ export function AbaNotificacoes({
 
   return (
     <div className="space-y-6">
+      {/* Explicação da aba */}
+      <Alert className="border-primary/20 bg-primary/5">
+        <MessageSquare className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-sm">
+          <strong>Notificações</strong> — Configure como os motoristas serão notificados a cada corrida finalizada.
+          Você pode ativar notificações no app TaxiMachine e/ou receber alertas no Telegram.
+        </AlertDescription>
+      </Alert>
+
       {/* Seletor de cidade */}
       <Card>
         <CardHeader>
@@ -134,7 +143,7 @@ export function AbaNotificacoes({
             <MapPin className="h-5 w-5 text-primary" />
             Selecionar cidade
           </CardTitle>
-          <CardDescription>Escolha a cidade para configurar notificações.</CardDescription>
+          <CardDescription>Escolha a cidade para configurar as notificações. Cada cidade tem suas próprias configurações.</CardDescription>
         </CardHeader>
         <CardContent className="max-w-md">
           <Select value={selectedBranchId || ""} onValueChange={setSelectedBranchId}>
@@ -162,7 +171,8 @@ export function AbaNotificacoes({
                 Notificação ao motorista no app
               </CardTitle>
               <CardDescription>
-                Envia uma mensagem automática no app TaxiMachine para o motorista informando os pontos ganhos a cada corrida finalizada.
+                Envia uma mensagem automática no app TaxiMachine para o motorista informando os pontos ganhos,
+                valor da corrida e saldo atualizado a cada corrida finalizada.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -174,13 +184,13 @@ export function AbaNotificacoes({
                 <Alert className="border-primary/30 bg-primary/5">
                   <CheckCircle className="h-4 w-4 text-primary" />
                   <AlertDescription className="text-xs">
-                    Motoristas receberão uma mensagem no app com os pontos ganhos, valor da corrida e saldo atualizado.
+                    Motoristas receberão uma mensagem no app com: pontos ganhos, valor da corrida e saldo atualizado.
                   </AlertDescription>
                 </Alert>
               )}
               {!driverMessageEnabled && (
                 <p className="text-xs text-muted-foreground">
-                  As notificações estão desativadas para esta cidade. Ative para que os motoristas sejam notificados a cada corrida.
+                  As notificações estão desativadas para esta cidade. Ative para que os motoristas sejam notificados automaticamente.
                 </p>
               )}
             </CardContent>
@@ -191,10 +201,10 @@ export function AbaNotificacoes({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Send className="h-4 w-4 text-primary" />
-                Telegram — Chat ID
+                Telegram — Alertas em grupo
               </CardTitle>
               <CardDescription>
-                Receba notificações de corridas finalizadas no Telegram.
+                Receba um alerta no Telegram a cada corrida finalizada com pontuação. Ideal para acompanhar em tempo real.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 max-w-lg">
@@ -217,9 +227,15 @@ export function AbaNotificacoes({
                   Testar
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Crie um bot no <strong>@BotFather</strong>, adicione ao grupo e use <strong>@userinfobot</strong> para obter o chat_id.
-              </p>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p><strong>Como configurar:</strong></p>
+                <ol className="list-decimal list-inside space-y-0.5">
+                  <li>Crie um bot no Telegram falando com <strong>@BotFather</strong></li>
+                  <li>Adicione o bot ao grupo desejado</li>
+                  <li>Use <strong>@userinfobot</strong> no grupo para obter o Chat ID</li>
+                  <li>Cole o Chat ID acima e clique em "Testar"</li>
+                </ol>
+              </div>
             </CardContent>
           </Card>
         </>
