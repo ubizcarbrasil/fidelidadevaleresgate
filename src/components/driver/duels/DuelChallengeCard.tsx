@@ -6,7 +6,7 @@ import { Swords, ShieldCheck, Flag, MessageSquare, Coins, Wallet, Send } from "l
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Duel } from "./hook_duelos";
-import { cleanDriverName, useRespondDuel, useCounterPropose } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, useRespondDuel, useCounterPropose } from "./hook_duelos";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
