@@ -80,10 +80,25 @@ async function retryRide(
 
   const cityHeaders = buildApiHeaders(cityApiKey, basicUser, basicPass);
 
-  // Matrix credentials for Recibo endpoint
-  const matrixApiKey = (integration.matrix_api_key || "").trim();
-  const matrixUser = (integration.matrix_basic_auth_user || "").trim();
-  const matrixPass = (integration.matrix_basic_auth_password || "").trim();
+  // Matrix credentials for Recibo endpoint — integration-level → brand-level fallback
+  let matrixApiKey = (integration.matrix_api_key || "").trim();
+  let matrixUser = (integration.matrix_basic_auth_user || "").trim();
+  let matrixPass = (integration.matrix_basic_auth_password || "").trim();
+
+  if (!matrixApiKey) {
+    const { data: brandData } = await sb
+      .from("brands")
+      .select("matrix_api_key, matrix_basic_auth_user, matrix_basic_auth_password")
+      .eq("id", brandId)
+      .maybeSingle();
+    if (brandData?.matrix_api_key) {
+      matrixApiKey = (brandData.matrix_api_key || "").trim();
+      matrixUser = (brandData.matrix_basic_auth_user || "").trim();
+      matrixPass = (brandData.matrix_basic_auth_password || "").trim();
+      logger.info("Using brand-level matrix credentials for retry", { brandId });
+    }
+  }
+
   const matrixHeaders = matrixApiKey
     ? buildApiHeaders(matrixApiKey, matrixUser, matrixPass)
     : undefined;

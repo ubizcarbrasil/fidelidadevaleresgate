@@ -161,6 +161,22 @@ Deno.serve(async (req) => {
       webhookRegistered = false;
     }
 
+    // Save matrix credentials at BRAND level (one config for all cities)
+    if (matrix_api_key !== undefined || matrix_basic_auth_user !== undefined || matrix_basic_auth_password !== undefined) {
+      const brandMatrixUpdate: Record<string, any> = {};
+      if (matrix_api_key !== undefined) brandMatrixUpdate.matrix_api_key = matrix_api_key || null;
+      if (matrix_basic_auth_user !== undefined) brandMatrixUpdate.matrix_basic_auth_user = matrix_basic_auth_user || null;
+      if (matrix_basic_auth_password !== undefined) brandMatrixUpdate.matrix_basic_auth_password = matrix_basic_auth_password || null;
+
+      const { error: brandErr } = await sb
+        .from("brands")
+        .update(brandMatrixUpdate)
+        .eq("id", brand_id);
+      if (brandErr) {
+        createEdgeLogger("register-machine-webhook").error("Brand matrix update error", { error: brandErr });
+      }
+    }
+
     // Upsert integration record — unique per (brand_id, branch_id)
     const upsertData: Record<string, any> = {
       brand_id,
@@ -171,10 +187,6 @@ Deno.serve(async (req) => {
       webhook_registered: webhookRegistered,
       is_active: true,
     };
-    // Include matrix credentials if provided
-    if (matrix_api_key !== undefined) upsertData.matrix_api_key = matrix_api_key || null;
-    if (matrix_basic_auth_user !== undefined) upsertData.matrix_basic_auth_user = matrix_basic_auth_user || null;
-    if (matrix_basic_auth_password !== undefined) upsertData.matrix_basic_auth_password = matrix_basic_auth_password || null;
     if (telegram_chat_id !== undefined) upsertData.telegram_chat_id = telegram_chat_id || null;
 
     const { error: upsertErr } = await sb
