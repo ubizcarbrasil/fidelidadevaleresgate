@@ -1,47 +1,61 @@
 
+Objetivo: fazer com que qualquer motorista veja claramente os duelos em andamento dentro do módulo de Duelos, não só na home do marketplace, e consiga abrir a Arena para assistir/palpitar.
 
-## Todos os motoristas ativos para duelo por padrão
+Diagnóstico
+- O backend já tem duelo ativo nessa cidade e a visualização pública está habilitada.
+- O problema principal não parece ser dados, e sim onde a UI pública aparece.
+- Hoje a visualização pública está em `DriverMarketplace` via `BannerDueloAoVivo` e `SecaoDuelosCidade`.
+- Na tela `DuelsHub`, o conteúdo usa `useDriverDuels()`, que mostra só os duelos do próprio motorista. Se ele não participa de nenhum, cai no estado vazio “Nenhum duelo ainda”, mesmo existindo duelo rolando na cidade.
+- Isso bate com seus prints: o motorista entra em “Duelos” e vê tela vazia, então parece que “não tem nada ao vivo”.
 
-### Problema
-Atualmente, cada motorista precisa manualmente ativar a participação em duelos (opt-in). O usuário quer que todos já venham habilitados automaticamente.
+Plano de implementação
 
-### Solução
+1. Colocar a seção pública dentro do `DuelsHub`
+- Adicionar `useDuelosCidade()` no `DuelsHub`.
+- Criar um bloco no topo da tela com algo como “Assistir duelos da cidade”.
+- Mostrar os duelos `live` e `accepted` ali, para qualquer motorista.
+- Cada card abre `ArenaAoVivo` direto.
 
-Implementar auto-enrollment: quando um motorista acessa o módulo de duelos e ainda não tem registro na tabela `driver_duel_participants`, o sistema cria automaticamente com `duels_enabled: true`.
+2. Priorizar “ao vivo” antes dos duelos pessoais
+- Dentro do `DuelsHub`, exibir primeiro:
+  - “Ao vivo na cidade”
+  - depois “Desafios recebidos”, “Contrapropostas”, “Meus duelos”, etc.
+- Assim o motorista entende imediatamente onde assistir.
 
-### Alterações
+3. Corrigir o estado vazio do módulo
+- O estado “Nenhum duelo ainda” só deve aparecer quando:
+  - não houver duelo próprio
+  - e também não houver duelo público na cidade
+- Se existir duelo público, mostrar essa seção em vez da tela vazia.
 
-**1. `src/components/driver/duels/hook_duelos.ts` — Auto-enroll no `useDuelParticipation`**
+4. Melhorar a sinalização para espectadores
+- Deixar o card público mais explícito para quem só quer assistir:
+  - CTA principal “Assistir ao vivo”
+  - CTA secundário “Dar palpite”
+- Ajustar o texto para “Duelos acontecendo agora na cidade” em vez de algo genérico.
 
-Quando o hook detecta que o motorista não tem participação (`participant === null` após query), automaticamente chama `toggle_duel_participation` com `p_enabled = true` para criar o registro. Isso acontece via `useEffect` que dispara uma vez.
+5. Manter a home como ponto extra de entrada
+- Preservar `BannerDueloAoVivo` e `SecaoDuelosCidade` na home.
+- O ajuste principal será no `DuelsHub`, porque é onde o usuário naturalmente vai procurar os duelos.
 
-```tsx
-// Dentro de useDuelParticipation, após a query:
-useEffect(() => {
-  if (!isLoading && !participant && driver) {
-    // Auto-enroll com duels_enabled = true
-    supabase.rpc("toggle_duel_participation", {
-      p_customer_id: driver.id,
-      p_branch_id: driver.branch_id,
-      p_brand_id: driver.brand_id,
-      p_enabled: true,
-    }).then(() => {
-      queryClient.invalidateQueries({ queryKey: ["duel-participant"] });
-    });
-  }
-}, [isLoading, participant, driver]);
-```
+Arquivos a ajustar
+- `src/components/driver/duels/DuelsHub.tsx`
+  - incluir a listagem pública da cidade
+  - abrir `ArenaAoVivo` a partir dessa lista
+  - corrigir lógica do estado vazio
+- `src/components/driver/duels/CardDueloPublico.tsx`
+  - reforçar CTA de assistir/palpitar
+- Possivelmente `src/components/driver/duels/SecaoDuelosCidade.tsx`
+  - reaproveitar layout/padrão visual dentro do hub, se fizer sentido
 
-**2. `src/components/driver/duels/DuelsHub.tsx` — Remover toggle de ativação**
+Detalhes técnicos
+- Não precisa mudança de banco para isso.
+- As tabelas de duelos e participantes já estão legíveis para consulta pública no app.
+- A configuração da filial já permite visualização pública.
+- O duelo público deve vir de `useDuelosCidade(branchId)`, não de `useDriverDuels()`.
+- A abertura da transmissão/visualização será com `ArenaAoVivo`, reaproveitando o fluxo já existente.
 
-Remover o switch "Participar dos Duelos" da interface, já que todos estarão ativos por padrão. Manter apenas a interface de duelos diretamente.
-
-**3. `src/components/driver/duels/dashboard/SecaoGamificacaoDashboard.tsx` — Ajustar lógica**
-
-Remover a checagem `participou` que condiciona a exibição. Mostrar conteúdo de duelos diretamente para todos.
-
-### Impacto
-- Motoristas novos são automaticamente habilitados ao acessar
-- Motoristas existentes sem registro serão habilitados no próximo acesso
-- A interface fica mais simples sem o toggle de opt-in
-
+Resultado esperado
+- Mesmo sem participar, qualquer motorista entra em “Duelos” e vê quem está duelando naquele momento.
+- Ele consegue tocar no card e assistir a disputa.
+- A tela deixa de parecer vazia quando há duelo acontecendo na cidade.
