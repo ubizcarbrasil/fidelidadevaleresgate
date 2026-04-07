@@ -73,19 +73,19 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
       style={{ backgroundColor: "hsl(var(--background))" }}
     >
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3" style={{ backgroundColor: "hsl(var(--background))" }}>
-        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center rounded-xl" style={{ backgroundColor: "hsl(var(--muted))" }}>
+        <button onClick={onBack} className="shrink-0 h-9 w-9 flex items-center justify-center rounded-xl" style={{ backgroundColor: "hsl(var(--muted))" }}>
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
-        <h1 className="text-base font-bold text-foreground flex items-center gap-2">
-          <Swords className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
+        <h1 className="text-base font-bold text-foreground flex items-center gap-2 truncate">
+          <Swords className="h-5 w-5 shrink-0" style={{ color: "hsl(var(--primary))" }} />
           Detalhe do Duelo
         </h1>
       </header>
 
-      <div className="flex-1 px-4 pb-8 space-y-6 max-w-lg mx-auto w-full">
+      <div className="flex-1 px-4 pb-8 space-y-5 w-full">
         {/* Status + countdown */}
         {(duel.status === "live" || duel.status === "accepted") && remaining > 0 && (
-          <div className="text-center py-4">
+          <div className="text-center py-3">
             <div className="flex items-center justify-center gap-2 mb-1">
               <Timer className="h-5 w-5" style={{ color: "hsl(var(--warning))" }} />
               <span className="text-sm font-medium text-muted-foreground">Tempo restante</span>
@@ -128,13 +128,13 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
 
         {/* Scoreboard */}
         <div
-          className="rounded-2xl p-5"
+          className="rounded-2xl p-4"
           style={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex-1 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Desafiante</p>
-              <p className="text-sm font-bold text-foreground truncate">{challengerName}</p>
+          <div className="flex items-start">
+            <div className="flex-1 min-w-0 text-center">
+              <p className="text-[11px] text-muted-foreground mb-0.5">Desafiante</p>
+              <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengerName}</p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenger_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>
                 {duel.challenger_rides_count}
               </p>
@@ -144,13 +144,13 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
               )}
             </div>
 
-            <div className="px-3">
+            <div className="shrink-0 flex items-center justify-center pt-8 px-2">
               <span className="text-lg font-extrabold text-muted-foreground">×</span>
             </div>
 
-            <div className="flex-1 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Desafiado</p>
-              <p className="text-sm font-bold text-foreground truncate">{challengedName}</p>
+            <div className="flex-1 min-w-0 text-center">
+              <p className="text-[11px] text-muted-foreground mb-0.5">Desafiado</p>
+              <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengedName}</p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenged_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>
                 {duel.challenged_rides_count}
               </p>
