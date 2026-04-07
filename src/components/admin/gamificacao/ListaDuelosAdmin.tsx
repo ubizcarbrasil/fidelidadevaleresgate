@@ -33,7 +33,7 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
         .from("driver_duels")
         .select(`
           id, status, start_at, end_at, challenger_rides_count, challenged_rides_count,
-          winner_id, created_at,
+          winner_id, created_at, prize_points, challenger_points_bet, challenged_points_bet,
           challenger:driver_duel_participants!driver_duels_challenger_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name)),
           challenged:driver_duel_participants!driver_duels_challenged_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name))
         `)
