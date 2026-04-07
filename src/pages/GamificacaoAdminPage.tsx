@@ -17,6 +17,7 @@ import ModalCriarDueloAdmin from "@/components/admin/gamificacao/ModalCriarDuelo
 export default function GamificacaoAdminPage() {
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [criarDueloOpen, setCriarDueloOpen] = useState(false);
 
   const isBrandScope = consoleScope === "BRAND" || consoleScope === "ROOT";
   const effectiveBranchId = isBrandScope ? selectedBranchId : currentBranchId;
