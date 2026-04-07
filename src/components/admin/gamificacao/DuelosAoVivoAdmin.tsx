@@ -92,17 +92,19 @@ export default function DuelosAoVivoAdmin({ branchId, brandId, onCriarDuelo }: P
   return (
     <>
       <Card className="border-primary/20">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <div className="flex items-center gap-2">
-            <Radio className="h-5 w-5 text-red-500 animate-pulse" />
-            <CardTitle className="text-base">Duelos Ao Vivo</CardTitle>
-            {duelos && duelos.length > 0 && (
-              <Badge variant="destructive" className="text-xs">{duelos.length}</Badge>
-            )}
+        <CardHeader className="pb-3 space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Radio className="h-5 w-5 text-red-500 animate-pulse" />
+              <CardTitle className="text-base">Duelos Ao Vivo</CardTitle>
+              {duelos && duelos.length > 0 && (
+                <Badge variant="destructive" className="text-xs">{duelos.length}</Badge>
+              )}
+            </div>
+            <Button size="sm" onClick={onCriarDuelo} className="gap-1 w-full sm:w-auto">
+              <Plus className="h-4 w-4" /> Criar Duelo
+            </Button>
           </div>
-          <Button size="sm" onClick={onCriarDuelo} className="gap-1">
-            <Plus className="h-4 w-4" /> Criar Duelo
-          </Button>
         </CardHeader>
         <CardContent>
           {!duelos?.length ? (
