@@ -1,37 +1,36 @@
 
 
-## Mostrar todos os motoristas da cidade na lista de adversários
+## Adicionar foto de perfil do motorista
 
-### Problema
-A lista "Escolha o Adversário" mostra apenas **6 motoristas** (os que já abriram a tela de duelos e foram auto-enrolled). Existem **43 motoristas** cadastrados na mesma filial. O usuário quer ver todos.
+### Contexto
+A tela "Meu Perfil de Duelos" já exibe um placeholder com a inicial do nome. A coluna `avatar_url` já existe na tabela `driver_duel_participants`. Falta: bucket de storage, upload da imagem e UI para selecionar/trocar a foto.
 
-### Causa raiz
-`useDuelOpponents` consulta apenas `driver_duel_participants`, que só tem registros de quem já visitou o DuelsHub. Os demais 37 motoristas nunca abriram a tela.
+### Plano
 
-### Solução
+**1. Migração SQL — Criar bucket de storage `driver-avatars`**
+- Bucket público (as fotos são visíveis nos duelos/ranking)
+- Política de upload permissiva (o app usa sessão CPF, não Supabase Auth — mesma abordagem do `brand-assets`)
+- Política de delete para permitir substituição
 
-**1. Criar RPC `list_branch_drivers_for_duels`** (migração SQL)
-- Função `SECURITY DEFINER` que busca todos os `customers` com tag `[MOTORISTA]` da mesma `branch_id`, excluindo o próprio motorista
-- Retorna: `customer_id`, `name` (limpo, sem `[MOTORISTA]`), `public_nickname` (join LEFT com `driver_duel_participants`), `avatar_url`, `display_name`, `is_enrolled` (boolean)
-- Isso contorna RLS da tabela `customers` de forma segura
+**2. Hook `useUpdateAvatar` em `hook_duelos.ts`**
+- Recebe um `File`, faz upload para `driver-avatars/{customer_id}.webp` (sobrescreve)
+- Gera a URL pública do storage
+- Atualiza `avatar_url` na tabela `driver_duel_participants`
+- Invalida queries relevantes
 
-**2. Atualizar `useDuelOpponents` em `hook_duelos.ts`**
-- Trocar a query de `driver_duel_participants` pela chamada ao novo RPC
-- Adaptar o tipo `DuelParticipant` para incluir `is_enrolled` opcional
-
-**3. Atualizar `CreateDuelSheet.tsx`**
-- Ao selecionar um adversário não-enrolled, fazer auto-enrollment dele (chamar `toggle_duel_participation`) antes de criar o duelo
-- Ou: o RPC de criação de duelo pode fazer o enrollment automaticamente se o adversário ainda não existir
-
-**4. Ajustar `OpponentCard`**
-- Mostrar indicador visual sutil para motoristas já ativos vs. novos (ex: badge "Novo" ou ícone diferente)
-- Priorizar: `public_nickname` > `display_name` > nome limpo do customer
+**3. Atualizar `PerfilMotoristaSheet.tsx`**
+- Tornar o avatar clicável com um ícone de câmera sobreposto
+- Input `type="file"` oculto, aceita `image/*`
+- Preview local da imagem selecionada antes de salvar
+- Ao clicar "Salvar", faz upload da foto (se alterada) + salva apelido
+- Loading state durante upload
+- Compressão/resize client-side usando Canvas (max 256x256) para manter leve
 
 ### Arquivos
-- **Nova migração SQL**: RPC `list_branch_drivers_for_duels`
-- **Editar**: `src/components/driver/duels/hook_duelos.ts` — trocar query
-- **Editar**: `src/components/driver/duels/CreateDuelSheet.tsx` — adaptar card e lógica de enrollment
+- **Nova migração SQL**: bucket `driver-avatars` + políticas de storage
+- **Editar**: `src/components/driver/duels/hook_duelos.ts` — novo hook `useUpdateAvatar`
+- **Editar**: `src/components/driver/duels/PerfilMotoristaSheet.tsx` — UI de upload com preview
 
 ### Resultado
-A lista mostrará todos os 43 motoristas da filial, não apenas os 6 que já visitaram a tela de duelos.
+O motorista poderá tirar uma foto ou escolher da galeria, ver o preview no perfil e salvar. A foto aparecerá nos duelos, ranking e em qualquer lugar que use `avatar_url`.
 
