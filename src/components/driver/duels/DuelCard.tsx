@@ -2,7 +2,8 @@
  * Card resumido de duelo para listas.
  */
 import React from "react";
-import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare } from "lucide-react";
+import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Duel } from "./hook_duelos";
 import { cleanDriverName } from "./hook_duelos";
