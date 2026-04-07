@@ -106,17 +106,19 @@ export default function GamificacaoAdminPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center gap-3">
-        <Swords className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-xl font-bold">Gamificação</h1>
-          <p className="text-sm text-muted-foreground">
-            Duelos, Ranking e Cinturão — {branch.name}
-          </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex items-center gap-3">
+          <Swords className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-xl font-bold">Gamificação</h1>
+            <p className="text-sm text-muted-foreground">
+              Duelos, Ranking e Cinturão — {branch.name}
+            </p>
+          </div>
         </div>
         {isBrandScope && (
           <Select value={effectiveBranchId ?? undefined} onValueChange={(val) => setSelectedBranchId(val)}>
-            <SelectTrigger className="w-auto min-w-[160px] ml-auto">
+            <SelectTrigger className="w-full md:w-auto md:min-w-[160px] md:ml-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -133,12 +135,12 @@ export default function GamificacaoAdminPage() {
       <DuelosAoVivoAdmin branchId={branch.id} brandId={branch.brand_id} onCriarDuelo={() => setCriarDueloOpen(true)} />
 
       <Tabs defaultValue="configuracao" className="w-full">
-        <TabsList className="w-full grid grid-cols-5">
-          <TabsTrigger value="configuracao">Configuração</TabsTrigger>
-          <TabsTrigger value="duelos">Duelos</TabsTrigger>
-          <TabsTrigger value="ranking">Ranking</TabsTrigger>
-          <TabsTrigger value="cinturao">Cinturão</TabsTrigger>
-          <TabsTrigger value="moderacao">Moderação</TabsTrigger>
+        <TabsList className="w-full flex overflow-x-auto md:grid md:grid-cols-5">
+          <TabsTrigger value="configuracao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Configuração</TabsTrigger>
+          <TabsTrigger value="duelos" className="flex-1 whitespace-nowrap text-xs md:text-sm">Duelos</TabsTrigger>
+          <TabsTrigger value="ranking" className="flex-1 whitespace-nowrap text-xs md:text-sm">Ranking</TabsTrigger>
+          <TabsTrigger value="cinturao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Cinturão</TabsTrigger>
+          <TabsTrigger value="moderacao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Moderação</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuracao">
