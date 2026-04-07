@@ -46,8 +46,10 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
     driver?.id || null
   );
 
-  const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
-  const challengedName = cleanDriverName((duel.challenged as any)?.customers?.name);
+  const challengerName = resolveParticipantName(duel.challenger);
+  const challengedName = resolveParticipantName(duel.challenged);
+  const challengerAvatar = resolveParticipantAvatar(duel.challenger);
+  const challengedAvatar = resolveParticipantAvatar(duel.challenged);
 
   const opponentName = isChallenger ? challengedName : challengerName;
   const winnerId = duel.winner_id;
