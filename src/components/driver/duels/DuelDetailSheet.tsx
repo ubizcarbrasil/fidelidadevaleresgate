@@ -38,6 +38,16 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
   const [showAudit, setShowAudit] = useState(false);
 
   const { data: auditLog } = useAuditoriaDuelo(duel.status === "finished" ? duel.id : null);
+  const { data: contagemRealtime } = useContagemCorridasDuelo(
+    duel.status === "live" || duel.status === "accepted" ? duel : null
+  );
+
+  const challengerRides = (duel.status === "live" || duel.status === "accepted")
+    ? (contagemRealtime?.challengerRides ?? duel.challenger_rides_count)
+    : duel.challenger_rides_count;
+  const challengedRides = (duel.status === "live" || duel.status === "accepted")
+    ? (contagemRealtime?.challengedRides ?? duel.challenged_rides_count)
+    : duel.challenged_rides_count;
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentCustomerId = isChallenger
