@@ -866,8 +866,27 @@ async function processFinalized(
       notification_type: "PASSENGER",
     });
 
-    // Send Telegram notification if chat_id configured (fire-and-forget)
-    if (integration.telegram_chat_id) {
+    // Send Telegram notification — fallback to any chat_id from same brand if not configured
+    let telegramChatId = integration.telegram_chat_id;
+    if (!telegramChatId) {
+      try {
+        const { data: fallbackInteg } = await sb
+          .from("machine_integrations")
+          .select("telegram_chat_id")
+          .eq("brand_id", brandId)
+          .not("telegram_chat_id", "is", null)
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+        if (fallbackInteg?.telegram_chat_id) {
+          telegramChatId = fallbackInteg.telegram_chat_id;
+          logger.info("Using fallback telegram_chat_id from another integration", { brandId });
+        }
+      } catch (e) {
+        logger.error("Error fetching fallback telegram_chat_id", { error: String(e) });
+      }
+    }
+    if (telegramChatId) {
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

@@ -227,6 +227,11 @@ export function AbaNotificacoes({
                   Testar
                 </Button>
               </div>
+              <Alert className="border-blue-500/20 bg-blue-500/5">
+                <AlertDescription className="text-xs">
+                  💡 O Chat ID configurado em uma cidade será usado automaticamente para <strong>todas as cidades da marca</strong> que não tiverem Chat ID próprio.
+                </AlertDescription>
+              </Alert>
               <div className="text-xs text-muted-foreground space-y-1">
                 <p><strong>Como configurar:</strong></p>
                 <ol className="list-decimal list-inside space-y-0.5">
