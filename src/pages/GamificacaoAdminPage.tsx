@@ -135,7 +135,7 @@ export default function GamificacaoAdminPage() {
       <DuelosAoVivoAdmin branchId={branch.id} brandId={branch.brand_id} onCriarDuelo={() => setCriarDueloOpen(true)} />
 
       <Tabs defaultValue="configuracao" className="w-full">
-        <TabsList className="w-full flex overflow-x-auto md:grid md:grid-cols-5">
+        <TabsList className="w-full flex overflow-x-auto scrollbar-none md:grid md:grid-cols-5 pr-4">
           <TabsTrigger value="configuracao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Configuração</TabsTrigger>
           <TabsTrigger value="duelos" className="flex-1 whitespace-nowrap text-xs md:text-sm">Duelos</TabsTrigger>
           <TabsTrigger value="ranking" className="flex-1 whitespace-nowrap text-xs md:text-sm">Ranking</TabsTrigger>

@@ -63,57 +63,103 @@ export default function ModeracaoApelidos({ branchId }: Props) {
         ) : !participantes?.length ? (
           <p className="text-sm text-muted-foreground text-center py-8">Nenhum participante encontrado.</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome Real</TableHead>
-                <TableHead>Apelido Público</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-20">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome Real</TableHead>
+                    <TableHead>Apelido Público</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-20">Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {participantes.map((p: any) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="text-sm">{(p.customer as any)?.name || "—"}</TableCell>
+                      <TableCell>
+                        {editingId === p.id ? (
+                          <Input
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            className="h-8 text-sm"
+                            autoFocus
+                            onKeyDown={e => e.key === "Enter" && salvarApelido.mutate({ id: p.id, nickname: editValue })}
+                          />
+                        ) : (
+                          <span className="text-sm">{p.public_nickname || "—"}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={p.duels_enabled ? "default" : "secondary"}>
+                          {p.duels_enabled ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {editingId === p.id ? (
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => salvarApelido.mutate({ id: p.id, nickname: editValue })}>
+                              <Check className="h-3.5 w-3.5 text-green-400" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
+                              <X className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(p.id, p.public_nickname)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden space-y-2">
               {participantes.map((p: any) => (
-                <TableRow key={p.id}>
-                  <TableCell className="text-sm">{(p.customer as any)?.name || "—"}</TableCell>
-                  <TableCell>
-                    {editingId === p.id ? (
-                      <Input
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        className="h-8 text-sm"
-                        autoFocus
-                        onKeyDown={e => e.key === "Enter" && salvarApelido.mutate({ id: p.id, nickname: editValue })}
-                      />
-                    ) : (
-                      <span className="text-sm">{p.public_nickname || "—"}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={p.duels_enabled ? "default" : "secondary"}>
+                <div key={p.id} className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium truncate flex-1 min-w-0">{(p.customer as any)?.name || "—"}</p>
+                    <Badge variant={p.duels_enabled ? "default" : "secondary"} className="shrink-0 text-xs">
                       {p.duels_enabled ? "Ativo" : "Inativo"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <div className="flex items-center gap-2">
                     {editingId === p.id ? (
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => salvarApelido.mutate({ id: p.id, nickname: editValue })}>
-                          <Check className="h-3.5 w-3.5 text-green-400" />
+                      <>
+                        <Input
+                          value={editValue}
+                          onChange={e => setEditValue(e.target.value)}
+                          className="h-8 text-sm flex-1"
+                          autoFocus
+                          placeholder="Apelido..."
+                          onKeyDown={e => e.key === "Enter" && salvarApelido.mutate({ id: p.id, nickname: editValue })}
+                        />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => salvarApelido.mutate({ id: p.id, nickname: editValue })}>
+                          <Check className="h-4 w-4 text-green-400" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
-                          <X className="h-3.5 w-3.5 text-destructive" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditingId(null)}>
+                          <X className="h-4 w-4 text-destructive" />
                         </Button>
-                      </div>
+                      </>
                     ) : (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(p.id, p.public_nickname)}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
+                      <>
+                        <span className="text-sm text-muted-foreground flex-1 truncate">{p.public_nickname || "Sem apelido"}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => startEdit(p.id, p.public_nickname)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

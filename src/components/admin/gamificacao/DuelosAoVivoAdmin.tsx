@@ -142,15 +142,15 @@ export default function DuelosAoVivoAdmin({ branchId, brandId, onCriarDuelo }: P
                     </div>
 
                     {/* Scoreboard */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 text-right">
-                        <p className="text-sm font-medium truncate">{getNome(d.challenger)}</p>
-                        <p className="text-2xl font-bold">{challengerRides}</p>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex-1 min-w-0 text-right">
+                        <p className="text-xs sm:text-sm font-medium truncate">{getNome(d.challenger)}</p>
+                        <p className="text-xl sm:text-2xl font-bold">{challengerRides}</p>
                       </div>
-                      <span className="text-muted-foreground font-bold text-lg">×</span>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium truncate">{getNome(d.challenged)}</p>
-                        <p className="text-2xl font-bold">{challengedRides}</p>
+                      <span className="text-muted-foreground font-bold text-base sm:text-lg shrink-0">×</span>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-xs sm:text-sm font-medium truncate">{getNome(d.challenged)}</p>
+                        <p className="text-xl sm:text-2xl font-bold">{challengedRides}</p>
                       </div>
                     </div>
 
@@ -166,7 +166,7 @@ export default function DuelosAoVivoAdmin({ branchId, brandId, onCriarDuelo }: P
 
                     {/* Prize breakdown */}
                     {(d.prize_points > 0 || d.challenger_points_bet > 0) && (
-                      <div className="flex gap-3 text-xs text-muted-foreground pt-1 border-t">
+                      <div className="flex flex-wrap gap-2 sm:gap-3 text-xs text-muted-foreground pt-1 border-t">
                         {d.prize_points > 0 && <span>🏆 Plataforma: {formatPoints(d.prize_points)}</span>}
                         {d.challenger_points_bet > 0 && <span>🎯 Aposta: {formatPoints(d.challenger_points_bet)} cada</span>}
                       </div>

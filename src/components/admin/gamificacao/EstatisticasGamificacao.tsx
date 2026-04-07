@@ -42,12 +42,12 @@ export default function EstatisticasGamificacao({ branchId, brandId }: Props) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {kpis.map((k) => (
-        <Card key={k.label}>
-          <CardContent className="p-4 flex items-center gap-3">
-            <k.icon className={`h-5 w-5 ${k.color}`} />
-            <div>
-              <p className="text-xs text-muted-foreground">{k.label}</p>
-              <p className="text-lg font-bold">{k.value}</p>
+        <Card key={k.label} className="min-w-0 overflow-hidden">
+          <CardContent className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3 min-w-0">
+            <k.icon className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 ${k.color}`} />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{k.label}</p>
+              <p className="text-base sm:text-lg font-bold">{k.value}</p>
             </div>
           </CardContent>
         </Card>
