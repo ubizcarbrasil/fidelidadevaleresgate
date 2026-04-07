@@ -188,11 +188,9 @@ export default function BranchForm() {
                  <Input value={city} onChange={(e) => handleCityChange(e.target.value)} required placeholder="Ex: Curitiba" />
                </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-               <div className="space-y-2">
-                 <Label>Timezone</Label>
-                 <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-               </div>
+            <div className="space-y-2">
+              <Label>Timezone</Label>
+              <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
