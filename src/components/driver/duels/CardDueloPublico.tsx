@@ -167,10 +167,17 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
         <p className="text-center text-[10px] text-muted-foreground">Empate! 🤝</p>
       )}
 
-      {/* Rodapé: corridas label */}
-      <p className="text-center text-[10px] text-muted-foreground mt-auto">
-        corridas concluídas
-      </p>
+      {/* Rodapé: corridas label + CTA palpite */}
+      <div className="flex items-center justify-between mt-auto">
+        <p className="text-[10px] text-muted-foreground">
+          corridas concluídas
+        </p>
+        {aoVivo && (
+          <span className="text-[10px] font-bold flex items-center gap-0.5" style={{ color: "hsl(var(--primary))" }}>
+            🎯 Palpitar
+          </span>
+        )}
+      </div>
     </button>
   );
 }

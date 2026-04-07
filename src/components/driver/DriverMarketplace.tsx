@@ -29,6 +29,7 @@ import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
 import BannerPromoDuelos from "./duels/BannerPromoDuelos";
+import BannerDueloAoVivo from "./duels/BannerDueloAoVivo";
 import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
 import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
 
