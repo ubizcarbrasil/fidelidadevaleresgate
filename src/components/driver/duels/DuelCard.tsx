@@ -6,7 +6,7 @@ import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare, Eye } from 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Duel } from "./hook_duelos";
-import { resolveParticipantName, resolveParticipantAvatar } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, useContagemCorridasDuelo } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
