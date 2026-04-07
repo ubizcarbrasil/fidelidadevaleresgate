@@ -899,6 +899,13 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {showDuels && configDuelos.duelosAtivos && (
         <DuelsHub onBack={() => setShowDuels(false)} configDuelos={configDuelos} />
       )}
+
+      {/* Popup de desafio recebido em tempo real */}
+      <PopupDesafioRecebido
+        desafio={desafioPendente}
+        onFechar={fecharPopup}
+        onVerDesafio={() => setShowDuels(true)}
+      />
     </div>
   );
 }
