@@ -131,8 +131,8 @@ export function AbaNotificacoes({
       <Alert className="border-primary/20 bg-primary/5">
         <MessageSquare className="h-4 w-4 text-primary" />
         <AlertDescription className="text-sm">
-          <strong>Notificações</strong> — Configure como os motoristas serão notificados a cada corrida finalizada.
-          Você pode ativar notificações no app TaxiMachine e/ou receber alertas no Telegram.
+          <strong>Notificações</strong> — Configure como os motoristas são notificados a cada corrida finalizada.
+          Usa as <strong>credenciais da cidade</strong> (cadastradas na aba Motorista) para enviar mensagens no app TaxiMachine. Telegram usa bot próprio, sem credenciais da TaxiMachine.
         </AlertDescription>
       </Alert>
 
@@ -171,8 +171,8 @@ export function AbaNotificacoes({
                 Notificação ao motorista no app
               </CardTitle>
               <CardDescription>
-                Envia uma mensagem automática no app TaxiMachine para o motorista informando os pontos ganhos,
-                valor da corrida e saldo atualizado a cada corrida finalizada.
+                Envia uma mensagem automática no app TaxiMachine para o motorista usando as <strong>credenciais da cidade</strong> cadastradas na aba Motorista.
+                Informa pontos ganhos, valor da corrida e saldo atualizado a cada corrida finalizada.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

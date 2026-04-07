@@ -88,8 +88,8 @@ export function AbaPontuarPassageiro({
       <Alert className="border-primary/20 bg-primary/5">
         <Trophy className="h-4 w-4 text-primary" />
         <AlertDescription className="text-sm">
-          <strong>Pontuar Passageiro</strong> — Aqui são exibidas as pontuações creditadas aos passageiros em tempo real.
-          As credenciais da Matriz (no topo da página) são usadas para buscar recibos e identificar os passageiros automaticamente.
+          <strong>Pontuar Passageiro</strong> — Pontuações creditadas aos passageiros em tempo real.
+          Usa as <strong>credenciais da Matriz</strong> (card acima) para buscar recibos na TaxiMachine e identificar quem era o passageiro de cada corrida. Nenhuma credencial de cidade é necessária aqui.
         </AlertDescription>
       </Alert>
 

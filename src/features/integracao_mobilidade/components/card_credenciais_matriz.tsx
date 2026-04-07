@@ -80,7 +80,7 @@ export function CardCredenciaisMatriz({ brandId, brandMatrix }: Props) {
                 )}
               </CardTitle>
               <CardDescription>
-                Configuração única para todas as cidades. Usada para buscar recibos e identificar passageiros.
+                Usada exclusivamente para <strong>pontuar passageiros</strong>. É a chave da sede que permite buscar recibos e identificar quem estava na corrida. Configuração única — vale para todas as cidades.
               </CardDescription>
             </div>
             <CollapsibleTrigger asChild>
@@ -93,7 +93,7 @@ export function CardCredenciaisMatriz({ brandId, brandMatrix }: Props) {
         <CollapsibleContent>
           <CardContent className="space-y-4 max-w-lg">
             <div className="space-y-2">
-              <Label>Chave API da Matriz</Label>
+              <Label>Chave API da Matriz (para pontuar passageiros)</Label>
               <div className="relative">
                 <Input
                   type={showMatrixApiKey ? "text" : "password"}
@@ -129,7 +129,7 @@ export function CardCredenciaisMatriz({ brandId, brandMatrix }: Props) {
               <Alert className="border-primary/30 bg-primary/5">
                 <CheckCircle className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-xs">
-                  Matriz configurada. Todas as cidades usarão estas credenciais para buscar recibos e pontuar passageiros.
+                  Matriz configurada. Essas credenciais serão usadas para buscar recibos e <strong>pontuar passageiros</strong> em todas as cidades. As credenciais de cada cidade (aba Motorista) são independentes.
                 </AlertDescription>
               </Alert>
             )}

@@ -84,8 +84,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
           {activeIntegrations.length > 0 ? "Adicionar nova cidade" : "Ativar integração"}
         </CardTitle>
         <CardDescription>
-          Cada cidade possui suas próprias credenciais (API Key, Usuário e Senha) na TaxiMachine.
-          Informe abaixo os dados da cidade que deseja integrar e escolha como registrar o webhook.
+          Informe as credenciais da <strong>cidade</strong> na TaxiMachine. Essas credenciais são usadas para <strong>pontuar motoristas</strong> e <strong>enviar notificações</strong> — são diferentes das credenciais da Matriz (usadas para pontuar passageiros).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 max-w-md">
@@ -106,7 +105,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
 
         {/* API Key */}
         <div className="space-y-2">
-          <Label>API Key da Cidade</Label>
+          <Label>API Key da Cidade (para motorista + notificações)</Label>
           <div className="relative">
             <Input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Token fornecido pela TaxiMachine para esta cidade" />
             <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
@@ -131,7 +130,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
               {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="text-xs text-muted-foreground">Usuário e senha são usados para buscar recibos e identificar passageiros desta cidade.</p>
+          <p className="text-xs text-muted-foreground">Usuário e senha da cidade são usados para receber corridas via webhook (pontuar motorista) e enviar mensagens no app (notificações).</p>
         </div>
 
         {/* Modo do webhook */}
