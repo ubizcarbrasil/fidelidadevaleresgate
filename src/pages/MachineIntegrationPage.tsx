@@ -399,7 +399,6 @@ export default function MachineIntegrationPage() {
             : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
         });
         setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
-        setMatrixApiKey(""); setMatrixBasicUser(""); setMatrixBasicPass("");
       }
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
