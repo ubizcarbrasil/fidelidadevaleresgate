@@ -136,6 +136,74 @@ export function useDuelOpponents() {
   });
 }
 
+export function useUpdateAvatar() {
+  const { driver } = useDriverSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      if (!driver) throw new Error("Sem sessão");
+
+      // Resize client-side to 256x256
+      const resized = await resizeImage(file, 256);
+
+      const filePath = `${driver.id}_${Date.now()}.webp`;
+      const { error: upErr } = await supabase.storage
+        .from("driver-avatars")
+        .upload(filePath, resized, { upsert: true, contentType: "image/webp" });
+      if (upErr) throw upErr;
+
+      const { data: urlData } = supabase.storage
+        .from("driver-avatars")
+        .getPublicUrl(filePath);
+
+      const { data: part } = await supabase
+        .from("driver_duel_participants")
+        .select("id")
+        .eq("customer_id", driver.id)
+        .maybeSingle();
+      if (!part) throw new Error("Participante não encontrado");
+
+      const { error } = await supabase
+        .from("driver_duel_participants")
+        .update({ avatar_url: urlData.publicUrl })
+        .eq("id", part.id);
+      if (error) throw error;
+      return urlData.publicUrl;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["duel-participant"] });
+      queryClient.invalidateQueries({ queryKey: ["duel-opponents"] });
+      toast.success("Foto atualizada! 📸");
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao enviar foto"),
+  });
+}
+
+/** Redimensiona imagem usando Canvas */
+async function resizeImage(file: File, maxSize: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      canvas.width = maxSize;
+      canvas.height = maxSize;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, maxSize, maxSize);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Erro ao processar imagem"))),
+        "image/webp",
+        0.8
+      );
+    };
+    img.onerror = () => reject(new Error("Erro ao carregar imagem"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export function useUpdateNickname() {
   const { driver } = useDriverSession();
   const queryClient = useQueryClient();

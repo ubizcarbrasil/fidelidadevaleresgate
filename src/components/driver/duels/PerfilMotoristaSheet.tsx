@@ -1,12 +1,12 @@
 /**
- * Sheet para o motorista editar seu apelido público (nickname) nos duelos.
+ * Sheet para o motorista editar seu perfil público (nickname + foto) nos duelos.
  */
-import React, { useState } from "react";
-import { ArrowLeft, User, Save } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { ArrowLeft, User, Save, Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
-import { useDuelParticipation, useUpdateNickname } from "./hook_duelos";
+import { useDuelParticipation, useUpdateNickname, useUpdateAvatar } from "./hook_duelos";
 import { toast } from "sonner";
 
 interface Props {
@@ -24,10 +24,29 @@ export default function PerfilMotoristaSheet({ onBack }: Props) {
   const { driver } = useDriverSession();
   const { participant } = useDuelParticipation();
   const updateNickname = useUpdateNickname();
+  const updateAvatar = useUpdateAvatar();
 
   const [nickname, setNickname] = useState(participant?.public_nickname || "");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSave = () => {
+  const isSaving = updateNickname.isPending || updateAvatar.isPending;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 5MB.");
+      return;
+    }
+    setPendingFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setPreviewUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
     const trimmed = nickname.trim();
     if (trimmed.length > 20) {
       toast.error("Máximo 20 caracteres");
@@ -37,10 +56,21 @@ export default function PerfilMotoristaSheet({ onBack }: Props) {
       toast.error("Apelido contém palavras inadequadas");
       return;
     }
-    updateNickname.mutate(trimmed || null, {
-      onSuccess: () => onBack(),
-    });
+
+    try {
+      if (pendingFile) {
+        await updateAvatar.mutateAsync(pendingFile);
+        setPendingFile(null);
+      }
+      await updateNickname.mutateAsync(trimmed || null);
+      onBack();
+    } catch {
+      // errors handled by mutation hooks
+    }
   };
+
+  const avatarSrc = previewUrl || participant?.avatar_url;
+  const initial = (participant?.public_nickname || participant?.display_name || driver?.name || "M").charAt(0).toUpperCase();
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-auto" style={{ backgroundColor: "hsl(var(--background))" }}>
@@ -55,18 +85,38 @@ export default function PerfilMotoristaSheet({ onBack }: Props) {
       </header>
 
       <div className="flex-1 px-4 pb-8 max-w-lg mx-auto w-full space-y-5">
-        {/* Avatar placeholder */}
+        {/* Avatar com upload */}
         <div className="flex flex-col items-center gap-3 pt-4">
-          <div
-            className="h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold"
-            style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="relative h-24 w-24 rounded-full overflow-hidden group"
+            style={{ backgroundColor: "hsl(var(--primary) / 0.15)" }}
           >
-            {participant?.avatar_url ? (
-              <img src={participant.avatar_url} alt="Avatar" className="h-20 w-20 rounded-full object-cover" />
+            {avatarSrc ? (
+              <img src={avatarSrc} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
-              (participant?.public_nickname || participant?.display_name || driver?.name || "M").charAt(0).toUpperCase()
+              <span className="flex items-center justify-center h-full w-full text-3xl font-bold" style={{ color: "hsl(var(--primary))" }}>
+                {initial}
+              </span>
             )}
-          </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+              <Camera className="h-6 w-6 text-white" />
+            </div>
+            {updateAvatar.isPending && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              </div>
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <p className="text-xs text-muted-foreground">Toque para trocar a foto</p>
           <p className="text-sm text-muted-foreground">
             {(participant as any)?.display_name || driver?.name?.replace(/\[MOTORISTA\]\s*/gi, "").trim() || "Motorista"}
           </p>
@@ -94,11 +144,11 @@ export default function PerfilMotoristaSheet({ onBack }: Props) {
 
         <Button
           onClick={handleSave}
-          disabled={updateNickname.isPending}
+          disabled={isSaving}
           className="w-full gap-2"
         >
-          <Save className="h-4 w-4" />
-          {updateNickname.isPending ? "Salvando..." : "Salvar Apelido"}
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isSaving ? "Salvando..." : "Salvar Perfil"}
         </Button>
       </div>
     </div>
