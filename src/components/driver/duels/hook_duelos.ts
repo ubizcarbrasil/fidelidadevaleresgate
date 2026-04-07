@@ -18,6 +18,7 @@ export interface DuelParticipant {
   public_nickname: string | null;
   avatar_url: string | null;
   display_name: string | null;
+  is_enrolled?: boolean;
   customers?: { name: string; cpf: string | null } | null;
 }
 
