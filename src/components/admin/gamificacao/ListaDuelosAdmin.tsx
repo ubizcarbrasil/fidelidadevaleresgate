@@ -23,7 +23,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
 
 const FILTER_OPTIONS = ["all", "pending", "accepted", "live", "finished", "declined", "canceled"] as const;
 
-export default function ListaDuelosAdmin({ branchId }: Props) {
+export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: duelos, isLoading } = useQuery({
