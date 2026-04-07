@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
-import { resolveParticipantName, resolveParticipantAvatar, cleanDriverName, useFinalizeDuel, useAuditoriaDuelo } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, cleanDriverName, useFinalizeDuel, useAuditoriaDuelo, useContagemCorridasDuelo } from "./hook_duelos";
 import { useDuelRating } from "./hook_avaliacao_duelo";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
