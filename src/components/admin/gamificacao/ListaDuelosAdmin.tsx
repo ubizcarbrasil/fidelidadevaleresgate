@@ -60,24 +60,26 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Duelos da Cidade</CardTitle>
-        <div className="flex items-center gap-2">
-          <select
-            className="rounded-md border bg-background px-3 py-1.5 text-sm"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <option value="all">Todos</option>
-            {FILTER_OPTIONS.filter(o => o !== "all").map(s => (
-              <option key={s} value={s}>{STATUS_LABELS[s]?.label || s}</option>
-            ))}
-          </select>
-          {onCriarDuelo && (
-            <Button size="sm" onClick={onCriarDuelo} className="gap-1">
-              <Plus className="h-4 w-4" /> Criar
-            </Button>
-          )}
+      <CardHeader className="space-y-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base">Duelos da Cidade</CardTitle>
+          <div className="flex items-center gap-2">
+            <select
+              className="rounded-md border bg-background px-3 py-1.5 text-sm flex-1 sm:flex-none"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Todos</option>
+              {FILTER_OPTIONS.filter(o => o !== "all").map(s => (
+                <option key={s} value={s}>{STATUS_LABELS[s]?.label || s}</option>
+              ))}
+            </select>
+            {onCriarDuelo && (
+              <Button size="sm" onClick={onCriarDuelo} className="gap-1">
+                <Plus className="h-4 w-4" /> Criar
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -86,47 +88,84 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
         ) : !duelos?.length ? (
           <p className="text-sm text-muted-foreground text-center py-8">Nenhum duelo encontrado.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Desafiante</TableHead>
-                  <TableHead>Desafiado</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Período</TableHead>
-                  <TableHead className="text-right">Placar</TableHead>
-                  <TableHead className="text-right">Prêmio</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {duelos.map((d: any) => {
-                  const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
-                  const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
-                  return (
-                    <TableRow key={d.id}>
-                      <TableCell className="text-sm">{getNome(d.challenger)}</TableCell>
-                      <TableCell className="text-sm">{getNome(d.challenged)}</TableCell>
-                      <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+          <>
+            {/* Mobile: card list */}
+            <div className="space-y-3 md:hidden">
+              {duelos.map((d: any) => {
+                const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
+                const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
+                return (
+                  <div key={d.id} className="rounded-lg border bg-card p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant={s.variant}>{s.label}</Badge>
+                      <span className="text-xs text-muted-foreground">
                         {format(new Date(d.start_at), "dd/MM")} — {format(new Date(d.end_at), "dd/MM")}
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium">
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm">
+                        <span className="font-medium truncate max-w-[120px] inline-block align-bottom">{getNome(d.challenger)}</span>
+                        <span className="text-muted-foreground mx-1">×</span>
+                        <span className="font-medium truncate max-w-[120px] inline-block align-bottom">{getNome(d.challenged)}</span>
+                      </div>
+                      <span className="text-sm font-bold whitespace-nowrap">
                         {d.challenger_rides_count ?? "—"} × {d.challenged_rides_count ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {totalPrize > 0 ? (
-                          <span className="flex items-center justify-end gap-1">
-                            <Trophy className="h-3.5 w-3.5 text-yellow-500" />
-                            {formatPoints(totalPrize)}
-                          </span>
-                        ) : "—"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                      </span>
+                    </div>
+                    {totalPrize > 0 && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Trophy className="h-3.5 w-3.5 text-yellow-500" />
+                        {formatPoints(totalPrize)} pts
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Desafiante</TableHead>
+                    <TableHead>Desafiado</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Período</TableHead>
+                    <TableHead className="text-right">Placar</TableHead>
+                    <TableHead className="text-right">Prêmio</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {duelos.map((d: any) => {
+                    const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
+                    const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
+                    return (
+                      <TableRow key={d.id}>
+                        <TableCell className="text-sm">{getNome(d.challenger)}</TableCell>
+                        <TableCell className="text-sm">{getNome(d.challenged)}</TableCell>
+                        <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {format(new Date(d.start_at), "dd/MM")} — {format(new Date(d.end_at), "dd/MM")}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">
+                          {d.challenger_rides_count ?? "—"} × {d.challenged_rides_count ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-right text-sm">
+                          {totalPrize > 0 ? (
+                            <span className="flex items-center justify-end gap-1">
+                              <Trophy className="h-3.5 w-3.5 text-yellow-500" />
+                              {formatPoints(totalPrize)}
+                            </span>
+                          ) : "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

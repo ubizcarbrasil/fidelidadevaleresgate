@@ -157,9 +157,9 @@ export default function DuelosAoVivoAdmin({ branchId, brandId, onCriarDuelo }: P
                     <Progress value={challengerPct} className="h-2" />
 
                     {/* Details & Actions */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground">
                       <span>{format(new Date(d.start_at), "dd/MM HH:mm")} — {format(new Date(d.end_at), "dd/MM HH:mm")}</span>
-                      <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={() => setBoostDuel(d)}>
+                      <Button variant="outline" size="sm" className="gap-1 h-7 text-xs w-full sm:w-auto" onClick={() => setBoostDuel(d)}>
                         <Zap className="h-3.5 w-3.5" /> Impulsionar
                       </Button>
                     </div>
