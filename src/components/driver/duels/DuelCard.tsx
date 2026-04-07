@@ -29,11 +29,12 @@ interface Props {
 export default function DuelCard({ duel, participantId, onClick }: Props) {
   const cfg = statusConfig[duel.status] || statusConfig.pending;
 
-  const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
-  const challengedName = cleanDriverName((duel.challenged as any)?.customers?.name);
+  const challengerName = resolveParticipantName(duel.challenger);
+  const challengedName = resolveParticipantName(duel.challenged);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentName = isChallenger ? challengedName : challengerName;
+  const opponentAvatar = resolveParticipantAvatar(isChallenger ? duel.challenged : duel.challenger);
   const myRides = isChallenger ? duel.challenger_rides_count : duel.challenged_rides_count;
   const theirRides = isChallenger ? duel.challenged_rides_count : duel.challenger_rides_count;
 
