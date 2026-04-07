@@ -19,7 +19,10 @@ function tempoRestante(endAt: string): string {
   return `${m}min`;
 }
 
-function AvatarMini({ nome }: { nome: string }) {
+function AvatarMini({ nome, avatarUrl }: { nome: string; avatarUrl?: string | null }) {
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={nome} className="w-9 h-9 rounded-full object-cover shrink-0" />;
+  }
   const iniciais = nome
     .split(" ")
     .slice(0, 2)
