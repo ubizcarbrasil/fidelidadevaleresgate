@@ -153,7 +153,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
           </p>
         </div>
 
-        <Button onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
+        <Button className="w-full sm:w-auto" onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
           {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           <Power className="h-4 w-4 mr-1" /> Ativar cidade
         </Button>

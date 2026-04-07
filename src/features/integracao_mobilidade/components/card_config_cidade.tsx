@@ -270,12 +270,12 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border">
-          <Button variant="destructive" size="sm" onClick={() => { if (confirm("Remover esta conexão?")) deleteIntegrationMutation.mutate(); }} disabled={deleteIntegrationMutation.isPending}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center pt-2 border-t border-border">
+          <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => { if (confirm("Remover esta conexão?")) deleteIntegrationMutation.mutate(); }} disabled={deleteIntegrationMutation.isPending}>
             {deleteIntegrationMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             <XCircle className="h-4 w-4 mr-1" /> Remover conexão
           </Button>
-          <Button variant="outline" size="sm" onClick={() => integration.branch_id && deactivateMutation.mutate()} disabled={deactivateMutation.isPending}>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => integration.branch_id && deactivateMutation.mutate()} disabled={deactivateMutation.isPending}>
             {deactivateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             <PowerOff className="h-4 w-4 mr-1" /> Desativar
           </Button>
