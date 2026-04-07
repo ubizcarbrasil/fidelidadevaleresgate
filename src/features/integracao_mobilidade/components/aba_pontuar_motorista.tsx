@@ -71,6 +71,9 @@ export function AbaPontuarMotorista({
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const addCidadeRef = useRef<HTMLDivElement>(null);
+
+  const hasActiveCities = activeIntegrations.length > 0;
 
   const selectedIntegration = selectedBranchId
     ? integrations.find((i) => i.branch_id === selectedBranchId && i.is_active)
