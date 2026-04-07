@@ -31,15 +31,12 @@ export function AcoesCidade({ branchId, branchName, onDeleted }: Props) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
-
-      const { data, error } = await supabase.functions.invoke("admin-brand-actions", {
-        body: { action: "delete_branch", branch_id: branchId },
-      });
+      const { error } = await supabase
+        .from("branches")
+        .delete()
+        .eq("id", branchId);
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
 
       toast.success("Cidade excluída com sucesso");
       queryClient.invalidateQueries({ queryKey: ["onboarding-branches"] });
