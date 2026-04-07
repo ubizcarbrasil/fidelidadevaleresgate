@@ -35,25 +35,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: roleCheck } = await adminClient
+    const { data: rootAdminCheck } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "root_admin")
       .maybeSingle();
 
-    if (!roleCheck) {
+    const body = await req.json();
+    const { action } = body;
+    const isRootAdmin = Boolean(rootAdminCheck);
+
+    const requireRootAdmin = () => {
+      if (isRootAdmin) return null;
+
       return new Response(JSON.stringify({ error: "Forbidden: root_admin required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    const body = await req.json();
-    const { action } = body;
+    };
 
     // ACTION: reset_password — set a new password for brand admin user
     if (action === "reset_password") {
+      const rootAdminError = requireRootAdmin();
+      if (rootAdminError) return rootAdminError;
+
       const { user_id, new_password } = body;
       if (!user_id || !new_password || new_password.length < 6) {
         return new Response(JSON.stringify({ error: "user_id and new_password (min 6 chars) required" }), {
@@ -72,6 +78,9 @@ Deno.serve(async (req) => {
 
     // ACTION: delete_brand — hard-delete a brand and all related data
     if (action === "delete_brand") {
+      const rootAdminError = requireRootAdmin();
+      if (rootAdminError) return rootAdminError;
+
       const { brand_id } = body;
       if (!brand_id) {
         return new Response(JSON.stringify({ error: "brand_id required" }), {
@@ -192,7 +201,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Allow root_admin (already checked) or brand_admin of this brand
+      // Allow root_admin or brand_admin of this brand
       const { data: brandAdminCheck } = await adminClient
         .from("user_roles")
         .select("role")
@@ -201,7 +210,7 @@ Deno.serve(async (req) => {
         .in("role", ["brand_admin", "root_admin"])
         .maybeSingle();
 
-      if (!brandAdminCheck && !roleCheck) {
+      if (!brandAdminCheck && !isRootAdmin) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -285,6 +294,9 @@ Deno.serve(async (req) => {
 
     // ACTION: change_plan — update subscription_plan for a brand
     if (action === "change_plan") {
+      const rootAdminError = requireRootAdmin();
+      if (rootAdminError) return rootAdminError;
+
       const { brand_id, plan } = body;
       if (!brand_id || !plan) {
         return new Response(JSON.stringify({ error: "brand_id and plan required" }), {
@@ -307,7 +319,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : "Erro interno";
+
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
