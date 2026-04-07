@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Power, Loader2, Eye, EyeOff, CheckCircle, Check, Copy,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { Branch, Integration } from "../hooks/hook_integracoes";
 
 interface Props {
