@@ -214,9 +214,9 @@ export default function BranchForm() {
                 Coordenadas preenchidas automaticamente. Ajuste manualmente se necessário.
               </p>
             )}
-            <div className="space-y-2">
+            <div className="flex items-center justify-between py-2">
               <Label>Ativo</Label>
-              <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
             <div className="flex gap-2 pt-4">
               <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
