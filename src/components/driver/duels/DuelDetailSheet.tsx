@@ -35,6 +35,9 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
   const { mutate: finalize, isPending: finalizing } = useFinalizeDuel();
   const [remaining, setRemaining] = useState(0);
   const [showRating, setShowRating] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
+
+  const { data: auditLog } = useAuditoriaDuelo(duel.status === "finished" ? duel.id : null);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentCustomerId = isChallenger
