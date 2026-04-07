@@ -99,38 +99,40 @@ export default function DuelChallengeCard({ duel }: Props) {
       )}
 
       {!showCounter ? (
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             onClick={() => hasBet ? setShowConfirm(true) : respond({ duelId: duel.id, accept: true, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
             disabled={responding || proposing || (hasBet && balance < duel.challenger_points_bet)}
-            className="flex-1 gap-1.5"
+            className="w-full gap-1.5"
             size="sm"
           >
             <ShieldCheck className="h-4 w-4" />
             {hasBet ? `Aceitar (${formatPoints(duel.challenger_points_bet)} pts)` : "Aceitar"}
           </Button>
-          {hasBet && (
+          <div className="flex gap-2">
+            {hasBet && (
+              <Button
+                onClick={() => setShowCounter(true)}
+                disabled={responding || proposing}
+                variant="secondary"
+                className="flex-1 gap-1.5"
+                size="sm"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Contraproposta
+              </Button>
+            )}
             <Button
-              onClick={() => setShowCounter(true)}
+              onClick={() => respond({ duelId: duel.id, accept: false, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
               disabled={responding || proposing}
-              variant="secondary"
-              className="gap-1.5"
+              variant="outline"
+              className="flex-1 gap-1.5"
               size="sm"
             >
-              <MessageSquare className="h-4 w-4" />
-              Contraproposta
+              <Flag className="h-4 w-4" />
+              {hasBet ? "Recusar" : "Arregar 😅"}
             </Button>
-          )}
-          <Button
-            onClick={() => respond({ duelId: duel.id, accept: false, challengerCustomerId: (duel.challenger as any)?.customer_id, challengerName })}
-            disabled={responding || proposing}
-            variant="outline"
-            className="gap-1.5"
-            size="sm"
-          >
-            <Flag className="h-4 w-4" />
-            {hasBet ? "Recusar" : "Arregar 😅"}
-          </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-2">
