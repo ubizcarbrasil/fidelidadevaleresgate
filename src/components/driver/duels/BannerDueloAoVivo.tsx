@@ -19,7 +19,7 @@ export default function BannerDueloAoVivo({ branchId, fontHeading }: Props) {
   const { data: duelos } = useDuelosCidade(branchId);
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
 
-  const aoVivo = (duelos || []).filter((d) => d.status === "live");
+  const aoVivo = (duelos || []).filter((d) => d.status === "live" || d.status === "accepted");
   if (aoVivo.length === 0 && !arenaDuel) return null;
 
   if (arenaDuel) {
@@ -75,9 +75,9 @@ export default function BannerDueloAoVivo({ branchId, fontHeading }: Props) {
               <div className="flex items-center gap-1.5 mb-0.5">
                 <Badge
                   className="text-[9px] gap-0.5 animate-pulse border-0 px-1.5 py-0"
-                  style={{ backgroundColor: "hsl(var(--success))", color: "white" }}
+                  style={{ backgroundColor: destaque.status === "live" ? "hsl(var(--success))" : "hsl(var(--warning))", color: "white" }}
                 >
-                  <Flame className="w-2.5 h-2.5" /> AO VIVO
+                  <Flame className="w-2.5 h-2.5" /> {destaque.status === "live" ? "AO VIVO" : "EM DUELO"}
                 </Badge>
                 {aoVivo.length > 1 && (
                   <span className="text-[9px] text-muted-foreground">

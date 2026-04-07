@@ -35,6 +35,22 @@ Deno.serve(async (req) => {
   );
 
   try {
+    // 0. Transition accepted duels to live when start_at has passed
+    const now = new Date().toISOString();
+    const { data: activatedDuels, error: activateErr } = await sb
+      .from("driver_duels")
+      .update({ status: "live" })
+      .eq("status", "accepted")
+      .lte("start_at", now)
+      .gt("end_at", now)
+      .select("id");
+
+    if (activateErr) {
+      logger.error("Failed to activate accepted duels", { error: String(activateErr) });
+    } else if (activatedDuels && activatedDuels.length > 0) {
+      logger.info("Activated accepted duels to live", { count: activatedDuels.length, ids: activatedDuels.map(d => d.id) });
+    }
+
     // 1. Find expired duels with participant info
     const { data: expiredDuels, error: duelsErr } = await sb
       .from("driver_duels")
@@ -45,7 +61,7 @@ Deno.serve(async (req) => {
         challenged:driver_duel_participants!driver_duels_challenged_id_fkey(customer_id, public_nickname, customers(name, external_driver_id))
       `)
       .in("status", ["accepted", "live"])
-      .lt("end_at", new Date().toISOString());
+      .lt("end_at", now);
 
     if (duelsErr) {
       logger.error("Failed to fetch expired duels", { error: String(duelsErr) });
