@@ -311,7 +311,7 @@ export function AbaPontuarMotorista({
   });
 
   // Diag rides
-  const { data: diagRides = [] } = (await import("@tanstack/react-query")).useQuery({
+  const { data: diagRides = [] } = useQuery({
     queryKey: ["machine-rides-diag", brandId],
     queryFn: async () => {
       const { data, error } = await supabase
