@@ -4,14 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Car, User, Zap } from "lucide-react";
+import { Coins, Car, User, Zap, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface IntegratedBranch {
+  branch_id: string;
+  branch_name: string;
+}
 
 interface PointsFeedProps {
   brandId?: string;
   isDriverEnabled?: boolean;
   isPassengerEnabled?: boolean;
+  integratedBranches?: IntegratedBranch[];
 }
 
 interface RideEntry {
@@ -23,24 +30,31 @@ interface RideEntry {
   driver_points_credited: number;
   ride_value: number;
   ride_status: string;
+  branch_name: string | null;
 }
 
-const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, isPassengerEnabled = true }: PointsFeedProps) {
+const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, isPassengerEnabled = true, integratedBranches = [] }: PointsFeedProps) {
   const queryClient = useQueryClient();
   const [liveCount, setLiveCount] = useState(0);
+  const [selectedBranch, setSelectedBranch] = useState<string>("all");
 
   const { data: rides, isLoading } = useQuery({
-    queryKey: ["dashboard-points-feed", brandId],
+    queryKey: ["dashboard-points-feed", brandId, selectedBranch],
     queryFn: async () => {
       let q = supabase
         .from("machine_rides")
-        .select("id, created_at, passenger_name, driver_name, points_credited, driver_points_credited, ride_value, ride_status")
+        .select("id, created_at, passenger_name, driver_name, points_credited, driver_points_credited, ride_value, ride_status, branches(name)")
         .eq("ride_status", "FINALIZED")
         .order("created_at", { ascending: false })
         .limit(15);
       if (brandId) q = q.eq("brand_id", brandId);
+      if (selectedBranch !== "all") q = q.eq("branch_id", selectedBranch);
       const { data } = await q;
-      return (data || []) as RideEntry[];
+      return ((data || []) as any[]).map((r) => ({
+        ...r,
+        branch_name: r.branches?.name || null,
+        branches: undefined,
+      })) as RideEntry[];
     },
   });
 
@@ -70,7 +84,7 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Zap className="h-4 w-4 text-primary" /> Pontuações em Tempo Real
           </CardTitle>
@@ -89,6 +103,20 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
             </Badge>
           </div>
         </div>
+        {integratedBranches.length > 1 && (
+          <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+            <SelectTrigger className="h-7 text-xs mt-2">
+              <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
+              <SelectValue placeholder="Filtrar por cidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as cidades</SelectItem>
+              {integratedBranches.map((b) => (
+                <SelectItem key={b.branch_id} value={b.branch_id}>{b.branch_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -129,7 +157,7 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
                       </Badge>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] text-muted-foreground">
                       R$ {ride.ride_value.toFixed(2)}
                     </span>
@@ -137,6 +165,14 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
                     <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNow(new Date(ride.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
+                    {ride.branch_name && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                          <MapPin className="h-2.5 w-2.5" /> {ride.branch_name}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

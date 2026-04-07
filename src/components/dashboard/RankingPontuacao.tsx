@@ -1,16 +1,23 @@
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Car, User } from "lucide-react";
+import { Coins, Car, User, MapPin } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface IntegratedBranch {
+  branch_id: string;
+  branch_name: string;
+}
 
 interface RankingPontuacaoProps {
   brandId?: string;
   isDriverEnabled?: boolean;
   isPassengerEnabled?: boolean;
+  integratedBranches?: IntegratedBranch[];
 }
 
 interface RankingEntry {
@@ -58,13 +65,29 @@ function RankingList({ items, icon: Icon, emptyMsg }: { items: RankingEntry[]; i
   );
 }
 
-const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabled = true, isPassengerEnabled = true }: RankingPontuacaoProps) {
+const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabled = true, isPassengerEnabled = true, integratedBranches = [] }: RankingPontuacaoProps) {
   const queryClient = useQueryClient();
+  const [selectedBranch, setSelectedBranch] = useState<string>("all");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ranking-pontuacao", brandId ?? "global"],
+    queryKey: ["ranking-pontuacao", brandId ?? "global", selectedBranch],
     queryFn: async () => {
       if (!brandId) return { passengers: [], drivers: [] };
+
+      // Use branch-specific RPC when filtering by city
+      if (selectedBranch !== "all") {
+        const { data: rows, error } = await supabase.rpc("get_branch_points_ranking", {
+          p_branch_id: selectedBranch,
+          p_limit: 10,
+        } as any);
+        if (error) throw error;
+        const all = (rows || []) as RankingEntry[];
+        return {
+          passengers: [] as RankingEntry[],
+          drivers: all.filter((r) => r.participant_type === "driver"),
+        };
+      }
+
       const { data: rows, error } = await supabase.rpc("get_points_ranking", {
         p_brand_id: brandId,
         p_limit: 10,
@@ -109,6 +132,20 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabl
             Ao vivo
           </Badge>
         </div>
+        {integratedBranches.length > 1 && (
+          <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+            <SelectTrigger className="h-7 text-xs mt-2">
+              <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
+              <SelectValue placeholder="Filtrar por cidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as cidades</SelectItem>
+              {integratedBranches.map((b) => (
+                <SelectItem key={b.branch_id} value={b.branch_id}>{b.branch_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -116,8 +153,8 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabl
             {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
           </div>
         ) : (
-          <Tabs defaultValue={isPassengerEnabled ? "passengers" : "drivers"} className="w-full">
-            {isPassengerEnabled && isDriverEnabled && (
+          <Tabs defaultValue={isPassengerEnabled && selectedBranch === "all" ? "passengers" : "drivers"} className="w-full">
+            {isPassengerEnabled && isDriverEnabled && selectedBranch === "all" && (
               <TabsList className="grid w-full grid-cols-2 mb-3">
                 <TabsTrigger value="passengers" className="text-xs gap-1.5">
                   <User className="h-3.5 w-3.5" /> Passageiros
@@ -127,7 +164,7 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabl
                 </TabsTrigger>
               </TabsList>
             )}
-            {isPassengerEnabled && (
+            {isPassengerEnabled && selectedBranch === "all" && (
               <TabsContent value="passengers">
                 <RankingList items={data?.passengers || []} icon={User} emptyMsg="Nenhum passageiro pontuou ainda." />
               </TabsContent>

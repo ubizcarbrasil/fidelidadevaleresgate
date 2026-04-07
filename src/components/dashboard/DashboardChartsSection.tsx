@@ -1,6 +1,28 @@
 import { Suspense, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+interface IntegratedBranch {
+  branch_id: string;
+  branch_name: string;
+}
+
+function useIntegratedBranches(brandId?: string) {
+  return useQuery({
+    queryKey: ["integrated-branches", brandId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("machine_integrations")
+        .select("branch_id, branches(name)")
+        .eq("brand_id", brandId!)
+        .eq("is_active", true);
+      return ((data || []) as any[])
+        .filter((d: any) => d.branch_id && d.branches?.name)
+        .map((d: any) => ({ branch_id: d.branch_id, branch_name: d.branches.name })) as IntegratedBranch[];
+    },
+    enabled: !!brandId,
+  });
+}
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -182,6 +204,7 @@ export default function DashboardChartsSection({
   isDriverEnabled = true, isPassengerEnabled = true,
 }: DashboardChartsSectionProps) {
   const shouldShowPointsFeed = isDriverEnabled || isPassengerEnabled;
+  const { data: integratedBranches } = useIntegratedBranches(brandFilter);
 
   return (
     <>
@@ -240,7 +263,7 @@ export default function DashboardChartsSection({
       {showBrand && !isRoot && (
         <div className="animate-slide-up delay-5">
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-            <RankingPontuacao brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
+            <RankingPontuacao brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} integratedBranches={integratedBranches || []} />
           </Suspense>
         </div>
       )}
@@ -249,7 +272,7 @@ export default function DashboardChartsSection({
       {showBrand && !isRoot && shouldShowPointsFeed && (
         <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-5">
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-            <PointsFeed brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
+            <PointsFeed brandId={brandFilter} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} integratedBranches={integratedBranches || []} />
           </Suspense>
           <Suspense fallback={<Skeleton className="h-48 w-full" />}>
             <AchadinhosAlerts brandId={brandFilter} />
