@@ -1,36 +1,35 @@
 
+## Corrigir nomes e fotos nos cards e detalhes de duelos
 
-## Adicionar foto de perfil do motorista
+### Problema
+Todos os cards de duelo (lista "Aguardando Resposta", "Ao Vivo na cidade", detalhe do duelo) mostram "Motorista" porque usam `cleanDriverName((duel.challenger as any)?.customers?.name)`, que depende do join com `customers` — bloqueado por RLS.
 
-### Contexto
-A tela "Meu Perfil de Duelos" já exibe um placeholder com a inicial do nome. A coluna `avatar_url` já existe na tabela `driver_duel_participants`. Falta: bucket de storage, upload da imagem e UI para selecionar/trocar a foto.
+Os dados corretos já estão disponíveis na query: `challenger.display_name`, `challenger.public_nickname` e `challenger.avatar_url` vêm da tabela `driver_duel_participants` (que o select `*` já traz).
 
-### Plano
+### Solução
+Criar uma função helper centralizada que resolve o nome a partir do participante do duelo, priorizando: `public_nickname` > `display_name` > `customers.name` (fallback). Usar `avatar_url` do participante para mostrar foto.
 
-**1. Migração SQL — Criar bucket de storage `driver-avatars`**
-- Bucket público (as fotos são visíveis nos duelos/ranking)
-- Política de upload permissiva (o app usa sessão CPF, não Supabase Auth — mesma abordagem do `brand-assets`)
-- Política de delete para permitir substituição
+### Arquivos a editar
 
-**2. Hook `useUpdateAvatar` em `hook_duelos.ts`**
-- Recebe um `File`, faz upload para `driver-avatars/{customer_id}.webp` (sobrescreve)
-- Gera a URL pública do storage
-- Atualiza `avatar_url` na tabela `driver_duel_participants`
-- Invalida queries relevantes
+**1. `hook_duelos.ts`** — Nova helper `resolveParticipantName(participant)`
+```ts
+export function resolveParticipantName(p: any): string {
+  return p?.public_nickname || p?.display_name || cleanDriverName(p?.customers?.name);
+}
+export function resolveParticipantAvatar(p: any): string | null {
+  return p?.avatar_url || null;
+}
+```
 
-**3. Atualizar `PerfilMotoristaSheet.tsx`**
-- Tornar o avatar clicável com um ícone de câmera sobreposto
-- Input `type="file"` oculto, aceita `image/*`
-- Preview local da imagem selecionada antes de salvar
-- Ao clicar "Salvar", faz upload da foto (se alterada) + salva apelido
-- Loading state durante upload
-- Compressão/resize client-side usando Canvas (max 256x256) para manter leve
+**2. `DuelCard.tsx`** — Usar `resolveParticipantName` e mostrar avatar do oponente
 
-### Arquivos
-- **Nova migração SQL**: bucket `driver-avatars` + políticas de storage
-- **Editar**: `src/components/driver/duels/hook_duelos.ts` — novo hook `useUpdateAvatar`
-- **Editar**: `src/components/driver/duels/PerfilMotoristaSheet.tsx` — UI de upload com preview
+**3. `DuelDetailSheet.tsx`** — Usar helpers para challengerName/challengedName + mostrar avatares no placar
+
+**4. `CardDueloPublico.tsx`** — Usar helpers + mostrar `avatar_url` no `AvatarMini`
+
+**5. `DuelChallengeCard.tsx`** — Usar helpers para nome do desafiante
+
+**6. `NegociacaoContrapropostaCard.tsx`** — Usar helpers para nome do oponente
 
 ### Resultado
-O motorista poderá tirar uma foto ou escolher da galeria, ver o preview no perfil e salvar. A foto aparecerá nos duelos, ranking e em qualquer lugar que use `avatar_url`.
-
+Todos os cards e telas de duelo mostrarão o apelido ou nome real do motorista (nunca "Motorista") e a foto de perfil quando disponível.
