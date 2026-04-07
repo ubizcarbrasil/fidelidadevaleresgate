@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDuelosCidade } from "./hook_duelos_publicos";
 import ArenaAoVivo from "./ArenaAoVivo";
-import { cleanDriverName, type Duel } from "./hook_duelos";
+import { cleanDriverName, type Duel, useContagemCorridasDuelo } from "./hook_duelos";
 
 interface Props {
   branchId: string | undefined;
