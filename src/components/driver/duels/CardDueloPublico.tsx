@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Flame, Clock, Trophy, User, Swords } from "lucide-react";
+import { Flame, Clock, Trophy, User, Swords, Flag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { resolveParticipantName, resolveParticipantAvatar, type Duel, useContagemCorridasDuelo } from "./hook_duelos";
