@@ -1,46 +1,30 @@
 
 
-## Popup de Desafio Recebido em Tempo Real
+## Adicionar botão "Acompanhar Duelo" nos cards ao vivo
 
 ### Problema
-Quando um motorista lança um duelo, o desafiado não recebe nenhum aviso visual. A query de duelos só atualiza manualmente, e o listener de eventos (`hook_listener_notificacoes`) apenas loga no console sem ação visual.
+Os cards de duelos ao vivo não têm um botão visível de ação — o card inteiro é clicável mas não há indicação visual clara para o motorista acompanhar o duelo.
 
 ### Solução
-Criar um sistema de escuta em tempo real (Realtime) na tabela `driver_duels` + um popup/dialog que aparece automaticamente quando um novo desafio é detectado.
+Adicionar um botão "Acompanhar" no `DuelCard.tsx` que aparece apenas para duelos com status `live` ou `accepted`.
 
-### Etapas
+### Alteração
 
-**1. Habilitar Realtime na tabela `driver_duels`**
-Migração SQL:
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.driver_duels;
+**Arquivo**: `src/components/driver/duels/DuelCard.tsx`
+
+- Importar `Eye` do lucide-react e `Button` do shadcn
+- Adicionar uma terceira linha no card com um botão estilizado:
+
+```tsx
+{(duel.status === "live" || duel.status === "accepted") && (
+  <div className="mt-2 pt-2" style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}>
+    <Button size="sm" variant="outline" className="w-full gap-2 text-xs">
+      <Eye className="h-3.5 w-3.5" />
+      Acompanhar Duelo
+    </Button>
+  </div>
+)}
 ```
 
-**2. Criar hook `hook_escuta_desafios_recebidos.ts`**
-Hook que:
-- Obtém o `participant_id` do motorista logado
-- Assina canal Realtime filtrando `challenged_id=eq.{participantId}` com evento `INSERT`
-- Quando detecta novo desafio com status `pending`, invalida a query `driver-duels` e retorna o desafio para exibir no popup
-- Inclui estado de controle (desafio pendente, fechar popup)
-
-**3. Criar componente `PopupDesafioRecebido.tsx`**
-Dialog/modal que exibe:
-- Nome do desafiante (nickname ou nome do customer)
-- Período do duelo (data início → fim)
-- Valor da aposta (se houver)
-- Botão "Ver Desafio" que navega para o DuelsHub
-- Botão "Fechar" para dispensar
-
-Visual: estilo arena com ícone de espadas, gradiente de fundo, animação de entrada.
-
-**4. Integrar no `DriverMarketplace.tsx`**
-- Importar o hook e o componente popup
-- Renderizar o popup no nível raiz do marketplace (fora de qualquer overlay)
-- Ao clicar "Ver Desafio", abrir o DuelsHub automaticamente
-
-### Arquivos afetados
-- **Nova migração SQL** — habilitar realtime
-- **Novo**: `src/components/driver/duels/hook_escuta_desafios_recebidos.ts`
-- **Novo**: `src/components/driver/duels/PopupDesafioRecebido.tsx`
-- **Editado**: `src/components/driver/DriverMarketplace.tsx` — integrar hook + popup
+O botão herda o `onClick` do card pai (abre o `DuelDetailSheet`), mantendo a mesma funcionalidade mas com um CTA visual claro.
 
