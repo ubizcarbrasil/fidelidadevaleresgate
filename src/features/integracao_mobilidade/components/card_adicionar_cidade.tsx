@@ -136,7 +136,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
         {/* Modo do webhook */}
         <div className="space-y-2">
           <Label>Como registrar o webhook?</Label>
-          <RadioGroup value={webhookMode} onValueChange={(v) => setWebhookMode(v as "auto" | "manual")} className="flex gap-4">
+          <RadioGroup value={webhookMode} onValueChange={(v) => setWebhookMode(v as "auto" | "manual")} className="flex flex-col gap-2 sm:flex-row sm:gap-4">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="auto" id="webhook-auto" />
               <Label htmlFor="webhook-auto" className="text-sm font-normal cursor-pointer">Automático</Label>
