@@ -29,6 +29,8 @@ import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
 import BannerPromoDuelos from "./duels/BannerPromoDuelos";
+import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
+import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
 
 export interface AffiliateDeal {
   id: string;
@@ -157,6 +159,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const configDuelos = useConfigDuelos(branch);
+  const { desafioPendente, fecharPopup } = useEscutaDesafiosRecebidos();
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
@@ -896,6 +899,13 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {showDuels && configDuelos.duelosAtivos && (
         <DuelsHub onBack={() => setShowDuels(false)} configDuelos={configDuelos} />
       )}
+
+      {/* Popup de desafio recebido em tempo real */}
+      <PopupDesafioRecebido
+        desafio={desafioPendente}
+        onFechar={fecharPopup}
+        onVerDesafio={() => setShowDuels(true)}
+      />
     </div>
   );
 }
