@@ -238,7 +238,7 @@ export function AbaPontuarMotorista({
                     const isFinalized = ev.status_code === "F";
                     const payload = ev.raw_payload;
                     return (
-                      <div key={ev.id} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${isFinalized ? "border-primary/30 bg-primary/5" : "border-border"}`}>
+                      <div key={ev.id} className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${isFinalized ? "border-primary/30 bg-primary/5" : "border-border"}`}>
                         <Badge variant="outline" className={`text-xs shrink-0 ${st.color}`}>{st.label}</Badge>
                         <span className="font-mono text-xs text-muted-foreground shrink-0">#{ev.machine_ride_id}</span>
                         {isFinalized && payload?.ride_value !== undefined && (
