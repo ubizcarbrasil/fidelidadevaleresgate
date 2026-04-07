@@ -46,7 +46,6 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
 
   if (!config.duelosAtivos) return null;
 
-  const participou = !!participant?.duels_enabled;
   const participantId = participant?.id || null;
 
   if (arenaDuel) {
