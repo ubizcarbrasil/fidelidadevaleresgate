@@ -150,8 +150,8 @@ export default function BranchForm() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <Button variant="ghost" onClick={() => navigate("/branches")} className="gap-2">
+    <div className="space-y-6 max-w-2xl px-1 sm:px-0">
+      <Button variant="ghost" onClick={() => navigate("/branches")} className="gap-2 w-full sm:w-auto">
         <ArrowLeft className="h-4 w-4" />Voltar
       </Button>
       <Card>
@@ -188,11 +188,9 @@ export default function BranchForm() {
                  <Input value={city} onChange={(e) => handleCityChange(e.target.value)} required placeholder="Ex: Curitiba" />
                </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-               <div className="space-y-2">
-                 <Label>Timezone</Label>
-                 <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-               </div>
+            <div className="space-y-2">
+              <Label>Timezone</Label>
+              <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -216,13 +214,13 @@ export default function BranchForm() {
                 Coordenadas preenchidas automaticamente. Ajuste manualmente se necessário.
               </p>
             )}
-            <div className="space-y-2">
+            <div className="flex items-center justify-between py-2">
               <Label>Ativo</Label>
-              <div className="pt-2"><Switch checked={isActive} onCheckedChange={setIsActive} /></div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
-              <Button type="button" variant="outline" onClick={() => navigate("/branches")}>Cancelar</Button>
+            <div className="flex flex-col gap-2 sm:flex-row pt-4">
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto">{loading ? "Salvando..." : "Salvar"}</Button>
+              <Button type="button" variant="outline" onClick={() => navigate("/branches")} className="w-full sm:w-auto">Cancelar</Button>
             </div>
           </form>
         </CardContent>
