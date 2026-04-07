@@ -8,6 +8,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { toast } from "sonner";
 import { eventBus } from "@/lib/eventBus";
 import { enviarNotificacaoDuelo } from "./servico_notificacoes_duelo";
+import { registrarEventoFeed } from "./servico_feed_cidade";
 
 export interface DuelParticipant {
   id: string;
@@ -281,6 +282,7 @@ export function useCreateDuel() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      queryClient.invalidateQueries({ queryKey: ["feed-cidade"] });
       toast.success("Desafio enviado! 🥊");
 
       const driverName = cleanDriverName(driver?.name);
@@ -298,6 +300,16 @@ export function useCreateDuel() {
         customerIds: [result.challengedCustomerId],
         duelId,
         nomeOponente: driverName,
+      });
+
+      registrarEventoFeed({
+        branchId: driver!.branch_id,
+        brandId: driver!.brand_id,
+        eventType: "DUEL_CHALLENGE_SENT",
+        customerId: driver!.id,
+        title: `${driverName} desafiou um motorista para um duelo!`,
+        description: "Novo desafio enviado na cidade",
+        metadata: { duelId },
       });
     },
     onError: (err: any) => toast.error(err.message || "Erro ao criar desafio"),
@@ -404,6 +416,7 @@ export function useRespondDuel() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       queryClient.invalidateQueries({ queryKey: ["driver-session"] });
+      queryClient.invalidateQueries({ queryKey: ["feed-cidade"] });
       toast.success(vars.accept ? "Desafio aceito! 💪" : "Você arregou... 😅");
 
       const driverName = cleanDriverName(driver?.name);
@@ -423,6 +436,15 @@ export function useRespondDuel() {
             nomeOponente: driverName,
           });
         }
+        registrarEventoFeed({
+          branchId: driver!.branch_id,
+          brandId: driver!.brand_id,
+          eventType: "DUEL_ACCEPTED",
+          customerId: driver!.id,
+          title: `${driverName} aceitou um duelo! 💪`,
+          description: "Duelo aceito — vai ter briga!",
+          metadata: { duelId: vars.duelId },
+        });
       } else {
         eventBus.emit("DUEL_CHALLENGE_DECLINED", {
           brandId: driver!.brand_id,
@@ -438,6 +460,15 @@ export function useRespondDuel() {
             nomeOponente: driverName,
           });
         }
+        registrarEventoFeed({
+          branchId: driver!.branch_id,
+          brandId: driver!.brand_id,
+          eventType: "DUEL_DECLINED",
+          customerId: driver!.id,
+          title: `${driverName} arregou de um duelo! 😅`,
+          description: "O motorista não aceitou o desafio",
+          metadata: { duelId: vars.duelId },
+        });
       }
     },
     onError: (err: any) => toast.error(err.message || "Erro ao responder"),
@@ -536,6 +567,7 @@ export function useFinalizeDuel() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
       queryClient.invalidateQueries({ queryKey: ["driver-session"] });
+      queryClient.invalidateQueries({ queryKey: ["feed-cidade"] });
       toast.success("Duelo finalizado! 🏆");
 
       const bothIds = [result.challengerCustomerId, result.challengedCustomerId];

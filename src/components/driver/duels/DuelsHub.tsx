@@ -3,7 +3,7 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye, UserCircle } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye, UserCircle, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -21,6 +21,7 @@ import AjudaDuelosSheet from "./AjudaDuelosSheet";
 import CardDueloPublico from "./CardDueloPublico";
 import ArenaAoVivo from "./ArenaAoVivo";
 import PerfilMotoristaSheet from "./PerfilMotoristaSheet";
+import FeedAtividadeCidade from "./FeedAtividadeCidade";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ConfigDuelos } from "./hook_config_duelos";
 import type { Duel } from "./hook_duelos";
@@ -58,6 +59,12 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
     );
   }, [duelosCidade, duels]);
 
+  // Feed de atividade: todos os duelos da cidade (últimos 30 dias)
+  const feedAtividade = useMemo(() => {
+    if (!duelosCidade) return [];
+    return duelosCidade;
+  }, [duelosCidade]);
+
   const pendingChallenges = useMemo(
     () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId && d.negotiation_status !== "counter_proposed"),
     [duels, participantId]
@@ -94,7 +101,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   );
 
   const totalDuels = (duels || []).length;
-  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0;
+  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0 || feedAtividade.length > 0;
 
   // Arena ao vivo (espectador)
   if (arenaDuel) {
@@ -300,6 +307,19 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
             ))}
           </section>
         )}
+
+        {/* ── Feed de Atividade da Cidade ── */}
+        <FeedAtividadeCidade
+          duelos={feedAtividade}
+          onOpenDuel={(d) => {
+            const meuDuel = (duels || []).find((md) => md.id === d.id);
+            if (meuDuel) {
+              setSelectedDuel(d.id);
+            } else {
+              setArenaDuel(d);
+            }
+          }}
+        />
 
         {/* Loading state */}
         {(loadingDuels || loadingCidade) && (

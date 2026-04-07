@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Flame, Clock, Trophy, User, Swords } from "lucide-react";
+import { Flame, Clock, Trophy, User, Swords, Flag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { resolveParticipantName, resolveParticipantAvatar, type Duel } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, type Duel, useContagemCorridasDuelo } from "./hook_duelos";
 
 interface Props {
   duelo: Duel;
@@ -42,6 +42,10 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
   const aoVivo = duelo.status === "live";
   const encerrado = duelo.status === "finished";
   const agendado = duelo.status === "accepted" || duelo.status === "pending";
+  const arregou = duelo.status === "declined";
+
+  const isAtivo = aoVivo || duelo.status === "accepted";
+  const { data: contagemRealtime } = useContagemCorridasDuelo(isAtivo ? duelo : null);
 
   // Tick a cada 30s para atualizar countdown
   useEffect(() => {
@@ -55,8 +59,8 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
   const avatarA = resolveParticipantAvatar(duelo.challenger);
   const avatarB = resolveParticipantAvatar(duelo.challenged);
 
-  const ridesA = duelo.challenger_rides_count;
-  const ridesB = duelo.challenged_rides_count;
+  const ridesA = isAtivo ? (contagemRealtime?.challengerRides ?? duelo.challenger_rides_count) : duelo.challenger_rides_count;
+  const ridesB = isAtivo ? (contagemRealtime?.challengedRides ?? duelo.challenged_rides_count) : duelo.challenged_rides_count;
   const aFrente = ridesA > ridesB ? "A" : ridesB > ridesA ? "B" : null;
 
   const vencedorId = duelo.winner_id;
@@ -86,6 +90,11 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
         {encerrado && (
           <Badge variant="outline" className="text-[10px] gap-1">
             <Trophy className="w-3 h-3" /> Encerrado
+          </Badge>
+        )}
+        {arregou && (
+          <Badge variant="outline" className="text-[10px] gap-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+            <Flag className="w-3 h-3" /> Arregou 😅
           </Badge>
         )}
 
