@@ -1,48 +1,47 @@
 
 
-## Sinalização de Duelos Ativos + Palpites para Todos os Motoristas
+## Todos os motoristas ativos para duelo por padrão
 
 ### Problema
-1. O popup de desafio recebido já está implementado e integrado no `DriverMarketplace`, mas pode não estar disparando corretamente (depende do motorista ter participação ativa — `useDuelParticipation` retorna `participant` apenas se já fez opt-in).
-2. Motoristas da cidade que **não participam** dos duelos não têm sinalização destacada de que há duelos ao vivo acontecendo, nem acesso fácil ao sistema de palpites.
+Atualmente, cada motorista precisa manualmente ativar a participação em duelos (opt-in). O usuário quer que todos já venham habilitados automaticamente.
 
 ### Solução
 
-#### 1. Corrigir o popup para desafiados participantes
-O hook `useEscutaDesafiosRecebidos` já depende de `participant?.id` do `useDuelParticipation`. Se o motorista tem participação ativa, o listener funciona. O problema pode ser que o `PopupDesafioRecebido` está sendo renderizado **dentro** do `showDuels` condicional ou atrás de algum overlay. Verificar e garantir que está no nível correto (já está no final do JSX — OK).
+Implementar auto-enrollment: quando um motorista acessa o módulo de duelos e ainda não tem registro na tabela `driver_duel_participants`, o sistema cria automaticamente com `duels_enabled: true`.
 
-**Ação**: Nenhuma mudança necessária no popup existente — já está correto.
+### Alterações
 
-#### 2. Criar banner flutuante "Duelo Ao Vivo" na tela principal
-Novo componente `BannerDueloAoVivo.tsx` que aparece na home do motorista quando há duelos `live` na cidade:
+**1. `src/components/driver/duels/hook_duelos.ts` — Auto-enroll no `useDuelParticipation`**
 
-- Usa o hook `useDuelosCidade` já existente para detectar duelos ao vivo
-- Exibe um banner fixo (sticky) no topo ou como floating bar com:
-  - Ícone animado (⚔️ pulsando)
-  - Nomes dos duelistas e placar resumido
-  - Botão "Acompanhar" → abre `ArenaAoVivo` (que já tem palpites integrados)
-  - Botão "Dar Palpite" → abre `ArenaAoVivo` direto na seção de palpites
-- Visível para **todos** os motoristas da cidade, independente de terem opt-in nos duelos
+Quando o hook detecta que o motorista não tem participação (`participant === null` após query), automaticamente chama `toggle_duel_participation` com `p_enabled = true` para criar o registro. Isso acontece via `useEffect` que dispara uma vez.
 
-#### 3. Integrar no `DriverMarketplace.tsx`
-- Importar e renderizar `BannerDueloAoVivo` no topo da tela (após header, antes do conteúdo)
-- Ao clicar, abre a `ArenaAoVivo` diretamente (sem precisar entrar no DuelsHub)
-
-### Arquivos
-
-- **Novo**: `src/components/driver/duels/BannerDueloAoVivo.tsx` — banner flutuante com placar + CTA
-- **Editado**: `src/components/driver/DriverMarketplace.tsx` — integrar banner no layout principal
-- **Editado**: `src/components/driver/duels/SecaoDuelosCidade.tsx` — adicionar botão "Dar Palpite" nos cards públicos ao vivo
-
-### Detalhes técnicos
-
-**BannerDueloAoVivo.tsx**:
 ```tsx
-// Filtra duelos ao vivo do hook useDuelosCidade
-// Exibe card compacto com nomes, placar e CTAs
-// Usa AnimatePresence para entrada/saída suave
-// Clique abre ArenaAoVivo (que já tem PalpitesDuelo integrado)
+// Dentro de useDuelParticipation, após a query:
+useEffect(() => {
+  if (!isLoading && !participant && driver) {
+    // Auto-enroll com duels_enabled = true
+    supabase.rpc("toggle_duel_participation", {
+      p_customer_id: driver.id,
+      p_branch_id: driver.branch_id,
+      p_brand_id: driver.brand_id,
+      p_enabled: true,
+    }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["duel-participant"] });
+    });
+  }
+}, [isLoading, participant, driver]);
 ```
 
-**CardDueloPublico.tsx** — adicionar botão "Dar Palpite 🎯" nos cards de duelos ao vivo para incentivar engajamento.
+**2. `src/components/driver/duels/DuelsHub.tsx` — Remover toggle de ativação**
+
+Remover o switch "Participar dos Duelos" da interface, já que todos estarão ativos por padrão. Manter apenas a interface de duelos diretamente.
+
+**3. `src/components/driver/duels/dashboard/SecaoGamificacaoDashboard.tsx` — Ajustar lógica**
+
+Remover a checagem `participou` que condiciona a exibição. Mostrar conteúdo de duelos diretamente para todos.
+
+### Impacto
+- Motoristas novos são automaticamente habilitados ao acessar
+- Motoristas existentes sem registro serão habilitados no próximo acesso
+- A interface fica mais simples sem o toggle de opt-in
 
