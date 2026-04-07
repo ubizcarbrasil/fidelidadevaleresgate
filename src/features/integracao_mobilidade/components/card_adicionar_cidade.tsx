@@ -105,7 +105,7 @@ export function CardAdicionarCidade({ brandId, availableBranches, branches, acti
 
         {/* API Key */}
         <div className="space-y-2">
-          <Label>API Key da Cidade</Label>
+          <Label>API Key da Cidade (para motorista + notificações)</Label>
           <div className="relative">
             <Input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Token fornecido pela TaxiMachine para esta cidade" />
             <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
