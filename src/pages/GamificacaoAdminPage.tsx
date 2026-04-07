@@ -130,6 +130,8 @@ export default function GamificacaoAdminPage() {
 
       <EstatisticasGamificacao branchId={branch.id} brandId={branch.brand_id} />
 
+      <DuelosAoVivoAdmin branchId={branch.id} brandId={branch.brand_id} onCriarDuelo={() => setCriarDueloOpen(true)} />
+
       <Tabs defaultValue="configuracao" className="w-full">
         <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="configuracao">Configuração</TabsTrigger>
@@ -143,7 +145,7 @@ export default function GamificacaoAdminPage() {
           <ConfiguracaoModulo branchId={branch.id} settings={settings} />
         </TabsContent>
         <TabsContent value="duelos">
-          <ListaDuelosAdmin branchId={branch.id} />
+          <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
         </TabsContent>
         <TabsContent value="ranking">
           <RankingAdminView branchId={branch.id} />
@@ -155,6 +157,14 @@ export default function GamificacaoAdminPage() {
           <ModeracaoApelidos branchId={branch.id} />
         </TabsContent>
       </Tabs>
+
+      <ModalCriarDueloAdmin
+        branchId={branch.id}
+        brandId={branch.brand_id}
+        open={criarDueloOpen}
+        onClose={() => setCriarDueloOpen(false)}
+        onSuccess={() => setCriarDueloOpen(false)}
+      />
     </div>
   );
 }
