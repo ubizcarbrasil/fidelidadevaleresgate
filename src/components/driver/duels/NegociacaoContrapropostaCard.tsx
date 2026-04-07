@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { MessageSquare, ShieldCheck, XCircle, Coins, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
-import { cleanDriverName, useRespondCounterProposal } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, useRespondCounterProposal } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
