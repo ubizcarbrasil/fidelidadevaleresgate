@@ -1,35 +1,25 @@
 
 
-## Plano: Monitoramento de Pontuação por Cidade em Tempo Real
+## Plano: Notificações Telegram para Todas as Cidades
 
 ### Problema
-O feed de pontuação em tempo real (`PointsFeed`) e o ranking (`RankingPontuacao`) mostram dados agregados de toda a marca, sem indicar de qual cidade cada pontuação veio. Não há como filtrar ou identificar visualmente a cidade.
+Hoje cada cidade tem seu próprio campo `telegram_chat_id` na tabela `machine_integrations`. Leme foi criada mas o campo está vazio (`null`), por isso só Araxá (que tem o chat ID configurado) envia notificações no Telegram.
 
-### Mudanças propostas
+### Solução
+Modificar o webhook (`machine-webhook/index.ts`) para, quando a integração da cidade não tiver `telegram_chat_id`, buscar o chat ID de outra integração da mesma marca que tenha um configurado. Assim, todas as cidades enviam para o mesmo grupo Telegram automaticamente.
 
-**1. Adicionar nome da cidade em cada item do feed (`PointsFeed.tsx`)**
-- Incluir `branch_id` e fazer join com `branches(name)` na query de `machine_rides`
-- Exibir um badge/chip com o nome da cidade em cada registro do feed (ex: "Leme", "Pirassununga")
-- Visual: badge discreto com ícone `MapPin` ao lado do horário
+### Mudanças
 
-**2. Adicionar filtro por cidade no feed (`PointsFeed.tsx`)**
-- Receber lista de branches disponíveis (query simples ou prop)
-- Adicionar um `Select` no header do card: "Todas as cidades" + lista de cidades com integração ativa
-- Filtrar a query de `machine_rides` por `branch_id` quando uma cidade for selecionada
+**1. `supabase/functions/machine-webhook/index.ts`**
+- No bloco de envio Telegram (linha ~870), antes de verificar `integration.telegram_chat_id`, adicionar fallback:
+  - Se `integration.telegram_chat_id` for null, fazer query em `machine_integrations` buscando qualquer integração da mesma `brand_id` que tenha `telegram_chat_id` não-nulo
+  - Usar esse chat ID para enviar a notificação
+- Isso garante que cidades novas herdem automaticamente o Telegram da marca sem precisar configurar manualmente em cada uma
 
-**3. Adicionar nome da cidade no ranking (`RankingPontuacao.tsx`)**
-- Mesma lógica: mostrar de qual cidade é cada participante do ranking
-- Opcional: filtro por cidade no ranking também
+**2. `src/features/integracao_mobilidade/components/aba_notificacoes.tsx`**
+- Adicionar um aviso informativo indicando que o Chat ID configurado em uma cidade será usado para todas as cidades da marca que não tiverem Chat ID próprio
 
-**4. Buscar lista de cidades com integração ativa**
-- Query em `machine_integrations` join `branches` para listar apenas cidades que realmente têm integração configurada
-- Reutilizar nos dois componentes via prop passada de `DashboardChartsSection`
-
-### Arquivos modificados
-- `src/components/dashboard/PointsFeed.tsx` — adicionar branch name na query, badge de cidade, filtro select
-- `src/components/dashboard/RankingPontuacao.tsx` — adicionar indicação de cidade (se aplicável ao ranking por brand)
-- `src/components/dashboard/DashboardChartsSection.tsx` — buscar branches integradas e passar como prop
-
-### Resumo
-O feed e ranking passam a mostrar o nome da cidade em cada pontuação e permitem filtrar por cidade específica, tudo em tempo real.
+### Resultado
+- Leme e qualquer cidade futura terão notificações Telegram imediatamente ao serem ativadas
+- Não quebra o comportamento atual — cidades com chat ID próprio continuam usando o seu
 
