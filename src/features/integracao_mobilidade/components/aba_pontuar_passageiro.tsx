@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ScoredCustomersPanel from "@/components/machine-integration/ScoredCustomersPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,18 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
-  KeyRound, Eye, EyeOff, Save, Check, Loader2, CheckCircle,
   Trophy, User, Phone, MapPin, Coins, Radio,
 } from "lucide-react";
-import type { Integration, BrandMatrix } from "../hooks/hook_integracoes";
+import type { Integration } from "../hooks/hook_integracoes";
 
 interface Props {
   brandId: string;
   activeIntegrations: Integration[];
-  brandMatrix: BrandMatrix;
   selectedIntegration: Integration | null;
   getBranchName: (id: string | null) => string;
 }
@@ -29,32 +26,15 @@ interface Props {
 export function AbaPontuarPassageiro({
   brandId,
   activeIntegrations,
-  brandMatrix,
   selectedIntegration,
   getBranchName,
 }: Props) {
   const queryClient = useQueryClient();
 
-  // Matrix credentials
-  const [matrixApiKey, setMatrixApiKey] = useState("");
-  const [showMatrixApiKey, setShowMatrixApiKey] = useState(false);
-  const [matrixBasicUser, setMatrixBasicUser] = useState("");
-  const [matrixBasicPass, setMatrixBasicPass] = useState("");
-  const [showMatrixPass, setShowMatrixPass] = useState(false);
-  const [matrixSaved, setMatrixSaved] = useState(false);
-
   // Notifications feed
   const [liveNotifications, setLiveNotifications] = useState<any[]>([]);
   const [identifyNotif, setIdentifyNotif] = useState<any>(null);
   const [identifyForm, setIdentifyForm] = useState({ name: "", cpf: "", phone: "" });
-
-  useEffect(() => {
-    if (brandMatrix) {
-      setMatrixApiKey(brandMatrix.matrix_api_key || "");
-      setMatrixBasicUser(brandMatrix.matrix_basic_auth_user || "");
-      setMatrixBasicPass(brandMatrix.matrix_basic_auth_password || "");
-    }
-  }, [brandMatrix]);
 
   // Load initial notifications
   useEffect(() => {
@@ -102,87 +82,8 @@ export function AbaPontuarPassageiro({
     }
   };
 
-  const saveMatrixMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await (supabase as any)
-        .from("brands")
-        .update({
-          matrix_api_key: matrixApiKey || null,
-          matrix_basic_auth_user: matrixBasicUser || null,
-          matrix_basic_auth_password: matrixBasicPass || null,
-        })
-        .eq("id", brandId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setMatrixSaved(true);
-      setTimeout(() => setMatrixSaved(false), 2000);
-      toast({ title: "Credenciais da matriz salvas!" });
-      queryClient.invalidateQueries({ queryKey: ["brand-matrix", brandId] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
-    },
-  });
-
   return (
     <div className="space-y-6">
-      {/* Credenciais da Matriz */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <KeyRound className="h-5 w-5 text-primary" />
-            Credenciais da Matriz (Sede)
-          </CardTitle>
-          <CardDescription>
-            Configuração única para todas as cidades. A API da Matriz é usada para buscar recibos e identificar passageiros (CPF, telefone, nome).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 max-w-lg">
-          <div className="space-y-2">
-            <Label>Chave API da Matriz</Label>
-            <div className="relative">
-              <Input
-                type={showMatrixApiKey ? "text" : "password"}
-                value={matrixApiKey}
-                onChange={(e) => setMatrixApiKey(e.target.value)}
-                placeholder="api-key da matriz"
-              />
-              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixApiKey(!showMatrixApiKey)}>
-                {showMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Usuário Basic Auth da Matriz</Label>
-            <Input value={matrixBasicUser} onChange={(e) => setMatrixBasicUser(e.target.value)} placeholder="Usuário de autenticação da matriz" />
-          </div>
-          <div className="space-y-2">
-            <Label>Senha Basic Auth da Matriz</Label>
-            <div className="relative">
-              <Input type={showMatrixPass ? "text" : "password"} value={matrixBasicPass} onChange={(e) => setMatrixBasicPass(e.target.value)} placeholder="Senha de autenticação da matriz" />
-              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixPass(!showMatrixPass)}>
-                {showMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => saveMatrixMutation.mutate()} disabled={saveMatrixMutation.isPending}>
-              {matrixSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveMatrixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-              Salvar credenciais da Matriz
-            </Button>
-          </div>
-          {matrixApiKey && (
-            <Alert className="border-primary/30 bg-primary/5">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-xs">
-                Matriz configurada. Todas as cidades usarão estas credenciais para buscar recibos e pontuar passageiros.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Endpoint primário */}
       {selectedIntegration && (
         <Card>

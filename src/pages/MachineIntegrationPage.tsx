@@ -4,6 +4,7 @@ import PageHeader from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Car, Send } from "lucide-react";
 import { useIntegracoes } from "@/features/integracao_mobilidade/hooks/hook_integracoes";
+import { CardCredenciaisMatriz } from "@/features/integracao_mobilidade/components/card_credenciais_matriz";
 import { AbaPontuarPassageiro } from "@/features/integracao_mobilidade/components/aba_pontuar_passageiro";
 import { AbaPontuarMotorista } from "@/features/integracao_mobilidade/components/aba_pontuar_motorista";
 import { AbaNotificacoes } from "@/features/integracao_mobilidade/components/aba_notificacoes";
@@ -35,6 +36,9 @@ export default function MachineIntegrationPage() {
         description="Conecte cada cidade à sua plataforma de corridas para pontuar clientes automaticamente"
       />
 
+      {/* Credenciais da Matriz — fixo no topo, fora das abas */}
+      <CardCredenciaisMatriz brandId={currentBrandId} brandMatrix={brandMatrix} />
+
       <Tabs defaultValue="passageiro" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="passageiro" className="flex items-center gap-1.5 text-xs sm:text-sm">
@@ -55,7 +59,6 @@ export default function MachineIntegrationPage() {
           <AbaPontuarPassageiro
             brandId={currentBrandId}
             activeIntegrations={activeIntegrations}
-            brandMatrix={brandMatrix}
             selectedIntegration={selectedIntegration ?? null}
             getBranchName={getBranchName}
           />

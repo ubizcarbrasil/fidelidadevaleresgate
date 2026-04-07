@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
 import {
   Car, CheckCircle, XCircle, Loader2, Activity, Clock, Hash, Coins,
-  Eye, EyeOff, Copy, Check, Radio, Save, Link2, KeyRound, AlertTriangle,
+  Eye, EyeOff, Copy, Check, Radio, Save, KeyRound, AlertTriangle,
   MapPin, Plus, Power, PowerOff, RefreshCw, Truck,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
@@ -87,22 +87,15 @@ export function AbaPontuarMotorista({
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Add city form - credentials
+  // Unified add city form
   const [activatingBranchId, setActivatingBranchId] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [basicUser, setBasicUser] = useState("");
   const [basicPass, setBasicPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
-
-  // Add city form - URL
-  const [urlBranchId, setUrlBranchId] = useState("");
-  const [urlBasicUser, setUrlBasicUser] = useState("");
-  const [urlBasicPass, setUrlBasicPass] = useState("");
-  const [showUrlPass, setShowUrlPass] = useState(false);
-  const [urlApiKey, setUrlApiKey] = useState("");
-  const [showUrlApiKey, setShowUrlApiKey] = useState(false);
-  const [urlActivatedWebhook, setUrlActivatedWebhook] = useState<string | null>(null);
+  const [webhookMode, setWebhookMode] = useState<"auto" | "manual">("auto");
+  const [activatedWebhookUrl, setActivatedWebhookUrl] = useState<string | null>(null);
 
   // Driver points config
   const [driverPointsEnabled, setDriverPointsEnabled] = useState(false);
@@ -173,35 +166,36 @@ export function AbaPontuarMotorista({
 
   /* Mutations */
   const activateMutation = useMutation({
-    mutationFn: async (opts?: { urlOnly?: boolean }) => {
-      const isUrlOnly = opts?.urlOnly;
-      const branchId = isUrlOnly ? urlBranchId : activatingBranchId;
-      const user = isUrlOnly ? urlBasicUser : basicUser;
-      const pass = isUrlOnly ? urlBasicPass : basicPass;
-      if (!branchId) throw new Error("Selecione uma cidade");
+    mutationFn: async () => {
+      if (!activatingBranchId) throw new Error("Selecione uma cidade");
       const body: Record<string, string> = {
-        brand_id: brandId, branch_id: branchId,
-        basic_auth_user: user, basic_auth_password: pass,
+        brand_id: brandId,
+        branch_id: activatingBranchId,
+        basic_auth_user: basicUser,
+        basic_auth_password: basicPass,
       };
-      const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
-      if (resolvedApiKey) body.api_key = resolvedApiKey;
+      if (apiKey) body.api_key = apiKey;
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      return { ...data, isUrlOnly };
+      return data;
     },
     onSuccess: (data) => {
-      if (data.isUrlOnly) {
-        setUrlActivatedWebhook(data.webhook_url || null);
-        toast({ title: "Cidade ativada por URL!", description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine." });
-        setUrlBasicUser(""); setUrlBasicPass(""); setUrlApiKey("");
+      if (webhookMode === "manual") {
+        const url = `${webhookBaseUrl}?brand_id=${encodeURIComponent(brandId)}&branch_id=${encodeURIComponent(activatingBranchId)}`;
+        setActivatedWebhookUrl(data.webhook_url || url);
+        toast({ title: "Cidade ativada!", description: "Copie a URL abaixo e cole no roteador de status da TaxiMachine." });
       } else {
         toast({
           title: "Integração ativada!",
           description: data.webhook_registered ? "Webhook registrado com sucesso." : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
         });
-        setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
+        if (!data.webhook_registered) {
+          const url = `${webhookBaseUrl}?brand_id=${encodeURIComponent(brandId)}&branch_id=${encodeURIComponent(activatingBranchId)}`;
+          setActivatedWebhookUrl(url);
+        }
       }
+      setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
     onError: (err: any) => {
@@ -294,7 +288,6 @@ export function AbaPontuarMotorista({
     },
   });
 
-  // Retry failed rides
   const retryMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("retry-failed-rides", { body: { brand_id: brandId } });
@@ -310,7 +303,6 @@ export function AbaPontuarMotorista({
     },
   });
 
-  // Diag rides
   const { data: diagRides = [] } = useQuery({
     queryKey: ["machine-rides-diag", brandId],
     queryFn: async () => {
@@ -508,10 +500,7 @@ export function AbaPontuarMotorista({
 
       {/* Diagnóstico do Webhook */}
       {activeIntegrations.length > 0 && (
-        <DiagnosticoWebhook
-          rides={diagRides}
-          retryMutation={retryMutation}
-        />
+        <DiagnosticoWebhook rides={diagRides} retryMutation={retryMutation} />
       )}
 
       {/* Eventos em tempo real */}
@@ -562,7 +551,7 @@ export function AbaPontuarMotorista({
         <ScoredDriversPanel brandId={brandId} />
       )}
 
-      {/* Adicionar nova cidade */}
+      {/* Adicionar nova cidade — formulário unificado */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -570,133 +559,87 @@ export function AbaPontuarMotorista({
             {activeIntegrations.length > 0 ? "Adicionar nova cidade" : "Ativar integração"}
           </CardTitle>
           <CardDescription>
-            {activeIntegrations.length > 0 ? "Cada cidade tem suas próprias credenciais da TaxiMachine." : "Conecte sua plataforma de corridas selecionando a cidade e as credenciais."}
+            Preencha as credenciais da cidade e escolha o modo de registro do webhook.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="credentials" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="credentials" className="flex items-center gap-1.5 text-xs sm:text-sm"><KeyRound className="h-4 w-4" />Por credenciais</TabsTrigger>
-              <TabsTrigger value="url" className="flex items-center gap-1.5 text-xs sm:text-sm"><Link2 className="h-4 w-4" />Por URL (manual)</TabsTrigger>
-            </TabsList>
+        <CardContent className="space-y-4 max-w-md">
+          <div className="space-y-2">
+            <Label>Cidade</Label>
+            {availableBranches.length > 0 ? (
+              <Select value={activatingBranchId} onValueChange={(v) => { setActivatingBranchId(v); setActivatedWebhookUrl(null); }}>
+                <SelectTrigger><SelectValue placeholder="Selecione a cidade..." /></SelectTrigger>
+                <SelectContent>{availableBranches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+              </Select>
+            ) : (
+              <p className="text-sm text-muted-foreground">{branches.length === 0 ? "Nenhuma cidade cadastrada." : "Todas as cidades já estão conectadas."}</p>
+            )}
+          </div>
 
-            <TabsContent value="credentials" className="space-y-4 mt-4">
-              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-                <h3 className="font-semibold text-sm">Como funciona</h3>
-                <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Selecione a <strong>cidade</strong> que deseja conectar.</li>
-                  <li>Obtenha as credenciais no painel da TaxiMachine para essa cidade.</li>
-                  <li>Preencha a <strong>chave de acesso</strong> (opcional), <strong>usuário</strong> e <strong>senha</strong>.</li>
-                  <li>Clique em "Ativar cidade". Se a chave foi informada, o webhook é registrado automaticamente.</li>
-                </ol>
-              </div>
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  {availableBranches.length > 0 ? (
-                    <Select value={activatingBranchId} onValueChange={setActivatingBranchId}>
-                      <SelectTrigger><SelectValue placeholder="Selecione a cidade..." /></SelectTrigger>
-                      <SelectContent>{availableBranches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">{branches.length === 0 ? "Nenhuma cidade cadastrada." : "Todas as cidades já estão conectadas."}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>api-key da Cidade</Label>
-                  <div className="relative">
-                    <Input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Token da cidade" />
-                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Usuário da Cidade</Label>
-                  <Input value={basicUser} onChange={(e) => setBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Senha da Cidade</Label>
-                  <div className="relative">
-                    <Input type={showPass ? "text" : "password"} value={basicPass} onChange={(e) => setBasicPass(e.target.value)} placeholder="Senha de autenticação" />
-                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPass(!showPass)}>
-                      {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <Button onClick={() => activateMutation.mutate({})} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
-                  {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  <Power className="h-4 w-4 mr-1" /> Ativar cidade
-                </Button>
-              </div>
-            </TabsContent>
+          <div className="space-y-2">
+            <Label>API Key da Cidade</Label>
+            <div className="relative">
+              <Input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Token da cidade" />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowApiKey(!showApiKey)}>
+                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-            <TabsContent value="url" className="space-y-4 mt-4">
-              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-                <h3 className="font-semibold text-sm">Como funciona</h3>
-                <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Selecione a <strong>cidade</strong>.</li>
-                  <li>Informe a <strong>chave de acesso</strong> (API Key).</li>
-                  <li>Preencha <strong>usuário</strong> e <strong>senha</strong>.</li>
-                  <li>Copie a URL gerada e cole no <strong>roteador de status</strong> da TaxiMachine.</li>
-                </ol>
+          <div className="space-y-2">
+            <Label>Usuário da Cidade</Label>
+            <Input value={basicUser} onChange={(e) => setBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Senha da Cidade</Label>
+            <div className="relative">
+              <Input type={showPass ? "text" : "password"} value={basicPass} onChange={(e) => setBasicPass(e.target.value)} placeholder="Senha de autenticação" />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPass(!showPass)}>
+                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Modo do webhook */}
+          <div className="space-y-2">
+            <Label>Modo de registro do webhook</Label>
+            <RadioGroup value={webhookMode} onValueChange={(v) => setWebhookMode(v as "auto" | "manual")} className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="auto" id="webhook-auto" />
+                <Label htmlFor="webhook-auto" className="text-sm font-normal cursor-pointer">Automático</Label>
               </div>
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  {availableBranches.length > 0 ? (
-                    <Select value={urlBranchId} onValueChange={(v) => { setUrlBranchId(v); setUrlActivatedWebhook(null); }}>
-                      <SelectTrigger><SelectValue placeholder="Selecione a cidade..." /></SelectTrigger>
-                      <SelectContent>{availableBranches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">{branches.length === 0 ? "Nenhuma cidade cadastrada." : "Todas as cidades já estão conectadas."}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>api-key da Cidade</Label>
-                  <div className="relative">
-                    <Input type={showUrlApiKey ? "text" : "password"} value={urlApiKey} onChange={(e) => setUrlApiKey(e.target.value)} placeholder="Token da cidade" />
-                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlApiKey(!showUrlApiKey)}>
-                      {showUrlApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Usuário da Cidade</Label>
-                  <Input value={urlBasicUser} onChange={(e) => setUrlBasicUser(e.target.value)} placeholder="Usuário de autenticação" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Senha da Cidade</Label>
-                  <div className="relative">
-                    <Input type={showUrlPass ? "text" : "password"} value={urlBasicPass} onChange={(e) => setUrlBasicPass(e.target.value)} placeholder="Senha de autenticação" />
-                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowUrlPass(!showUrlPass)}>
-                      {showUrlPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <Button onClick={() => activateMutation.mutate({ urlOnly: true })} disabled={activateMutation.isPending || !urlBasicUser || !urlBasicPass || !urlBranchId}>
-                  {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  <Power className="h-4 w-4 mr-1" /> Ativar cidade
-                </Button>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="manual" id="webhook-manual" />
+                <Label htmlFor="webhook-manual" className="text-sm font-normal cursor-pointer">Manual (copiar URL)</Label>
               </div>
-              {urlActivatedWebhook && (
-                <Alert className="border-primary/30 bg-primary/5">
-                  <CheckCircle className="h-4 w-4 text-primary" />
-                  <AlertTitle>Cidade ativada!</AlertTitle>
-                  <AlertDescription className="space-y-2">
-                    <p className="text-sm">Copie a URL abaixo e cole no roteador de status da TaxiMachine:</p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">{urlActivatedWebhook}</code>
-                      <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(urlActivatedWebhook); setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }}>
-                        {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </TabsContent>
-          </Tabs>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              {webhookMode === "auto"
+                ? "O sistema registrará o webhook automaticamente via API. Requer API Key."
+                : "Após ativar, copie a URL gerada e cole no roteador de status da TaxiMachine."}
+            </p>
+          </div>
+
+          <Button onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
+            {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Power className="h-4 w-4 mr-1" /> Ativar cidade
+          </Button>
+
+          {activatedWebhookUrl && (
+            <Alert className="border-primary/30 bg-primary/5">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              <AlertTitle>Cidade ativada!</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p className="text-sm">Copie a URL abaixo e cole no roteador de status da TaxiMachine:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all border border-border">{activatedWebhookUrl}</code>
+                  <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(activatedWebhookUrl); setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }}>
+                    {copiedUrl ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </div>
