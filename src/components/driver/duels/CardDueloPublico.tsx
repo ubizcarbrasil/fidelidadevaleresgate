@@ -92,6 +92,11 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
             <Trophy className="w-3 h-3" /> Encerrado
           </Badge>
         )}
+        {arregou && (
+          <Badge variant="outline" className="text-[10px] gap-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+            <Flag className="w-3 h-3" /> Arregou 😅
+          </Badge>
+        )}
 
         {aoVivo && (
           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
