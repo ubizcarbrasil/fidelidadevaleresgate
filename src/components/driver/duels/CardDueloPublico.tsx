@@ -42,6 +42,10 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
   const aoVivo = duelo.status === "live";
   const encerrado = duelo.status === "finished";
   const agendado = duelo.status === "accepted" || duelo.status === "pending";
+  const arregou = duelo.status === "declined";
+
+  const isAtivo = aoVivo || duelo.status === "accepted";
+  const { data: contagemRealtime } = useContagemCorridasDuelo(isAtivo ? duelo : null);
 
   // Tick a cada 30s para atualizar countdown
   useEffect(() => {
@@ -55,8 +59,8 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
   const avatarA = resolveParticipantAvatar(duelo.challenger);
   const avatarB = resolveParticipantAvatar(duelo.challenged);
 
-  const ridesA = duelo.challenger_rides_count;
-  const ridesB = duelo.challenged_rides_count;
+  const ridesA = isAtivo ? (contagemRealtime?.challengerRides ?? duelo.challenger_rides_count) : duelo.challenger_rides_count;
+  const ridesB = isAtivo ? (contagemRealtime?.challengedRides ?? duelo.challenged_rides_count) : duelo.challenged_rides_count;
   const aFrente = ridesA > ridesB ? "A" : ridesB > ridesA ? "B" : null;
 
   const vencedorId = duelo.winner_id;
