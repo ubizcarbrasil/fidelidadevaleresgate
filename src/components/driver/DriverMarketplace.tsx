@@ -29,6 +29,8 @@ import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
 import BannerPromoDuelos from "./duels/BannerPromoDuelos";
+import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
+import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
 
 export interface AffiliateDeal {
   id: string;
