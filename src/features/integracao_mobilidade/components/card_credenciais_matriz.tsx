@@ -93,7 +93,7 @@ export function CardCredenciaisMatriz({ brandId, brandMatrix }: Props) {
         <CollapsibleContent>
           <CardContent className="space-y-4 max-w-lg">
             <div className="space-y-2">
-              <Label>Chave API da Matriz</Label>
+              <Label>Chave API da Matriz (para pontuar passageiros)</Label>
               <div className="relative">
                 <Input
                   type={showMatrixApiKey ? "text" : "password"}
