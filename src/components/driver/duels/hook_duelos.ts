@@ -631,3 +631,41 @@ export function useDriverCompetitiveProfile(customerId: string | null) {
     enabled: !!customerId,
   });
 }
+
+// === Auditoria de Duelos ===
+
+export interface DuelAuditLog {
+  id: string;
+  duel_id: string;
+  challenger_customer_id: string;
+  challenged_customer_id: string;
+  challenger_rides_counted: number;
+  challenged_rides_counted: number;
+  challenger_ride_ids: string[];
+  challenged_ride_ids: string[];
+  winner_participant_id: string | null;
+  count_window_start: string;
+  count_window_end: string;
+  points_settled: boolean;
+  finalized_by: string;
+  created_at: string;
+}
+
+export function useAuditoriaDuelo(duelId: string | null) {
+  return useQuery({
+    queryKey: ["duel-audit-log", duelId],
+    queryFn: async () => {
+      if (!duelId) return null;
+      const { data, error } = await supabase
+        .from("driver_duel_audit_log")
+        .select("*")
+        .eq("duel_id", duelId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as DuelAuditLog | null;
+    },
+    enabled: !!duelId,
+  });
+}
