@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { ArrowLeft, Swords, Search, Calendar, Clock, Send, Coins, Wallet, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDuelOpponents, useCreateDuel, cleanDriverName, useDriverCompetitiveProfile } from "./hook_duelos";
+import { useDuelOpponents, useCreateDuel, useDriverCompetitiveProfile } from "./hook_duelos";
 import type { DuelParticipant } from "./hook_duelos";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
