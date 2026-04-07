@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
-  Car, Activity, Radio, AlertTriangle, RefreshCw, Loader2, Info,
+  Car, Activity, Radio, AlertTriangle, RefreshCw, Loader2, Info, MapPin, Plus,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
 import { CardCidadesConectadas } from "./card_cidades_conectadas";
@@ -149,7 +149,23 @@ export function AbaPontuarMotorista({
         </AlertDescription>
       </Alert>
 
-      {/* Sem cidades ativas: card de adicionar no topo */}
+      {/* Sem cidades ativas: empty state + card de adicionar */}
+      {!hasActiveCities && (
+        <Card className="border-dashed border-2 border-primary/30">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+            <div className="rounded-full bg-primary/10 p-4">
+              <MapPin className="h-10 w-10 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">Nenhuma cidade configurada</h3>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Conecte sua primeira cidade para começar a receber corridas via webhook e pontuar motoristas automaticamente.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {!hasActiveCities && (
         <CardAdicionarCidade
           brandId={brandId}
