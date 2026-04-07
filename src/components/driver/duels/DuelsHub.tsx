@@ -185,6 +185,15 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
                 <BarChart3 className="h-4 w-4" />
                 Desempenho
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowPerfil(true)}
+                className="gap-2"
+                size="icon"
+                title="Meu perfil de duelos"
+              >
+                <UserCircle className="h-4 w-4" />
+              </Button>
             </div>
             {configDuelos?.rankingAtivo !== false && (
               <Button
