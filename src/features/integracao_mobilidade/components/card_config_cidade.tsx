@@ -202,7 +202,7 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
         {/* Callback URL */}
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">URL de retorno (opcional) — receba uma notificação HTTP a cada corrida processada</Label>
-          <div className="flex items-center gap-2 max-w-lg">
+          <div className="flex items-center gap-2">
             <Input value={callbackUrl} onChange={(e) => setCallbackUrl(e.target.value)} placeholder="https://seu-sistema.com/webhook/pontuacao" type="url" />
             <Button variant="outline" size="icon" onClick={() => saveCallbackMutation.mutate()} disabled={saveCallbackMutation.isPending}>
               {callbackSaved ? <Check className="h-4 w-4 text-primary" /> : saveCallbackMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
