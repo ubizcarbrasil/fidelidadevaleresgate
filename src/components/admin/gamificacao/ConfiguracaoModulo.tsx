@@ -177,7 +177,7 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
           {/* Bulk enable button */}
           <Button
             variant="outline"
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
             onClick={() => setShowConfirmAll(true)}
             disabled={habilitarTodos.isPending}
           >

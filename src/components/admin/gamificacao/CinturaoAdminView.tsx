@@ -42,12 +42,12 @@ export default function CinturaoAdminView({ branchId, brandId }: Props) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="text-base flex items-center gap-2">
           <Crown className="h-4 w-4 text-amber-400" />
           Cinturão da Cidade
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={() => atualizar.mutate()} disabled={atualizar.isPending}>
+        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => atualizar.mutate()} disabled={atualizar.isPending}>
           <RefreshCw className={`h-4 w-4 mr-1 ${atualizar.isPending ? "animate-spin" : ""}`} />
           Atualizar
         </Button>

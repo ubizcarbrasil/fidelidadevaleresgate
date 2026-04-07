@@ -27,34 +27,59 @@ export default function RankingAdminView({ branchId }: Props) {
         ) : !ranking?.length ? (
           <p className="text-sm text-muted-foreground text-center py-8">Nenhum dado de ranking encontrado.</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead>Motorista</TableHead>
-                <TableHead>Apelido</TableHead>
-                <TableHead className="text-right">Corridas</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">#</TableHead>
+                    <TableHead>Motorista</TableHead>
+                    <TableHead>Apelido</TableHead>
+                    <TableHead className="text-right">Corridas</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ranking.map((r) => (
+                    <TableRow key={r.customerId}>
+                      <TableCell>
+                        {r.rankPosition <= 3 ? (
+                          <Medal className={`h-4 w-4 ${MEDAL_COLORS[r.rankPosition - 1]}`} />
+                        ) : (
+                          <span className="text-sm text-muted-foreground">{r.rankPosition}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">{r.driverName}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{r.nickname || "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="secondary">{r.totalRides}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden space-y-2">
               {ranking.map((r) => (
-                <TableRow key={r.customerId}>
-                  <TableCell>
+                <div key={r.customerId} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="shrink-0 w-8 text-center">
                     {r.rankPosition <= 3 ? (
-                      <Medal className={`h-4 w-4 ${MEDAL_COLORS[r.rankPosition - 1]}`} />
+                      <Medal className={`h-5 w-5 mx-auto ${MEDAL_COLORS[r.rankPosition - 1]}`} />
                     ) : (
-                      <span className="text-sm text-muted-foreground">{r.rankPosition}</span>
+                      <span className="text-sm font-medium text-muted-foreground">{r.rankPosition}</span>
                     )}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">{r.driverName}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.nickname || "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant="secondary">{r.totalRides}</Badge>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{r.driverName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{r.nickname || "Sem apelido"}</p>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0">{r.totalRides}</Badge>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

@@ -166,7 +166,7 @@ export default function DuelosAoVivoAdmin({ branchId, brandId, onCriarDuelo }: P
 
                     {/* Prize breakdown */}
                     {(d.prize_points > 0 || d.challenger_points_bet > 0) && (
-                      <div className="flex gap-3 text-xs text-muted-foreground pt-1 border-t">
+                      <div className="flex flex-wrap gap-2 sm:gap-3 text-xs text-muted-foreground pt-1 border-t">
                         {d.prize_points > 0 && <span>🏆 Plataforma: {formatPoints(d.prize_points)}</span>}
                         {d.challenger_points_bet > 0 && <span>🎯 Aposta: {formatPoints(d.challenger_points_bet)} cada</span>}
                       </div>
