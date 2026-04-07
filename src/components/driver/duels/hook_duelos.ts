@@ -304,6 +304,86 @@ export function useCreateDuel() {
   });
 }
 
+/** Hook para criação de duelos em massa */
+export function useCreateDuelsBatch() {
+  const { driver } = useDriverSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      challengedCustomerIds: string[];
+      startAt: string;
+      endAt: string;
+      pointsBet: number;
+    }) => {
+      if (!driver) throw new Error("Sem sessão");
+
+      const totalRequired = params.pointsBet * params.challengedCustomerIds.length;
+      const balance = driver.points_balance ?? 0;
+      if (totalRequired > balance) {
+        throw new Error(`Saldo insuficiente. Necessário: ${totalRequired} pts, disponível: ${balance} pts`);
+      }
+
+      const results: { customerId: string; success: boolean; error?: string; duelId?: string }[] = [];
+
+      for (const customerId of params.challengedCustomerIds) {
+        try {
+          const { data, error } = await supabase.rpc("create_duel_challenge", {
+            p_challenger_customer_id: driver.id,
+            p_challenged_customer_id: customerId,
+            p_branch_id: driver.branch_id,
+            p_brand_id: driver.brand_id,
+            p_start_at: params.startAt,
+            p_end_at: params.endAt,
+            p_points_bet: params.pointsBet,
+          });
+          if (error) throw error;
+          const result = data as any;
+          if (!result?.success) throw new Error(result?.error || "Erro");
+          results.push({ customerId, success: true, duelId: result.duel_id });
+        } catch (err: any) {
+          results.push({ customerId, success: false, error: err.message });
+        }
+      }
+
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ["driver-duels"] });
+      queryClient.invalidateQueries({ queryKey: ["driver-session"] });
+
+      const successCount = results.filter((r) => r.success).length;
+      const failCount = results.filter((r) => !r.success).length;
+
+      if (successCount > 0) {
+        toast.success(`${successCount} desafio${successCount > 1 ? "s" : ""} enviado${successCount > 1 ? "s" : ""}! 🥊`);
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount} desafio${failCount > 1 ? "s" : ""} falhou/falharam`);
+      }
+
+      const driverName = cleanDriverName(driver?.name);
+      for (const r of results) {
+        if (r.success && r.duelId) {
+          eventBus.emit("DUEL_CHALLENGE_RECEIVED", {
+            brandId: driver!.brand_id,
+            challengedCustomerId: r.customerId,
+            challengerName: driverName,
+            duelId: r.duelId,
+          });
+          enviarNotificacaoDuelo({
+            tipo: "DUEL_CHALLENGE_RECEIVED",
+            customerIds: [r.customerId],
+            duelId: r.duelId,
+            nomeOponente: driverName,
+          });
+        }
+      }
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao criar desafios"),
+  });
+}
+
 export function useRespondDuel() {
   const { driver } = useDriverSession();
   const queryClient = useQueryClient();
