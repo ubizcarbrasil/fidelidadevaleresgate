@@ -62,16 +62,23 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Duelos da Cidade</CardTitle>
-        <select
-          className="rounded-md border bg-background px-3 py-1.5 text-sm"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-        >
-          <option value="all">Todos</option>
-          {FILTER_OPTIONS.filter(o => o !== "all").map(s => (
-            <option key={s} value={s}>{STATUS_LABELS[s]?.label || s}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            className="rounded-md border bg-background px-3 py-1.5 text-sm"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="all">Todos</option>
+            {FILTER_OPTIONS.filter(o => o !== "all").map(s => (
+              <option key={s} value={s}>{STATUS_LABELS[s]?.label || s}</option>
+            ))}
+          </select>
+          {onCriarDuelo && (
+            <Button size="sm" onClick={onCriarDuelo} className="gap-1">
+              <Plus className="h-4 w-4" /> Criar
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
