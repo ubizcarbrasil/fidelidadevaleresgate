@@ -298,7 +298,8 @@ function OpponentCard({
   onSelect: () => void;
   onViewProfile: () => void;
 }) {
-  const name = cleanDriverName((participant.customers as any)?.name);
+  const displayName = participant.public_nickname || participant.display_name || "Motorista";
+  const subtitle = participant.public_nickname ? (participant.display_name || "Motorista") : null;
   const { data: profile } = useDriverCompetitiveProfile(participant.customer_id);
 
   return (
