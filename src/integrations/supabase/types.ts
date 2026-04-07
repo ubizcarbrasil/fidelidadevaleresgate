@@ -2460,6 +2460,65 @@ export type Database = {
           },
         ]
       }
+      driver_duel_audit_log: {
+        Row: {
+          challenged_customer_id: string
+          challenged_ride_ids: string[] | null
+          challenged_rides_counted: number
+          challenger_customer_id: string
+          challenger_ride_ids: string[] | null
+          challenger_rides_counted: number
+          count_window_end: string
+          count_window_start: string
+          created_at: string | null
+          duel_id: string
+          finalized_by: string | null
+          id: string
+          points_settled: boolean | null
+          winner_participant_id: string | null
+        }
+        Insert: {
+          challenged_customer_id: string
+          challenged_ride_ids?: string[] | null
+          challenged_rides_counted?: number
+          challenger_customer_id: string
+          challenger_ride_ids?: string[] | null
+          challenger_rides_counted?: number
+          count_window_end: string
+          count_window_start: string
+          created_at?: string | null
+          duel_id: string
+          finalized_by?: string | null
+          id?: string
+          points_settled?: boolean | null
+          winner_participant_id?: string | null
+        }
+        Update: {
+          challenged_customer_id?: string
+          challenged_ride_ids?: string[] | null
+          challenged_rides_counted?: number
+          challenger_customer_id?: string
+          challenger_ride_ids?: string[] | null
+          challenger_rides_counted?: number
+          count_window_end?: string
+          count_window_start?: string
+          created_at?: string | null
+          duel_id?: string
+          finalized_by?: string | null
+          id?: string
+          points_settled?: boolean | null
+          winner_participant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_duel_audit_log_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_duel_guesses: {
         Row: {
           created_at: string
@@ -7153,6 +7212,15 @@ export type Database = {
           p_start_at: string
         }
         Returns: Json
+      }
+      collect_duel_ride_ids: {
+        Args: {
+          p_branch_id: string
+          p_customer_id: string
+          p_end_at: string
+          p_start_at: string
+        }
+        Returns: string[]
       }
       count_duel_rides: {
         Args: {
