@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,13 +10,30 @@ import { SeletorCidade } from "./components/seletor_cidade";
 import { IndicadorProgresso } from "./components/indicador_progresso";
 import { EtapaOnboardingCard } from "./components/etapa_onboarding";
 import { PainelTesteFinal } from "./components/painel_teste_final";
+import { AcoesCidade } from "./components/acoes_cidade";
 import { useValidacaoCidade } from "./hooks/hook_validacao_cidade";
 import { ETAPAS_ONBOARDING } from "./constants/constantes_etapas";
 
 export default function PaginaOnboardingCidade() {
+  const { currentBrandId } = useBrandGuard();
   const [branchId, setBranchId] = useState<string | null>(null);
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
   const { data: validacao, isLoading } = useValidacaoCidade(branchId);
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ["onboarding-branches", currentBrandId],
+    enabled: !!currentBrandId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("branches")
+        .select("id, name")
+        .eq("brand_id", currentBrandId!)
+        .order("name");
+      return data ?? [];
+    },
+  });
+
+  const selectedBranch = branches.find((b) => b.id === branchId);
 
   const toggleStep = (id: string) =>
     setExpandedStep(expandedStep === id ? null : id);
@@ -61,7 +81,16 @@ export default function PaginaOnboardingCidade() {
       {/* City selector */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-foreground">Selecione a cidade para validar:</label>
-        <SeletorCidade value={branchId} onChange={setBranchId} />
+        <div className="flex items-center gap-2">
+          <SeletorCidade value={branchId} onChange={setBranchId} />
+          {branchId && (
+            <AcoesCidade
+              branchId={branchId}
+              branchName={selectedBranch?.name}
+              onDeleted={() => setBranchId(null)}
+            />
+          )}
+        </div>
       </div>
 
       {branchId && (

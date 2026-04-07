@@ -168,6 +168,121 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: delete_branch — hard-delete a branch and all related data
+    if (action === "delete_branch") {
+      const { branch_id } = body;
+      if (!branch_id) {
+        return new Response(JSON.stringify({ error: "branch_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify caller owns the brand that owns this branch (or is root_admin)
+      const { data: branch } = await adminClient
+        .from("branches")
+        .select("id, brand_id")
+        .eq("id", branch_id)
+        .maybeSingle();
+
+      if (!branch) {
+        return new Response(JSON.stringify({ error: "Branch not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Allow root_admin (already checked) or brand_admin of this brand
+      const { data: brandAdminCheck } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("brand_id", branch.brand_id)
+        .in("role", ["brand_admin", "root_admin"])
+        .maybeSingle();
+
+      if (!brandAdminCheck && !roleCheck) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Delete dependent data filtered by branch_id
+      const branchTables = [
+        "redemptions",
+        "coupons",
+        "catalog_cart_orders",
+        "machine_ride_notifications",
+        "store_catalog_items",
+        "store_catalog_categories",
+        "store_points_rules",
+        "store_type_requests",
+        "customer_favorites",
+        "customer_favorite_stores",
+        "customer_click_events",
+        "points_ledger",
+        "earning_events",
+        "offers",
+        "customers",
+        "stores",
+        "brand_permission_config",
+        "brand_sub_permission_config",
+        "ganha_ganha_store_fees",
+        "ganha_ganha_billing_events",
+        "machine_ride_events",
+        "machine_rides",
+        "machine_integrations",
+        "points_rules",
+        "sponsored_placements",
+      ];
+
+      for (const table of branchTables) {
+        await adminClient.from(table).delete().eq("branch_id", branch_id);
+      }
+
+      // Tables that use branch_id indirectly or need special handling
+      await adminClient
+        .from("branch_wallet_transactions")
+        .delete()
+        .eq("branch_id", branch_id);
+      await adminClient
+        .from("branch_points_wallet")
+        .delete()
+        .eq("branch_id", branch_id);
+      await adminClient
+        .from("city_belt_champions")
+        .delete()
+        .eq("branch_id", branch_id);
+      await adminClient
+        .from("city_feed_events")
+        .delete()
+        .eq("branch_id", branch_id);
+
+      // Clear profile references
+      await adminClient
+        .from("profiles")
+        .update({ selected_branch_id: null })
+        .eq("selected_branch_id", branch_id);
+
+      // Clear user_roles branch references
+      await adminClient
+        .from("user_roles")
+        .delete()
+        .eq("branch_id", branch_id);
+
+      // Delete the branch itself
+      const { error } = await adminClient
+        .from("branches")
+        .delete()
+        .eq("id", branch_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ACTION: change_plan — update subscription_plan for a brand
     if (action === "change_plan") {
       const { brand_id, plan } = body;
