@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, Smartphone } from "lucide-react";
+import { TrendingUp, Smartphone, Swords } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
@@ -346,6 +346,29 @@ export default function Dashboard() {
                 </div>
                 <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/crm")}>
                   <TrendingUp className="h-3.5 w-3.5" /> Abrir CRM
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Gamificação Banner */}
+          {showBrand && !isRoot && isDriverEnabled && (
+            <Card className="border-primary/20 overflow-hidden">
+              <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Swords className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-semibold text-sm">Duelos & Ranking</h3>
+                      <Badge variant="destructive" className="text-[10px] px-2 py-0">Ao Vivo</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Acompanhe duelos ao vivo, crie desafios e impulsione apostas.</p>
+                  </div>
+                </div>
+                <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/gamificacao-admin")}>
+                  <Swords className="h-3.5 w-3.5" /> Abrir Gamificação
                 </Button>
               </CardContent>
             </Card>

@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Building2, Store, ShoppingBag, Car, ExternalLink, Copy, LogIn,
-  Globe, Eye, Smartphone, Search, Link2,
+  Globe, Eye, Smartphone, Search, Link2, Swords,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
@@ -46,6 +46,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     { label: "Painel Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Gestão das lojas", scoringFilter: "PASSENGER" as const },
     { label: "Achadinho Motorista", path: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", prodPath: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", icon: Car, description: "Marketplace do motorista", scoringFilter: "DRIVER" as const },
     { label: "Painel Franqueado", path: "/branch-wallet", prodPath: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
+    { label: "Gamificação", path: "/gamificacao-admin", prodPath: "/gamificacao-admin", icon: Swords, description: "Duelos & Ranking", scoringFilter: "DRIVER" as const },
   ];
 
   const quickLinks = allQuickLinks.filter((link) => {
