@@ -204,6 +204,7 @@ export default function DashboardChartsSection({
   isDriverEnabled = true, isPassengerEnabled = true,
 }: DashboardChartsSectionProps) {
   const shouldShowPointsFeed = isDriverEnabled || isPassengerEnabled;
+  const { data: integratedBranches } = useIntegratedBranches(brandFilter);
 
   return (
     <>
