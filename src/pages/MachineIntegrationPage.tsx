@@ -201,11 +201,6 @@ export default function MachineIntegrationPage() {
   const [matrixBasicUser, setMatrixBasicUser] = useState("");
   const [matrixBasicPass, setMatrixBasicPass] = useState("");
   const [showMatrixPass, setShowMatrixPass] = useState(false);
-  const [selectedMatrixApiKey, setSelectedMatrixApiKey] = useState("");
-  const [selectedShowMatrixApiKey, setSelectedShowMatrixApiKey] = useState(false);
-  const [selectedMatrixBasicUser, setSelectedMatrixBasicUser] = useState("");
-  const [selectedMatrixBasicPass, setSelectedMatrixBasicPass] = useState("");
-  const [selectedShowMatrixPass, setSelectedShowMatrixPass] = useState(false);
   const [matrixSaved, setMatrixSaved] = useState(false);
   const [liveEvents, setLiveEvents] = useState<RideEvent[]>([]);
   const [activatingBranchId, setActivatingBranchId] = useState<string>("");
@@ -272,6 +267,29 @@ export default function MachineIntegrationPage() {
     enabled: !!currentBrandId,
   });
 
+  /* ── Query: brand-level matrix credentials ── */
+  const { data: brandMatrix } = useQuery({
+    queryKey: ["brand-matrix", currentBrandId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("brands")
+        .select("matrix_api_key, matrix_basic_auth_user, matrix_basic_auth_password")
+        .eq("id", currentBrandId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { matrix_api_key: string | null; matrix_basic_auth_user: string | null; matrix_basic_auth_password: string | null } | null;
+    },
+    enabled: !!currentBrandId,
+  });
+
+  useEffect(() => {
+    if (brandMatrix) {
+      setMatrixApiKey(brandMatrix.matrix_api_key || "");
+      setMatrixBasicUser(brandMatrix.matrix_basic_auth_user || "");
+      setMatrixBasicPass(brandMatrix.matrix_basic_auth_password || "");
+    }
+  }, [brandMatrix]);
+
   const activeIntegrations = integrations.filter((i) => i.is_active);
   const selectedIntegration = selectedBranchId
     ? integrations.find((i) => i.branch_id === selectedBranchId && i.is_active)
@@ -280,9 +298,6 @@ export default function MachineIntegrationPage() {
   useEffect(() => {
     if (selectedIntegration?.callback_url !== undefined) setCallbackUrl(selectedIntegration?.callback_url || "");
     setTelegramChatId((selectedIntegration as any)?.telegram_chat_id || "");
-    setSelectedMatrixApiKey(selectedIntegration?.matrix_api_key || "");
-    setSelectedMatrixBasicUser(selectedIntegration?.matrix_basic_auth_user || "");
-    setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
     setDriverPointsEnabled((selectedIntegration as any)?.driver_points_enabled ?? false);
     setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
     setDriverPointsMode((selectedIntegration as any)?.driver_points_mode ?? "PERCENT");
@@ -292,9 +307,6 @@ export default function MachineIntegrationPage() {
     selectedIntegration?.id,
     selectedIntegration?.callback_url,
     (selectedIntegration as any)?.telegram_chat_id,
-    selectedIntegration?.matrix_api_key,
-    selectedIntegration?.matrix_basic_auth_user,
-    selectedIntegration?.matrix_basic_auth_password,
     (selectedIntegration as any)?.driver_points_enabled,
     (selectedIntegration as any)?.driver_points_percent,
     (selectedIntegration as any)?.driver_points_mode,
@@ -365,12 +377,7 @@ export default function MachineIntegrationPage() {
       };
       const resolvedApiKey = isUrlOnly ? urlApiKey : apiKey;
       if (resolvedApiKey) body.api_key = resolvedApiKey;
-      // Matrix credentials (only from credentials tab)
-      if (!isUrlOnly) {
-        if (matrixApiKey) body.matrix_api_key = matrixApiKey;
-        if (matrixBasicUser) body.matrix_basic_auth_user = matrixBasicUser;
-        if (matrixBasicPass) body.matrix_basic_auth_password = matrixBasicPass;
-      }
+      // Matrix credentials are now saved at brand level, not per city
       const { data, error } = await supabase.functions.invoke("register-machine-webhook", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -392,7 +399,6 @@ export default function MachineIntegrationPage() {
             : "Integração ativada, mas o registro automático falhou. Copie a URL manualmente.",
         });
         setApiKey(""); setBasicUser(""); setBasicPass(""); setActivatingBranchId("");
-        setMatrixApiKey(""); setMatrixBasicUser(""); setMatrixBasicPass("");
       }
       queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     },
@@ -458,22 +464,22 @@ export default function MachineIntegrationPage() {
 
   const saveMatrixMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedIntegration?.id) throw new Error("Integration not found");
+      if (!currentBrandId) throw new Error("Brand not found");
       const { error } = await (supabase as any)
-        .from("machine_integrations")
+        .from("brands")
         .update({
-          matrix_api_key: selectedMatrixApiKey || null,
-          matrix_basic_auth_user: selectedMatrixBasicUser || null,
-          matrix_basic_auth_password: selectedMatrixBasicPass || null,
+          matrix_api_key: matrixApiKey || null,
+          matrix_basic_auth_user: matrixBasicUser || null,
+          matrix_basic_auth_password: matrixBasicPass || null,
         })
-        .eq("id", selectedIntegration.id);
+        .eq("id", currentBrandId);
       if (error) throw error;
     },
     onSuccess: () => {
       setMatrixSaved(true);
       setTimeout(() => setMatrixSaved(false), 2000);
       toast({ title: "Credenciais da matriz salvas!" });
-      queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
+      queryClient.invalidateQueries({ queryKey: ["brand-matrix", currentBrandId] });
     },
     onError: (err: any) => {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
@@ -590,7 +596,64 @@ export default function MachineIntegrationPage() {
         description="Conecte cada cidade à sua plataforma de corridas para pontuar clientes automaticamente"
       />
 
-      {/* ─── ACTIVE INTEGRATIONS LIST ─── */}
+      {/* ═══════ SEÇÃO 1 — MATRIZ (nível marca) ═══════ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="h-5 w-5 text-primary" />
+            Credenciais da Matriz (Sede)
+          </CardTitle>
+          <CardDescription>
+            Configuração única para todas as cidades. A API da Matriz é usada para buscar recibos e identificar passageiros (CPF, telefone, nome).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-lg">
+          <div className="space-y-2">
+            <Label>Chave API da Matriz</Label>
+            <div className="relative">
+              <Input
+                type={showMatrixApiKey ? "text" : "password"}
+                value={matrixApiKey}
+                onChange={(e) => setMatrixApiKey(e.target.value)}
+                placeholder="api-key da matriz"
+              />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixApiKey(!showMatrixApiKey)}>
+                {showMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Usuário Basic Auth da Matriz</Label>
+            <Input value={matrixBasicUser} onChange={(e) => setMatrixBasicUser(e.target.value)} placeholder="Usuário de autenticação da matriz" />
+          </div>
+          <div className="space-y-2">
+            <Label>Senha Basic Auth da Matriz</Label>
+            <div className="relative">
+              <Input type={showMatrixPass ? "text" : "password"} value={matrixBasicPass} onChange={(e) => setMatrixBasicPass(e.target.value)} placeholder="Senha de autenticação da matriz" />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixPass(!showMatrixPass)}>
+                {showMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => saveMatrixMutation.mutate()} disabled={saveMatrixMutation.isPending}>
+              {matrixSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveMatrixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+              Salvar credenciais da Matriz
+            </Button>
+          </div>
+          {matrixApiKey && (
+            <Alert className="border-primary/30 bg-primary/5">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-xs">
+                Matriz configurada. Todas as cidades usarão estas credenciais para buscar recibos e pontuar passageiros.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ═══════ SEÇÃO 2 — CIDADES (nível filial) ═══════ */}
+
       {activeIntegrations.length > 0 && (
         <Card>
           <CardHeader>
@@ -755,43 +818,7 @@ export default function MachineIntegrationPage() {
                 </div>
               </div>
 
-              {/* Matrix Credentials */}
-              <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
-                <Label className="text-xs text-muted-foreground">Credenciais da Matriz (Recibo)</Label>
-                <Input
-                  value={selectedMatrixBasicUser}
-                  onChange={(e) => setSelectedMatrixBasicUser(e.target.value)}
-                  placeholder="Usuário Basic Auth da Matriz"
-                />
-                <div className="relative">
-                  <Input
-                    type={selectedShowMatrixPass ? "text" : "password"}
-                    value={selectedMatrixBasicPass}
-                    onChange={(e) => setSelectedMatrixBasicPass(e.target.value)}
-                    placeholder="Senha Basic Auth da Matriz"
-                  />
-                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSelectedShowMatrixPass(!selectedShowMatrixPass)}>
-                    {selectedShowMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <div className="relative">
-                  <Input
-                    type={selectedShowMatrixApiKey ? "text" : "password"}
-                    value={selectedMatrixApiKey}
-                    onChange={(e) => setSelectedMatrixApiKey(e.target.value)}
-                    placeholder="api-key da Matriz"
-                  />
-                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setSelectedShowMatrixApiKey(!selectedShowMatrixApiKey)}>
-                    {selectedShowMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <div className="flex justify-end">
-                  <Button variant="outline" size="sm" onClick={() => saveMatrixMutation.mutate()} disabled={saveMatrixMutation.isPending}>
-                    {matrixSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveMatrixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                    Salvar matriz
-                  </Button>
-                </div>
-              </div>
+              {/* Matrix credentials moved to brand-level section above */}
 
               {/* Telegram Chat ID */}
               <div className="space-y-1">
@@ -1239,44 +1266,7 @@ export default function MachineIntegrationPage() {
                   </div>
                 </div>
 
-                {/* ── Credenciais da Matriz (Recibo) ── */}
-                <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3 mt-2">
-                  <h4 className="font-semibold text-sm flex items-center gap-1.5">
-                    <KeyRound className="h-4 w-4 text-primary" />
-                    Credenciais da Matriz (Recibo)
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    O endpoint de recibos exige credenciais da <strong>matriz</strong> (sede), diferentes das credenciais da cidade. Preencha para habilitar a consulta de recibos com CPF do passageiro.
-                  </p>
-                  <div className="space-y-2">
-                    <Label htmlFor="matrix_api_key">Chave API da Matriz</Label>
-                    <div className="relative">
-                      <Input
-                        id="matrix_api_key"
-                        type={showMatrixApiKey ? "text" : "password"}
-                        value={matrixApiKey}
-                        onChange={(e) => setMatrixApiKey(e.target.value)}
-                        placeholder="api-key da matriz para consultar recibos"
-                      />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixApiKey(!showMatrixApiKey)}>
-                        {showMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="matrix_basic_user">Usuário Basic Auth da Matriz</Label>
-                    <Input id="matrix_basic_user" value={matrixBasicUser} onChange={(e) => setMatrixBasicUser(e.target.value)} placeholder="Usuário de autenticação da matriz" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="matrix_basic_pass">Senha Basic Auth da Matriz</Label>
-                    <div className="relative">
-                      <Input id="matrix_basic_pass" type={showMatrixPass ? "text" : "password"} value={matrixBasicPass} onChange={(e) => setMatrixBasicPass(e.target.value)} placeholder="Senha de autenticação da matriz" />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixPass(!showMatrixPass)}>
-                        {showMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* Matrix credentials are configured at brand level */}
 
                 <Button onClick={() => activateMutation.mutate({})} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
                   {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

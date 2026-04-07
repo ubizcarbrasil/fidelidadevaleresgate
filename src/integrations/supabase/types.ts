@@ -1083,6 +1083,9 @@ export type Database = {
           home_layout_json: Json | null
           id: string
           is_active: boolean
+          matrix_api_key: string | null
+          matrix_basic_auth_password: string | null
+          matrix_basic_auth_user: string | null
           name: string
           slug: string
           stripe_customer_id: string | null
@@ -1098,6 +1101,9 @@ export type Database = {
           home_layout_json?: Json | null
           id?: string
           is_active?: boolean
+          matrix_api_key?: string | null
+          matrix_basic_auth_password?: string | null
+          matrix_basic_auth_user?: string | null
           name: string
           slug: string
           stripe_customer_id?: string | null
@@ -1113,6 +1119,9 @@ export type Database = {
           home_layout_json?: Json | null
           id?: string
           is_active?: boolean
+          matrix_api_key?: string | null
+          matrix_basic_auth_password?: string | null
+          matrix_basic_auth_user?: string | null
           name?: string
           slug?: string
           stripe_customer_id?: string | null
