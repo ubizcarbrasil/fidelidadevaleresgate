@@ -919,7 +919,7 @@ async function processFinalized(
               Authorization: `Bearer ${supabaseAnonKey}`,
             },
             body: JSON.stringify({
-              chat_id: integration.telegram_chat_id,
+              chat_id: telegramChatId,
               customer_name: customerFullName,
               customer_phone: customerPhone,
               city_name: resolvedCityName,
