@@ -275,9 +275,6 @@ export default function MachineIntegrationPage() {
   useEffect(() => {
     if (selectedIntegration?.callback_url !== undefined) setCallbackUrl(selectedIntegration?.callback_url || "");
     setTelegramChatId((selectedIntegration as any)?.telegram_chat_id || "");
-    setSelectedMatrixApiKey(selectedIntegration?.matrix_api_key || "");
-    setSelectedMatrixBasicUser(selectedIntegration?.matrix_basic_auth_user || "");
-    setSelectedMatrixBasicPass(selectedIntegration?.matrix_basic_auth_password || "");
     setDriverPointsEnabled((selectedIntegration as any)?.driver_points_enabled ?? false);
     setDriverPointsPercent(String((selectedIntegration as any)?.driver_points_percent ?? 50));
     setDriverPointsMode((selectedIntegration as any)?.driver_points_mode ?? "PERCENT");
@@ -287,9 +284,6 @@ export default function MachineIntegrationPage() {
     selectedIntegration?.id,
     selectedIntegration?.callback_url,
     (selectedIntegration as any)?.telegram_chat_id,
-    selectedIntegration?.matrix_api_key,
-    selectedIntegration?.matrix_basic_auth_user,
-    selectedIntegration?.matrix_basic_auth_password,
     (selectedIntegration as any)?.driver_points_enabled,
     (selectedIntegration as any)?.driver_points_percent,
     (selectedIntegration as any)?.driver_points_mode,
