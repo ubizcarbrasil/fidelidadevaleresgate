@@ -222,11 +222,14 @@ Deno.serve(async (req) => {
         "redemptions",
         "coupons",
         "catalog_cart_orders",
+        "crm_contacts",
         "machine_ride_notifications",
+        "product_redemption_orders",
         "store_catalog_items",
         "store_catalog_categories",
         "store_points_rules",
         "store_type_requests",
+        "tier_points_rules",
         "customer_favorites",
         "customer_favorite_stores",
         "customer_click_events",
@@ -235,6 +238,7 @@ Deno.serve(async (req) => {
         "offers",
         "customers",
         "stores",
+        "vouchers",
         "brand_permission_config",
         "brand_sub_permission_config",
         "ganha_ganha_store_fees",
@@ -249,6 +253,11 @@ Deno.serve(async (req) => {
       for (const table of branchTables) {
         await adminClient.from(table).delete().eq("branch_id", branch_id);
       }
+
+      await adminClient
+        .from("offers")
+        .update({ redemption_branch_id: null })
+        .eq("redemption_branch_id", branch_id);
 
       // Tables that use branch_id indirectly or need special handling
       await adminClient
