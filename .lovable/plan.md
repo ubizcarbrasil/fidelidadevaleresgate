@@ -1,33 +1,24 @@
 
-## Plano: Completar Notificações Push de Duelos
 
-### Diagnóstico atual
-- ✅ `servico_notificacoes_duelo.ts` já dispara notificações in-app para: desafio, aceite, recusa, início, resultado
-- ✅ `send-push-notification` edge function salva em `customer_notifications`
-- ❌ Contraproposta usa tipo genérico `DUEL_CHALLENGE_RECEIVED` ao invés de tipo próprio
-- ❌ O `finalize-duels-cron` NÃO envia notificações quando auto-finaliza duelos
-- ❌ Notificações de duelo NÃO são enviadas via TaxiMachine (só ficam no app)
+## Correção: Adicionar valores de duelo ao enum `ledger_reference_type`
 
-### O que será feito
+### Problema confirmado
+O enum `ledger_reference_type` no banco possui apenas: `EARNING_EVENT`, `REDEMPTION`, `MANUAL_ADJUSTMENT`, `MACHINE_RIDE`.
 
-**1. Novo tipo `DUEL_COUNTER_PROPOSAL`** no serviço de notificações
-- Mensagem: "Fulano fez uma contraproposta de X pontos"
-- Atualizar `useCounterPropose` para usar o novo tipo
+As RPCs de duelo (`respond_to_duel`, `respond_counter_proposal`, `finalize_duel`) tentam inserir `DUEL_RESERVE`, `DUEL_WIN` e `DUEL_REFUND`, causando o erro ao aceitar desafios.
 
-**2. Notificações no `finalize-duels-cron`**
-- Após auto-finalizar cada duelo, chamar `send-push-notification` para ambos os participantes
-- Enviar notificação de vitória/derrota/empate conforme resultado
+### Solução
+Uma única migração SQL:
 
-**3. Entrega via TaxiMachine no `send-push-notification`**
-- Quando o `reference_type` for de duelo (`duel_*`), buscar `external_driver_id` e `machine_integrations`
-- Enviar mensagem via API TaxiMachine como complemento à notificação in-app
-- Reutilizar o padrão de envio já existente no `notify-driver-points`
+```sql
+ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DUEL_RESERVE';
+ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DUEL_WIN';
+ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DUEL_REFUND';
+ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DRIVER_RIDE';
+```
 
-### Arquivos
+### Impacto
+- Nenhuma alteração de código frontend ou edge function necessária
+- As RPCs já utilizam esses valores, faltava apenas registrá-los no enum
+- Após a migração, aceitar desafios e finalizar duelos funcionará normalmente
 
-| Arquivo | Ação |
-|---------|------|
-| `servico_notificacoes_duelo.ts` | Adicionar `DUEL_COUNTER_PROPOSAL` |
-| `hook_duelos.ts` | Atualizar `useCounterPropose` |
-| `finalize-duels-cron/index.ts` | Adicionar envio de notificações |
-| `send-push-notification/index.ts` | Adicionar entrega TaxiMachine para duelos |
