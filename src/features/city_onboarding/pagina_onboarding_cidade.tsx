@@ -81,7 +81,16 @@ export default function PaginaOnboardingCidade() {
       {/* City selector */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-foreground">Selecione a cidade para validar:</label>
-        <SeletorCidade value={branchId} onChange={setBranchId} />
+        <div className="flex items-center gap-2">
+          <SeletorCidade value={branchId} onChange={setBranchId} />
+          {branchId && (
+            <AcoesCidade
+              branchId={branchId}
+              branchName={selectedBranch?.name}
+              onDeleted={() => setBranchId(null)}
+            />
+          )}
+        </div>
       </div>
 
       {branchId && (
