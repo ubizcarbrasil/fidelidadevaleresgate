@@ -180,7 +180,7 @@ export function AbaPontuarMotorista({
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
           onClick={() => addCidadeRef.current?.scrollIntoView({ behavior: "smooth" })}
         >
           <Car className="h-4 w-4" />
