@@ -1,24 +1,49 @@
 
 
-## Correção: Adicionar valores de duelo ao enum `ledger_reference_type`
+## Correção: Layout dos botões no card de desafio
 
-### Problema confirmado
-O enum `ledger_reference_type` no banco possui apenas: `EARNING_EVENT`, `REDEMPTION`, `MANUAL_ADJUSTMENT`, `MACHINE_RIDE`.
-
-As RPCs de duelo (`respond_to_duel`, `respond_counter_proposal`, `finalize_duel`) tentam inserir `DUEL_RESERVE`, `DUEL_WIN` e `DUEL_REFUND`, causando o erro ao aceitar desafios.
+### Problema
+Os 3 botões (Aceitar, Contraproposta, Recusar) estão numa única linha `flex`, o que causa overflow em telas mobile de 430px — o botão "Recusar" fica cortado/fora do card.
 
 ### Solução
-Uma única migração SQL:
+Reorganizar os botões em duas linhas quando há aposta de pontos:
+- **Linha 1**: "Aceitar" (largura total)
+- **Linha 2**: "Contraproposta" e "Recusar" lado a lado (cada um flex-1)
 
-```sql
-ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DUEL_RESERVE';
-ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DUEL_WIN';
-ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DUEL_REFUND';
-ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'DRIVER_RIDE';
+Quando não há aposta (sem botão Contraproposta), manter "Aceitar" e "Recusar" numa única linha.
+
+### Alteração
+**Arquivo**: `src/components/driver/duels/DuelChallengeCard.tsx`
+
+Substituir o bloco de botões (linhas 101-136) para usar `flex-col` com sub-rows:
+
+```tsx
+{!showCounter ? (
+  <div className="flex flex-col gap-2">
+    <Button
+      onClick={...}
+      disabled={...}
+      className="w-full gap-1.5"
+      size="sm"
+    >
+      <ShieldCheck className="h-4 w-4" />
+      {hasBet ? `Aceitar (${formatPoints(...)} pts)` : "Aceitar"}
+    </Button>
+    <div className="flex gap-2">
+      {hasBet && (
+        <Button variant="secondary" className="flex-1 gap-1.5" size="sm">
+          <MessageSquare className="h-4 w-4" />
+          Contraproposta
+        </Button>
+      )}
+      <Button variant="outline" className="flex-1 gap-1.5" size="sm">
+        <Flag className="h-4 w-4" />
+        {hasBet ? "Recusar" : "Arregar 😅"}
+      </Button>
+    </div>
+  </div>
+) : (...)}
 ```
 
-### Impacto
-- Nenhuma alteração de código frontend ou edge function necessária
-- As RPCs já utilizam esses valores, faltava apenas registrá-los no enum
-- Após a migração, aceitar desafios e finalizar duelos funcionará normalmente
+Impacto: apenas layout CSS, sem mudança de lógica.
 
