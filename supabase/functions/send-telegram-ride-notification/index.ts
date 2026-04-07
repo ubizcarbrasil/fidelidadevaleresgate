@@ -66,12 +66,12 @@ Deno.serve(async (req) => {
     if (is_driver_notification && driver_points) {
       // Driver notification template
       message = [
+        city_name ? `📍 <b>${city_name}</b>` : null,
         "🚗 <b>Motorista pontuado!</b>",
         "",
         `👤 Motorista: ${driver_name || "Não identificado"}`,
         `🪙 Pontos creditados: ${driver_points}`,
         `💰 Valor da corrida: R$ ${Number(ride_value || 0).toFixed(2)}`,
-        city_name ? `🏙️ Cidade: ${city_name}` : null,
         driver_volume_tier ? `📊 ${driver_volume_tier}` : null,
         driver_monthly_rides ? `🔄 Corridas no ciclo: ${driver_monthly_rides}` : null,
         `👥 Passageiro: ${customer_name || "Não identificado"}`,
