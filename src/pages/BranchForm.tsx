@@ -218,9 +218,9 @@ export default function BranchForm() {
               <Label>Ativo</Label>
               <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
-              <Button type="button" variant="outline" onClick={() => navigate("/branches")}>Cancelar</Button>
+            <div className="flex flex-col gap-2 sm:flex-row pt-4">
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto">{loading ? "Salvando..." : "Salvar"}</Button>
+              <Button type="button" variant="outline" onClick={() => navigate("/branches")} className="w-full sm:w-auto">Cancelar</Button>
             </div>
           </form>
         </CardContent>
