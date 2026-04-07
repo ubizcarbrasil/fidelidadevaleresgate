@@ -158,7 +158,7 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
               <p className="text-[11px] text-muted-foreground mb-0.5">Desafiante</p>
               <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengerName}</p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenger_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>
-                {duel.challenger_rides_count}
+                {challengerRides}
               </p>
               <p className="text-[10px] text-muted-foreground">corridas</p>
               {winnerId === duel.challenger_id && (
