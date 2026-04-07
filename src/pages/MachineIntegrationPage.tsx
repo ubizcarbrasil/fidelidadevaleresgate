@@ -1210,44 +1210,7 @@ export default function MachineIntegrationPage() {
                   </div>
                 </div>
 
-                {/* ── Credenciais da Matriz (Recibo) ── */}
-                <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3 mt-2">
-                  <h4 className="font-semibold text-sm flex items-center gap-1.5">
-                    <KeyRound className="h-4 w-4 text-primary" />
-                    Credenciais da Matriz (Recibo)
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    O endpoint de recibos exige credenciais da <strong>matriz</strong> (sede), diferentes das credenciais da cidade. Preencha para habilitar a consulta de recibos com CPF do passageiro.
-                  </p>
-                  <div className="space-y-2">
-                    <Label htmlFor="matrix_api_key">Chave API da Matriz</Label>
-                    <div className="relative">
-                      <Input
-                        id="matrix_api_key"
-                        type={showMatrixApiKey ? "text" : "password"}
-                        value={matrixApiKey}
-                        onChange={(e) => setMatrixApiKey(e.target.value)}
-                        placeholder="api-key da matriz para consultar recibos"
-                      />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixApiKey(!showMatrixApiKey)}>
-                        {showMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="matrix_basic_user">Usuário Basic Auth da Matriz</Label>
-                    <Input id="matrix_basic_user" value={matrixBasicUser} onChange={(e) => setMatrixBasicUser(e.target.value)} placeholder="Usuário de autenticação da matriz" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="matrix_basic_pass">Senha Basic Auth da Matriz</Label>
-                    <div className="relative">
-                      <Input id="matrix_basic_pass" type={showMatrixPass ? "text" : "password"} value={matrixBasicPass} onChange={(e) => setMatrixBasicPass(e.target.value)} placeholder="Senha de autenticação da matriz" />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixPass(!showMatrixPass)}>
-                        {showMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* Matrix credentials are configured at brand level */}
 
                 <Button onClick={() => activateMutation.mutate({})} disabled={activateMutation.isPending || !basicUser || !basicPass || !activatingBranchId}>
                   {activateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
