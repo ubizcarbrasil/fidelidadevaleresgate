@@ -25,7 +25,8 @@ export default function DuelChallengeCard({ duel }: Props) {
   const [counterValue, setCounterValue] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const challengerName = cleanDriverName((duel.challenger as any)?.customers?.name);
+  const challengerName = resolveParticipantName(duel.challenger);
+  const challengerAvatar = resolveParticipantAvatar(duel.challenger);
   const hasBet = duel.challenger_points_bet > 0;
   const balance = driver?.points_balance ?? 0;
   const counterNum = parseInt(counterValue) || 0;
