@@ -316,14 +316,14 @@ function OpponentCard({
           style={{ backgroundColor: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" }}
         >
           {participant.avatar_url ? (
-            <img src={participant.avatar_url} alt={name} className="h-10 w-10 rounded-full object-cover" />
+            <img src={participant.avatar_url} alt={displayName} className="h-10 w-10 rounded-full object-cover" />
           ) : (
-            name.charAt(0).toUpperCase()
+            displayName.charAt(0).toUpperCase()
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{name}</p>
-          <p className="text-[11px] text-muted-foreground">{participant.public_nickname || "Motorista"}</p>
+          <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+          {subtitle && <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>}
           {profile && profile.total_duels > 0 && (
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }}>
