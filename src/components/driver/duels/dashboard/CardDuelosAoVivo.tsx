@@ -4,7 +4,7 @@
 import { Swords, Flame, ChevronRight, Crown, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { cleanDriverName, type Duel } from "../hook_duelos";
+import { cleanDriverName, type Duel, useContagemCorridasDuelo } from "../hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
@@ -21,10 +21,11 @@ export default function CardDuelosAoVivo({ duelos, onAbrirArena, fontHeading }: 
   if (ativos.length === 0) return null;
 
   const destaque = ativos[0];
+  const { data: contagemRealtime } = useContagemCorridasDuelo(destaque);
   const nomeA = cleanDriverName(destaque.challenger?.public_nickname || (destaque.challenger as any)?.customers?.name);
   const nomeB = cleanDriverName(destaque.challenged?.public_nickname || (destaque.challenged as any)?.customers?.name);
-  const ridesA = destaque.challenger_rides_count;
-  const ridesB = destaque.challenged_rides_count;
+  const ridesA = contagemRealtime?.challengerRides ?? destaque.challenger_rides_count;
+  const ridesB = contagemRealtime?.challengedRides ?? destaque.challenged_rides_count;
   const lider = ridesA > ridesB ? nomeA : ridesB > ridesA ? nomeB : null;
   const totalBet = (destaque.challenger_points_bet || 0) + (destaque.challenged_points_bet || 0);
   const isLive = destaque.status === "live";

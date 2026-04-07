@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDuelosCidade } from "./hook_duelos_publicos";
 import ArenaAoVivo from "./ArenaAoVivo";
-import { cleanDriverName, type Duel } from "./hook_duelos";
+import { cleanDriverName, type Duel, useContagemCorridasDuelo } from "./hook_duelos";
 
 interface Props {
   branchId: string | undefined;
@@ -28,14 +28,15 @@ export default function BannerDueloAoVivo({ branchId, fontHeading }: Props) {
   }
 
   const destaque = aoVivo[0];
+  const { data: contagemRealtime } = useContagemCorridasDuelo(destaque);
   const nomeA = cleanDriverName(
     destaque.challenger?.public_nickname || destaque.challenger?.customers?.name
   );
   const nomeB = cleanDriverName(
     destaque.challenged?.public_nickname || destaque.challenged?.customers?.name
   );
-  const ridesA = destaque.challenger_rides_count;
-  const ridesB = destaque.challenged_rides_count;
+  const ridesA = contagemRealtime?.challengerRides ?? destaque.challenger_rides_count;
+  const ridesB = contagemRealtime?.challengedRides ?? destaque.challenged_rides_count;
 
   return (
     <AnimatePresence>

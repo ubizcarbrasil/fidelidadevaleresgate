@@ -6,7 +6,7 @@ import { Swords, Clock, Trophy, Flag, XCircle, Coins, MessageSquare, Eye } from 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Duel } from "./hook_duelos";
-import { resolveParticipantName, resolveParticipantAvatar } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, useContagemCorridasDuelo } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -29,14 +29,20 @@ interface Props {
 export default function DuelCard({ duel, participantId, onClick }: Props) {
   const cfg = statusConfig[duel.status] || statusConfig.pending;
 
+  const isAtivo = duel.status === "live" || duel.status === "accepted";
+  const { data: contagemRealtime } = useContagemCorridasDuelo(isAtivo ? duel : null);
+
   const challengerName = resolveParticipantName(duel.challenger);
   const challengedName = resolveParticipantName(duel.challenged);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentName = isChallenger ? challengedName : challengerName;
   const opponentAvatar = resolveParticipantAvatar(isChallenger ? duel.challenged : duel.challenger);
-  const myRides = isChallenger ? duel.challenger_rides_count : duel.challenged_rides_count;
-  const theirRides = isChallenger ? duel.challenged_rides_count : duel.challenger_rides_count;
+
+  const challengerRides = isAtivo ? (contagemRealtime?.challengerRides ?? duel.challenger_rides_count) : duel.challenger_rides_count;
+  const challengedRides = isAtivo ? (contagemRealtime?.challengedRides ?? duel.challenged_rides_count) : duel.challenged_rides_count;
+  const myRides = isChallenger ? challengerRides : challengedRides;
+  const theirRides = isChallenger ? challengedRides : challengerRides;
 
   const hasBet = (duel.challenger_points_bet || 0) > 0;
   const totalBet = (duel.challenger_points_bet || 0) + (duel.challenged_points_bet || 0);

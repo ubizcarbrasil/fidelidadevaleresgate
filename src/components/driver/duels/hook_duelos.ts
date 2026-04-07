@@ -632,6 +632,53 @@ export function useDriverCompetitiveProfile(customerId: string | null) {
   });
 }
 
+// === Contagem em tempo real de corridas para duelos ativos ===
+
+export interface ContagemCorridasDuelo {
+  challengerRides: number;
+  challengedRides: number;
+}
+
+export function useContagemCorridasDuelo(duel: Duel | null) {
+  const isAtivo = duel?.status === "live" || duel?.status === "accepted";
+  const challengerCustomerId = (duel?.challenger as any)?.customer_id || null;
+  const challengedCustomerId = (duel?.challenged as any)?.customer_id || null;
+
+  return useQuery({
+    queryKey: ["duel-rides-realtime", duel?.id],
+    queryFn: async (): Promise<ContagemCorridasDuelo> => {
+      if (!duel || !challengerCustomerId || !challengedCustomerId) {
+        return { challengerRides: 0, challengedRides: 0 };
+      }
+
+      const [resA, resB] = await Promise.all([
+        supabase.rpc("count_duel_rides", {
+          p_customer_id: challengerCustomerId,
+          p_branch_id: duel.branch_id,
+          p_start_at: duel.start_at,
+          p_end_at: duel.end_at,
+        }),
+        supabase.rpc("count_duel_rides", {
+          p_customer_id: challengedCustomerId,
+          p_branch_id: duel.branch_id,
+          p_start_at: duel.start_at,
+          p_end_at: duel.end_at,
+        }),
+      ]);
+
+      if (resA.error) throw resA.error;
+      if (resB.error) throw resB.error;
+
+      return {
+        challengerRides: Number(resA.data) || 0,
+        challengedRides: Number(resB.data) || 0,
+      };
+    },
+    enabled: !!isAtivo && !!challengerCustomerId && !!challengedCustomerId,
+    refetchInterval: 30000,
+  });
+}
+
 // === Auditoria de Duelos ===
 
 export interface DuelAuditLog {
