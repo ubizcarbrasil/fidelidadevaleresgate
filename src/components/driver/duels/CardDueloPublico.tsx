@@ -101,7 +101,7 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
       <div className="flex items-center justify-between gap-2">
         {/* Motorista A */}
         <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <AvatarMini nome={nomeA} />
+          <AvatarMini nome={nomeA} avatarUrl={avatarA} />
           <span className="text-[11px] font-medium text-foreground truncate w-full text-center">
             {nomeA}
           </span>
