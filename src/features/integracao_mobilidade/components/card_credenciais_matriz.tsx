@@ -80,7 +80,7 @@ export function CardCredenciaisMatriz({ brandId, brandMatrix }: Props) {
                 )}
               </CardTitle>
               <CardDescription>
-                Configuração única para todas as cidades. Usada para buscar recibos e identificar passageiros.
+                Usada exclusivamente para <strong>pontuar passageiros</strong>. É a chave da sede que permite buscar recibos e identificar quem estava na corrida. Configuração única — vale para todas as cidades.
               </CardDescription>
             </div>
             <CollapsibleTrigger asChild>
