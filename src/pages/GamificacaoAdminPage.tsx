@@ -106,17 +106,19 @@ export default function GamificacaoAdminPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center gap-3">
-        <Swords className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-xl font-bold">Gamificação</h1>
-          <p className="text-sm text-muted-foreground">
-            Duelos, Ranking e Cinturão — {branch.name}
-          </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex items-center gap-3">
+          <Swords className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-xl font-bold">Gamificação</h1>
+            <p className="text-sm text-muted-foreground">
+              Duelos, Ranking e Cinturão — {branch.name}
+            </p>
+          </div>
         </div>
         {isBrandScope && (
           <Select value={effectiveBranchId ?? undefined} onValueChange={(val) => setSelectedBranchId(val)}>
-            <SelectTrigger className="w-auto min-w-[160px] ml-auto">
+            <SelectTrigger className="w-full md:w-auto md:min-w-[160px] md:ml-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
