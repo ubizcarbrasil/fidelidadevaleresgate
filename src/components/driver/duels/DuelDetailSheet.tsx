@@ -2,10 +2,10 @@
  * Detalhe de um duelo — placar, countdown, vencedor, pontos em jogo.
  */
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle } from "lucide-react";
+import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Duel } from "./hook_duelos";
-import { resolveParticipantName, resolveParticipantAvatar, cleanDriverName, useFinalizeDuel } from "./hook_duelos";
+import { resolveParticipantName, resolveParticipantAvatar, cleanDriverName, useFinalizeDuel, useAuditoriaDuelo } from "./hook_duelos";
 import { useDuelRating } from "./hook_avaliacao_duelo";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
@@ -35,6 +35,9 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
   const { mutate: finalize, isPending: finalizing } = useFinalizeDuel();
   const [remaining, setRemaining] = useState(0);
   const [showRating, setShowRating] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
+
+  const { data: auditLog } = useAuditoriaDuelo(duel.status === "finished" ? duel.id : null);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponentCustomerId = isChallenger
@@ -224,7 +227,83 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
           </div>
         </div>
 
-        {/* Finalize button */}
+        {/* Audit log section */}
+        {duel.status === "finished" && auditLog && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ border: "1px solid hsl(var(--border))" }}
+          >
+            <button
+              onClick={() => setShowAudit(!showAudit)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
+                Auditoria da Finalização
+              </span>
+              {showAudit ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+
+            {showAudit && (
+              <div className="px-4 pb-4 space-y-3 text-xs">
+                {/* Mismatch warning */}
+                {(auditLog.challenger_rides_counted !== duel.challenger_rides_count ||
+                  auditLog.challenged_rides_counted !== duel.challenged_rides_count) && (
+                  <div
+                    className="flex items-start gap-2 rounded-lg p-3"
+                    style={{
+                      backgroundColor: "hsl(var(--destructive) / 0.1)",
+                      border: "1px solid hsl(var(--destructive) / 0.3)",
+                    }}
+                  >
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--destructive))" }} />
+                    <div>
+                      <p className="font-bold" style={{ color: "hsl(var(--destructive))" }}>Divergência detectada</p>
+                      <p className="text-muted-foreground mt-0.5">
+                        Auditoria: {auditLog.challenger_rides_counted}×{auditLog.challenged_rides_counted} | Exibido: {duel.challenger_rides_count}×{duel.challenged_rides_count}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Finalizado em</span>
+                    <span className="font-medium text-foreground">
+                      {format(new Date(auditLog.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Janela de contagem</span>
+                    <span className="font-medium text-foreground">
+                      {format(new Date(auditLog.count_window_start), "dd/MM HH:mm", { locale: ptBR })} — {format(new Date(auditLog.count_window_end), "dd/MM HH:mm", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Corridas desafiante</span>
+                    <span className="font-medium text-foreground">
+                      {auditLog.challenger_rides_counted} ({auditLog.challenger_ride_ids?.length || 0} IDs)
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Corridas desafiado</span>
+                    <span className="font-medium text-foreground">
+                      {auditLog.challenged_rides_counted} ({auditLog.challenged_ride_ids?.length || 0} IDs)
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Pontos liquidados</span>
+                    <span className="font-medium text-foreground">{auditLog.points_settled ? "Sim ✅" : "Não"}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Finalizado por</span>
+                    <span className="font-medium text-foreground">{auditLog.finalized_by}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {canFinalize && (
           <Button onClick={() => finalize({
             duelId: duel.id,
