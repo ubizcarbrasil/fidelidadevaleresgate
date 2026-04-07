@@ -267,6 +267,29 @@ export default function MachineIntegrationPage() {
     enabled: !!currentBrandId,
   });
 
+  /* ── Query: brand-level matrix credentials ── */
+  const { data: brandMatrix } = useQuery({
+    queryKey: ["brand-matrix", currentBrandId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("brands")
+        .select("matrix_api_key, matrix_basic_auth_user, matrix_basic_auth_password")
+        .eq("id", currentBrandId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { matrix_api_key: string | null; matrix_basic_auth_user: string | null; matrix_basic_auth_password: string | null } | null;
+    },
+    enabled: !!currentBrandId,
+  });
+
+  useEffect(() => {
+    if (brandMatrix) {
+      setMatrixApiKey(brandMatrix.matrix_api_key || "");
+      setMatrixBasicUser(brandMatrix.matrix_basic_auth_user || "");
+      setMatrixBasicPass(brandMatrix.matrix_basic_auth_password || "");
+    }
+  }, [brandMatrix]);
+
   const activeIntegrations = integrations.filter((i) => i.is_active);
   const selectedIntegration = selectedBranchId
     ? integrations.find((i) => i.branch_id === selectedBranchId && i.is_active)
