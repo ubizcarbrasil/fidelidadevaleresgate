@@ -20,6 +20,7 @@ import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
 import AjudaDuelosSheet from "./AjudaDuelosSheet";
 import CardDueloPublico from "./CardDueloPublico";
 import ArenaAoVivo from "./ArenaAoVivo";
+import PerfilMotoristaSheet from "./PerfilMotoristaSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ConfigDuelos } from "./hook_config_duelos";
 import type { Duel } from "./hook_duelos";
