@@ -21,9 +21,9 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
   const [showConfirm, setShowConfirm] = useState(false);
 
   const isChallenger = participantId === duel.challenger_id;
-  const opponentName = isChallenger
-    ? cleanDriverName((duel.challenged as any)?.customers?.name)
-    : cleanDriverName((duel.challenger as any)?.customers?.name);
+  const opponent = isChallenger ? duel.challenged : duel.challenger;
+  const opponentName = resolveParticipantName(opponent);
+  const opponentAvatar = resolveParticipantAvatar(opponent);
   const opponentCustomerId = isChallenger
     ? (duel.challenged as any)?.customer_id
     : (duel.challenger as any)?.customer_id;
