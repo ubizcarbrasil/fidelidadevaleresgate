@@ -180,7 +180,6 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
               </Button>
             )}
           </div>
-        )}
 
         {/* Pending challenges received */}
         {pendingChallenges.length > 0 && (
