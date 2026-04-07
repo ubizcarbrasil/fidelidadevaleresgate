@@ -96,7 +96,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
       const cleanCpf = driver.cpf.replace(/\D/g, "");
       localStorage.setItem(`driver_session_cpf_${brandId}`, cleanCpf);
     }
-    const url = `/customer-preview?brandId=${brandId}`;
+    const url = `/driver?brandId=${brandId}`;
     window.open(url, "_blank");
   };
 
