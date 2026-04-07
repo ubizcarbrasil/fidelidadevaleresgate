@@ -97,6 +97,15 @@ export default function DuelCard({ duel, participantId, onClick }: Props) {
           </span>
         )}
       </div>
+
+      {(duel.status === "live" || duel.status === "accepted") && (
+        <div className="mt-2 pt-2" style={{ borderTop: "1px solid hsl(var(--border) / 0.5)" }}>
+          <Button size="sm" variant="outline" className="w-full gap-2 text-xs">
+            <Eye className="h-3.5 w-3.5" />
+            Acompanhar Duelo
+          </Button>
+        </div>
+      )}
     </button>
   );
 }
