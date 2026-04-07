@@ -87,32 +87,6 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
         </div>
       </div>
 
-      {/* Convite para ativar */}
-      {!participou && (
-        <motion.div
-          whileTap={{ scale: 0.97 }}
-          className="rounded-2xl p-5 relative overflow-hidden cursor-pointer"
-          style={{
-            background: "linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.04) 100%)",
-            border: "1px dashed hsl(var(--primary) / 0.4)",
-          }}
-          onClick={() => setShowDuelsHub(true)}
-        >
-          <div className="absolute -bottom-6 -right-6 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "hsl(var(--primary))" }} />
-          <div className="flex items-center gap-3 relative z-10">
-            <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))" }}>
-              <Zap className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-extrabold text-foreground">Entre na arena! 🥊</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Ative os duelos e mostre quem manda nessa cidade
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </motion.div>
-      )}
 
       {/* 1. Duelos ao vivo */}
       {config.visualizacaoPublica && (
