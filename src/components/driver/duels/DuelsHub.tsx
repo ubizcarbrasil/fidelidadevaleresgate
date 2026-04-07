@@ -114,6 +114,10 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
     return <RankingCidadeSheet onBack={() => setShowRanking(false)} />;
   }
 
+  if (showPerfil) {
+    return <PerfilMotoristaSheet onBack={() => setShowPerfil(false)} />;
+  }
+
   if (showCinturao) {
     return <CinturaoCidadeSheet onBack={() => setShowCinturao(false)} />;
   }
