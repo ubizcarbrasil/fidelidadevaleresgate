@@ -136,7 +136,7 @@ export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
 
         {/* Motorista B */}
         <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <AvatarMini nome={nomeB} />
+          <AvatarMini nome={nomeB} avatarUrl={avatarB} />
           <span className="text-[11px] font-medium text-foreground truncate w-full text-center">
             {nomeB}
           </span>

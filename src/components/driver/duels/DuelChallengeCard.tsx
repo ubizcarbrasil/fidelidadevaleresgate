@@ -49,12 +49,16 @@ export default function DuelChallengeCard({ duel }: Props) {
       }}
     >
       <div className="flex items-center gap-2">
-        <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "hsl(var(--warning) / 0.15)" }}
-        >
-          <Swords className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
-        </div>
+        {challengerAvatar ? (
+          <img src={challengerAvatar} alt={challengerName} className="h-8 w-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: "hsl(var(--warning) / 0.15)" }}
+          >
+            <Swords className="h-4 w-4" style={{ color: "hsl(var(--warning))" }} />
+          </div>
+        )}
         <div className="flex-1">
           <p className="text-sm font-bold text-foreground">Desafio de {challengerName}</p>
           <p className="text-[11px] text-muted-foreground">

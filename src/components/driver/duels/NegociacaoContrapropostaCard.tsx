@@ -40,12 +40,16 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
       }}
     >
       <div className="flex items-center gap-2">
-        <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "hsl(var(--info) / 0.15)" }}
-        >
-          <MessageSquare className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
-        </div>
+        {opponentAvatar ? (
+          <img src={opponentAvatar} alt={opponentName} className="h-8 w-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <div
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: "hsl(var(--info) / 0.15)" }}
+          >
+            <MessageSquare className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
+          </div>
+        )}
         <div>
           <p className="text-sm font-bold text-foreground">Contraproposta de {opponentName}</p>
           <p className="text-[11px] text-muted-foreground">

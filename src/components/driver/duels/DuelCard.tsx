@@ -53,7 +53,11 @@ export default function DuelCard({ duel, participantId, onClick }: Props) {
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Swords className="h-4 w-4" style={{ color: cfg.color }} />
+          {opponentAvatar ? (
+            <img src={opponentAvatar} alt={opponentName} className="h-6 w-6 rounded-full object-cover shrink-0" />
+          ) : (
+            <Swords className="h-4 w-4" style={{ color: cfg.color }} />
+          )}
           <span className="text-sm font-bold text-foreground">vs {opponentName}</span>
         </div>
         <div className="flex items-center gap-1.5">
