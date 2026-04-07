@@ -4,7 +4,7 @@
 import { Swords, Flame, ChevronRight, Crown, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { cleanDriverName, type Duel } from "../hook_duelos";
+import { cleanDriverName, type Duel, useContagemCorridasDuelo } from "../hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 
 interface Props {
