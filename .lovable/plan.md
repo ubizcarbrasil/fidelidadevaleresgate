@@ -1,49 +1,46 @@
 
 
-## Correção: Layout dos botões no card de desafio
+## Popup de Desafio Recebido em Tempo Real
 
 ### Problema
-Os 3 botões (Aceitar, Contraproposta, Recusar) estão numa única linha `flex`, o que causa overflow em telas mobile de 430px — o botão "Recusar" fica cortado/fora do card.
+Quando um motorista lança um duelo, o desafiado não recebe nenhum aviso visual. A query de duelos só atualiza manualmente, e o listener de eventos (`hook_listener_notificacoes`) apenas loga no console sem ação visual.
 
 ### Solução
-Reorganizar os botões em duas linhas quando há aposta de pontos:
-- **Linha 1**: "Aceitar" (largura total)
-- **Linha 2**: "Contraproposta" e "Recusar" lado a lado (cada um flex-1)
+Criar um sistema de escuta em tempo real (Realtime) na tabela `driver_duels` + um popup/dialog que aparece automaticamente quando um novo desafio é detectado.
 
-Quando não há aposta (sem botão Contraproposta), manter "Aceitar" e "Recusar" numa única linha.
+### Etapas
 
-### Alteração
-**Arquivo**: `src/components/driver/duels/DuelChallengeCard.tsx`
-
-Substituir o bloco de botões (linhas 101-136) para usar `flex-col` com sub-rows:
-
-```tsx
-{!showCounter ? (
-  <div className="flex flex-col gap-2">
-    <Button
-      onClick={...}
-      disabled={...}
-      className="w-full gap-1.5"
-      size="sm"
-    >
-      <ShieldCheck className="h-4 w-4" />
-      {hasBet ? `Aceitar (${formatPoints(...)} pts)` : "Aceitar"}
-    </Button>
-    <div className="flex gap-2">
-      {hasBet && (
-        <Button variant="secondary" className="flex-1 gap-1.5" size="sm">
-          <MessageSquare className="h-4 w-4" />
-          Contraproposta
-        </Button>
-      )}
-      <Button variant="outline" className="flex-1 gap-1.5" size="sm">
-        <Flag className="h-4 w-4" />
-        {hasBet ? "Recusar" : "Arregar 😅"}
-      </Button>
-    </div>
-  </div>
-) : (...)}
+**1. Habilitar Realtime na tabela `driver_duels`**
+Migração SQL:
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.driver_duels;
 ```
 
-Impacto: apenas layout CSS, sem mudança de lógica.
+**2. Criar hook `hook_escuta_desafios_recebidos.ts`**
+Hook que:
+- Obtém o `participant_id` do motorista logado
+- Assina canal Realtime filtrando `challenged_id=eq.{participantId}` com evento `INSERT`
+- Quando detecta novo desafio com status `pending`, invalida a query `driver-duels` e retorna o desafio para exibir no popup
+- Inclui estado de controle (desafio pendente, fechar popup)
+
+**3. Criar componente `PopupDesafioRecebido.tsx`**
+Dialog/modal que exibe:
+- Nome do desafiante (nickname ou nome do customer)
+- Período do duelo (data início → fim)
+- Valor da aposta (se houver)
+- Botão "Ver Desafio" que navega para o DuelsHub
+- Botão "Fechar" para dispensar
+
+Visual: estilo arena com ícone de espadas, gradiente de fundo, animação de entrada.
+
+**4. Integrar no `DriverMarketplace.tsx`**
+- Importar o hook e o componente popup
+- Renderizar o popup no nível raiz do marketplace (fora de qualquer overlay)
+- Ao clicar "Ver Desafio", abrir o DuelsHub automaticamente
+
+### Arquivos afetados
+- **Nova migração SQL** — habilitar realtime
+- **Novo**: `src/components/driver/duels/hook_escuta_desafios_recebidos.ts`
+- **Novo**: `src/components/driver/duels/PopupDesafioRecebido.tsx`
+- **Editado**: `src/components/driver/DriverMarketplace.tsx` — integrar hook + popup
 
