@@ -95,11 +95,13 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                   <TableHead>Status</TableHead>
                   <TableHead>Período</TableHead>
                   <TableHead className="text-right">Placar</TableHead>
+                  <TableHead className="text-right">Prêmio</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {duelos.map((d: any) => {
                   const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
+                  const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
                   return (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm">{getNome(d.challenger)}</TableCell>
@@ -110,6 +112,14 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                       </TableCell>
                       <TableCell className="text-right text-sm font-medium">
                         {d.challenger_rides_count ?? "—"} × {d.challenged_rides_count ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {totalPrize > 0 ? (
+                          <span className="flex items-center justify-end gap-1">
+                            <Trophy className="h-3.5 w-3.5 text-yellow-500" />
+                            {formatPoints(totalPrize)}
+                          </span>
+                        ) : "—"}
                       </TableCell>
                     </TableRow>
                   );
