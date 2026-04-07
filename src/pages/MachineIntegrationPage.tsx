@@ -597,7 +597,64 @@ export default function MachineIntegrationPage() {
         description="Conecte cada cidade à sua plataforma de corridas para pontuar clientes automaticamente"
       />
 
-      {/* ─── ACTIVE INTEGRATIONS LIST ─── */}
+      {/* ═══════ SEÇÃO 1 — MATRIZ (nível marca) ═══════ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="h-5 w-5 text-primary" />
+            Credenciais da Matriz (Sede)
+          </CardTitle>
+          <CardDescription>
+            Configuração única para todas as cidades. A API da Matriz é usada para buscar recibos e identificar passageiros (CPF, telefone, nome).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 max-w-lg">
+          <div className="space-y-2">
+            <Label>Chave API da Matriz</Label>
+            <div className="relative">
+              <Input
+                type={showMatrixApiKey ? "text" : "password"}
+                value={matrixApiKey}
+                onChange={(e) => setMatrixApiKey(e.target.value)}
+                placeholder="api-key da matriz"
+              />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixApiKey(!showMatrixApiKey)}>
+                {showMatrixApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Usuário Basic Auth da Matriz</Label>
+            <Input value={matrixBasicUser} onChange={(e) => setMatrixBasicUser(e.target.value)} placeholder="Usuário de autenticação da matriz" />
+          </div>
+          <div className="space-y-2">
+            <Label>Senha Basic Auth da Matriz</Label>
+            <div className="relative">
+              <Input type={showMatrixPass ? "text" : "password"} value={matrixBasicPass} onChange={(e) => setMatrixBasicPass(e.target.value)} placeholder="Senha de autenticação da matriz" />
+              <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowMatrixPass(!showMatrixPass)}>
+                {showMatrixPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => saveMatrixMutation.mutate()} disabled={saveMatrixMutation.isPending}>
+              {matrixSaved ? <Check className="h-4 w-4 text-primary mr-1" /> : saveMatrixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+              Salvar credenciais da Matriz
+            </Button>
+          </div>
+          {matrixApiKey && (
+            <Alert className="border-primary/30 bg-primary/5">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-xs">
+                Matriz configurada. Todas as cidades usarão estas credenciais para buscar recibos e pontuar passageiros.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ═══════ SEÇÃO 2 — CIDADES (nível filial) ═══════ */}
+
       {activeIntegrations.length > 0 && (
         <Card>
           <CardHeader>
