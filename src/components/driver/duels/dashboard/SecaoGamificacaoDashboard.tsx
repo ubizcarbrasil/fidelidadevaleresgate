@@ -104,9 +104,7 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
       </div>
 
       {/* 4. Desempenho pessoal */}
-      {participou && (
-        <CardDesempenhoPessoal duels={meusDuelos} participantId={participantId} reputacao={reputacao || null} onAbrir={() => setShowDuelsHub(true)} fontHeading={fontHeading} />
-      )}
+      <CardDesempenhoPessoal duels={meusDuelos} participantId={participantId} reputacao={reputacao || null} onAbrir={() => setShowDuelsHub(true)} fontHeading={fontHeading} />
 
       {/* 5. Palpites / Torcida */}
       {config.visualizacaoPublica && (

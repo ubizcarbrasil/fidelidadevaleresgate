@@ -121,37 +121,24 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
       </header>
 
       <div className="flex-1 px-4 pb-8 space-y-5 max-w-lg mx-auto w-full">
-        {/* Toggle participation */}
+        {/* Status badge — auto-enrolled */}
         <div
-          className="rounded-xl p-4 flex items-center justify-between"
+          className="rounded-xl p-4 flex items-center gap-3"
           style={{
             backgroundColor: "hsl(var(--card))",
             border: "1px solid hsl(var(--border))",
           }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: isEnabled ? "hsl(var(--success) / 0.15)" : "hsl(var(--muted))" }}
-            >
-              <Shield className="h-5 w-5" style={{ color: isEnabled ? "hsl(var(--success))" : "hsl(var(--muted-foreground))" }} />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground">Participar dos Duelos</p>
-              <p className="text-[11px] text-muted-foreground">
-                {isEnabled ? "Você está visível para desafios" : "Ative para participar"}
-              </p>
-            </div>
+          <div
+            className="h-10 w-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: "hsl(var(--success) / 0.15)" }}
+          >
+            <Shield className="h-5 w-5" style={{ color: "hsl(var(--success))" }} />
           </div>
-          {loadingPart ? (
-            <Skeleton className="h-6 w-11 rounded-full" />
-          ) : (
-            <Switch
-              checked={isEnabled}
-              disabled={toggling}
-              onCheckedChange={(val) => toggleParticipation(val)}
-            />
-          )}
+          <div>
+            <p className="text-sm font-bold text-foreground">Duelos Ativos</p>
+            <p className="text-[11px] text-muted-foreground">Você está visível para desafios ⚔️</p>
+          </div>
         </div>
 
         {/* Action buttons */}
