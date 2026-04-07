@@ -212,7 +212,7 @@ export function CardConfigCidade({ brandId, integration, getBranchName, webhookB
 
         {/* Driver Points Config */}
         <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label className="text-sm flex items-center gap-1.5">
                 <Truck className="h-4 w-4 text-primary" /> Pontuação do Motorista
