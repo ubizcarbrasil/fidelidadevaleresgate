@@ -1,6 +1,7 @@
 /**
  * Hook para gerenciar dados e ações do módulo de duelos.
  */
+import { useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -85,6 +86,22 @@ export function useDuelParticipation() {
     },
     onError: (err: any) => toast.error(err.message || "Erro ao alterar participação"),
   });
+
+  // Auto-enroll: se motorista não tem registro, criar automaticamente com duels_enabled=true
+  const autoEnrolled = useRef(false);
+  useEffect(() => {
+    if (!isLoading && !participant && driver && !autoEnrolled.current) {
+      autoEnrolled.current = true;
+      supabase.rpc("toggle_duel_participation", {
+        p_customer_id: driver.id,
+        p_branch_id: driver.branch_id,
+        p_brand_id: driver.brand_id,
+        p_enabled: true,
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["duel-participant"] });
+      });
+    }
+  }, [isLoading, participant, driver, queryClient]);
 
   return { participant, isLoading, toggleParticipation: toggleMutation.mutate, toggling: toggleMutation.isPending };
 }
