@@ -505,6 +505,16 @@ export function cleanDriverName(name?: string | null): string {
   return name.replace(/\[MOTORISTA\]\s*/gi, "").trim() || "Motorista";
 }
 
+/** Resolve nome do participante priorizando nickname > display_name > customers.name */
+export function resolveParticipantName(p: any): string {
+  return p?.public_nickname || p?.display_name || cleanDriverName(p?.customers?.name);
+}
+
+/** Resolve avatar_url do participante */
+export function resolveParticipantAvatar(p: any): string | null {
+  return p?.avatar_url || null;
+}
+
 export interface CompetitiveProfile {
   total_duels: number;
   wins: number;
