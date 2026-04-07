@@ -3,11 +3,12 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useDuelParticipation, useDriverDuels } from "./hook_duelos";
+import { useDuelosCidade } from "./hook_duelos_publicos";
 import DuelCard from "./DuelCard";
 import DuelChallengeCard from "./DuelChallengeCard";
 import NegociacaoContrapropostaCard from "./NegociacaoContrapropostaCard";
@@ -17,9 +18,11 @@ import MeuDesempenhoSheet from "./MeuDesempenhoSheet";
 import RankingCidadeSheet from "./RankingCidadeSheet";
 import CinturaoCidadeSheet from "./CinturaoCidadeSheet";
 import AjudaDuelosSheet from "./AjudaDuelosSheet";
+import CardDueloPublico from "./CardDueloPublico";
+import ArenaAoVivo from "./ArenaAoVivo";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ConfigDuelos } from "./hook_config_duelos";
+import type { Duel } from "./hook_duelos";
 
 interface Props {
   onBack: () => void;
@@ -31,6 +34,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   useListenerNotificacoesDuelo();
   const { participant, isLoading: loadingPart, toggleParticipation, toggling } = useDuelParticipation();
   const { data: duels, isLoading: loadingDuels } = useDriverDuels();
+  const { data: duelosCidade, isLoading: loadingCidade } = useDuelosCidade(driver?.branch_id);
 
   const [showCreate, setShowCreate] = useState(false);
   const [showDesempenho, setShowDesempenho] = useState(false);
@@ -38,9 +42,19 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const [showCinturao, setShowCinturao] = useState(false);
   const [showAjuda, setShowAjuda] = useState(false);
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
+  const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
 
   const isEnabled = participant?.duels_enabled === true;
   const participantId = participant?.id || null;
+
+  // Duelos públicos ao vivo na cidade (excluindo os próprios do motorista)
+  const duelosCidadeAoVivo = useMemo(() => {
+    if (!duelosCidade) return [];
+    const meusIds = new Set((duels || []).map((d) => d.id));
+    return duelosCidade.filter(
+      (d) => (d.status === "live" || d.status === "accepted") && !meusIds.has(d.id)
+    );
+  }, [duelosCidade, duels]);
 
   const pendingChallenges = useMemo(
     () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId && d.negotiation_status !== "counter_proposed"),
@@ -50,7 +64,6 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const counterProposals = useMemo(
     () => (duels || []).filter((d) => {
       if (d.status !== "pending" || d.negotiation_status !== "counter_proposed") return false;
-      // Show to the person who needs to respond (NOT the one who proposed)
       if (d.counter_proposal_by === "challenged" && participantId === d.challenger_id) return true;
       if (d.counter_proposal_by === "challenger" && participantId === d.challenged_id) return true;
       return false;
@@ -77,6 +90,15 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
     () => (duels || []).find((d) => d.id === selectedDuel) || null,
     [duels, selectedDuel]
   );
+
+  const totalDuels = (duels || []).length;
+  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0;
+
+  // Arena ao vivo (espectador)
+  if (arenaDuel) {
+    const updated = (duelosCidade || []).find((d) => d.id === arenaDuel.id) || arenaDuel;
+    return <ArenaAoVivo duel={updated} onBack={() => setArenaDuel(null)} />;
+  }
 
   if (showCreate) {
     return <CreateDuelSheet onBack={() => setShowCreate(false)} onSuccess={() => setShowCreate(false)} />;
@@ -182,6 +204,24 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           </div>
         </div>
 
+        {/* ── Duelos ao vivo na cidade (público) ── */}
+        {duelosCidadeAoVivo.length > 0 && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Eye className="h-4 w-4" style={{ color: "hsl(var(--success))" }} />
+              🔴 Ao vivo na cidade
+            </h2>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Assista e dê seu palpite nos duelos acontecendo agora!
+            </p>
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+              {duelosCidadeAoVivo.map((d) => (
+                <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Pending challenges received */}
         {pendingChallenges.length > 0 && (
           <section className="space-y-2">
@@ -212,7 +252,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           <section className="space-y-2">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
               <Flame className="h-4 w-4" style={{ color: "hsl(var(--success))" }} />
-              Ao Vivo
+              Meus Duelos Ao Vivo
             </h2>
             {liveDuels.map((d) => (
               <DuelCard key={d.id} duel={d} participantId={participantId} onClick={() => setSelectedDuel(d.id)} />
@@ -247,7 +287,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
         )}
 
         {/* Loading state */}
-        {loadingDuels && (
+        {(loadingDuels || loadingCidade) && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-20 w-full rounded-xl" />
@@ -255,8 +295,8 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
           </div>
         )}
 
-        {/* Empty state */}
-        {!loadingDuels && isEnabled && (duels || []).length === 0 && (
+        {/* Empty state — only when no personal AND no public duels */}
+        {!loadingDuels && !loadingCidade && !hasAnything && (
           <div className="text-center py-8">
             <Swords className="h-12 w-12 mx-auto mb-3" style={{ color: "hsl(var(--muted-foreground) / 0.3)" }} />
             <p className="text-sm text-muted-foreground">Nenhum duelo ainda</p>
