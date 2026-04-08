@@ -415,6 +415,41 @@ export default function BrandPermissionOverflowPage() {
   const hasChanges = Object.keys(localChanges).length > 0 || Object.keys(localSubItemChanges).length > 0;
   const isViewingBranch = activeBranchId !== null;
 
+  const selectedBranchScoringModel = useMemo(() => {
+    if (!activeBranchId || !branches) return null;
+    const branch = branches.find(b => b.id === activeBranchId);
+    return (branch?.scoring_model as string) || null;
+  }, [activeBranchId, branches]);
+
+  const alignToModel = useCallback(() => {
+    if (!selectedBranchScoringModel || selectedBranchScoringModel === "BOTH") {
+      toast.info("Este modelo (Ambos) permite todas as permissões. Nenhuma alteração necessária.");
+      return;
+    }
+    if (!permissions) return;
+
+    const changes: Record<string, Partial<ConfigRow>> = { ...localChanges };
+    let count = 0;
+
+    permissions.forEach(p => {
+      if (isOutOfModel(p.module, selectedBranchScoringModel)) {
+        const currentBrand = getEffectiveValue(p.key, "allowed_for_brand");
+        const currentStore = getEffectiveValue(p.key, "allowed_for_store");
+        if (currentBrand || currentStore) {
+          changes[p.key] = { ...changes[p.key], allowed_for_brand: false, allowed_for_store: false };
+          count++;
+        }
+      }
+    });
+
+    setLocalChanges(changes);
+    if (count > 0) {
+      toast.success(`${count} permissão(ões) fora do modelo desativada(s). Salve para aplicar.`);
+    } else {
+      toast.info("Todas as permissões já estão alinhadas ao modelo.");
+    }
+  }, [selectedBranchScoringModel, permissions, localChanges, getEffectiveValue]);
+
   /* ─── render sub-items (subclass) ─── */
   const renderSubItems = (permId: string, parentEnabled: boolean) => {
     const items = subItemsByPermission[permId];
