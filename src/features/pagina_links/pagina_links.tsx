@@ -3,7 +3,7 @@ import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink,
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
-const BASE_URL = "https://fidelidadevaleresgate.lovable.app";
+const getBaseUrl = () => window.location.origin;
 
 interface LinkCard {
   titulo: string;
@@ -153,7 +153,7 @@ export default function PaginaLinks() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.cards.map((card) => {
                   const Icone = card.icone;
-                  const urlCompleta = `${BASE_URL}${card.rota}`;
+                  const urlCompleta = `${getBaseUrl()}${card.rota}`;
                   return (
                     <a
                       key={card.titulo + card.rota}
