@@ -2990,6 +2990,154 @@ export type Database = {
           },
         ]
       }
+      duel_side_bets: {
+        Row: {
+          bettor_a_customer_id: string
+          bettor_a_points: number
+          bettor_a_predicted_winner: string
+          bettor_b_customer_id: string | null
+          bettor_b_points: number | null
+          bettor_b_predicted_winner: string | null
+          branch_id: string
+          brand_id: string
+          counter_proposal_points: number | null
+          created_at: string
+          duel_id: string
+          duel_winner_bonus: number | null
+          id: string
+          points_reserved: boolean
+          settled_at: string | null
+          status: string
+          updated_at: string
+          winner_customer_id: string | null
+        }
+        Insert: {
+          bettor_a_customer_id: string
+          bettor_a_points: number
+          bettor_a_predicted_winner: string
+          bettor_b_customer_id?: string | null
+          bettor_b_points?: number | null
+          bettor_b_predicted_winner?: string | null
+          branch_id: string
+          brand_id: string
+          counter_proposal_points?: number | null
+          created_at?: string
+          duel_id: string
+          duel_winner_bonus?: number | null
+          id?: string
+          points_reserved?: boolean
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+          winner_customer_id?: string | null
+        }
+        Update: {
+          bettor_a_customer_id?: string
+          bettor_a_points?: number
+          bettor_a_predicted_winner?: string
+          bettor_b_customer_id?: string | null
+          bettor_b_points?: number | null
+          bettor_b_predicted_winner?: string | null
+          branch_id?: string
+          brand_id?: string
+          counter_proposal_points?: number | null
+          created_at?: string
+          duel_id?: string
+          duel_winner_bonus?: number | null
+          id?: string
+          points_reserved?: boolean
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+          winner_customer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_side_bets_bettor_a_customer_id_fkey"
+            columns: ["bettor_a_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_bettor_a_customer_id_fkey"
+            columns: ["bettor_a_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_bettor_a_predicted_winner_fkey"
+            columns: ["bettor_a_predicted_winner"]
+            isOneToOne: false
+            referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_bettor_b_customer_id_fkey"
+            columns: ["bettor_b_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_bettor_b_customer_id_fkey"
+            columns: ["bettor_b_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_bettor_b_predicted_winner_fkey"
+            columns: ["bettor_b_predicted_winner"]
+            isOneToOne: false
+            referencedRelation: "driver_duel_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "driver_duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_winner_customer_id_fkey"
+            columns: ["winner_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_side_bets_winner_customer_id_fkey"
+            columns: ["winner_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       earning_events: {
         Row: {
           branch_id: string
@@ -7206,6 +7354,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_side_bet: {
+        Args: { p_bet_id: string; p_customer_id: string }
+        Returns: Json
+      }
       admin_boost_duel: {
         Args: { p_amount: number; p_branch_id: string; p_duel_id: string }
         Returns: Json
@@ -7248,6 +7400,14 @@ export type Database = {
         }
         Returns: Json
       }
+      counter_propose_side_bet: {
+        Args: {
+          p_bet_id: string
+          p_counter_points: number
+          p_customer_id: string
+        }
+        Returns: Json
+      }
       create_duel_challenge:
         | {
             Args: {
@@ -7272,6 +7432,15 @@ export type Database = {
             }
             Returns: Json
           }
+      create_side_bet: {
+        Args: {
+          p_customer_id: string
+          p_duel_id: string
+          p_points: number
+          p_predicted_winner_participant_id: string
+        }
+        Returns: Json
+      }
       debit_branch_wallet: {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
@@ -7464,6 +7633,10 @@ export type Database = {
         Args: { p_accept: boolean; p_customer_id: string; p_duel_id: string }
         Returns: Json
       }
+      respond_side_bet_counter: {
+        Args: { p_accept: boolean; p_bet_id: string; p_customer_id: string }
+        Returns: Json
+      }
       respond_to_duel: {
         Args: { p_accept: boolean; p_customer_id: string; p_duel_id: string }
         Returns: Json
@@ -7509,6 +7682,10 @@ export type Database = {
       seed_affiliate_categories: {
         Args: { p_brand_id: string }
         Returns: undefined
+      }
+      settle_side_bets: {
+        Args: { p_duel_id: string; p_winner_participant_id: string }
+        Returns: Json
       }
       toggle_duel_participation: {
         Args: {
