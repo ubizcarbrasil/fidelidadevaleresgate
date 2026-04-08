@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, Suspense, startTransition, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandInfo } from "@/hooks/useBrandName";
@@ -129,9 +129,17 @@ function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+
+  // Allow BRAND/TENANT/ROOT admins to view a specific branch dashboard via URL param
+  const urlBranchId = searchParams.get("branchId");
+  const viewingBranchId = urlBranchId && ["ROOT", "TENANT", "BRAND"].includes(consoleScope)
+    ? urlBranchId
+    : null;
+  const isViewingBranch = !!viewingBranchId;
 
   useRealtimeRefresh();
 
@@ -301,6 +309,11 @@ export default function Dashboard() {
       {/* Branch-specific dashboard */}
       {consoleScope === "BRANCH" && currentBranchId && (
         <BranchDashboardSection branchId={currentBranchId} />
+      )}
+
+      {/* Brand/Tenant/Root viewing a specific branch */}
+      {isViewingBranch && viewingBranchId && (
+        <BranchDashboardSection branchId={viewingBranchId} />
       )}
 
       {/* Sections hidden for BRANCH scope */}

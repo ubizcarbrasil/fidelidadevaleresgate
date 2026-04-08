@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 
 export default function DemoAccessCard() {
   const { currentBrandId } = useBrandGuard();
+  const navigate = useNavigate();
 
   const { data: branches } = useQuery({
     queryKey: ["demo-branches", currentBrandId],
@@ -110,12 +112,7 @@ export default function DemoAccessCard() {
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs gap-1 shrink-0"
-                onClick={() =>
-                  window.open(
-                    `${origin}/branch-wallet?branchId=${branch.id}`,
-                    "_blank"
-                  )
-                }
+                onClick={() => navigate(`/index?branchId=${branch.id}`)}
               >
                 <ExternalLink className="h-3 w-3" /> Abrir
               </Button>
