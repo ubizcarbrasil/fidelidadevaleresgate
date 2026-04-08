@@ -85,21 +85,48 @@ export default function BrandBranchesPage() {
         <div className="space-y-2">
           {branches.map((branch) => (
             <Card key={branch.id} className="rounded-xl">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="h-4 w-4 text-primary" />
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <MapPin className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {branch.city || branch.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {branch.state || "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {branch.city || branch.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {branch.state || "—"}
-                    </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Switch
+                      checked={branch.is_active}
+                      onCheckedChange={(checked) =>
+                        toggleMutation.mutate({ id: branch.id, is_active: checked })
+                      }
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Resetar pontos"
+                      onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => navigate(`/brand-branches/${branch.id}`)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap pl-12">
                   {(branch as any).scoring_model === "DRIVER_ONLY" && (
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <Car className="h-3 w-3" /> Motorista
@@ -123,29 +150,6 @@ export default function BrandBranchesPage() {
                   <Badge variant={branch.is_active ? "default" : "secondary"} className="text-[10px]">
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>
-                  <Switch
-                    checked={branch.is_active}
-                    onCheckedChange={(checked) =>
-                      toggleMutation.mutate({ id: branch.id, is_active: checked })
-                    }
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title="Resetar pontos"
-                    onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => navigate(`/brand-branches/${branch.id}`)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>
