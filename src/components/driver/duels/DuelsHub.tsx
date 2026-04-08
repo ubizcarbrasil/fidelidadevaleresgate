@@ -247,8 +247,25 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
             </div>
           </section>
         )}
+        {/* ── Duelos agendados na cidade (público) ── */}
+        {duelosCidadeAgendados.length > 0 && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
+              📅 Agendados na cidade
+            </h2>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Duelos confirmados que vão rolar em breve!
+            </p>
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+              {duelosCidadeAgendados.map((d) => (
+                <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} />
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Pending challenges received */}
+
         {pendingChallenges.length > 0 && (
           <section className="space-y-2">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
