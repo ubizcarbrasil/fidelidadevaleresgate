@@ -7636,6 +7636,21 @@ export type Database = {
           points_balance: number
         }[]
       }
+      lookup_driver_by_id: {
+        Args: { p_brand_id: string; p_customer_id: string }
+        Returns: {
+          branch_id: string
+          branch_name: string
+          brand_id: string
+          cpf: string
+          email: string
+          id: string
+          money_balance: number
+          name: string
+          phone: string
+          points_balance: number
+        }[]
+      }
       rate_limit_cleanup: { Args: never; Returns: undefined }
       redeem_city_offer_driver: {
         Args: {
