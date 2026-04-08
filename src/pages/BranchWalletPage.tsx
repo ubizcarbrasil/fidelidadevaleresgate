@@ -94,44 +94,44 @@ export default function BranchWalletPage() {
   const canLoad = ["ROOT", "BRAND", "TENANT"].includes(consoleScope);
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
-    queryKey: ["branch-wallet", currentBranchId],
+    queryKey: ["branch-wallet", effectiveBranchId],
     queryFn: async () => {
-      if (!currentBranchId) return null;
+      if (!effectiveBranchId) return null;
       const { data } = await supabase
         .from("branch_points_wallet")
         .select("*")
-        .eq("branch_id", currentBranchId)
+        .eq("branch_id", effectiveBranchId)
         .maybeSingle();
       return data;
     },
-    enabled: !!currentBranchId,
+    enabled: !!effectiveBranchId,
   });
 
   const { data: transactions, isLoading: txLoading } = useQuery({
-    queryKey: ["branch-wallet-transactions", currentBranchId],
+    queryKey: ["branch-wallet-transactions", effectiveBranchId],
     queryFn: async () => {
-      if (!currentBranchId) return [];
+      if (!effectiveBranchId) return [];
       const { data } = await supabase
         .from("branch_wallet_transactions")
         .select("*")
-        .eq("branch_id", currentBranchId)
+        .eq("branch_id", effectiveBranchId)
         .order("created_at", { ascending: false })
         .limit(50);
       return data || [];
     },
-    enabled: !!currentBranchId,
+    enabled: !!effectiveBranchId,
   });
 
   const loadMutation = useMutation({
     mutationFn: async () => {
       const amount = Number(loadAmount);
       if (!amount || amount <= 0) throw new Error("Valor inválido");
-      if (!currentBranchId || !currentBrandId) throw new Error("Cidade não identificada");
+      if (!effectiveBranchId || !currentBrandId) throw new Error("Cidade não identificada");
 
       const { data: existing } = await supabase
         .from("branch_points_wallet")
         .select("id, balance, total_loaded")
-        .eq("branch_id", currentBranchId)
+        .eq("branch_id", effectiveBranchId)
         .maybeSingle();
 
       if (existing) {
@@ -142,17 +142,17 @@ export default function BranchWalletPage() {
           .eq("id", existing.id);
 
         await supabase.from("branch_wallet_transactions").insert({
-          branch_id: currentBranchId, brand_id: currentBrandId,
+          branch_id: effectiveBranchId, brand_id: currentBrandId,
           transaction_type: "LOAD", amount, balance_after: newBalance,
           description: loadDescription || "Recarga de pontos",
         });
       } else {
         await supabase.from("branch_points_wallet").insert({
-          branch_id: currentBranchId, brand_id: currentBrandId,
+          branch_id: effectiveBranchId, brand_id: currentBrandId,
           balance: amount, total_loaded: amount, total_distributed: 0,
         });
         await supabase.from("branch_wallet_transactions").insert({
-          branch_id: currentBranchId, brand_id: currentBrandId,
+          branch_id: effectiveBranchId, brand_id: currentBrandId,
           transaction_type: "LOAD", amount, balance_after: amount,
           description: loadDescription || "Recarga inicial de pontos",
         });
@@ -169,7 +169,7 @@ export default function BranchWalletPage() {
     onError: (err: Error) => { toast.error(err.message || "Erro ao recarregar"); },
   });
 
-  if (!currentBranchId) {
+  if (!effectiveBranchId) {
     return <div className="p-6 text-center text-muted-foreground">Nenhuma cidade vinculada ao seu perfil.</div>;
   }
 
