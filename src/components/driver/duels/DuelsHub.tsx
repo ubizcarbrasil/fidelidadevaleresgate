@@ -51,13 +51,17 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const participantId = participant?.id || null;
 
   // Duelos públicos ao vivo na cidade (excluindo os próprios do motorista)
+  const meusIds = useMemo(() => new Set((duels || []).map((d) => d.id)), [duels]);
+
   const duelosCidadeAoVivo = useMemo(() => {
     if (!duelosCidade) return [];
-    const meusIds = new Set((duels || []).map((d) => d.id));
-    return duelosCidade.filter(
-      (d) => (d.status === "live" || d.status === "accepted") && !meusIds.has(d.id)
-    );
-  }, [duelosCidade, duels]);
+    return duelosCidade.filter((d) => d.status === "live" && !meusIds.has(d.id));
+  }, [duelosCidade, meusIds]);
+
+  const duelosCidadeAgendados = useMemo(() => {
+    if (!duelosCidade) return [];
+    return duelosCidade.filter((d) => d.status === "accepted" && !meusIds.has(d.id));
+  }, [duelosCidade, meusIds]);
 
   // Feed de atividade: todos os duelos da cidade (últimos 30 dias)
   const feedAtividade = useMemo(() => {
@@ -101,7 +105,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   );
 
   const totalDuels = (duels || []).length;
-  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0 || feedAtividade.length > 0;
+  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0 || duelosCidadeAgendados.length > 0 || feedAtividade.length > 0;
 
   // Arena ao vivo (espectador)
   if (arenaDuel) {
@@ -243,8 +247,25 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
             </div>
           </section>
         )}
+        {/* ── Duelos agendados na cidade (público) ── */}
+        {duelosCidadeAgendados.length > 0 && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" style={{ color: "hsl(var(--info))" }} />
+              📅 Agendados na cidade
+            </h2>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Duelos confirmados que vão rolar em breve!
+            </p>
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+              {duelosCidadeAgendados.map((d) => (
+                <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} />
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Pending challenges received */}
+
         {pendingChallenges.length > 0 && (
           <section className="space-y-2">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
