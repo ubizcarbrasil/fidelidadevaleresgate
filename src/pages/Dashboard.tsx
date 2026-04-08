@@ -129,9 +129,17 @@ function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+
+  // Allow BRAND/TENANT/ROOT admins to view a specific branch dashboard via URL param
+  const urlBranchId = searchParams.get("branchId");
+  const viewingBranchId = urlBranchId && ["ROOT", "TENANT", "BRAND"].includes(consoleScope)
+    ? urlBranchId
+    : null;
+  const isViewingBranch = !!viewingBranchId;
 
   useRealtimeRefresh();
 
