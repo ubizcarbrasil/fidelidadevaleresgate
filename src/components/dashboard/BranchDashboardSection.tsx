@@ -15,6 +15,7 @@ import BranchKpiClientesCadastrados from "./branch/BranchKpiClientesCadastrados"
 import BranchKpiClientesAtivos from "./branch/BranchKpiClientesAtivos";
 import BranchKpiOfertasAtivas from "./branch/BranchKpiOfertasAtivas";
 import BranchKpiLojasParceiras from "./branch/BranchKpiLojasParceiras";
+import BranchArenaDuelos from "./branch/BranchArenaDuelos";
 
 interface Props {
   branchId: string;
