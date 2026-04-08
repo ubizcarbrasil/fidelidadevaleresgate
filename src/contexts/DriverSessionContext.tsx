@@ -32,6 +32,10 @@ function storageKey(brandId: string) {
   return `driver_session_cpf_${brandId}`;
 }
 
+function requestStorageKey(brandId: string, requestKey: string) {
+  return `driver_session_request_${brandId}_${requestKey}`;
+}
+
 async function fetchDriverByCpf(brandId: string, cpf: string): Promise<DriverCustomer | null> {
   const { data, error } = await supabase
     .rpc("lookup_driver_by_cpf", { p_brand_id: brandId, p_cpf: cpf });
@@ -53,9 +57,11 @@ async function fetchDriverByCpf(brandId: string, cpf: string): Promise<DriverCus
 
 export function DriverSessionProvider({
   brandId,
+  sessionRequestKey,
   children,
 }: {
   brandId: string;
+  sessionRequestKey?: string | null;
   children: React.ReactNode;
 }) {
   const [driver, setDriver] = useState<DriverCustomer | null>(null);
@@ -63,17 +69,31 @@ export function DriverSessionProvider({
 
   // Restore session from localStorage
   useEffect(() => {
-    const savedCpf = localStorage.getItem(storageKey(brandId));
+    const requestedCpf = sessionRequestKey
+      ? localStorage.getItem(requestStorageKey(brandId, sessionRequestKey))
+      : null;
+    const savedCpf = requestedCpf || localStorage.getItem(storageKey(brandId));
+
     if (!savedCpf) {
       setLoading(false);
       return;
     }
+
     fetchDriverByCpf(brandId, savedCpf).then((d) => {
-      if (d) setDriver(d);
-      else localStorage.removeItem(storageKey(brandId));
+      if (d) {
+        setDriver(d);
+        localStorage.setItem(storageKey(brandId), cleanCpf(savedCpf));
+      } else if (!requestedCpf) {
+        localStorage.removeItem(storageKey(brandId));
+      }
+
+      if (sessionRequestKey) {
+        localStorage.removeItem(requestStorageKey(brandId, sessionRequestKey));
+      }
+
       setLoading(false);
     });
-  }, [brandId]);
+  }, [brandId, sessionRequestKey]);
 
   const loginByCpf = useCallback(
     async (cpf: string): Promise<{ success: boolean; error?: string }> => {
@@ -103,12 +123,24 @@ export function DriverSessionProvider({
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState !== "visible") return;
-      const savedCpf = localStorage.getItem(storageKey(brandId));
+      const requestedCpf = sessionRequestKey
+        ? localStorage.getItem(requestStorageKey(brandId, sessionRequestKey))
+        : null;
+      const savedCpf = requestedCpf || localStorage.getItem(storageKey(brandId));
       const currentCpf = driver?.cpf ? cleanCpf(driver.cpf) : null;
+
       if (savedCpf && savedCpf !== currentCpf) {
         setLoading(true);
         fetchDriverByCpf(brandId, savedCpf).then((d) => {
-          if (d) setDriver(d);
+          if (d) {
+            setDriver(d);
+            localStorage.setItem(storageKey(brandId), cleanCpf(savedCpf));
+          }
+
+          if (sessionRequestKey) {
+            localStorage.removeItem(requestStorageKey(brandId, sessionRequestKey));
+          }
+
           setLoading(false);
         });
       } else if (!savedCpf && driver) {
@@ -117,7 +149,7 @@ export function DriverSessionProvider({
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [brandId, driver]);
+  }, [brandId, driver, sessionRequestKey]);
 
   return (
     <DriverSessionContext.Provider value={{ driver, loading, loginByCpf, logout, refreshDriver }}>
