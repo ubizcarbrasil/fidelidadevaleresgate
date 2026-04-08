@@ -48,6 +48,37 @@ const ACTION_LABELS: Record<string, string> = {
   send: "Enviar", redeem: "Resgatar", config: "Configurar",
 };
 
+/* ─── business model context per module ─── */
+type ModuleContext = "DRIVER" | "PASSENGER" | "UNIVERSAL";
+
+const MODULE_CONTEXT: Record<string, ModuleContext> = {
+  offers: "PASSENGER",
+  redemptions: "PASSENGER",
+  vouchers: "PASSENGER",
+  catalog: "PASSENGER",
+  redemption_qr: "PASSENGER",
+  affiliate_deals: "PASSENGER",
+};
+
+const SCORING_MODEL_LABELS: Record<string, { label: string; icon: typeof Car; colorClass: string }> = {
+  DRIVER_ONLY: { label: "Apenas Motorista", icon: Car, colorClass: "text-green-400 border-green-500/50 bg-green-500/10" },
+  PASSENGER_ONLY: { label: "Apenas Cliente", icon: User, colorClass: "text-red-400 border-red-500/50 bg-red-500/10" },
+  BOTH: { label: "Ambos", icon: Zap, colorClass: "text-blue-400 border-blue-500/50 bg-blue-500/10" },
+};
+
+function getModuleContext(mod: string): ModuleContext {
+  return MODULE_CONTEXT[mod] || "UNIVERSAL";
+}
+
+function isOutOfModel(mod: string, scoringModel: string | null): boolean {
+  if (!scoringModel || scoringModel === "BOTH") return false;
+  const ctx = getModuleContext(mod);
+  if (ctx === "UNIVERSAL") return false;
+  if (scoringModel === "DRIVER_ONLY" && ctx === "PASSENGER") return true;
+  if (scoringModel === "PASSENGER_ONLY" && ctx === "DRIVER") return true;
+  return false;
+}
+
 function friendlyModule(mod: string) { return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1); }
 function friendlyPermission(key: string) {
   const parts = key.split(".");
