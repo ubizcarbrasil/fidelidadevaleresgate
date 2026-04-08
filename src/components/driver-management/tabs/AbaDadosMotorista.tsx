@@ -94,16 +94,13 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
   };
 
   const handleOpenPwa = () => {
-    if (driver.cpf) {
-      const cleanCpf = driver.cpf.replace(/\D/g, "");
-      const sessionRequestKey = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-      localStorage.setItem(`driver_session_cpf_${brandId}`, cleanCpf);
-      localStorage.setItem(`driver_session_request_${brandId}_${sessionRequestKey}`, cleanCpf);
-      const url = `/driver?brandId=${brandId}&sessionKey=${sessionRequestKey}&t=${Date.now()}`;
-      window.open(url, "_blank");
-      return;
-    }
-    const url = `/driver?brandId=${brandId}&t=${Date.now()}`;
+    const sessionRequestKey = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const requestData = JSON.stringify({
+      customerId: driver.id,
+      cpf: driver.cpf ? driver.cpf.replace(/\D/g, "") : null,
+    });
+    localStorage.setItem(`driver_session_request_${brandId}_${sessionRequestKey}`, requestData);
+    const url = `/driver?brandId=${brandId}&sessionKey=${sessionRequestKey}&t=${Date.now()}`;
     window.open(url, "_blank");
   };
 
