@@ -1,33 +1,52 @@
 
 
-## Atualizar AjudaDuelosSheet com a Jornada Completa dos Duelos
+## Reset de Pontos Granular — Motorista, Cliente ou Todos
 
 ### Objetivo
-Reescrever o conteúdo do `AjudaDuelosSheet.tsx` para cobrir **toda a jornada** do sistema de duelos — desde a criação do desafio até apostas paralelas, negociação de pontos, arena ao vivo, ranking, cinturão, conquistas, perfil competitivo e feed social.
+Evoluir o reset de pontos da cidade para permitir escolher: zerar **todos**, apenas **motoristas**, apenas **clientes**, ou um **indivíduo específico**.
 
-### O que muda
-Arquivo único: `src/components/driver/duels/AjudaDuelosSheet.tsx`
+### Arquivos
 
-### Novas seções do accordion (substituindo as atuais)
+**1. Nova action `reset_branch_points` em `supabase/functions/admin-brand-actions/index.ts`**
+- Recebe: `branch_id`, `target` (`"all"` | `"drivers"` | `"clients"` | `"single"`), `customer_id?` (quando `target = "single"`)
+- Autorização: brand_admin da marca ou root_admin
+- Lógica:
+  - `all` → zera `points_balance` de todos os customers da branch
+  - `drivers` → zera apenas onde `name ILIKE '%[MOTORISTA]%'`
+  - `clients` → zera apenas onde `name NOT ILIKE '%[MOTORISTA]%'`
+  - `single` → zera apenas o `customer_id` informado
+- Para cada customer com saldo > 0, insere um DEBIT no `points_ledger` com `reference_type = 'BRANCH_RESET'`
+- Cancela duelos ativos e side bets abertas/matched da branch (quando target = all/drivers)
+- Retorna contagem de afetados
 
-1. **Como funciona o duelo?** — Competição entre motoristas da mesma cidade, corridas finalizadas no período
-2. **Como desafiar alguém?** — Seleção de adversário(s), definição de período e aposta de pontos opcional
-3. **Negociação de pontos** — Contraproposta de valor, aceite/recusa da contraproposta, escrow automático
-4. **Aceitar ou recusar desafio** — Confirmação com aviso de risco, reserva imediata de pontos
-5. **Contagem de corridas** — Apenas FINALIZED dentro do período, 100% automático
-6. **Arena ao vivo** — Placar em tempo real, palpites da torcida, badges de liderança
-7. **Apostas entre espectadores** — Sistema P2P: criar aposta, aceitar ou contrapropor valor, escrow, liquidação 90/10
-8. **Bônus 10% para o vencedor** — Explicação do prêmio extra vindo das apostas de espectadores
-9. **Ranking da cidade** — Classificação por corridas/pontos, atualização automática
-10. **Cinturão da cidade** — Título máximo, troca de mãos, destaque especial
-11. **Perfil competitivo** — Apelido público, avatar, conquistas, estatísticas
-12. **Feed de atividade** — Timeline social: desafios, aceites, resultados, recusas
-13. **Privacidade e anonimato** — Apelido público, sem dados de rota/valor
-14. **Dúvidas frequentes** — FAQ atualizado incluindo apostas, empate, limites, pontos pendentes
+**2. Novo componente `src/components/branch/DialogResetPontos.tsx`**
+- Dialog/Sheet com 3 opções via RadioGroup:
+  - "Todos os pontos" (motoristas + clientes)
+  - "Apenas motoristas"
+  - "Apenas clientes"
+  - "Motorista/cliente específico" → exibe campo de busca por nome/CPF
+- Campo de busca com autocomplete que consulta `customers` da branch
+- Botão "Resetar" com variante destructive
+- ConfirmDialog aninhado com aviso irreversível antes de executar
 
-### Detalhes técnicos
-- Mesmo componente `Sheet` + `Accordion` existente
-- Apenas atualização do array `secoes` com novos ícones (adicionar `Handshake`, `Wallet`, `Gift`, `Star` do lucide)
-- Nenhuma mudança estrutural, apenas conteúdo expandido
-- Textos em português brasileiro, linguagem acessível e direta
+**3. Modificação em `src/pages/BrandBranchesPage.tsx`**
+- Adicionar botão `RotateCcw` em cada card de cidade
+- Ao clicar, abre o `DialogResetPontos` passando `branch_id`
+- Toast de sucesso com contagem de afetados
+
+### Fluxo do Usuário
+```text
+Card da cidade → [⟲] → Dialog abre
+  ○ Todos
+  ○ Apenas motoristas
+  ○ Apenas clientes
+  ○ Específico → [Buscar por nome/CPF] → Selecionar
+→ [Resetar Pontos] → Confirmação destructive → Executar → Toast "X registros zerados"
+```
+
+### Detalhes Técnicos
+- Busca de customers usa query filtrada por `branch_id` com limit 20
+- O campo de busca filtra por `name` ou `cpf` (ilike)
+- Reutiliza `ConfirmDialog` existente com variante destructive
+- Auditabilidade garantida via `points_ledger` com reason descritivo por tipo de reset
 
