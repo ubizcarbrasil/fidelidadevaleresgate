@@ -152,6 +152,13 @@ export default function BrandBranchesPage() {
           ))}
         </div>
       )}
+
+      <DialogResetPontos
+        open={!!resetBranch}
+        onClose={() => setResetBranch(null)}
+        branchId={resetBranch?.id || ""}
+        branchName={resetBranch?.name || ""}
+      />
     </div>
   );
 }
