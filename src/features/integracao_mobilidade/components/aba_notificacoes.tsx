@@ -246,6 +246,9 @@ export function AbaNotificacoes({
           </Card>
         </>
       )}
+
+      {/* Histórico de notificações */}
+      <HistoricoNotificacoesMotorista brandId={brandId} getBranchName={getBranchName} />
     </div>
   );
 }
