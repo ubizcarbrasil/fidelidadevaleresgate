@@ -2881,6 +2881,217 @@ export type Database = {
           },
         ]
       }
+      driver_message_flows: {
+        Row: {
+          audience: string
+          branch_id: string | null
+          brand_id: string
+          created_at: string
+          event_type: string
+          id: string
+          is_active: boolean
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          is_active?: boolean
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_message_flows_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_flows_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_flows_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_flows_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "driver_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_message_logs: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string
+          customer_id: string
+          error_detail: string | null
+          event_type: string | null
+          flow_id: string | null
+          id: string
+          metadata_json: Json
+          rendered_message: string
+          status: string
+          template_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string
+          customer_id: string
+          error_detail?: string | null
+          event_type?: string | null
+          flow_id?: string | null
+          id?: string
+          metadata_json?: Json
+          rendered_message?: string
+          status?: string
+          template_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string
+          customer_id?: string
+          error_detail?: string | null
+          event_type?: string | null
+          flow_id?: string | null
+          id?: string
+          metadata_json?: Json
+          rendered_message?: string
+          status?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_message_logs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_logs_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "driver_message_flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "driver_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_message_templates: {
+        Row: {
+          available_vars: string[]
+          body_template: string
+          brand_id: string
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          available_vars?: string[]
+          body_template?: string
+          brand_id: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          available_vars?: string[]
+          body_template?: string
+          brand_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_message_templates_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_message_templates_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_points_rules: {
         Row: {
           branch_id: string | null
