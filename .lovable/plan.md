@@ -1,29 +1,20 @@
 
 
-## Correção: Botão "Abrir" no card de cidades não leva ao painel correto
+## Ocultar cards vazios no dashboard
 
 ### Problema
-O `DemoAccessCard` abre `/branch-wallet?branchId={branch.id}` ao clicar "Abrir", mas o `BranchWalletPage` **ignora completamente o parâmetro `branchId` da URL**. Ele usa apenas o `currentBranchId` do hook `useBrandGuard()`, que vem dos roles do usuário logado. Como o empreendedor (brand_admin) não tem `branch_id` nos seus roles, a página mostra "Nenhuma cidade vinculada ao seu perfil."
+Os cards "Denúncias de Ofertas" e "Tarefas Pendentes" aparecem mesmo sem atividade, exibindo mensagens como "Nenhuma denúncia pendente" e "Tudo em dia!". Eles devem ficar ocultos quando não há itens.
 
 ### Solução
-Fazer o `BranchWalletPage` ler o parâmetro `branchId` da URL e usá-lo como override quando o usuário tem permissão suficiente (BRAND, TENANT ou ROOT).
+Alterar os dois componentes para retornar `null` no estado vazio em vez de renderizar o card com mensagem.
 
-### Arquivo modificado
+### Arquivos
 
-**`src/pages/BranchWalletPage.tsx`**
-- Importar `useSearchParams` do React Router
-- Ler `branchId` dos search params
-- Se presente e o `consoleScope` for BRAND/TENANT/ROOT, usar esse valor como `effectiveBranchId` em vez do `currentBranchId`
-- Substituir todas as referências a `currentBranchId` por `effectiveBranchId` nas queries e mutações
+**`src/components/dashboard/PendingReportsSection.tsx`** (linha 117-133)
+- Trocar o bloco `if (!reports || reports.length === 0)` para retornar `null`
 
-```typescript
-const [searchParams] = useSearchParams();
-const urlBranchId = searchParams.get("branchId");
-const effectiveBranchId = 
-  urlBranchId && ["ROOT", "TENANT", "BRAND"].includes(consoleScope)
-    ? urlBranchId 
-    : currentBranchId;
-```
+**`src/components/dashboard/TasksSection.tsx`** (linha 114-126)
+- Trocar o bloco `if (tasks.length === 0)` para retornar `null`
 
-Nenhuma mudança de banco de dados é necessária.
+Ambos os estados de loading permanecem iguais para evitar layout shift.
 
