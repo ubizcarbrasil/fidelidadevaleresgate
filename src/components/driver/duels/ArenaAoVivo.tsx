@@ -19,6 +19,7 @@ import { formatPoints } from "@/lib/formatPoints";
 import { differenceInSeconds } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import PalpitesDuelo from "./PalpitesDuelo";
+import ApostasDuelo from "./ApostasDuelo";
 
 interface Props {
   duel: Duel;
