@@ -515,11 +515,13 @@ export default function BrandPermissionOverflowPage() {
     const hasLocalChange = localChanges[perm.key] !== undefined;
     const displayName = perm.display_name || friendlyPermission(perm.key);
     const isEditing = editingDisplayName === perm.id;
+    const outOfModel = isViewingBranch && isOutOfModel(perm.module, selectedBranchScoringModel);
+    const moduleCtx = getModuleContext(perm.module);
 
     return (
       <div key={perm.id}>
         <div
-          className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""}`}
+          className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""} ${outOfModel ? "opacity-40 border-dashed" : ""}`}
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
