@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Crown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { enviarNotificacaoDuelo } from "@/components/driver/duels/servico_notificacoes_duelo";
 
 interface Props {
   branchId: string;
@@ -66,11 +67,17 @@ export default function ModalAtribuirCinturao({ branchId, brandId, open, onClose
     onSuccess: () => {
       toast.success("Cinturão atribuído com sucesso!");
       qc.invalidateQueries({ queryKey: ["city-belt-champion", branchId] });
+
+      // Enviar notificação push para o novo campeão
+      enviarNotificacaoDuelo({
+        tipo: "BELT_NEW_CHAMPION",
+        customerIds: [customerId],
+      });
+
       resetAndClose();
     },
     onError: () => toast.error("Erro ao atribuir cinturão"),
   });
-
   const resetAndClose = () => {
     setCustomerId("");
     setRecordValue("");
