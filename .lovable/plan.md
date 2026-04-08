@@ -1,68 +1,62 @@
-## Plano: Painel da Cidade — Visão Completa da Arena Competitiva
+
+
+## Painel da Cidade — Visão Completa da Arena Competitiva
 
 ### Objetivo
-Dar ao administrador da cidade (Branch Admin) visibilidade total da jornada de duelos, apostas, ranking competitivo, cinturão e feed de atividades — tudo dentro do dashboard da cidade.
+Dar ao administrador da cidade (Branch Admin) visibilidade total da jornada de duelos, apostas, ranking competitivo, cinturão e feed — tudo dentro do dashboard da cidade.
 
-### Novos Componentes
+### Novos Arquivos
 
-**1. `src/components/dashboard/branch/BranchArenaDuelos.tsx`**
-- Componente orquestrador que agrupa os sub-cards da arena no dashboard da cidade
-- Recebe `branchId` e reutiliza os hooks existentes (`useDuelosCidade`, `useRankingCidade`, `useCinturaoCidade`, `useSideBets`)
-- Visual de seção com banner similar ao do dashboard do motorista ("⚔️ Arena da Cidade")
+**1. `src/components/dashboard/branch/hook_branch_duelos.ts`**
+- `useBranchDuelosStats(branchId)` — queries agregadas: duelos ativos, finalizados no mês, apostas abertas/matched, pontos em escrow, bônus 10% distribuído
 
 **2. `src/components/dashboard/branch/BranchDuelosAtivos.tsx`**
-- Lista de duelos ao vivo/aceitos/pendentes da cidade
-- Mostra placar em tempo real (reutiliza `useContagemCorridasDuelo`)
-- Status visual (ao vivo, pendente, finalizado) com badges coloridas
-- Contagem total de duelos ativos e finalizados no mês
+- Lista duelos ao vivo/aceitos/pendentes com placar, nomes e status visual (badges)
+- Reutiliza `useDuelosCidade` existente
 
 **3. `src/components/dashboard/branch/BranchApostasResumo.tsx`**
-- Resumo das apostas ativas na cidade: total de apostas abertas, matched e pontos em escrow
-- Lista das apostas em andamento com valores e status
-- Total de pontos movimentados em apostas no mês
-- Bônus 10% distribuído para vencedores de duelos
+- Resumo das apostas: abertas, matched, pontos em escrow, bônus distribuído
+- Lista apostas ativas com valores e participantes
 
 **4. `src/components/dashboard/branch/BranchRankingCompetitivo.tsx`**
 - Top motoristas por corridas (reusa `useRankingCidade`)
-- Exibe posição, nome, corridas e avatar/nickname
-- Campeão do cinturão destacado no topo (reusa `useCinturaoCidade`)
+- Campeão do cinturão em destaque (reusa `useCinturaoCidade`)
 
 **5. `src/components/dashboard/branch/BranchFeedDuelos.tsx`**
-- Timeline dos últimos eventos de duelos (desafios, aceites, resultados, recusas)
-- Reutiliza a lógica do `FeedAtividadeCidade` adaptada para o admin
-- Mostra últimos 20 eventos com ícones e timestamps
+- Timeline dos últimos eventos de duelos (desafios, aceites, resultados)
+- Adapta a lógica do `FeedAtividadeCidade` para o admin
 
-### Hooks Novos
+**6. `src/components/dashboard/branch/BranchArenaDuelos.tsx`**
+- Componente orquestrador com banner "⚔️ Arena da Cidade"
+- Agrupa KPIs de duelos + sub-cards acima
+- Exibe somente quando há dados de duelos
 
-**6. `src/components/dashboard/branch/hook_branch_duelos.ts`**
-- `useBranchDuelosStats(branchId)` — query que retorna contagens agregadas: duelos ativos, finalizados no mês, total de apostas, pontos em escrow, bônus distribuído
-- Query direta nas tabelas `driver_duels` e `duel_side_bets` filtrada por `branch_id`
-
-### Modificações
+### Modificação
 
 **7. `src/components/dashboard/BranchDashboardSection.tsx`**
-- Adicionar `<BranchArenaDuelos branchId={branchId} />` após a seção de Ranking + Feed
-- Só exibir quando `isDriverEnabled` for true (duelos só existem no modelo motorista)
+- Adicionar `<BranchArenaDuelos branchId={branchId} />` após o bloco de Ranking + Feed
+- Condicional a `isDriverEnabled`
 
-### Estrutura Visual
-
+### Layout Visual
 ```text
 ┌────────────────────────────────┐
 │ ⚔️ Arena Competitiva da Cidade │
 ├────────────────────────────────┤
-│ KPIs: Duelos Ativos | Apostas  │
-│        Pontos Escrow | Bônus   │
+│ KPIs: Ativos | Finalizados    │
+│       Apostas | Escrow | Bônus│
 ├───────────────┬────────────────┤
-│  Duelos Ao    │  Ranking +     │
-│  Vivo/Recentes│  Cinturão      │
+│ Duelos ao     │ Ranking +      │
+│ Vivo/Recentes │ Cinturão       │
 ├───────────────┴────────────────┤
-│  Apostas Ativas (resumo)       │
+│ Apostas Ativas (resumo)       │
 ├────────────────────────────────┤
-│  Feed de Atividades (timeline) │
+│ Feed de Atividades (timeline) │
 └────────────────────────────────┘
 ```
 
-### Resultado
-- O admin da cidade vê tudo: duelos ao vivo, placares, apostas, ranking, cinturão e feed
-- Reutiliza hooks existentes dos motoristas sem duplicação de lógica
-- Um hook novo para métricas agregadas específicas do painel admin
+### Destaques Técnicos
+- Reutiliza hooks existentes: `useDuelosCidade`, `useRankingCidade`, `useCinturaoCidade`
+- Hook novo apenas para métricas agregadas (contagens e somas)
+- Realtime via os mesmos channels já configurados
+- Sem necessidade de novas tabelas ou RPCs — tudo via queries client-side filtradas por `branch_id`
+
