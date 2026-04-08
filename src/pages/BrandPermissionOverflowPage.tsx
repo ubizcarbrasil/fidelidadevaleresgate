@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X, MoveRight } from "lucide-react";
+import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X, MoveRight, Car, User, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { queryKeys } from "@/lib/queryKeys";
@@ -47,6 +47,37 @@ const ACTION_LABELS: Record<string, string> = {
   approve: "Aprovar", manage: "Gerenciar", export: "Exportar", import: "Importar",
   send: "Enviar", redeem: "Resgatar", config: "Configurar",
 };
+
+/* ─── business model context per module ─── */
+type ModuleContext = "DRIVER" | "PASSENGER" | "UNIVERSAL";
+
+const MODULE_CONTEXT: Record<string, ModuleContext> = {
+  offers: "PASSENGER",
+  redemptions: "PASSENGER",
+  vouchers: "PASSENGER",
+  catalog: "PASSENGER",
+  redemption_qr: "PASSENGER",
+  affiliate_deals: "PASSENGER",
+};
+
+const SCORING_MODEL_LABELS: Record<string, { label: string; icon: typeof Car; colorClass: string }> = {
+  DRIVER_ONLY: { label: "Apenas Motorista", icon: Car, colorClass: "text-green-400 border-green-500/50 bg-green-500/10" },
+  PASSENGER_ONLY: { label: "Apenas Cliente", icon: User, colorClass: "text-red-400 border-red-500/50 bg-red-500/10" },
+  BOTH: { label: "Ambos", icon: Zap, colorClass: "text-blue-400 border-blue-500/50 bg-blue-500/10" },
+};
+
+function getModuleContext(mod: string): ModuleContext {
+  return MODULE_CONTEXT[mod] || "UNIVERSAL";
+}
+
+function isOutOfModel(mod: string, scoringModel: string | null): boolean {
+  if (!scoringModel || scoringModel === "BOTH") return false;
+  const ctx = getModuleContext(mod);
+  if (ctx === "UNIVERSAL") return false;
+  if (scoringModel === "DRIVER_ONLY" && ctx === "PASSENGER") return true;
+  if (scoringModel === "PASSENGER_ONLY" && ctx === "DRIVER") return true;
+  return false;
+}
 
 function friendlyModule(mod: string) { return MODULE_LABELS[mod] || mod.charAt(0).toUpperCase() + mod.slice(1); }
 function friendlyPermission(key: string) {
@@ -87,7 +118,7 @@ export default function BrandPermissionOverflowPage() {
   const { data: branches } = useQuery({
     queryKey: ["branches-for-brand", activeBrandId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("branches").select("id, name, city").eq("brand_id", activeBrandId!).eq("is_active", true).order("name");
+      const { data, error } = await supabase.from("branches").select("id, name, city, scoring_model").eq("brand_id", activeBrandId!).eq("is_active", true).order("name");
       if (error) throw error;
       return data;
     },
@@ -384,6 +415,41 @@ export default function BrandPermissionOverflowPage() {
   const hasChanges = Object.keys(localChanges).length > 0 || Object.keys(localSubItemChanges).length > 0;
   const isViewingBranch = activeBranchId !== null;
 
+  const selectedBranchScoringModel = useMemo(() => {
+    if (!activeBranchId || !branches) return null;
+    const branch = branches.find(b => b.id === activeBranchId);
+    return (branch?.scoring_model as string) || null;
+  }, [activeBranchId, branches]);
+
+  const alignToModel = useCallback(() => {
+    if (!selectedBranchScoringModel || selectedBranchScoringModel === "BOTH") {
+      toast.info("Este modelo (Ambos) permite todas as permissões. Nenhuma alteração necessária.");
+      return;
+    }
+    if (!permissions) return;
+
+    const changes: Record<string, Partial<ConfigRow>> = { ...localChanges };
+    let count = 0;
+
+    permissions.forEach(p => {
+      if (isOutOfModel(p.module, selectedBranchScoringModel)) {
+        const currentBrand = getEffectiveValue(p.key, "allowed_for_brand");
+        const currentStore = getEffectiveValue(p.key, "allowed_for_store");
+        if (currentBrand || currentStore) {
+          changes[p.key] = { ...changes[p.key], allowed_for_brand: false, allowed_for_store: false };
+          count++;
+        }
+      }
+    });
+
+    setLocalChanges(changes);
+    if (count > 0) {
+      toast.success(`${count} permissão(ões) fora do modelo desativada(s). Salve para aplicar.`);
+    } else {
+      toast.info("Todas as permissões já estão alinhadas ao modelo.");
+    }
+  }, [selectedBranchScoringModel, permissions, localChanges, getEffectiveValue]);
+
   /* ─── render sub-items (subclass) ─── */
   const renderSubItems = (permId: string, parentEnabled: boolean) => {
     const items = subItemsByPermission[permId];
@@ -449,11 +515,13 @@ export default function BrandPermissionOverflowPage() {
     const hasLocalChange = localChanges[perm.key] !== undefined;
     const displayName = perm.display_name || friendlyPermission(perm.key);
     const isEditing = editingDisplayName === perm.id;
+    const outOfModel = isViewingBranch && isOutOfModel(perm.module, selectedBranchScoringModel);
+    const moduleCtx = getModuleContext(perm.module);
 
     return (
       <div key={perm.id}>
         <div
-          className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""}`}
+          className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${hasLocalChange ? "border-primary/50 bg-primary/5" : ""} ${!perm.is_active ? "opacity-50" : ""} ${outOfModel ? "opacity-40 border-dashed" : ""}`}
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -477,6 +545,15 @@ export default function BrandPermissionOverflowPage() {
                 </>
               )}
               {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
+              {isViewingBranch && moduleCtx === "PASSENGER" && (
+                <Badge variant="outline" className="text-[10px] border-red-500/50 text-red-400">Cliente</Badge>
+              )}
+              {isViewingBranch && moduleCtx === "DRIVER" && (
+                <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-400">Motorista</Badge>
+              )}
+              {outOfModel && (
+                <Badge variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-400">Fora do modelo</Badge>
+              )}
               {isViewingBranch && configs?.some(c => c.permission_key === perm.key && c.branch_id === activeBranchId) && (
                 <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">customizado</Badge>
               )}
@@ -600,9 +677,29 @@ export default function BrandPermissionOverflowPage() {
       {isViewingBranch && (
         <Card className="border-accent bg-accent/10">
           <CardContent className="py-3">
-            <p className="text-sm text-accent-foreground">
-              <MapPin className="h-4 w-4 inline mr-1" />
-              Visualizando permissões para <strong>{branches?.find(b => b.id === activeBranchId)?.name}</strong>.
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 text-sm text-accent-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>Visualizando permissões para <strong>{branches?.find(b => b.id === activeBranchId)?.name}</strong>.</span>
+                {selectedBranchScoringModel && SCORING_MODEL_LABELS[selectedBranchScoringModel] && (() => {
+                  const info = SCORING_MODEL_LABELS[selectedBranchScoringModel];
+                  const Icon = info.icon;
+                  return (
+                    <Badge variant="outline" className={`text-xs ${info.colorClass}`}>
+                      <Icon className="h-3 w-3 mr-1" />
+                      {info.label}
+                    </Badge>
+                  );
+                })()}
+              </div>
+              {selectedBranchScoringModel && selectedBranchScoringModel !== "BOTH" && (
+                <Button variant="outline" size="sm" onClick={alignToModel} className="text-xs">
+                  <Zap className="h-3.5 w-3.5 mr-1" />
+                  Alinhar ao Modelo
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
               Permissões herdam do padrão global e podem ser sobrescritas individualmente.
             </p>
           </CardContent>
