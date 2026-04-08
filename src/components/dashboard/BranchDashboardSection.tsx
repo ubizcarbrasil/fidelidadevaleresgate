@@ -82,6 +82,9 @@ export default function BranchDashboardSection({ branchId }: Props) {
           <BranchFeedTempoReal feed={feed} />
         </div>
       )}
+
+      {/* Arena Competitiva — duelos, apostas, ranking, feed */}
+      {isDriverEnabled && <BranchArenaDuelos branchId={branchId} />}
     </div>
   );
 }
