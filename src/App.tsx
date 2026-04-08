@@ -166,6 +166,7 @@ function AnimatedRoutes() {
             <Route path="/p/:slug" element={<CustomPage />} />
             <Route path="/trial" element={<TrialSignupPage />} />
             <Route path="/landing" element={<LandingPage />} />
+            <Route path="/links" element={<PaginaLinks />} />
             <Route path="/driver" element={<DriverPanelPage />} />
             <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
