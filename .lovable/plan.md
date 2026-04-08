@@ -1,24 +1,26 @@
 
 
-## Corrigir links do Cliente e Motorista na Central de Acessos
+## Corrigir botão "Quero ser parceiro" na tela de login
 
 ### Problema
-Os links do Painel Motorista e App do Cliente na página `/links` contêm placeholders literais (`ID_DA_BRAND`), resultando em "Marca não encontrada" ao clicar.
+A rota `/register-store` está envolvida em `<ProtectedRoute>`, exigindo autenticação. Quando o usuário clica "Quero ser parceiro" na tela de login (onde ainda não está logado), a navegação falha — o `ProtectedRoute` redireciona de volta ao `/auth`.
 
 ### Solução
-Tornar a página dinâmica: buscar as brands ativas do banco e gerar links funcionais com os IDs reais. Cada brand terá seus próprios cards de Motorista e Cliente.
+Remover o `<ProtectedRoute>` da rota `/register-store` no `App.tsx`, tornando-a pública. Isso permite que qualquer visitante acesse o formulário de cadastro de parceiro sem precisar estar logado.
 
-### Arquivos
+O formulário de registro de parceiro já coleta os dados necessários e pode lidar com autenticação internamente se precisar.
 
-**`src/features/pagina_links/pagina_links.tsx`**
-- Buscar brands ativas via Supabase (`select id, name from brands where is_active = true`)
-- Buscar branches ativas (`select id, name, brand_id from branches where is_active = true`)
-- Gerar cards dinâmicos para:
-  - **Painel Motorista**: um card por brand com `brandId` real
-  - **App do Cliente**: um card por brand com `brandId` real  
-  - **Painel Cidade**: um card por branch com `branchId` real
-  - **Painel Parceiro**: buscar stores e gerar cards com `storeId` real
-- Cards administrativos (Painel Raiz, Login) permanecem estáticos
-- Mostrar o nome da entidade no card (ex: "Motorista — Ubiz Car")
-- Loading state enquanto busca os dados
+### Arquivo modificado
+
+**`src/App.tsx`**
+- Alterar a rota de:
+  ```tsx
+  <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
+  ```
+  Para:
+  ```tsx
+  <Route path="/register-store" element={<StoreRegistrationWizard />} />
+  ```
+
+Apenas uma linha alterada. A rota já está na lista de `publicPaths` (linha 354), então o restante do sistema já a trata como pública.
 
