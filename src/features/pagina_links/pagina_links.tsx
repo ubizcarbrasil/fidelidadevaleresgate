@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -102,6 +103,30 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
   ];
 }
 
+function BotaoCopiar({ url }: { url: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiado(true);
+      toast.success("Link copiado!");
+      setTimeout(() => setCopiado(false), 2000);
+    });
+  }, [url]);
+
+  return (
+    <button
+      onClick={copiar}
+      className="shrink-0 rounded-md bg-muted/80 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      title="Copiar link"
+    >
+      {copiado ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
 export default function PaginaLinks() {
   const [categorias, setCategorias] = useState<CategoriaLinks[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -178,9 +203,12 @@ export default function PaginaLinks() {
                               <span>{card.nota}</span>
                             </div>
                           )}
-                          <code className="mt-auto block truncate rounded bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
-                            {card.rota}
-                          </code>
+                          <div className="mt-auto flex items-center gap-2">
+                            <code className="block flex-1 truncate rounded bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
+                              {card.rota}
+                            </code>
+                            <BotaoCopiar url={urlCompleta} />
+                          </div>
                         </CardContent>
                       </Card>
                     </a>
