@@ -1250,6 +1250,8 @@ export type Database = {
       city_belt_champions: {
         Row: {
           achieved_at: string
+          assigned_manually: boolean
+          belt_prize_points: number
           branch_id: string
           brand_id: string
           champion_customer_id: string
@@ -1261,6 +1263,8 @@ export type Database = {
         }
         Insert: {
           achieved_at?: string
+          assigned_manually?: boolean
+          belt_prize_points?: number
           branch_id: string
           brand_id: string
           champion_customer_id: string
@@ -1272,6 +1276,8 @@ export type Database = {
         }
         Update: {
           achieved_at?: string
+          assigned_manually?: boolean
+          belt_prize_points?: number
           branch_id?: string
           brand_id?: string
           champion_customer_id?: string
@@ -7374,6 +7380,16 @@ export type Database = {
         }
         Returns: Json
       }
+      assign_city_belt_manual: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_customer_id: string
+          p_prize_points?: number
+          p_record_value: number
+        }
+        Returns: Json
+      }
       collect_duel_ride_ids: {
         Args: {
           p_branch_id: string
@@ -7476,6 +7492,8 @@ export type Database = {
         Args: { p_branch_id: string }
         Returns: {
           achieved_at: string
+          assigned_manually: boolean
+          belt_prize_points: number
           branch_id: string
           champion_avatar_url: string
           champion_customer_id: string

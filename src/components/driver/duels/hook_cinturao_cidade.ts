@@ -14,6 +14,8 @@ export interface CampeaoCinturao {
   record_value: number;
   record_type: "monthly" | "all_time";
   achieved_at: string;
+  belt_prize_points: number;
+  assigned_manually: boolean;
 }
 
 export function useCinturaoCidade(branchId: string | null | undefined) {
