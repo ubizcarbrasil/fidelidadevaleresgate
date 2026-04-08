@@ -8,7 +8,7 @@ import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
 
-function DriverGate({ brand, branch, theme, initialCategoryId, initialDealId }: {
+function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId }: {
   brand: any;
   branch: any;
   theme: any;
@@ -20,7 +20,26 @@ function DriverGate({ brand, branch, theme, initialCategoryId, initialDealId }: 
   const logoUrl = settings?.logo_url;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : undefined;
 
-  if (loading) {
+  // Auto-fetch branch from driver's branch_id when URL doesn't include branchId
+  const [derivedBranch, setDerivedBranch] = useState<any>(null);
+  const [loadingBranch, setLoadingBranch] = useState(false);
+
+  useEffect(() => {
+    if (branchFromUrl || !driver?.branch_id) {
+      setDerivedBranch(null);
+      return;
+    }
+    setLoadingBranch(true);
+    supabase.from("branches").select("*").eq("id", driver.branch_id).maybeSingle()
+      .then(({ data }) => {
+        setDerivedBranch(data);
+        setLoadingBranch(false);
+      });
+  }, [branchFromUrl, driver?.branch_id]);
+
+  const effectiveBranch = branchFromUrl || derivedBranch;
+
+  if (loading || loadingBranch) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -35,7 +54,7 @@ function DriverGate({ brand, branch, theme, initialCategoryId, initialDealId }: 
   return (
     <CustomerProvider>
       <div className="min-h-screen bg-background text-foreground">
-        <DriverMarketplace brand={brand} branch={branch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
+        <DriverMarketplace brand={brand} branch={effectiveBranch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
       </div>
     </CustomerProvider>
   );

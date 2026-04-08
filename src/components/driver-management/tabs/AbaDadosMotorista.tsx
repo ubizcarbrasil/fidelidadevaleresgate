@@ -94,6 +94,9 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
   };
 
   const handleOpenPwa = () => {
+    // Clear any previous driver session to prevent fallback to wrong profile
+    localStorage.removeItem(`driver_session_cpf_${brandId}`);
+
     const sessionRequestKey = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const requestData = JSON.stringify({
       customerId: driver.id,
