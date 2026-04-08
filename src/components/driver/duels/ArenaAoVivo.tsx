@@ -384,6 +384,9 @@ export default function ArenaAoVivo({ duel, onBack }: Props) {
         {/* Palpites sociais */}
         {(aoVivo || duel.status === "accepted") && <PalpitesDuelo duel={duel} />}
 
+        {/* Apostas laterais */}
+        {(aoVivo || duel.status === "accepted") && <ApostasDuelo duel={duel} />}
+
         {/* Leader status */}
         {aFrente && aoVivo && (
           <motion.div
