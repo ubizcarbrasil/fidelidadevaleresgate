@@ -1,37 +1,45 @@
 
 
-## Corrigir Layout Responsivo dos Cards de Cidade
+## Alinhar Permissões ao Modelo de Negócio da Cidade
 
 ### Problema
-Em telas mobile (430px), o card de cada cidade exibe badges, switch e botões de ação numa única linha horizontal. Os elementos ultrapassam a largura disponível e o botão de reset fica oculto por overflow.
+A página de Permissões dos Parceiros (`BrandPermissionOverflowPage`) não leva em conta o `scoring_model` da cidade selecionada. Quando você seleciona Leme (DRIVER_ONLY), permissões de módulos voltados ao cliente (ofertas, resgates, cupons) continuam habilitadas, gerando inconsistência.
 
 ### Solução
-Reorganizar o layout do card em mobile para empilhar os elementos em duas linhas:
-- **Linha 1**: Nome da cidade + botões de ação (reset, editar, switch)
-- **Linha 2**: Badges (scoring model, resgate cidade, status)
+Adicionar consciência do modelo de negócio na página de permissões, com:
 
-### Arquivo modificado
-`src/pages/BrandBranchesPage.tsx`
+1. **Indicador visual do modelo** — Ao selecionar uma cidade, exibir um badge com o scoring_model (🚗 Motorista, 👤 Cliente, 🔄 Ambos)
 
-### Mudanças
-- Reestruturar o `CardContent` para usar `flex-wrap` ou empilhar verticalmente em telas pequenas
-- Mover badges para uma linha separada abaixo do nome/ações em mobile
-- Garantir que os botões de ação (switch, reset, editar) fiquem sempre visíveis
-- Usar classes responsivas do Tailwind (`sm:`, `md:`) para manter o layout horizontal em desktop
+2. **Mapeamento de contexto por módulo** — Constante que classifica cada módulo de permissão como `DRIVER`, `PASSENGER` ou `UNIVERSAL`:
+   - PASSENGER: `offers`, `redemptions`, `vouchers`, `catalog`
+   - DRIVER: (módulos futuros de gestão de motorista)
+   - UNIVERSAL: `stores`, `customers`, `reports`, `settings`, `branches`, `users`, `roles`, `loyalty`, `points_rules`, etc.
 
-### Layout esperado (mobile)
+3. **Tag visual por permissão** — Badge colorido indicando se a permissão é de contexto motorista (🟢), cliente (🔴) ou universal (sem badge)
+
+4. **Botão "Alinhar ao Modelo"** — Ação rápida que:
+   - Num cidade DRIVER_ONLY → desativa automaticamente todas as permissões de módulos PASSENGER
+   - Num cidade PASSENGER_ONLY → desativa automaticamente todas as permissões de módulos DRIVER
+   - Num cidade BOTH → não altera nada (mostra toast informativo)
+   - Aplica apenas como alterações locais (precisa salvar depois)
+
+5. **Permissões fora do modelo ficam visualmente esmaecidas** — Opacity reduzida e badge "Fora do modelo" quando uma permissão não se aplica ao scoring_model da cidade selecionada
+
+### Arquivos modificados
+
+- `src/pages/BrandPermissionOverflowPage.tsx` — Buscar `scoring_model` da branch selecionada, adicionar mapeamento de contexto, badge do modelo, botão "Alinhar ao Modelo", visual esmaecido para permissões fora do contexto
+
+### Fluxo do Usuário
 ```text
-┌──────────────────────────────┐
-│ 📍 Cidade Nome    🔄 ✏️ [⟲] │
-│ Estado                       │
-│ [Misto] [Resgate] [Ativa] ● │
-└──────────────────────────────┘
+Permissões → Seleciona cidade "Leme" → Badge [🚗 Apenas Motorista]
+→ Permissões de cliente (ofertas, resgates, cupons) aparecem esmaecidas com badge "Fora do modelo"
+→ Botão [Alinhar ao Modelo] → Desativa automaticamente permissões de cliente
+→ [Salvar]
 ```
 
-### Layout esperado (desktop — sem mudança)
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ 📍 Cidade Nome  |  [Misto] [Resgate] [Ativa] ● [⟲] [✏️]   │
-└──────────────────────────────────────────────────────────────┘
-```
+### Detalhes técnicos
+- Busca `scoring_model` da branch selecionada via query existente (já carrega branches, basta incluir `scoring_model` no select)
+- Mapeamento é uma constante no código (sem migration), pois os módulos de permissão já existem
+- O botão "Alinhar" apenas manipula `localChanges`, sem salvar automaticamente
+- Não altera a lógica de salvamento existente
 
