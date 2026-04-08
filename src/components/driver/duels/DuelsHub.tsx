@@ -105,7 +105,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   );
 
   const totalDuels = (duels || []).length;
-  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0 || feedAtividade.length > 0;
+  const hasAnything = totalDuels > 0 || duelosCidadeAoVivo.length > 0 || duelosCidadeAgendados.length > 0 || feedAtividade.length > 0;
 
   // Arena ao vivo (espectador)
   if (arenaDuel) {
