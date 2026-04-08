@@ -7,6 +7,8 @@ import { resolveParticipantName, resolveParticipantAvatar, type Duel, useContage
 interface Props {
   duelo: Duel;
   onOpenArena?: (duel: Duel) => void;
+  /** Força o contexto visual do card (ignora status real para badge) */
+  contextoSecao?: "ao_vivo" | "agendado";
 }
 
 function tempoRestante(endAt: string): string {
