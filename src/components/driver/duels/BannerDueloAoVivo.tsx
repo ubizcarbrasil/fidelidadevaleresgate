@@ -19,7 +19,7 @@ export default function BannerDueloAoVivo({ branchId, fontHeading }: Props) {
   const { data: duelos } = useDuelosCidade(branchId);
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
 
-  const aoVivo = (duelos || []).filter((d) => d.status === "live" || d.status === "accepted");
+  const aoVivo = (duelos || []).filter((d) => d.status === "live");
   if (aoVivo.length === 0 && !arenaDuel) return null;
 
   if (arenaDuel) {
