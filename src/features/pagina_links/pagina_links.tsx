@@ -103,6 +103,30 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
   ];
 }
 
+function BotaoCopiar({ url }: { url: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiado(true);
+      toast.success("Link copiado!");
+      setTimeout(() => setCopiado(false), 2000);
+    });
+  }, [url]);
+
+  return (
+    <button
+      onClick={copiar}
+      className="shrink-0 rounded-md bg-muted/80 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      title="Copiar link"
+    >
+      {copiado ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
 export default function PaginaLinks() {
   const [categorias, setCategorias] = useState<CategoriaLinks[]>([]);
   const [carregando, setCarregando] = useState(true);
