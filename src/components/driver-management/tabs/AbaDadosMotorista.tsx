@@ -187,7 +187,9 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
         <DriverPasswordReset driver={driver} />
       </div>
 
-      <DriverBranchEditor driver={driver} brandId={brandId} />
+      {consoleScope !== "BRANCH" && (
+        <DriverBranchEditor driver={driver} brandId={brandId} />
+      )}
     </div>
   );
 }
