@@ -323,6 +323,119 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: reset_branch_points — granular points reset per branch
+    if (action === "reset_branch_points") {
+      const { branch_id, target, customer_id } = body;
+      if (!branch_id || !target) {
+        return new Response(JSON.stringify({ error: "branch_id and target required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!["all", "drivers", "clients", "single"].includes(target)) {
+        return new Response(JSON.stringify({ error: "target must be all, drivers, clients, or single" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (target === "single" && !customer_id) {
+        return new Response(JSON.stringify({ error: "customer_id required for single target" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify caller owns the brand that owns this branch (or is root_admin)
+      const { data: branch } = await adminClient
+        .from("branches")
+        .select("id, brand_id")
+        .eq("id", branch_id)
+        .maybeSingle();
+
+      if (!branch) {
+        return new Response(JSON.stringify({ error: "Branch not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: brandAdminCheck } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("brand_id", branch.brand_id)
+        .in("role", ["brand_admin", "root_admin"])
+        .maybeSingle();
+
+      if (!brandAdminCheck && !isRootAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Build query to find affected customers
+      let query = adminClient
+        .from("customers")
+        .select("id, name, points_balance")
+        .eq("branch_id", branch_id)
+        .gt("points_balance", 0);
+
+      if (target === "drivers") {
+        query = query.ilike("name", "%[MOTORISTA]%");
+      } else if (target === "clients") {
+        query = query.not("name", "ilike", "%[MOTORISTA]%");
+      } else if (target === "single") {
+        query = query.eq("id", customer_id);
+      }
+
+      const { data: affectedCustomers, error: fetchErr } = await query;
+      if (fetchErr) throw fetchErr;
+
+      const affected = affectedCustomers || [];
+
+      // Insert DEBIT ledger entries for audit trail
+      for (const c of affected) {
+        await adminClient.from("points_ledger").insert({
+          customer_id: c.id,
+          brand_id: branch.brand_id,
+          branch_id: branch_id,
+          entry_type: "DEBIT",
+          points_amount: c.points_balance,
+          reason: `Reset de pontos (${target === "all" ? "todos" : target === "drivers" ? "motoristas" : target === "clients" ? "clientes" : "individual"})`,
+          reference_type: "BRANCH_RESET",
+        });
+      }
+
+      // Zero out balances
+      if (affected.length > 0) {
+        const ids = affected.map((c: any) => c.id);
+        // Supabase JS doesn't have bulk .in() update, so we do batches
+        for (const id of ids) {
+          await adminClient.from("customers").update({ points_balance: 0 }).eq("id", id);
+        }
+      }
+
+      // Cancel active duels and side bets when resetting drivers or all
+      if (target === "all" || target === "drivers") {
+        await adminClient
+          .from("driver_duels")
+          .update({ status: "canceled" })
+          .eq("branch_id", branch_id)
+          .in("status", ["pending", "accepted", "live"]);
+
+        await adminClient
+          .from("duel_side_bets")
+          .update({ status: "canceled" })
+          .eq("branch_id", branch_id)
+          .in("status", ["open", "counter_proposed", "matched"]);
+      }
+
+      return new Response(JSON.stringify({ ok: true, affected_count: affected.length }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

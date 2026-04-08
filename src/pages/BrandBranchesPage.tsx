@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw, HandCoins } from "lucide-react";
+import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw, HandCoins, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import DialogResetPontos from "@/components/branch/DialogResetPontos";
 
 export default function BrandBranchesPage() {
   const navigate = useNavigate();
