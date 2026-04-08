@@ -677,9 +677,29 @@ export default function BrandPermissionOverflowPage() {
       {isViewingBranch && (
         <Card className="border-accent bg-accent/10">
           <CardContent className="py-3">
-            <p className="text-sm text-accent-foreground">
-              <MapPin className="h-4 w-4 inline mr-1" />
-              Visualizando permissões para <strong>{branches?.find(b => b.id === activeBranchId)?.name}</strong>.
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 text-sm text-accent-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>Visualizando permissões para <strong>{branches?.find(b => b.id === activeBranchId)?.name}</strong>.</span>
+                {selectedBranchScoringModel && SCORING_MODEL_LABELS[selectedBranchScoringModel] && (() => {
+                  const info = SCORING_MODEL_LABELS[selectedBranchScoringModel];
+                  const Icon = info.icon;
+                  return (
+                    <Badge variant="outline" className={`text-xs ${info.colorClass}`}>
+                      <Icon className="h-3 w-3 mr-1" />
+                      {info.label}
+                    </Badge>
+                  );
+                })()}
+              </div>
+              {selectedBranchScoringModel && selectedBranchScoringModel !== "BOTH" && (
+                <Button variant="outline" size="sm" onClick={alignToModel} className="text-xs">
+                  <Zap className="h-3.5 w-3.5 mr-1" />
+                  Alinhar ao Modelo
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
               Permissões herdam do padrão global e podem ser sobrescritas individualmente.
             </p>
           </CardContent>
