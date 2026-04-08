@@ -66,8 +66,13 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   // Feed de atividade: todos os duelos da cidade (últimos 30 dias)
   const feedAtividade = useMemo(() => {
     if (!duelosCidade) return [];
-    return duelosCidade;
-  }, [duelosCidade]);
+    // Excluir duelos já exibidos nas seções "Ao vivo" e "Agendados" da cidade
+    const idsDestaque = new Set([
+      ...duelosCidadeAoVivo.map((d) => d.id),
+      ...duelosCidadeAgendados.map((d) => d.id),
+    ]);
+    return duelosCidade.filter((d) => !idsDestaque.has(d.id));
+  }, [duelosCidade, duelosCidadeAoVivo, duelosCidadeAgendados]);
 
   const pendingChallenges = useMemo(
     () => (duels || []).filter((d) => d.status === "pending" && d.challenged_id === participantId && d.negotiation_status !== "counter_proposed"),
