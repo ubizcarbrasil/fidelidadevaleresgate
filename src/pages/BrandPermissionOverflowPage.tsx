@@ -545,6 +545,15 @@ export default function BrandPermissionOverflowPage() {
                 </>
               )}
               {hasLocalChange && <Badge variant="secondary" className="text-[10px]">modificado</Badge>}
+              {isViewingBranch && moduleCtx === "PASSENGER" && (
+                <Badge variant="outline" className="text-[10px] border-red-500/50 text-red-400">Cliente</Badge>
+              )}
+              {isViewingBranch && moduleCtx === "DRIVER" && (
+                <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-400">Motorista</Badge>
+              )}
+              {outOfModel && (
+                <Badge variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-400">Fora do modelo</Badge>
+              )}
               {isViewingBranch && configs?.some(c => c.permission_key === perm.key && c.branch_id === activeBranchId) && (
                 <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">customizado</Badge>
               )}
