@@ -51,13 +51,17 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const participantId = participant?.id || null;
 
   // Duelos públicos ao vivo na cidade (excluindo os próprios do motorista)
+  const meusIds = useMemo(() => new Set((duels || []).map((d) => d.id)), [duels]);
+
   const duelosCidadeAoVivo = useMemo(() => {
     if (!duelosCidade) return [];
-    const meusIds = new Set((duels || []).map((d) => d.id));
-    return duelosCidade.filter(
-      (d) => (d.status === "live" || d.status === "accepted") && !meusIds.has(d.id)
-    );
-  }, [duelosCidade, duels]);
+    return duelosCidade.filter((d) => d.status === "live" && !meusIds.has(d.id));
+  }, [duelosCidade, meusIds]);
+
+  const duelosCidadeAgendados = useMemo(() => {
+    if (!duelosCidade) return [];
+    return duelosCidade.filter((d) => d.status === "accepted" && !meusIds.has(d.id));
+  }, [duelosCidade, meusIds]);
 
   // Feed de atividade: todos os duelos da cidade (últimos 30 dias)
   const feedAtividade = useMemo(() => {
