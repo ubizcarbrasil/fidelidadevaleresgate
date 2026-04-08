@@ -141,7 +141,7 @@ export default function DialogResetPontos({ open, onClose, branchId, branchName 
                 </div>
               )}
               {selectedCustomer && (
-                <p className="text-sm text-green-600 font-medium">✓ {selectedCustomer.name}</p>
+                <p className="text-sm text-primary font-medium">✓ {selectedCustomer.name}</p>
               )}
             </div>
           )}
