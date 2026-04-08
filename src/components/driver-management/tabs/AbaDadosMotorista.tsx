@@ -40,6 +40,7 @@ const formatCpf = (cpf: string | null) => {
 
 export default function AbaDadosMotorista({ driver, brandId }: Props) {
   const queryClient = useQueryClient();
+  const { consoleScope } = useBrandGuard();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formName, setFormName] = useState("");
