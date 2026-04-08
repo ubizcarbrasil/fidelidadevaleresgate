@@ -145,7 +145,7 @@ export default function AppLayout() {
           <SidebarComponent />
         </Suspense>
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 px-4 saas-topbar shrink-0 relative z-10">
+          <header className="h-14 flex items-center gap-3 px-4 saas-topbar shrink-0 relative z-10 pwa-safe-top">
             <SidebarTrigger className="mr-1" />
 
             {isImpersonating && (
