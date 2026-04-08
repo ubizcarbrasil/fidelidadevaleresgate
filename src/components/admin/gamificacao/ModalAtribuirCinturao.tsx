@@ -66,7 +66,12 @@ export default function ModalAtribuirCinturao({ branchId, brandId, open, onClose
     onSuccess: () => {
       toast.success("Cinturão atribuído com sucesso!");
       qc.invalidateQueries({ queryKey: ["city-belt-champion", branchId] });
+
+      // Enviar notificação push para o novo campeão
+      enviarNotificacaoCinturao(customerId);
+
       resetAndClose();
+    },
     },
     onError: () => toast.error("Erro ao atribuir cinturão"),
   });
