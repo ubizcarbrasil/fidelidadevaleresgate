@@ -118,7 +118,7 @@ export default function CustomerPreviewPage() {
           .select("*")
           .eq("id", brandId)
           .eq("is_active", true)
-          .single(),
+          .maybeSingle(),
         supabase
           .from("branches")
           .select("*")

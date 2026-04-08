@@ -153,7 +153,7 @@ export default function PaginaLinks() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.cards.map((card) => {
                   const Icone = card.icone;
-                  const urlCompleta = `${BASE_URL}${card.rota}`;
+                  const urlCompleta = `${getBaseUrl()}${card.rota}`;
                   return (
                     <a
                       key={card.titulo + card.rota}
