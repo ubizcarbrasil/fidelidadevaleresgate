@@ -99,6 +99,26 @@ export function DriverSessionProvider({
     if (d) setDriver(d);
   }, [brandId, driver]);
 
+  // Re-check localStorage when tab regains focus (fixes stale session on mobile tab reuse)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      const savedCpf = localStorage.getItem(storageKey(brandId));
+      const currentCpf = driver?.cpf ? cleanCpf(driver.cpf) : null;
+      if (savedCpf && savedCpf !== currentCpf) {
+        setLoading(true);
+        fetchDriverByCpf(brandId, savedCpf).then((d) => {
+          if (d) setDriver(d);
+          setLoading(false);
+        });
+      } else if (!savedCpf && driver) {
+        setDriver(null);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [brandId, driver]);
+
   return (
     <DriverSessionContext.Provider value={{ driver, loading, loginByCpf, logout, refreshDriver }}>
       {children}
