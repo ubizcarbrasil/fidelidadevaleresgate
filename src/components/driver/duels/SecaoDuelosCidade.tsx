@@ -15,7 +15,10 @@ export default function SecaoDuelosCidade({ branchId, fontHeading, onVerTodos }:
   const { data: duelos, isLoading } = useDuelosCidade(branchId);
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
 
-  if (isLoading || !duelos || duelos.length === 0) return null;
+  // Mostrar apenas duelos ao vivo nesta seção
+  const aoVivo = (duelos || []).filter((d) => d.status === "live");
+
+  if (isLoading || aoVivo.length === 0) return null;
 
   if (arenaDuel) {
     // Find latest version from query data
