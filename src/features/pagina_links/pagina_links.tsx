@@ -3,7 +3,7 @@ import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink,
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
-const BASE_URL = "https://fidelidadevaleresgate.lovable.app";
+const getBaseUrl = () => window.location.origin;
 
 interface LinkCard {
   titulo: string;
