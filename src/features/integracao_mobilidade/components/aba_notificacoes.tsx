@@ -13,6 +13,7 @@ import {
   Send, Save, Check, Loader2, CheckCircle, MapPin, MessageSquare,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
+import { HistoricoNotificacoesMotorista } from "./historico_notificacoes_motorista";
 
 interface Props {
   brandId: string;
@@ -245,6 +246,9 @@ export function AbaNotificacoes({
           </Card>
         </>
       )}
+
+      {/* Histórico de notificações */}
+      <HistoricoNotificacoesMotorista brandId={brandId} getBranchName={getBranchName} />
     </div>
   );
 }
