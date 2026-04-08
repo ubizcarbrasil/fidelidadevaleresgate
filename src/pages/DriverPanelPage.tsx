@@ -47,6 +47,7 @@ export default function DriverPanelPage() {
   const branchId = searchParams.get("branchId") || null;
   const initialCategoryId = searchParams.get("categoryId") || null;
   const initialDealId = searchParams.get("dealId") || null;
+  const sessionRequestKey = searchParams.get("sessionKey") || null;
 
   const [brand, setBrand] = useState<any>(null);
   const [branch, setBranch] = useState<any>(null);
@@ -120,7 +121,7 @@ export default function DriverPanelPage() {
   }
 
   return (
-    <DriverSessionProvider brandId={brand.id}>
+    <DriverSessionProvider brandId={brand.id} sessionRequestKey={sessionRequestKey}>
       <DriverGate
         brand={brand}
         branch={branch}
