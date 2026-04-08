@@ -1,62 +1,33 @@
 
 
-## Painel da Cidade — Visão Completa da Arena Competitiva
+## Atualizar AjudaDuelosSheet com a Jornada Completa dos Duelos
 
 ### Objetivo
-Dar ao administrador da cidade (Branch Admin) visibilidade total da jornada de duelos, apostas, ranking competitivo, cinturão e feed — tudo dentro do dashboard da cidade.
+Reescrever o conteúdo do `AjudaDuelosSheet.tsx` para cobrir **toda a jornada** do sistema de duelos — desde a criação do desafio até apostas paralelas, negociação de pontos, arena ao vivo, ranking, cinturão, conquistas, perfil competitivo e feed social.
 
-### Novos Arquivos
+### O que muda
+Arquivo único: `src/components/driver/duels/AjudaDuelosSheet.tsx`
 
-**1. `src/components/dashboard/branch/hook_branch_duelos.ts`**
-- `useBranchDuelosStats(branchId)` — queries agregadas: duelos ativos, finalizados no mês, apostas abertas/matched, pontos em escrow, bônus 10% distribuído
+### Novas seções do accordion (substituindo as atuais)
 
-**2. `src/components/dashboard/branch/BranchDuelosAtivos.tsx`**
-- Lista duelos ao vivo/aceitos/pendentes com placar, nomes e status visual (badges)
-- Reutiliza `useDuelosCidade` existente
+1. **Como funciona o duelo?** — Competição entre motoristas da mesma cidade, corridas finalizadas no período
+2. **Como desafiar alguém?** — Seleção de adversário(s), definição de período e aposta de pontos opcional
+3. **Negociação de pontos** — Contraproposta de valor, aceite/recusa da contraproposta, escrow automático
+4. **Aceitar ou recusar desafio** — Confirmação com aviso de risco, reserva imediata de pontos
+5. **Contagem de corridas** — Apenas FINALIZED dentro do período, 100% automático
+6. **Arena ao vivo** — Placar em tempo real, palpites da torcida, badges de liderança
+7. **Apostas entre espectadores** — Sistema P2P: criar aposta, aceitar ou contrapropor valor, escrow, liquidação 90/10
+8. **Bônus 10% para o vencedor** — Explicação do prêmio extra vindo das apostas de espectadores
+9. **Ranking da cidade** — Classificação por corridas/pontos, atualização automática
+10. **Cinturão da cidade** — Título máximo, troca de mãos, destaque especial
+11. **Perfil competitivo** — Apelido público, avatar, conquistas, estatísticas
+12. **Feed de atividade** — Timeline social: desafios, aceites, resultados, recusas
+13. **Privacidade e anonimato** — Apelido público, sem dados de rota/valor
+14. **Dúvidas frequentes** — FAQ atualizado incluindo apostas, empate, limites, pontos pendentes
 
-**3. `src/components/dashboard/branch/BranchApostasResumo.tsx`**
-- Resumo das apostas: abertas, matched, pontos em escrow, bônus distribuído
-- Lista apostas ativas com valores e participantes
-
-**4. `src/components/dashboard/branch/BranchRankingCompetitivo.tsx`**
-- Top motoristas por corridas (reusa `useRankingCidade`)
-- Campeão do cinturão em destaque (reusa `useCinturaoCidade`)
-
-**5. `src/components/dashboard/branch/BranchFeedDuelos.tsx`**
-- Timeline dos últimos eventos de duelos (desafios, aceites, resultados)
-- Adapta a lógica do `FeedAtividadeCidade` para o admin
-
-**6. `src/components/dashboard/branch/BranchArenaDuelos.tsx`**
-- Componente orquestrador com banner "⚔️ Arena da Cidade"
-- Agrupa KPIs de duelos + sub-cards acima
-- Exibe somente quando há dados de duelos
-
-### Modificação
-
-**7. `src/components/dashboard/BranchDashboardSection.tsx`**
-- Adicionar `<BranchArenaDuelos branchId={branchId} />` após o bloco de Ranking + Feed
-- Condicional a `isDriverEnabled`
-
-### Layout Visual
-```text
-┌────────────────────────────────┐
-│ ⚔️ Arena Competitiva da Cidade │
-├────────────────────────────────┤
-│ KPIs: Ativos | Finalizados    │
-│       Apostas | Escrow | Bônus│
-├───────────────┬────────────────┤
-│ Duelos ao     │ Ranking +      │
-│ Vivo/Recentes │ Cinturão       │
-├───────────────┴────────────────┤
-│ Apostas Ativas (resumo)       │
-├────────────────────────────────┤
-│ Feed de Atividades (timeline) │
-└────────────────────────────────┘
-```
-
-### Destaques Técnicos
-- Reutiliza hooks existentes: `useDuelosCidade`, `useRankingCidade`, `useCinturaoCidade`
-- Hook novo apenas para métricas agregadas (contagens e somas)
-- Realtime via os mesmos channels já configurados
-- Sem necessidade de novas tabelas ou RPCs — tudo via queries client-side filtradas por `branch_id`
+### Detalhes técnicos
+- Mesmo componente `Sheet` + `Accordion` existente
+- Apenas atualização do array `secoes` com novos ícones (adicionar `Handshake`, `Wallet`, `Gift`, `Star` do lucide)
+- Nenhuma mudança estrutural, apenas conteúdo expandido
+- Textos em português brasileiro, linguagem acessível e direta
 
