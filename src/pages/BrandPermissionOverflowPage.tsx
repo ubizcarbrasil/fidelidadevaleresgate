@@ -118,7 +118,7 @@ export default function BrandPermissionOverflowPage() {
   const { data: branches } = useQuery({
     queryKey: ["branches-for-brand", activeBrandId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("branches").select("id, name, city").eq("brand_id", activeBrandId!).eq("is_active", true).order("name");
+      const { data, error } = await supabase.from("branches").select("id, name, city, scoring_model").eq("brand_id", activeBrandId!).eq("is_active", true).order("name");
       if (error) throw error;
       return data;
     },
