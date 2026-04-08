@@ -1,45 +1,54 @@
 
 
-## Alinhar Permissões ao Modelo de Negócio da Cidade
+## Cinturão Manual + Recompensa por Tomada
 
-### Problema
-A página de Permissões dos Parceiros (`BrandPermissionOverflowPage`) não leva em conta o `scoring_model` da cidade selecionada. Quando você seleciona Leme (DRIVER_ONLY), permissões de módulos voltados ao cliente (ofertas, resgates, cupons) continuam habilitadas, gerando inconsistência.
+### Resumo
+Permitir que o admin atribua manualmente o cinturão a um motorista (definindo o recorde), e configure uma recompensa em pontos para quem "tomar" o cinturão no mês (superar o recorde).
 
-### Solução
-Adicionar consciência do modelo de negócio na página de permissões, com:
+### Mudanças no Banco de Dados (1 migration)
 
-1. **Indicador visual do modelo** — Ao selecionar uma cidade, exibir um badge com o scoring_model (🚗 Motorista, 👤 Cliente, 🔄 Ambos)
+1. **Adicionar colunas à `city_belt_champions`**:
+   - `belt_prize_points integer DEFAULT 0` — recompensa em pontos para quem tomar o cinturão
+   - `assigned_manually boolean DEFAULT false` — indica se foi atribuição manual
 
-2. **Mapeamento de contexto por módulo** — Constante que classifica cada módulo de permissão como `DRIVER`, `PASSENGER` ou `UNIVERSAL`:
-   - PASSENGER: `offers`, `redemptions`, `vouchers`, `catalog`
-   - DRIVER: (módulos futuros de gestão de motorista)
-   - UNIVERSAL: `stores`, `customers`, `reports`, `settings`, `branches`, `users`, `roles`, `loyalty`, `points_rules`, etc.
+2. **Criar RPC `assign_city_belt_manual`**:
+   - Parâmetros: `p_branch_id`, `p_brand_id`, `p_customer_id`, `p_record_value` (número de corridas do portador), `p_prize_points` (recompensa)
+   - Faz upsert no registro `monthly` com o motorista escolhido e o recorde informado
+   - Atualiza `all_time` se o valor for maior que o atual
+   - Salva `belt_prize_points` e `assigned_manually = true`
 
-3. **Tag visual por permissão** — Badge colorido indicando se a permissão é de contexto motorista (🟢), cliente (🔴) ou universal (sem badge)
+3. **Atualizar RPC `update_city_belt`**:
+   - Quando o cinturão muda de dono automaticamente (novo recorde superado), creditar `belt_prize_points` ao novo campeão via `points_ledger` e debitar da `branch_points_wallet`
+   - Zerar o prize após distribuição
 
-4. **Botão "Alinhar ao Modelo"** — Ação rápida que:
-   - Num cidade DRIVER_ONLY → desativa automaticamente todas as permissões de módulos PASSENGER
-   - Num cidade PASSENGER_ONLY → desativa automaticamente todas as permissões de módulos DRIVER
-   - Num cidade BOTH → não altera nada (mostra toast informativo)
-   - Aplica apenas como alterações locais (precisa salvar depois)
+### Mudanças no Frontend
 
-5. **Permissões fora do modelo ficam visualmente esmaecidas** — Opacity reduzida e badge "Fora do modelo" quando uma permissão não se aplica ao scoring_model da cidade selecionada
+**Arquivo: `src/components/admin/gamificacao/CinturaoAdminView.tsx`**
+- Adicionar botão "Atribuir Cinturão" que abre um dialog/modal
+- Exibir a recompensa configurada no card do campeão mensal (ex: "🏆 Prêmio: 500 pts para quem tomar")
 
-### Arquivos modificados
+**Novo arquivo: `src/components/admin/gamificacao/ModalAtribuirCinturao.tsx`**
+- Select de motorista (busca motoristas da cidade com `[MOTORISTA]` no nome)
+- Input numérico para "Recorde do portador" (número de corridas)
+- Input numérico para "Recompensa por tomada" (pontos que o próximo campeão ganha)
+- Botão confirmar que chama a RPC `assign_city_belt_manual`
 
-- `src/pages/BrandPermissionOverflowPage.tsx` — Buscar `scoring_model` da branch selecionada, adicionar mapeamento de contexto, badge do modelo, botão "Alinhar ao Modelo", visual esmaecido para permissões fora do contexto
+**Atualizar hook `hook_cinturao_cidade.ts`**:
+- Incluir `belt_prize_points` e `assigned_manually` no tipo `CampeaoCinturao`
+
+**Atualizar RPC `get_city_belt_champion`**:
+- Retornar `belt_prize_points` e `assigned_manually`
 
 ### Fluxo do Usuário
 ```text
-Permissões → Seleciona cidade "Leme" → Badge [🚗 Apenas Motorista]
-→ Permissões de cliente (ofertas, resgates, cupons) aparecem esmaecidas com badge "Fora do modelo"
-→ Botão [Alinhar ao Modelo] → Desativa automaticamente permissões de cliente
-→ [Salvar]
+Gamificação → Cinturão → [Atribuir Cinturão]
+→ Seleciona motorista "João Silva"
+→ Recorde: 120 corridas
+→ Recompensa: 500 pontos
+→ [Confirmar]
+→ Cinturão atribuído manualmente
+→ Card exibe: "João Silva · 120 corridas · 🏆 500 pts em jogo"
+→ No próximo update automático, se alguém superar 120 corridas:
+   → Novo campeão recebe 500 pontos automaticamente
 ```
-
-### Detalhes técnicos
-- Busca `scoring_model` da branch selecionada via query existente (já carrega branches, basta incluir `scoring_model` no select)
-- Mapeamento é uma constante no código (sem migration), pois os módulos de permissão já existem
-- O botão "Alinhar" apenas manipula `localChanges`, sem salvar automaticamente
-- Não altera a lógica de salvamento existente
 
