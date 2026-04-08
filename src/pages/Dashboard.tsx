@@ -311,6 +311,11 @@ export default function Dashboard() {
         <BranchDashboardSection branchId={currentBranchId} />
       )}
 
+      {/* Brand/Tenant/Root viewing a specific branch */}
+      {isViewingBranch && viewingBranchId && (
+        <BranchDashboardSection branchId={viewingBranchId} />
+      )}
+
       {/* Sections hidden for BRANCH scope */}
       {consoleScope !== "BRANCH" && (
         <>

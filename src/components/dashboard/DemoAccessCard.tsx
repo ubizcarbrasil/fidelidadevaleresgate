@@ -110,12 +110,7 @@ export default function DemoAccessCard() {
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs gap-1 shrink-0"
-                onClick={() =>
-                  window.open(
-                    `${origin}/branch-wallet?branchId=${branch.id}`,
-                    "_blank"
-                  )
-                }
+                onClick={() => navigate(`/index?branchId=${branch.id}`)}
               >
                 <ExternalLink className="h-3 w-3" /> Abrir
               </Button>
