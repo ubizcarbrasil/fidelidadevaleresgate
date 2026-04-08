@@ -1,23 +1,27 @@
 
 
-# Correção: Seção "Ao vivo na cidade" mostrando duelos agendados
+# Investigação: "Agendado" ainda aparece na seção errada
 
-## Problema
-A seção **"Ao vivo na cidade"** está exibindo duelos com status `accepted` (badge "Agendado"), que ainda não começaram. Isso é confuso porque o título diz "Ao vivo" mas o card mostra "Agendado".
+## Diagnóstico
 
-## Solução
+O código do `DuelsHub.tsx` já foi corrigido na última alteração — a seção "Ao vivo na cidade" filtra apenas `status === "live"`. Porém, existem **duas possíveis causas** para o problema persistir:
 
-Separar os duelos da cidade em duas categorias visuais:
+1. **FeedAtividadeCidade** — A seção "Atividade da Cidade" no final da tela mostra **todos** os duelos da cidade (incluindo `accepted`/agendados) com badges como "Desafio aceito", o que pode estar causando confusão visual similar.
 
-1. **"Ao vivo na cidade"** — mostrar apenas duelos com `status === "live"` (realmente acontecendo agora)
-2. **"Agendados na cidade"** — mostrar duelos com `status === "accepted"` que ainda não começaram, com título e ícone diferenciados (ex: ícone de relógio, cor neutra)
+2. **Cache do preview** — A versão anterior do código pode ainda estar carregada no navegador. Um refresh forçado resolveria.
 
-## Arquivo alterado
-- `src/components/driver/duels/DuelsHub.tsx` — separar o `useMemo` de `duelosCidadeAoVivo` em dois arrays (ao vivo e agendados) e renderizar duas seções distintas
+## Plano de correção
 
-## Detalhes técnicos
-- Filtro "Ao vivo": `d.status === "live"`
-- Filtro "Agendados": `d.status === "accepted"`
-- Ambos continuam excluindo duelos do próprio motorista (`!meusIds.has(d.id)`)
-- O componente `CardDueloPublico` já renderiza corretamente os badges por status, então não precisa de alteração
+### 1. Verificar se é cache
+- Testar se o preview atual já reflete o código corrigido (a seção "Ao vivo" deveria mostrar apenas duelos `live`)
+
+### 2. Melhorar o FeedAtividadeCidade
+- Se o problema é no feed, filtrar ou agrupar melhor os itens para evitar confusão com as seções acima
+- Excluir do feed os duelos que já aparecem nas seções "Ao vivo" e "Agendados" para não duplicar
+
+### 3. Arquivo alterado
+- `src/components/driver/duels/DuelsHub.tsx` — ajustar o array `feedAtividade` para excluir duelos já listados nas seções de destaque (ao vivo e agendados)
+
+## Pergunta
+Preciso confirmar: o problema que você vê é na seção "Ao vivo na cidade" ainda mostrando badge "Agendado"? Ou é em outra parte da tela (como o feed de atividade mais abaixo)? Se puder mandar outro print ajuda a localizar exatamente.
 
