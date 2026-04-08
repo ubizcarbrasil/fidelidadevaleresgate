@@ -159,8 +159,73 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        beltsUpdated++;
-        logger.info("City belt updated", { branch_id: branchId, result: data });
+        const beltResult = data as { success: boolean; changed?: boolean; champion_customer_id?: string; record_value?: number; prize_awarded?: number };
+
+        if (beltResult?.changed && beltResult.champion_customer_id) {
+          beltsUpdated++;
+          logger.info("City belt changed", { branch_id: branchId, new_champion: beltResult.champion_customer_id });
+
+          // Notify the new champion
+          const prizeText = beltResult.prize_awarded && beltResult.prize_awarded > 0
+            ? ` Você ganhou ${beltResult.prize_awarded} pts de prêmio!`
+            : "";
+          await sendNotification(
+            sb,
+            [beltResult.champion_customer_id],
+            "Você conquistou o cinturão! 👑🏆",
+            `Parabéns! Você é o novo dono do cinturão da cidade com ${beltResult.record_value ?? 0} corridas!${prizeText}`,
+            "belt_champion",
+            branchId,
+          );
+
+          // Also notify via TaxiMachine if possible
+          try {
+            const { data: champCustomer } = await sb
+              .from("customers")
+              .select("external_driver_id, name")
+              .eq("id", beltResult.champion_customer_id)
+              .maybeSingle();
+
+            if (champCustomer?.external_driver_id) {
+              const { data: integration } = await sb
+                .from("machine_integrations")
+                .select("api_key, basic_auth_user, basic_auth_password, driver_message_enabled")
+                .eq("brand_id", brandId)
+                .eq("driver_message_enabled", true)
+                .maybeSingle();
+
+              if (integration?.api_key) {
+                const basicToken = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
+                const driverId = parseInt(champCustomer.external_driver_id, 10);
+                if (!isNaN(driverId)) {
+                  const msg = `👑🏆 Você conquistou o CINTURÃO DA CIDADE com ${beltResult.record_value ?? 0} corridas no mês!${prizeText} Parabéns, campeão!`;
+                  const controller = new AbortController();
+                  const timeout = setTimeout(() => controller.abort(), 5000);
+                  try {
+                    await fetch("https://api.taximachine.com.br/api/integracao/enviarMensagem", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "api-key": integration.api_key,
+                        "Authorization": `Basic ${basicToken}`,
+                      },
+                      body: JSON.stringify({ tipo_chat: "P", destinatario_id: driverId, mensagem: msg }),
+                      signal: controller.signal,
+                    });
+                  } catch (_) { /* ignore */ } finally {
+                    clearTimeout(timeout);
+                  }
+                }
+              }
+            }
+          } catch (tmErr) {
+            logger.error("Failed to send TaxiMachine belt notification", { error: String(tmErr) });
+          }
+
+          notificationsSent++;
+        } else {
+          logger.info("City belt unchanged", { branch_id: branchId });
+        }
       } catch (err) {
         logger.error("Exception updating city belt", { branch_id: branchId, error: String(err) });
       }
