@@ -59,7 +59,7 @@ export function EditorTemplateMensagem({ open, onOpenChange, template, brandId, 
   const previewMessage = () => {
     let msg = bodyTemplate;
     for (const v of AVAILABLE_VARS) {
-      msg = msg.replaceAll(`{{${v.key}}}`, v.example);
+      msg = msg.split(`{{${v.key}}}`).join(v.example);
     }
     return msg;
   };
