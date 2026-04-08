@@ -170,7 +170,7 @@ function AnimatedRoutes() {
             <Route path="/driver" element={<DriverPanelPage />} />
             <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
-            <Route path="/register-store" element={<ProtectedRoute><StoreRegistrationWizard /></ProtectedRoute>} />
+            <Route path="/register-store" element={<StoreRegistrationWizard />} />
             <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
             <Route
               path="/"
