@@ -7,6 +7,8 @@ import { resolveParticipantName, resolveParticipantAvatar, type Duel, useContage
 interface Props {
   duelo: Duel;
   onOpenArena?: (duel: Duel) => void;
+  /** Força o contexto visual do card (ignora status real para badge) */
+  contextoSecao?: "ao_vivo" | "agendado";
 }
 
 function tempoRestante(endAt: string): string {
@@ -36,13 +38,14 @@ function AvatarMini({ nome, avatarUrl }: { nome: string; avatarUrl?: string | nu
   );
 }
 
-export default function CardDueloPublico({ duelo, onOpenArena }: Props) {
+export default function CardDueloPublico({ duelo, onOpenArena, contextoSecao }: Props) {
   const [, setTick] = useState(0);
 
-  const aoVivo = duelo.status === "live";
-  const encerrado = duelo.status === "finished";
-  const agendado = duelo.status === "accepted" || duelo.status === "pending";
-  const arregou = duelo.status === "declined";
+  // Se contextoSecao é fornecido, força a classificação visual para evitar badge errada
+  const aoVivo = contextoSecao === "ao_vivo" ? true : contextoSecao === "agendado" ? false : duelo.status === "live";
+  const encerrado = !contextoSecao && duelo.status === "finished";
+  const agendado = contextoSecao === "agendado" ? true : contextoSecao === "ao_vivo" ? false : (duelo.status === "accepted" || duelo.status === "pending");
+  const arregou = !contextoSecao && duelo.status === "declined";
 
   const isAtivo = aoVivo || duelo.status === "accepted";
   const { data: contagemRealtime } = useContagemCorridasDuelo(isAtivo ? duelo : null);

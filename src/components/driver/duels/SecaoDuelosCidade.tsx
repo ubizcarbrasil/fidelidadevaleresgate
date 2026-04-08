@@ -15,11 +15,13 @@ export default function SecaoDuelosCidade({ branchId, fontHeading, onVerTodos }:
   const { data: duelos, isLoading } = useDuelosCidade(branchId);
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
 
-  if (isLoading || !duelos || duelos.length === 0) return null;
+  // Mostrar apenas duelos ao vivo nesta seção
+  const aoVivo = (duelos || []).filter((d) => d.status === "live");
+
+  if (isLoading || aoVivo.length === 0) return null;
 
   if (arenaDuel) {
-    // Find latest version from query data
-    const updated = duelos.find((d) => d.id === arenaDuel.id) || arenaDuel;
+    const updated = (duelos || []).find((d) => d.id === arenaDuel.id) || arenaDuel;
     return <ArenaAoVivo duel={updated} onBack={() => setArenaDuel(null)} />;
   }
 
@@ -44,8 +46,8 @@ export default function SecaoDuelosCidade({ branchId, fontHeading, onVerTodos }:
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
-        {duelos.map((d) => (
-          <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} />
+        {aoVivo.map((d) => (
+          <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} contextoSecao="ao_vivo" />
         ))}
       </div>
     </section>

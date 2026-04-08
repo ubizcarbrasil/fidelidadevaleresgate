@@ -14,9 +14,7 @@ interface Props {
 }
 
 export default function CardDuelosAoVivo({ duelos, onAbrirArena, fontHeading }: Props) {
-  const aoVivo = duelos.filter((d) => d.status === "live");
-  const aceitos = duelos.filter((d) => d.status === "accepted");
-  const ativos = [...aoVivo, ...aceitos];
+  const ativos = duelos.filter((d) => d.status === "live");
 
   if (ativos.length === 0) return null;
 
