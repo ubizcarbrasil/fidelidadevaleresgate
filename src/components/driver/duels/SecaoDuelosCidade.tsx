@@ -21,8 +21,7 @@ export default function SecaoDuelosCidade({ branchId, fontHeading, onVerTodos }:
   if (isLoading || aoVivo.length === 0) return null;
 
   if (arenaDuel) {
-    // Find latest version from query data
-    const updated = duelos.find((d) => d.id === arenaDuel.id) || arenaDuel;
+    const updated = (duelos || []).find((d) => d.id === arenaDuel.id) || arenaDuel;
     return <ArenaAoVivo duel={updated} onBack={() => setArenaDuel(null)} />;
   }
 
