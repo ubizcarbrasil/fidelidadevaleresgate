@@ -78,11 +78,18 @@ function ListaTransacoes({ transactions, filterType }: { transactions: any[]; fi
 }
 
 export default function BranchWalletPage() {
+  const [searchParams] = useSearchParams();
+  const urlBranchId = searchParams.get("branchId");
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
   const queryClient = useQueryClient();
   const [loadAmount, setLoadAmount] = useState("");
   const [loadDescription, setLoadDescription] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const effectiveBranchId =
+    urlBranchId && ["ROOT", "TENANT", "BRAND"].includes(consoleScope)
+      ? urlBranchId
+      : currentBranchId;
 
   const canLoad = ["ROOT", "BRAND", "TENANT"].includes(consoleScope);
 
