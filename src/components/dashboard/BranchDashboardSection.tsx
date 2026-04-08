@@ -15,6 +15,7 @@ import BranchKpiClientesCadastrados from "./branch/BranchKpiClientesCadastrados"
 import BranchKpiClientesAtivos from "./branch/BranchKpiClientesAtivos";
 import BranchKpiOfertasAtivas from "./branch/BranchKpiOfertasAtivas";
 import BranchKpiLojasParceiras from "./branch/BranchKpiLojasParceiras";
+import BranchArenaDuelos from "./branch/BranchArenaDuelos";
 
 interface Props {
   branchId: string;
@@ -81,6 +82,9 @@ export default function BranchDashboardSection({ branchId }: Props) {
           <BranchFeedTempoReal feed={feed} />
         </div>
       )}
+
+      {/* Arena Competitiva — duelos, apostas, ranking, feed */}
+      {isDriverEnabled && <BranchArenaDuelos branchId={branchId} />}
     </div>
   );
 }
