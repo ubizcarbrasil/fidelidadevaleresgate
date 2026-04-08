@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { User, CreditCard, Phone, Mail, ExternalLink, Pencil, X, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { DriverRow } from "@/types/driver";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import DriverPasswordReset from "../DriverPasswordReset";
 import DriverBranchEditor from "../DriverBranchEditor";
 
@@ -39,6 +40,7 @@ const formatCpf = (cpf: string | null) => {
 
 export default function AbaDadosMotorista({ driver, brandId }: Props) {
   const queryClient = useQueryClient();
+  const { consoleScope } = useBrandGuard();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formName, setFormName] = useState("");
@@ -185,7 +187,9 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
         <DriverPasswordReset driver={driver} />
       </div>
 
-      <DriverBranchEditor driver={driver} brandId={brandId} />
+      {consoleScope !== "BRANCH" && (
+        <DriverBranchEditor driver={driver} brandId={brandId} />
+      )}
     </div>
   );
 }
