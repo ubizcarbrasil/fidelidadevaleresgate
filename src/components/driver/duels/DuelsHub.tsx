@@ -247,7 +247,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
             </p>
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
               {duelosCidadeAoVivo.map((d) => (
-                <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} />
+                <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} contextoSecao="ao_vivo" />
               ))}
             </div>
           </section>
