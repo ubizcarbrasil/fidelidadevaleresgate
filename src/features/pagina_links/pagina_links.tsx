@@ -1,5 +1,7 @@
-import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const BASE_URL = "https://fidelidadevaleresgate.lovable.app";
 
@@ -17,88 +19,122 @@ interface CategoriaLinks {
   cards: LinkCard[];
 }
 
-const categorias: CategoriaLinks[] = [
-  {
-    titulo: "Painéis Administrativos",
-    cards: [
-      {
-        titulo: "Painel Raiz",
-        descricao: "Acesso administrativo root — gerencia tenants, brands e configurações globais.",
-        rota: "/",
-        icone: Shield,
-        cor: "from-red-500/20 to-red-600/10 border-red-500/30",
-      },
-      {
-        titulo: "Painel Empreendedor",
-        descricao: "Dashboard do brand_admin — gerencia lojas, ofertas, clientes e campanhas.",
-        rota: "/",
-        icone: Building2,
-        cor: "from-blue-500/20 to-blue-600/10 border-blue-500/30",
-        nota: "O painel exibido depende do nível de acesso do usuário logado.",
-      },
-    ],
-  },
-  {
-    titulo: "Painéis Operacionais",
-    cards: [
-      {
-        titulo: "Painel Cidade",
-        descricao: "Dashboard da cidade — KPIs, ranking e feed de eventos locais.",
-        rota: "/?branchId=ID_DA_CIDADE",
+interface Brand { id: string; name: string }
+interface Branch { id: string; name: string; brand_id: string }
+interface StoreRow { id: string; name: string; branch_id: string; brand_id: string }
+
+function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreRow[]): CategoriaLinks[] {
+  const brandMap = Object.fromEntries(brands.map(b => [b.id, b.name]));
+
+  return [
+    {
+      titulo: "Painéis Administrativos",
+      cards: [
+        {
+          titulo: "Painel Raiz",
+          descricao: "Acesso administrativo root — gerencia tenants, brands e configurações globais.",
+          rota: "/",
+          icone: Shield,
+          cor: "from-red-500/20 to-red-600/10 border-red-500/30",
+        },
+        {
+          titulo: "Painel Empreendedor",
+          descricao: "Dashboard do brand_admin — gerencia lojas, ofertas, clientes e campanhas.",
+          rota: "/",
+          icone: Building2,
+          cor: "from-blue-500/20 to-blue-600/10 border-blue-500/30",
+          nota: "O painel exibido depende do nível de acesso do usuário logado.",
+        },
+      ],
+    },
+    {
+      titulo: "Painéis Operacionais — Cidade",
+      cards: branches.map((branch) => ({
+        titulo: `Cidade — ${branch.name}`,
+        descricao: `Dashboard da cidade ${branch.name} (${brandMap[branch.brand_id] || "Brand"}).`,
+        rota: `/?branchId=${branch.id}`,
         icone: MapPin,
         cor: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30",
-        nota: "Substitua ID_DA_CIDADE pelo UUID da branch desejada.",
-      },
-      {
-        titulo: "Painel Parceiro",
-        descricao: "Painel do lojista — gerencia ofertas, cupons e visualiza métricas da loja.",
-        rota: "/store-panel?storeId=ID_DA_LOJA",
+      })),
+    },
+    {
+      titulo: "Painéis Operacionais — Parceiro",
+      cards: stores.slice(0, 12).map((store) => ({
+        titulo: `Parceiro — ${store.name}`,
+        descricao: `Painel da loja ${store.name}.`,
+        rota: `/store-panel?storeId=${store.id}`,
         icone: Store,
         cor: "from-amber-500/20 to-amber-600/10 border-amber-500/30",
-        nota: "Substitua ID_DA_LOJA pelo UUID da store desejada.",
-      },
-      {
-        titulo: "Painel Motorista",
-        descricao: "Painel do motorista — saldo, ofertas, conquistas e duelos.",
-        rota: "/driver?brandId=ID_DA_BRAND",
+      })),
+    },
+    {
+      titulo: "Painéis Operacionais — Motorista",
+      cards: brands.map((brand) => ({
+        titulo: `Motorista — ${brand.name}`,
+        descricao: `Painel do motorista na brand ${brand.name}.`,
+        rota: `/driver?brandId=${brand.id}`,
         icone: Car,
         cor: "from-purple-500/20 to-purple-600/10 border-purple-500/30",
-        nota: "Substitua ID_DA_BRAND pelo UUID da brand desejada.",
-      },
-    ],
-  },
-  {
-    titulo: "Aplicativos",
-    cards: [
-      {
-        titulo: "App do Cliente",
-        descricao: "Visualização do app do consumidor — carteira, ofertas, cupons e lojas.",
-        rota: "/customer-preview?brandId=ID_DA_BRAND",
+      })),
+    },
+    {
+      titulo: "Aplicativos",
+      cards: brands.map((brand) => ({
+        titulo: `App Cliente — ${brand.name}`,
+        descricao: `Visualização do app do consumidor na brand ${brand.name}.`,
+        rota: `/customer-preview?brandId=${brand.id}`,
         icone: Smartphone,
         cor: "from-cyan-500/20 to-cyan-600/10 border-cyan-500/30",
-        nota: "Substitua ID_DA_BRAND pelo UUID da brand desejada.",
-      },
-    ],
-  },
-  {
-    titulo: "Autenticação",
-    cards: [
-      {
-        titulo: "Login",
-        descricao: "Tela de autenticação — acesso para administradores, empreendedores e lojistas.",
-        rota: "/auth",
-        icone: LogIn,
-        cor: "from-gray-500/20 to-gray-600/10 border-gray-500/30",
-      },
-    ],
-  },
-];
+      })),
+    },
+    {
+      titulo: "Autenticação",
+      cards: [
+        {
+          titulo: "Login",
+          descricao: "Tela de autenticação — acesso para administradores, empreendedores e lojistas.",
+          rota: "/auth",
+          icone: LogIn,
+          cor: "from-gray-500/20 to-gray-600/10 border-gray-500/30",
+        },
+      ],
+    },
+  ];
+}
 
 export default function PaginaLinks() {
+  const [categorias, setCategorias] = useState<CategoriaLinks[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    async function buscarDados() {
+      const [brandsRes, branchesRes, storesRes] = await Promise.all([
+        supabase.from("brands").select("id, name").eq("is_active", true).order("name"),
+        supabase.from("branches").select("id, name, brand_id").eq("is_active", true).order("name"),
+        supabase.from("stores").select("id, name, branch_id, brand_id").eq("is_active", true).eq("approval_status", "APPROVED").order("name").limit(50),
+      ]);
+
+      const brands = (brandsRes.data || []) as Brand[];
+      const branches = (branchesRes.data || []) as Branch[];
+      const stores = (storesRes.data || []) as StoreRow[];
+
+      setCategorias(construirCategorias(brands, branches, stores));
+      setCarregando(false);
+    }
+    buscarDados();
+  }, []);
+
+  if (carregando) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-        {/* Header */}
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Central de Acessos
@@ -108,7 +144,6 @@ export default function PaginaLinks() {
           </p>
         </div>
 
-        {/* Categorias */}
         <div className="space-y-10">
           {categorias.map((cat) => (
             <section key={cat.titulo}>
@@ -121,7 +156,7 @@ export default function PaginaLinks() {
                   const urlCompleta = `${BASE_URL}${card.rota}`;
                   return (
                     <a
-                      key={card.titulo}
+                      key={card.titulo + card.rota}
                       href={urlCompleta}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -131,7 +166,7 @@ export default function PaginaLinks() {
                         <CardContent className="flex flex-col gap-3 p-5">
                           <div className="flex items-center gap-3">
                             <Icone className="h-6 w-6 shrink-0 text-foreground/80" />
-                            <span className="text-base font-semibold">{card.titulo}</span>
+                            <span className="text-base font-semibold leading-tight">{card.titulo}</span>
                             <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                           </div>
                           <p className="text-sm text-muted-foreground leading-relaxed">
