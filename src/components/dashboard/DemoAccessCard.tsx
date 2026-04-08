@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 export default function DemoAccessCard() {
   const { currentBrandId } = useBrandGuard();
+  const navigate = useNavigate();
 
   const { data: branches } = useQuery({
     queryKey: ["demo-branches", currentBrandId],
