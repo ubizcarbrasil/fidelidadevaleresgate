@@ -179,9 +179,12 @@ export default function PaginaLinks() {
                               <span>{card.nota}</span>
                             </div>
                           )}
-                          <code className="mt-auto block truncate rounded bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
-                            {card.rota}
-                          </code>
+                          <div className="mt-auto flex items-center gap-2">
+                            <code className="block flex-1 truncate rounded bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
+                              {card.rota}
+                            </code>
+                            <BotaoCopiar url={urlCompleta} />
+                          </div>
                         </CardContent>
                       </Card>
                     </a>
