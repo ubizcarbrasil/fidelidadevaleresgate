@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X, MoveRight } from "lucide-react";
+import { Shield, ArrowRight, Building2, Store, Save, Loader2, ChevronDown, MapPin, Pencil, Check, X, MoveRight, Car, User, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { queryKeys } from "@/lib/queryKeys";
