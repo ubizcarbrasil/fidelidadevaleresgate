@@ -1,52 +1,37 @@
 
 
-## Reset de Pontos Granular — Motorista, Cliente ou Todos
+## Corrigir Layout Responsivo dos Cards de Cidade
 
-### Objetivo
-Evoluir o reset de pontos da cidade para permitir escolher: zerar **todos**, apenas **motoristas**, apenas **clientes**, ou um **indivíduo específico**.
+### Problema
+Em telas mobile (430px), o card de cada cidade exibe badges, switch e botões de ação numa única linha horizontal. Os elementos ultrapassam a largura disponível e o botão de reset fica oculto por overflow.
 
-### Arquivos
+### Solução
+Reorganizar o layout do card em mobile para empilhar os elementos em duas linhas:
+- **Linha 1**: Nome da cidade + botões de ação (reset, editar, switch)
+- **Linha 2**: Badges (scoring model, resgate cidade, status)
 
-**1. Nova action `reset_branch_points` em `supabase/functions/admin-brand-actions/index.ts`**
-- Recebe: `branch_id`, `target` (`"all"` | `"drivers"` | `"clients"` | `"single"`), `customer_id?` (quando `target = "single"`)
-- Autorização: brand_admin da marca ou root_admin
-- Lógica:
-  - `all` → zera `points_balance` de todos os customers da branch
-  - `drivers` → zera apenas onde `name ILIKE '%[MOTORISTA]%'`
-  - `clients` → zera apenas onde `name NOT ILIKE '%[MOTORISTA]%'`
-  - `single` → zera apenas o `customer_id` informado
-- Para cada customer com saldo > 0, insere um DEBIT no `points_ledger` com `reference_type = 'BRANCH_RESET'`
-- Cancela duelos ativos e side bets abertas/matched da branch (quando target = all/drivers)
-- Retorna contagem de afetados
+### Arquivo modificado
+`src/pages/BrandBranchesPage.tsx`
 
-**2. Novo componente `src/components/branch/DialogResetPontos.tsx`**
-- Dialog/Sheet com 3 opções via RadioGroup:
-  - "Todos os pontos" (motoristas + clientes)
-  - "Apenas motoristas"
-  - "Apenas clientes"
-  - "Motorista/cliente específico" → exibe campo de busca por nome/CPF
-- Campo de busca com autocomplete que consulta `customers` da branch
-- Botão "Resetar" com variante destructive
-- ConfirmDialog aninhado com aviso irreversível antes de executar
+### Mudanças
+- Reestruturar o `CardContent` para usar `flex-wrap` ou empilhar verticalmente em telas pequenas
+- Mover badges para uma linha separada abaixo do nome/ações em mobile
+- Garantir que os botões de ação (switch, reset, editar) fiquem sempre visíveis
+- Usar classes responsivas do Tailwind (`sm:`, `md:`) para manter o layout horizontal em desktop
 
-**3. Modificação em `src/pages/BrandBranchesPage.tsx`**
-- Adicionar botão `RotateCcw` em cada card de cidade
-- Ao clicar, abre o `DialogResetPontos` passando `branch_id`
-- Toast de sucesso com contagem de afetados
-
-### Fluxo do Usuário
+### Layout esperado (mobile)
 ```text
-Card da cidade → [⟲] → Dialog abre
-  ○ Todos
-  ○ Apenas motoristas
-  ○ Apenas clientes
-  ○ Específico → [Buscar por nome/CPF] → Selecionar
-→ [Resetar Pontos] → Confirmação destructive → Executar → Toast "X registros zerados"
+┌──────────────────────────────┐
+│ 📍 Cidade Nome    🔄 ✏️ [⟲] │
+│ Estado                       │
+│ [Misto] [Resgate] [Ativa] ● │
+└──────────────────────────────┘
 ```
 
-### Detalhes Técnicos
-- Busca de customers usa query filtrada por `branch_id` com limit 20
-- O campo de busca filtra por `name` ou `cpf` (ilike)
-- Reutiliza `ConfirmDialog` existente com variante destructive
-- Auditabilidade garantida via `points_ledger` com reason descritivo por tipo de reset
+### Layout esperado (desktop — sem mudança)
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ 📍 Cidade Nome  |  [Misto] [Resgate] [Ativa] ● [⟲] [✏️]   │
+└──────────────────────────────────────────────────────────────┘
+```
 
