@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
