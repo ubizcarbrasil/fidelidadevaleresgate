@@ -1,47 +1,68 @@
+## Plano: Painel da Cidade — Visão Completa da Arena Competitiva
 
+### Objetivo
+Dar ao administrador da cidade (Branch Admin) visibilidade total da jornada de duelos, apostas, ranking competitivo, cinturão e feed de atividades — tudo dentro do dashboard da cidade.
 
-## Sistema de Apostas em Duelos — Entretenimento Competitivo
+### Novos Componentes
 
-### Conceito
-Motoristas que NÃO estão em um duelo podem apostar entre si sobre o resultado. Funciona em formato "dupla": um motorista cria uma aposta escolhendo um lado, e outro motorista aceita (ou faz contraproposta de valor). Ao fechar acordo, os pontos ficam travados (escrow). Ao final do duelo, quem acertou leva o prêmio — menos 10% que vai para o vencedor do duelo como recompensa.
+**1. `src/components/dashboard/branch/BranchArenaDuelos.tsx`**
+- Componente orquestrador que agrupa os sub-cards da arena no dashboard da cidade
+- Recebe `branchId` e reutiliza os hooks existentes (`useDuelosCidade`, `useRankingCidade`, `useCinturaoCidade`, `useSideBets`)
+- Visual de seção com banner similar ao do dashboard do motorista ("⚔️ Arena da Cidade")
 
-### Regras de Negócio
-- Espectador escolhe um duelo ao vivo, seleciona em quem aposta (A ou B) e define valor em pontos
-- A aposta fica "aberta" até outro motorista aceitar o lado oposto (pode aceitar o valor ou fazer contraproposta)
-- Ao fechar, pontos de ambos são debitados imediatamente (escrow/reserva)
-- Na liquidação: apostador que acertou recebe o total menos 10%, e esses 10% vão como bônus para o vencedor do duelo
-- Empate no duelo = devolução integral para os apostadores
-- Participantes do duelo NÃO podem apostar no próprio duelo
+**2. `src/components/dashboard/branch/BranchDuelosAtivos.tsx`**
+- Lista de duelos ao vivo/aceitos/pendentes da cidade
+- Mostra placar em tempo real (reutiliza `useContagemCorridasDuelo`)
+- Status visual (ao vivo, pendente, finalizado) com badges coloridas
+- Contagem total de duelos ativos e finalizados no mês
 
-### Banco de Dados
+**3. `src/components/dashboard/branch/BranchApostasResumo.tsx`**
+- Resumo das apostas ativas na cidade: total de apostas abertas, matched e pontos em escrow
+- Lista das apostas em andamento com valores e status
+- Total de pontos movimentados em apostas no mês
+- Bônus 10% distribuído para vencedores de duelos
 
-**Nova tabela `duel_side_bets`** com colunas para:
-- Apostador A (criador): customer_id, lado escolhido, valor
-- Apostador B (aceitante): customer_id, lado escolhido, valor
-- Status: open → counter_proposed → matched → settled / canceled
-- Escrow e liquidação: points_reserved, winner, duel_winner_bonus (10%), settled_at
+**4. `src/components/dashboard/branch/BranchRankingCompetitivo.tsx`**
+- Top motoristas por corridas (reusa `useRankingCidade`)
+- Exibe posição, nome, corridas e avatar/nickname
+- Campeão do cinturão destacado no topo (reusa `useCinturaoCidade`)
 
-**RPCs:**
-- `create_side_bet` — valida saldo, impede participantes do duelo de apostar, cria aposta aberta
-- `accept_side_bet` — aceita e reserva pontos de ambos
-- `counter_propose_side_bet` / `respond_side_bet_counter` — negociação de valor
-- `settle_side_bets` — chamada durante `finalize_duel`, liquida todas as apostas, distribui 90/10
+**5. `src/components/dashboard/branch/BranchFeedDuelos.tsx`**
+- Timeline dos últimos eventos de duelos (desafios, aceites, resultados, recusas)
+- Reutiliza a lógica do `FeedAtividadeCidade` adaptada para o admin
+- Mostra últimos 20 eventos com ícones e timestamps
 
-**Expansão do `finalize_duel`** para chamar `settle_side_bets` automaticamente
+### Hooks Novos
 
-### Frontend
+**6. `src/components/dashboard/branch/hook_branch_duelos.ts`**
+- `useBranchDuelosStats(branchId)` — query que retorna contagens agregadas: duelos ativos, finalizados no mês, total de apostas, pontos em escrow, bônus distribuído
+- Query direta nas tabelas `driver_duels` e `duel_side_bets` filtrada por `branch_id`
 
-**Novos componentes:**
-- `ApostasDuelo.tsx` — seção na Arena ao Vivo mostrando apostas abertas e ativas
-- `CriarApostaSheet.tsx` — tela para criar aposta (escolher lado, valor, aviso de risco)
-- `ApostaAbertaCard.tsx` — card de aposta disponível para aceitar/contrapropor
-- `hook_apostas_duelo.ts` — hooks para CRUD de apostas
+### Modificações
 
-**Modificações:**
-- `ArenaAoVivo.tsx` — adicionar seção de apostas abaixo dos palpites
-- `finalize-duels-cron` — chamar liquidação de side bets
-- `points_ledger` — novos tipos: SIDE_BET_RESERVE, SIDE_BET_WIN, SIDE_BET_REFUND, SIDE_BET_DUEL_BONUS
+**7. `src/components/dashboard/BranchDashboardSection.tsx`**
+- Adicionar `<BranchArenaDuelos branchId={branchId} />` após a seção de Ranking + Feed
+- Só exibir quando `isDriverEnabled` for true (duelos só existem no modelo motorista)
 
-### Extrato
-Todas as movimentações registradas no extrato com origem clara: "Aposta no Duelo — Vitória", "Bônus 10% — Apostas no seu duelo", etc.
+### Estrutura Visual
 
+```text
+┌────────────────────────────────┐
+│ ⚔️ Arena Competitiva da Cidade │
+├────────────────────────────────┤
+│ KPIs: Duelos Ativos | Apostas  │
+│        Pontos Escrow | Bônus   │
+├───────────────┬────────────────┤
+│  Duelos Ao    │  Ranking +     │
+│  Vivo/Recentes│  Cinturão      │
+├───────────────┴────────────────┤
+│  Apostas Ativas (resumo)       │
+├────────────────────────────────┤
+│  Feed de Atividades (timeline) │
+└────────────────────────────────┘
+```
+
+### Resultado
+- O admin da cidade vê tudo: duelos ao vivo, placares, apostas, ranking, cinturão e feed
+- Reutiliza hooks existentes dos motoristas sem duplicação de lógica
+- Um hook novo para métricas agregadas específicas do painel admin
