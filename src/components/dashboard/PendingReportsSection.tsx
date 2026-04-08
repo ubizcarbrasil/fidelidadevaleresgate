@@ -115,22 +115,7 @@ export default function PendingReportsSection({ brandId }: Props) {
   }
 
   if (!reports || reports.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-            Denúncias de Ofertas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center py-6 gap-2">
-            <CheckCircle2 className="h-8 w-8 text-success" />
-            <p className="text-sm text-muted-foreground">Nenhuma denúncia pendente.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (

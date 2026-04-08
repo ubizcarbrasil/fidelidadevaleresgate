@@ -112,17 +112,7 @@ export default function TasksSection() {
   }
 
   if (tasks.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Tarefas Pendentes</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center py-6 gap-2">
-            <CheckCircle2 className="h-8 w-8 text-success" />
-            <p className="text-sm text-muted-foreground">Tudo em dia! Nenhuma pendência.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
