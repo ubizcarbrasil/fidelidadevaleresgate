@@ -27,11 +27,11 @@ function DuelRow({ duel }: { duel: Duel }) {
   const isLive = duel.status === "live" || duel.status === "accepted";
 
   const { data: contagem } = useContagemCorridasDuelo(
-    isLive ? duel : undefined
+    isLive ? duel : null
   );
 
-  const scoreA = isLive && contagem ? contagem.challenger : duel.challenger_rides_count;
-  const scoreB = isLive && contagem ? contagem.challenged : duel.challenged_rides_count;
+  const scoreA = isLive && contagem ? contagem.challengerRides : duel.challenger_rides_count;
+  const scoreB = isLive && contagem ? contagem.challengedRides : duel.challenged_rides_count;
 
   return (
     <div
