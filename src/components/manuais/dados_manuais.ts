@@ -189,6 +189,29 @@ export const gruposManuais: GrupoManual[] = [
         ],
         rota: "/banner-manager"
       },
+      {
+        id: "minhas-cidades",
+        titulo: "Minhas Cidades",
+        descricao: "Gerencie as cidades da sua marca com ações rápidas de edição e reset de pontos. Cada cidade exibe botões 'Resetar pontos' e 'Editar' diretamente na listagem para acesso rápido.",
+        comoAtivar: "Acesse 'Minhas Cidades' no menu lateral. Disponível para marcas com modelo de mobilidade.",
+        passos: [
+          "Acesse 'Minhas Cidades' no menu lateral.",
+          "Visualize todas as cidades da marca com status ativo/inativo.",
+          "Clique em 'Editar' para abrir a tela de edição da cidade (nome, slug, geolocalização, scoring model).",
+          "Clique em 'Resetar pontos' para abrir o diálogo de reset granular.",
+          "No diálogo de reset, escolha o escopo: todos os usuários, apenas motoristas, apenas clientes ou um usuário específico.",
+          "Confirme o reset — os pontos serão zerados e registrados no extrato como BRANCH_RESET.",
+          "Consulte o histórico de resets no mesmo diálogo para auditoria (data, escopo, total zerado).",
+          "O reset de pontos também está disponível dentro da tela de edição da cidade."
+        ],
+        dicas: [
+          "O reset é irreversível — confirme com cuidado antes de executar.",
+          "Use o reset individual para corrigir saldos de um usuário específico sem afetar os demais.",
+          "O histórico de resets é visível diretamente no diálogo para fins de auditoria.",
+          "Cidades inativas não distribuem pontos, mas os dados são preservados."
+        ],
+        rota: "/brand-branches"
+      },
     ],
   },
   {
@@ -998,22 +1021,23 @@ export const gruposManuais: GrupoManual[] = [
       },
       {
         id: "integracao-mobilidade",
-        titulo: "Integração Mobilidade",
-        descricao: "Configure a integração com plataformas de mobilidade urbana (apps de corrida). Conecte sua plataforma de fidelidade com serviços de transporte.",
+        titulo: "Integração Mobilidade (TaxiMachine)",
+        descricao: "Configure a integração com a plataforma TaxiMachine para pontuar passageiros e motoristas automaticamente. A interface é organizada em 3 ambientes: Pontuar Passageiro, Pontuar Motorista e Notificações.",
         comoAtivar: "Ative o módulo 'Integração Mobilidade' na página de Módulos.",
         passos: [
           "Acesse 'Integração Mobilidade' no menu lateral.",
-          "Configure as credenciais de conexão com a plataforma de mobilidade.",
-          "Defina o mapeamento de dados (corridas → pontos).",
-          "Configure os webhooks para receber eventos em tempo real.",
-          "Teste a conexão com dados de exemplo.",
-          "Ative a integração em produção.",
-          "Monitore o fluxo de dados e erros."
+          "Configure as credenciais centralizadas no nível da Marca: API Key e Basic Auth (usuário e senha).",
+          "Ambiente 1 — Pontuar Passageiro: configure Logs de corridas e integração Matrix para identificar passageiros em todas as cidades.",
+          "Ambiente 2 — Pontuar Motorista: ative cidades via Webhook (automático ou manual), acompanhe diagnósticos em tempo real e status de cada cidade.",
+          "Ambiente 3 — Notificações: configure Chat no app e Telegram com fallback automático para o Chat ID da marca.",
+          "Teste a conexão com dados de exemplo em cada ambiente.",
+          "Ative a integração em produção e monitore o fluxo de dados."
         ],
         dicas: [
-          "Teste exaustivamente em ambiente de staging antes de ativar.",
-          "Configure alertas para falhas de sincronização.",
-          "Documente o mapeamento de campos para manutenção futura."
+          "As credenciais da Marca alimentam a identificação de passageiros em todas as cidades automaticamente.",
+          "Use o Lab Webhook para testar cenários antes de ativar em produção.",
+          "O ambiente de Notificações possui fallback automático — se Telegram falhar, o sistema tenta o Chat no app.",
+          "Monitore os diagnósticos em tempo real para detectar problemas rapidamente."
         ],
         rota: "/machine-integration"
       },
@@ -1107,6 +1131,54 @@ export const gruposManuais: GrupoManual[] = [
     ],
   },
   {
+    categoria: "Comunicação",
+    icone: "MessageSquare",
+    manuais: [
+      {
+        id: "notificacao-push",
+        titulo: "Notificação Push",
+        descricao: "Envie notificações push diretamente para os celulares dos clientes. Selecione público-alvo por cidade e personalize título e mensagem.",
+        comoAtivar: "Acesse 'Enviar Notificação' no menu lateral, aba 'Notificação Push'.",
+        passos: [
+          "Acesse 'Enviar Notificação' no menu lateral.",
+          "Selecione a aba 'Notificação Push'.",
+          "Defina o título e o corpo da mensagem.",
+          "Selecione o público-alvo: todos os clientes ou filtrado por cidade.",
+          "Clique em 'Enviar' para disparar a notificação.",
+          "Acompanhe o status de envio na tela."
+        ],
+        dicas: [
+          "Mensagens curtas e diretas geram melhor engajamento.",
+          "Evite enviar muitas notificações no mesmo dia para não irritar os clientes.",
+          "Use horários estratégicos (manhã ou fim de tarde) para melhor taxa de abertura."
+        ],
+        rota: "/send-notification"
+      },
+      {
+        id: "mensagens-machine",
+        titulo: "Mensagens via Machine",
+        descricao: "Envie mensagens para motoristas via TaxiMachine. Configure templates com variáveis dinâmicas, fluxos automáticos para eventos de gamificação e apostas, envie mensagens manuais (em massa ou individual) e acompanhe relatórios de entrega.",
+        comoAtivar: "Acesse 'Enviar Notificação' no menu lateral, aba 'Mensagens via Machine'.",
+        passos: [
+          "Acesse 'Enviar Notificação' no menu lateral.",
+          "Selecione a aba 'Mensagens via Machine'.",
+          "Na sub-aba 'Templates', crie modelos de mensagem com variáveis: {{nome}}, {{pontos}}, {{saldo}}, {{adversario}}, {{corridas}}, {{premio}}, {{cidade}}.",
+          "Na sub-aba 'Fluxos', configure disparos automáticos para eventos: desafios, aceites, vitórias, apostas (SIDE_BET_CREATED, SIDE_BET_ACCEPTED) e conquista de cinturão.",
+          "Para cada fluxo, selecione o template, a audiência-alvo e ative/desative conforme necessário.",
+          "Na sub-aba 'Envio Manual', envie mensagens em massa (para todos ou por cidade) ou individual (por ID do motorista).",
+          "Na sub-aba 'Relatório', acompanhe métricas de entrega, erros e logs de auditoria (driver_message_logs)."
+        ],
+        dicas: [
+          "Use variáveis nos templates para personalizar mensagens automaticamente.",
+          "Teste templates com envio individual antes de disparar em massa.",
+          "Configure fluxos de apostas para manter os motoristas informados sobre palpites P2P.",
+          "Monitore o relatório de entregas regularmente para identificar falhas de envio."
+        ],
+        rota: "/send-notification"
+      },
+    ],
+  },
+  {
     categoria: "Gamificação — Administração",
     icone: "Swords",
     manuais: [
@@ -1165,6 +1237,30 @@ export const gruposManuais: GrupoManual[] = [
           "Incentive motoristas a experimentarem pelo menos um duelo curto (24h).",
           "Em caso de problemas técnicos, verifique se o scoring model da cidade inclui motoristas.",
           "O módulo funciona melhor com pelo menos 5 motoristas ativos na cidade.",
+        ],
+        rota: "/gamificacao-admin",
+      },
+      {
+        id: "gamif-admin-apostas-laterais",
+        titulo: "Apostas Laterais (Side Bets)",
+        descricao: "Gerencie o sistema de apostas P2P em duelos. Espectadores podem apostar pontos entre si palpitando no vencedor de um duelo. O módulo inclui criação, aceitação, contrapropostas, ranking de apostadores e bônus automático para o vencedor do duelo.",
+        comoAtivar: "As apostas laterais ficam disponíveis automaticamente quando os duelos estão ativos. Acesse 'Gamificação' > aba 'Apostas'.",
+        passos: [
+          "Acesse a aba 'Apostas' dentro da página de Gamificação.",
+          "Visualize todas as apostas ativas, pendentes e encerradas nos duelos da marca.",
+          "Cada aposta mostra: apostadores, pontos apostados, palpite (em quem apostou), status e resultado.",
+          "Apostas suportam contrapropostas — o oponente pode negociar o valor antes de aceitar.",
+          "Ao aceitar, os pontos de ambos os apostadores são reservados em escrow automaticamente.",
+          "Quando o duelo encerra: 90% do prêmio vai para o apostador vencedor e 10% como bônus para o motorista que venceu o duelo real.",
+          "Em caso de empate no duelo, todos os pontos em escrow são devolvidos integralmente.",
+          "Na aba 'Ranking', visualize o ranking de rentabilidade dos apostadores.",
+          "Configure templates de mensagem para os eventos SIDE_BET_CREATED e SIDE_BET_ACCEPTED na aba Mensagens via Machine."
+        ],
+        dicas: [
+          "Monitore as apostas ativas para garantir a integridade das competições.",
+          "Use a aba de moderação para cancelar apostas suspeitas se necessário.",
+          "O bônus de 10% para o vencedor do duelo incentiva os competidores a manterem alta performance.",
+          "Notificações push e mensagens Machine são disparadas automaticamente nos eventos de aposta."
         ],
         rota: "/gamificacao-admin",
       },
@@ -1537,6 +1633,36 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
           "Frases de recusa engraçadas tornam a experiência mais leve e divertida.",
           "Limite de 3 duelos simultâneos evita sobrecarga sem limitar a diversão.",
           "Métricas diferentes para ranking e cinturão criam múltiplas formas de competir.",
+        ],
+        rota: "/gamificacao-admin",
+      },
+    ],
+  },
+  {
+    categoria: "Apostas em Duelos — Franqueado",
+    icone: "Swords",
+    scoringFilter: "DRIVER" as const,
+    manuais: [
+      {
+        id: "gamif-apostas-franqueado",
+        titulo: "Apostas Laterais (Side Bets)",
+        descricao: "Acompanhe as apostas P2P realizadas pelos motoristas nos duelos da sua cidade. Espectadores apostam pontos entre si palpitando no vencedor, com contrapropostas e escrow automático.",
+        comoAtivar: "Acesse 'Gamificação' > aba 'Apostas'. Disponível quando os duelos estão ativos na cidade.",
+        passos: [
+          "Acesse a aba 'Apostas' dentro da página de Gamificação.",
+          "Visualize as apostas ativas, pendentes e encerradas nos duelos da sua cidade.",
+          "Cada aposta exibe: apostadores (apelidos), pontos apostados, palpite e status.",
+          "Apostas podem ter contrapropostas — o oponente negocia o valor antes de aceitar.",
+          "Ao aceitar, os pontos são reservados em escrow automaticamente.",
+          "Resultado: 90% do prêmio vai ao apostador vencedor, 10% de bônus ao motorista que venceu o duelo.",
+          "Em empate, todos os pontos são devolvidos integralmente.",
+          "Consulte o ranking de apostadores na aba 'Ranking' para ver os mais rentáveis."
+        ],
+        dicas: [
+          "Apostas aumentam significativamente o engajamento nos duelos.",
+          "Monitore apostas para garantir competições saudáveis.",
+          "O bônus de 10% para o duelista vencedor motiva alta performance.",
+          "Notificações são enviadas automaticamente nos eventos de aposta."
         ],
         rota: "/gamificacao-admin",
       },

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, BookOpen, Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2, Swords } from "lucide-react";
+import { Search, BookOpen, Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2, Swords, MessageSquare, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ManualRenderer } from "@/components/manuais/ManualRenderer";
 import { gruposManuais, gruposManuaisFranqueado } from "@/components/manuais/dados_manuais";
@@ -7,7 +7,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 
 const iconesPorNome: Record<string, any> = {
-  Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2, Swords,
+  Palette, Sparkles, ShoppingBag, Store, Coins, ReceiptText, ShieldCheck, Users, BarChart3, Key, Settings2, Swords, MessageSquare, Building2,
 };
 
 export default function ManuaisPage() {
