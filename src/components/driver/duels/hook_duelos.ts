@@ -300,6 +300,8 @@ export function useCreateDuel() {
         customerIds: [result.challengedCustomerId],
         duelId,
         nomeOponente: driverName,
+        brandId: driver!.brand_id,
+        branchId: driver!.branch_id,
       });
 
       registrarEventoFeed({
