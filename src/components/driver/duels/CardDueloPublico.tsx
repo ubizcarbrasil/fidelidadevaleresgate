@@ -75,10 +75,10 @@ export default function CardDueloPublico({ duelo, onOpenArena, contextoSecao }: 
 
   return (
     <button
-      onClick={() => (aoVivo || encerrado) && onOpenArena?.(duelo)}
+      onClick={() => (aoVivo || agendado || encerrado) && onOpenArena?.(duelo)}
       className={`relative flex flex-col gap-2 rounded-xl border p-3 min-w-[260px] max-w-[280px] snap-start shrink-0 bg-card text-left transition-all ${
         aoVivo ? "border-green-500/60 shadow-[0_0_12px_-3px_rgba(34,197,94,0.35)]" : "border-border"
-      } ${(aoVivo || encerrado) ? "active:scale-[0.98] cursor-pointer" : ""}`}
+      } ${(aoVivo || agendado || encerrado) ? "active:scale-[0.98] cursor-pointer" : ""}`}
     >
       {/* Badge status */}
       <div className="flex items-center justify-between">
@@ -197,7 +197,12 @@ export default function CardDueloPublico({ duelo, onOpenArena, contextoSecao }: 
         </p>
         {aoVivo && (
           <span className="text-[10px] font-bold flex items-center gap-1" style={{ color: "hsl(var(--success))" }}>
-            👁️ Assistir ao vivo
+            🎯 Assistir e apostar
+          </span>
+        )}
+        {agendado && (
+          <span className="text-[10px] font-bold flex items-center gap-1" style={{ color: "hsl(var(--info, var(--primary)))" }}>
+            🎯 Ver e apostar
           </span>
         )}
         {encerrado && (

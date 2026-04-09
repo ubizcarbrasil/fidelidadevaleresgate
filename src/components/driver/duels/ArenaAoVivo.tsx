@@ -381,11 +381,11 @@ export default function ArenaAoVivo({ duel, onBack }: Props) {
           </div>
         )}
 
+        {/* Apostas laterais — acima dos palpites para maior visibilidade */}
+        {(aoVivo || duel.status === "accepted") && <ApostasDuelo duel={duel} />}
+
         {/* Palpites sociais */}
         {(aoVivo || duel.status === "accepted") && <PalpitesDuelo duel={duel} />}
-
-        {/* Apostas laterais */}
-        {(aoVivo || duel.status === "accepted") && <ApostasDuelo duel={duel} />}
 
         {/* Leader status */}
         {aFrente && aoVivo && (

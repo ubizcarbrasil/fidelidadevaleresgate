@@ -97,10 +97,17 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
     // Clear any previous driver session to prevent fallback to wrong profile
     localStorage.removeItem(`driver_session_cpf_${brandId}`);
 
+    // Write CPF directly so DriverSessionProvider auto-restores without login screen
+    const cpfClean = driver.cpf ? driver.cpf.replace(/\D/g, "") : null;
+    if (cpfClean) {
+      localStorage.setItem(`driver_session_cpf_${brandId}`, cpfClean);
+    }
+
+    // Also write session request key as fallback for drivers without CPF
     const sessionRequestKey = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const requestData = JSON.stringify({
       customerId: driver.id,
-      cpf: driver.cpf ? driver.cpf.replace(/\D/g, "") : null,
+      cpf: cpfClean,
     });
     localStorage.setItem(`driver_session_request_${brandId}_${sessionRequestKey}`, requestData);
     const url = `/driver?brandId=${brandId}&sessionKey=${sessionRequestKey}&t=${Date.now()}`;
