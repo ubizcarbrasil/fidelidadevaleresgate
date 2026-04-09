@@ -30,6 +30,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel(branchId);
   const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
   const { currentBrandId } = useBrandGuard();
+  const { isBranchModuleEnabled } = useBranchModules(branchId);
   const effectiveBrandId = currentBrandId || "";
 
   const passengerOnly = isPassengerEnabled && !isDriverEnabled;
@@ -88,7 +89,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
       )}
 
       {/* Arena Competitiva — duelos, apostas, ranking, feed */}
-      {isDriverEnabled && <BranchArenaDuelos branchId={branchId} />}
+      {isDriverEnabled && isBranchModuleEnabled("enable_duels_module") && <BranchArenaDuelos branchId={branchId} />}
     </div>
   );
 }
