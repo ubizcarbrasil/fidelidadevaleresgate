@@ -286,7 +286,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs — hidden for BRANCH scope */}
-      {consoleScope !== "BRANCH" && <DashboardKpiSection
+      {!isCityScopedView && <DashboardKpiSection
         redemptionsPeriod={redemptionsPeriod}
         redemptionsTotal={redemptionsTotal}
         customersTotal={customersTotal}
@@ -318,7 +318,7 @@ export default function Dashboard() {
       )}
 
       {/* Sections hidden for BRANCH scope */}
-      {consoleScope !== "BRANCH" && (
+      {!isCityScopedView && (
         <>
           {/* Corridas com seletor de período — só motorista */}
           {showBrand && isDriverEnabled && <RidesCounterCard brandId={brandFilter} />}
@@ -390,11 +390,12 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Quick Links, Access Hub, Demo */}
-      <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
+      {!isCityScopedView && (
+        <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
+      )}
 
       {/* FAB */}
-      {currentBrandId && (
+      {currentBrandId && !isCityScopedView && (
         <button
           onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
           className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 shadow-lg hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/20"
