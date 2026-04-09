@@ -134,6 +134,26 @@ export default function BrandBranchesPage() {
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>
                 </div>
+                <div className="flex items-center gap-2 pl-12">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Resetar pontos
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => navigate(`/brand-branches/${branch.id}`)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
