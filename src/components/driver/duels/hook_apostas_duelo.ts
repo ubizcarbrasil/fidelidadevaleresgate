@@ -97,7 +97,15 @@ export function useCreateSideBet() {
 export function useAcceptSideBet() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { betId: string; customerId: string; duelId: string }) => {
+    mutationFn: async (params: {
+      betId: string;
+      customerId: string;
+      duelId: string;
+      brandId?: string;
+      branchId?: string;
+      nomeAceitante?: string;
+      bettorACustomerId?: string;
+    }) => {
       const { data, error } = await supabase.rpc("accept_side_bet" as any, {
         p_bet_id: params.betId,
         p_customer_id: params.customerId,
@@ -111,6 +119,18 @@ export function useAcceptSideBet() {
       qc.invalidateQueries({ queryKey: ["side-bets", vars.duelId] });
       qc.invalidateQueries({ queryKey: ["driver-session"] });
       toast.success("Aposta aceita! Pontos reservados.");
+
+      // Notificar o criador da aposta
+      if (vars.bettorACustomerId) {
+        enviarNotificacaoDuelo({
+          tipo: "SIDE_BET_ACCEPTED",
+          customerIds: [vars.bettorACustomerId],
+          duelId: vars.duelId,
+          nomeOponente: vars.nomeAceitante,
+          brandId: vars.brandId,
+          branchId: vars.branchId,
+        });
+      }
     },
     onError: (err: any) => {
       toast.error(err.message || "Erro ao aceitar aposta");
