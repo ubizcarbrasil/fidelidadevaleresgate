@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats } from "./branch/hook_branch_dashboard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import BranchKpiResgates from "./branch/BranchKpiResgates";
 import BranchKpiPontuacao from "./branch/BranchKpiPontuacao";
 import BranchKpiMotoristas from "./branch/BranchKpiMotoristas";
@@ -27,6 +28,8 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const feed = useBranchRealtimeFeed(branchId);
   const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel(branchId);
   const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
+  const { currentBrandId } = useBrandGuard();
+  const effectiveBrandId = currentBrandId || "";
 
   const passengerOnly = isPassengerEnabled && !isDriverEnabled;
 
@@ -73,7 +76,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
       )}
 
       {/* Visão geral da cidade — só motorista */}
-      {isDriverEnabled && <BranchVisaoGeral stats={stats} />}
+      {isDriverEnabled && <BranchVisaoGeral stats={stats} branchId={branchId} brandId={effectiveBrandId} />}
 
       {/* Ranking + Feed — só motorista */}
       {isDriverEnabled && (
