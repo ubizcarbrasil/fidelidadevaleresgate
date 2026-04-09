@@ -16,7 +16,9 @@ type TipoNotificacaoDuelo =
   | "DUEL_DEFEAT"
   | "DUEL_DRAW"
   | "RANKING_TOP10_ENTRY"
-  | "BELT_NEW_CHAMPION";
+  | "BELT_NEW_CHAMPION"
+  | "SIDE_BET_CREATED"
+  | "SIDE_BET_ACCEPTED";
 
 interface MapeamentoNotificacao {
   titulo: (nome?: string) => string;
