@@ -555,6 +555,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           <BannerPromoDuelos
             fontHeading={fontHeading}
             onAbrir={() => setShowDuels(true)}
+            temDesafioPendente={!!desafioPendente}
           />
         </div>
       )}
