@@ -1,42 +1,87 @@
 
 
-# Plano: Histórico de Resets de Pontos no Painel de Cidades
+# Auditoria: Funcionalidades construídas que faltam no painel do empreendedor
 
-## Problema Identificado
+## Diagnóstico
 
-O enum `ledger_reference_type` **não contém** o valor `BRANCH_RESET`. A edge function tenta inserir registros com esse tipo, mas falha silenciosamente. Precisamos corrigir isso e criar a visualização do histórico.
+Após análise completa da codebase, identifiquei **5 lacunas** entre o que foi implementado e o que está acessível no painel do empreendedor (BrandSidebar + GamificacaoAdminPage + Dashboard):
 
-## Mudanças
+---
 
-### 1. Migration: adicionar `BRANCH_RESET` ao enum
+### 1. Apostas Laterais (Side Bets) — sem visibilidade no admin
 
-Adicionar o valor faltante ao enum `ledger_reference_type` para que os registros de reset sejam efetivamente gravados no `points_ledger`.
+**O que existe**: Sistema completo de apostas laterais no app do motorista (`hook_apostas_duelo.ts`, `CriarApostaSheet.tsx`, `ApostasDuelo.tsx`, `NegociacaoContrapropostaCard.tsx`), com escrow, contrapropostas, e settlements. O `BranchArenaDuelos` no dashboard da **cidade** (Branch scope) mostra KPIs de apostas (abertas, matched, pontos em escrow).
 
-### 2. Componente: `HistoricoResetPontos`
+**O que falta**: A página `GamificacaoAdminPage` (acessada pelo empreendedor) **não tem nenhuma aba ou seção de apostas laterais**. As abas são: Configuração, Duelos, Ranking, Cinturão, Moderação. Não há como o empreendedor ver, moderar ou acompanhar apostas.
 
-**Arquivo**: `src/components/branch/HistoricoResetPontos.tsx`
+**Ação**: Adicionar uma aba "Apostas" na `GamificacaoAdminPage` com:
+- KPIs de apostas (abertas, matched, settled, pontos em escrow)
+- Lista de apostas com status e filtros
+- Ações de moderação (cancelar aposta suspeita)
 
-- Consulta `points_ledger` filtrando por `reference_type = 'BRANCH_RESET'` e `branch_id` da cidade selecionada
-- Agrupa os registros por timestamp (resets do mesmo lote têm timestamps muito próximos) para exibir como um único evento
-- Exibe: data/hora, escopo (extraído do campo `reason`), quantidade de registros afetados e total de pontos zerados
-- Formato de lista/timeline com cards compactos
-- Paginação simples (últimos 20 eventos)
+---
 
-### 3. Integração no `BrandBranchesPage`
+### 2. Ranking de Apostadores — sem visibilidade no admin
 
-- Adicionar botão "Histórico de Resets" ou sheet/dialog acessível a partir da página de cidades
-- Ao clicar, abre um Sheet lateral com o `HistoricoResetPontos` filtrado pela cidade selecionada
+**O que existe**: `RankingApostadoresSheet.tsx` e `hook_ranking_apostadores.ts` com RPC `get_side_bet_ranking` — tudo funcional no app do motorista. O `CardRankingApostador.tsx` mostra estatísticas detalhadas (acertos, win rate, net points).
 
-### 4. Alternativa: aba no `DialogResetPontos`
+**O que falta**: A aba "Ranking" do admin (`RankingAdminView`) mostra apenas o ranking de pontos dos motoristas. Não há visualização do ranking de apostadores.
 
-- Adicionar uma seção "Últimos resets" abaixo do formulário de reset, mostrando os 5 últimos resets da cidade de forma compacta (data, escopo, pontos zerados)
+**Ação**: Adicionar uma seção ou sub-aba "Ranking de Apostadores" no `RankingAdminView` ou na nova aba "Apostas".
 
-## Abordagem escolhida
+---
 
-Adicionar no próprio `DialogResetPontos` uma seção inferior com o histórico recente, mantendo tudo contextualizado em um único lugar. Isso evita navegação extra e o empreendedor vê o histórico antes de decidir fazer um novo reset.
+### 3. Feed de Duelos em tempo real — ausente no admin
 
-## Resultado
+**O que existe**: `BranchFeedDuelos.tsx` mostra feed em tempo real de atividades de duelos no dashboard da cidade. No app do motorista, `FeedAtividadeCidade.tsx` e `servico_feed_cidade.ts` fornecem feed completo.
 
-- Resets passarão a ser registrados corretamente no banco (fix do enum)
-- O empreendedor verá os últimos resets ao abrir o dialog de reset de qualquer cidade
+**O que falta**: A `GamificacaoAdminPage` não tem um feed de atividade em tempo real. O admin só vê lista estática de duelos.
+
+**Ação**: Adicionar componente de feed ao vivo na `GamificacaoAdminPage` (reutilizar lógica do `BranchFeedDuelos` ou `DuelosAoVivoAdmin`).
+
+---
+
+### 4. Estatísticas de Apostas no Dashboard principal
+
+**O que existe**: O Dashboard principal (`Dashboard.tsx`) tem banners de CRM e Gamificação para BRAND scope, mas nenhum KPI de apostas. O `BranchArenaDuelos` só aparece no scope BRANCH.
+
+**O que falta**: Para empreendedores (BRAND scope), não há nenhum indicador de apostas no dashboard principal — nem KPIs agregados, nem um banner resumo.
+
+**Ação**: Adicionar card/KPI resumo de apostas no dashboard do empreendedor (total em escrow, apostas ativas cross-city).
+
+---
+
+### 5. Relatório de mensagens de apostas — parcial
+
+**O que existe**: Os event types `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED` foram adicionados aos fluxos e ao relatório de mensagens (feito nesta sessão).
+
+**O que falta**: Validar que o relatório de mensagens filtra e exibe corretamente entregas desses novos tipos. Não há mais lacuna de código, mas pode precisar de verificação funcional.
+
+**Status**: Já implementado. Apenas verificação necessária.
+
+---
+
+## Plano de implementação
+
+### Etapa 1: Nova aba "Apostas" na GamificacaoAdminPage
+- Criar `ApostasAdminView.tsx` em `src/components/admin/gamificacao/`
+- Query `duel_side_bets` filtrando por `branch_id`, com filtros de status
+- KPIs: abertas, matched, settled, canceladas, pontos em escrow, bonus distribuído
+- Tabela de apostas com detalhes (apostador A/B, pontos, status, duelo vinculado)
+- Botão de cancelamento/moderação para apostas suspeitas
+- Adicionar `TabsTrigger` "Apostas" na `GamificacaoAdminPage`
+
+### Etapa 2: Ranking de Apostadores no admin
+- Criar `RankingApostadoresAdmin.tsx` em `src/components/admin/gamificacao/`
+- Reutilizar RPC `get_side_bet_ranking` já existente
+- Exibir dentro da nova aba "Apostas" como seção inferior ou como sub-aba do ranking
+
+### Etapa 3: KPI de apostas no Dashboard do empreendedor
+- Adicionar card compacto no `DashboardKpiSection` ou abaixo do banner de Gamificação
+- Mostrar: apostas ativas (total cross-city), pontos em escrow agregados
+- Query agregada por `brand_id` nas `duel_side_bets`
+
+### Etapa 4: Ajuste no grid de abas
+- A `GamificacaoAdminPage` passará de 5 para 6 abas: Configuração, Duelos, **Apostas**, Ranking, Cinturão, Moderação
+- Ajustar `grid-cols-5` para `grid-cols-6` no TabsList
 
