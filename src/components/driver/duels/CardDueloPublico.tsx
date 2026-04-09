@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Flame, Clock, Trophy, User, Swords, Flag } from "lucide-react";
+import { Flame, Clock, Trophy, User, Swords, Flag, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { resolveParticipantName, resolveParticipantAvatar, type Duel, useContagemCorridasDuelo } from "./hook_duelos";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Props {
   duelo: Duel;
@@ -82,7 +84,7 @@ export default function CardDueloPublico({ duelo, onOpenArena, contextoSecao }: 
       <div className="flex items-center justify-between">
         {aoVivo && (
           <Badge className="bg-green-600 text-white text-[10px] gap-1 animate-pulse">
-            <Flame className="w-3 h-3" /> Ao Vivo
+            <Flame className="w-3 h-3" /> Em andamento
           </Badge>
         )}
         {agendado && (
@@ -107,6 +109,14 @@ export default function CardDueloPublico({ duelo, onOpenArena, contextoSecao }: 
             {tempoRestante(duelo.end_at)}
           </span>
         )}
+      </div>
+
+      {/* Período do duelo */}
+      <div className="flex items-center gap-1 text-[9px] text-muted-foreground justify-center">
+        <Calendar className="w-2.5 h-2.5 shrink-0" />
+        <span>
+          {format(new Date(duelo.start_at), "dd/MM HH:mm", { locale: ptBR })} — {format(new Date(duelo.end_at), "dd/MM HH:mm", { locale: ptBR })}
+        </span>
       </div>
 
       {/* Placar */}
