@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { toast } from "sonner";
+import { enviarNotificacaoDuelo } from "./servico_notificacoes_duelo";
 
 export interface SideBet {
   id: string;
