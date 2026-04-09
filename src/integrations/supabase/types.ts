@@ -7976,6 +7976,12 @@ export type Database = {
         | "DUEL_WIN"
         | "DUEL_REFUND"
         | "DRIVER_RIDE"
+        | "SIDE_BET_RESERVE"
+        | "SIDE_BET_WIN"
+        | "SIDE_BET_REFUND"
+        | "SIDE_BET_DUEL_BONUS"
+        | "BELT_PRIZE"
+        | "DUEL_SETTLEMENT"
       offer_purpose: "EARN" | "REDEEM" | "BOTH"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
       points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
@@ -8156,6 +8162,12 @@ export const Constants = {
         "DUEL_WIN",
         "DUEL_REFUND",
         "DRIVER_RIDE",
+        "SIDE_BET_RESERVE",
+        "SIDE_BET_WIN",
+        "SIDE_BET_REFUND",
+        "SIDE_BET_DUEL_BONUS",
+        "BELT_PRIZE",
+        "DUEL_SETTLEMENT",
       ],
       offer_purpose: ["EARN", "REDEEM", "BOTH"],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
