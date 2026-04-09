@@ -113,27 +113,18 @@ export function DriverSessionProvider({
 
     const restore = async () => {
       let d: DriverCustomer | null = null;
-      const hasSessionRequestKey = !!sessionRequestKey;
 
-      // Priority 1: session request (admin impersonation)
       if (sessionRequest) {
         d = await fetchDriverFromRequest(brandId, sessionRequest);
-        if (d) {
-          // Persist CPF for future refreshes if available
-          if (d.cpf) {
-            localStorage.setItem(storageKey(brandId), cleanCpf(d.cpf));
-          }
+        if (d?.cpf) {
+          localStorage.setItem(storageKey(brandId), cleanCpf(d.cpf));
         }
-        // Always clean up the request key
         if (sessionRequestKey) {
           localStorage.removeItem(requestStorageKey(brandId, sessionRequestKey));
         }
       }
 
-      // Priority 2: saved CPF session — but ONLY if no sessionRequestKey was provided.
-      // If a sessionRequestKey was in the URL but the request wasn't found in localStorage,
-      // it means impersonation failed; do NOT fall back to a stale CPF.
-      if (!d && !hasSessionRequestKey) {
+      if (!d) {
         const savedCpf = localStorage.getItem(storageKey(brandId));
         if (savedCpf) {
           d = await fetchDriverByCpf(brandId, savedCpf);
