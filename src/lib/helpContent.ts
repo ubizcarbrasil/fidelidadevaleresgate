@@ -1001,6 +1001,884 @@ const helpContent: Record<string, HelpEntry> = {
       },
     ],
   },
+
+  /* ═══════════════════════════════════════════════
+     FRANQUEADO (BRANCH) — Rotas adicionais
+     ═══════════════════════════════════════════════ */
+  "/branch-wallet": {
+    pageTitle: "Carteira de Pontos da Cidade",
+    sections: [
+      {
+        title: "Gerenciar carteira de pontos",
+        summary: "Controle o saldo de pontos disponíveis para distribuição na sua cidade.",
+        steps: [
+          "Visualize o saldo atual, total distribuído e total carregado no topo da página.",
+          "Consulte o extrato de transações da carteira (cargas e distribuições).",
+          "Solicite recarga de pontos quando o saldo estiver baixo.",
+        ],
+        tips: [
+          "Configure o alerta de saldo baixo para ser notificado antes de ficar sem pontos.",
+          "Cada distribuição de pontos é registrada automaticamente no extrato.",
+        ],
+      },
+    ],
+  },
+
+  "/branch-reports": {
+    pageTitle: "Relatórios da Cidade",
+    sections: [
+      {
+        title: "Visualizar relatórios da cidade",
+        summary: "Acesse dados de desempenho, resgates e movimentações da sua cidade.",
+        steps: [
+          "Selecione o período desejado usando os filtros de data.",
+          "Navegue pelas abas para ver diferentes tipos de relatórios.",
+          "Analise gráficos de tendência e tabelas detalhadas.",
+        ],
+        tips: [
+          "Os dados são filtrados automaticamente pela sua cidade.",
+          "Exporte relatórios para planilha quando necessário.",
+        ],
+      },
+    ],
+  },
+
+  "/motoristas": {
+    pageTitle: "Gestão de Motoristas",
+    sections: [
+      {
+        title: "Gerenciar motoristas",
+        summary: "Visualize e gerencie os motoristas cadastrados na sua cidade.",
+        steps: [
+          "Use a busca para encontrar motoristas por nome, telefone ou ID externo.",
+          "Clique em um motorista para ver detalhes: saldo, histórico e corridas.",
+          "Ative ou desative motoristas conforme necessário.",
+          "Use filtros para segmentar por tier ou status.",
+        ],
+        tips: [
+          "Motoristas inativos não acumulam pontos automaticamente.",
+          "O ID externo vincula o motorista ao sistema de corridas.",
+        ],
+      },
+    ],
+  },
+
+  "/driver-points-rules": {
+    pageTitle: "Regras de Pontos para Motoristas",
+    sections: [
+      {
+        title: "Configurar regras de pontuação de motoristas",
+        summary: "Defina como os motoristas acumulam pontos por corridas realizadas.",
+        steps: [
+          "Configure a taxa base: quantos pontos por corrida finalizada.",
+          "Defina limites diários e por período.",
+          "Configure bônus por metas (ex: X corridas = bônus extra).",
+          "Salve as configurações para aplicar imediatamente.",
+        ],
+        tips: [
+          "As regras são aplicadas automaticamente a cada corrida FINALIZED.",
+          "Teste com valores baixos antes de ajustar para produção.",
+        ],
+      },
+    ],
+  },
+
+  "/points-packages-store": {
+    pageTitle: "Loja de Pacotes de Pontos",
+    sections: [
+      {
+        title: "Comprar pacotes de pontos",
+        summary: "Adquira pacotes de pontos para reabastecer a carteira da cidade.",
+        steps: [
+          "Visualize os pacotes disponíveis com preços e quantidades.",
+          "Selecione o pacote desejado.",
+          "Confirme a compra — os pontos serão creditados na carteira da cidade.",
+        ],
+        tips: [
+          "Pacotes maiores geralmente oferecem melhor custo-benefício.",
+          "O histórico de compras fica disponível na carteira de pontos.",
+        ],
+      },
+    ],
+  },
+
+  "/tier-points-rules": {
+    pageTitle: "Regras de Pontos por Tier",
+    sections: [
+      {
+        title: "Configurar pontuação por nível (Tier)",
+        summary: "Defina multiplicadores de pontos diferentes para cada nível de cliente.",
+        steps: [
+          "Visualize os tiers configurados pela marca.",
+          "Defina o multiplicador de pontos para cada tier.",
+          "Salve — clientes de tiers superiores receberão mais pontos automaticamente.",
+        ],
+        tips: [
+          "Tiers incentivam clientes a subir de nível para ganhar mais benefícios.",
+          "Os multiplicadores são aplicados sobre a regra base de pontos.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     EMPREENDEDOR (BRAND) — Rotas adicionais
+     ═══════════════════════════════════════════════ */
+  "/brand-settings": {
+    pageTitle: "Configurações da Marca",
+    sections: [
+      {
+        title: "Ajustar configurações gerais",
+        summary: "Configure parâmetros gerais da sua marca: nome, slug, comportamento e integrações.",
+        steps: [
+          "Edite o nome e slug da marca.",
+          "Configure parâmetros de comportamento (pontuação, resgates, notificações).",
+          "Ajuste configurações avançadas no JSON de configurações.",
+          "Salve para aplicar as alterações.",
+        ],
+        tips: [
+          "Alterações no slug podem afetar links existentes.",
+          "Use o JSON de configurações para ajustes finos não disponíveis na interface.",
+        ],
+      },
+    ],
+  },
+
+  "/brand-cidades-journey": {
+    pageTitle: "Jornada de Cidades",
+    sections: [
+      {
+        title: "Acompanhar a jornada de implantação",
+        summary: "Visualize o progresso de cada cidade na jornada de ativação.",
+        steps: [
+          "Veja o status de cada etapa: configuração, parceiros, ofertas, clientes.",
+          "Siga as recomendações para avançar em cada etapa.",
+          "Cidades com todas as etapas concluídas ficam marcadas como 'Pronta'.",
+        ],
+      },
+    ],
+  },
+
+  "/brand-api-journey": {
+    pageTitle: "Jornada de Integração API",
+    sections: [
+      {
+        title: "Configurar integração via API",
+        summary: "Siga o passo a passo para integrar seus sistemas à plataforma via API.",
+        steps: [
+          "Gere suas credenciais de API (chave e segredo).",
+          "Configure o webhook para receber eventos.",
+          "Teste a integração com o ambiente de sandbox.",
+          "Ative a integração em produção.",
+        ],
+        tips: [
+          "Consulte a documentação da API para detalhes técnicos.",
+          "Teste cada endpoint antes de ir para produção.",
+        ],
+      },
+    ],
+  },
+
+  "/brand-permissions": {
+    pageTitle: "Permissões do Parceiro",
+    sections: [
+      {
+        title: "Configurar permissões para parceiros",
+        summary: "Defina o que os parceiros podem fazer no portal deles.",
+        steps: [
+          "Visualize a lista de permissões disponíveis.",
+          "Ative ou desative cada permissão para a marca.",
+          "Configure permissões específicas por cidade quando necessário.",
+          "Salve para aplicar.",
+        ],
+        tips: [
+          "Permissões restritivas dão mais controle mas reduzem autonomia dos parceiros.",
+          "Ajuste permissões conforme o nível de maturidade dos parceiros.",
+        ],
+      },
+    ],
+  },
+
+  "/subscription": {
+    pageTitle: "Assinatura",
+    sections: [
+      {
+        title: "Gerenciar plano e assinatura",
+        summary: "Visualize seu plano atual, histórico de pagamentos e opções de upgrade.",
+        steps: [
+          "Veja os detalhes do plano atual: nome, preço, funcionalidades incluídas.",
+          "Compare planos disponíveis para upgrade.",
+          "Consulte o histórico de faturas e pagamentos.",
+        ],
+        tips: [
+          "Upgrades são aplicados imediatamente.",
+          "Consulte o suporte para planos personalizados.",
+        ],
+      },
+    ],
+  },
+
+  "/partner-landing-config": {
+    pageTitle: "Landing Page do Parceiro",
+    sections: [
+      {
+        title: "Configurar página de cadastro de parceiros",
+        summary: "Personalize a landing page onde novos parceiros se cadastram na sua marca.",
+        steps: [
+          "Configure título, subtítulo e imagens da página.",
+          "Defina os campos obrigatórios no formulário de cadastro.",
+          "Personalize cores e textos de acordo com a identidade da marca.",
+          "Ative ou desative o cadastro público de parceiros.",
+        ],
+        tips: [
+          "Uma landing page atrativa aumenta a conversão de novos parceiros.",
+          "Teste a página em diferentes dispositivos antes de publicar.",
+        ],
+      },
+    ],
+  },
+
+  "/machine-integration": {
+    pageTitle: "Integração de Mobilidade",
+    sections: [
+      {
+        title: "Credenciais da Matriz",
+        summary: "Configure as credenciais de acesso à API da plataforma de mobilidade.",
+        steps: [
+          "Informe o usuário e senha de autenticação básica (Basic Auth).",
+          "Informe a chave de API fornecida pela plataforma de mobilidade.",
+          "Salve as credenciais — elas serão usadas por todas as cidades.",
+        ],
+        tips: [
+          "Credenciais incorretas impedirão a pontuação automática.",
+          "Altere as credenciais imediatamente caso suspeite de vazamento.",
+        ],
+      },
+      {
+        title: "Pontuar Passageiros e Motoristas",
+        summary: "Configure a pontuação automática de passageiros e motoristas por corrida.",
+        steps: [
+          "Na aba 'Passageiro', configure como passageiros acumulam pontos.",
+          "Na aba 'Motorista', vincule cidades e configure regras de pontuação.",
+          "Ative a integração por cidade para iniciar a pontuação automática.",
+        ],
+      },
+      {
+        title: "Notificações e Mensagens",
+        summary: "Configure notificações push e mensagens automáticas para motoristas.",
+        steps: [
+          "Na aba 'Notificações', configure templates e disparos automáticos.",
+          "Na aba 'Mensagens', gerencie mensagens enviadas via plataforma de mobilidade.",
+          "Configure fluxos automáticos por evento (corrida finalizada, meta atingida, etc.).",
+        ],
+      },
+    ],
+  },
+
+  "/machine-webhook-test": {
+    pageTitle: "Teste de Webhook",
+    sections: [
+      {
+        title: "Testar integração via webhook",
+        summary: "Simule eventos para testar se o webhook está configurado corretamente.",
+        steps: [
+          "Selecione o tipo de evento para simular.",
+          "Preencha os dados do payload de teste.",
+          "Clique em 'Enviar' para disparar o evento.",
+          "Verifique o resultado e os logs de processamento.",
+        ],
+        tips: [
+          "Use dados fictícios para não afetar registros reais.",
+          "Verifique os logs após cada teste para identificar erros.",
+        ],
+      },
+    ],
+  },
+
+  "/driver-config": {
+    pageTitle: "Configuração do Painel Motorista",
+    sections: [
+      {
+        title: "Personalizar o painel do motorista",
+        summary: "Configure o que os motoristas veem e podem fazer no painel deles.",
+        steps: [
+          "Defina quais seções são visíveis no painel do motorista.",
+          "Configure textos e labels personalizados.",
+          "Ative ou desative funcionalidades específicas (extrato, ofertas, ranking).",
+          "Salve para aplicar.",
+        ],
+      },
+    ],
+  },
+
+  "/sponsored-placements": {
+    pageTitle: "Espaços Patrocinados",
+    sections: [
+      {
+        title: "Gerenciar espaços patrocinados",
+        summary: "Configure posições de destaque no aplicativo para parceiros patrocinadores.",
+        steps: [
+          "Defina os espaços disponíveis (topo, destaque, banner lateral).",
+          "Atribua parceiros a cada espaço patrocinado.",
+          "Configure período de exibição e prioridade.",
+          "Ative ou desative espaços conforme necessário.",
+        ],
+        tips: [
+          "Espaços patrocinados geram receita adicional para a marca.",
+          "Alterne parceiros para manter o conteúdo fresco.",
+        ],
+      },
+    ],
+  },
+
+  "/offer-card-config": {
+    pageTitle: "Configuração do Card de Oferta",
+    sections: [
+      {
+        title: "Personalizar a aparência dos cards",
+        summary: "Configure como os cards de oferta aparecem no aplicativo do cliente.",
+        steps: [
+          "Escolha o layout do card: compacto, expandido ou destaque.",
+          "Configure quais informações são exibidas (preço, desconto, badge).",
+          "Ajuste cores e estilos dos badges.",
+          "Pré-visualize o resultado antes de salvar.",
+        ],
+      },
+    ],
+  },
+
+  "/access-hub": {
+    pageTitle: "Hub de Acessos",
+    sections: [
+      {
+        title: "Gerenciar acessos rápidos",
+        summary: "Configure links e atalhos de acesso rápido para diferentes portais.",
+        steps: [
+          "Visualize todos os portais e links de acesso disponíveis.",
+          "Copie links de acesso para compartilhar com parceiros ou operadores.",
+          "Configure novos acessos conforme necessário.",
+        ],
+      },
+    ],
+  },
+
+  "/points-packages": {
+    pageTitle: "Pacotes de Pontos",
+    sections: [
+      {
+        title: "Gerenciar pacotes de pontos",
+        summary: "Crie e configure pacotes de pontos disponíveis para compra pelas cidades.",
+        steps: [
+          "Clique em 'Novo pacote' para criar.",
+          "Defina nome, quantidade de pontos e preço.",
+          "Configure se o pacote é recorrente ou avulso.",
+          "Ative ou desative pacotes na lista.",
+        ],
+        tips: [
+          "Ofereça pacotes variados para atender diferentes tamanhos de operação.",
+          "Pacotes inativos não aparecem na loja das cidades.",
+        ],
+      },
+    ],
+  },
+
+  "/crm": {
+    pageTitle: "CRM — Gestão de Relacionamento",
+    sections: [
+      {
+        title: "Gerenciar contatos e campanhas",
+        summary: "Centralize contatos, segmente audiências e envie campanhas direcionadas.",
+        steps: [
+          "Na aba 'Contatos', visualize e busque todos os contatos da marca.",
+          "Na aba 'Audiências', crie segmentos com filtros (cidade, corridas, tier, etc.).",
+          "Na aba 'Campanhas', crie e agende campanhas de comunicação.",
+          "Na aba 'Tiers', configure os níveis de engajamento dos contatos.",
+        ],
+        tips: [
+          "Segmente audiências antes de criar campanhas para melhorar a conversão.",
+          "Use filtros combinados para criar segmentos precisos.",
+          "Acompanhe os logs de envio para monitorar a entrega.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     ACHADINHOS / MARKETPLACE
+     ═══════════════════════════════════════════════ */
+  "/affiliate-categories": {
+    pageTitle: "Categorias de Afiliados",
+    sections: [
+      {
+        title: "Gerenciar categorias",
+        summary: "Organize as ofertas de afiliados em categorias para facilitar a navegação.",
+        steps: [
+          "Clique em 'Nova categoria' para criar.",
+          "Defina nome, ícone, cor e palavras-chave.",
+          "Reordene as categorias arrastando na lista.",
+          "Ative ou desative categorias conforme necessário.",
+        ],
+        tips: [
+          "Palavras-chave ajudam na classificação automática de ofertas importadas.",
+          "Use cores distintas para facilitar a identificação visual.",
+        ],
+      },
+    ],
+  },
+
+  "/mirror-sync": {
+    pageTitle: "Sincronização de Ofertas",
+    sections: [
+      {
+        title: "Sincronizar ofertas externas",
+        summary: "Importe e sincronize ofertas de plataformas externas automaticamente.",
+        steps: [
+          "Configure a fonte de dados (URL, API ou feed).",
+          "Defina a frequência de sincronização.",
+          "Mapeie os campos da fonte para os campos da plataforma.",
+          "Ative a sincronização e monitore os logs.",
+        ],
+        tips: [
+          "Verifique os logs após cada sincronização para identificar erros.",
+          "Ofertas duplicadas são detectadas automaticamente pelo hash de origem.",
+        ],
+      },
+    ],
+  },
+
+  "/offer-governance": {
+    pageTitle: "Governança de Ofertas",
+    sections: [
+      {
+        title: "Gerenciar aprovação de ofertas",
+        summary: "Revise e aprove ofertas antes de serem publicadas no marketplace.",
+        steps: [
+          "Ofertas pendentes aparecem automaticamente na fila de revisão.",
+          "Revise título, preço, imagem e descrição.",
+          "Aprove, rejeite ou solicite correções.",
+          "Ofertas aprovadas ficam visíveis imediatamente.",
+        ],
+      },
+    ],
+  },
+
+  "/product-redemption-orders": {
+    pageTitle: "Pedidos de Resgate de Produtos",
+    sections: [
+      {
+        title: "Gerenciar pedidos de resgate",
+        summary: "Acompanhe e processe pedidos de resgate de produtos físicos.",
+        steps: [
+          "Visualize pedidos por status: pendente, processando, enviado, concluído.",
+          "Clique em um pedido para ver detalhes: cliente, produto, endereço.",
+          "Atualize o status do pedido conforme o processamento avança.",
+          "Registre código de rastreamento quando aplicável.",
+        ],
+      },
+    ],
+  },
+
+  "/produtos-resgate": {
+    pageTitle: "Produtos para Resgate",
+    sections: [
+      {
+        title: "Gerenciar catálogo de produtos resgatáveis",
+        summary: "Configure os produtos que podem ser resgatados com pontos.",
+        steps: [
+          "Clique em 'Novo produto' para adicionar ao catálogo.",
+          "Defina nome, descrição, imagem e custo em pontos.",
+          "Configure estoque disponível e limites por cliente.",
+          "Ative ou desative produtos conforme disponibilidade.",
+        ],
+        tips: [
+          "Produtos com estoque zerado ficam marcados como 'Esgotado' automaticamente.",
+          "Use imagens de alta qualidade para melhorar a atratividade.",
+        ],
+      },
+    ],
+  },
+
+  "/regras-resgate": {
+    pageTitle: "Regras de Resgate",
+    sections: [
+      {
+        title: "Configurar regras de resgate de produtos",
+        summary: "Defina as políticas de resgate: limites, elegibilidade e condições.",
+        steps: [
+          "Configure limites de resgate por período (diário, semanal, mensal).",
+          "Defina requisitos de elegibilidade (tier mínimo, pontos mínimos).",
+          "Configure as condições de entrega e prazos.",
+          "Salve para aplicar as regras.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     GANHA-GANHA
+     ═══════════════════════════════════════════════ */
+  "/ganha-ganha-config": {
+    pageTitle: "Ganha-Ganha — Configuração",
+    sections: [
+      {
+        title: "Configurar módulo Ganha-Ganha",
+        summary: "Defina as regras de comissionamento e participação no programa.",
+        steps: [
+          "Configure a taxa de comissão por venda ou resgate.",
+          "Defina os parceiros participantes.",
+          "Configure os períodos de apuração e pagamento.",
+          "Ative o módulo para iniciar o programa.",
+        ],
+      },
+    ],
+  },
+
+  "/ganha-ganha-billing": {
+    pageTitle: "Ganha-Ganha — Faturamento",
+    sections: [
+      {
+        title: "Acompanhar faturamento",
+        summary: "Visualize faturas, valores devidos e pagamentos do programa Ganha-Ganha.",
+        steps: [
+          "Consulte o resumo financeiro do período atual.",
+          "Visualize faturas individuais por parceiro.",
+          "Acompanhe o status de cada pagamento.",
+          "Exporte relatórios financeiros para planilha.",
+        ],
+      },
+    ],
+  },
+
+  "/ganha-ganha-closing": {
+    pageTitle: "Ganha-Ganha — Fechamento",
+    sections: [
+      {
+        title: "Realizar fechamento do período",
+        summary: "Processe o fechamento do período para calcular comissões e gerar faturas.",
+        steps: [
+          "Selecione o período a ser fechado.",
+          "Revise o resumo de vendas e comissões.",
+          "Confirme o fechamento para gerar as faturas.",
+          "Após o fechamento, os valores ficam disponíveis para pagamento.",
+        ],
+        tips: [
+          "O fechamento é irreversível — revise os dados com cuidado.",
+          "Períodos fechados geram faturas automaticamente para cada parceiro.",
+        ],
+      },
+    ],
+  },
+
+  "/ganha-ganha-dashboard": {
+    pageTitle: "Ganha-Ganha — Dashboard",
+    sections: [
+      {
+        title: "Visão geral do programa",
+        summary: "Acompanhe indicadores e desempenho do programa Ganha-Ganha.",
+        steps: [
+          "Veja os indicadores principais: vendas, comissões, parceiros ativos.",
+          "Analise gráficos de tendência e comparativos.",
+          "Identifique os parceiros com melhor desempenho.",
+        ],
+      },
+    ],
+  },
+
+  "/ganha-ganha-store-summary": {
+    pageTitle: "Ganha-Ganha — Resumo da Loja",
+    sections: [
+      {
+        title: "Ver resumo por loja",
+        summary: "Visualize o desempenho individual de cada loja no programa.",
+        steps: [
+          "Selecione a loja desejada na lista.",
+          "Veja vendas, resgates e comissões do período.",
+          "Compare com períodos anteriores para identificar tendências.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     ROOT — Rotas adicionais
+     ═══════════════════════════════════════════════ */
+  "/provision-brand": {
+    pageTitle: "Provisionar Nova Marca",
+    sections: [
+      {
+        title: "Criar uma nova marca na plataforma",
+        summary: "Provisione uma marca completa com todas as configurações iniciais.",
+        steps: [
+          "Preencha os dados da marca: nome, slug e empresa proprietária.",
+          "Selecione o plano de assinatura inicial.",
+          "Configure os módulos que serão ativados.",
+          "Confirme para criar a marca com todas as dependências.",
+        ],
+        tips: [
+          "O slug deve ser único e não pode ser alterado posteriormente.",
+          "Módulos podem ser ajustados depois na seção de Módulos da marca.",
+        ],
+      },
+    ],
+  },
+
+  "/starter-kit": {
+    pageTitle: "Kit Inicial",
+    sections: [
+      {
+        title: "Configurar kit inicial para marcas",
+        summary: "Defina o pacote padrão de configurações aplicado a novas marcas.",
+        steps: [
+          "Configure seções padrão da tela inicial.",
+          "Defina regras de pontos iniciais.",
+          "Configure módulos que serão ativados automaticamente.",
+          "Salve o kit para aplicação automática em novas marcas.",
+        ],
+      },
+    ],
+  },
+
+  "/platform-theme": {
+    pageTitle: "Tema da Plataforma",
+    sections: [
+      {
+        title: "Personalizar o visual da plataforma",
+        summary: "Configure cores, fontes e estilos globais do painel administrativo.",
+        steps: [
+          "Defina as cores primária, secundária e de destaque.",
+          "Configure a fonte principal e secundária.",
+          "Ajuste o modo claro/escuro e contrastes.",
+          "Pré-visualize as alterações antes de salvar.",
+        ],
+      },
+    ],
+  },
+
+  "/app-icons": {
+    pageTitle: "Ícones do Aplicativo",
+    sections: [
+      {
+        title: "Gerenciar ícones do app",
+        summary: "Configure os ícones exibidos no aplicativo do cliente.",
+        steps: [
+          "Envie ícones personalizados para substituir os padrão.",
+          "Defina ícones por categoria ou funcionalidade.",
+          "Pré-visualize como os ícones aparecem no aplicativo.",
+          "Salve para aplicar em todas as marcas.",
+        ],
+      },
+    ],
+  },
+
+  "/plan-templates": {
+    pageTitle: "Templates de Planos",
+    sections: [
+      {
+        title: "Gerenciar templates de planos",
+        summary: "Crie modelos de planos de assinatura reutilizáveis.",
+        steps: [
+          "Clique em 'Novo template' para criar.",
+          "Defina nome, descrição e funcionalidades incluídas.",
+          "Configure limites (cidades, parceiros, usuários).",
+          "Ative o template para ficar disponível na criação de marcas.",
+        ],
+      },
+    ],
+  },
+
+  "/plan-pricing": {
+    pageTitle: "Preços de Planos",
+    sections: [
+      {
+        title: "Configurar precificação",
+        summary: "Defina os preços para cada plano de assinatura da plataforma.",
+        steps: [
+          "Selecione o plano a ser precificado.",
+          "Defina valor mensal e anual.",
+          "Configure descontos e promoções.",
+          "Salve para aplicar os novos preços.",
+        ],
+      },
+    ],
+  },
+
+  "/taxonomy": {
+    pageTitle: "Taxonomia",
+    sections: [
+      {
+        title: "Gerenciar taxonomia de categorias",
+        summary: "Configure a árvore de categorias usada em toda a plataforma.",
+        steps: [
+          "Adicione novas categorias e subcategorias.",
+          "Defina ícones e cores para cada categoria.",
+          "Reordene a hierarquia arrastando os itens.",
+          "Desative categorias que não são mais usadas.",
+        ],
+      },
+    ],
+  },
+
+  "/welcome-tour": {
+    pageTitle: "Tour de Boas-vindas",
+    sections: [
+      {
+        title: "Configurar tour de boas-vindas",
+        summary: "Defina as etapas do tour que novos usuários veem ao acessar a plataforma.",
+        steps: [
+          "Adicione etapas com título, descrição e imagem.",
+          "Reordene as etapas arrastando na lista.",
+          "Configure o público-alvo do tour (tipo de usuário).",
+          "Ative o tour para que novos usuários o vejam automaticamente.",
+        ],
+      },
+    ],
+  },
+
+  "/profile-links": {
+    pageTitle: "Links do Perfil",
+    sections: [
+      {
+        title: "Configurar links exibidos no perfil",
+        summary: "Defina os links que aparecem na seção de perfil do aplicativo do cliente.",
+        steps: [
+          "Adicione links com título, URL e ícone.",
+          "Reordene os links arrastando na lista.",
+          "Ative ou desative links individualmente.",
+          "Use links para direcionar a redes sociais, suporte, FAQ, etc.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     OUTROS — Rotas adicionais
+     ═══════════════════════════════════════════════ */
+  "/api-keys": {
+    pageTitle: "Chaves de API",
+    sections: [
+      {
+        title: "Gerenciar chaves de API",
+        summary: "Crie e gerencie chaves de autenticação para integração via API.",
+        steps: [
+          "Clique em 'Nova chave' para gerar.",
+          "Defina um rótulo descritivo para identificar o uso da chave.",
+          "Copie a chave gerada — ela não será exibida novamente.",
+          "Desative chaves comprometidas imediatamente.",
+        ],
+        tips: [
+          "Nunca compartilhe chaves de API em locais públicos.",
+          "Use rótulos claros para identificar cada integração.",
+          "Revogue chaves não utilizadas periodicamente.",
+        ],
+      },
+    ],
+  },
+
+  "/api-docs": {
+    pageTitle: "Documentação da API",
+    sections: [
+      {
+        title: "Consultar documentação",
+        summary: "Acesse a documentação completa dos endpoints da API.",
+        steps: [
+          "Navegue pelos endpoints organizados por módulo.",
+          "Consulte exemplos de requisição e resposta.",
+          "Teste endpoints diretamente na interface (quando disponível).",
+        ],
+      },
+    ],
+  },
+
+  "/emitter-requests": {
+    pageTitle: "Solicitações de Emissores",
+    sections: [
+      {
+        title: "Gerenciar solicitações",
+        summary: "Revise e processe solicitações de emissores de pontos.",
+        steps: [
+          "Visualize solicitações pendentes na fila.",
+          "Revise os detalhes de cada solicitação.",
+          "Aprove ou rejeite com justificativa.",
+        ],
+      },
+    ],
+  },
+
+  "/page-builder-v2": {
+    pageTitle: "Montador de Páginas V2",
+    sections: [
+      {
+        title: "Criar páginas com o novo editor",
+        summary: "Use o editor visual avançado para montar páginas personalizadas.",
+        steps: [
+          "Clique em 'Nova página' ou edite uma existente.",
+          "Arraste e solte blocos de conteúdo (texto, imagem, botão, seção).",
+          "Configure cada bloco com as opções do painel lateral.",
+          "Pré-visualize em tempo real e publique quando estiver pronta.",
+        ],
+        tips: [
+          "O V2 oferece mais tipos de blocos e opções de layout que a versão anterior.",
+          "Use seções para organizar o conteúdo em grupos visuais.",
+        ],
+      },
+    ],
+  },
+
+  "/manuais": {
+    pageTitle: "Manuais e Guias",
+    sections: [
+      {
+        title: "Acessar manuais do sistema",
+        summary: "Consulte guias completos sobre cada funcionalidade da plataforma.",
+        steps: [
+          "Navegue pelas categorias de manuais.",
+          "Clique em um manual para abrir o conteúdo completo.",
+          "Use a busca para encontrar tópicos específicos.",
+        ],
+      },
+    ],
+  },
+
+  "/city-onboarding": {
+    pageTitle: "Onboarding de Cidade",
+    sections: [
+      {
+        title: "Configurar nova cidade",
+        summary: "Siga o passo a passo guiado para configurar uma nova cidade na plataforma.",
+        steps: [
+          "Preencha os dados da cidade: nome, estado e localização.",
+          "Configure as regras de pontos iniciais.",
+          "Cadastre os primeiros parceiros.",
+          "Crie as primeiras ofertas.",
+          "Ative a cidade para começar a operar.",
+        ],
+        tips: [
+          "Complete todas as etapas para garantir uma operação saudável desde o início.",
+          "Você pode voltar a qualquer etapa a qualquer momento.",
+        ],
+      },
+    ],
+  },
+
+  "/driver": {
+    pageTitle: "Painel do Motorista",
+    sections: [
+      {
+        title: "Usar o painel do motorista",
+        summary: "Acesse seu saldo, ofertas exclusivas e ranking como motorista.",
+        steps: [
+          "Visualize seu saldo de pontos no topo da tela.",
+          "Navegue pelas ofertas disponíveis para motoristas.",
+          "Consulte seu ranking e posição na cidade.",
+          "Resgate pontos por prêmios ou produtos disponíveis.",
+        ],
+        tips: [
+          "Complete mais corridas para subir no ranking.",
+          "Fique atento a ofertas exclusivas para motoristas.",
+        ],
+      },
+    ],
+  },
 };
 
 export function getHelpForRoute(pathname: string): HelpEntry | null {
