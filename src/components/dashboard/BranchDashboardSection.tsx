@@ -76,7 +76,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
       )}
 
       {/* Visão geral da cidade — só motorista */}
-      {isDriverEnabled && <BranchVisaoGeral stats={stats} />}
+      {isDriverEnabled && <BranchVisaoGeral stats={stats} branchId={branchId} brandId={effectiveBrandId} />}
 
       {/* Ranking + Feed — só motorista */}
       {isDriverEnabled && (
