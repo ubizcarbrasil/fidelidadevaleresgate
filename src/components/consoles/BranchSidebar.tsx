@@ -28,11 +28,13 @@ interface MenuItem {
   scoringFilter?: "DRIVER" | "PASSENGER";
 }
 
+type BranchModuleKey = "enable_duels_module" | "enable_achadinhos_module" | "enable_marketplace_module" | "enable_race_earn_module" | "enable_customer_scoring_module";
+
 const dashboardItem: MenuItem = {
   key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
 };
 
-const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: MenuItem[] }[] = [
+const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; branchModuleKey?: BranchModuleKey; items: MenuItem[] }[] = [
   {
     label: "Gestão Comercial",
     scoringFilter: "PASSENGER",
