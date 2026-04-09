@@ -149,12 +149,17 @@ export function useMessageTemplates(brandId: string | null) {
     enabled: !!brandId,
   });
 
-  // Auto-seed default templates when brand has none
+  // Auto-seed default templates for missing categories
   useEffect(() => {
     if (!brandId || query.isLoading || seedingRef.current) return;
-    if (query.data && query.data.length === 0) {
+    if (!query.data) return;
+
+    const existingCategories = new Set(query.data.map((t) => t.category));
+    const missingTemplates = DEFAULT_TEMPLATES.filter((t) => !existingCategories.has(t.category));
+
+    if (missingTemplates.length > 0) {
       seedingRef.current = true;
-      const rows = DEFAULT_TEMPLATES.map((t) => ({ ...t, brand_id: brandId }));
+      const rows = missingTemplates.map((t) => ({ ...t, brand_id: brandId }));
       (supabase as any)
         .from("driver_message_templates")
         .insert(rows)
