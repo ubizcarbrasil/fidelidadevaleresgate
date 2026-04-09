@@ -547,6 +547,8 @@ export function useRespondCounterProposal() {
           customerIds: [vars.opponentCustomerId],
           duelId: vars.duelId,
           nomeOponente: cleanDriverName(driver?.name),
+          brandId: driver!.brand_id,
+          branchId: driver!.branch_id,
         });
       }
     },

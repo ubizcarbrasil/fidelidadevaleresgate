@@ -87,15 +87,29 @@ const MAPEAMENTO: Record<TipoNotificacaoDuelo, MapeamentoNotificacao> = {
   },
 };
 
+/** Mapeamento de tipos internos para event_type do sistema de fluxos */
+const MAPEAMENTO_FLUXO: Partial<Record<TipoNotificacaoDuelo, string>> = {
+  DUEL_CHALLENGE_RECEIVED: "DUEL_CHALLENGE_RECEIVED",
+  DUEL_CHALLENGE_ACCEPTED: "DUEL_ACCEPTED",
+  DUEL_CHALLENGE_DECLINED: "DUEL_DECLINED",
+  DUEL_VICTORY: "DUEL_VICTORY",
+  DUEL_FINISHED: "DUEL_FINISHED",
+  BELT_NEW_CHAMPION: "BELT_NEW_CHAMPION",
+};
+
 interface ParamsNotificacao {
   tipo: TipoNotificacaoDuelo;
   customerIds: string[];
   duelId?: string;
   nomeOponente?: string;
+  brandId?: string;
+  branchId?: string;
 }
 
 /**
  * Dispara notificação interna via edge function send-push-notification.
+ * Se brandId estiver presente e houver mapeamento de fluxo, também dispara
+ * send-driver-message para envio via TaxiMachine.
  * Não lança erro — falhas são logadas silenciosamente.
  */
 export async function enviarNotificacaoDuelo({
@@ -103,12 +117,15 @@ export async function enviarNotificacaoDuelo({
   customerIds,
   duelId,
   nomeOponente,
+  brandId,
+  branchId,
 }: ParamsNotificacao): Promise<void> {
   if (!customerIds.length) return;
 
   const mapeamento = MAPEAMENTO[tipo];
   if (!mapeamento) return;
 
+  // 1. Notificação in-app (push notification)
   try {
     await supabase.functions.invoke("send-push-notification", {
       body: {
@@ -120,6 +137,26 @@ export async function enviarNotificacaoDuelo({
       },
     });
   } catch (err) {
-    console.error(`[NotificacaoDuelo] Falha ao enviar ${tipo}:`, err);
+    console.error(`[NotificacaoDuelo] Falha ao enviar push ${tipo}:`, err);
+  }
+
+  // 2. Disparo do fluxo de mensagem via TaxiMachine (se configurado)
+  const eventType = MAPEAMENTO_FLUXO[tipo];
+  if (eventType && brandId) {
+    try {
+      await supabase.functions.invoke("send-driver-message", {
+        body: {
+          brand_id: brandId,
+          branch_id: branchId || null,
+          event_type: eventType,
+          customer_ids: customerIds,
+          context_vars: {
+            adversario: nomeOponente || "",
+          },
+        },
+      });
+    } catch (err) {
+      console.error(`[NotificacaoDuelo] Falha ao enviar fluxo ${tipo}:`, err);
+    }
   }
 }
