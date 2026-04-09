@@ -1,63 +1,35 @@
 
 
-# Atualizar Manuais com Novas Funcionalidades
+# Notificação Fluorescente de Desafio Recebido
 
-## Resumo
-Os manuais (`dados_manuais.ts`) e a ajuda contextual (`helpContent.ts`) estão desatualizados em relação a várias funcionalidades recentes. Este plano cobre todas as lacunas identificadas.
+## Problema
+O popup atual de desafio recebido é um Dialog discreto que pode passar despercebido. O motorista não sabe que tem um desafio se não abrir a seção de duelos.
 
-## Lacunas Identificadas
+## Solução
+Transformar o popup em uma experiência visual impactante com:
 
-1. **Minhas Cidades (brand-branches)** — Nenhum manual existe. Botões "Resetar pontos" e "Editar" foram adicionados recentemente com labels visíveis. Reset granular (todos, motoristas, clientes, individual) + histórico de auditoria. Reset também disponível dentro da tela de edição.
-
-2. **Comunicação (send-notification)** — Nenhum manual existe em `dados_manuais.ts`. A página agora tem duas abas: "Notificação Push" e "Mensagens via Machine" (templates, fluxos automáticos, envio manual, relatório).
-
-3. **Apostas Laterais (Side Bets)** — Funcionalidade completa de apostas em duelos não é mencionada nos manuais de gamificação. Inclui criação, aceitação, ranking de apostadores.
-
-4. **Integração Mobilidade** — Manual genérico, não reflete a arquitetura atual de 3 ambientes (Pontuar Passageiro, Pontuar Motorista, Notificações/Mensagens).
-
-5. **Ajuda Contextual (`helpContent.ts`)** — Rota `/send-notification` desatualizada (só push), rota `/brand-branches` inexistente.
+1. **Overlay full-screen pulsante** — fundo escuro semi-transparente com borda neon verde fluorescente animada
+2. **Animação de entrada** — o card entra com scale + fade, com glow neon pulsando ao redor
+3. **Ícone grande animado** — espadas cruzadas com efeito de brilho/pulse
+4. **Texto grande e chamativo** — "VOCÊ FOI DESAFIADO!" em fonte bold com cor neon
+5. **Efeito de vibração** — chamada a `navigator.vibrate()` (quando suportado) para alertar fisicamente
+6. **Badge persistente** — quando o motorista fecha o popup sem ver o desafio, mostrar um badge pulsante no botão de Duelos na home para lembrar que há desafio pendente
 
 ## Mudanças
 
-### 1. `src/components/manuais/dados_manuais.ts`
+### `src/components/driver/duels/PopupDesafioRecebido.tsx`
+- Substituir o Dialog discreto por um overlay full-screen com z-50
+- Adicionar animações CSS: glow neon pulsante (box-shadow verde fluorescente), scale-in do card, ícone com pulse
+- Texto principal "VOCÊ FOI DESAFIADO!" grande e fluorescente
+- Card central com borda neon animada (alternando intensidade)
+- Botão "Ver Desafio" grande e brilhante, botão "Mais tarde" secundário
+- Chamar `navigator.vibrate([200, 100, 200])` ao montar
 
-**A) Adicionar manual "Minhas Cidades"** na categoria "Personalização & Vitrine":
-- Título: "Minhas Cidades"
-- Cobertura: listar cidades, ativar/desativar, botão "Resetar pontos" (granular: todos, motoristas, clientes, específico), botão "Editar", histórico de resets, reset também acessível na tela de edição
-- Rota: `/brand-branches`
+### `src/components/driver/DriverMarketplace.tsx`
+- Passar estado `desafioPendente` para o banner/botão de Duelos
+- Quando houver desafio pendente (mesmo após fechar popup), mostrar um indicador pulsante vermelho/verde no card "Duelos entre Motoristas" na home
 
-**B) Adicionar manual "Comunicação"** — Nova categoria ou dentro de uma existente:
-- Manual 1: "Notificação Push" — enviar push para clientes (todos ou por cidade)
-- Manual 2: "Mensagens via Machine" — templates com variáveis, fluxos automáticos (eventos de gamificação, apostas), envio manual (massa ou individual), relatório de entregas
-- Rota: `/send-notification`
-
-**C) Adicionar manual "Apostas Laterais"** na categoria "Gamificação — Administração":
-- Cobertura: criar apostas em duelos, aceitar, ranking de apostadores, configuração de templates de mensagem para SIDE_BET_CREATED e SIDE_BET_ACCEPTED
-- Rota: `/gamificacao-admin`
-
-**D) Atualizar manual "Integração Mobilidade"** (id: `integracao-mobilidade`):
-- Refletir os 3 ambientes: Pontuar Passageiro (Logs + Matrix), Pontuar Motorista (Webhook automático/manual, diagnósticos), Notificações (Chat app + Telegram + fallback)
-- Mencionar credenciais centralizadas no nível da Marca
-
-**E) Adicionar manuais na seção franqueado** (`gruposManuaisFranqueado`):
-- Manual de Apostas Laterais para o franqueado (aba Apostas na gamificação)
-
-### 2. `src/lib/helpContent.ts`
-
-**A) Atualizar `/send-notification`:**
-- Adicionar seção sobre a aba "Mensagens via Machine" (templates, fluxos, envio, relatório)
-- Manter seção existente de Push
-
-**B) Adicionar `/brand-branches`:**
-- Seção: gerenciar cidades da marca, ativar/desativar, resetar pontos, editar
-
-**C) Atualizar `/gamificacao-admin`:**
-- Adicionar seção sobre Apostas Laterais
-
-## Detalhes Técnicos
-
-- Todos os novos manuais seguem a interface `ManualEntry` existente (id, titulo, descricao, comoAtivar, passos, dicas, rota)
-- Ajuda contextual segue a interface `HelpEntry` existente (pageTitle, sections com title, summary, steps, tips)
-- Nenhum novo arquivo criado — apenas edição dos dois arquivos existentes
-- Nenhuma mudança de lógica ou componentes — apenas conteúdo textual
+### CSS (inline via Tailwind + style)
+- Keyframes para glow pulse, border animation e scale-in — tudo inline via `style` ou classes Tailwind `animate-`
+- Cores fluorescentes: `#39FF14` (verde neon) e `#FFD700` (dourado) para contraste em fundo escuro
 
