@@ -97,10 +97,23 @@ function useRealtimeRefresh() {
 }
 
 /* ── Dashboard Header ── */
-function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; scopeLabels: Record<string, string> }) {
+function DashboardHeader({ consoleScope, scopeLabels, isCityScopedView, viewingBranchId }: { consoleScope: string; scopeLabels: Record<string, string>; isCityScopedView: boolean; viewingBranchId: string | null }) {
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const showBrandLogo = ["BRAND", "TENANT"].includes(consoleScope);
   const greeting = new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite";
+
+  const { data: branchName } = useQuery({
+    queryKey: ["branch-name", viewingBranchId],
+    queryFn: async () => {
+      const { data } = await supabase.from("branches").select("name").eq("id", viewingBranchId!).single();
+      return data?.name || "Cidade";
+    },
+    enabled: !!viewingBranchId,
+  });
+
+  const scopeLabel = isCityScopedView && viewingBranchId
+    ? `Visão da cidade · ${branchName || "Carregando..."}`
+    : scopeLabels[consoleScope];
 
   return (
     <div className="flex items-center gap-3">
@@ -118,7 +131,7 @@ function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; 
         <p className="text-sm text-muted-foreground mt-0.5">
           {showBrandLogo && brandName ? `${brandName} · ` : ""}
           {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-          {" · "}{scopeLabels[consoleScope]}
+          {" · "}{scopeLabel}
         </p>
       </div>
     </div>
