@@ -1,46 +1,22 @@
 
 
-# Tornar botão de Reset de Pontos mais visível no mobile
+# Plano: Adicionar Mensagens via Machine na página Enviar Notificação
 
-## Problema
-O botão de resetar pontos é um ícone pequeno (`RotateCcw` 14px) sem label, difícil de identificar no mobile (430px).
+## Contexto
+A página "Enviar Notificação" (`/send-notification`, menu Comunicação) atualmente só tem o formulário de push notification para clientes. O usuário quer que o fluxo de mensagens Machine também esteja acessível aqui.
 
 ## Solução
-Reorganizar as ações de cada card de cidade em duas linhas no mobile:
-- **Linha 1**: Nome da cidade + Switch ativo/inativo
-- **Linha 2**: Dois botões com label textual — "Resetar pontos" e "Editar" — usando `variant="outline"` e `size="sm"`, visíveis e clicáveis
-
-No desktop, os botões podem manter o layout inline com labels visíveis.
+Adicionar sub-tabs na `SendNotificationPage`:
+- **Notificação Push** — conteúdo atual (formulário de envio push para clientes)
+- **Mensagens via Machine** — reutiliza o componente `AbaMensagens` com templates, fluxos, envio manual e relatório
 
 ## Mudanças
 
-### `src/pages/BrandBranchesPage.tsx`
+### `src/pages/SendNotificationPage.tsx`
+- Importar `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` e `AbaMensagens`
+- Buscar branches com brand_id para passar ao `AbaMensagens`
+- Envolver o conteúdo atual em uma tab "Notificação Push"
+- Adicionar segunda tab "Mensagens via Machine" renderizando `<AbaMensagens brandId={currentBrandId} branches={branches} />`
 
-Substituir os dois `Button size="icon"` (reset e editar) por botões com ícone + texto, movidos para uma linha separada abaixo do nome/switch:
-
-```tsx
-{/* Linha de ações — abaixo dos badges */}
-<div className="flex items-center gap-2 pl-12">
-  <Button
-    variant="outline"
-    size="sm"
-    className="h-8 text-xs gap-1.5"
-    onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
-  >
-    <RotateCcw className="h-3.5 w-3.5" />
-    Resetar pontos
-  </Button>
-  <Button
-    variant="outline"
-    size="sm"
-    className="h-8 text-xs gap-1.5"
-    onClick={() => navigate(`/brand-branches/${branch.id}`)}
-  >
-    <Pencil className="h-3.5 w-3.5" />
-    Editar
-  </Button>
-</div>
-```
-
-A primeira linha do card fica apenas com nome + switch, mais limpa e legível.
+Nenhum arquivo novo. Apenas reorganização da página existente.
 
