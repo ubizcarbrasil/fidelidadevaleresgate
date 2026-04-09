@@ -1,55 +1,95 @@
 
 
-# Plano de Otimização de Performance
+# Atualização do Conteúdo de Ajuda Contextual (Botão ?)
 
-## Resumo
-5 otimizações para reduzir bundle inicial (~40-50KB), acelerar primeiro render (~200-400ms) e melhorar fluidez de navegação.
+## Situação Atual
 
----
+O botão de interrogação (?) no canto inferior direito usa o arquivo `src/lib/helpContent.ts` para exibir ajuda contextual por rota. Atualmente:
 
-## 1. Remover AnimatePresence do roteamento global
+- **~25 rotas** possuem conteúdo de ajuda
+- **~45 rotas** NÃO possuem conteúdo — nessas páginas o botão simplesmente não aparece
 
-**Arquivo**: `src/App.tsx`
-- Remover imports de `AnimatePresence` e `PageTransition`
-- Substituir `AnimatedRoutes` por `<Suspense>` + `<Routes>` direto (sem wrapper de animação)
-- Elimina framer-motion do caminho crítico de cada navegação
+### Rotas sem ajuda (principais grupos)
 
-**Arquivo**: `src/components/ui/page-transition.tsx`
-- Substituir implementação framer-motion por transição CSS pura (opacity + translate via classe Tailwind `animate-in fade-in`)
+```text
+FRANQUEADO (Branch)
+├── /branch-wallet         (Carteira de Pontos)
+├── /branch-reports        (Relatórios da Cidade)
+├── /motoristas            (Gestão de Motoristas)
+├── /driver-points-rules   (Regras de Pontos Motorista)
+├── /points-packages-store (Loja de Pacotes)
+└── /tier-points-rules     (Regras por Tier)
 
-## 2. Configurar manual chunks no Vite
+EMPREENDEDOR (Brand)
+├── /brand-settings        (Configurações da Marca)
+├── /brand-branches        (já existe ✓)
+├── /brand-cidades-journey (Jornada Cidades)
+├── /brand-api-journey     (Jornada API)
+├── /brand-permissions     (Permissões do Parceiro)
+├── /subscription          (Assinatura)
+├── /partner-landing-config(Config Landing Parceiro)
+├── /machine-integration   (Integração Machine)
+├── /machine-webhook-test  (Teste Webhook)
+├── /driver-config         (Config Painel Motorista)
+├── /sponsored-placements  (Espaços Patrocinados)
+├── /offer-card-config     (Config Card de Oferta)
+├── /access-hub            (Hub de Acessos)
+├── /points-packages       (Pacotes de Pontos)
+└── /crm                   (CRM)
 
-**Arquivo**: `vite.config.ts`
-- Adicionar `build.rollupOptions.output.manualChunks`:
-  - `vendor-react`: react, react-dom, react-router-dom
-  - `vendor-supabase`: @supabase/supabase-js
-  - `vendor-ui`: lucide-react, @radix-ui/*
-  - `vendor-motion`: framer-motion
-  - `vendor-sentry`: @sentry/react
-  - `vendor-query`: @tanstack/react-query
+ACHADINHOS / MARKETPLACE
+├── /affiliate-categories  (Categorias)
+├── /mirror-sync           (Sincronização)
+├── /offer-governance      (Governança)
+├── /product-redemption-orders (Pedidos de Resgate)
+├── /produtos-resgate      (Produtos Resgate)
+└── /regras-resgate        (Regras de Resgate)
 
-## 3. Lazy-load Sentry e web-vitals
+GANHA-GANHA
+├── /ganha-ganha-config    (Configuração)
+├── /ganha-ganha-billing   (Faturamento)
+├── /ganha-ganha-closing   (Fechamento)
+├── /ganha-ganha-dashboard (Dashboard Root)
+└── /ganha-ganha-store-summary (Resumo Loja)
 
-**Arquivo**: `src/main.tsx`
-- Mover `initSentry()` e `reportWebVitals()` para `import()` dinâmico dentro de `requestIdleCallback` ou `setTimeout(..., 0)` após o mount do React
-- Remover imports síncronos de `@/lib/sentry` e `@/lib/webVitals` do topo
+ROOT
+├── /provision-brand       (Provisionar Marca)
+├── /starter-kit           (Kit Inicial)
+├── /platform-theme        (Tema da Plataforma)
+├── /app-icons             (Ícones do App)
+├── /plan-templates        (Templates de Planos)
+├── /plan-pricing          (Preços de Planos)
+├── /taxonomy              (Taxonomia)
+├── /welcome-tour          (Tour de Boas-vindas)
+└── /profile-links         (Links do Perfil)
 
-## 4. Paralelizar chamadas no BrandContext
+OUTROS
+├── /api-keys              (Chaves de API)
+├── /api-docs              (Documentação API)
+├── /emitter-requests      (Solicitações Emissores)
+├── /page-builder-v2       (Montador V2)
+├── /manuais               (Página de Manuais)
+├── /city-onboarding       (Onboarding Cidade)
+└── /driver                (Painel Motorista)
+```
 
-**Arquivo**: `src/contexts/BrandContext.tsx`
-- No `useEffect` que carrega branches + perfil, usar `Promise.all` para buscar ambos simultaneamente após o brand ser resolvido
-- Reduz ~200ms de cascata em conexões lentas
+## Plano
 
-## 5. Memoizar Sidebars
+### Passo 1 — Adicionar conteúdo de ajuda para todas as rotas faltantes
+**Arquivo**: `src/lib/helpContent.ts`
 
-**Arquivos**: `src/components/consoles/BranchSidebar.tsx`, `src/components/consoles/BrandSidebar.tsx`
-- Envolver o export default com `React.memo` para evitar re-renders em cada navegação de rota
+Adicionar entradas para cada uma das ~45 rotas listadas acima, seguindo o mesmo formato existente (título, resumo, passos e dicas). O conteúdo será escrito em português, descritivo e orientado ao usuário final de cada console (Root, Brand, Branch).
 
----
+### Passo 2 — Revisar e atualizar conteúdo existente
+Verificar se as entradas já existentes estão atualizadas com as funcionalidades mais recentes (ex: reset granular em `/brand-branches` já está atualizado, mas conferir se `/gamificacao-admin` inclui apostas laterais — já inclui).
 
-## Impacto Esperado
-- Bundle inicial ~40-50KB menor (Sentry + framer-motion fora do critical path)
-- Primeiro render ~200-400ms mais rápido
-- Navegação sem overhead de animação JS
-- Melhor cache de browser com chunks separados
+### Detalhe Técnico
+- Apenas o arquivo `src/lib/helpContent.ts` será editado
+- O `ContextualHelpDrawer` já funciona para qualquer rota — basta adicionar o conteúdo
+- A função `getHelpForRoute` já suporta match exato e por base path (`/brands/123` → `/brands`)
+- Nenhuma migração de banco ou mudança de componente é necessária
+
+### Impacto
+- O botão `?` passará a aparecer em **todas as páginas** do sistema
+- Cada página terá instruções contextuais relevantes para o usuário
 
