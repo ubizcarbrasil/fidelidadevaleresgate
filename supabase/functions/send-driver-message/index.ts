@@ -118,16 +118,22 @@ Deno.serve(async (req) => {
     }
 
     // 3. Get integration credentials per brand
-    const { data: integration } = await sb
+    // For manual broadcasts or event-driven messages, we don't require driver_message_enabled
+    // We just need active integration credentials with an API key
+    let integrationQuery = sb
       .from("machine_integrations")
       .select("api_key, basic_auth_user, basic_auth_password")
       .eq("brand_id", brand_id)
-      .eq("driver_message_enabled", true)
-      .limit(1)
-      .maybeSingle();
+      .not("api_key", "is", null);
+
+    if (branch_id) {
+      integrationQuery = integrationQuery.eq("branch_id", branch_id);
+    }
+
+    const { data: integration } = await integrationQuery.limit(1).maybeSingle();
 
     if (!integration?.api_key) {
-      return json({ error: "No active integration with driver messaging enabled" }, 400);
+      return json({ error: "No active integration with API credentials found" }, 400);
     }
 
     const basicToken = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
