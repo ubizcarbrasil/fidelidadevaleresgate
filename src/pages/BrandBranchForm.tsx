@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw, Package, ShoppingCart, Store, Zap, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
@@ -74,6 +74,13 @@ export default function BrandBranchForm() {
   const [enableCityRanking, setEnableCityRanking] = useState(true);
   const [enableCityBelt, setEnableCityBelt] = useState(true);
   const [allowPublicDuelViewing, setAllowPublicDuelViewing] = useState(false);
+
+  // Módulos de Negócio
+  const [enableDuelsModule, setEnableDuelsModule] = useState(true);
+  const [enableAchadinhosModule, setEnableAchadinhosModule] = useState(true);
+  const [enableMarketplaceModule, setEnableMarketplaceModule] = useState(true);
+  const [enableRaceEarnModule, setEnableRaceEarnModule] = useState(true);
+  const [enableCustomerScoringModule, setEnableCustomerScoringModule] = useState(true);
 
   // Load brand's default scoring model for new cities
   useEffect(() => {
@@ -151,6 +158,12 @@ export default function BrandBranchForm() {
         setEnableCityRanking(bs.enable_city_ranking !== false);
         setEnableCityBelt(bs.enable_city_belt !== false);
         setAllowPublicDuelViewing(bs.allow_public_duel_viewing === true);
+        // Módulos de Negócio
+        setEnableDuelsModule(bs.enable_duels_module !== false);
+        setEnableAchadinhosModule(bs.enable_achadinhos_module !== false);
+        setEnableMarketplaceModule(bs.enable_marketplace_module !== false);
+        setEnableRaceEarnModule(bs.enable_race_earn_module !== false);
+        setEnableCustomerScoringModule(bs.enable_customer_scoring_module !== false);
       }
     }
   }, [existing]);
@@ -216,6 +229,12 @@ export default function BrandBranchForm() {
         enable_city_ranking: enableCityRanking,
         enable_city_belt: enableCityBelt,
         allow_public_duel_viewing: allowPublicDuelViewing,
+        // Módulos de Negócio
+        enable_duels_module: enableDuelsModule,
+        enable_achadinhos_module: enableAchadinhosModule,
+        enable_marketplace_module: enableMarketplaceModule,
+        enable_race_earn_module: enableRaceEarnModule,
+        enable_customer_scoring_module: enableCustomerScoringModule,
       };
 
       const payload = {
