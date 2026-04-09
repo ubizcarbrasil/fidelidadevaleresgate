@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -408,6 +408,13 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   return (
     <div className="max-w-lg mx-auto pb-8" style={{ overflowX: "clip" }}>
+      {/* Banner admin — voltar ao painel */}
+      {isAdminSession && (
+        <div className="sticky top-0 z-20 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground cursor-pointer" onClick={() => window.location.assign("/dashboard")}>
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-xs font-semibold">Voltar ao Painel</span>
+        </div>
+      )}
       {/* Header — same style as customer app */}
       <header
         className="sticky top-0 z-10"
