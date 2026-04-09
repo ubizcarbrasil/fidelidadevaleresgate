@@ -157,6 +157,15 @@ export default function DialogResetPontos({ open, onClose, branchId, branchName 
             {resetMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Resetar Pontos
           </Button>
+
+          <Separator className="my-4" />
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5" /> Últimos resets
+            </p>
+            <HistoricoResetPontos branchId={branchId} />
+          </div>
         </DialogContent>
       </Dialog>
 
