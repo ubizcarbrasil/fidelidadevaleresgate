@@ -1,35 +1,37 @@
 
 
-# Notificação Fluorescente de Desafio Recebido
+# Permitir Visualização do Perfil Competitivo do Oponente
 
 ## Problema
-O popup atual de desafio recebido é um Dialog discreto que pode passar despercebido. O motorista não sabe que tem um desafio se não abrir a seção de duelos.
+Atualmente, o perfil competitivo só é acessível ao selecionar adversários na criação de duelo. Em desafios recebidos, duelos ativos e no histórico, não há como ver as stats do oponente.
 
 ## Solução
-Transformar o popup em uma experiência visual impactante com:
-
-1. **Overlay full-screen pulsante** — fundo escuro semi-transparente com borda neon verde fluorescente animada
-2. **Animação de entrada** — o card entra com scale + fade, com glow neon pulsando ao redor
-3. **Ícone grande animado** — espadas cruzadas com efeito de brilho/pulse
-4. **Texto grande e chamativo** — "VOCÊ FOI DESAFIADO!" em fonte bold com cor neon
-5. **Efeito de vibração** — chamada a `navigator.vibrate()` (quando suportado) para alertar fisicamente
-6. **Badge persistente** — quando o motorista fecha o popup sem ver o desafio, mostrar um badge pulsante no botão de Duelos na home para lembrar que há desafio pendente
+Tornar o nome/avatar do oponente clicável em 3 locais, abrindo o `PerfilCompetitivoSheet` já existente.
 
 ## Mudanças
 
-### `src/components/driver/duels/PopupDesafioRecebido.tsx`
-- Substituir o Dialog discreto por um overlay full-screen com z-50
-- Adicionar animações CSS: glow neon pulsante (box-shadow verde fluorescente), scale-in do card, ícone com pulse
-- Texto principal "VOCÊ FOI DESAFIADO!" grande e fluorescente
-- Card central com borda neon animada (alternando intensidade)
-- Botão "Ver Desafio" grande e brilhante, botão "Mais tarde" secundário
-- Chamar `navigator.vibrate([200, 100, 200])` ao montar
+### 1. `src/components/driver/duels/DuelChallengeCard.tsx`
+- Adicionar estado `viewingProfile` para controlar abertura do perfil
+- Tornar o nome do challenger clicável (underline + cursor pointer)
+- Ao clicar, abrir `PerfilCompetitivoSheet` com `duel.challenger` como participant
+- Permite ao desafiado "estudar" o oponente antes de aceitar ou arregar
 
-### `src/components/driver/DriverMarketplace.tsx`
-- Passar estado `desafioPendente` para o banner/botão de Duelos
-- Quando houver desafio pendente (mesmo após fechar popup), mostrar um indicador pulsante vermelho/verde no card "Duelos entre Motoristas" na home
+### 2. `src/components/driver/duels/DuelDetailSheet.tsx`
+- Adicionar estado `viewingProfile`
+- No placar (scoreboard), tornar os nomes dos dois participantes clicáveis
+- Ao clicar em qualquer nome, abrir o perfil competitivo daquele participante
+- Funciona em duelos live, accepted e finished
 
-### CSS (inline via Tailwind + style)
-- Keyframes para glow pulse, border animation e scale-in — tudo inline via `style` ou classes Tailwind `animate-`
-- Cores fluorescentes: `#39FF14` (verde neon) e `#FFD700` (dourado) para contraste em fundo escuro
+### 3. `src/components/driver/duels/MeuDesempenhoSheet.tsx`
+- No histórico de confrontos, tornar o nome "vs Adversário" clicável
+- Buscar o `DuelParticipant` correto do duelo (challenger ou challenged) e abrir o perfil
+- Permite revisar stats de oponentes passados
+
+### 4. `src/components/driver/duels/NegociacaoContrapropostaCard.tsx`
+- Tornar o nome do oponente na contraproposta clicável para ver o perfil
+
+### Detalhes Técnicos
+- Reutiliza 100% o componente `PerfilCompetitivoSheet` existente
+- O `Duel` já carrega `challenger?: DuelParticipant` e `challenged?: DuelParticipant`, então não há queries adicionais
+- Visual: nome com sublinhado sutil e ícone de "ver perfil" para indicar que é interativo
 
