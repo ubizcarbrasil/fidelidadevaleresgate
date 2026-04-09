@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats } from "./branch/hook_branch_dashboard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBranchModules } from "@/hooks/useBranchModules";
 import BranchKpiResgates from "./branch/BranchKpiResgates";
 import BranchKpiPontuacao from "./branch/BranchKpiPontuacao";
 import BranchKpiMotoristas from "./branch/BranchKpiMotoristas";

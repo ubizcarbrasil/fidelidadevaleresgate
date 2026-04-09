@@ -194,6 +194,7 @@ export function BranchSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
   const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
+  const { isBranchModuleEnabled } = useBranchModules();
   const { name: brandName, logoUrl } = useBrandInfo();
   const cityName = useBranchCityName();
 
@@ -201,6 +202,7 @@ export function BranchSidebar() {
     .filter((group) => {
       if (group.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
       if (group.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
+      if (group.branchModuleKey && !isBranchModuleEnabled(group.branchModuleKey)) return false;
       return true;
     })
     .map((group) => ({
