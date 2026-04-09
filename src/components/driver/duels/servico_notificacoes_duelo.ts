@@ -87,6 +87,16 @@ const MAPEAMENTO: Record<TipoNotificacaoDuelo, MapeamentoNotificacao> = {
     corpo: () => "O cinturão da cidade tem um novo campeão!",
     referenceType: "belt_champion",
   },
+  SIDE_BET_CREATED: {
+    titulo: () => "Nova aposta no seu duelo! 🎯",
+    corpo: (nome) => `${nome || "Alguém"} fez uma aposta lateral no seu duelo`,
+    referenceType: "side_bet_created",
+  },
+  SIDE_BET_ACCEPTED: {
+    titulo: () => "Aposta aceita! 💰",
+    corpo: () => "Sua aposta foi aceita. Pontos reservados!",
+    referenceType: "side_bet_accepted",
+  },
 };
 
 /** Mapeamento de tipos internos para event_type do sistema de fluxos */
