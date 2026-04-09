@@ -129,40 +129,35 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     resolve();
   }, []);
 
-  // Load branches when brand is resolved
+  // Load branches and restore profile in parallel when brand is resolved
   useEffect(() => {
     if (!brand) return;
-    const fetchBranches = async () => {
-      const { data } = await supabase
+    const load = async () => {
+      const branchesPromise = supabase
         .from("branches")
         .select("*")
         .eq("brand_id", brand.id)
         .eq("is_active", true)
         .order("name");
-      setBranches(data || []);
-      if (data && data.length === 1) {
-        setSelectedBranchState(data[0]);
-      }
-    };
-    fetchBranches();
-  }, [brand]);
 
-  // Restore selected branch from profile
-  useEffect(() => {
-    if (!user || !brand || branches.length <= 1) return;
-    const restore = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("selected_branch_id")
-        .eq("id", user.id)
-        .single();
-      if (profile?.selected_branch_id) {
-        const saved = branches.find((b) => b.id === profile.selected_branch_id);
+      const profilePromise = user
+        ? supabase.from("profiles").select("selected_branch_id").eq("id", user.id).single()
+        : Promise.resolve({ data: null });
+
+      const [branchesResult, profileResult] = await Promise.all([branchesPromise, profilePromise]);
+
+      const branchList = branchesResult.data || [];
+      setBranches(branchList);
+
+      if (branchList.length === 1) {
+        setSelectedBranchState(branchList[0]);
+      } else if (profileResult.data?.selected_branch_id && branchList.length > 1) {
+        const saved = branchList.find((b) => b.id === profileResult.data!.selected_branch_id);
         if (saved) setSelectedBranchState(saved);
       }
     };
-    restore();
-  }, [user, brand, branches]);
+    load();
+  }, [brand, user]);
 
   // Auto-detect branch by geolocation — deferred to avoid blocking initial render
   useEffect(() => {

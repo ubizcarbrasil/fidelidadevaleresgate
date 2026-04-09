@@ -1,15 +1,9 @@
 /**
  * Entry point — mounts a minimal shell instantly, then lazy-loads App.
- * Each phase is instrumented so failures are visible in the bootstrap overlay.
+ * Sentry and web-vitals are deferred to avoid blocking the first render.
  */
 console.info("[boot] main.tsx executing");
 (window as any).__BOOT_PHASE__ = "MAIN_MODULE_START";
-
-import { initSentry } from "@/lib/sentry";
-initSentry();
-
-import { reportWebVitals } from "@/lib/webVitals";
-reportWebVitals();
 
 import "./index.css";
 import { createRoot } from "react-dom/client";
@@ -68,6 +62,17 @@ function BootShell() {
     console.info("[boot] APP_MOUNTED — dismissing overlay");
     if (typeof (window as any).__dismissBootstrap === "function") {
       (window as any).__dismissBootstrap();
+    }
+
+    // Deferred: load Sentry + web-vitals after mount (non-blocking)
+    const loadMonitoring = () => {
+      import("@/lib/sentry").then(({ initSentry }) => initSentry()).catch(() => {});
+      import("@/lib/webVitals").then(({ reportWebVitals }) => reportWebVitals()).catch(() => {});
+    };
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(loadMonitoring);
+    } else {
+      setTimeout(loadMonitoring, 0);
     }
   }, []);
 
