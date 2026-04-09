@@ -8,12 +8,13 @@ import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
 
-function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId }: {
+function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
   branch: any;
   theme: any;
   initialCategoryId: string | null;
   initialDealId: string | null;
+  isAdminSession: boolean;
 }) {
   const { driver, loading } = useDriverSession();
   const settings = brand?.brand_settings_json as any;
