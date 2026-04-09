@@ -202,7 +202,8 @@ export const gruposManuais: GrupoManual[] = [
         passos: [
           "Acesse 'Minhas Cidades' no menu lateral.",
           "Visualize todas as cidades da marca com status ativo/inativo.",
-          "Clique em 'Editar' para abrir a tela de edição da cidade (nome, slug, geolocalização, scoring model).",
+          "Clique em 'Editar' para abrir a tela de edição da cidade (nome, slug, geolocalização, scoring model, módulos de negócio).",
+          "Na edição, configure os Módulos de Negócio: Duelo, Achadinho, Mercado Livre, Corra e Ganhe Pontos e Cliente Pontua.",
           "Clique em 'Resetar pontos' para abrir o diálogo de reset granular.",
           "No diálogo de reset, escolha o escopo: todos os usuários, apenas motoristas, apenas clientes ou um usuário específico.",
           "Confirme o reset — os pontos serão zerados e registrados no extrato como BRANCH_RESET.",
@@ -212,6 +213,7 @@ export const gruposManuais: GrupoManual[] = [
         dicas: [
           "O reset é irreversível — confirme com cuidado antes de executar.",
           "Use o reset individual para corrigir saldos de um usuário específico sem afetar os demais.",
+          "Os Módulos de Negócio permitem personalizar a experiência de cada cidade — desative o que não se aplica.",
           "O histórico de resets é visível diretamente no diálogo para fins de auditoria.",
           "Cidades inativas não distribuem pontos, mas os dados são preservados."
         ],
