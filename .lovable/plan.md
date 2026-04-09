@@ -1,26 +1,46 @@
 
 
-# Plano: Adicionar seção de Mensagens dentro da aba Notificações
+# Tornar botão de Reset de Pontos mais visível no mobile
 
-## Objetivo
+## Problema
+O botão de resetar pontos é um ícone pequeno (`RotateCcw` 14px) sem label, difícil de identificar no mobile (430px).
 
-O usuário quer que o sistema de mensagens (fluxos automáticos, templates, envio manual, relatório) também seja acessível dentro da aba **Notificações**, sob uma sub-seção "Notificação via Machine". A aba "Mensagens" existente permanece intacta.
+## Solução
+Reorganizar as ações de cada card de cidade em duas linhas no mobile:
+- **Linha 1**: Nome da cidade + Switch ativo/inativo
+- **Linha 2**: Dois botões com label textual — "Resetar pontos" e "Editar" — usando `variant="outline"` e `size="sm"`, visíveis e clicáveis
+
+No desktop, os botões podem manter o layout inline com labels visíveis.
 
 ## Mudanças
 
-### 1. Modificar `aba_notificacoes.tsx`
+### `src/pages/BrandBranchesPage.tsx`
 
-Adicionar uma sub-navegação interna com tabs:
-- **Notificação por corrida** — conteúdo atual da aba (Telegram, mensagem no app, histórico)
-- **Mensagens via Machine** — reutiliza o componente `AbaMensagens` já existente
+Substituir os dois `Button size="icon"` (reset e editar) por botões com ícone + texto, movidos para uma linha separada abaixo do nome/switch:
 
-Isso cria um acesso direto ao fluxo de mensagens sem sair do contexto de notificações.
+```tsx
+{/* Linha de ações — abaixo dos badges */}
+<div className="flex items-center gap-2 pl-12">
+  <Button
+    variant="outline"
+    size="sm"
+    className="h-8 text-xs gap-1.5"
+    onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
+  >
+    <RotateCcw className="h-3.5 w-3.5" />
+    Resetar pontos
+  </Button>
+  <Button
+    variant="outline"
+    size="sm"
+    className="h-8 text-xs gap-1.5"
+    onClick={() => navigate(`/brand-branches/${branch.id}`)}
+  >
+    <Pencil className="h-3.5 w-3.5" />
+    Editar
+  </Button>
+</div>
+```
 
-### 2. Arquivos impactados
-
-| Arquivo | Ação |
-|---|---|
-| `src/features/integracao_mobilidade/components/aba_notificacoes.tsx` | Adicionar sub-tabs internas com o conteúdo atual + `AbaMensagens` |
-
-Nenhum arquivo novo. Apenas reorganização visual com sub-abas dentro de Notificações.
+A primeira linha do card fica apenas com nome + switch, mais limpa e legível.
 
