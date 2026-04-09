@@ -1365,12 +1365,12 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
         passos: [
           "Acesse 'Carteira de Pontos' no menu lateral.",
           "Visualize o saldo disponível, total carregado e total distribuído.",
-          "O empreendedor realiza recargas quando necessário.",
+          "Para recarregar, acesse 'Comprar Pontos' no menu e adquira um pacote do empreendedor.",
           "Acompanhe o histórico de transações (recargas e débitos).",
           "Os pontos são debitados automaticamente conforme motoristas são pontuados.",
         ],
         dicas: [
-          "Solicite recarga ao empreendedor antes que o saldo fique zerado.",
+          "Use a 'Loja de Pacotes' para comprar pontos quando o saldo estiver baixo.",
           "Acompanhe o histórico para controlar gastos.",
           "Se o saldo acabar, as pontuações ficarão pendentes.",
         ],
