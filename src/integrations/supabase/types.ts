@@ -7796,6 +7796,21 @@ export type Database = {
           score: number
         }[]
       }
+      get_side_bet_ranking: {
+        Args: { p_branch_id: string; p_limit?: number }
+        Returns: {
+          bets_lost: number
+          bets_won: number
+          bettor_name: string
+          customer_id: string
+          net_points: number
+          points_lost: number
+          points_won: number
+          rank_position: number
+          total_bets: number
+          win_rate: number
+        }[]
+      }
       get_user_branch_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_brand_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }

@@ -3,7 +3,7 @@
  */
 import React, { useState, useMemo } from "react";
 import { useListenerNotificacoesDuelo } from "./hook_listener_notificacoes";
-import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye, UserCircle, Activity } from "lucide-react";
+import { ArrowLeft, Swords, Plus, Shield, Clock, Trophy, Flame, Crown, HelpCircle, BarChart3, MessageSquare, Eye, UserCircle, Activity, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -22,6 +22,7 @@ import CardDueloPublico from "./CardDueloPublico";
 import ArenaAoVivo from "./ArenaAoVivo";
 import PerfilMotoristaSheet from "./PerfilMotoristaSheet";
 import FeedAtividadeCidade from "./FeedAtividadeCidade";
+import RankingApostadoresSheet from "./RankingApostadoresSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ConfigDuelos } from "./hook_config_duelos";
 import type { Duel } from "./hook_duelos";
@@ -46,6 +47,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
   const [selectedDuel, setSelectedDuel] = useState<string | null>(null);
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
   const [showPerfil, setShowPerfil] = useState(false);
+  const [showRankingApostadores, setShowRankingApostadores] = useState(false);
 
   const isEnabled = participant?.duels_enabled === true;
   const participantId = participant?.id || null;
@@ -132,6 +134,10 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
 
   if (showPerfil) {
     return <PerfilMotoristaSheet onBack={() => setShowPerfil(false)} />;
+  }
+
+  if (showRankingApostadores) {
+    return <RankingApostadoresSheet onBack={() => setShowRankingApostadores(false)} />;
   }
 
   if (showCinturao) {
@@ -232,6 +238,14 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
                 Cinturão da Cidade
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => setShowRankingApostadores(true)}
+              className="w-full gap-2"
+            >
+              <DollarSign className="h-4 w-4" />
+              Top Apostadores
+            </Button>
           </div>
         </div>
 
