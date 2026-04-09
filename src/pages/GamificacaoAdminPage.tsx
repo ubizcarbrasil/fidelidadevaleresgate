@@ -136,9 +136,10 @@ export default function GamificacaoAdminPage() {
       <DuelosAoVivoAdmin branchId={branch.id} brandId={branch.brand_id} onCriarDuelo={() => setCriarDueloOpen(true)} />
 
       <Tabs defaultValue="configuracao" className="w-full">
-        <TabsList className="w-full flex overflow-x-auto scrollbar-none md:grid md:grid-cols-5 pr-4">
+        <TabsList className="w-full flex overflow-x-auto scrollbar-none md:grid md:grid-cols-6 pr-4">
           <TabsTrigger value="configuracao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Configuração</TabsTrigger>
           <TabsTrigger value="duelos" className="flex-1 whitespace-nowrap text-xs md:text-sm">Duelos</TabsTrigger>
+          <TabsTrigger value="apostas" className="flex-1 whitespace-nowrap text-xs md:text-sm">Apostas</TabsTrigger>
           <TabsTrigger value="ranking" className="flex-1 whitespace-nowrap text-xs md:text-sm">Ranking</TabsTrigger>
           <TabsTrigger value="cinturao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Cinturão</TabsTrigger>
           <TabsTrigger value="moderacao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Moderação</TabsTrigger>
@@ -149,6 +150,9 @@ export default function GamificacaoAdminPage() {
         </TabsContent>
         <TabsContent value="duelos">
           <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
+        </TabsContent>
+        <TabsContent value="apostas">
+          <ApostasAdminView branchId={branch.id} brandId={branch.brand_id} />
         </TabsContent>
         <TabsContent value="ranking">
           <RankingAdminView branchId={branch.id} />
