@@ -129,128 +129,145 @@ export function AbaNotificacoes({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Explicação da aba */}
-      <Alert className="border-primary/20 bg-primary/5">
-        <MessageSquare className="h-4 w-4 text-primary" />
-        <AlertDescription className="text-sm">
-          <strong>Notificações</strong> — Configure como os motoristas são notificados a cada corrida finalizada.
-          Usa as <strong>credenciais da cidade</strong> (cadastradas na aba Motorista) para enviar mensagens no app TaxiMachine. Telegram usa bot próprio, sem credenciais da TaxiMachine.
-        </AlertDescription>
-      </Alert>
+    <Tabs defaultValue="por-corrida" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="por-corrida" className="text-xs sm:text-sm flex items-center gap-1.5">
+          <Send className="h-3.5 w-3.5" /> Notificação por corrida
+        </TabsTrigger>
+        <TabsTrigger value="mensagens-machine" className="text-xs sm:text-sm flex items-center gap-1.5">
+          <Mail className="h-3.5 w-3.5" /> Mensagens via Machine
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Seletor de cidade */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MapPin className="h-5 w-5 text-primary" />
-            Selecionar cidade
-          </CardTitle>
-          <CardDescription>Escolha a cidade para configurar as notificações. Cada cidade tem suas próprias configurações.</CardDescription>
-        </CardHeader>
-        <CardContent className="max-w-md">
-          <Select value={selectedBranchId || ""} onValueChange={setSelectedBranchId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a cidade..." />
-            </SelectTrigger>
-            <SelectContent>
-              {activeIntegrations.map((integ) => (
-                <SelectItem key={integ.id} value={integ.branch_id || ""}>
-                  {getBranchName(integ.branch_id)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      <TabsContent value="por-corrida" className="mt-4">
+        <div className="space-y-6">
+          {/* Explicação da aba */}
+          <Alert className="border-primary/20 bg-primary/5">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-sm">
+              <strong>Notificações</strong> — Configure como os motoristas são notificados a cada corrida finalizada.
+              Usa as <strong>credenciais da cidade</strong> (cadastradas na aba Motorista) para enviar mensagens no app TaxiMachine. Telegram usa bot próprio, sem credenciais da TaxiMachine.
+            </AlertDescription>
+          </Alert>
 
-      {selectedIntegration && (
-        <>
-          {/* Notificação no app */}
+          {/* Seletor de cidade */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Send className="h-4 w-4 text-primary" />
-                Notificação ao motorista no app
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MapPin className="h-5 w-5 text-primary" />
+                Selecionar cidade
               </CardTitle>
-              <CardDescription>
-                Envia uma mensagem automática no app TaxiMachine para o motorista usando as <strong>credenciais da cidade</strong> cadastradas na aba Motorista.
-                Informa pontos ganhos, valor da corrida e saldo atualizado a cada corrida finalizada.
-              </CardDescription>
+              <CardDescription>Escolha a cidade para configurar as notificações. Cada cidade tem suas próprias configurações.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">Notificação ativada</Label>
-                <Switch checked={driverMessageEnabled} onCheckedChange={handleToggleDriverMessage} />
-              </div>
-              {driverMessageEnabled && (
-                <Alert className="border-primary/30 bg-primary/5">
-                  <CheckCircle className="h-4 w-4 text-primary" />
-                  <AlertDescription className="text-xs">
-                    Motoristas receberão uma mensagem no app com: pontos ganhos, valor da corrida e saldo atualizado.
-                  </AlertDescription>
-                </Alert>
-              )}
-              {!driverMessageEnabled && (
-                <p className="text-xs text-muted-foreground">
-                  As notificações estão desativadas para esta cidade. Ative para que os motoristas sejam notificados automaticamente.
-                </p>
-              )}
+            <CardContent className="max-w-md">
+              <Select value={selectedBranchId || ""} onValueChange={setSelectedBranchId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a cidade..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeIntegrations.map((integ) => (
+                    <SelectItem key={integ.id} value={integ.branch_id || ""}>
+                      {getBranchName(integ.branch_id)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
 
-          {/* Telegram */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Send className="h-4 w-4 text-primary" />
-                Telegram — Alertas em grupo
-              </CardTitle>
-              <CardDescription>
-                Receba um alerta no Telegram a cada corrida finalizada com pontuação. Ideal para acompanhar em tempo real.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 max-w-lg">
-              <div className="flex items-center gap-2">
-                <Input
-                  value={telegramChatId}
-                  onChange={(e) => setTelegramChatId(e.target.value)}
-                  placeholder="-1001234567890"
-                />
-                <Button variant="outline" size="icon" onClick={() => saveTelegramMutation.mutate()} disabled={saveTelegramMutation.isPending}>
-                  {telegramSaved ? <Check className="h-4 w-4 text-primary" /> : saveTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={!telegramChatId.trim() || testTelegramMutation.isPending}
-                  onClick={() => testTelegramMutation.mutate()}
-                >
-                  {testTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                  Testar
-                </Button>
-              </div>
-              <Alert className="border-blue-500/20 bg-blue-500/5">
-                <AlertDescription className="text-xs">
-                  💡 O Chat ID configurado em uma cidade será usado automaticamente para <strong>todas as cidades da marca</strong> que não tiverem Chat ID próprio.
-                </AlertDescription>
-              </Alert>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p><strong>Como configurar:</strong></p>
-                <ol className="list-decimal list-inside space-y-0.5">
-                  <li>Crie um bot no Telegram falando com <strong>@BotFather</strong></li>
-                  <li>Adicione o bot ao grupo desejado</li>
-                  <li>Use <strong>@userinfobot</strong> no grupo para obter o Chat ID</li>
-                  <li>Cole o Chat ID acima e clique em "Testar"</li>
-                </ol>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+          {selectedIntegration && (
+            <>
+              {/* Notificação no app */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Send className="h-4 w-4 text-primary" />
+                    Notificação ao motorista no app
+                  </CardTitle>
+                  <CardDescription>
+                    Envia uma mensagem automática no app TaxiMachine para o motorista usando as <strong>credenciais da cidade</strong> cadastradas na aba Motorista.
+                    Informa pontos ganhos, valor da corrida e saldo atualizado a cada corrida finalizada.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Notificação ativada</Label>
+                    <Switch checked={driverMessageEnabled} onCheckedChange={handleToggleDriverMessage} />
+                  </div>
+                  {driverMessageEnabled && (
+                    <Alert className="border-primary/30 bg-primary/5">
+                      <CheckCircle className="h-4 w-4 text-primary" />
+                      <AlertDescription className="text-xs">
+                        Motoristas receberão uma mensagem no app com: pontos ganhos, valor da corrida e saldo atualizado.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {!driverMessageEnabled && (
+                    <p className="text-xs text-muted-foreground">
+                      As notificações estão desativadas para esta cidade. Ative para que os motoristas sejam notificados automaticamente.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
 
-      {/* Histórico de notificações */}
-      <HistoricoNotificacoesMotorista brandId={brandId} getBranchName={getBranchName} />
-    </div>
+              {/* Telegram */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Send className="h-4 w-4 text-primary" />
+                    Telegram — Alertas em grupo
+                  </CardTitle>
+                  <CardDescription>
+                    Receba um alerta no Telegram a cada corrida finalizada com pontuação. Ideal para acompanhar em tempo real.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 max-w-lg">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={telegramChatId}
+                      onChange={(e) => setTelegramChatId(e.target.value)}
+                      placeholder="-1001234567890"
+                    />
+                    <Button variant="outline" size="icon" onClick={() => saveTelegramMutation.mutate()} disabled={saveTelegramMutation.isPending}>
+                      {telegramSaved ? <Check className="h-4 w-4 text-primary" /> : saveTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={!telegramChatId.trim() || testTelegramMutation.isPending}
+                      onClick={() => testTelegramMutation.mutate()}
+                    >
+                      {testTelegramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                      Testar
+                    </Button>
+                  </div>
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <AlertDescription className="text-xs">
+                      💡 O Chat ID configurado em uma cidade será usado automaticamente para <strong>todas as cidades da marca</strong> que não tiverem Chat ID próprio.
+                    </AlertDescription>
+                  </Alert>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Como configurar:</strong></p>
+                    <ol className="list-decimal list-inside space-y-0.5">
+                      <li>Crie um bot no Telegram falando com <strong>@BotFather</strong></li>
+                      <li>Adicione o bot ao grupo desejado</li>
+                      <li>Use <strong>@userinfobot</strong> no grupo para obter o Chat ID</li>
+                      <li>Cole o Chat ID acima e clique em "Testar"</li>
+                    </ol>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Histórico de notificações */}
+          <HistoricoNotificacoesMotorista brandId={brandId} getBranchName={getBranchName} />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="mensagens-machine" className="mt-4">
+        <AbaMensagens brandId={brandId} branches={branches} />
+      </TabsContent>
+    </Tabs>
   );
 }
