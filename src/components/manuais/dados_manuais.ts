@@ -36,12 +36,17 @@ export const gruposManuais: GrupoManual[] = [
           "Preencha o nome da cidade, estado e slug (identificador único).",
           "Opcionalmente, configure latitude e longitude para geolocalização.",
           "Defina o fuso horário da cidade.",
+          "Configure o Modelo de Pontuação (Motorista, Cliente ou Ambos).",
+          "Na seção 'Módulos de Negócio', ative ou desative os módulos disponíveis para esta cidade: Duelo, Achadinho, Mercado Livre, Corra e Ganhe Pontos e Cliente Pontua.",
+          "Na seção 'Gamificação de Motoristas', configure duelos, ranking e cinturão.",
           "Ative ou desative a cidade conforme necessário.",
           "Salve e a cidade ficará disponível para vincular parceiros e clientes."
         ],
         dicas: [
           "O slug deve ser único e sem espaços (use hífens).",
           "Cidades inativas não aparecem para o usuário final.",
+          "Os Módulos de Negócio controlam quais funcionalidades aparecem no painel do franqueado de cada cidade.",
+          "Módulos desativados são ocultos automaticamente no sidebar e no dashboard da cidade.",
           "Vincule parceiros à cidade correta para segmentar corretamente ofertas e pontos."
         ],
         rota: "/branches"
@@ -197,7 +202,8 @@ export const gruposManuais: GrupoManual[] = [
         passos: [
           "Acesse 'Minhas Cidades' no menu lateral.",
           "Visualize todas as cidades da marca com status ativo/inativo.",
-          "Clique em 'Editar' para abrir a tela de edição da cidade (nome, slug, geolocalização, scoring model).",
+          "Clique em 'Editar' para abrir a tela de edição da cidade (nome, slug, geolocalização, scoring model, módulos de negócio).",
+          "Na edição, configure os Módulos de Negócio: Duelo, Achadinho, Mercado Livre, Corra e Ganhe Pontos e Cliente Pontua.",
           "Clique em 'Resetar pontos' para abrir o diálogo de reset granular.",
           "No diálogo de reset, escolha o escopo: todos os usuários, apenas motoristas, apenas clientes ou um usuário específico.",
           "Confirme o reset — os pontos serão zerados e registrados no extrato como BRANCH_RESET.",
@@ -207,6 +213,7 @@ export const gruposManuais: GrupoManual[] = [
         dicas: [
           "O reset é irreversível — confirme com cuidado antes de executar.",
           "Use o reset individual para corrigir saldos de um usuário específico sem afetar os demais.",
+          "Os Módulos de Negócio permitem personalizar a experiência de cada cidade — desative o que não se aplica.",
           "O histórico de resets é visível diretamente no diálogo para fins de auditoria.",
           "Cidades inativas não distribuem pontos, mas os dados são preservados."
         ],
@@ -386,6 +393,60 @@ export const gruposManuais: GrupoManual[] = [
           "Mantenha o cliente informado sobre o status do pedido."
         ],
         rota: "/product-redemption-orders"
+      },
+    ],
+  },
+  {
+    categoria: "Comercialização de Pontos",
+    icone: "Package",
+    manuais: [
+      {
+        id: "pacotes-pontos",
+        titulo: "Pacotes de Pontos",
+        descricao: "Crie pacotes de pontos com preço fixo para que as cidades (franqueados) possam comprar diretamente pelo painel. É o modelo de comercialização da plataforma: o empreendedor define os pacotes e aprova os pedidos.",
+        comoAtivar: "Acesse 'Pacotes de Pontos' no menu lateral, dentro do grupo 'Cidades'.",
+        passos: [
+          "Acesse 'Pacotes de Pontos' no menu lateral.",
+          "Na aba 'Pacotes', clique em 'Novo Pacote' para criar um pacote.",
+          "Defina o nome do pacote (ex: 'Pacote Básico'), quantidade de pontos e preço em R$.",
+          "Adicione uma descrição opcional para orientar o franqueado.",
+          "Ative ou desative o pacote conforme necessidade.",
+          "Na aba 'Pedidos', visualize os pedidos feitos pelos franqueados.",
+          "Para cada pedido pendente, clique em 'Confirmar' para aprovar ou 'Cancelar' para recusar.",
+          "Ao confirmar, os pontos são creditados automaticamente na carteira da cidade.",
+        ],
+        dicas: [
+          "Crie pacotes com diferentes faixas de preço para atender cidades de todos os tamanhos.",
+          "A confirmação do pedido é atômica — os pontos são creditados e a transação registrada automaticamente.",
+          "Monitore os pedidos pendentes regularmente para não atrasar a operação das cidades.",
+          "Pacotes inativos não aparecem na loja do franqueado, mas os pedidos existentes são mantidos.",
+        ],
+        rota: "/points-packages",
+      },
+      {
+        id: "modulos-negocio",
+        titulo: "Módulos de Negócio por Cidade",
+        descricao: "Configure quais funcionalidades cada cidade terá disponível. Ative ou desative módulos individualmente para personalizar o modelo de negócio de cada franqueado.",
+        comoAtivar: "Acesse 'Minhas Cidades' > 'Editar' cidade. Os módulos ficam no card 'Módulos de Negócio'.",
+        passos: [
+          "Acesse 'Minhas Cidades' no menu lateral.",
+          "Clique em 'Editar' na cidade desejada.",
+          "No card 'Módulos de Negócio', configure os 5 módulos:",
+          "• Módulo Duelo — competições entre motoristas com apostas de pontos.",
+          "• Módulo Achadinho — vitrine de ofertas afiliadas.",
+          "• Módulo Mercado Livre — marketplace de produtos para motoristas.",
+          "• Módulo Corra e Ganhe Pontos — motoristas acumulam pontos por corrida.",
+          "• Módulo Cliente Pontua — programa de fidelidade para clientes em lojas parceiras.",
+          "Ative ou desative cada módulo usando o toggle.",
+          "Salve as alterações — o painel do franqueado será atualizado imediatamente.",
+        ],
+        dicas: [
+          "Todos os módulos vêm ativados por padrão — é um modelo opt-out.",
+          "Módulos desativados ocultam automaticamente os menus e KPIs correspondentes no painel do franqueado.",
+          "Cada cidade pode ter uma configuração diferente, permitindo modelos de negócio distintos.",
+          "Desativar um módulo não apaga dados — você pode reativá-lo a qualquer momento.",
+        ],
+        rota: "/brand-branches",
       },
     ],
   },
@@ -1276,6 +1337,27 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
     scoringFilter: "DRIVER",
     manuais: [
       {
+        id: "comprar-pontos-franqueado",
+        titulo: "Comprar Pontos (Pacotes)",
+        descricao: "Adquira pacotes de pontos criados pelo empreendedor diretamente pelo seu painel. Os pontos são creditados na carteira da cidade após confirmação.",
+        comoAtivar: "Acesse 'Comprar Pontos' no menu lateral.",
+        passos: [
+          "Acesse 'Comprar Pontos' no menu lateral.",
+          "Visualize os pacotes disponíveis com nome, quantidade de pontos e preço.",
+          "Clique em 'Comprar' no pacote desejado para criar um pedido.",
+          "O pedido será enviado ao empreendedor com status 'Pendente'.",
+          "Aguarde a confirmação — quando aprovado, os pontos são creditados automaticamente na sua carteira.",
+          "Acompanhe o histórico de pedidos na aba 'Meus Pedidos'.",
+        ],
+        dicas: [
+          "Planeje suas compras para manter o saldo sempre positivo.",
+          "Pedidos pendentes podem ser acompanhados na mesma tela.",
+          "Ao ser confirmado, o saldo é atualizado instantaneamente.",
+          "Entre em contato com o empreendedor se um pedido ficar pendente por muito tempo.",
+        ],
+        rota: "/points-packages-store",
+      },
+      {
         id: "carteira-pontos",
         titulo: "Carteira de Pontos",
         descricao: "Entenda como funciona a carteira de pontos da sua cidade. O saldo precisa ser recarregado pelo empreendedor para que os motoristas recebam pontos pelas corridas.",
@@ -1283,12 +1365,12 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
         passos: [
           "Acesse 'Carteira de Pontos' no menu lateral.",
           "Visualize o saldo disponível, total carregado e total distribuído.",
-          "O empreendedor realiza recargas quando necessário.",
+          "Para recarregar, acesse 'Comprar Pontos' no menu e adquira um pacote do empreendedor.",
           "Acompanhe o histórico de transações (recargas e débitos).",
           "Os pontos são debitados automaticamente conforme motoristas são pontuados.",
         ],
         dicas: [
-          "Solicite recarga ao empreendedor antes que o saldo fique zerado.",
+          "Use a 'Loja de Pacotes' para comprar pontos quando o saldo estiver baixo.",
           "Acompanhe o histórico para controlar gastos.",
           "Se o saldo acabar, as pontuações ficarão pendentes.",
         ],
