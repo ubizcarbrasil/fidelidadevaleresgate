@@ -97,10 +97,23 @@ function useRealtimeRefresh() {
 }
 
 /* ── Dashboard Header ── */
-function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; scopeLabels: Record<string, string> }) {
+function DashboardHeader({ consoleScope, scopeLabels, isCityScopedView, viewingBranchId }: { consoleScope: string; scopeLabels: Record<string, string>; isCityScopedView: boolean; viewingBranchId: string | null }) {
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
   const showBrandLogo = ["BRAND", "TENANT"].includes(consoleScope);
   const greeting = new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite";
+
+  const { data: branchName } = useQuery({
+    queryKey: ["branch-name", viewingBranchId],
+    queryFn: async () => {
+      const { data } = await supabase.from("branches").select("name").eq("id", viewingBranchId!).single();
+      return data?.name || "Cidade";
+    },
+    enabled: !!viewingBranchId,
+  });
+
+  const scopeLabel = isCityScopedView && viewingBranchId
+    ? `Visão da cidade · ${branchName || "Carregando..."}`
+    : scopeLabels[consoleScope];
 
   return (
     <div className="flex items-center gap-3">
@@ -118,7 +131,7 @@ function DashboardHeader({ consoleScope, scopeLabels }: { consoleScope: string; 
         <p className="text-sm text-muted-foreground mt-0.5">
           {showBrandLogo && brandName ? `${brandName} · ` : ""}
           {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-          {" · "}{scopeLabels[consoleScope]}
+          {" · "}{scopeLabel}
         </p>
       </div>
     </div>
@@ -140,6 +153,7 @@ export default function Dashboard() {
     ? urlBranchId
     : null;
   const isViewingBranch = !!viewingBranchId;
+  const isCityScopedView = consoleScope === "BRANCH" || isViewingBranch;
 
   useRealtimeRefresh();
 
@@ -262,7 +276,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <DashboardHeader consoleScope={consoleScope} scopeLabels={scopeLabels} />
+        <DashboardHeader consoleScope={consoleScope} scopeLabels={scopeLabels} isCityScopedView={isCityScopedView} viewingBranchId={viewingBranchId} />
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="gap-1.5 text-xs font-normal border-success/30 text-success">
             <span className="relative flex h-2 w-2">
@@ -285,7 +299,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs — hidden for BRANCH scope */}
-      {consoleScope !== "BRANCH" && <DashboardKpiSection
+      {!isCityScopedView && <DashboardKpiSection
         redemptionsPeriod={redemptionsPeriod}
         redemptionsTotal={redemptionsTotal}
         customersTotal={customersTotal}
@@ -317,7 +331,7 @@ export default function Dashboard() {
       )}
 
       {/* Sections hidden for BRANCH scope */}
-      {consoleScope !== "BRANCH" && (
+      {!isCityScopedView && (
         <>
           {/* Corridas com seletor de período — só motorista */}
           {showBrand && isDriverEnabled && <RidesCounterCard brandId={brandFilter} />}
@@ -389,11 +403,12 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Quick Links, Access Hub, Demo */}
-      <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
+      {!isCityScopedView && (
+        <DashboardQuickLinksSection consoleScope={consoleScope} showBrand={showBrand} isRoot={isRoot} isDriverEnabled={isDriverEnabled} isPassengerEnabled={isPassengerEnabled} />
+      )}
 
       {/* FAB */}
-      {currentBrandId && (
+      {currentBrandId && !isCityScopedView && (
         <button
           onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}
           className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 shadow-lg hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/20"
