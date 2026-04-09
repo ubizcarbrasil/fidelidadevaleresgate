@@ -16,7 +16,8 @@ export default function SecaoDuelosCidade({ branchId, fontHeading, onVerTodos }:
   const [arenaDuel, setArenaDuel] = useState<Duel | null>(null);
 
   // Mostrar apenas duelos ao vivo nesta seção
-  const aoVivo = (duelos || []).filter((d) => d.status === "live");
+  const agora = Date.now();
+  const aoVivo = (duelos || []).filter((d) => d.status === "live" || (d.status === "accepted" && new Date(d.start_at).getTime() <= agora));
 
   if (isLoading || aoVivo.length === 0) return null;
 

@@ -44,9 +44,10 @@ export default function CardDueloPublico({ duelo, onOpenArena, contextoSecao }: 
   const [, setTick] = useState(0);
 
   // Se contextoSecao é fornecido, força a classificação visual para evitar badge errada
-  const aoVivo = contextoSecao === "ao_vivo" ? true : contextoSecao === "agendado" ? false : duelo.status === "live";
+  const jaComecou = duelo.status === "accepted" && new Date(duelo.start_at).getTime() <= Date.now();
+  const aoVivo = contextoSecao === "ao_vivo" ? true : contextoSecao === "agendado" ? false : (duelo.status === "live" || jaComecou);
   const encerrado = !contextoSecao && duelo.status === "finished";
-  const agendado = contextoSecao === "agendado" ? true : contextoSecao === "ao_vivo" ? false : (duelo.status === "accepted" || duelo.status === "pending");
+  const agendado = contextoSecao === "agendado" ? true : contextoSecao === "ao_vivo" ? false : (!jaComecou && (duelo.status === "accepted" || duelo.status === "pending"));
   const arregou = !contextoSecao && duelo.status === "declined";
 
   const isAtivo = aoVivo || duelo.status === "accepted";
