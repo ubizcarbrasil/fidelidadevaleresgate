@@ -1,0 +1,1 @@
+ALTER TYPE public.ledger_reference_type ADD VALUE IF NOT EXISTS 'BRANCH_RESET';

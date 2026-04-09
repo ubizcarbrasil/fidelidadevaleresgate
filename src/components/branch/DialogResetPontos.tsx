@@ -13,8 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Users, Car, User, Search, Loader2 } from "lucide-react";
+import { Users, Car, User, Search, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import HistoricoResetPontos from "@/components/branch/HistoricoResetPontos";
 
 type ResetTarget = "all" | "drivers" | "clients" | "single";
 
@@ -155,6 +157,15 @@ export default function DialogResetPontos({ open, onClose, branchId, branchName 
             {resetMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Resetar Pontos
           </Button>
+
+          <Separator className="my-4" />
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5" /> Últimos resets
+            </p>
+            <HistoricoResetPontos branchId={branchId} />
+          </div>
         </DialogContent>
       </Dialog>
 

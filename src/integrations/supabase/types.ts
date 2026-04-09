@@ -7997,6 +7997,7 @@ export type Database = {
         | "SIDE_BET_DUEL_BONUS"
         | "BELT_PRIZE"
         | "DUEL_SETTLEMENT"
+        | "BRANCH_RESET"
       offer_purpose: "EARN" | "REDEEM" | "BOTH"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
       points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
@@ -8183,6 +8184,7 @@ export const Constants = {
         "SIDE_BET_DUEL_BONUS",
         "BELT_PRIZE",
         "DUEL_SETTLEMENT",
+        "BRANCH_RESET",
       ],
       offer_purpose: ["EARN", "REDEEM", "BOTH"],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
