@@ -22,6 +22,7 @@ import CardDueloPublico from "./CardDueloPublico";
 import ArenaAoVivo from "./ArenaAoVivo";
 import PerfilMotoristaSheet from "./PerfilMotoristaSheet";
 import FeedAtividadeCidade from "./FeedAtividadeCidade";
+import RankingApostadoresSheet from "./RankingApostadoresSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ConfigDuelos } from "./hook_config_duelos";
 import type { Duel } from "./hook_duelos";
