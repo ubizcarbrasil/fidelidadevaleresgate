@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { toast } from "sonner";
+import { enviarNotificacaoDuelo } from "./servico_notificacoes_duelo";
 
 export interface SideBet {
   id: string;
@@ -53,6 +54,11 @@ export function useCreateSideBet() {
       customerId: string;
       predictedWinnerParticipantId: string;
       points: number;
+      brandId?: string;
+      branchId?: string;
+      nomeApostador?: string;
+      challengerCustomerId?: string;
+      challengedCustomerId?: string;
     }) => {
       const { data, error } = await supabase.rpc("create_side_bet" as any, {
         p_duel_id: params.duelId,
@@ -68,6 +74,19 @@ export function useCreateSideBet() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["side-bets", vars.duelId] });
       toast.success("Aposta criada! Aguardando um oponente.");
+
+      // Notificar os duelistas
+      const duelistIds = [vars.challengerCustomerId, vars.challengedCustomerId].filter(Boolean) as string[];
+      if (duelistIds.length > 0) {
+        enviarNotificacaoDuelo({
+          tipo: "SIDE_BET_CREATED",
+          customerIds: duelistIds,
+          duelId: vars.duelId,
+          nomeOponente: vars.nomeApostador,
+          brandId: vars.brandId,
+          branchId: vars.branchId,
+        });
+      }
     },
     onError: (err: any) => {
       toast.error(err.message || "Erro ao criar aposta");
@@ -78,7 +97,15 @@ export function useCreateSideBet() {
 export function useAcceptSideBet() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { betId: string; customerId: string; duelId: string }) => {
+    mutationFn: async (params: {
+      betId: string;
+      customerId: string;
+      duelId: string;
+      brandId?: string;
+      branchId?: string;
+      nomeAceitante?: string;
+      bettorACustomerId?: string;
+    }) => {
       const { data, error } = await supabase.rpc("accept_side_bet" as any, {
         p_bet_id: params.betId,
         p_customer_id: params.customerId,
@@ -92,6 +119,18 @@ export function useAcceptSideBet() {
       qc.invalidateQueries({ queryKey: ["side-bets", vars.duelId] });
       qc.invalidateQueries({ queryKey: ["driver-session"] });
       toast.success("Aposta aceita! Pontos reservados.");
+
+      // Notificar o criador da aposta
+      if (vars.bettorACustomerId) {
+        enviarNotificacaoDuelo({
+          tipo: "SIDE_BET_ACCEPTED",
+          customerIds: [vars.bettorACustomerId],
+          duelId: vars.duelId,
+          nomeOponente: vars.nomeAceitante,
+          brandId: vars.brandId,
+          branchId: vars.branchId,
+        });
+      }
     },
     onError: (err: any) => {
       toast.error(err.message || "Erro ao aceitar aposta");

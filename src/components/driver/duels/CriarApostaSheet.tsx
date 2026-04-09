@@ -32,11 +32,17 @@ export default function CriarApostaSheet({ duel, onBack }: Props) {
 
   const handleCreate = async () => {
     if (!driver || !selectedSide) return;
+    const driverName = cleanDriverName(driver.name);
     await createBet.mutateAsync({
       duelId: duel.id,
       customerId: driver.id,
       predictedWinnerParticipantId: participantId,
       points: pointsNum,
+      brandId: driver.brand_id,
+      branchId: driver.branch_id,
+      nomeApostador: driverName,
+      challengerCustomerId: duel.challenger?.customer_id,
+      challengedCustomerId: duel.challenged?.customer_id,
     });
     refreshDriver();
     onBack();
