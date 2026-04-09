@@ -28,6 +28,8 @@ const LABELS_EVENTO: Record<string, string> = {
   DUEL_STARTED: "Duelo Iniciado",
   DUEL_LEAD_CHANGE: "Mudança Liderança",
   RANKING_TOP10_ENTRY: "Entrada Top 10",
+  SIDE_BET_CREATED: "Aposta Criada",
+  SIDE_BET_ACCEPTED: "Aposta Aceita",
 };
 
 function CardMetrica({

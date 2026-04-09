@@ -41,6 +41,8 @@ export const EVENT_TYPES = [
   { value: "DUEL_VICTORY", label: "Vitória no duelo", category: "duel" },
   { value: "BELT_NEW_CHAMPION", label: "Novo campeão do cinturão", category: "belt" },
   { value: "PROMOTION_NEW", label: "Nova promoção disponível", category: "promotion" },
+  { value: "SIDE_BET_CREATED", label: "Aposta lateral criada", category: "bet" },
+  { value: "SIDE_BET_ACCEPTED", label: "Aposta lateral aceita", category: "bet" },
 ] as const;
 
 export const AUDIENCE_OPTIONS = [
@@ -51,6 +53,7 @@ export const AUDIENCE_OPTIONS = [
   { value: "challenger", label: "Desafiante" },
   { value: "challenged", label: "Desafiado" },
   { value: "individual", label: "Individual (específico)" },
+  { value: "bettor", label: "Apostador (criador)" },
 ] as const;
 
 export const AVAILABLE_VARS = [
