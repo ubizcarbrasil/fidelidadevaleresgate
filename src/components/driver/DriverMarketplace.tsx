@@ -410,7 +410,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     <div className="max-w-lg mx-auto pb-8" style={{ overflowX: "clip" }}>
       {/* Banner admin — voltar ao painel */}
       {isAdminSession && (
-        <div className="sticky top-0 z-20 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground cursor-pointer" onClick={() => window.location.assign("/dashboard")}>
+        <div className="sticky top-0 z-20 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground cursor-pointer" onClick={() => window.location.assign("/index")}>
           <ArrowLeft className="w-4 h-4" />
           <span className="text-xs font-semibold">Voltar ao Painel</span>
         </div>
