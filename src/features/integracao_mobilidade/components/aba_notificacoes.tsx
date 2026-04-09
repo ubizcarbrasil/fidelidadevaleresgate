@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
-  Send, Save, Check, Loader2, CheckCircle, MapPin, MessageSquare,
+  Send, Save, Check, Loader2, CheckCircle, MapPin, MessageSquare, Mail,
 } from "lucide-react";
 import type { Integration, Branch } from "../hooks/hook_integracoes";
 import { HistoricoNotificacoesMotorista } from "./historico_notificacoes_motorista";
+import { AbaMensagens } from "./aba_mensagens";
 
 interface Props {
   brandId: string;
