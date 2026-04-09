@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ArrowLeft,
   Trophy,
@@ -12,9 +12,12 @@ import {
   Ban,
   Equal,
   BarChart3,
+  Eye,
 } from "lucide-react";
 import { useEstatisticasDuelos } from "./hook_estatisticas_duelos";
 import CardEstatistica from "./CardEstatistica";
+import PerfilCompetitivoSheet from "./PerfilCompetitivoSheet";
+import type { DuelParticipant } from "./hook_duelos";
 
 interface Duel {
   id: string;
@@ -38,6 +41,7 @@ interface Props {
 
 export default function MeuDesempenhoSheet({ duels, participantId, onBack }: Props) {
   const stats = useEstatisticasDuelos(duels, participantId);
+  const [viewingProfile, setViewingProfile] = useState<DuelParticipant | null>(null);
 
   const historico = (duels || [])
     .filter((d) => d.status === "finished")
@@ -52,6 +56,13 @@ export default function MeuDesempenhoSheet({ duels, participantId, onBack }: Pro
       return d.challenged?.public_nickname || "Adversário";
     }
     return d.challenger?.public_nickname || "Adversário";
+  };
+
+  const getAdversarioParticipant = (d: Duel): DuelParticipant | null => {
+    if (d.challenger_id === participantId) {
+      return d.challenged as DuelParticipant | null;
+    }
+    return d.challenger as DuelParticipant | null;
   };
 
   const getMeuPlacar = (d: Duel) => {
@@ -216,8 +227,15 @@ export default function MeuDesempenhoSheet({ duels, participantId, onBack }: Pro
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-foreground truncate">
+                  <p
+                    className="text-xs font-bold text-foreground truncate cursor-pointer hover:underline flex items-center gap-1"
+                    onClick={() => {
+                      const p = getAdversarioParticipant(d);
+                      if (p) setViewingProfile(p);
+                    }}
+                  >
                     vs {getAdversario(d)}
+                    <Eye className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {d.finished_at
@@ -247,6 +265,13 @@ export default function MeuDesempenhoSheet({ duels, participantId, onBack }: Pro
           })}
         </section>
       </div>
+
+      {viewingProfile && (
+        <PerfilCompetitivoSheet
+          participant={viewingProfile}
+          onBack={() => setViewingProfile(null)}
+        />
+      )}
     </div>
   );
 }

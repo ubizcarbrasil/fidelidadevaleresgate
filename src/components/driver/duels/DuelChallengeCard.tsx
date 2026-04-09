@@ -2,16 +2,17 @@
  * Card de desafio recebido — aceitar, contraproposta ou recusar.
  */
 import React, { useState } from "react";
-import { Swords, ShieldCheck, Flag, MessageSquare, Coins, Wallet, Send } from "lucide-react";
+import { Swords, ShieldCheck, Flag, MessageSquare, Coins, Wallet, Send, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Duel } from "./hook_duelos";
+import type { Duel, DuelParticipant } from "./hook_duelos";
 import { resolveParticipantName, resolveParticipantAvatar, useRespondDuel, useCounterPropose } from "./hook_duelos";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ConfirmacaoAceiteDuelo from "./ConfirmacaoAceiteDuelo";
+import PerfilCompetitivoSheet from "./PerfilCompetitivoSheet";
 
 interface Props {
   duel: Duel;
@@ -24,6 +25,7 @@ export default function DuelChallengeCard({ duel }: Props) {
   const [showCounter, setShowCounter] = useState(false);
   const [counterValue, setCounterValue] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(false);
 
   const challengerName = resolveParticipantName(duel.challenger);
   const challengerAvatar = resolveParticipantAvatar(duel.challenger);
@@ -60,7 +62,13 @@ export default function DuelChallengeCard({ duel }: Props) {
           </div>
         )}
         <div className="flex-1">
-          <p className="text-sm font-bold text-foreground">Desafio de {challengerName}</p>
+          <p
+            className="text-sm font-bold text-foreground flex items-center gap-1 cursor-pointer hover:underline"
+            onClick={() => setViewingProfile(true)}
+          >
+            Desafio de {challengerName}
+            <Eye className="h-3 w-3 text-muted-foreground shrink-0" />
+          </p>
           <p className="text-[11px] text-muted-foreground">
             {format(new Date(duel.start_at), "dd/MM HH:mm", { locale: ptBR })} — {format(new Date(duel.end_at), "dd/MM HH:mm", { locale: ptBR })}
           </p>
@@ -165,6 +173,12 @@ export default function DuelChallengeCard({ duel }: Props) {
             Cancelar
           </button>
         </div>
+      )}
+      {viewingProfile && duel.challenger && (
+        <PerfilCompetitivoSheet
+          participant={duel.challenger as DuelParticipant}
+          onBack={() => setViewingProfile(false)}
+        />
       )}
       {hasBet && (
         <ConfirmacaoAceiteDuelo

@@ -2,14 +2,15 @@
  * Card exibido quando o motorista recebe uma contraproposta de pontos.
  */
 import React, { useState } from "react";
-import { MessageSquare, ShieldCheck, XCircle, Coins, ArrowRight } from "lucide-react";
+import { MessageSquare, ShieldCheck, XCircle, Coins, ArrowRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Duel } from "./hook_duelos";
+import type { Duel, DuelParticipant } from "./hook_duelos";
 import { resolveParticipantName, resolveParticipantAvatar, useRespondCounterProposal } from "./hook_duelos";
 import { formatPoints } from "@/lib/formatPoints";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ConfirmacaoAceiteDuelo from "./ConfirmacaoAceiteDuelo";
+import PerfilCompetitivoSheet from "./PerfilCompetitivoSheet";
 
 interface Props {
   duel: Duel;
@@ -19,6 +20,7 @@ interface Props {
 export default function NegociacaoContrapropostaCard({ duel, participantId }: Props) {
   const { mutate: respondCounter, isPending } = useRespondCounterProposal();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(false);
 
   const isChallenger = participantId === duel.challenger_id;
   const opponent = isChallenger ? duel.challenged : duel.challenger;
@@ -51,7 +53,13 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
           </div>
         )}
         <div>
-          <p className="text-sm font-bold text-foreground">Contraproposta de {opponentName}</p>
+          <p
+            className="text-sm font-bold text-foreground flex items-center gap-1 cursor-pointer hover:underline"
+            onClick={() => setViewingProfile(true)}
+          >
+            Contraproposta de {opponentName}
+            <Eye className="h-3 w-3 text-muted-foreground shrink-0" />
+          </p>
           <p className="text-[11px] text-muted-foreground">
             {format(new Date(duel.start_at), "dd/MM HH:mm", { locale: ptBR })} — {format(new Date(duel.end_at), "dd/MM HH:mm", { locale: ptBR })}
           </p>
@@ -104,6 +112,13 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
           Arregar 🐔
         </Button>
       </div>
+
+      {viewingProfile && opponent && (
+        <PerfilCompetitivoSheet
+          participant={opponent as DuelParticipant}
+          onBack={() => setViewingProfile(false)}
+        />
+      )}
 
       <ConfirmacaoAceiteDuelo
         open={showConfirm}
