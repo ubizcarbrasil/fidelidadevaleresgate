@@ -22,6 +22,8 @@ const REFERENCE_TO_EVENT_TYPE: Record<string, string> = {
   duel_draw: "DUEL_DRAW",
   belt_champion: "BELT_NEW_CHAMPION",
   ranking_top10: "RANKING_TOP10_ENTRY",
+  side_bet_created: "SIDE_BET_CREATED",
+  side_bet_accepted: "SIDE_BET_ACCEPTED",
 };
 
 Deno.serve(async (req) => {
