@@ -1,28 +1,30 @@
 
 
-# Duas correções no painel do motorista
+# Adicionar botão de recarga de pontos no painel da cidade
 
-## 1. Botão "Voltar ao Painel" quando admin acessa conta do motorista
+## Problema
+O componente `BranchVisaoGeral` (visão geral da cidade no dashboard) mostra o saldo da carteira, total carregado e distribuído, mas não oferece nenhuma ação para adicionar pontos. A funcionalidade de recarga já existe na página dedicada `/branch-wallet` (`BranchWalletPage.tsx`), mas o empreendedor não tem acesso direto a ela pelo dashboard da cidade.
 
-**Problema**: Quando o empreendedor clica "Acessar Conta", ele é redirecionado para `/driver?brandId=...&sessionKey=...` via `window.location.assign`. Não há como voltar ao painel administrativo.
+## Solução
+Adicionar um botão "Recarregar" diretamente no card `BranchVisaoGeral` do dashboard da cidade, com um dialog inline para inserir quantidade e descrição — reutilizando a mesma lógica que já existe em `BranchWalletPage`.
 
-**Solução**: Detectar que o acesso veio do admin (presença do parâmetro `sessionKey` na URL) e exibir um botão fixo "Voltar ao Painel" no topo do `DriverMarketplace`.
+## Alterações
 
-- Em `src/pages/DriverPanelPage.tsx`: passar prop `isAdminSession={!!sessionRequestKey}` para `DriverGate` e depois para `DriverMarketplace`
-- Em `src/components/driver/DriverMarketplace.tsx`: receber `isAdminSession` como prop. Quando true, renderizar um banner/botão fixo no topo com ícone de seta e texto "Voltar ao Painel" que faz `window.location.assign("/dashboard")`
+### 1. Atualizar `BranchVisaoGeral` com botão de recarga
+- Adicionar props `branchId` e `brandId` ao componente
+- Adicionar estado local para o dialog de recarga (quantidade, descrição)
+- Implementar mutation de recarga (mesma lógica de `BranchWalletPage`)
+- Renderizar botão "Recarregar" no header do card, visível apenas para escopos ROOT/BRAND/TENANT
+- Incluir Dialog com input de pontos e textarea de descrição
 
-## 2. Card de duelo na cidade em tela cheia com arraste horizontal
+### 2. Atualizar `BranchDashboardSection`
+- Passar `branchId` e `brandId` como props para `BranchVisaoGeral`
 
-**Problema**: O `CardDueloPublico` tem `min-w-[260px] max-w-[280px]`, muito pequeno. O container já tem scroll horizontal (`overflow-x-auto snap-x`), mas os cards não ocupam a largura total.
-
-**Solução**:
-
-- Em `src/components/driver/duels/CardDueloPublico.tsx`: remover `min-w-[260px] max-w-[280px]` e aplicar `w-[calc(100vw-56px)] max-w-[400px] shrink-0` para ocupar quase toda a tela, mantendo `snap-start` para o arraste funcionar
-- Em `src/components/driver/duels/SecaoDuelosCidade.tsx`: ajustar o container para `-mx-5 px-5` garantindo que o scroll mostre os cards edge-to-edge com padding correto
+### 3. Atualizar `Dashboard.tsx`
+- Garantir que o `brandId` está disponível e passado corretamente ao `BranchDashboardSection`
 
 ### Arquivos alterados
-- `src/pages/DriverPanelPage.tsx`
-- `src/components/driver/DriverMarketplace.tsx`
-- `src/components/driver/duels/CardDueloPublico.tsx`
-- `src/components/driver/duels/SecaoDuelosCidade.tsx`
+- `src/components/dashboard/branch/BranchVisaoGeral.tsx` — adicionar dialog de recarga
+- `src/components/dashboard/BranchDashboardSection.tsx` — passar props extras
+- `src/components/dashboard/branch/tipos_branch_dashboard.ts` — verificar se o tipo já tem os campos necessários
 
