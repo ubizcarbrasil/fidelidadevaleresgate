@@ -438,6 +438,8 @@ export function useRespondDuel() {
             customerIds: [vars.challengerCustomerId],
             duelId: vars.duelId,
             nomeOponente: driverName,
+            brandId: driver!.brand_id,
+            branchId: driver!.branch_id,
           });
         }
         registrarEventoFeed({
