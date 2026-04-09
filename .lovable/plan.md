@@ -1,30 +1,52 @@
 
 
-# Adicionar botão de recarga de pontos no painel da cidade
+# Pacotes de Pontos — Modelo de Comercialização
 
-## Problema
-O componente `BranchVisaoGeral` (visão geral da cidade no dashboard) mostra o saldo da carteira, total carregado e distribuído, mas não oferece nenhuma ação para adicionar pontos. A funcionalidade de recarga já existe na página dedicada `/branch-wallet` (`BranchWalletPage.tsx`), mas o empreendedor não tem acesso direto a ela pelo dashboard da cidade.
+## Resumo
+Criar um sistema onde o Empreendedor (BRAND) define pacotes de pontos com preço fixo (ex: "5.000 pts por R$ 50,00"), e o Franqueado (BRANCH) pode comprar esses pacotes diretamente pelo seu painel, creditando pontos na carteira da cidade.
 
-## Solução
-Adicionar um botão "Recarregar" diretamente no card `BranchVisaoGeral` do dashboard da cidade, com um dialog inline para inserir quantidade e descrição — reutilizando a mesma lógica que já existe em `BranchWalletPage`.
+## Estrutura
 
-## Alterações
+### 1. Nova tabela: `points_packages`
+Armazena os pacotes criados pelo empreendedor:
+- `id`, `brand_id`, `name` (ex: "Pacote Básico"), `points_amount` (quantidade de pontos), `price_cents` (preço em centavos R$), `description`, `is_active`, `sort_order`, `created_at`, `updated_at`
 
-### 1. Atualizar `BranchVisaoGeral` com botão de recarga
-- Adicionar props `branchId` e `brandId` ao componente
-- Adicionar estado local para o dialog de recarga (quantidade, descrição)
-- Implementar mutation de recarga (mesma lógica de `BranchWalletPage`)
-- Renderizar botão "Recarregar" no header do card, visível apenas para escopos ROOT/BRAND/TENANT
-- Incluir Dialog com input de pontos e textarea de descrição
+### 2. Nova tabela: `points_package_orders`
+Registra cada compra de pacote pelo franqueado:
+- `id`, `package_id`, `branch_id`, `brand_id`, `points_amount`, `price_cents`, `status` (PENDING, CONFIRMED, CANCELLED), `purchased_by` (user_id), `confirmed_by` (user_id, nullable), `created_at`, `confirmed_at`
 
-### 2. Atualizar `BranchDashboardSection`
-- Passar `branchId` e `brandId` como props para `BranchVisaoGeral`
+### 3. Página do Empreendedor: Gerenciar Pacotes (`/points-packages`)
+- Listagem de pacotes criados (cards com nome, pontos, preço, status ativo/inativo)
+- Botão para criar novo pacote (dialog com nome, pontos, preço, descrição)
+- Edição e ativação/desativação inline
+- Histórico de compras realizadas pelos franqueados (tabela com status, cidade, data)
+- Ação de confirmar/cancelar pedidos pendentes (ao confirmar, credita pontos na carteira da cidade)
 
-### 3. Atualizar `Dashboard.tsx`
-- Garantir que o `brandId` está disponível e passado corretamente ao `BranchDashboardSection`
+### 4. Página do Franqueado: Loja de Pacotes (`/points-packages-store`)
+- Vitrine de pacotes disponíveis (cards visuais com nome, pontos, preço)
+- Botão "Comprar" que cria um pedido com status PENDING
+- Histórico dos meus pedidos (status do pedido)
 
-### Arquivos alterados
-- `src/components/dashboard/branch/BranchVisaoGeral.tsx` — adicionar dialog de recarga
-- `src/components/dashboard/BranchDashboardSection.tsx` — passar props extras
-- `src/components/dashboard/branch/tipos_branch_dashboard.ts` — verificar se o tipo já tem os campos necessários
+### 5. Navegação
+- **BrandSidebar**: Novo item "Pacotes de Pontos" no grupo "Cidades" com ícone `Package`
+- **BranchSidebar**: Novo item "Comprar Pontos" no grupo "Motoristas & Resgate" com ícone `ShoppingCart`
+
+### 6. Fluxo de confirmação
+Quando o empreendedor confirma um pedido:
+- Atualiza `points_package_orders.status` para CONFIRMED
+- Credita os pontos na `branch_points_wallet` (balance + total_loaded)
+- Insere transação em `branch_wallet_transactions` (tipo LOAD, descrição referenciando o pacote)
+
+### 7. RLS
+- Brand admins podem CRUD nos pacotes da sua marca
+- Branch admins podem SELECT pacotes ativos da marca e INSERT/SELECT seus próprios pedidos
+- Confirmação de pedidos restrita ao brand admin
+
+### Arquivos criados/alterados
+- **Migration SQL**: 2 tabelas + RLS policies
+- `src/pages/PacotesPontosPage.tsx` — gestão de pacotes (empreendedor)
+- `src/pages/LojaPacotesPontosPage.tsx` — vitrine + compra (franqueado)
+- `src/components/consoles/BrandSidebar.tsx` — novo item de menu
+- `src/components/consoles/BranchSidebar.tsx` — novo item de menu
+- `src/App.tsx` — novas rotas
 
