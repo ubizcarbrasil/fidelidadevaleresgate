@@ -237,7 +237,6 @@ export default function MeuDesempenhoSheet({ duels, participantId, onBack }: Pro
                     vs {getAdversario(d)}
                     <Eye className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                   </p>
-                  </p>
                   <p className="text-[10px] text-muted-foreground">
                     {d.finished_at
                       ? new Date(d.finished_at).toLocaleDateString("pt-BR")
