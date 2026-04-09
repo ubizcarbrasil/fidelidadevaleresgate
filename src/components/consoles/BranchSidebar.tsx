@@ -72,6 +72,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
     scoringFilter: "DRIVER",
     items: [
       { key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "achadinhos_motorista" },
+      { key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.regras_motorista", defaultTitle: "Regras de Pontuação", url: "/driver-points-rules", icon: Settings2, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: ReceiptText, moduleKey: "achadinhos_motorista" },

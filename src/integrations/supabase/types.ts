@@ -5182,6 +5182,131 @@ export type Database = {
           },
         ]
       }
+      points_package_orders: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          package_id: string
+          points_amount: number
+          price_cents: number
+          purchased_by: string | null
+          status: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          package_id: string
+          points_amount: number
+          price_cents: number
+          purchased_by?: string | null
+          status?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          package_id?: string
+          points_amount?: number
+          price_cents?: number
+          purchased_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "points_package_orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_package_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_package_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_package_orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "points_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      points_packages: {
+        Row: {
+          brand_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          points_amount: number
+          price_cents: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          points_amount: number
+          price_cents: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_amount?: number
+          price_cents?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "points_packages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "points_packages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_rules: {
         Row: {
           allow_store_custom_rule: boolean
@@ -7609,6 +7734,10 @@ export type Database = {
           p_start_at: string
         }
         Returns: string[]
+      }
+      confirm_package_order: {
+        Args: { p_confirmed_by: string; p_order_id: string }
+        Returns: Json
       }
       count_duel_rides: {
         Args: {

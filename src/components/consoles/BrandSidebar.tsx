@@ -49,6 +49,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Cidades",
     items: [
       { key: "sidebar.branches", defaultTitle: "Minhas Cidades", url: "/brand-branches", icon: MapPin },
+      { key: "sidebar.pacotes_pontos", defaultTitle: "Pacotes de Pontos", url: "/points-packages", icon: Package },
       { key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2 },
       { key: "sidebar.jornada_cidades", defaultTitle: "Guia de Cidades", url: "/brand-cidades-journey", icon: BookOpen },
       { key: "sidebar.onboarding_cidade", defaultTitle: "Onboarding Cidade", url: "/city-onboarding", icon: Rocket },
