@@ -13,8 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Users, Car, User, Search, Loader2 } from "lucide-react";
+import { Users, Car, User, Search, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import HistoricoResetPontos from "@/components/branch/HistoricoResetPontos";
 
 type ResetTarget = "all" | "drivers" | "clients" | "single";
 
