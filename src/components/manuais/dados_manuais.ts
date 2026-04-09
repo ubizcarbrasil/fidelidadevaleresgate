@@ -1331,6 +1331,11 @@ export const gruposManuais: GrupoManual[] = [
 
 // Grupo de manuais do franqueado (Achadinhos Motorista)
 export const gruposManuaisFranqueado: GrupoManual[] = [
+  {
+    categoria: "Achadinhos Motorista — Franqueado",
+    icone: "Coins",
+    scoringFilter: "DRIVER",
+    manuais: [
       {
         id: "comprar-pontos-franqueado",
         titulo: "Comprar Pontos (Pacotes)",
@@ -1352,10 +1357,6 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
         ],
         rota: "/points-packages-store",
       },
-    categoria: "Achadinhos Motorista — Franqueado",
-    icone: "Coins",
-    scoringFilter: "DRIVER",
-    manuais: [
       {
         id: "carteira-pontos",
         titulo: "Carteira de Pontos",
