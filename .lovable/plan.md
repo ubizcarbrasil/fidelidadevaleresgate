@@ -1,49 +1,40 @@
 
 
-# Plano: Notificações automáticas para apostas laterais via TaxiMachine
+# Verificação: Mensagens de apostas no painel do empreendedor
 
-## O que será feito
+## Diagnóstico
 
-Quando um motorista criar ou aceitar uma aposta lateral em um duelo, o sistema enviará automaticamente notificações in-app e via TaxiMachine para os motoristas envolvidos.
+O fluxo de notificações de apostas laterais está **parcialmente implementado**. A parte do motorista (app) está correta: ao criar ou aceitar uma aposta, o sistema dispara `enviarNotificacaoDuelo` com os tipos `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED`, que por sua vez chama a edge function `send-driver-message`.
 
-## Mudanças
+Porém, no **painel do empreendedor** (aba Mensagens > Fluxos), os eventos de aposta **não aparecem como opções configuráveis**. O array `EVENT_TYPES` em `hook_message_flows.ts` não inclui `SIDE_BET_CREATED` nem `SIDE_BET_ACCEPTED`. Isso significa que o empreendedor **não consegue criar fluxos automáticos** para esses eventos — as mensagens simplesmente não serão enviadas via TaxiMachine mesmo que o disparo ocorra no código.
 
-### 1. Adicionar tipos de notificação de aposta no serviço de notificações
+## Correções necessárias
 
-**Arquivo**: `src/components/driver/duels/servico_notificacoes_duelo.ts`
+### 1. Adicionar eventos de aposta na lista de fluxos configuráveis
 
-- Adicionar dois novos tipos ao `TipoNotificacaoDuelo`: `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED`
-- Adicionar mapeamento no `MAPEAMENTO` com títulos/corpos em português:
-  - `SIDE_BET_CREATED`: "Nova aposta no seu duelo! 🎯" / "Alguém apostou {pontos} pts em {nome}"
-  - `SIDE_BET_ACCEPTED`: "Aposta aceita! 💰" / "Sua aposta foi aceita. Pontos reservados!"
-- Adicionar `reference_type` correspondentes: `side_bet_created`, `side_bet_accepted`
-- Adicionar mapeamento no `MAPEAMENTO_FLUXO` para disparo via TaxiMachine: `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED`
+**Arquivo**: `src/features/integracao_mobilidade/hooks/hook_message_flows.ts`
 
-### 2. Adicionar mapeamento na edge function send-push-notification
+Incluir no array `EVENT_TYPES`:
+- `{ value: "SIDE_BET_CREATED", label: "Aposta lateral criada", category: "bet" }`
+- `{ value: "SIDE_BET_ACCEPTED", label: "Aposta lateral aceita", category: "bet" }`
 
-**Arquivo**: `supabase/functions/send-push-notification/index.ts`
+### 2. Adicionar opções de audiência relevantes para apostas
 
-- Adicionar ao `REFERENCE_TO_EVENT_TYPE`:
-  - `side_bet_created` → `SIDE_BET_CREATED`
-  - `side_bet_accepted` → `SIDE_BET_ACCEPTED`
+**Arquivo**: `src/features/integracao_mobilidade/hooks/hook_message_flows.ts`
 
-### 3. Disparar notificações nos hooks de apostas
+Incluir no array `AUDIENCE_OPTIONS`:
+- `{ value: "bettor", label: "Apostador (criador)" }` — para notificar quem criou a aposta quando ela for aceita
 
-**Arquivo**: `src/components/driver/duels/hook_apostas_duelo.ts`
+### 3. Adicionar labels amigáveis no relatório de mensagens
 
-- Modificar `useCreateSideBet` e `useAcceptSideBet` para receber `brandId`, `branchId` e `nomeApostador` nos parâmetros da mutation
-- No `onSuccess` de `useCreateSideBet`: chamar `enviarNotificacaoDuelo` com tipo `SIDE_BET_CREATED`, notificando os participantes do duelo (challenger e challenged customer IDs)
-- No `onSuccess` de `useAcceptSideBet`: chamar `enviarNotificacaoDuelo` com tipo `SIDE_BET_ACCEPTED`, notificando o criador da aposta (bettor_a)
-- Adicionar parâmetros extras: `challengerCustomerId`, `challengedCustomerId`, `bettorACustomerId` para saber quem notificar
+**Arquivo**: `src/features/integracao_mobilidade/components/relatorio_mensagens.tsx`
 
-### 4. Atualizar componentes para passar os novos parâmetros
-
-**Arquivos**: `CriarApostaSheet.tsx` e `ApostaAbertaCard.tsx`
-
-- Passar `brandId`, `branchId` e nomes dos envolvidos nas chamadas de `createBet.mutateAsync` e `acceptBet.mutateAsync`
-- Obter `brand_id` e `branch_id` do contexto do driver session
+Garantir que os event types `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED` apareçam com labels legíveis no gráfico de distribuição por evento (ex: "Aposta Criada", "Aposta Aceita") em vez do valor cru do enum.
 
 ## Resultado
 
-Ao criar uma aposta lateral, os dois duelistas serão notificados de que alguém apostou no duelo deles. Ao aceitar uma aposta, o criador original será notificado. Ambas as notificações serão enviadas in-app e via TaxiMachine (se houver fluxo configurado).
+O empreendedor poderá, no painel de Integração de Mobilidade > Mensagens > Fluxos:
+1. Criar um fluxo automático para "Aposta lateral criada" — definindo o template e audiência
+2. Criar um fluxo automático para "Aposta lateral aceita" — definindo o template e audiência
+3. Visualizar no relatório as métricas de entrega dessas mensagens
 
