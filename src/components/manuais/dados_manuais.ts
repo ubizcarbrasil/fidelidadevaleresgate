@@ -36,12 +36,17 @@ export const gruposManuais: GrupoManual[] = [
           "Preencha o nome da cidade, estado e slug (identificador único).",
           "Opcionalmente, configure latitude e longitude para geolocalização.",
           "Defina o fuso horário da cidade.",
+          "Configure o Modelo de Pontuação (Motorista, Cliente ou Ambos).",
+          "Na seção 'Módulos de Negócio', ative ou desative os módulos disponíveis para esta cidade: Duelo, Achadinho, Mercado Livre, Corra e Ganhe Pontos e Cliente Pontua.",
+          "Na seção 'Gamificação de Motoristas', configure duelos, ranking e cinturão.",
           "Ative ou desative a cidade conforme necessário.",
           "Salve e a cidade ficará disponível para vincular parceiros e clientes."
         ],
         dicas: [
           "O slug deve ser único e sem espaços (use hífens).",
           "Cidades inativas não aparecem para o usuário final.",
+          "Os Módulos de Negócio controlam quais funcionalidades aparecem no painel do franqueado de cada cidade.",
+          "Módulos desativados são ocultos automaticamente no sidebar e no dashboard da cidade.",
           "Vincule parceiros à cidade correta para segmentar corretamente ofertas e pontos."
         ],
         rota: "/branches"
