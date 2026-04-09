@@ -25,7 +25,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const { data: stats, isLoading } = useBranchDashboardStats(branchId);
   const { data: ranking } = useBranchRanking(branchId);
   const feed = useBranchRealtimeFeed(branchId);
-  const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel();
+  const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel(branchId);
   const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
 
   const passengerOnly = isPassengerEnabled && !isDriverEnabled;

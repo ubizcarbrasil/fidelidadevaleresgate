@@ -140,6 +140,7 @@ export default function Dashboard() {
     ? urlBranchId
     : null;
   const isViewingBranch = !!viewingBranchId;
+  const isCityScopedView = consoleScope === "BRANCH" || isViewingBranch;
 
   useRealtimeRefresh();
 
