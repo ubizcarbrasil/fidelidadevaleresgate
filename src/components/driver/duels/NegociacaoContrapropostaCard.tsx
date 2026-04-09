@@ -101,7 +101,7 @@ export default function NegociacaoContrapropostaCard({ duel, participantId }: Pr
           size="sm"
         >
           <XCircle className="h-4 w-4" />
-          Recusar e Encerrar
+          Arregar 🐔
         </Button>
       </div>
 

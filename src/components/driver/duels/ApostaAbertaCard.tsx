@@ -138,7 +138,7 @@ export default function ApostaAbertaCard({ bet, duel }: Props) {
               disabled={respondCounter.isPending}
               className="flex-1 h-8 text-xs font-bold gap-1"
             >
-              <X className="h-3 w-3" /> Recusar
+              <X className="h-3 w-3" /> Arregar 🐔
             </Button>
           </div>
         </div>
