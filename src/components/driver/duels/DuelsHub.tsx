@@ -238,6 +238,14 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
                 Cinturão da Cidade
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => setShowRankingApostadores(true)}
+              className="w-full gap-2"
+            >
+              <DollarSign className="h-4 w-4" />
+              Top Apostadores
+            </Button>
           </div>
         </div>
 
