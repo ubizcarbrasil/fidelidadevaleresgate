@@ -129,7 +129,7 @@ export default function SendNotificationPage() {
 
         <TabsContent value="machine" className="mt-4">
           {currentBrandId ? (
-            <AbaMensagens brandId={currentBrandId} branches={branches?.map(b => ({ id: b.id, name: b.name })) || []} />
+            <AbaMensagens brandId={currentBrandId} branches={branches || []} />
           ) : (
             <p className="text-sm text-muted-foreground">Selecione uma marca para acessar as mensagens.</p>
           )}
