@@ -8,12 +8,13 @@ import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
 
-function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId }: {
+function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
   branch: any;
   theme: any;
   initialCategoryId: string | null;
   initialDealId: string | null;
+  isAdminSession: boolean;
 }) {
   const { driver, loading } = useDriverSession();
   const settings = brand?.brand_settings_json as any;
@@ -54,7 +55,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   return (
     <CustomerProvider>
       <div className="min-h-screen bg-background text-foreground">
-        <DriverMarketplace brand={brand} branch={effectiveBranch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} />
+        <DriverMarketplace brand={brand} branch={effectiveBranch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} isAdminSession={isAdminSession} />
       </div>
     </CustomerProvider>
   );
@@ -148,6 +149,7 @@ export default function DriverPanelPage() {
         theme={theme}
         initialCategoryId={initialCategoryId}
         initialDealId={initialDealId}
+        isAdminSession={!!sessionRequestKey}
       />
     </DriverSessionProvider>
   );
