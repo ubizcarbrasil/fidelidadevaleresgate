@@ -1,40 +1,42 @@
 
 
-# Verificação: Mensagens de apostas no painel do empreendedor
+# Plano: Histórico de Resets de Pontos no Painel de Cidades
 
-## Diagnóstico
+## Problema Identificado
 
-O fluxo de notificações de apostas laterais está **parcialmente implementado**. A parte do motorista (app) está correta: ao criar ou aceitar uma aposta, o sistema dispara `enviarNotificacaoDuelo` com os tipos `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED`, que por sua vez chama a edge function `send-driver-message`.
+O enum `ledger_reference_type` **não contém** o valor `BRANCH_RESET`. A edge function tenta inserir registros com esse tipo, mas falha silenciosamente. Precisamos corrigir isso e criar a visualização do histórico.
 
-Porém, no **painel do empreendedor** (aba Mensagens > Fluxos), os eventos de aposta **não aparecem como opções configuráveis**. O array `EVENT_TYPES` em `hook_message_flows.ts` não inclui `SIDE_BET_CREATED` nem `SIDE_BET_ACCEPTED`. Isso significa que o empreendedor **não consegue criar fluxos automáticos** para esses eventos — as mensagens simplesmente não serão enviadas via TaxiMachine mesmo que o disparo ocorra no código.
+## Mudanças
 
-## Correções necessárias
+### 1. Migration: adicionar `BRANCH_RESET` ao enum
 
-### 1. Adicionar eventos de aposta na lista de fluxos configuráveis
+Adicionar o valor faltante ao enum `ledger_reference_type` para que os registros de reset sejam efetivamente gravados no `points_ledger`.
 
-**Arquivo**: `src/features/integracao_mobilidade/hooks/hook_message_flows.ts`
+### 2. Componente: `HistoricoResetPontos`
 
-Incluir no array `EVENT_TYPES`:
-- `{ value: "SIDE_BET_CREATED", label: "Aposta lateral criada", category: "bet" }`
-- `{ value: "SIDE_BET_ACCEPTED", label: "Aposta lateral aceita", category: "bet" }`
+**Arquivo**: `src/components/branch/HistoricoResetPontos.tsx`
 
-### 2. Adicionar opções de audiência relevantes para apostas
+- Consulta `points_ledger` filtrando por `reference_type = 'BRANCH_RESET'` e `branch_id` da cidade selecionada
+- Agrupa os registros por timestamp (resets do mesmo lote têm timestamps muito próximos) para exibir como um único evento
+- Exibe: data/hora, escopo (extraído do campo `reason`), quantidade de registros afetados e total de pontos zerados
+- Formato de lista/timeline com cards compactos
+- Paginação simples (últimos 20 eventos)
 
-**Arquivo**: `src/features/integracao_mobilidade/hooks/hook_message_flows.ts`
+### 3. Integração no `BrandBranchesPage`
 
-Incluir no array `AUDIENCE_OPTIONS`:
-- `{ value: "bettor", label: "Apostador (criador)" }` — para notificar quem criou a aposta quando ela for aceita
+- Adicionar botão "Histórico de Resets" ou sheet/dialog acessível a partir da página de cidades
+- Ao clicar, abre um Sheet lateral com o `HistoricoResetPontos` filtrado pela cidade selecionada
 
-### 3. Adicionar labels amigáveis no relatório de mensagens
+### 4. Alternativa: aba no `DialogResetPontos`
 
-**Arquivo**: `src/features/integracao_mobilidade/components/relatorio_mensagens.tsx`
+- Adicionar uma seção "Últimos resets" abaixo do formulário de reset, mostrando os 5 últimos resets da cidade de forma compacta (data, escopo, pontos zerados)
 
-Garantir que os event types `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED` apareçam com labels legíveis no gráfico de distribuição por evento (ex: "Aposta Criada", "Aposta Aceita") em vez do valor cru do enum.
+## Abordagem escolhida
+
+Adicionar no próprio `DialogResetPontos` uma seção inferior com o histórico recente, mantendo tudo contextualizado em um único lugar. Isso evita navegação extra e o empreendedor vê o histórico antes de decidir fazer um novo reset.
 
 ## Resultado
 
-O empreendedor poderá, no painel de Integração de Mobilidade > Mensagens > Fluxos:
-1. Criar um fluxo automático para "Aposta lateral criada" — definindo o template e audiência
-2. Criar um fluxo automático para "Aposta lateral aceita" — definindo o template e audiência
-3. Visualizar no relatório as métricas de entrega dessas mensagens
+- Resets passarão a ser registrados corretamente no banco (fix do enum)
+- O empreendedor verá os últimos resets ao abrir o dialog de reset de qualquer cidade
 
