@@ -6,6 +6,7 @@ import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
+import { useBranchModules } from "@/hooks/useBranchModules";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -27,14 +28,17 @@ interface MenuItem {
   scoringFilter?: "DRIVER" | "PASSENGER";
 }
 
+type BranchModuleKey = "enable_duels_module" | "enable_achadinhos_module" | "enable_marketplace_module" | "enable_race_earn_module" | "enable_customer_scoring_module";
+
 const dashboardItem: MenuItem = {
   key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
 };
 
-const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: MenuItem[] }[] = [
+const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; branchModuleKey?: BranchModuleKey; items: MenuItem[] }[] = [
   {
     label: "Gestão Comercial",
     scoringFilter: "PASSENGER",
+    branchModuleKey: "enable_customer_scoring_module",
     items: [
       { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
       { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
@@ -47,6 +51,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
   {
     label: "Aprovações",
     scoringFilter: "PASSENGER",
+    branchModuleKey: "enable_customer_scoring_module",
     items: [
       { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
       { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
@@ -55,6 +60,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
   {
     label: "Achadinhos",
     scoringFilter: "PASSENGER",
+    branchModuleKey: "enable_achadinhos_module",
     items: [
       { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart, moduleKey: "affiliate_deals" },
       { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart, moduleKey: "affiliate_deals" },
@@ -70,6 +76,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
   {
     label: "Motoristas & Resgate",
     scoringFilter: "DRIVER",
+    branchModuleKey: "enable_race_earn_module",
     items: [
       { key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "achadinhos_motorista" },
       { key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "achadinhos_motorista" },
@@ -84,6 +91,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
   {
     label: "Programa de Fidelidade",
     scoringFilter: "PASSENGER",
+    branchModuleKey: "enable_customer_scoring_module",
     items: [
       { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
       { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
@@ -93,6 +101,7 @@ const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; items: Me
   {
     label: "Gamificação",
     scoringFilter: "DRIVER",
+    branchModuleKey: "enable_duels_module",
     items: [
       { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista" },
     ],
@@ -185,6 +194,7 @@ export function BranchSidebar() {
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
   const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
+  const { isBranchModuleEnabled } = useBranchModules();
   const { name: brandName, logoUrl } = useBrandInfo();
   const cityName = useBranchCityName();
 
@@ -192,6 +202,7 @@ export function BranchSidebar() {
     .filter((group) => {
       if (group.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
       if (group.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
+      if (group.branchModuleKey && !isBranchModuleEnabled(group.branchModuleKey)) return false;
       return true;
     })
     .map((group) => ({

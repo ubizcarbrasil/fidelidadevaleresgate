@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw, Package, ShoppingCart, Store, Zap, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
@@ -74,6 +74,13 @@ export default function BrandBranchForm() {
   const [enableCityRanking, setEnableCityRanking] = useState(true);
   const [enableCityBelt, setEnableCityBelt] = useState(true);
   const [allowPublicDuelViewing, setAllowPublicDuelViewing] = useState(false);
+
+  // Módulos de Negócio
+  const [enableDuelsModule, setEnableDuelsModule] = useState(true);
+  const [enableAchadinhosModule, setEnableAchadinhosModule] = useState(true);
+  const [enableMarketplaceModule, setEnableMarketplaceModule] = useState(true);
+  const [enableRaceEarnModule, setEnableRaceEarnModule] = useState(true);
+  const [enableCustomerScoringModule, setEnableCustomerScoringModule] = useState(true);
 
   // Load brand's default scoring model for new cities
   useEffect(() => {
@@ -151,6 +158,12 @@ export default function BrandBranchForm() {
         setEnableCityRanking(bs.enable_city_ranking !== false);
         setEnableCityBelt(bs.enable_city_belt !== false);
         setAllowPublicDuelViewing(bs.allow_public_duel_viewing === true);
+        // Módulos de Negócio
+        setEnableDuelsModule(bs.enable_duels_module !== false);
+        setEnableAchadinhosModule(bs.enable_achadinhos_module !== false);
+        setEnableMarketplaceModule(bs.enable_marketplace_module !== false);
+        setEnableRaceEarnModule(bs.enable_race_earn_module !== false);
+        setEnableCustomerScoringModule(bs.enable_customer_scoring_module !== false);
       }
     }
   }, [existing]);
@@ -216,6 +229,12 @@ export default function BrandBranchForm() {
         enable_city_ranking: enableCityRanking,
         enable_city_belt: enableCityBelt,
         allow_public_duel_viewing: allowPublicDuelViewing,
+        // Módulos de Negócio
+        enable_duels_module: enableDuelsModule,
+        enable_achadinhos_module: enableAchadinhosModule,
+        enable_marketplace_module: enableMarketplaceModule,
+        enable_race_earn_module: enableRaceEarnModule,
+        enable_customer_scoring_module: enableCustomerScoringModule,
       };
 
       const payload = {
@@ -422,6 +441,85 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={allowPublicDuelViewing} onCheckedChange={setAllowPublicDuelViewing} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Módulos de Negócio */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Módulos de Negócio
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Ative ou desative funcionalidades disponíveis para esta cidade. Módulos desativados ficam ocultos no painel do franqueado.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Swords className="h-4 w-4 text-orange-500" />
+                Módulo Duelo
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Competições entre motoristas com apostas de pontos.
+              </p>
+            </div>
+            <Switch checked={enableDuelsModule} onCheckedChange={setEnableDuelsModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-pink-500" />
+                Módulo Achadinho
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Vitrine de ofertas afiliadas para clientes e motoristas.
+              </p>
+            </div>
+            <Switch checked={enableAchadinhosModule} onCheckedChange={setEnableAchadinhosModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-blue-500" />
+                Módulo Mercado Livre
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Marketplace de produtos para resgate de motoristas.
+              </p>
+            </div>
+            <Switch checked={enableMarketplaceModule} onCheckedChange={setEnableMarketplaceModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-yellow-500" />
+                Módulo Corra e Ganhe Pontos
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Motoristas acumulam pontos a cada corrida finalizada.
+              </p>
+            </div>
+            <Switch checked={enableRaceEarnModule} onCheckedChange={setEnableRaceEarnModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-green-500" />
+                Módulo Cliente Pontua
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Programa de fidelidade onde clientes acumulam pontos em lojas parceiras.
+              </p>
+            </div>
+            <Switch checked={enableCustomerScoringModule} onCheckedChange={setEnableCustomerScoringModule} />
           </div>
         </CardContent>
       </Card>
