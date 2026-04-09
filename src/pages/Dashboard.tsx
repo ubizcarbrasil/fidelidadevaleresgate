@@ -276,7 +276,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <DashboardHeader consoleScope={consoleScope} scopeLabels={scopeLabels} />
+        <DashboardHeader consoleScope={consoleScope} scopeLabels={scopeLabels} isCityScopedView={isCityScopedView} viewingBranchId={viewingBranchId} />
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="gap-1.5 text-xs font-normal border-success/30 text-success">
             <span className="relative flex h-2 w-2">
