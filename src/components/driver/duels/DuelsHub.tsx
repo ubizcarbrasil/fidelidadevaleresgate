@@ -257,7 +257,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
               🔴 Ao vivo na cidade
             </h2>
             <p className="text-[11px] text-muted-foreground -mt-1">
-              Assista e dê seu palpite nos duelos acontecendo agora!
+              Assista, aposte e torça nos duelos acontecendo agora! 🎯
             </p>
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
               {duelosCidadeAoVivo.map((d) => (
@@ -274,7 +274,7 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
               📅 Agendados na cidade
             </h2>
             <p className="text-[11px] text-muted-foreground -mt-1">
-              Duelos confirmados que vão rolar em breve!
+              Duelos confirmados — já pode apostar antes de começar! 🎯
             </p>
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
               {duelosCidadeAgendados.map((d) => (
