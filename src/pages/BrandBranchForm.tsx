@@ -67,6 +67,7 @@ export default function BrandBranchForm() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [scoringModel, setScoringModel] = useState("BOTH");
   const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
   // Gamificação de Motoristas
   const [enableDriverDuels, setEnableDriverDuels] = useState(true);
