@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import DialogResetPontos from "@/components/branch/DialogResetPontos";
 
 const ESTADOS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -66,6 +67,7 @@ export default function BrandBranchForm() {
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [scoringModel, setScoringModel] = useState("BOTH");
   const [isCityRedemptionEnabled, setIsCityRedemptionEnabled] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
   // Gamificação de Motoristas
   const [enableDriverDuels, setEnableDriverDuels] = useState(true);
@@ -630,6 +632,26 @@ export default function BrandBranchForm() {
         </Card>
       )}
 
+      {isEdit && id && (
+        <Card className="rounded-xl border-destructive/30">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Resetar Pontos</p>
+              <p className="text-xs text-muted-foreground">Zerar pontos de motoristas e/ou clientes desta cidade.</p>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setShowResetDialog(true)}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Resetar
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={() => navigate("/brand-branches")}>
           Cancelar
@@ -639,6 +661,15 @@ export default function BrandBranchForm() {
           {isEdit ? "Salvar" : "Criar Cidade"}
         </Button>
       </div>
+
+      {isEdit && id && (
+        <DialogResetPontos
+          open={showResetDialog}
+          onClose={() => setShowResetDialog(false)}
+          branchId={id}
+          branchName={cidade ? `${cidade} - ${uf}` : ""}
+        />
+      )}
     </div>
   );
 }
