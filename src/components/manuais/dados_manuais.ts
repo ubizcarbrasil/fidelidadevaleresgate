@@ -1331,7 +1331,27 @@ export const gruposManuais: GrupoManual[] = [
 
 // Grupo de manuais do franqueado (Achadinhos Motorista)
 export const gruposManuaisFranqueado: GrupoManual[] = [
-  {
+      {
+        id: "comprar-pontos-franqueado",
+        titulo: "Comprar Pontos (Pacotes)",
+        descricao: "Adquira pacotes de pontos criados pelo empreendedor diretamente pelo seu painel. Os pontos são creditados na carteira da cidade após confirmação.",
+        comoAtivar: "Acesse 'Comprar Pontos' no menu lateral.",
+        passos: [
+          "Acesse 'Comprar Pontos' no menu lateral.",
+          "Visualize os pacotes disponíveis com nome, quantidade de pontos e preço.",
+          "Clique em 'Comprar' no pacote desejado para criar um pedido.",
+          "O pedido será enviado ao empreendedor com status 'Pendente'.",
+          "Aguarde a confirmação — quando aprovado, os pontos são creditados automaticamente na sua carteira.",
+          "Acompanhe o histórico de pedidos na aba 'Meus Pedidos'.",
+        ],
+        dicas: [
+          "Planeje suas compras para manter o saldo sempre positivo.",
+          "Pedidos pendentes podem ser acompanhados na mesma tela.",
+          "Ao ser confirmado, o saldo é atualizado instantaneamente.",
+          "Entre em contato com o empreendedor se um pedido ficar pendente por muito tempo.",
+        ],
+        rota: "/points-packages-store",
+      },
     categoria: "Achadinhos Motorista — Franqueado",
     icone: "Coins",
     scoringFilter: "DRIVER",
