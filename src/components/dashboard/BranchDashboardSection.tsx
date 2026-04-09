@@ -28,6 +28,8 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const feed = useBranchRealtimeFeed(branchId);
   const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel(branchId);
   const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
+  const { currentBrandId } = useBrandGuard();
+  const effectiveBrandId = currentBrandId || "";
 
   const passengerOnly = isPassengerEnabled && !isDriverEnabled;
 
