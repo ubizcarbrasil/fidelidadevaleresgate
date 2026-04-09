@@ -2,9 +2,9 @@
  * Detalhe de um duelo — placar, countdown, vencedor, pontos em jogo.
  */
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Swords, Trophy, Timer, Crown, Coins, Star, CheckCircle, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Duel } from "./hook_duelos";
+import type { Duel, DuelParticipant } from "./hook_duelos";
 import { resolveParticipantName, resolveParticipantAvatar, cleanDriverName, useFinalizeDuel, useAuditoriaDuelo, useContagemCorridasDuelo } from "./hook_duelos";
 import { useDuelRating } from "./hook_avaliacao_duelo";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -12,6 +12,7 @@ import { formatPoints } from "@/lib/formatPoints";
 import { format, differenceInSeconds, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AvaliacaoDueloSheet from "./AvaliacaoDueloSheet";
+import PerfilCompetitivoSheet from "./PerfilCompetitivoSheet";
 
 interface Props {
   duel: Duel;
@@ -36,6 +37,7 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
   const [remaining, setRemaining] = useState(0);
   const [showRating, setShowRating] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState<DuelParticipant | null>(null);
 
   const { data: auditLog } = useAuditoriaDuelo(duel.status === "finished" ? duel.id : null);
   const { data: contagemRealtime } = useContagemCorridasDuelo(
@@ -156,7 +158,13 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
                 </div>
               )}
               <p className="text-[11px] text-muted-foreground mb-0.5">Desafiante</p>
-              <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengerName}</p>
+              <p
+                className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1 cursor-pointer hover:underline flex items-center justify-center gap-0.5"
+                onClick={() => duel.challenger && setViewingProfile(duel.challenger as DuelParticipant)}
+              >
+                {challengerName}
+                <Eye className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+              </p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenger_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>
                 {challengerRides}
               </p>
@@ -179,7 +187,13 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
                 </div>
               )}
               <p className="text-[11px] text-muted-foreground mb-0.5">Desafiado</p>
-              <p className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1">{challengedName}</p>
+              <p
+                className="text-xs font-bold text-foreground leading-tight line-clamp-2 px-1 cursor-pointer hover:underline flex items-center justify-center gap-0.5"
+                onClick={() => duel.challenged && setViewingProfile(duel.challenged as DuelParticipant)}
+              >
+                {challengedName}
+                <Eye className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+              </p>
               <p className="text-4xl font-extrabold mt-2" style={{ color: winnerId === duel.challenged_id ? "hsl(var(--success))" : "hsl(var(--foreground))" }}>
                 {challengedRides}
               </p>
@@ -352,6 +366,14 @@ export default function DuelDetailSheet({ duel, participantId, onBack }: Props) 
           </div>
         )}
       </div>
+
+      {/* Profile sheet */}
+      {viewingProfile && (
+        <PerfilCompetitivoSheet
+          participant={viewingProfile}
+          onBack={() => setViewingProfile(null)}
+        />
+      )}
 
       {/* Rating sheet */}
       {showRating && driver?.id && opponentCustomerId && (
