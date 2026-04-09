@@ -1,17 +1,26 @@
 
 
-# Corrigir: Menu "Minhas Cidades" não aparece no sidebar
+# Plano: Adicionar seção de Mensagens dentro da aba Notificações
 
-## Problema
+## Objetivo
 
-O item "Minhas Cidades" no sidebar tem `moduleKey: "branches"`, o que faz ele ser filtrado quando o módulo "branches" não está habilitado na tabela `brand_modules`. Cidades é uma funcionalidade essencial e não deveria depender de ativação de módulo.
+O usuário quer que o sistema de mensagens (fluxos automáticos, templates, envio manual, relatório) também seja acessível dentro da aba **Notificações**, sob uma sub-seção "Notificação via Machine". A aba "Mensagens" existente permanece intacta.
 
-## Solução
+## Mudanças
 
-Remover o `moduleKey: "branches"` do item "Minhas Cidades" em `src/components/consoles/BrandSidebar.tsx` (linha 51), tornando-o sempre visível — assim como os outros itens do grupo "Cidades" (Regras de Resgate, Guia de Cidades, Onboarding) que já não possuem `moduleKey`.
+### 1. Modificar `aba_notificacoes.tsx`
 
-**Arquivo**: `src/components/consoles/BrandSidebar.tsx`
-- Linha 51: remover `moduleKey: "branches"` do objeto do item "Minhas Cidades"
+Adicionar uma sub-navegação interna com tabs:
+- **Notificação por corrida** — conteúdo atual da aba (Telegram, mensagem no app, histórico)
+- **Mensagens via Machine** — reutiliza o componente `AbaMensagens` já existente
 
-Mudança de uma única linha. O menu passará a aparecer para todos os empreendedores.
+Isso cria um acesso direto ao fluxo de mensagens sem sair do contexto de notificações.
+
+### 2. Arquivos impactados
+
+| Arquivo | Ação |
+|---|---|
+| `src/features/integracao_mobilidade/components/aba_notificacoes.tsx` | Adicionar sub-tabs internas com o conteúdo atual + `AbaMensagens` |
+
+Nenhum arquivo novo. Apenas reorganização visual com sub-abas dentro de Notificações.
 
