@@ -41,7 +41,16 @@ export default function ApostaAbertaCard({ bet, duel }: Props) {
     : cleanDriverName(duel.challenged?.public_nickname || (duel.challenged as any)?.customers?.name);
 
   const handleAccept = async () => {
-    await acceptBet.mutateAsync({ betId: bet.id, customerId: driver.id, duelId: bet.duel_id });
+    const driverName = cleanDriverName(driver.name);
+    await acceptBet.mutateAsync({
+      betId: bet.id,
+      customerId: driver.id,
+      duelId: bet.duel_id,
+      brandId: driver.brand_id,
+      branchId: driver.branch_id,
+      nomeAceitante: driverName,
+      bettorACustomerId: bet.bettor_a_customer_id,
+    });
     refreshDriver();
     setShowConfirmAccept(false);
   };
