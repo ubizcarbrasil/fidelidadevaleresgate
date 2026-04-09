@@ -100,30 +100,13 @@ export default function BrandBranchesPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center shrink-0">
                     <Switch
                       checked={branch.is_active}
                       onCheckedChange={(checked) =>
                         toggleMutation.mutate({ id: branch.id, is_active: checked })
                       }
                     />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      title="Resetar pontos"
-                      onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => navigate(`/brand-branches/${branch.id}`)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap pl-12">
@@ -150,6 +133,26 @@ export default function BrandBranchesPage() {
                   <Badge variant={branch.is_active ? "default" : "secondary"} className="text-[10px]">
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>
+                </div>
+                <div className="flex items-center gap-2 pl-12">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Resetar pontos
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => navigate(`/brand-branches/${branch.id}`)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar
+                  </Button>
                 </div>
               </CardContent>
             </Card>
