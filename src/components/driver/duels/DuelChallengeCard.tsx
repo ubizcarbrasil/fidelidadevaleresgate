@@ -135,7 +135,7 @@ export default function DuelChallengeCard({ duel }: Props) {
               size="sm"
             >
               <Flag className="h-4 w-4" />
-              {hasBet ? "Recusar" : "Arregar 😅"}
+              Arregar 🐔
             </Button>
           </div>
         </div>
