@@ -300,6 +300,8 @@ export function useCreateDuel() {
         customerIds: [result.challengedCustomerId],
         duelId,
         nomeOponente: driverName,
+        brandId: driver!.brand_id,
+        branchId: driver!.branch_id,
       });
 
       registrarEventoFeed({
@@ -388,6 +390,8 @@ export function useCreateDuelsBatch() {
             customerIds: [r.customerId],
             duelId: r.duelId,
             nomeOponente: driverName,
+            brandId: driver!.brand_id,
+            branchId: driver!.branch_id,
           });
         }
       }
@@ -434,6 +438,8 @@ export function useRespondDuel() {
             customerIds: [vars.challengerCustomerId],
             duelId: vars.duelId,
             nomeOponente: driverName,
+            brandId: driver!.brand_id,
+            branchId: driver!.branch_id,
           });
         }
         registrarEventoFeed({
@@ -458,6 +464,8 @@ export function useRespondDuel() {
             customerIds: [vars.challengerCustomerId],
             duelId: vars.duelId,
             nomeOponente: driverName,
+            brandId: driver!.brand_id,
+            branchId: driver!.branch_id,
           });
         }
         registrarEventoFeed({
@@ -502,6 +510,8 @@ export function useCounterPropose() {
           customerIds: [vars.opponentCustomerId],
           duelId: vars.duelId,
           nomeOponente: cleanDriverName(driver?.name),
+          brandId: driver!.brand_id,
+          branchId: driver!.branch_id,
         });
       }
     },
@@ -537,6 +547,8 @@ export function useRespondCounterProposal() {
           customerIds: [vars.opponentCustomerId],
           duelId: vars.duelId,
           nomeOponente: cleanDriverName(driver?.name),
+          brandId: driver!.brand_id,
+          branchId: driver!.branch_id,
         });
       }
     },
