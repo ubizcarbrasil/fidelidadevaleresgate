@@ -6,6 +6,7 @@ import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
+import { useBranchModules } from "@/hooks/useBranchModules";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,

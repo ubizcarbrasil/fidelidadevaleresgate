@@ -445,6 +445,85 @@ export default function BrandBranchForm() {
         </CardContent>
       </Card>
 
+      {/* Módulos de Negócio */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Módulos de Negócio
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Ative ou desative funcionalidades disponíveis para esta cidade. Módulos desativados ficam ocultos no painel do franqueado.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Swords className="h-4 w-4 text-orange-500" />
+                Módulo Duelo
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Competições entre motoristas com apostas de pontos.
+              </p>
+            </div>
+            <Switch checked={enableDuelsModule} onCheckedChange={setEnableDuelsModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-pink-500" />
+                Módulo Achadinho
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Vitrine de ofertas afiliadas para clientes e motoristas.
+              </p>
+            </div>
+            <Switch checked={enableAchadinhosModule} onCheckedChange={setEnableAchadinhosModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-blue-500" />
+                Módulo Mercado Livre
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Marketplace de produtos para resgate de motoristas.
+              </p>
+            </div>
+            <Switch checked={enableMarketplaceModule} onCheckedChange={setEnableMarketplaceModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-yellow-500" />
+                Módulo Corra e Ganhe Pontos
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Motoristas acumulam pontos a cada corrida finalizada.
+              </p>
+            </div>
+            <Switch checked={enableRaceEarnModule} onCheckedChange={setEnableRaceEarnModule} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-green-500" />
+                Módulo Cliente Pontua
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Programa de fidelidade onde clientes acumulam pontos em lojas parceiras.
+              </p>
+            </div>
+            <Switch checked={enableCustomerScoringModule} onCheckedChange={setEnableCustomerScoringModule} />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Modelo de Negócio */}
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
