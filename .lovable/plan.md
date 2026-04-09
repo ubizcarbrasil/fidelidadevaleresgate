@@ -1,52 +1,54 @@
 
 
-# Pacotes de Pontos — Modelo de Comercialização
+# Módulos de Negócio por Cidade
 
 ## Resumo
-Criar um sistema onde o Empreendedor (BRAND) define pacotes de pontos com preço fixo (ex: "5.000 pts por R$ 50,00"), e o Franqueado (BRANCH) pode comprar esses pacotes diretamente pelo seu painel, creditando pontos na carteira da cidade.
+Adicionar 5 toggles de módulos de negócio no formulário de criação/edição de cidade (`BrandBranchForm`), armazenados no `branch_settings_json`. O sidebar do franqueado e o dashboard passam a respeitar esses toggles, ocultando funcionalidades desativadas.
 
-## Estrutura
+## Módulos
 
-### 1. Nova tabela: `points_packages`
-Armazena os pacotes criados pelo empreendedor:
-- `id`, `brand_id`, `name` (ex: "Pacote Básico"), `points_amount` (quantidade de pontos), `price_cents` (preço em centavos R$), `description`, `is_active`, `sort_order`, `created_at`, `updated_at`
+| Chave no `branch_settings_json` | Nome no UI | Controla |
+|---|---|---|
+| `enable_duels_module` | Módulo Duelo | Grupo "Gamificação" no sidebar + Arena no dashboard |
+| `enable_achadinhos_module` | Módulo Achadinho | Grupo "Achadinhos" no sidebar |
+| `enable_marketplace_module` | Módulo Mercado Livre | Vitrine do marketplace do motorista |
+| `enable_race_earn_module` | Módulo Corra e Ganhe Pontos | Grupo "Motoristas & Resgate" no sidebar |
+| `enable_customer_scoring_module` | Módulo Cliente Pontua | Grupos "Gestão Comercial", "Programa de Fidelidade", "Aprovações" no sidebar |
 
-### 2. Nova tabela: `points_package_orders`
-Registra cada compra de pacote pelo franqueado:
-- `id`, `package_id`, `branch_id`, `brand_id`, `points_amount`, `price_cents`, `status` (PENDING, CONFIRMED, CANCELLED), `purchased_by` (user_id), `confirmed_by` (user_id, nullable), `created_at`, `confirmed_at`
+## Alterações
 
-### 3. Página do Empreendedor: Gerenciar Pacotes (`/points-packages`)
-- Listagem de pacotes criados (cards com nome, pontos, preço, status ativo/inativo)
-- Botão para criar novo pacote (dialog com nome, pontos, preço, descrição)
-- Edição e ativação/desativação inline
-- Histórico de compras realizadas pelos franqueados (tabela com status, cidade, data)
-- Ação de confirmar/cancelar pedidos pendentes (ao confirmar, credita pontos na carteira da cidade)
+### 1. `BrandBranchForm.tsx` — Novo card "Módulos de Negócio"
+- Adicionar 5 estados booleanos (todos `true` por padrão)
+- Carregar valores existentes do `branch_settings_json` no `useEffect`
+- Salvar no merge do `branchSettingsJson` no `handleSave`
+- Renderizar card com 5 switches entre o card de Gamificação e o de Modelo de Pontuação, cada um com nome, descrição e ícone
 
-### 4. Página do Franqueado: Loja de Pacotes (`/points-packages-store`)
-- Vitrine de pacotes disponíveis (cards visuais com nome, pontos, preço)
-- Botão "Comprar" que cria um pedido com status PENDING
-- Histórico dos meus pedidos (status do pedido)
+### 2. Hook `useBranchModules.ts` (novo)
+- Recebe `branchId` opcional (ou usa o do `useBrandGuard`)
+- Consulta `branches.branch_settings_json` para o branch
+- Retorna `{ isBranchModuleEnabled(key): boolean, isLoading }`
+- Módulos são `true` por padrão (opt-out) para retrocompatibilidade
 
-### 5. Navegação
-- **BrandSidebar**: Novo item "Pacotes de Pontos" no grupo "Cidades" com ícone `Package`
-- **BranchSidebar**: Novo item "Comprar Pontos" no grupo "Motoristas & Resgate" com ícone `ShoppingCart`
+### 3. `BranchSidebar.tsx` — Filtrar grupos por módulos da cidade
+- Importar `useBranchModules`
+- Adicionar campo `branchModuleKey` nos grupos relevantes:
+  - "Gamificação" → `enable_duels_module`
+  - "Achadinhos" → `enable_achadinhos_module`
+  - "Motoristas & Resgate" → `enable_race_earn_module`
+  - "Gestão Comercial", "Aprovações", "Programa de Fidelidade" → `enable_customer_scoring_module`
+- Filtrar grupos onde `branchModuleKey` está desativado
 
-### 6. Fluxo de confirmação
-Quando o empreendedor confirma um pedido:
-- Atualiza `points_package_orders.status` para CONFIRMED
-- Credita os pontos na `branch_points_wallet` (balance + total_loaded)
-- Insere transação em `branch_wallet_transactions` (tipo LOAD, descrição referenciando o pacote)
-
-### 7. RLS
-- Brand admins podem CRUD nos pacotes da sua marca
-- Branch admins podem SELECT pacotes ativos da marca e INSERT/SELECT seus próprios pedidos
-- Confirmação de pedidos restrita ao brand admin
+### 4. `BranchDashboardSection.tsx` — Respeitar módulos
+- Importar `useBranchModules`
+- Condicionar `BranchArenaDuelos` a `enable_duels_module`
+- Condicionar KPIs de motorista a `enable_race_earn_module`
 
 ### Arquivos criados/alterados
-- **Migration SQL**: 2 tabelas + RLS policies
-- `src/pages/PacotesPontosPage.tsx` — gestão de pacotes (empreendedor)
-- `src/pages/LojaPacotesPontosPage.tsx` — vitrine + compra (franqueado)
-- `src/components/consoles/BrandSidebar.tsx` — novo item de menu
-- `src/components/consoles/BranchSidebar.tsx` — novo item de menu
-- `src/App.tsx` — novas rotas
+- `src/hooks/useBranchModules.ts` — **novo** hook
+- `src/pages/BrandBranchForm.tsx` — novo card de módulos + persistência
+- `src/components/consoles/BranchSidebar.tsx` — filtrar por módulos da cidade
+- `src/components/dashboard/BranchDashboardSection.tsx` — condicionar componentes
+
+### Retrocompatibilidade
+Todos os módulos são `true` por padrão quando não configurados no `branch_settings_json`. Cidades existentes continuam funcionando normalmente sem necessidade de migração.
 
