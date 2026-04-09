@@ -64,6 +64,7 @@ interface Props {
   theme: any;
   initialCategoryId?: string | null;
   initialDealId?: string | null;
+  isAdminSession?: boolean;
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
@@ -137,7 +138,7 @@ export const formatPrice = (val: number | null | undefined) => {
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId }: Props) {
+export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);

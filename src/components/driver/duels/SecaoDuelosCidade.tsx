@@ -46,7 +46,7 @@ export default function SecaoDuelosCidade({ branchId, fontHeading, onVerTodos }:
         )}
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-5 px-5">
         {aoVivo.map((d) => (
           <CardDueloPublico key={d.id} duelo={d} onOpenArena={setArenaDuel} contextoSecao="ao_vivo" />
         ))}
