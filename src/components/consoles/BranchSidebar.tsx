@@ -274,3 +274,5 @@ export function BranchSidebar() {
     </Sidebar>
   );
 }
+
+export default React.memo(BranchSidebar);

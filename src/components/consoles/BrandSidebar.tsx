@@ -385,3 +385,5 @@ export function BrandSidebar() {
     </Sidebar>
   );
 }
+
+export default React.memo(BrandSidebar);
