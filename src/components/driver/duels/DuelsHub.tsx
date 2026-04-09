@@ -57,12 +57,20 @@ export default function DuelsHub({ onBack, configDuelos }: Props) {
 
   const duelosCidadeAoVivo = useMemo(() => {
     if (!duelosCidade) return [];
-    return duelosCidade.filter((d) => d.status === "live" && !meusIds.has(d.id));
+    const agora = Date.now();
+    return duelosCidade.filter((d) => {
+      if (meusIds.has(d.id)) return false;
+      return d.status === "live" || (d.status === "accepted" && new Date(d.start_at).getTime() <= agora);
+    });
   }, [duelosCidade, meusIds]);
 
   const duelosCidadeAgendados = useMemo(() => {
     if (!duelosCidade) return [];
-    return duelosCidade.filter((d) => d.status === "accepted" && !meusIds.has(d.id));
+    const agora = Date.now();
+    return duelosCidade.filter((d) => {
+      if (meusIds.has(d.id)) return false;
+      return d.status === "accepted" && new Date(d.start_at).getTime() > agora;
+    });
   }, [duelosCidade, meusIds]);
 
   // Feed de atividade: todos os duelos da cidade (últimos 30 dias)
