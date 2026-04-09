@@ -1638,4 +1638,34 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
       },
     ],
   },
+  {
+    categoria: "Apostas em Duelos — Franqueado",
+    icone: "Swords",
+    scoringFilter: "DRIVER" as const,
+    manuais: [
+      {
+        id: "gamif-apostas-franqueado",
+        titulo: "Apostas Laterais (Side Bets)",
+        descricao: "Acompanhe as apostas P2P realizadas pelos motoristas nos duelos da sua cidade. Espectadores apostam pontos entre si palpitando no vencedor, com contrapropostas e escrow automático.",
+        comoAtivar: "Acesse 'Gamificação' > aba 'Apostas'. Disponível quando os duelos estão ativos na cidade.",
+        passos: [
+          "Acesse a aba 'Apostas' dentro da página de Gamificação.",
+          "Visualize as apostas ativas, pendentes e encerradas nos duelos da sua cidade.",
+          "Cada aposta exibe: apostadores (apelidos), pontos apostados, palpite e status.",
+          "Apostas podem ter contrapropostas — o oponente negocia o valor antes de aceitar.",
+          "Ao aceitar, os pontos são reservados em escrow automaticamente.",
+          "Resultado: 90% do prêmio vai ao apostador vencedor, 10% de bônus ao motorista que venceu o duelo.",
+          "Em empate, todos os pontos são devolvidos integralmente.",
+          "Consulte o ranking de apostadores na aba 'Ranking' para ver os mais rentáveis."
+        ],
+        dicas: [
+          "Apostas aumentam significativamente o engajamento nos duelos.",
+          "Monitore apostas para garantir competições saudáveis.",
+          "O bônus de 10% para o duelista vencedor motiva alta performance.",
+          "Notificações são enviadas automaticamente nos eventos de aposta."
+        ],
+        rota: "/gamificacao-admin",
+      },
+    ],
+  },
 ];

@@ -591,15 +591,35 @@ const helpContent: Record<string, HelpEntry> = {
      NOTIFICAÇÕES
      ═══════════════════════════════════════════════ */
    "/send-notification": {
-    pageTitle: "Enviar Notificação",
+    pageTitle: "Comunicação — Notificações e Mensagens",
     sections: [
       {
-        title: "Enviar aviso para clientes",
-        summary: "Envie mensagens diretamente para os celulares dos clientes.",
+        title: "Notificação Push para clientes",
+        summary: "Envie mensagens diretamente para os celulares dos clientes via push notification.",
         steps: [
+          "Selecione a aba 'Notificação Push'.",
           "Defina o título e o corpo da mensagem.",
-          "Selecione o público-alvo.",
+          "Selecione o público-alvo: todos ou filtrado por cidade.",
           "Clique em 'Enviar'.",
+        ],
+        tips: [
+          "Mensagens curtas e diretas geram melhor engajamento.",
+          "Evite enviar muitas notificações no mesmo dia.",
+        ],
+      },
+      {
+        title: "Mensagens via Machine (Motoristas)",
+        summary: "Envie mensagens para motoristas via TaxiMachine com templates dinâmicos e fluxos automáticos.",
+        steps: [
+          "Selecione a aba 'Mensagens via Machine'.",
+          "Na sub-aba 'Templates', crie modelos com variáveis: {{nome}}, {{pontos}}, {{saldo}}, {{adversario}}, etc.",
+          "Na sub-aba 'Fluxos', configure disparos automáticos para eventos de gamificação e apostas.",
+          "Na sub-aba 'Envio Manual', envie mensagens em massa ou individual.",
+          "Na sub-aba 'Relatório', acompanhe métricas de entrega e logs.",
+        ],
+        tips: [
+          "Teste templates com envio individual antes de disparar em massa.",
+          "Configure fluxos para eventos de apostas (SIDE_BET_CREATED, SIDE_BET_ACCEPTED).",
         ],
       },
     ],
@@ -896,10 +916,26 @@ const helpContent: Record<string, HelpEntry> = {
         ],
       },
       {
+        title: "Apostas Laterais (Side Bets)",
+        summary: "Monitore apostas P2P em duelos: criação, aceitação, contrapropostas, escrow e resultados.",
+        steps: [
+          "Acesse a aba 'Apostas' para visualizar todas as apostas ativas e encerradas.",
+          "Cada aposta mostra apostadores, pontos, palpite, status e resultado.",
+          "Apostas suportam contrapropostas — o oponente pode negociar o valor.",
+          "Pontos são reservados em escrow ao aceitar: 90% para o apostador vencedor, 10% de bônus para o duelista vencedor.",
+          "Em empate, pontos são devolvidos integralmente.",
+        ],
+        tips: [
+          "Monitore apostas para garantir integridade das competições.",
+          "Configure templates de mensagem Machine para eventos de aposta.",
+        ],
+      },
+      {
         title: "Ranking e Cinturão",
         summary: "Acompanhe o ranking mensal dos motoristas e o campeão do cinturão da cidade.",
         steps: [
           "Na aba 'Ranking', veja a classificação dos motoristas por corridas ou pontos.",
+          "O ranking também exibe a rentabilidade dos apostadores.",
           "Na aba 'Cinturão', visualize o campeão atual e seu recorde.",
           "O cinturão é atualizado automaticamente quando um novo recordista surge.",
         ],
@@ -924,6 +960,43 @@ const helpContent: Record<string, HelpEntry> = {
           "Motoristas competem usando apelidos — nomes reais não são exibidos.",
           "Apenas totais agregados de corridas são usados, sem detalhes de rotas ou valores.",
           "A API retorna somente contagens, sem expor dados individuais de viagens.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     MINHAS CIDADES (BRAND-BRANCHES)
+     ═══════════════════════════════════════════════ */
+  "/brand-branches": {
+    pageTitle: "Minhas Cidades",
+    sections: [
+      {
+        title: "Gerenciar cidades da marca",
+        summary: "Visualize, edite e gerencie as cidades onde sua marca opera, com ações rápidas de reset e edição.",
+        steps: [
+          "Acesse 'Minhas Cidades' no menu lateral.",
+          "Visualize todas as cidades com status ativo/inativo.",
+          "Use o botão 'Editar' para abrir a tela de edição (nome, slug, geolocalização, scoring model).",
+          "Use o botão 'Resetar pontos' para abrir o diálogo de reset granular.",
+        ],
+        tips: [
+          "Os botões 'Resetar pontos' e 'Editar' estão visíveis diretamente na listagem para acesso rápido.",
+        ],
+      },
+      {
+        title: "Resetar pontos da cidade",
+        summary: "Zere saldos de pontos de forma granular: todos, motoristas, clientes ou usuário específico.",
+        steps: [
+          "Clique em 'Resetar pontos' na cidade desejada.",
+          "Escolha o escopo: todos os usuários, apenas motoristas, apenas clientes ou um usuário específico.",
+          "Confirme a operação — os pontos serão zerados e registrados como BRANCH_RESET no extrato.",
+          "Consulte o histórico de resets no mesmo diálogo (data, escopo, total zerado).",
+        ],
+        tips: [
+          "O reset é irreversível — confirme com cuidado.",
+          "O reset também está disponível dentro da tela de edição da cidade.",
+          "Use o reset individual para corrigir saldos sem afetar os demais.",
         ],
       },
     ],
