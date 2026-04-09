@@ -1,41 +1,49 @@
 
 
-# Plano: Conectar evento DUEL_CHALLENGE_RECEIVED ao sistema de fluxos de mensagens
+# Plano: Notificações automáticas para apostas laterais via TaxiMachine
 
 ## O que será feito
 
-Quando um motorista for desafiado para um duelo, além da notificação in-app existente, o sistema disparará automaticamente a edge function `send-driver-message` para enviar a mensagem personalizada via TaxiMachine usando o template "Desafio de Duelo" e o fluxo configurado.
+Quando um motorista criar ou aceitar uma aposta lateral em um duelo, o sistema enviará automaticamente notificações in-app e via TaxiMachine para os motoristas envolvidos.
 
-## Duas etapas
+## Mudanças
 
-### 1. Modificar `servico_notificacoes_duelo.ts` — adicionar disparo do fluxo de mensagem
+### 1. Adicionar tipos de notificação de aposta no serviço de notificações
 
-Após enviar a notificação in-app via `send-push-notification`, disparar também `send-driver-message` com o `event_type` correspondente. Isso permite que o sistema de fluxos resolva automaticamente o template e a audiência configurados.
+**Arquivo**: `src/components/driver/duels/servico_notificacoes_duelo.ts`
 
-A função `enviarNotificacaoDuelo` receberá dois novos parâmetros opcionais: `brandId` e `branchId`. Quando presentes e o tipo do evento tiver um mapeamento para o sistema de fluxos, será feita uma chamada adicional a `send-driver-message` com:
-- `brand_id`, `branch_id`
-- `event_type` mapeado (ex: `DUEL_CHALLENGE_RECEIVED`)
-- `customer_ids` (os mesmos motoristas)
-- `context_vars` com `adversario` (nomeOponente)
+- Adicionar dois novos tipos ao `TipoNotificacaoDuelo`: `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED`
+- Adicionar mapeamento no `MAPEAMENTO` com títulos/corpos em português:
+  - `SIDE_BET_CREATED`: "Nova aposta no seu duelo! 🎯" / "Alguém apostou {pontos} pts em {nome}"
+  - `SIDE_BET_ACCEPTED`: "Aposta aceita! 💰" / "Sua aposta foi aceita. Pontos reservados!"
+- Adicionar `reference_type` correspondentes: `side_bet_created`, `side_bet_accepted`
+- Adicionar mapeamento no `MAPEAMENTO_FLUXO` para disparo via TaxiMachine: `SIDE_BET_CREATED` e `SIDE_BET_ACCEPTED`
 
-Mapeamento de tipos suportados inicialmente:
-- `DUEL_CHALLENGE_RECEIVED` → evento `DUEL_CHALLENGE_RECEIVED`
-- `DUEL_CHALLENGE_ACCEPTED` → `DUEL_ACCEPTED`
-- `DUEL_CHALLENGE_DECLINED` → `DUEL_DECLINED`
-- `DUEL_VICTORY` → `DUEL_VICTORY`
-- `DUEL_FINISHED` → `DUEL_FINISHED`
-- `BELT_NEW_CHAMPION` → `BELT_NEW_CHAMPION`
+### 2. Adicionar mapeamento na edge function send-push-notification
 
-### 2. Atualizar `hook_duelos.ts` — passar `brandId` e `branchId` nas chamadas
+**Arquivo**: `supabase/functions/send-push-notification/index.ts`
 
-As chamadas a `enviarNotificacaoDuelo` no hook de duelos já têm acesso ao `brandId` e `branchId` do contexto. Adicionar esses parâmetros nas chamadas existentes para ativar o disparo automático do fluxo.
+- Adicionar ao `REFERENCE_TO_EVENT_TYPE`:
+  - `side_bet_created` → `SIDE_BET_CREATED`
+  - `side_bet_accepted` → `SIDE_BET_ACCEPTED`
 
-## Arquivos modificados
+### 3. Disparar notificações nos hooks de apostas
 
-1. `src/components/driver/duels/servico_notificacoes_duelo.ts` — adicionar lógica de disparo do fluxo
-2. `src/components/driver/duels/hook_duelos.ts` — passar brandId/branchId nas chamadas de notificação
+**Arquivo**: `src/components/driver/duels/hook_apostas_duelo.ts`
+
+- Modificar `useCreateSideBet` e `useAcceptSideBet` para receber `brandId`, `branchId` e `nomeApostador` nos parâmetros da mutation
+- No `onSuccess` de `useCreateSideBet`: chamar `enviarNotificacaoDuelo` com tipo `SIDE_BET_CREATED`, notificando os participantes do duelo (challenger e challenged customer IDs)
+- No `onSuccess` de `useAcceptSideBet`: chamar `enviarNotificacaoDuelo` com tipo `SIDE_BET_ACCEPTED`, notificando o criador da aposta (bettor_a)
+- Adicionar parâmetros extras: `challengerCustomerId`, `challengedCustomerId`, `bettorACustomerId` para saber quem notificar
+
+### 4. Atualizar componentes para passar os novos parâmetros
+
+**Arquivos**: `CriarApostaSheet.tsx` e `ApostaAbertaCard.tsx`
+
+- Passar `brandId`, `branchId` e nomes dos envolvidos nas chamadas de `createBet.mutateAsync` e `acceptBet.mutateAsync`
+- Obter `brand_id` e `branch_id` do contexto do driver session
 
 ## Resultado
 
-Com o fluxo ativo no banco (event_type=DUEL_CHALLENGE_RECEIVED, template=Desafio de Duelo), quando um motorista criar um duelo, o desafiado receberá automaticamente a mensagem personalizada via TaxiMachine com as variáveis `{{nome}}` e `{{adversario}}` substituídas.
+Ao criar uma aposta lateral, os dois duelistas serão notificados de que alguém apostou no duelo deles. Ao aceitar uma aposta, o criador original será notificado. Ambas as notificações serão enviadas in-app e via TaxiMachine (se houver fluxo configurado).
 
