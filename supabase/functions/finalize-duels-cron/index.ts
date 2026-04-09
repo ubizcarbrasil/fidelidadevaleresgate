@@ -29,10 +29,8 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized" }, 401);
   }
 
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    serviceRoleKey,
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const sb = createClient(supabaseUrl, serviceRoleKey);
 
   try {
     // 0. Transition accepted duels to live when start_at has passed
@@ -136,8 +134,8 @@ Deno.serve(async (req) => {
           notificationsSent += 2;
         }
 
-        // Also send via TaxiMachine if available
-        await sendTaxiMachineNotifications(sb, duel, result, challenger, challenged);
+        // 3.5 Dispatch message flows via send-driver-message
+        await dispatchDuelMessageFlow(supabaseUrl, serviceRoleKey, duel, result, challenger, challenged);
 
       } catch (err) {
         logger.error("Exception finalizing duel", { duel_id: duel.id, error: String(err) });
@@ -165,7 +163,7 @@ Deno.serve(async (req) => {
           beltsUpdated++;
           logger.info("City belt changed", { branch_id: branchId, new_champion: beltResult.champion_customer_id });
 
-          // Notify the new champion
+          // Notify the new champion via in-app
           const prizeText = beltResult.prize_awarded && beltResult.prize_awarded > 0
             ? ` Você ganhou ${beltResult.prize_awarded} pts de prêmio!`
             : "";
@@ -178,49 +176,17 @@ Deno.serve(async (req) => {
             branchId,
           );
 
-          // Also notify via TaxiMachine if possible
-          try {
-            const { data: champCustomer } = await sb
-              .from("customers")
-              .select("external_driver_id, name")
-              .eq("id", beltResult.champion_customer_id)
-              .maybeSingle();
-
-            if (champCustomer?.external_driver_id) {
-              const { data: integration } = await sb
-                .from("machine_integrations")
-                .select("api_key, basic_auth_user, basic_auth_password, driver_message_enabled")
-                .eq("brand_id", brandId)
-                .eq("driver_message_enabled", true)
-                .maybeSingle();
-
-              if (integration?.api_key) {
-                const basicToken = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
-                const driverId = parseInt(champCustomer.external_driver_id, 10);
-                if (!isNaN(driverId)) {
-                  const msg = `👑🏆 Você conquistou o CINTURÃO DA CIDADE com ${beltResult.record_value ?? 0} corridas no mês!${prizeText} Parabéns, campeão!`;
-                  const controller = new AbortController();
-                  const timeout = setTimeout(() => controller.abort(), 5000);
-                  try {
-                    await fetch("https://api.taximachine.com.br/api/integracao/enviarMensagem", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        "api-key": integration.api_key,
-                        "Authorization": `Basic ${basicToken}`,
-                      },
-                      body: JSON.stringify({ tipo_chat: "P", destinatario_id: driverId, mensagem: msg }),
-                      signal: controller.signal,
-                    });
-                  } catch (_) { /* ignore */ } finally {
-                    clearTimeout(timeout);
-                  }
-                }
-              }
-            }
-          } catch (tmErr) {
-            logger.error("Failed to send TaxiMachine belt notification", { error: String(tmErr) });
-          }
+          // Dispatch belt message flow via send-driver-message
+          await dispatchMessageFlow(supabaseUrl, serviceRoleKey, {
+            brand_id: brandId,
+            branch_id: branchId,
+            event_type: "BELT_NEW_CHAMPION",
+            customer_ids: [beltResult.champion_customer_id],
+            context_vars: {
+              corridas: String(beltResult.record_value ?? 0),
+              premio: String(beltResult.prize_awarded ?? 0),
+            },
+          });
 
           notificationsSent++;
         } else {
@@ -269,74 +235,91 @@ async function sendNotification(
   }
 }
 
-async function sendTaxiMachineNotifications(
-  sb: ReturnType<typeof createClient>,
+/**
+ * Calls the send-driver-message edge function with the given payload.
+ * Failures are logged silently — never blocks the cron.
+ */
+async function dispatchMessageFlow(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  payload: Record<string, unknown>,
+) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const resp = await fetch(`${supabaseUrl}/functions/v1/send-driver-message`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+    const result = await resp.json();
+    logger.info("Message flow dispatched", { event_type: payload.event_type, result });
+  } catch (err) {
+    logger.error("Failed to dispatch message flow", { event_type: payload.event_type, error: String(err) });
+  }
+}
+
+/**
+ * Dispatches duel result message flows for winner/loser/draw.
+ */
+async function dispatchDuelMessageFlow(
+  supabaseUrl: string,
+  serviceRoleKey: string,
   duel: any,
   result: { winner_id?: string | null; challenger_rides?: number; challenged_rides?: number },
   challenger: any,
   challenged: any,
 ) {
-  try {
-    // Fetch TaxiMachine integration for this brand
-    const { data: integration } = await sb
-      .from("machine_integrations")
-      .select("api_key, basic_auth_user, basic_auth_password, driver_message_enabled")
-      .eq("brand_id", duel.brand_id)
-      .eq("driver_message_enabled", true)
-      .maybeSingle();
+  const challengerName = cleanName(challenger.public_nickname || challenger.customers?.name);
+  const challengedName = cleanName(challenged.public_nickname || challenged.customers?.name);
 
-    if (!integration?.api_key) return;
+  if (result.winner_id === null) {
+    // Draw — send DUEL_FINISHED to both
+    await dispatchMessageFlow(supabaseUrl, serviceRoleKey, {
+      brand_id: duel.brand_id,
+      branch_id: duel.branch_id,
+      event_type: "DUEL_FINISHED",
+      customer_ids: [challenger.customer_id, challenged.customer_id],
+      context_vars: {
+        corridas: String((result.challenger_rides ?? 0) + (result.challenged_rides ?? 0)),
+      },
+    });
+  } else {
+    const isChallenger = result.winner_id === duel.challenger_id;
+    const winnerId = isChallenger ? challenger.customer_id : challenged.customer_id;
+    const loserId = isChallenger ? challenged.customer_id : challenger.customer_id;
+    const loserName = isChallenger ? challengedName : challengerName;
+    const winnerName = isChallenger ? challengerName : challengedName;
 
-    const challengerDriverId = challenger.customers?.external_driver_id;
-    const challengedDriverId = challenged.customers?.external_driver_id;
+    // Winner — DUEL_VICTORY flow
+    await dispatchMessageFlow(supabaseUrl, serviceRoleKey, {
+      brand_id: duel.brand_id,
+      branch_id: duel.branch_id,
+      event_type: "DUEL_VICTORY",
+      customer_ids: [winnerId],
+      context_vars: {
+        adversario: loserName,
+        corridas: String(isChallenger ? result.challenger_rides : result.challenged_rides),
+      },
+    });
 
-    const challengerName = cleanName(challenger.public_nickname || challenger.customers?.name);
-    const challengedName = cleanName(challenged.public_nickname || challenged.customers?.name);
-
-    const basicToken = btoa(`${integration.basic_auth_user}:${integration.basic_auth_password}`);
-
-    const sendMsg = async (externalId: string, msg: string) => {
-      const id = parseInt(externalId, 10);
-      if (isNaN(id)) return;
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-
-      try {
-        await fetch("https://api.taximachine.com.br/api/integracao/enviarMensagem", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "api-key": integration.api_key,
-            "Authorization": `Basic ${basicToken}`,
-          },
-          body: JSON.stringify({ tipo_chat: "P", destinatario_id: id, mensagem: msg }),
-          signal: controller.signal,
-        });
-      } catch (_) { /* ignore */ } finally {
-        clearTimeout(timeout);
-      }
-    };
-
-    if (result.winner_id === null) {
-      // Draw
-      if (challengerDriverId) await sendMsg(challengerDriverId, `🤝 Empate no duelo contra ${challengedName}! ${result.challenger_rides ?? 0} x ${result.challenged_rides ?? 0} corridas. Pontos devolvidos. Que tal uma revanche?`);
-      if (challengedDriverId) await sendMsg(challengedDriverId, `🤝 Empate no duelo contra ${challengerName}! ${result.challenged_rides ?? 0} x ${result.challenger_rides ?? 0} corridas. Pontos devolvidos. Que tal uma revanche?`);
-    } else {
-      const isChallenger = result.winner_id === duel.challenger_id;
-      const winnerName = isChallenger ? challengerName : challengedName;
-      const loserName = isChallenger ? challengedName : challengerName;
-      const winnerDriverId = isChallenger ? challengerDriverId : challengedDriverId;
-      const loserDriverId = isChallenger ? challengedDriverId : challengerDriverId;
-      const winnerRides = isChallenger ? result.challenger_rides : result.challenged_rides;
-      const loserRides = isChallenger ? result.challenged_rides : result.challenger_rides;
-
-      if (winnerDriverId) await sendMsg(winnerDriverId, `🏆 Você venceu o duelo contra ${loserName}! ${winnerRides ?? 0} x ${loserRides ?? 0} corridas. Parabéns!`);
-      if (loserDriverId) await sendMsg(loserDriverId, `😤 ${winnerName} venceu o duelo: ${winnerRides ?? 0} x ${loserRides ?? 0} corridas. A próxima é sua! 🥊`);
-    }
-
-    logger.info("TaxiMachine duel notifications sent", { duel_id: duel.id });
-  } catch (err) {
-    logger.error("Failed to send TaxiMachine notifications", { duel_id: duel.id, error: String(err) });
+    // Loser — DUEL_FINISHED flow
+    await dispatchMessageFlow(supabaseUrl, serviceRoleKey, {
+      brand_id: duel.brand_id,
+      branch_id: duel.branch_id,
+      event_type: "DUEL_FINISHED",
+      customer_ids: [loserId],
+      context_vars: {
+        adversario: winnerName,
+        corridas: String(isChallenger ? result.challenged_rides : result.challenger_rides),
+      },
+    });
   }
 }
