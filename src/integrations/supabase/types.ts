@@ -116,6 +116,13 @@ export type Database = {
             referencedRelation: "affiliate_deals"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "affiliate_clicks_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "public_affiliate_deals_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       affiliate_deal_categories: {
@@ -4582,6 +4589,13 @@ export type Database = {
             referencedRelation: "affiliate_deals"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "offer_reports_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "public_affiliate_deals_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       offer_sync_groups: {
@@ -5524,6 +5538,13 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "affiliate_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_redemption_orders_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "public_affiliate_deals_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -7473,6 +7494,125 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_affiliate_deals_safe: {
+        Row: {
+          affiliate_url: string | null
+          badge_label: string | null
+          branch_id: string | null
+          brand_id: string | null
+          category: string | null
+          category_id: string | null
+          click_count: number | null
+          created_at: string | null
+          current_status: string | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_flash_promo: boolean | null
+          is_redeemable: boolean | null
+          marketplace: string | null
+          order_index: number | null
+          origin: string | null
+          original_price: number | null
+          price: number | null
+          redeem_points_cost: number | null
+          store_logo_url: string | null
+          store_name: string | null
+          title: string | null
+          updated_at: string | null
+          visible_driver: boolean | null
+        }
+        Insert: {
+          affiliate_url?: string | null
+          badge_label?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
+          category?: string | null
+          category_id?: string | null
+          click_count?: number | null
+          created_at?: string | null
+          current_status?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_flash_promo?: boolean | null
+          is_redeemable?: boolean | null
+          marketplace?: string | null
+          order_index?: number | null
+          origin?: string | null
+          original_price?: number | null
+          price?: number | null
+          redeem_points_cost?: number | null
+          store_logo_url?: string | null
+          store_name?: string | null
+          title?: string | null
+          updated_at?: string | null
+          visible_driver?: boolean | null
+        }
+        Update: {
+          affiliate_url?: string | null
+          badge_label?: string | null
+          branch_id?: string | null
+          brand_id?: string | null
+          category?: string | null
+          category_id?: string | null
+          click_count?: number | null
+          created_at?: string | null
+          current_status?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_flash_promo?: boolean | null
+          is_redeemable?: boolean | null
+          marketplace?: string | null
+          order_index?: number | null
+          origin?: string | null
+          original_price?: number | null
+          price?: number | null
+          redeem_points_cost?: number | null
+          store_logo_url?: string | null
+          store_name?: string | null
+          title?: string | null
+          updated_at?: string | null
+          visible_driver?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_deals_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_deals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_deals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_deals_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_deal_categories"
             referencedColumns: ["id"]
           },
         ]
