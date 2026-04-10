@@ -134,10 +134,11 @@ export default function DriverPanelPage() {
       try {
         const canonicalOrigin = await resolveCanonicalOrigin(brandId, settings);
         const currentOrigin = window.location.origin;
-        // Only redirect if canonical is different AND we're not in iframe/preview
+        // Only redirect if canonical is different AND we're not in iframe/preview/dev
         const isInIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
-        const isPreview = window.location.hostname.includes("id-preview--");
-        if (!isInIframe && !isPreview && canonicalOrigin && currentOrigin !== canonicalOrigin) {
+        const hostname = window.location.hostname;
+        const isDevOrPreview = hostname.includes("id-preview--") || hostname.includes("lovableproject.com") || hostname === "localhost";
+        if (!isInIframe && !isDevOrPreview && canonicalOrigin && currentOrigin !== canonicalOrigin) {
           const redirectUrl = `${canonicalOrigin}${window.location.pathname}${window.location.search}${window.location.hash}`;
           window.location.replace(redirectUrl);
           return;
