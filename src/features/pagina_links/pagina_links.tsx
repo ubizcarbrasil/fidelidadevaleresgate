@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
-import { getPublicOriginSync } from "@/lib/publicShareUrl";
+import { getPublicOrigin, getPublicOriginSync } from "@/lib/publicShareUrl";
 
 const getBaseUrl = () => window.location.origin;
 

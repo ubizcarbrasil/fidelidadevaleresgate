@@ -7,19 +7,21 @@ let cachedBaseUrls: Record<string, string> = {};
 const PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
 
 /**
- * Returns the public origin for share URLs.
+ * Resolves the canonical origin for a brand.
  * Resolution order:
  *   1. brand_settings_json.driver_public_base_url
  *   2. Primary active domain from brand_domains
- *   3. Published app origin (never window.location.origin to avoid cross-brand leaks)
+ *   3. Published app origin
+ *
+ * Uses public_brands_safe view to work in anonymous sessions (mobile/driver).
  */
 export async function getPublicOrigin(brandId: string): Promise<string> {
   if (cachedBaseUrls[brandId]) return cachedBaseUrls[brandId];
 
   try {
-    // Step 1: check brand settings
+    // Step 1: check brand settings via public-safe view (no RLS issues)
     const { data: brandData } = await supabase
-      .from("brands")
+      .from("public_brands_safe")
       .select("brand_settings_json")
       .eq("id", brandId)
       .maybeSingle();
@@ -59,6 +61,46 @@ export async function getPublicOrigin(brandId: string): Promise<string> {
  */
 export function getPublicOriginSync(brandId: string): string {
   return cachedBaseUrls[brandId] || PUBLISHED_ORIGIN;
+}
+
+/**
+ * Resolves canonical origin from already-fetched brand settings (no extra query).
+ * Used by DriverPanelPage which already has brand data.
+ */
+export async function resolveCanonicalOriginFromSettings(
+  brandId: string,
+  settings: Record<string, unknown> | null,
+): Promise<string> {
+  // Check cache first
+  if (cachedBaseUrls[brandId]) return cachedBaseUrls[brandId];
+
+  // 1. Configured base URL
+  const configuredUrl = (settings?.driver_public_base_url as string)?.trim().replace(/\/+$/, "");
+  if (configuredUrl) {
+    cachedBaseUrls[brandId] = configuredUrl;
+    return configuredUrl;
+  }
+
+  // 2. Brand domain
+  try {
+    const { data } = await supabase
+      .from("brand_domains")
+      .select("domain")
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .eq("is_primary", true)
+      .limit(1)
+      .maybeSingle();
+    if (data?.domain) {
+      const origin = `https://${data.domain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+      cachedBaseUrls[brandId] = origin;
+      return origin;
+    }
+  } catch { /* fall through */ }
+
+  // 3. Published origin
+  cachedBaseUrls[brandId] = PUBLISHED_ORIGIN;
+  return PUBLISHED_ORIGIN;
 }
 
 /**
