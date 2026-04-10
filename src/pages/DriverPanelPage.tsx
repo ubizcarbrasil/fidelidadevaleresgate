@@ -87,7 +87,13 @@ export default function DriverPanelPage() {
       return;
     }
     const load = async () => {
-      const { data: b, error: brandError } = await supabase.from("brands").select("*").eq("id", brandId).maybeSingle();
+      // Use public view to allow anonymous access (Android/mobile without session)
+      const { data: b, error: brandError } = await supabase
+        .from("public_brands_safe")
+        .select("*")
+        .eq("id", brandId)
+        .eq("is_active", true)
+        .maybeSingle();
       if (brandError) { setError(`Erro ao buscar marca: ${brandError.message}`); setLoading(false); return; }
       if (!b) { setError("Marca não encontrada para o ID informado."); setLoading(false); return; }
       setBrand(b);
