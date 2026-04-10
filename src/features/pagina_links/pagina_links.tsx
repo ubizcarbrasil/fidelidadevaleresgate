@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2, Copy, Check } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Shield, Building2, MapPin, Store, Car, Smartphone, LogIn, ExternalLink, Info, Loader2, Copy, Check, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
 const getBaseUrl = () => window.location.origin;
@@ -13,6 +15,7 @@ interface LinkCard {
   icone: React.ElementType;
   cor: string;
   nota?: string;
+  brandId?: string;
 }
 
 interface CategoriaLinks {
@@ -56,6 +59,7 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
         rota: `/?branchId=${branch.id}`,
         icone: MapPin,
         cor: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30",
+        brandId: branch.brand_id,
       })),
     },
     {
@@ -66,6 +70,7 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
         rota: `/store-panel?storeId=${store.id}`,
         icone: Store,
         cor: "from-amber-500/20 to-amber-600/10 border-amber-500/30",
+        brandId: store.brand_id,
       })),
     },
     {
@@ -76,6 +81,7 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
         rota: `/driver?brandId=${brand.id}`,
         icone: Car,
         cor: "from-purple-500/20 to-purple-600/10 border-purple-500/30",
+        brandId: brand.id,
       })),
     },
     {
@@ -86,6 +92,7 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
         rota: `/customer-preview?brandId=${brand.id}`,
         icone: Smartphone,
         cor: "from-cyan-500/20 to-cyan-600/10 border-cyan-500/30",
+        brandId: brand.id,
       })),
     },
     {
@@ -129,7 +136,9 @@ function BotaoCopiar({ url }: { url: string }) {
 
 export default function PaginaLinks() {
   const [categorias, setCategorias] = useState<CategoriaLinks[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [filtroMarca, setFiltroMarca] = useState<string>("all");
 
   useEffect(() => {
     async function buscarDados() {
@@ -139,15 +148,26 @@ export default function PaginaLinks() {
         supabase.from("stores").select("id, name, branch_id, brand_id").eq("is_active", true).eq("approval_status", "APPROVED").order("name").limit(50),
       ]);
 
-      const brands = (brandsRes.data || []) as Brand[];
+      const brandsData = (brandsRes.data || []) as Brand[];
       const branches = (branchesRes.data || []) as Branch[];
       const stores = (storesRes.data || []) as StoreRow[];
 
-      setCategorias(construirCategorias(brands, branches, stores));
+      setBrands(brandsData);
+      setCategorias(construirCategorias(brandsData, branches, stores));
       setCarregando(false);
     }
     buscarDados();
   }, []);
+
+  const categoriasFiltradas = useMemo(() => {
+    if (filtroMarca === "all") return categorias;
+    return categorias
+      .map((cat) => ({
+        ...cat,
+        cards: cat.cards.filter((card) => !card.brandId || card.brandId === filtroMarca),
+      }))
+      .filter((cat) => cat.cards.length > 0);
+  }, [categorias, filtroMarca]);
 
   if (carregando) {
     return (
@@ -169,8 +189,29 @@ export default function PaginaLinks() {
           </p>
         </div>
 
+        {/* Filtro por marca */}
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={filtroMarca} onValueChange={setFiltroMarca}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Filtrar por marca" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as marcas</SelectItem>
+              {brands.map((brand) => (
+                <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {filtroMarca !== "all" && (
+            <Badge variant="secondary" className="cursor-pointer" onClick={() => setFiltroMarca("all")}>
+              Limpar filtro ✕
+            </Badge>
+          )}
+        </div>
+
         <div className="space-y-10">
-          {categorias.map((cat) => (
+          {categoriasFiltradas.map((cat) => (
             <section key={cat.titulo}>
               <h2 className="mb-4 text-lg font-semibold text-muted-foreground tracking-wide uppercase text-center">
                 {cat.titulo}
