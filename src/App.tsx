@@ -41,6 +41,7 @@ const VoucherForm = lazyWithRetry(() => import("@/pages/VoucherForm"));
 const VoucherWizardPage = lazyWithRetry(() => import("@/pages/VoucherWizardPage"));
 const VoucherRedeem = lazyWithRetry(() => import("@/pages/VoucherRedeem"));
 const BrandDomains = lazyWithRetry(() => import("@/pages/BrandDomains"));
+const PaginaDominiosMarca = lazyWithRetry(() => import("@/pages/PaginaDominiosMarca"));
 const UsersPage = lazyWithRetry(() => import("@/pages/UsersPage"));
 const StoresPage = lazyWithRetry(() => import("@/pages/StoresPage"));
 const OffersPage = lazyWithRetry(() => import("@/pages/OffersPage"));
@@ -191,6 +192,7 @@ function AnimatedRoutes() {
               <Route path="vouchers/redeem" element={<ModuleGuard moduleKey="vouchers"><VoucherRedeem /></ModuleGuard>} />
               <Route path="vouchers/:id" element={<ModuleGuard moduleKey="vouchers"><VoucherForm /></ModuleGuard>} />
               <Route path="domains" element={<RootGuard><BrandDomains /></RootGuard>} />
+              <Route path="brand-domains" element={<PaginaDominiosMarca />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="stores" element={<ModuleGuard moduleKey="stores"><StoresPage /></ModuleGuard>} />
               <Route path="offers" element={<ModuleGuard moduleKey="offers"><OffersPage /></ModuleGuard>} />
