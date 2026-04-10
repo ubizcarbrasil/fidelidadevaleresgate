@@ -4,37 +4,61 @@ import { toast } from "@/hooks/use-toast";
 // Cache to avoid repeated queries during same session
 let cachedBaseUrls: Record<string, string> = {};
 
+const PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
+
 /**
  * Returns the public origin for share URLs.
- * Checks brand_settings_json.driver_public_base_url first, falls back to window.location.origin.
+ * Resolution order:
+ *   1. brand_settings_json.driver_public_base_url
+ *   2. Primary active domain from brand_domains
+ *   3. Published app origin (never window.location.origin to avoid cross-brand leaks)
  */
 export async function getPublicOrigin(brandId: string): Promise<string> {
   if (cachedBaseUrls[brandId]) return cachedBaseUrls[brandId];
 
   try {
-    const { data } = await supabase
+    // Step 1: check brand settings
+    const { data: brandData } = await supabase
       .from("brands")
       .select("brand_settings_json")
       .eq("id", brandId)
       .maybeSingle();
-    const settings = data?.brand_settings_json as Record<string, unknown> | null;
+    const settings = brandData?.brand_settings_json as Record<string, unknown> | null;
     const configuredUrl = (settings?.driver_public_base_url as string)?.trim().replace(/\/+$/, "");
     if (configuredUrl) {
       cachedBaseUrls[brandId] = configuredUrl;
       return configuredUrl;
     }
+
+    // Step 2: check brand_domains for a primary active domain
+    const { data: domainData } = await supabase
+      .from("brand_domains")
+      .select("domain")
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .eq("is_primary", true)
+      .limit(1)
+      .maybeSingle();
+    if (domainData?.domain) {
+      const domainOrigin = `https://${domainData.domain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+      cachedBaseUrls[brandId] = domainOrigin;
+      return domainOrigin;
+    }
   } catch {
     // silently fall back
   }
 
-  // Detect Lovable preview URLs and use published domain instead
-  let fallback = window.location.origin;
-  if (/^https:\/\/id-preview--[^.]+\.lovable\.app$/.test(fallback)) {
-    fallback = "https://fidelidadevaleresgate.lovable.app";
-  }
+  // Step 3: always use published origin (never window.location.origin)
+  cachedBaseUrls[brandId] = PUBLISHED_ORIGIN;
+  return PUBLISHED_ORIGIN;
+}
 
-  cachedBaseUrls[brandId] = fallback;
-  return fallback;
+/**
+ * Returns a synchronous best-effort origin without async calls.
+ * Uses cache if available, otherwise falls back to published origin.
+ */
+export function getPublicOriginSync(brandId: string): string {
+  return cachedBaseUrls[brandId] || PUBLISHED_ORIGIN;
 }
 
 /**
