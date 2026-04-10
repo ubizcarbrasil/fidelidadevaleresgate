@@ -1,14 +1,25 @@
 
 
-# Corrigir Seed dos Templates de Mensagem
+# Cadastrar domínio customizado para a marca
 
 ## Problema
-O auto-seed dos 15 templates padrão (3 por categoria) nunca rodou porque já existia 1 template criado manualmente ("Desafio de Duelo"). A condição `query.data.length === 0` impede o seed quando há qualquer template existente.
+O domínio `valeresgata.ubizcar.com.br` não está cadastrado na tabela `brand_domains`. A marca "Ubiz Car" tem apenas o domínio `ubiz-car.valeresgate.com` registrado.
 
 ## Solução
 
-### Passo 1 — Inserir os 14 templates faltantes via migração SQL
-Inserir diretamente no banco os 14 templates padrão que faltam para a brand existente, preservando o template "Desafio de Duelo" já criado.
+### Passo 1 — Inserir o domínio customizado via migração SQL
+Adicionar um registro na tabela `brand_domains` associando `valeresgata.ubizcar.com.br` à brand `44df8653-2a7a-40d1-b717-c6b09a6f694f` (Ubiz Car):
 
-**Arquivo**: Migração SQL  
--
+```sql
+INSERT INTO brand_domains (brand_id, domain, subdomain, is_active)
+VALUES ('44df8653-2a7a-40d1-b717-c6b09a6f694f', 'valeresgata.ubizcar.com.br', 'valeresgata', true);
+```
+
+### Passo 2 — Verificar DNS
+O domínio `valeresgata.ubizcar.com.br` precisa apontar (via CNAME ou A record) para o servidor onde a aplicação está hospedada. Isso é configuração externa ao código.
+
+## Impacto
+- Nenhuma mudança de código — apenas um registro no banco
+- Após inserir, o `resolveBrandByDomain` encontrará a marca pelo full domain match
+- A página carregará o layout white-label da marca Ubiz Car
+
