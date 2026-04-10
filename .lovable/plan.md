@@ -1,69 +1,71 @@
 
 
-# Plano: Correção Estrutural de Domínios White-Label
+# Roteamento Inteligente por Sessão — White-Label
 
-## Status Atual
+## Análise do Estado Atual
 
-| Etapa | Status | Detalhe |
-|-------|--------|---------|
-| **View `public_brands_safe`** | ⚠️ Parcial | Criada COM `security_invoker=on` — bloqueia anônimos. Precisa recriar SEM essa opção + GRANT |
-| **Sanitização de domínios no banco** | ❌ Pendente | Domínios com `https://` precisam de UPDATE |
-| **Roteamento inteligente (App.tsx)** | ✅ Pronto | Lógica brand_admin/branch_admin já implementada (linhas 364-386) |
-| **BrandContext usa view pública** | ✅ Pronto | `fetchBrandById` já tenta `public_brands_safe` primeiro |
-| **Sanitização de hostname no código** | ❌ Pendente | `resolveBrandByDomain` não limpa protocolo |
-| **Sanitização na escrita de domínios** | ❌ Pendente | `PaginaDominiosMarca.tsx` e `BrandDomains.tsx` salvam domínio como digitado |
-| **Central de Acessos hierárquica** | ✅ Pronto | `AccessHubPage.tsx` já reformulada com drill-down |
+O roteamento em `App.tsx` (linhas 364-383) **já implementa** a lógica principal:
+- Visitante anônimo em domínio white-label → `WhiteLabelLayout`
+- `brand_admin` ou `branch_admin` logado no domínio da marca → `AnimatedRoutes` (painel admin)
+- `root_admin` em qualquer domínio → funciona porque `isWhiteLabel = false` no domínio da plataforma
 
-## O Que Será Feito
+### O que falta
 
-### Etapa 1 — Migration SQL (corrige o bug principal)
+1. **`store_admin` não é roteado** — brand_admin e branch_admin são verificados, mas `store_admin` fica no `WhiteLabelLayout` quando acessa o domínio da marca
+2. **Root admin em domínio white-label** — se um root_admin acessar `ubizcar.com.br`, ele cai no `WhiteLabelLayout` porque não tem `brand_id` associado. Precisa de tratamento especial
+3. **Badge visual** — não existe indicador de "domínio próprio" no header do painel admin
 
-Nova migration que:
-1. Recria `public_brands_safe` **SEM** `security_invoker` (executa como owner, bypassa RLS da tabela base)
-2. Adiciona `GRANT SELECT` para `anon` e `authenticated`
-3. Sanitiza domínios existentes removendo `https://` e `http://`
+## Mudanças
 
-```sql
-DROP VIEW IF EXISTS public.public_brands_safe;
-CREATE VIEW public.public_brands_safe AS
-SELECT id, name, slug, is_active, subscription_status, tenant_id,
-       default_theme_id, home_layout_json, brand_settings_json,
-       created_at, trial_expires_at
-FROM public.brands;
+### 1. `src/App.tsx` — Ampliar verificação de roles (linhas 364-376)
 
-GRANT SELECT ON public.public_brands_safe TO anon, authenticated;
-
-UPDATE public.brand_domains
-SET domain = REGEXP_REPLACE(domain, '^https?://', '')
-WHERE domain ~ '^https?://';
-```
-
-### Etapa 2 — BrandContext.tsx
-
-Adicionar sanitização de hostname no início de `resolveBrandByDomain`:
+Adicionar `store_admin` à verificação e incluir `root_admin` como passagem direta:
 
 ```typescript
-hostname = hostname.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase().trim();
+if (isWhiteLabel) {
+  if (user && !authLoading) {
+    const isRoot = roles.some((r) => r.role === "root_admin");
+    const isBrandAdmin = brand && roles.some(
+      (r) => r.role === "brand_admin" && r.brand_id === brand.id
+    );
+    const isBranchAdmin = brand && roles.some(
+      (r) => ["branch_admin", "branch_operator", "operator_pdv"].includes(r.role) && r.brand_id === brand.id
+    );
+    const isStoreAdmin = brand && roles.some(
+      (r) => r.role === "store_admin" && r.brand_id === brand.id
+    );
+
+    if (isRoot || isBrandAdmin || isBranchAdmin || isStoreAdmin) {
+      return <AnimatedRoutes />;
+    }
+  }
+  // ...resto mantido
+}
 ```
 
-### Etapa 3 — Sanitização na escrita (2 arquivos)
+### 2. `src/components/AppLayout.tsx` — Badge "Domínio Próprio"
 
-Em `PaginaDominiosMarca.tsx` e `BrandDomains.tsx`, ao salvar domínio, limpar protocolo e barras:
+Adicionar um indicador sutil no header quando `isWhiteLabel === true`:
+- Importar `useBrand` e ler `isWhiteLabel`
+- Renderizar um badge com ícone `Globe` e texto "Domínio próprio" ao lado do botão "Voltar ao Painel Raiz" (que já existe para impersonação)
+- Estilo discreto: texto pequeno, cor `muted-foreground`, ícone Globe de 14px
 
 ```typescript
-const cleanDomain = domain.toLowerCase().trim()
-  .replace(/^https?:\/\//, '')
-  .replace(/\/$/, '');
+// No header, após o bloco isImpersonating:
+{isWhiteLabel && !isImpersonating && (
+  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-accent/40 px-2.5 py-1 rounded-md">
+    <Globe className="h-3.5 w-3.5" />
+    <span className="hidden sm:inline">Domínio próprio</span>
+  </div>
+)}
 ```
 
-### Arquivos Envolvidos
+### Arquivos
 
-| Arquivo | Ação |
-|---------|------|
-| Nova migration SQL | Criar — recriar view + sanitizar dados |
-| `src/contexts/BrandContext.tsx` | Editar — sanitizar hostname |
-| `src/pages/PaginaDominiosMarca.tsx` | Editar — sanitizar domínio ao salvar |
-| `src/pages/BrandDomains.tsx` | Editar — sanitizar domínio ao salvar |
+| Arquivo | Mudança |
+|---------|---------|
+| `src/App.tsx` | Adicionar `root_admin` e `store_admin` ao roteamento white-label |
+| `src/components/AppLayout.tsx` | Badge "Domínio próprio" no header |
 
-As etapas de roteamento inteligente (App.tsx) e Central de Acessos (AccessHubPage.tsx) **já estão implementadas** e não precisam de mudanças adicionais.
+Nenhuma mudança de banco de dados necessária.
 
