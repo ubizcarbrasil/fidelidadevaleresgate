@@ -18,6 +18,7 @@ interface LinkCard {
   cor: string;
   nota?: string;
   brandId?: string;
+  useCanonicalOrigin?: boolean;
 }
 
 interface CategoriaLinks {
@@ -76,14 +77,15 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
       })),
     },
     {
-      titulo: "Painéis Operacionais — Motorista",
-      cards: brands.map((brand) => ({
+77:       titulo: "Painéis Operacionais — Motorista",
+78:       cards: brands.map((brand) => ({
         titulo: `Motorista — ${brand.name}`,
         descricao: `Painel do motorista na brand ${brand.name}.`,
         rota: `/driver?brandId=${brand.id}`,
         icone: Car,
         cor: "from-purple-500/20 to-purple-600/10 border-purple-500/30",
         brandId: brand.id,
+        useCanonicalOrigin: true,
       })),
     },
     {
@@ -221,7 +223,8 @@ export default function PaginaLinks() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.cards.map((card) => {
                   const Icone = card.icone;
-                  const urlCompleta = `${getBaseUrl()}${card.rota}`;
+                  const cardOrigin = card.useCanonicalOrigin && card.brandId ? getPublicOriginSync(card.brandId) : getBaseUrl();
+                  const urlCompleta = `${cardOrigin}${card.rota}`;
                   return (
                     <a
                       key={card.titulo + card.rota}
