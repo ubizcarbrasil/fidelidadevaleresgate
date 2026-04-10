@@ -76,6 +76,9 @@ export default function BrandForm() {
         setName(data.name);
         setSlug(data.slug);
         setTenantId(data.tenant_id);
+        supabase.from("tenants").select("name").eq("id", data.tenant_id).single().then(({ data: tenant }) => {
+          if (tenant) setTenantName(tenant.name);
+        });
         setIsActive(data.is_active);
         setSubscriptionPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
