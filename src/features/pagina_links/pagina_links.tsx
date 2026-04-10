@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
+import { getPublicOriginSync } from "@/lib/publicShareUrl";
+
 const getBaseUrl = () => window.location.origin;
 
 interface LinkCard {
@@ -16,6 +18,7 @@ interface LinkCard {
   cor: string;
   nota?: string;
   brandId?: string;
+  useCanonicalOrigin?: boolean;
 }
 
 interface CategoriaLinks {
@@ -82,6 +85,7 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
         icone: Car,
         cor: "from-purple-500/20 to-purple-600/10 border-purple-500/30",
         brandId: brand.id,
+        useCanonicalOrigin: true,
       })),
     },
     {
@@ -219,7 +223,8 @@ export default function PaginaLinks() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.cards.map((card) => {
                   const Icone = card.icone;
-                  const urlCompleta = `${getBaseUrl()}${card.rota}`;
+                  const cardOrigin = card.useCanonicalOrigin && card.brandId ? getPublicOriginSync(card.brandId) : getBaseUrl();
+                  const urlCompleta = `${cardOrigin}${card.rota}`;
                   return (
                     <a
                       key={card.titulo + card.rota}

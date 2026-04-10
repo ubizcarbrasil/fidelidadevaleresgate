@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Vale Resgate" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a6cfa" />
-    <meta name="app-version" content="2026-04-06-v2" />
+    <meta name="app-version" content="2026-04-10-v1" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
     <meta property="og:type" content="website" />
@@ -106,7 +106,7 @@
           var isInIframe = false;
           try { isInIframe = window.self !== window.top; } catch(e) { isInIframe = true; }
           var isPreview = window.location.hostname.indexOf('id-preview--') !== -1 || window.location.hostname.indexOf('lovableproject.com') !== -1;
-          var recoveryKey = (isInIframe || isPreview) ? '__sw_recovered_preview_v3__' : '__sw_recovered_v3__';
+          var recoveryKey = (isInIframe || isPreview) ? '__sw_recovered_preview_v4__' : '__sw_recovered_v4__';
 
           if (!('serviceWorker' in navigator)) return;
           if (sessionStorage.getItem(recoveryKey)) return;

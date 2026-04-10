@@ -31,6 +31,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const testAccounts = (settings?.test_accounts ?? undefined) as { email: string; role: string; is_active: boolean }[] | undefined;
   const origin = window.location.origin;
   const driverPublicBase = (settings?.driver_public_base_url as string) || null;
+  const PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
@@ -77,7 +78,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {quickLinks.map((link) => {
               const internalUrl = `${origin}${link.path}`;
-              const publicBase = driverPublicBase || origin;
+              const publicBase = driverPublicBase || PUBLISHED_ORIGIN;
               const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
               return (
                 <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">

@@ -61,6 +61,38 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   );
 }
 
+/**
+ * Resolves the canonical origin for a brand:
+ *   1. driver_public_base_url from settings
+ *   2. Primary active brand_domain
+ *   3. Published app origin
+ */
+async function resolveCanonicalOrigin(brandId: string, settings: any): Promise<string> {
+  const PUBLISHED = "https://fidelidadevaleresgate.lovable.app";
+
+  // 1. Configured base URL
+  const configuredUrl = (settings?.driver_public_base_url as string)?.trim().replace(/\/+$/, "");
+  if (configuredUrl) return configuredUrl;
+
+  // 2. Brand domain
+  try {
+    const { data } = await supabase
+      .from("brand_domains")
+      .select("domain")
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .eq("is_primary", true)
+      .limit(1)
+      .maybeSingle();
+    if (data?.domain) {
+      return `https://${data.domain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+    }
+  } catch { /* fall through */ }
+
+  // 3. Published origin
+  return PUBLISHED;
+}
+
 export default function DriverPanelPage() {
   const [searchParams] = useSearchParams();
   const brandId = searchParams.get("brandId");
@@ -96,6 +128,22 @@ export default function DriverPanelPage() {
         .maybeSingle();
       if (brandError) { setError(`Erro ao buscar marca: ${brandError.message}`); setLoading(false); return; }
       if (!b) { setError("Marca não encontrada para o ID informado."); setLoading(false); return; }
+
+      // Auto-redirect: if current host doesn't match the brand's canonical origin, redirect
+      const settings = b.brand_settings_json as any;
+      try {
+        const canonicalOrigin = await resolveCanonicalOrigin(brandId, settings);
+        const currentOrigin = window.location.origin;
+        // Only redirect if canonical is different AND we're not in iframe/preview
+        const isInIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+        const isPreview = window.location.hostname.includes("id-preview--");
+        if (!isInIframe && !isPreview && canonicalOrigin && currentOrigin !== canonicalOrigin) {
+          const redirectUrl = `${canonicalOrigin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+          window.location.replace(redirectUrl);
+          return;
+        }
+      } catch { /* don't block loading on redirect check failure */ }
+
       setBrand(b);
       if (branchId) {
         const { data: br } = await supabase.from("branches").select("*").eq("id", branchId).single();
