@@ -1,25 +1,50 @@
 
 
-# Cadastrar domínio customizado para a marca
+# Domínios Próprios por Empresa (Brand Admin)
 
-## Problema
-O domínio `valeresgata.ubizcar.com.br` não está cadastrado na tabela `brand_domains`. A marca "Ubiz Car" tem apenas o domínio `ubiz-car.valeresgate.com` registrado.
+## Problema Atual
+- A página de domínios (`/domains`) está protegida por `RootGuard` — apenas o Root Admin acessa
+- Brand Admins não conseguem cadastrar ou gerenciar seus próprios domínios
+- A tabela `brand_domains` já tem RLS permitindo que Brand Admins gerenciem domínios da própria marca
 
 ## Solução
 
-### Passo 1 — Inserir o domínio customizado via migração SQL
-Adicionar um registro na tabela `brand_domains` associando `valeresgata.ubizcar.com.br` à brand `44df8653-2a7a-40d1-b717-c6b09a6f694f` (Ubiz Car):
+### 1. Criar página de domínios para o Brand Admin
+Criar uma nova página `src/pages/PaginaDominiosMarca.tsx` que:
+- Lista apenas os domínios da marca do usuário logado (filtro via `useBrandGuard`)
+- Permite adicionar, editar e excluir domínios
+- Mostra instruções de configuração DNS (apontar para `185.158.133.1`)
+- Exibe status visual (ativo/inativo)
+- Inclui card explicativo com passo a passo para o empreendedor
 
-```sql
-INSERT INTO brand_domains (brand_id, domain, subdomain, is_active)
-VALUES ('44df8653-2a7a-40d1-b717-c6b09a6f694f', 'valeresgata.ubizcar.com.br', 'valeresgata', true);
-```
+### 2. Adicionar rota no App.tsx
+- Nova rota `/brand-domains` protegida por `ModuleGuard` com moduleKey `domains` (ou sem guard, como configuração básica)
+- Acessível pelo painel BRAND
 
-### Passo 2 — Verificar DNS
-O domínio `valeresgata.ubizcar.com.br` precisa apontar (via CNAME ou A record) para o servidor onde a aplicação está hospedada. Isso é configuração externa ao código.
+### 3. Adicionar item no BrandSidebar
+- Novo item no grupo "Configurações":
+  ```
+  { key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe }
+  ```
 
-## Impacto
-- Nenhuma mudança de código — apenas um registro no banco
-- Após inserir, o `resolveBrandByDomain` encontrará a marca pelo full domain match
-- A página carregará o layout white-label da marca Ubiz Car
+### 4. Adaptar lógica de inserção
+- Ao cadastrar um domínio, o `brand_id` será injetado automaticamente via `enforceBrandId` do `useBrandGuard`
+- O Brand Admin não verá nem escolherá a marca — será a dele automaticamente
+- Ao salvar um domínio `exemplo.com`, inserir automaticamente também `www.exemplo.com` para evitar problemas de resolução
+
+### 5. Card de instruções DNS
+A página incluirá um card explicativo com:
+- IP de destino: `185.158.133.1`
+- Tipo de registro: A Record
+- Prazo de propagação: até 72h
+- Dica sobre versão www
+
+## Arquivos Envolvidos
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/PaginaDominiosMarca.tsx` | Criar — página de domínios do empreendedor |
+| `src/App.tsx` | Editar — adicionar rota `/brand-domains` |
+| `src/components/consoles/BrandSidebar.tsx` | Editar — adicionar item "Meus Domínios" |
+
+Nenhuma mudança de banco de dados necessária — as RLS policies já permitem que Brand Admins gerenciem domínios da própria marca.
 
