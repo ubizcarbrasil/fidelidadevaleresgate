@@ -49,7 +49,6 @@ interface BranchRow {
 interface BranchCounts {
   customers: number;
   stores: number;
-  drivers: number;
 }
 
 /* ─── Helpers ─── */
@@ -74,15 +73,13 @@ function DomainBadge({ domain, isActive }: { domain: string; isActive: boolean }
 
 /* ─── Branch counts loader ─── */
 async function loadBranchCounts(branchId: string): Promise<BranchCounts> {
-  const [customersRes, storesRes, driversRes] = await Promise.all([
+  const [customersRes, storesRes] = await Promise.all([
     supabase.from("customers").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
     supabase.from("stores").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
-    supabase.from("drivers").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
   ]);
   return {
     customers: customersRes.count ?? 0,
     stores: storesRes.count ?? 0,
-    drivers: driversRes.count ?? 0,
   };
 }
 
