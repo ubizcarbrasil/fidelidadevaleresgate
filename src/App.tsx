@@ -323,7 +323,8 @@ const App = () => (
 );
 
 function AppContent() {
-  const { isWhiteLabel, loading } = useBrand();
+  const { isWhiteLabel, loading, brand } = useBrand();
+  const { user, roles, loading: authLoading } = useAuth();
   const location = useLocation();
 
   // Partner landing page is a public route that works regardless of white-label mode
@@ -352,7 +353,7 @@ function AppContent() {
   const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
-  if (loading && !isPublicPath) {
+  if ((loading || authLoading) && !isPublicPath) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -361,6 +362,24 @@ function AppContent() {
   }
 
   if (isWhiteLabel) {
+    // Smart routing: if authenticated user is brand_admin for this brand, show admin panel
+    if (user && brand && !authLoading) {
+      const isBrandAdmin = roles.some(
+        (r) => r.role === "brand_admin" && r.brand_id === brand.id
+      );
+      const isBranchAdmin = roles.some(
+        (r) => (r.role === "branch_admin" || r.role === "branch_operator" || r.role === "operator_pdv") && r.brand_id === brand.id
+      );
+      if (isBrandAdmin || isBranchAdmin) {
+        return <AnimatedRoutes />;
+      }
+    }
+
+    // Auth page on white-label domain should still work
+    if (isPublicPath) {
+      return <AnimatedRoutes />;
+    }
+
     return <WhiteLabelLayout />;
   }
 
