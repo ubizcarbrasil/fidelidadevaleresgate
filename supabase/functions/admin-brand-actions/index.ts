@@ -461,8 +461,16 @@ Deno.serve(async (req) => {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro interno";
+  } catch (err: unknown) {
+    let message = "Erro interno";
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (typeof err === "object" && err !== null) {
+      message = (err as any).message || (err as any).error_description || JSON.stringify(err);
+    } else if (typeof err === "string") {
+      message = err;
+    }
+    console.error("[admin-brand-actions] Unhandled error:", message, err);
 
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
