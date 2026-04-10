@@ -25,10 +25,10 @@ interface DomainRow {
 
 function CardInstrucoesDNS() {
   return (
-    <Card className="border-blue-500/30 bg-blue-500/5">
+    <Card className="border-primary/30 bg-primary/5">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Info className="h-5 w-5 text-blue-400" />
+          <Info className="h-5 w-5 text-primary" />
           <CardTitle className="text-base">Como configurar seu domínio</CardTitle>
         </div>
         <CardDescription>
@@ -73,7 +73,7 @@ function CardInstrucoesDNS() {
 
 export default function PaginaDominiosMarca() {
   const queryClient = useQueryClient();
-  const { currentBrandId, enforceBrandId } = useBrandGuard();
+  const { currentBrandId } = useBrandGuard();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingDomain, setEditingDomain] = useState<DomainRow | null>(null);
