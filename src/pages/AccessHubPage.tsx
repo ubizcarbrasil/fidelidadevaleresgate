@@ -17,7 +17,7 @@ import {
   AlertCircle,
   MapPin,
   Users,
-  Car,
+  
   Store,
   ExternalLink,
 } from "lucide-react";
