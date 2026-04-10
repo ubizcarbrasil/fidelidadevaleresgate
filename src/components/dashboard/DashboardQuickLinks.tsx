@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
+import { getPublicOrigin } from "@/lib/publicShareUrl";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
@@ -30,8 +31,15 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const settings = brand?.brand_settings_json as Record<string, unknown> | null;
   const testAccounts = (settings?.test_accounts ?? undefined) as { email: string; role: string; is_active: boolean }[] | undefined;
   const origin = window.location.origin;
-  const driverPublicBase = (settings?.driver_public_base_url as string) || null;
   const PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
+
+  // Resolve canonical origin asynchronously
+  const [resolvedPublicBase, setResolvedPublicBase] = useState<string | null>(null);
+  useEffect(() => {
+    if (!currentBrandId) return;
+    getPublicOrigin(currentBrandId).then(setResolvedPublicBase);
+  }, [currentBrandId]);
+  const publicBase = resolvedPublicBase || PUBLISHED_ORIGIN;
 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
@@ -65,7 +73,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Link2 className="h-4 w-4 text-primary" /> Links Úteis
             </CardTitle>
-            {driverPublicBase ? (
+          {resolvedPublicBase ? (
               <Badge variant="outline" className="text-[10px] gap-1">
                 <Globe className="h-3 w-3" /> URL configurada
               </Badge>
@@ -78,8 +86,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {quickLinks.map((link) => {
               const internalUrl = `${origin}${link.path}`;
-              const publicBase = driverPublicBase || PUBLISHED_ORIGIN;
-              const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
+               const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
               return (
                 <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-2">
