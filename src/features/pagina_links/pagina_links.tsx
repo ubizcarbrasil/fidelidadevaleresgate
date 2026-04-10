@@ -141,6 +141,7 @@ function BotaoCopiar({ url }: { url: string }) {
 export default function PaginaLinks() {
   const [categorias, setCategorias] = useState<CategoriaLinks[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [resolvedOrigins, setResolvedOrigins] = useState<Record<string, string>>({});
   const [carregando, setCarregando] = useState(true);
   const [filtroMarca, setFiltroMarca] = useState<string>("all");
 
@@ -158,6 +159,16 @@ export default function PaginaLinks() {
 
       setBrands(brandsData);
       setCategorias(construirCategorias(brandsData, branches, stores));
+
+      // Pre-resolve canonical origins for all brands
+      const origins: Record<string, string> = {};
+      await Promise.all(
+        brandsData.map(async (b) => {
+          origins[b.id] = await getPublicOrigin(b.id);
+        }),
+      );
+      setResolvedOrigins(origins);
+
       setCarregando(false);
     }
     buscarDados();
@@ -223,7 +234,9 @@ export default function PaginaLinks() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {cat.cards.map((card) => {
                   const Icone = card.icone;
-                  const cardOrigin = card.useCanonicalOrigin && card.brandId ? getPublicOriginSync(card.brandId) : getBaseUrl();
+                  const cardOrigin = card.useCanonicalOrigin && card.brandId
+                    ? (resolvedOrigins[card.brandId] || getPublicOriginSync(card.brandId))
+                    : getBaseUrl();
                   const urlCompleta = `${cardOrigin}${card.rota}`;
                   return (
                     <a
