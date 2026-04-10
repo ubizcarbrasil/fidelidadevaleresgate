@@ -1,47 +1,25 @@
 
 
-# Reescrita Completa: AccessHubPage.tsx
+# Corrigir Nome da Organização + Permitir Edição no Painel
 
-## Contexto
+## 1. Correção de dados
 
-A página atual usa `Collapsible`, `useState/useEffect` para dados, não conta motoristas separadamente, não tem links diretos por entidade, e não usa Accordion do shadcn.
+Atualizar o nome do tenant `1dcbe0c0-4f9a-48ba-80ee-a8c9404e9382` de "123456" para "Ubiz Resgata" via insert tool (UPDATE).
 
-## Mudanças Principais
+## 2. Permitir edição do nome da organização no BrandForm
 
-### Arquivo único: `src/pages/AccessHubPage.tsx`
+No arquivo `src/pages/BrandForm.tsx`, na aba "Geral" (visível apenas para `root_admin`), adicionar um campo de texto editável ao lado do Select de organização. Quando o root_admin altera o nome, ao salvar a marca, o nome do tenant também é atualizado.
 
-Reescrita completa com os seguintes componentes internos:
+### Mudanças em `src/pages/BrandForm.tsx`:
 
-1. **DomainStatusBadge** — Badge verde (Globe + domínio) ou vermelho (GlobeOff + "Sem domínio")
-2. **SubscriptionBadge** — active=verde, trial=amarelo, outros=cinza
-3. **BranchEntityRow** — Cidade com 3 contadores clicáveis (clientes, motoristas, parceiros) usando `navigate()`. Motoristas identificados por `name ILIKE '%[MOTORISTA]%'` (não existe `scoring_model` na tabela)
-4. **BrandAccordionItem** — Item do Accordion com logo (via `brand_settings_json`), nome, badges, totais agregados, botão "Entrar como marca" (root only), e lista de BranchEntityRow no corpo
-5. **RootAccessHub** — Stats globais, busca, Accordion com todas as marcas, useQuery
-6. **BrandAccessHub** — CTA de domínio se ausente, lista de cidades, sem accordion
-7. **StatCard** — Card de estatística reutilizável
+- Adicionar estado `tenantName` que é preenchido ao carregar a marca (fetch do tenant selecionado)
+- Ao lado do Select de organização, adicionar um Input para editar o nome do tenant selecionado
+- No `handleSave`, incluir um `supabase.from("tenants").update({ name: tenantName }).eq("id", tenantId)` antes ou junto do save da brand
 
-### Mudanças técnicas
+### Arquivos modificados
 
-| Aspecto | Antes | Depois |
-|---------|-------|--------|
-| Data fetching | useState + useEffect | React Query (useQuery) |
-| Componente expansível | Collapsible | Accordion (shadcn) |
-| Contagem motoristas | Não existe | `name ILIKE '%[MOTORISTA]%'` via count query |
-| Links por entidade | Botão "Painel da Cidade" genérico | 3 links clicáveis: `/customers?branchId=X`, `/motoristas?branchId=X`, `/stores?branchId=X` |
-| Logo da marca | Não mostrada | Via `brand_settings_json->logo_url` com SafeImage |
-| Empty states | Texto simples | EmptyState com botões de ação |
-| Domain badge | Texto com ícone | Badge colorido verde/vermelho |
-| Subscription badge | Não existe | Badge com 3 estados |
-| Navegação | `window.location.href` | `useNavigate()` do react-router |
-
-### Queries
-
-- Marcas: `queryKeys.brands.all` → `brands` table (id, name, slug, is_active, subscription_status, brand_settings_json)
-- Domínios: `queryKeys.brandDomains.all` → `brand_domains` table
-- Branches: `queryKeys.branches.list(brandId)` → lazy load ao expandir accordion
-- Contadores: Promise.all com 3 count queries por branch (clientes não-motorista, motoristas, stores)
-
-### Nenhuma migração SQL necessária
-
-Todas as tabelas e campos já existem. A identificação de motoristas usa o padrão existente `name ILIKE '%[MOTORISTA]%'`.
+| Arquivo | Mudança |
+|---------|---------|
+| (dados) | UPDATE tenants SET name = 'Ubiz Resgata' WHERE id = '1dcbe0c0-...' |
+| `src/pages/BrandForm.tsx` | Adicionar campo editável para nome da organização |
 
