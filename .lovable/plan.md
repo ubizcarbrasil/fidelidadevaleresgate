@@ -1,71 +1,47 @@
 
 
-# Roteamento Inteligente por Sessão — White-Label
+# Reescrita Completa: AccessHubPage.tsx
 
-## Análise do Estado Atual
+## Contexto
 
-O roteamento em `App.tsx` (linhas 364-383) **já implementa** a lógica principal:
-- Visitante anônimo em domínio white-label → `WhiteLabelLayout`
-- `brand_admin` ou `branch_admin` logado no domínio da marca → `AnimatedRoutes` (painel admin)
-- `root_admin` em qualquer domínio → funciona porque `isWhiteLabel = false` no domínio da plataforma
+A página atual usa `Collapsible`, `useState/useEffect` para dados, não conta motoristas separadamente, não tem links diretos por entidade, e não usa Accordion do shadcn.
 
-### O que falta
+## Mudanças Principais
 
-1. **`store_admin` não é roteado** — brand_admin e branch_admin são verificados, mas `store_admin` fica no `WhiteLabelLayout` quando acessa o domínio da marca
-2. **Root admin em domínio white-label** — se um root_admin acessar `ubizcar.com.br`, ele cai no `WhiteLabelLayout` porque não tem `brand_id` associado. Precisa de tratamento especial
-3. **Badge visual** — não existe indicador de "domínio próprio" no header do painel admin
+### Arquivo único: `src/pages/AccessHubPage.tsx`
 
-## Mudanças
+Reescrita completa com os seguintes componentes internos:
 
-### 1. `src/App.tsx` — Ampliar verificação de roles (linhas 364-376)
+1. **DomainStatusBadge** — Badge verde (Globe + domínio) ou vermelho (GlobeOff + "Sem domínio")
+2. **SubscriptionBadge** — active=verde, trial=amarelo, outros=cinza
+3. **BranchEntityRow** — Cidade com 3 contadores clicáveis (clientes, motoristas, parceiros) usando `navigate()`. Motoristas identificados por `name ILIKE '%[MOTORISTA]%'` (não existe `scoring_model` na tabela)
+4. **BrandAccordionItem** — Item do Accordion com logo (via `brand_settings_json`), nome, badges, totais agregados, botão "Entrar como marca" (root only), e lista de BranchEntityRow no corpo
+5. **RootAccessHub** — Stats globais, busca, Accordion com todas as marcas, useQuery
+6. **BrandAccessHub** — CTA de domínio se ausente, lista de cidades, sem accordion
+7. **StatCard** — Card de estatística reutilizável
 
-Adicionar `store_admin` à verificação e incluir `root_admin` como passagem direta:
+### Mudanças técnicas
 
-```typescript
-if (isWhiteLabel) {
-  if (user && !authLoading) {
-    const isRoot = roles.some((r) => r.role === "root_admin");
-    const isBrandAdmin = brand && roles.some(
-      (r) => r.role === "brand_admin" && r.brand_id === brand.id
-    );
-    const isBranchAdmin = brand && roles.some(
-      (r) => ["branch_admin", "branch_operator", "operator_pdv"].includes(r.role) && r.brand_id === brand.id
-    );
-    const isStoreAdmin = brand && roles.some(
-      (r) => r.role === "store_admin" && r.brand_id === brand.id
-    );
+| Aspecto | Antes | Depois |
+|---------|-------|--------|
+| Data fetching | useState + useEffect | React Query (useQuery) |
+| Componente expansível | Collapsible | Accordion (shadcn) |
+| Contagem motoristas | Não existe | `name ILIKE '%[MOTORISTA]%'` via count query |
+| Links por entidade | Botão "Painel da Cidade" genérico | 3 links clicáveis: `/customers?branchId=X`, `/motoristas?branchId=X`, `/stores?branchId=X` |
+| Logo da marca | Não mostrada | Via `brand_settings_json->logo_url` com SafeImage |
+| Empty states | Texto simples | EmptyState com botões de ação |
+| Domain badge | Texto com ícone | Badge colorido verde/vermelho |
+| Subscription badge | Não existe | Badge com 3 estados |
+| Navegação | `window.location.href` | `useNavigate()` do react-router |
 
-    if (isRoot || isBrandAdmin || isBranchAdmin || isStoreAdmin) {
-      return <AnimatedRoutes />;
-    }
-  }
-  // ...resto mantido
-}
-```
+### Queries
 
-### 2. `src/components/AppLayout.tsx` — Badge "Domínio Próprio"
+- Marcas: `queryKeys.brands.all` → `brands` table (id, name, slug, is_active, subscription_status, brand_settings_json)
+- Domínios: `queryKeys.brandDomains.all` → `brand_domains` table
+- Branches: `queryKeys.branches.list(brandId)` → lazy load ao expandir accordion
+- Contadores: Promise.all com 3 count queries por branch (clientes não-motorista, motoristas, stores)
 
-Adicionar um indicador sutil no header quando `isWhiteLabel === true`:
-- Importar `useBrand` e ler `isWhiteLabel`
-- Renderizar um badge com ícone `Globe` e texto "Domínio próprio" ao lado do botão "Voltar ao Painel Raiz" (que já existe para impersonação)
-- Estilo discreto: texto pequeno, cor `muted-foreground`, ícone Globe de 14px
+### Nenhuma migração SQL necessária
 
-```typescript
-// No header, após o bloco isImpersonating:
-{isWhiteLabel && !isImpersonating && (
-  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-accent/40 px-2.5 py-1 rounded-md">
-    <Globe className="h-3.5 w-3.5" />
-    <span className="hidden sm:inline">Domínio próprio</span>
-  </div>
-)}
-```
-
-### Arquivos
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/App.tsx` | Adicionar `root_admin` e `store_admin` ao roteamento white-label |
-| `src/components/AppLayout.tsx` | Badge "Domínio próprio" no header |
-
-Nenhuma mudança de banco de dados necessária.
+Todas as tabelas e campos já existem. A identificação de motoristas usa o padrão existente `name ILIKE '%[MOTORISTA]%'`.
 
