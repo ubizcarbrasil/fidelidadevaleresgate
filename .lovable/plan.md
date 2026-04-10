@@ -1,50 +1,112 @@
 
 
-# Domínios Próprios por Empresa (Brand Admin)
+# Entendimento: Arquitetura SaaS White-Label Multi-Nível
 
-## Problema Atual
-- A página de domínios (`/domains`) está protegida por `RootGuard` — apenas o Root Admin acessa
-- Brand Admins não conseguem cadastrar ou gerenciar seus próprios domínios
-- A tabela `brand_domains` já tem RLS permitindo que Brand Admins gerenciem domínios da própria marca
+## O Modelo Atual
 
-## Solução
+```text
+┌─────────────────────────────────────────────────────┐
+│                  PAINEL RAIZ (ROOT)                  │
+│        fidelidadevaleresgate.lovable.app             │
+│  Vê tudo: marcas, cidades, parceiros, motoristas    │
+│  Gerencia: módulos, planos, domínios globais        │
+├─────────────────────────────────────────────────────┤
+│            PAINEL MARCA (EMPREENDEDOR)               │
+│  Mesmo domínio, diferenciado por papel (brand_admin) │
+│  Gerencia: suas cidades, parceiros, módulos          │
+│  Configura: domínio próprio (brand_domains)          │
+├─────────────────────────────────────────────────────┤
+│         WHITE-LABEL (domínio da marca)               │
+│  ubiz-car.valeresgate.com → App Cliente              │
+│  ubiz-car.valeresgate.com/driver → Motorista         │
+│  Cada marca tem identidade visual própria            │
+└─────────────────────────────────────────────────────┘
+```
 
-### 1. Criar página de domínios para o Brand Admin
-Criar uma nova página `src/pages/PaginaDominiosMarca.tsx` que:
-- Lista apenas os domínios da marca do usuário logado (filtro via `useBrandGuard`)
-- Permite adicionar, editar e excluir domínios
-- Mostra instruções de configuração DNS (apontar para `185.158.133.1`)
-- Exibe status visual (ativo/inativo)
-- Inclui card explicativo com passo a passo para o empreendedor
+## O Problema
 
-### 2. Adicionar rota no App.tsx
-- Nova rota `/brand-domains` protegida por `ModuleGuard` com moduleKey `domains` (ou sem guard, como configuração básica)
-- Acessível pelo painel BRAND
+Hoje, o **Painel Root** e o **Painel do Empreendedor** vivem no mesmo domínio e na mesma aplicação. A diferenciação é apenas por role do usuário logado. Isso causa:
 
-### 3. Adicionar item no BrandSidebar
-- Novo item no grupo "Configurações":
-  ```
-  { key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe }
-  ```
+1. **Mistura de contextos** — Root e Empreendedor compartilham o mesmo domínio e sidebar
+2. **Central de Acessos incompleta** — a página `/access-hub` não reflete a hierarquia real do SaaS
+3. **Domínio white-label serve apenas o app do cliente** — o painel administrativo do empreendedor NÃO roda no domínio próprio dele
 
-### 4. Adaptar lógica de inserção
-- Ao cadastrar um domínio, o `brand_id` será injetado automaticamente via `enforceBrandId` do `useBrandGuard`
-- O Brand Admin não verá nem escolherá a marca — será a dele automaticamente
-- Ao salvar um domínio `exemplo.com`, inserir automaticamente também `www.exemplo.com` para evitar problemas de resolução
+## A Hierarquia Correta do SaaS
 
-### 5. Card de instruções DNS
-A página incluirá um card explicativo com:
-- IP de destino: `185.158.133.1`
-- Tipo de registro: A Record
-- Prazo de propagação: até 72h
-- Dica sobre versão www
+```text
+NÍVEL 1 — PLATAFORMA (Root Admin)
+  │  Domínio: admin.valeresgate.com (ou lovable.app)
+  │  Visão: todas as marcas, todos os dados
+  │
+  ├── NÍVEL 2 — MARCA / EMPREENDEDOR (Brand Admin)
+  │     │  Domínio próprio: admin.ubizcar.com.br
+  │     │  Visão: apenas sua marca
+  │     │
+  │     ├── NÍVEL 3 — CIDADE (Branch Admin)
+  │     │     │  Acesso via painel da marca (filtro por cidade)
+  │     │     │  Visão: motoristas, parceiros, carteira daquela cidade
+  │     │     │
+  │     │     ├── Motoristas da cidade
+  │     │     ├── Clientes da cidade
+  │     │     └── Parceiros da cidade
+  │     │
+  │     └── NÍVEL 4 — PARCEIRO (Store Admin)
+  │           Acesso: /store-panel
+  │           Visão: apenas sua loja
+  │
+  └── WHITE-LABEL PÚBLICO (domínio da marca)
+        ubizcar.com.br → App do Cliente
+        ubizcar.com.br/driver → Painel do Motorista
+```
 
-## Arquivos Envolvidos
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/PaginaDominiosMarca.tsx` | Criar — página de domínios do empreendedor |
-| `src/App.tsx` | Editar — adicionar rota `/brand-domains` |
-| `src/components/consoles/BrandSidebar.tsx` | Editar — adicionar item "Meus Domínios" |
+## O Que Precisa Mudar
 
-Nenhuma mudança de banco de dados necessária — as RLS policies já permitem que Brand Admins gerenciem domínios da própria marca.
+### 1. Separação do Painel Admin do Empreendedor
+
+Hoje, quando um domínio é detectado em `BrandContext`, o sistema ativa `isWhiteLabel = true` e carrega o `WhiteLabelLayout` (app do cliente). O empreendedor **não consegue** acessar seu painel admin pelo domínio próprio.
+
+**Solução**: Quando um domínio white-label é acessado, verificar se o usuário logado é `brand_admin` daquela marca. Se for, mostrar o `AppLayout` (painel admin) em vez do `WhiteLabelLayout`. Assim:
+- `ubizcar.com.br` sem login → App do Cliente
+- `ubizcar.com.br` com login de brand_admin → Painel do Empreendedor
+- `ubizcar.com.br/driver` → Painel do Motorista
+
+### 2. Resignificação da Central de Acessos
+
+A Central de Acessos precisa refletir a hierarquia completa:
+
+**Para o Root**: Árvore de navegação por Marca → Cidades → Motoristas/Clientes/Parceiros, com links diretos para cada painel e visão consolidada de domínios conectados.
+
+**Para o Empreendedor**: Suas cidades → dentro de cada cidade, os motoristas, clientes e parceiros daquela cidade.
+
+### 3. Domínio do Painel Admin vs Domínio Público
+
+Cada marca pode ter **dois usos** para seu domínio:
+- **Público** (cliente/motorista): `ubizcar.com.br`
+- **Admin** (empreendedor): `ubizcar.com.br` (mesmo domínio, roteamento inteligente por sessão)
+
+O Root sempre acessa pelo domínio da plataforma e pode "entrar" em qualquer marca via `?brandId=`.
+
+## Plano de Implementação
+
+### Etapa 1 — Roteamento Inteligente por Sessão
+- Modificar `AppContent` em `App.tsx` para que, em domínio white-label, se o usuário logado for `brand_admin` da marca resolvida, renderize `AnimatedRoutes` (painel admin) em vez de `WhiteLabelLayout`
+- Manter o comportamento atual para visitantes anônimos (app do cliente)
+
+### Etapa 2 — Reformular a Central de Acessos
+- Root vê: tabela de marcas com expansão para cidades, e dentro de cada cidade: contadores de motoristas/clientes/parceiros + links diretos
+- Brand Admin vê: suas cidades com os mesmos detalhes expandidos
+- Adicionar coluna de "Domínio" mostrando se a marca tem domínio conectado ou não
+
+### Etapa 3 — Garantir Resolução Pública da Marca
+- Corrigir o problema de RLS que impede visitantes anônimos de ver a marca (usar `public_brands_safe` view no `BrandContext`)
+
+### Arquivos Envolvidos
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/App.tsx` | Lógica de roteamento inteligente (admin vs cliente em domínio white-label) |
+| `src/contexts/BrandContext.tsx` | Usar view pública para resolver marca sem autenticação |
+| `src/pages/AccessHubPage.tsx` | Reformular com hierarquia Marca → Cidade → Entidades |
+
+Nenhuma mudança de banco de dados necessária — a infraestrutura já existe.
 
