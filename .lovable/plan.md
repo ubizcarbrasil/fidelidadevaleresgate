@@ -1,36 +1,80 @@
 
+# Corrigir erro do link do motorista no Android
 
-# Limpeza de Organizações + Botão de Excluir
+## O que identifiquei
 
-## Diagnóstico
+Do I know what the issue is? Sim.
 
-1. **Organizações extras**: Existem 13 tenants sem nenhuma marca vinculada que precisam ser removidos. Apenas **Ubiz Resgata** e **Ubiz Car** devem permanecer.
+O texto da tela do print é exatamente o erro do `src/pages/DriverPanelPage.tsx`. Hoje essa página ainda busca a marca direto em `brands`:
 
-2. **Por que não some ao excluir cidade**: A página de Organizações (`/tenants`) não tem botão de exclusão — só tem toggle ativo/inativo e edição. Não existe funcionalidade de deletar tenant na interface.
+```ts
+supabase.from("brands").select("*").eq("id", brandId)
+```
 
-## Plano
+Como essa rota é pública e no Android o usuário abre sem sessão, a RLS bloqueia a leitura e a tela cai em:
 
-### 1. Remover 13 tenants órfãos via migração SQL
+```ts
+"Marca não encontrada para o ID informado."
+```
 
-Executar DELETE para os 13 tenants sem brands vinculadas:
-- Empresa Teste, Abs, Pizzaria do Teste, Meu motorista, Me leva resgata, Matheus MKT, Gina Car, Soureino, Gina haline car, Urbano Norte, Vini fideliza, Leo fideliza, DomStore
+Também encontrei um segundo ponto importante:
+- o domínio do print `valeresgata.ubizcar.com.br` está vinculado hoje à marca **Ubiz Car**
+- a marca **Ubiz Resgata** não tem domínio próprio configurado nessa base
 
-### 2. Adicionar botão de Excluir na página Tenants
+Então existem 2 ajustes separados:
+1. corrigir a leitura pública da marca no `/driver`
+2. alinhar o domínio/link público da Ubiz Resgata, se vocês quiserem usar domínio próprio
 
-Em `src/pages/Tenants.tsx`:
-- Adicionar ícone `Trash2` e botão de exclusão ao lado dos botões existentes (editar/toggle)
-- Criar mutation `deleteTenant` que executa `supabase.from("tenants").delete().eq("id", id)`
-- Adicionar confirmação antes de excluir (dialog ou `window.confirm`)
-- Bloquear exclusão se o tenant tiver marcas vinculadas (`brand_count > 0`)
-- Invalidar queries após sucesso para a lista atualizar automaticamente
+## Plano de implementação
 
-### 3. Corrigir slug do Ubiz Resgata
+### 1. Corrigir a rota `/driver` para funcionar sem login
+No arquivo `src/pages/DriverPanelPage.tsx`:
+- trocar a busca da marca para usar `public_brands_safe`
+- filtrar por `is_active = true`
+- manter fallback para `brands` apenas se fizer sentido em sessão autenticada
 
-O slug ainda está como "123456" — atualizar para "ubiz-resgata" para consistência.
+Exemplo de direção:
+```ts
+const { data: b } = await supabase
+  .from("public_brands_safe")
+  .select("*")
+  .eq("id", brandId)
+  .eq("is_active", true)
+  .maybeSingle();
+```
 
-### Resultado esperado
+### 2. Manter o carregamento da filial compatível com acesso público
+Revisar o trecho que carrega `branches` em `DriverPanelPage.tsx` para:
+- continuar funcionando anonimamente
+- tratar melhor caso `branchId` não exista ou a filial não venha
+- evitar erro silencioso no primeiro acesso mobile
 
-- Página de Organizações mostrará apenas **Ubiz Resgata** e **Ubiz Car**
-- Botão de lixeira permitirá excluir organizações sem marcas diretamente pela interface
-- Lista atualiza automaticamente após exclusão
+### 3. Corrigir o link público da Ubiz Resgata
+Como o domínio do print pertence à **Ubiz Car**, vou ajustar uma destas opções conforme a configuração atual desejada:
+- usar o domínio publicado padrão para a Ubiz Resgata
+- ou configurar um domínio/base pública própria da Ubiz Resgata no backend
 
+Se a intenção for que **Ubiz Resgata** tenha link próprio, preciso alinhar:
+- `brand_domains`
+- e/ou `brand_settings_json.driver_public_base_url`
+
+## Resultado esperado
+
+Depois da correção:
+- o link do motorista abre no Android mesmo sem login prévio
+- a tela de CPF do motorista aparece normalmente
+- não aparece mais “Marca não encontrada para o ID informado”
+- os links passam a apontar para a marca/domínio corretos
+
+## Arquivos e dados envolvidos
+
+- `src/pages/DriverPanelPage.tsx`
+- configuração pública da marca no backend (`brands` / `brand_domains`)
+
+## Validação após implementar
+
+Vou validar estes cenários:
+1. abrir `/driver?brandId=...` em acesso anônimo
+2. abrir no mobile/Android sem sessão salva
+3. testar com domínio publicado padrão
+4. testar com domínio próprio, se a Ubiz Resgata for configurada com um
