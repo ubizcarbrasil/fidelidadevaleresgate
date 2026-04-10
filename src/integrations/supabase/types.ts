@@ -1494,6 +1494,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           tags: string[] | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1503,6 +1504,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           tags?: string[] | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1512,6 +1514,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           tags?: string[] | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1522,6 +1525,7 @@ export type Database = {
           created_at: string
           id: string
           title: string
+          user_id: string | null
         }
         Insert: {
           category?: string | null
@@ -1529,6 +1533,7 @@ export type Database = {
           created_at?: string
           id?: string
           title?: string
+          user_id?: string | null
         }
         Update: {
           category?: string | null
@@ -1536,6 +1541,7 @@ export type Database = {
           created_at?: string
           id?: string
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1548,6 +1554,7 @@ export type Database = {
           priority: string
           status: string
           title: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1557,6 +1564,7 @@ export type Database = {
           priority?: string
           status?: string
           title?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1566,6 +1574,7 @@ export type Database = {
           priority?: string
           status?: string
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }
