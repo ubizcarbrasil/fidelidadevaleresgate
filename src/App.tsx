@@ -362,15 +362,19 @@ function AppContent() {
   }
 
   if (isWhiteLabel) {
-    // Smart routing: if authenticated user is brand_admin for this brand, show admin panel
-    if (user && brand && !authLoading) {
-      const isBrandAdmin = roles.some(
+    // Smart routing: if authenticated admin for this brand, show admin panel
+    if (user && !authLoading) {
+      const isRoot = roles.some((r) => r.role === "root_admin");
+      const isBrandAdmin = brand && roles.some(
         (r) => r.role === "brand_admin" && r.brand_id === brand.id
       );
-      const isBranchAdmin = roles.some(
+      const isBranchAdmin = brand && roles.some(
         (r) => (r.role === "branch_admin" || r.role === "branch_operator" || r.role === "operator_pdv") && r.brand_id === brand.id
       );
-      if (isBrandAdmin || isBranchAdmin) {
+      const isStoreAdmin = brand && roles.some(
+        (r) => r.role === "store_admin" && r.brand_id === brand.id
+      );
+      if (isRoot || isBrandAdmin || isBranchAdmin || isStoreAdmin) {
         return <AnimatedRoutes />;
       }
     }
