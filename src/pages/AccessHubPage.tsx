@@ -1,567 +1,371 @@
-import { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Globe, Users, Car, Store, MapPin, Search, LogIn, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import PageHeader from "@/components/PageHeader";
+import { queryKeys } from "@/lib/queryKeys";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Search,
-  Building2,
-  Smartphone,
-  ChevronRight,
-  Globe,
-  AlertCircle,
-  MapPin,
-  Users,
-  
-  Store,
-  ExternalLink,
-} from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import SafeImage from "@/components/customer/SafeImage";
+import EmptyState from "@/components/customer/EmptyState";
 
-/* ─── Types ─── */
+/* ═══════════════════════════════════════════
+   Tipos internos
+   ═══════════════════════════════════════════ */
+
 interface BrandRow {
   id: string;
   name: string;
   slug: string;
   is_active: boolean;
   subscription_status: string;
+  brand_settings_json: Record<string, any> | null;
 }
 
 interface DomainRow {
   brand_id: string;
   domain: string;
   is_active: boolean;
-  is_primary: boolean;
 }
 
 interface BranchRow {
   id: string;
   name: string;
-  city: string | null;
-  brand_id: string;
   is_active: boolean;
 }
 
 interface BranchCounts {
-  customers: number;
+  clients: number;
+  drivers: number;
   stores: number;
 }
 
-/* ─── Helpers ─── */
-function StatusBadge({ active }: { active: boolean }) {
+/* ═══════════════════════════════════════════
+   Componentes auxiliares
+   ═══════════════════════════════════════════ */
+
+function DomainStatusBadge({ domain }: { domain?: string }) {
+  if (domain) {
+    return (
+      <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-400 gap-1 text-[11px]">
+        <Globe className="h-3 w-3" />
+        {domain}
+      </Badge>
+    );
+  }
   return (
-    <Badge variant={active ? "default" : "secondary"}>
-      {active ? "Ativo" : "Inativo"}
+    <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[11px]">
+      <Globe className="h-3 w-3" />
+      Sem domínio
     </Badge>
   );
 }
 
-function DomainBadge({ domain, isActive }: { domain: string; isActive: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-xs">
-      <Globe className="h-3 w-3 text-muted-foreground" />
-      <span className={isActive ? "text-foreground" : "text-muted-foreground line-through"}>
-        {domain}
-      </span>
-    </span>
-  );
+function SubscriptionBadge({ status }: { status: string }) {
+  if (status === "active") {
+    return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[11px]">Ativo</Badge>;
+  }
+  if (status === "trial") {
+    return <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/30 text-[11px]">Trial</Badge>;
+  }
+  return <Badge variant="secondary" className="text-[11px]">Inativo</Badge>;
 }
 
-/* ─── Branch counts loader ─── */
-async function loadBranchCounts(branchId: string): Promise<BranchCounts> {
-  const [customersRes, storesRes] = await Promise.all([
-    supabase.from("customers").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
-    supabase.from("stores").select("id", { count: "exact", head: true }).eq("branch_id", branchId),
-  ]);
-  return {
-    customers: customersRes.count ?? 0,
-    stores: storesRes.count ?? 0,
-  };
-}
-
-/* ─── Branch Expandable Row ─── */
-function BranchExpandableRow({ branch }: { branch: BranchRow }) {
-  const [open, setOpen] = useState(false);
-  const [counts, setCounts] = useState<BranchCounts | null>(null);
-  const [loadingCounts, setLoadingCounts] = useState(false);
-
-  const handleToggle = async () => {
-    if (!open && !counts) {
-      setLoadingCounts(true);
-      const c = await loadBranchCounts(branch.id);
-      setCounts(c);
-      setLoadingCounts(false);
-    }
-    setOpen(!open);
-  };
-
+function StatCard({ icon: Icon, label, value, loading }: { icon: React.ElementType; label: string; value: number; loading?: boolean }) {
   return (
-    <Collapsible open={open} onOpenChange={handleToggle}>
-      <CollapsibleTrigger asChild>
-        <div className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer transition-colors">
-          <div className="flex items-center gap-3">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="font-medium text-sm">{branch.name}</p>
-              {branch.city && (
-                <p className="text-xs text-muted-foreground">{branch.city}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <StatusBadge active={branch.is_active} />
-            <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
-          </div>
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="ml-7 mt-2 space-y-2">
-          {loadingCounts ? (
-            <div className="flex gap-3">
-              <Skeleton className="h-16 w-32 rounded-lg" />
-              <Skeleton className="h-16 w-32 rounded-lg" />
-              <Skeleton className="h-16 w-32 rounded-lg" />
-            </div>
-          ) : counts ? (
-            <div className="flex flex-wrap gap-3">
-              <CountCard icon={Users} label="Clientes" count={counts.customers} />
-              <CountCard icon={Store} label="Parceiros" count={counts.stores} />
-            </div>
-          ) : null}
-          <div className="flex gap-2 mt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-xs"
-              onClick={() => {
-                window.location.href = `/?branchId=${branch.id}`;
-              }}
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              Painel da Cidade
-            </Button>
-          </div>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
-function CountCard({ icon: Icon, label, count }: { icon: typeof Users; label: string; count: number }) {
-  return (
-    <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 min-w-[120px]">
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      <div>
-        <p className="text-lg font-bold leading-none">{count}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
+      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground truncate">{label}</p>
+        {loading ? <Skeleton className="h-6 w-12 mt-0.5" /> : <p className="text-lg font-bold">{value}</p>}
       </div>
     </div>
   );
 }
 
-/* ─── Brand Card with expandable branches ─── */
-function BrandCard({
-  brand,
-  domains,
-}: {
-  brand: BrandRow;
-  domains: DomainRow[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [branches, setBranches] = useState<BranchRow[]>([]);
-  const [loadingBranches, setLoadingBranches] = useState(false);
+/* ═══════════════════════════════════════════
+   Hook: contadores por branch
+   ═══════════════════════════════════════════ */
 
-  const brandDomains = domains.filter((d) => d.brand_id === brand.id);
-  const primaryDomain = brandDomains.find((d) => d.is_primary);
+function useBranchCounts(branchId: string | undefined) {
+  return useQuery({
+    queryKey: ["branch-entity-counts", branchId],
+    enabled: !!branchId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<BranchCounts> => {
+      const [clientsRes, driversRes, storesRes] = await Promise.all([
+        supabase.from("customers").select("id", { count: "exact", head: true }).eq("branch_id", branchId!).not("name", "ilike", "%[MOTORISTA]%"),
+        supabase.from("customers").select("id", { count: "exact", head: true }).eq("branch_id", branchId!).ilike("name", "%[MOTORISTA]%"),
+        supabase.from("stores").select("id", { count: "exact", head: true }).eq("branch_id", branchId!),
+      ]);
+      return {
+        clients: clientsRes.count ?? 0,
+        drivers: driversRes.count ?? 0,
+        stores: storesRes.count ?? 0,
+      };
+    },
+  });
+}
 
-  const handleToggle = async () => {
-    if (!open && branches.length === 0) {
-      setLoadingBranches(true);
-      const { data } = await supabase
-        .from("branches")
-        .select("id, name, city, brand_id, is_active")
-        .eq("brand_id", brand.id)
-        .order("name");
-      setBranches(data || []);
-      setLoadingBranches(false);
-    }
-    setOpen(!open);
-  };
+/* ═══════════════════════════════════════════
+   BranchEntityRow
+   ═══════════════════════════════════════════ */
+
+function BranchEntityRow({ branch }: { branch: BranchRow }) {
+  const navigate = useNavigate();
+  const { data: counts, isLoading } = useBranchCounts(branch.id);
+
+  const counters = [
+    { icon: Users, label: "clientes", value: counts?.clients ?? 0, path: `/customers?branchId=${branch.id}` },
+    { icon: Car, label: "motoristas", value: counts?.drivers ?? 0, path: `/motoristas?branchId=${branch.id}` },
+    { icon: Store, label: "parceiros", value: counts?.stores ?? 0, path: `/stores?branchId=${branch.id}` },
+  ];
 
   return (
-    <Collapsible open={open} onOpenChange={handleToggle}>
-      <CollapsibleTrigger asChild>
-        <div className="flex items-center justify-between p-4 rounded-xl border bg-card hover:bg-accent/30 cursor-pointer transition-colors">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold truncate">{brand.name}</h3>
-              <StatusBadge active={brand.is_active} />
-            </div>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs text-muted-foreground">{brand.slug}</span>
-              {primaryDomain ? (
-                <DomainBadge domain={primaryDomain.domain} isActive={primaryDomain.is_active} />
-              ) : (
-                <span className="inline-flex items-center gap-1 text-xs text-amber-500">
-                  <AlertCircle className="h-3 w-3" />
-                  Sem domínio
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 ml-2 shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 hidden sm:inline-flex"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/dashboard?brandId=${brand.id}`;
-              }}
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              Admin
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 hidden sm:inline-flex"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/customer-preview?brandId=${brand.id}`;
-              }}
-            >
-              <Smartphone className="h-3.5 w-3.5" />
-              App
-            </Button>
-            <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
-          </div>
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="ml-4 mt-2 space-y-2 pb-2">
-          {/* Mobile action buttons */}
-          <div className="flex gap-2 sm:hidden">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => {
-                window.location.href = `/dashboard?brandId=${brand.id}`;
-              }}
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              Painel Admin
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => {
-                window.location.href = `/customer-preview?brandId=${brand.id}`;
-              }}
-            >
-              <Smartphone className="h-3.5 w-3.5" />
-              App
-            </Button>
-          </div>
-
-          {/* Domain info */}
-          {brandDomains.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-1">
-              {brandDomains.map((d) => (
-                <DomainBadge key={d.domain} domain={d.domain} isActive={d.is_active} />
-              ))}
-            </div>
-          )}
-
-          {/* Branches */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground px-1 pt-1">Cidades</p>
-            {loadingBranches ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full rounded-lg" />
-                <Skeleton className="h-12 w-full rounded-lg" />
-              </div>
-            ) : branches.length === 0 ? (
-              <p className="text-xs text-muted-foreground px-1">Nenhuma cidade cadastrada.</p>
-            ) : (
-              branches.map((branch) => (
-                <BranchExpandableRow key={branch.id} branch={branch} />
-              ))
-            )}
-          </div>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3 px-2 rounded-lg hover:bg-accent/30 transition-colors">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="font-medium text-sm truncate">{branch.name}</span>
+        {!branch.is_active && <Badge variant="secondary" className="text-[10px] shrink-0">Inativa</Badge>}
+      </div>
+      <div className="flex items-center gap-3 flex-wrap">
+        {counters.map((c) => (
+          <button
+            key={c.label}
+            onClick={() => navigate(c.path)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <c.icon className="h-3.5 w-3.5 group-hover:text-primary transition-colors" />
+            {isLoading ? <Skeleton className="h-4 w-6" /> : <span className="font-semibold">{c.value}</span>}
+            <span className="hidden sm:inline">{c.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
-/* ─── ROOT VIEW ─── */
+/* ═══════════════════════════════════════════
+   BrandAccordionItem
+   ═══════════════════════════════════════════ */
+
+function BrandAccordionItem({ brand, domain, isRoot }: { brand: BrandRow; domain?: string; isRoot: boolean }) {
+  const navigate = useNavigate();
+  const logoUrl = (brand.brand_settings_json as any)?.logo_url as string | undefined;
+
+  const { data: branches = [], isLoading: branchesLoading } = useQuery({
+    queryKey: queryKeys.branches.list(brand.id),
+    queryFn: async () => {
+      const { data } = await supabase.from("branches").select("id, name, is_active").eq("brand_id", brand.id).order("name");
+      return (data ?? []) as BranchRow[];
+    },
+  });
+
+  return (
+    <AccordionItem value={brand.id} className="border rounded-xl mb-3 overflow-hidden">
+      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-accent/20 [&[data-state=open]]:bg-accent/10">
+        <div className="flex items-center gap-3 flex-1 min-w-0 mr-2 flex-wrap">
+          <SafeImage
+            src={logoUrl}
+            alt={brand.name}
+            preset="thumbnail"
+            className="h-8 w-8 rounded-lg object-cover shrink-0"
+            fallback={<div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center"><Building2 className="h-4 w-4 text-primary" /></div>}
+          />
+          <span className="font-semibold text-sm truncate">{brand.name}</span>
+          <DomainStatusBadge domain={domain} />
+          <SubscriptionBadge status={brand.subscription_status} />
+          <span className="text-[11px] text-muted-foreground hidden lg:inline">
+            {branches.length} cidades
+          </span>
+          {isRoot && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/?brandId=${brand.id}`); }}
+              className="ml-auto flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 font-medium shrink-0"
+            >
+              <LogIn className="h-3.5 w-3.5" /> Entrar
+            </button>
+          )}
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pb-4">
+        {branchesLoading ? (
+          <div className="space-y-2 pt-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+        ) : branches.length === 0 ? (
+          <EmptyState type="generic" title="Nenhuma cidade cadastrada" description="Crie a primeira cidade para esta marca." ctaLabel="Criar cidade" onCta={() => navigate("/branches")} />
+        ) : (
+          <div className="divide-y divide-border/40">
+            {branches.map((b) => <BranchEntityRow key={b.id} branch={b} />)}
+          </div>
+        )}
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   RootAccessHub
+   ═══════════════════════════════════════════ */
+
 function RootAccessHub() {
-  const [brands, setBrands] = useState<BrandRow[]>([]);
-  const [domains, setDomains] = useState<DomainRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    Promise.all([
-      supabase
-        .from("brands")
-        .select("id, name, slug, is_active, subscription_status")
-        .order("name"),
-      supabase
-        .from("brand_domains")
-        .select("brand_id, domain, is_active, is_primary"),
-    ]).then(([brandsRes, domainsRes]) => {
-      setBrands(brandsRes.data || []);
-      setDomains(domainsRes.data || []);
-      setLoading(false);
-    });
-  }, []);
+  const { data: brands = [], isLoading: brandsLoading } = useQuery({
+    queryKey: queryKeys.brands.all,
+    queryFn: async () => {
+      const { data } = await supabase.from("brands").select("id, name, slug, is_active, subscription_status, brand_settings_json").order("name");
+      return (data ?? []) as BrandRow[];
+    },
+  });
 
-  const filtered = brands.filter(
-    (b) =>
-      b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.slug.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: domains = [], isLoading: domainsLoading } = useQuery({
+    queryKey: queryKeys.brandDomains.all,
+    queryFn: async () => {
+      const { data } = await supabase.from("brand_domains").select("brand_id, domain, is_active");
+      return (data ?? []) as DomainRow[];
+    },
+  });
 
-  const semDominio = brands.filter(
-    (b) => !domains.some((d) => d.brand_id === b.id && d.is_active)
-  );
+  const domainMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    domains.filter((d) => d.is_active).forEach((d) => { map[d.brand_id] = d.domain; });
+    return map;
+  }, [domains]);
 
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-xl" />
-        ))}
-      </div>
-    );
-  }
+  const filtered = useMemo(() => {
+    if (!search.trim()) return brands;
+    const q = search.toLowerCase();
+    return brands.filter((b) => b.name.toLowerCase().includes(q));
+  }, [brands, search]);
 
-  return (
-    <div className="space-y-4">
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Marcas" value={brands.length} />
-        <StatCard label="Ativas" value={brands.filter((b) => b.is_active).length} />
-        <StatCard label="Com Domínio" value={brands.length - semDominio.length} />
-        <StatCard label="Sem Domínio" value={semDominio.length} variant="warning" />
-      </div>
-
-      {/* Alert for brands without domain */}
-      {semDominio.length > 0 && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium text-amber-500">
-              {semDominio.length} marca(s) sem domínio próprio
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {semDominio.map((b) => b.name).join(", ")}
-          </p>
-        </div>
-      )}
-
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar marca..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
-      {/* Brand list */}
-      <div className="space-y-2">
-        {filtered.map((brand) => (
-          <BrandCard key={brand.id} brand={brand} domains={domains} />
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            Nenhuma marca encontrada.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ─── BRAND ADMIN VIEW ─── */
-function BrandAccessHub({ brandId }: { brandId: string }) {
-  const [branches, setBranches] = useState<BranchRow[]>([]);
-  const [domains, setDomains] = useState<DomainRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      supabase
-        .from("branches")
-        .select("id, name, city, brand_id, is_active")
-        .eq("brand_id", brandId)
-        .order("name"),
-      supabase
-        .from("brand_domains")
-        .select("brand_id, domain, is_active, is_primary")
-        .eq("brand_id", brandId),
-    ]).then(([branchesRes, domainsRes]) => {
-      setBranches(branchesRes.data || []);
-      setDomains(domainsRes.data || []);
-      setLoading(false);
-    });
-  }, [brandId]);
-
-  const primaryDomain = domains.find((d) => d.is_primary && d.is_active);
-
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-xl" />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Domain status */}
-      <div className="rounded-lg border p-4 bg-card">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="text-sm font-medium">Domínio</p>
-              {primaryDomain ? (
-                <p className="text-xs text-muted-foreground">{primaryDomain.domain}</p>
-              ) : (
-                <p className="text-xs text-amber-500">Nenhum domínio configurado</p>
-              )}
-            </div>
-          </div>
-          {primaryDomain && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() =>
-                window.open(`https://${primaryDomain.domain}`, "_blank")
-              }
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Abrir
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Cidades" value={branches.length} />
-        <StatCard label="Ativas" value={branches.filter((b) => b.is_active).length} />
-        <StatCard label="Domínios" value={domains.length} />
-      </div>
-
-      {/* Branches */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Suas Cidades</p>
-        {branches.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            Nenhuma cidade cadastrada.
-          </p>
-        ) : (
-          branches.map((branch) => (
-            <BranchExpandableRow key={branch.id} branch={branch} />
-          ))
-        )}
-      </div>
-
-      {/* Customer app */}
-      <div className="rounded-lg border p-4 bg-card flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Smartphone className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium">App do Cliente</p>
-            <p className="text-xs text-muted-foreground">
-              Visualize como seus consumidores veem
-            </p>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1.5"
-          onClick={() =>
-            window.open(`/customer-preview?brandId=${brandId}`, "_blank")
-          }
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          Abrir
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Stat Card ─── */
-function StatCard({
-  label,
-  value,
-  variant = "default",
-}: {
-  label: string;
-  value: number;
-  variant?: "default" | "warning";
-}) {
-  return (
-    <div className="rounded-lg border bg-card p-3">
-      <p
-        className={`text-2xl font-bold ${
-          variant === "warning" && value > 0 ? "text-amber-500" : ""
-        }`}
-      >
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
-/* ─── Main page ─── */
-export default function AccessHubPage() {
-  const { isRootAdmin } = useAuth();
-  const { currentBrandId } = useBrandGuard();
+  const loading = brandsLoading || domainsLoading;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Central de Acessos"
-        description={
-          isRootAdmin
-            ? "Visão completa: Marcas → Cidades → Entidades"
-            : "Suas cidades e acessos rápidos"
-        }
-      />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Building2} label="Marcas" value={brands.length} loading={loading} />
+        <StatCard icon={MapPin} label="Domínios ativos" value={domains.filter((d) => d.is_active).length} loading={loading} />
+        <StatCard icon={Globe} label="Com domínio" value={Object.keys(domainMap).length} loading={loading} />
+        <StatCard icon={Building2} label="Sem domínio" value={brands.length - Object.keys(domainMap).length} loading={loading} />
+      </div>
 
-      {isRootAdmin ? (
-        <RootAccessHub />
-      ) : currentBrandId ? (
-        <BrandAccessHub brandId={currentBrandId} />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Buscar marca..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full h-10 pl-9 pr-4 rounded-xl border bg-card text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+      ) : filtered.length === 0 ? (
+        search ? (
+          <EmptyState type="search" title="Nenhuma marca encontrada" description={`Sem resultados para "${search}".`} />
+        ) : (
+          <EmptyState type="generic" title="Nenhuma marca cadastrada" ctaLabel="Criar primeira marca" onCta={() => {}} />
+        )
       ) : (
-        <p className="text-muted-foreground">
-          Nenhuma marca vinculada encontrada.
-        </p>
+        <Accordion type="multiple" className="space-y-0">
+          {filtered.map((b) => (
+            <BrandAccordionItem key={b.id} brand={b} domain={domainMap[b.id]} isRoot />
+          ))}
+        </Accordion>
       )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   BrandAccessHub
+   ═══════════════════════════════════════════ */
+
+function BrandAccessHub() {
+  const navigate = useNavigate();
+  const { brand } = useBrand();
+  const { currentBrandId } = useBrandGuard();
+  const brandId = currentBrandId ?? brand?.id;
+
+  const { data: domains = [] } = useQuery({
+    queryKey: queryKeys.brandDomains.list(brandId ?? ""),
+    enabled: !!brandId,
+    queryFn: async () => {
+      const { data } = await supabase.from("brand_domains").select("brand_id, domain, is_active").eq("brand_id", brandId!);
+      return (data ?? []) as DomainRow[];
+    },
+  });
+
+  const { data: branches = [], isLoading } = useQuery({
+    queryKey: queryKeys.branches.list(brandId ?? ""),
+    enabled: !!brandId,
+    queryFn: async () => {
+      const { data } = await supabase.from("branches").select("id, name, is_active").eq("brand_id", brandId!).order("name");
+      return (data ?? []) as BranchRow[];
+    },
+  });
+
+  const activeDomain = domains.find((d) => d.is_active)?.domain;
+
+  return (
+    <div className="space-y-6">
+      {!activeDomain && (
+        <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Globe className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Configure seu domínio white-label</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Seus clientes acessarão pelo seu próprio endereço personalizado.</p>
+          </div>
+          <button onClick={() => navigate("/brand-domains")} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0">
+            Configurar agora
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="font-semibold">{brand?.name ?? "Minha Marca"}</span>
+        <DomainStatusBadge domain={activeDomain} />
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+      ) : branches.length === 0 ? (
+        <EmptyState type="generic" title="Nenhuma cidade cadastrada" description="Crie sua primeira cidade para começar a operar." ctaLabel="Criar primeira cidade" onCta={() => navigate("/branches")} />
+      ) : (
+        <div className="divide-y divide-border/40 rounded-xl border bg-card p-2">
+          {branches.map((b) => <BranchEntityRow key={b.id} branch={b} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Página principal
+   ═══════════════════════════════════════════ */
+
+export default function AccessHubPage() {
+  const { consoleScope } = useBrandGuard();
+  const isRoot = consoleScope === "ROOT";
+
+  return (
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-xl font-bold">Central de Acessos</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {isRoot ? "Visão global de todas as marcas e cidades" : "Gerencie suas cidades e acessos"}
+        </p>
+      </div>
+      {isRoot ? <RootAccessHub /> : <BrandAccessHub />}
     </div>
   );
 }
