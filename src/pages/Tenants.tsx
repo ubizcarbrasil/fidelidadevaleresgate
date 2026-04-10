@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Power } from "lucide-react";
+import { Plus, Pencil, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const PAGE_SIZE = 20;
 
@@ -18,6 +20,7 @@ export default function Tenants() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
+  const { state: confirmState, confirm, close: closeConfirm } = useConfirmDialog();
 
   const { data, isLoading } = useQuery({
     queryKey: ["tenants", debouncedSearch, page],
@@ -40,6 +43,29 @@ export default function Tenants() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["tenants"] }); toast.success("Status atualizado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const deleteTenant = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tenants").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["tenants"] }); toast.success("Organização excluída!"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDelete = (t: any) => {
+    if (t.brand_count > 0) {
+      toast.error("Não é possível excluir: existem marcas vinculadas a esta organização.");
+      return;
+    }
+    confirm({
+      title: "Excluir organização",
+      description: `Tem certeza que deseja excluir "${t.name}"? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+      onConfirm: () => deleteTenant.mutate(t.id),
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -69,6 +95,7 @@ export default function Tenants() {
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="icon" asChild><Link to={`/tenants/${t.id}`}><Pencil className="h-4 w-4" /></Link></Button>
                     <Button variant="ghost" size="icon" onClick={() => toggleActive.mutate({ id: t.id, is_active: !t.is_active })}><Power className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(t)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -76,6 +103,7 @@ export default function Tenants() {
           </Table>)}
         </CardContent>
       </Card>
+      <ConfirmDialog open={confirmState.open} title={confirmState.title} description={confirmState.description} confirmLabel={confirmState.confirmLabel} variant={confirmState.variant} onConfirm={confirmState.onConfirm} onClose={closeConfirm} />
     </div>
   );
 }
