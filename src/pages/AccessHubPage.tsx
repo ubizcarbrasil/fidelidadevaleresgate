@@ -130,7 +130,6 @@ function BranchExpandableRow({ branch }: { branch: BranchRow }) {
             <div className="flex flex-wrap gap-3">
               <CountCard icon={Users} label="Clientes" count={counts.customers} />
               <CountCard icon={Store} label="Parceiros" count={counts.stores} />
-              <CountCard icon={Car} label="Motoristas" count={counts.drivers} />
             </div>
           ) : null}
           <div className="flex gap-2 mt-2">
