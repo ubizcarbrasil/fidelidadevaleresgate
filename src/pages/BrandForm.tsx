@@ -35,6 +35,7 @@ export default function BrandForm() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [tenantId, setTenantId] = useState("");
+  const [tenantName, setTenantName] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
   const [theme, setTheme] = useState<BrandTheme>({});
@@ -75,6 +76,9 @@ export default function BrandForm() {
         setName(data.name);
         setSlug(data.slug);
         setTenantId(data.tenant_id);
+        supabase.from("tenants").select("name").eq("id", data.tenant_id).single().then(({ data: tenant }) => {
+          if (tenant) setTenantName(tenant.name);
+        });
         setIsActive(data.is_active);
         setSubscriptionPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
@@ -140,8 +144,17 @@ export default function BrandForm() {
         }).eq("id", id!)
       : await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan }]);
 
-    if (error) toast.error(error.message);
-    else { toast.success(isEdit ? "Marca atualizada!" : "Marca criada!"); if (isRootAdmin && !isEdit) navigate("/brands"); }
+    if (error) {
+      toast.error(error.message);
+    } else {
+      // Update tenant name if changed
+      if (isRootAdmin && tenantId && tenantName.trim()) {
+        await supabase.from("tenants").update({ name: tenantName.trim() }).eq("id", tenantId);
+        queryClient.invalidateQueries({ queryKey: ["tenants-select"] });
+      }
+      toast.success(isEdit ? "Marca atualizada!" : "Marca criada!");
+      if (isRootAdmin && !isEdit) navigate("/brands");
+    }
     setLoading(false);
   };
 
@@ -216,16 +229,28 @@ export default function BrandForm() {
               <Card>
                 <CardHeader><CardTitle>{isEdit ? "Editar Marca" : "Nova Marca"}</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Organização</Label>
-                    <Select value={tenantId} onValueChange={setTenantId}>
-                      <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
-                      <SelectContent>
-                        {tenants?.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Organização</Label>
+                      <Select value={tenantId} onValueChange={(val) => {
+                        setTenantId(val);
+                        const selected = tenants?.find(t => t.id === val);
+                        if (selected) setTenantName(selected.name);
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
+                        <SelectContent>
+                          {tenants?.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {tenantId && (
+                      <div className="space-y-2">
+                        <Label>Nome da Organização</Label>
+                        <Input value={tenantName} onChange={(e) => setTenantName(e.target.value)} placeholder="Nome da organização" />
+                      </div>
+                    )}
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
