@@ -1,80 +1,71 @@
 
-# Corrigir erro do link do motorista no Android
-
-## O que identifiquei
+Objetivo: fazer o link do motorista abrir no Android mesmo quando o usuário recebeu/copiou um link antigo ou gerado no domínio errado.
 
 Do I know what the issue is? Sim.
 
-O texto da tela do print é exatamente o erro do `src/pages/DriverPanelPage.tsx`. Hoje essa página ainda busca a marca direto em `brands`:
+Problema exato:
+- A correção no `/driver` já foi aplicada: `DriverPanelPage.tsx` usa a view pública e isso resolve o acesso anônimo.
+- O erro continua no Android porque o link que está sendo aberto usa o host `www.valeresgata.ubizcar.com.br`.
+- Hoje esse domínio está mapeado no backend para a marca Ubiz Car, não para Ubiz Resgata.
+- Além disso, vários pontos do app ainda geram links públicos usando `window.location.origin`, então a Ubiz Resgata pode herdar o domínio atual errado ao copiar/compartilhar links.
+- No Android, isso piora por causa de cache/PWA: o usuário tende a reabrir sempre o mesmo host já salvo/copiado.
 
-```ts
-supabase.from("brands").select("*").eq("id", brandId)
-```
+Plano de implementação
 
-Como essa rota é pública e no Android o usuário abre sem sessão, a RLS bloqueia a leitura e a tela cai em:
+1. Centralizar a URL pública correta da marca
+- Ajustar `src/lib/publicShareUrl.ts` para resolver a origem canônica da marca nesta ordem:
+  1. `driver_public_base_url` configurada
+  2. domínio ativo/principal da marca
+  3. domínio publicado padrão do app
+- Parar de depender de `window.location.origin` para links públicos de motorista.
 
-```ts
-"Marca não encontrada para o ID informado."
-```
+2. Corrigir todos os geradores de link
+- Atualizar para usar a mesma lógica central:
+  - `src/features/pagina_links/pagina_links.tsx`
+  - `src/components/dashboard/DashboardQuickLinks.tsx`
+  - `src/pages/DriverPanelConfigPage.tsx`
+  - qualquer share/copy do motorista
+- Resultado: Ubiz Resgata sempre gera link próprio/canônico, mesmo se o admin estiver navegando em outro domínio.
 
-Também encontrei um segundo ponto importante:
-- o domínio do print `valeresgata.ubizcar.com.br` está vinculado hoje à marca **Ubiz Car**
-- a marca **Ubiz Resgata** não tem domínio próprio configurado nessa base
+3. Auto-corrigir links antigos no próprio `/driver`
+- Em `src/pages/DriverPanelPage.tsx`, depois de carregar a marca:
+  - calcular a origem canônica da marca
+  - se o host atual não bater com a origem correta, redirecionar automaticamente preservando rota e querystring
+- Isso “cura” links antigos já enviados para Android.
 
-Então existem 2 ajustes separados:
-1. corrigir a leitura pública da marca no `/driver`
-2. alinhar o domínio/link público da Ubiz Resgata, se vocês quiserem usar domínio próprio
+4. Alinhar a configuração pública da Ubiz Resgata
+- Configurar a base pública da Ubiz Resgata para um endereço correto:
+  - ou domínio publicado padrão
+  - ou domínio white-label próprio da Ubiz Resgata
+- Hoje ela está sem `driver_public_base_url`, então o sistema cai em fallback e pode usar o host errado.
 
-## Plano de implementação
+5. Forçar atualização mais confiável no Android
+- Endurecer a recuperação de cache/PWA para evitar bundle antigo:
+  - revisar `index.html` e o fluxo de SW
+  - subir a chave/versionamento da limpeza para forçar refresh após deploy
+- Isso reduz o risco de o Android continuar servindo JS antigo.
 
-### 1. Corrigir a rota `/driver` para funcionar sem login
-No arquivo `src/pages/DriverPanelPage.tsx`:
-- trocar a busca da marca para usar `public_brands_safe`
-- filtrar por `is_active = true`
-- manter fallback para `brands` apenas se fizer sentido em sessão autenticada
-
-Exemplo de direção:
-```ts
-const { data: b } = await supabase
-  .from("public_brands_safe")
-  .select("*")
-  .eq("id", brandId)
-  .eq("is_active", true)
-  .maybeSingle();
-```
-
-### 2. Manter o carregamento da filial compatível com acesso público
-Revisar o trecho que carrega `branches` em `DriverPanelPage.tsx` para:
-- continuar funcionando anonimamente
-- tratar melhor caso `branchId` não exista ou a filial não venha
-- evitar erro silencioso no primeiro acesso mobile
-
-### 3. Corrigir o link público da Ubiz Resgata
-Como o domínio do print pertence à **Ubiz Car**, vou ajustar uma destas opções conforme a configuração atual desejada:
-- usar o domínio publicado padrão para a Ubiz Resgata
-- ou configurar um domínio/base pública própria da Ubiz Resgata no backend
-
-Se a intenção for que **Ubiz Resgata** tenha link próprio, preciso alinhar:
-- `brand_domains`
-- e/ou `brand_settings_json.driver_public_base_url`
-
-## Resultado esperado
-
-Depois da correção:
-- o link do motorista abre no Android mesmo sem login prévio
-- a tela de CPF do motorista aparece normalmente
-- não aparece mais “Marca não encontrada para o ID informado”
-- os links passam a apontar para a marca/domínio corretos
-
-## Arquivos e dados envolvidos
-
+Arquivos envolvidos
 - `src/pages/DriverPanelPage.tsx`
-- configuração pública da marca no backend (`brands` / `brand_domains`)
+- `src/lib/publicShareUrl.ts`
+- `src/features/pagina_links/pagina_links.tsx`
+- `src/components/dashboard/DashboardQuickLinks.tsx`
+- `src/pages/DriverPanelConfigPage.tsx`
+- `index.html`
+- configuração de domínio/base pública da marca no backend
 
-## Validação após implementar
+Detalhes técnicos
+- O problema principal agora não é mais RLS do `/driver`.
+- O problema é “host canônico errado + geração de links baseada no domínio atual”.
+- O print confirma isso: o usuário abriu `www.valeresgata.ubizcar.com.br`, mas esse host está associado a outra marca.
+- A solução mais robusta é:
+  - gerar links com origem canônica por marca
+  - redirecionar automaticamente quando um link abrir no host errado
+  - invalidar cache antigo no Android
 
-Vou validar estes cenários:
-1. abrir `/driver?brandId=...` em acesso anônimo
-2. abrir no mobile/Android sem sessão salva
-3. testar com domínio publicado padrão
-4. testar com domínio próprio, se a Ubiz Resgata for configurada com um
+Validação após implementar
+1. Gerar novo link da Ubiz Resgata na página `/links`
+2. Abrir no Android em aba anônima
+3. Abrir no Android em navegador normal
+4. Abrir um link antigo com host errado e confirmar redirecionamento automático
+5. Confirmar que a tela de CPF abre sem “Marca não encontrada”
