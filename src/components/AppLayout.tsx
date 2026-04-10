@@ -162,6 +162,13 @@ export default function AppLayout() {
               </Button>
             )}
 
+            {isWhiteLabel && !isImpersonating && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-accent/40 px-2.5 py-1 rounded-md shrink-0">
+                <Globe className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Domínio próprio</span>
+              </div>
+            )}
+
             <Breadcrumb className="hidden md:flex">
               <BreadcrumbList>
                 {crumbs.map((crumb, i) => (
