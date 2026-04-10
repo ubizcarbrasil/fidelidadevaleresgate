@@ -7619,6 +7619,7 @@ export type Database = {
       }
       public_brands_safe: {
         Row: {
+          brand_settings_json: Json | null
           created_at: string | null
           default_theme_id: string | null
           home_layout_json: Json | null
@@ -7631,6 +7632,7 @@ export type Database = {
           trial_expires_at: string | null
         }
         Insert: {
+          brand_settings_json?: Json | null
           created_at?: string | null
           default_theme_id?: string | null
           home_layout_json?: Json | null
@@ -7643,6 +7645,7 @@ export type Database = {
           trial_expires_at?: string | null
         }
         Update: {
+          brand_settings_json?: Json | null
           created_at?: string | null
           default_theme_id?: string | null
           home_layout_json?: Json | null
