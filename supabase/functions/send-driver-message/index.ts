@@ -79,6 +79,10 @@ Deno.serve(async (req) => {
     }
 
     if (!templateBody) {
+      // If called via event_type with no configured flow, gracefully skip
+      if (event_type && !message_body && !template_id) {
+        return json({ sent: 0, failed: 0, skipped: 0, message: "No flow or template configured for this event" });
+      }
       return json({ error: "No template or message body provided" }, 400);
     }
 
