@@ -144,8 +144,17 @@ export default function BrandForm() {
         }).eq("id", id!)
       : await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan }]);
 
-    if (error) toast.error(error.message);
-    else { toast.success(isEdit ? "Marca atualizada!" : "Marca criada!"); if (isRootAdmin && !isEdit) navigate("/brands"); }
+    if (error) {
+      toast.error(error.message);
+    } else {
+      // Update tenant name if changed
+      if (isRootAdmin && tenantId && tenantName.trim()) {
+        await supabase.from("tenants").update({ name: tenantName.trim() }).eq("id", tenantId);
+        queryClient.invalidateQueries({ queryKey: ["tenants-select"] });
+      }
+      toast.success(isEdit ? "Marca atualizada!" : "Marca criada!");
+      if (isRootAdmin && !isEdit) navigate("/brands");
+    }
     setLoading(false);
   };
 
