@@ -77,8 +77,8 @@ function construirCategorias(brands: Brand[], branches: Branch[], stores: StoreR
       })),
     },
     {
-77:       titulo: "Painéis Operacionais — Motorista",
-78:       cards: brands.map((brand) => ({
+      titulo: "Painéis Operacionais — Motorista",
+      cards: brands.map((brand) => ({
         titulo: `Motorista — ${brand.name}`,
         descricao: `Painel do motorista na brand ${brand.name}.`,
         rota: `/driver?brandId=${brand.id}`,
