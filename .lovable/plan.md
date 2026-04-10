@@ -1,112 +1,69 @@
 
 
-# Entendimento: Arquitetura SaaS White-Label Multi-Nível
+# Plano: Correção Estrutural de Domínios White-Label
 
-## O Modelo Atual
+## Status Atual
 
-```text
-┌─────────────────────────────────────────────────────┐
-│                  PAINEL RAIZ (ROOT)                  │
-│        fidelidadevaleresgate.lovable.app             │
-│  Vê tudo: marcas, cidades, parceiros, motoristas    │
-│  Gerencia: módulos, planos, domínios globais        │
-├─────────────────────────────────────────────────────┤
-│            PAINEL MARCA (EMPREENDEDOR)               │
-│  Mesmo domínio, diferenciado por papel (brand_admin) │
-│  Gerencia: suas cidades, parceiros, módulos          │
-│  Configura: domínio próprio (brand_domains)          │
-├─────────────────────────────────────────────────────┤
-│         WHITE-LABEL (domínio da marca)               │
-│  ubiz-car.valeresgate.com → App Cliente              │
-│  ubiz-car.valeresgate.com/driver → Motorista         │
-│  Cada marca tem identidade visual própria            │
-└─────────────────────────────────────────────────────┘
+| Etapa | Status | Detalhe |
+|-------|--------|---------|
+| **View `public_brands_safe`** | ⚠️ Parcial | Criada COM `security_invoker=on` — bloqueia anônimos. Precisa recriar SEM essa opção + GRANT |
+| **Sanitização de domínios no banco** | ❌ Pendente | Domínios com `https://` precisam de UPDATE |
+| **Roteamento inteligente (App.tsx)** | ✅ Pronto | Lógica brand_admin/branch_admin já implementada (linhas 364-386) |
+| **BrandContext usa view pública** | ✅ Pronto | `fetchBrandById` já tenta `public_brands_safe` primeiro |
+| **Sanitização de hostname no código** | ❌ Pendente | `resolveBrandByDomain` não limpa protocolo |
+| **Sanitização na escrita de domínios** | ❌ Pendente | `PaginaDominiosMarca.tsx` e `BrandDomains.tsx` salvam domínio como digitado |
+| **Central de Acessos hierárquica** | ✅ Pronto | `AccessHubPage.tsx` já reformulada com drill-down |
+
+## O Que Será Feito
+
+### Etapa 1 — Migration SQL (corrige o bug principal)
+
+Nova migration que:
+1. Recria `public_brands_safe` **SEM** `security_invoker` (executa como owner, bypassa RLS da tabela base)
+2. Adiciona `GRANT SELECT` para `anon` e `authenticated`
+3. Sanitiza domínios existentes removendo `https://` e `http://`
+
+```sql
+DROP VIEW IF EXISTS public.public_brands_safe;
+CREATE VIEW public.public_brands_safe AS
+SELECT id, name, slug, is_active, subscription_status, tenant_id,
+       default_theme_id, home_layout_json, brand_settings_json,
+       created_at, trial_expires_at
+FROM public.brands;
+
+GRANT SELECT ON public.public_brands_safe TO anon, authenticated;
+
+UPDATE public.brand_domains
+SET domain = REGEXP_REPLACE(domain, '^https?://', '')
+WHERE domain ~ '^https?://';
 ```
 
-## O Problema
+### Etapa 2 — BrandContext.tsx
 
-Hoje, o **Painel Root** e o **Painel do Empreendedor** vivem no mesmo domínio e na mesma aplicação. A diferenciação é apenas por role do usuário logado. Isso causa:
+Adicionar sanitização de hostname no início de `resolveBrandByDomain`:
 
-1. **Mistura de contextos** — Root e Empreendedor compartilham o mesmo domínio e sidebar
-2. **Central de Acessos incompleta** — a página `/access-hub` não reflete a hierarquia real do SaaS
-3. **Domínio white-label serve apenas o app do cliente** — o painel administrativo do empreendedor NÃO roda no domínio próprio dele
-
-## A Hierarquia Correta do SaaS
-
-```text
-NÍVEL 1 — PLATAFORMA (Root Admin)
-  │  Domínio: admin.valeresgate.com (ou lovable.app)
-  │  Visão: todas as marcas, todos os dados
-  │
-  ├── NÍVEL 2 — MARCA / EMPREENDEDOR (Brand Admin)
-  │     │  Domínio próprio: admin.ubizcar.com.br
-  │     │  Visão: apenas sua marca
-  │     │
-  │     ├── NÍVEL 3 — CIDADE (Branch Admin)
-  │     │     │  Acesso via painel da marca (filtro por cidade)
-  │     │     │  Visão: motoristas, parceiros, carteira daquela cidade
-  │     │     │
-  │     │     ├── Motoristas da cidade
-  │     │     ├── Clientes da cidade
-  │     │     └── Parceiros da cidade
-  │     │
-  │     └── NÍVEL 4 — PARCEIRO (Store Admin)
-  │           Acesso: /store-panel
-  │           Visão: apenas sua loja
-  │
-  └── WHITE-LABEL PÚBLICO (domínio da marca)
-        ubizcar.com.br → App do Cliente
-        ubizcar.com.br/driver → Painel do Motorista
+```typescript
+hostname = hostname.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase().trim();
 ```
 
-## O Que Precisa Mudar
+### Etapa 3 — Sanitização na escrita (2 arquivos)
 
-### 1. Separação do Painel Admin do Empreendedor
+Em `PaginaDominiosMarca.tsx` e `BrandDomains.tsx`, ao salvar domínio, limpar protocolo e barras:
 
-Hoje, quando um domínio é detectado em `BrandContext`, o sistema ativa `isWhiteLabel = true` e carrega o `WhiteLabelLayout` (app do cliente). O empreendedor **não consegue** acessar seu painel admin pelo domínio próprio.
-
-**Solução**: Quando um domínio white-label é acessado, verificar se o usuário logado é `brand_admin` daquela marca. Se for, mostrar o `AppLayout` (painel admin) em vez do `WhiteLabelLayout`. Assim:
-- `ubizcar.com.br` sem login → App do Cliente
-- `ubizcar.com.br` com login de brand_admin → Painel do Empreendedor
-- `ubizcar.com.br/driver` → Painel do Motorista
-
-### 2. Resignificação da Central de Acessos
-
-A Central de Acessos precisa refletir a hierarquia completa:
-
-**Para o Root**: Árvore de navegação por Marca → Cidades → Motoristas/Clientes/Parceiros, com links diretos para cada painel e visão consolidada de domínios conectados.
-
-**Para o Empreendedor**: Suas cidades → dentro de cada cidade, os motoristas, clientes e parceiros daquela cidade.
-
-### 3. Domínio do Painel Admin vs Domínio Público
-
-Cada marca pode ter **dois usos** para seu domínio:
-- **Público** (cliente/motorista): `ubizcar.com.br`
-- **Admin** (empreendedor): `ubizcar.com.br` (mesmo domínio, roteamento inteligente por sessão)
-
-O Root sempre acessa pelo domínio da plataforma e pode "entrar" em qualquer marca via `?brandId=`.
-
-## Plano de Implementação
-
-### Etapa 1 — Roteamento Inteligente por Sessão
-- Modificar `AppContent` em `App.tsx` para que, em domínio white-label, se o usuário logado for `brand_admin` da marca resolvida, renderize `AnimatedRoutes` (painel admin) em vez de `WhiteLabelLayout`
-- Manter o comportamento atual para visitantes anônimos (app do cliente)
-
-### Etapa 2 — Reformular a Central de Acessos
-- Root vê: tabela de marcas com expansão para cidades, e dentro de cada cidade: contadores de motoristas/clientes/parceiros + links diretos
-- Brand Admin vê: suas cidades com os mesmos detalhes expandidos
-- Adicionar coluna de "Domínio" mostrando se a marca tem domínio conectado ou não
-
-### Etapa 3 — Garantir Resolução Pública da Marca
-- Corrigir o problema de RLS que impede visitantes anônimos de ver a marca (usar `public_brands_safe` view no `BrandContext`)
+```typescript
+const cleanDomain = domain.toLowerCase().trim()
+  .replace(/^https?:\/\//, '')
+  .replace(/\/$/, '');
+```
 
 ### Arquivos Envolvidos
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/App.tsx` | Lógica de roteamento inteligente (admin vs cliente em domínio white-label) |
-| `src/contexts/BrandContext.tsx` | Usar view pública para resolver marca sem autenticação |
-| `src/pages/AccessHubPage.tsx` | Reformular com hierarquia Marca → Cidade → Entidades |
+| Arquivo | Ação |
+|---------|------|
+| Nova migration SQL | Criar — recriar view + sanitizar dados |
+| `src/contexts/BrandContext.tsx` | Editar — sanitizar hostname |
+| `src/pages/PaginaDominiosMarca.tsx` | Editar — sanitizar domínio ao salvar |
+| `src/pages/BrandDomains.tsx` | Editar — sanitizar domínio ao salvar |
 
-Nenhuma mudança de banco de dados necessária — a infraestrutura já existe.
+As etapas de roteamento inteligente (App.tsx) e Central de Acessos (AccessHubPage.tsx) **já estão implementadas** e não precisam de mudanças adicionais.
 
