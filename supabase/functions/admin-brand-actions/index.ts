@@ -92,6 +92,10 @@ Deno.serve(async (req) => {
       // Delete dependent data in order — explicit cleanup before cascade
       const tables = [
         // Deep dependents first
+        "affiliate_clicks",
+        "affiliate_category_banners",
+        "brand_section_manual_items",
+        "brand_section_sources",
         "redemptions",
         "coupons",
         "catalog_cart_orders",
@@ -105,6 +109,16 @@ Deno.serve(async (req) => {
         "customer_click_events",
         "points_ledger",
         "earning_events",
+        "product_redemption_orders",
+        "driver_duel_audit_log",
+        "duel_side_bets",
+        "driver_duels",
+        "driver_duel_participants",
+        "city_belt_champions",
+        "city_feed_events",
+        "tier_points_rules",
+        "driver_points_rules",
+        "vouchers",
         "offers",
         "customers",
         "stores",
@@ -138,10 +152,17 @@ Deno.serve(async (req) => {
         "points_rules",
         "sponsored_placements",
         "store_products",
+        "branch_wallet_transactions",
+        "branch_points_wallet",
+        "audit_logs",
       ];
 
       for (const table of tables) {
-        await adminClient.from(table).delete().eq("brand_id", brand_id);
+        try {
+          await adminClient.from(table).delete().eq("brand_id", brand_id);
+        } catch {
+          console.warn(`[delete_brand] Failed to clean table ${table}, skipping`);
+        }
       }
 
       // Clear profile references to branches of this brand before deleting branches
@@ -440,8 +461,16 @@ Deno.serve(async (req) => {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Erro interno";
+  } catch (err: unknown) {
+    let message = "Erro interno";
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (typeof err === "object" && err !== null) {
+      message = (err as any).message || (err as any).error_description || JSON.stringify(err);
+    } else if (typeof err === "string") {
+      message = err;
+    }
+    console.error("[admin-brand-actions] Unhandled error:", message, err);
 
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
