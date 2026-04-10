@@ -26,6 +26,33 @@ const BrandContext = createContext<BrandContextType | undefined>(undefined);
  * Resolve brand by subdomain: {brandSlug}.valeresgate.com
  * or by full domain match in brand_domains table.
  */
+/**
+ * Fetch brand data by ID using the public-safe view first (works for anon),
+ * falling back to the full brands table (works for authenticated users).
+ */
+async function fetchBrandById(brandId: string): Promise<Brand | null> {
+  // Try public view first (accessible to anonymous users)
+  const { data: publicBrand } = await supabase
+    .from("public_brands_safe")
+    .select("*")
+    .eq("id", brandId)
+    .single();
+
+  if (publicBrand) {
+    // Cast — the public view has the same core fields
+    return publicBrand as unknown as Brand;
+  }
+
+  // Fallback for authenticated users with RLS access
+  const { data: brand } = await supabase
+    .from("brands")
+    .select("*")
+    .eq("id", brandId)
+    .single();
+
+  return brand;
+}
+
 async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
   // 1) Try subdomain match first
   const parts = hostname.split(".");
@@ -41,33 +68,33 @@ async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
         .maybeSingle();
 
       if (subdomainMatch) {
-        const { data: brand } = await supabase
-          .from("brands")
-          .select("*")
-          .eq("id", subdomainMatch.brand_id)
-          .single();
-        return brand;
+        return fetchBrandById(subdomainMatch.brand_id);
       }
     }
   }
 
-  // 2) Fallback: full domain match
-  const { data } = await supabase
-    .from("brand_domains")
-    .select("brand_id")
-    .eq("domain", hostname)
-    .eq("is_active", true)
-    .maybeSingle();
+  // 2) Fallback: full domain match (try with and without www)
+  const domainsToTry = [hostname];
+  if (hostname.startsWith("www.")) {
+    domainsToTry.push(hostname.replace("www.", ""));
+  } else {
+    domainsToTry.push(`www.${hostname}`);
+  }
 
-  if (!data) return null;
+  for (const domain of domainsToTry) {
+    const { data } = await supabase
+      .from("brand_domains")
+      .select("brand_id")
+      .eq("domain", domain)
+      .eq("is_active", true)
+      .maybeSingle();
 
-  const { data: brand } = await supabase
-    .from("brands")
-    .select("*")
-    .eq("id", data.brand_id)
-    .single();
+    if (data) {
+      return fetchBrandById(data.brand_id);
+    }
+  }
 
-  return brand;
+  return null;
 }
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
@@ -103,11 +130,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           const params = new URLSearchParams(window.location.search);
           const brandIdParam = params.get("brandId");
           if (brandIdParam) {
-            const { data: brandData } = await supabase
-              .from("brands")
-              .select("*")
-              .eq("id", brandIdParam)
-              .single();
+            const brandData = await fetchBrandById(brandIdParam);
             if (brandData) {
               setBrand(brandData);
             }
