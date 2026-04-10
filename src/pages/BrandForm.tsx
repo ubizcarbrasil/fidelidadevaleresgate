@@ -35,6 +35,7 @@ export default function BrandForm() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [tenantId, setTenantId] = useState("");
+  const [tenantName, setTenantName] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
   const [theme, setTheme] = useState<BrandTheme>({});
