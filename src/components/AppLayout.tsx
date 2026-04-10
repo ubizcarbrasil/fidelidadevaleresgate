@@ -74,6 +74,7 @@ function useBreadcrumbs() {
 
 export default function AppLayout() {
   const { consoleScope, isRootAdmin } = useBrandGuard();
+  const { isWhiteLabel } = useBrand();
   const { name: brandName, logoUrl: brandLogoUrl, brandId } = useBrandInfo();
   const { user, signOut } = useAuth();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
