@@ -220,17 +220,28 @@ export default function BrandForm() {
               <Card>
                 <CardHeader><CardTitle>{isEdit ? "Editar Marca" : "Nova Marca"}</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Organização</Label>
-                    <Select value={tenantId} onValueChange={setTenantId}>
-                      <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
-                      <SelectContent>
-                        {tenants?.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Organização</Label>
+                      <Select value={tenantId} onValueChange={(val) => {
+                        setTenantId(val);
+                        const selected = tenants?.find(t => t.id === val);
+                        if (selected) setTenantName(selected.name);
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Selecione uma organização" /></SelectTrigger>
+                        <SelectContent>
+                          {tenants?.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {tenantId && (
+                      <div className="space-y-2">
+                        <Label>Nome da Organização</Label>
+                        <Input value={tenantName} onChange={(e) => setTenantName(e.target.value)} placeholder="Nome da organização" />
+                      </div>
+                    )}
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Nome</Label>
