@@ -99,7 +99,7 @@ export default function PaginaDominiosMarca() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const cleanDomain = domain.toLowerCase().trim();
+      const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
       if (!currentBrandId) throw new Error("Brand não identificada");
 
       if (editingDomain) {

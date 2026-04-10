@@ -137,8 +137,9 @@ export default function BrandDomains() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
       const payload = {
-        domain: domain.toLowerCase().trim(),
+        domain: cleanDomain,
         brand_id: brandId,
         is_primary: isPrimary,
         is_active: isActive,

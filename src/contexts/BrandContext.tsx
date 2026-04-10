@@ -54,6 +54,9 @@ async function fetchBrandById(brandId: string): Promise<Brand | null> {
 }
 
 async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
+  // Sanitize hostname: remove protocol, trailing slash, lowercase
+  hostname = hostname.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase().trim();
+
   // 1) Try subdomain match first
   const parts = hostname.split(".");
   if (parts.length >= 2) {
