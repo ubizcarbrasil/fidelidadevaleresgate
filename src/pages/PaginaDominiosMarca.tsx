@@ -100,29 +100,29 @@ export default function PaginaDominiosMarca() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const cleanDomain = domain.toLowerCase().trim();
-      const basePayload = enforceBrandId({
-        domain: cleanDomain,
-        is_primary: isPrimary,
-      });
+      if (!currentBrandId) throw new Error("Brand não identificada");
 
       if (editingDomain) {
         const { error } = await supabase
           .from("brand_domains")
-          .update(basePayload)
+          .update({ domain: cleanDomain, is_primary: isPrimary })
           .eq("id", editingDomain.id);
         if (error) throw error;
       } else {
-        // Insert main domain
-        const { error } = await supabase.from("brand_domains").insert(basePayload);
+        const { error } = await supabase.from("brand_domains").insert({
+          domain: cleanDomain,
+          is_primary: isPrimary,
+          brand_id: currentBrandId,
+        });
         if (error) throw error;
 
-        // Auto-insert www version if not already a www domain
+        // Auto-insert www version
         if (!cleanDomain.startsWith("www.")) {
-          const wwwPayload = enforceBrandId({
+          await supabase.from("brand_domains").insert({
             domain: `www.${cleanDomain}`,
             is_primary: false,
+            brand_id: currentBrandId,
           });
-          await supabase.from("brand_domains").insert(wwwPayload);
         }
       }
     },
