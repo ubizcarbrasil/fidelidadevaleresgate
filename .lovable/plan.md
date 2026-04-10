@@ -1,25 +1,36 @@
 
 
-# Corrigir Nome da Organização + Permitir Edição no Painel
+# Limpeza de Organizações + Botão de Excluir
 
-## 1. Correção de dados
+## Diagnóstico
 
-Atualizar o nome do tenant `1dcbe0c0-4f9a-48ba-80ee-a8c9404e9382` de "123456" para "Ubiz Resgata" via insert tool (UPDATE).
+1. **Organizações extras**: Existem 13 tenants sem nenhuma marca vinculada que precisam ser removidos. Apenas **Ubiz Resgata** e **Ubiz Car** devem permanecer.
 
-## 2. Permitir edição do nome da organização no BrandForm
+2. **Por que não some ao excluir cidade**: A página de Organizações (`/tenants`) não tem botão de exclusão — só tem toggle ativo/inativo e edição. Não existe funcionalidade de deletar tenant na interface.
 
-No arquivo `src/pages/BrandForm.tsx`, na aba "Geral" (visível apenas para `root_admin`), adicionar um campo de texto editável ao lado do Select de organização. Quando o root_admin altera o nome, ao salvar a marca, o nome do tenant também é atualizado.
+## Plano
 
-### Mudanças em `src/pages/BrandForm.tsx`:
+### 1. Remover 13 tenants órfãos via migração SQL
 
-- Adicionar estado `tenantName` que é preenchido ao carregar a marca (fetch do tenant selecionado)
-- Ao lado do Select de organização, adicionar um Input para editar o nome do tenant selecionado
-- No `handleSave`, incluir um `supabase.from("tenants").update({ name: tenantName }).eq("id", tenantId)` antes ou junto do save da brand
+Executar DELETE para os 13 tenants sem brands vinculadas:
+- Empresa Teste, Abs, Pizzaria do Teste, Meu motorista, Me leva resgata, Matheus MKT, Gina Car, Soureino, Gina haline car, Urbano Norte, Vini fideliza, Leo fideliza, DomStore
 
-### Arquivos modificados
+### 2. Adicionar botão de Excluir na página Tenants
 
-| Arquivo | Mudança |
-|---------|---------|
-| (dados) | UPDATE tenants SET name = 'Ubiz Resgata' WHERE id = '1dcbe0c0-...' |
-| `src/pages/BrandForm.tsx` | Adicionar campo editável para nome da organização |
+Em `src/pages/Tenants.tsx`:
+- Adicionar ícone `Trash2` e botão de exclusão ao lado dos botões existentes (editar/toggle)
+- Criar mutation `deleteTenant` que executa `supabase.from("tenants").delete().eq("id", id)`
+- Adicionar confirmação antes de excluir (dialog ou `window.confirm`)
+- Bloquear exclusão se o tenant tiver marcas vinculadas (`brand_count > 0`)
+- Invalidar queries após sucesso para a lista atualizar automaticamente
+
+### 3. Corrigir slug do Ubiz Resgata
+
+O slug ainda está como "123456" — atualizar para "ubiz-resgata" para consistência.
+
+### Resultado esperado
+
+- Página de Organizações mostrará apenas **Ubiz Resgata** e **Ubiz Car**
+- Botão de lixeira permitirá excluir organizações sem marcas diretamente pela interface
+- Lista atualiza automaticamente após exclusão
 
