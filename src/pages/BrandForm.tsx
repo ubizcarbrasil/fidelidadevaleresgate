@@ -242,6 +242,7 @@ export default function BrandForm() {
                         <Input value={tenantName} onChange={(e) => setTenantName(e.target.value)} placeholder="Nome da organização" />
                       </div>
                     )}
+                  </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Nome</Label>
