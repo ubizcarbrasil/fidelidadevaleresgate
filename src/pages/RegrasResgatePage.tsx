@@ -129,6 +129,11 @@ export default function RegrasResgatePage() {
   });
 
   const updateField = (key: keyof RedemptionRules, value: string) => {
+    if (value === "" || value === ".") {
+      setForm((prev) => ({ ...prev, [key]: 0 }));
+      setDirty(true);
+      return;
+    }
     const num = parseFloat(value);
     if (isNaN(num) || num < 0) return;
     setForm((prev) => ({ ...prev, [key]: num }));
@@ -237,7 +242,7 @@ export default function RegrasResgatePage() {
                   type="number"
                   step={card.step || "1"}
                   min={card.min ?? 0}
-                  value={form[card.field]}
+                  value={form[card.field] === 0 ? "" : form[card.field]}
                   onChange={(e) => updateField(card.field, e.target.value)}
                   className="w-32"
                 />
