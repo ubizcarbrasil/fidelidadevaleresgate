@@ -7579,6 +7579,7 @@ export type Database = {
           original_price: number | null
           price: number | null
           redeem_points_cost: number | null
+          redeemable_by: string | null
           store_logo_url: string | null
           store_name: string | null
           title: string | null
@@ -7608,6 +7609,7 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           redeem_points_cost?: number | null
+          redeemable_by?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           title?: string | null
@@ -7637,6 +7639,7 @@ export type Database = {
           original_price?: number | null
           price?: number | null
           redeem_points_cost?: number | null
+          redeemable_by?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           title?: string | null
