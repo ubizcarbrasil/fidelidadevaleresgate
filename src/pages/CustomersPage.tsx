@@ -344,6 +344,7 @@ export default function CustomersPage() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setBonusCustomer(c)} title="Bonificar"><Gift className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                     </div>
                   </div>
