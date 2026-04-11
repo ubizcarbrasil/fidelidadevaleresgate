@@ -41,7 +41,21 @@ export default function ProdutosResgatePage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<any>(null);
 
-  const mirrorDriver = (brand?.brand_settings_json as any)?.customer_redeem_mirror_driver === true;
+  // Query dedicada para brand_settings_json (brand pode ser null no admin)
+  const { data: brandSettings } = useQuery({
+    queryKey: ["brand-settings", currentBrandId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", currentBrandId!)
+        .single();
+      return (data?.brand_settings_json as Record<string, any>) ?? {};
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const mirrorDriver = brandSettings?.customer_redeem_mirror_driver === true;
 
   // ── Query ──
   const { data, isLoading } = useQuery({
@@ -233,7 +247,7 @@ export default function ProdutosResgatePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand"] });
+      qc.invalidateQueries({ queryKey: ["brand-settings", currentBrandId] });
       toast.success("Configuração de espelhamento atualizada");
     },
     onError: (e: Error) => toast.error(e.message),
