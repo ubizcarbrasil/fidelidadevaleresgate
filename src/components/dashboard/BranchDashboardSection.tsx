@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats } from "./branch/hook_branch_dashboard";
+import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats, useBranchRidesPerDay } from "./branch/hook_branch_dashboard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBranchModules } from "@/hooks/useBranchModules";
@@ -18,7 +18,7 @@ import BranchKpiClientesAtivos from "./branch/BranchKpiClientesAtivos";
 import BranchKpiOfertasAtivas from "./branch/BranchKpiOfertasAtivas";
 import BranchKpiLojasParceiras from "./branch/BranchKpiLojasParceiras";
 import BranchArenaDuelos from "./branch/BranchArenaDuelos";
-
+import BranchGraficoCorridasDia from "./branch/BranchGraficoCorridasDia";
 interface Props {
   branchId: string;
 }
@@ -29,6 +29,7 @@ export default function BranchDashboardSection({ branchId }: Props) {
   const feed = useBranchRealtimeFeed(branchId);
   const { isDriverEnabled, isPassengerEnabled, isLoading: isScoringLoading } = useBranchScoringModel(branchId);
   const { data: passengerStats, isLoading: isPassengerLoading } = useBranchPassengerStats(branchId);
+  const { data: ridesPerDay, isLoading: isRidesPerDayLoading } = useBranchRidesPerDay(branchId);
   const { currentBrandId } = useBrandGuard();
   const { isBranchModuleEnabled } = useBranchModules(branchId);
   const effectiveBrandId = currentBrandId || "";
@@ -76,6 +77,9 @@ export default function BranchDashboardSection({ branchId }: Props) {
           </div>
         </>
       )}
+
+      {/* Gráfico de corridas por dia */}
+      {isDriverEnabled && <BranchGraficoCorridasDia data={ridesPerDay} isLoading={isRidesPerDayLoading} />}
 
       {/* Visão geral da cidade — só motorista */}
       {isDriverEnabled && <BranchVisaoGeral stats={stats} branchId={branchId} brandId={effectiveBrandId} />}
