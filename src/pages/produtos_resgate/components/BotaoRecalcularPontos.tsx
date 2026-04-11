@@ -57,7 +57,7 @@ export default function BotaoRecalcularPontos() {
     mutationFn: async () => {
       let query = supabase
         .from("affiliate_deals")
-        .select("id, price")
+        .select("id, price, redeemable_by")
         .eq("is_redeemable", true)
         .not("price", "is", null)
         .gt("price", 0);
@@ -72,7 +72,8 @@ export default function BotaoRecalcularPontos() {
 
       let count = 0;
       for (const deal of deals) {
-        const novoCusto = Math.ceil((deal.price as number) * taxa);
+        const taxaPublico = getTaxaPorPublico((deal as any).redeemable_by || "driver");
+        const novoCusto = Math.ceil((deal.price as number) * taxaPublico);
         const { error } = await supabase
           .from("affiliate_deals")
           .update({ redeem_points_cost: novoCusto } as any)
