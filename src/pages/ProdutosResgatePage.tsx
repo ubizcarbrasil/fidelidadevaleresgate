@@ -247,7 +247,7 @@ export default function ProdutosResgatePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand"] });
+      qc.invalidateQueries({ queryKey: ["brand-settings", currentBrandId] });
       toast.success("Configuração de espelhamento atualizada");
     },
     onError: (e: Error) => toast.error(e.message),
