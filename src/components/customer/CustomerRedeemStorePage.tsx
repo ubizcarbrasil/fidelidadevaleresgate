@@ -54,15 +54,14 @@ export default function CustomerRedeemStorePage({ onBack }: Props) {
   // Check if mirroring driver products
   const mirrorDriver = (brand?.brand_settings_json as any)?.customer_redeem_mirror_driver === true;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["customer-redeem-store", brandId, branchId, mirrorDriver],
     enabled: !!brandId,
     queryFn: async () => {
       let q = supabase
-        .from("affiliate_deals")
+        .from("public_affiliate_deals_safe")
         .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_redeemable, redeem_points_cost, redeemable_by")
         .eq("brand_id", brandId!)
-        .eq("is_active", true)
         .eq("is_redeemable", true)
         .order("order_index")
         .limit(500);
@@ -84,6 +83,10 @@ export default function CustomerRedeemStorePage({ onBack }: Props) {
         .order("order_index");
 
       const [dealsRes, catsRes] = await Promise.all([q, catsQ]);
+
+      if (dealsRes.error) throw new Error(dealsRes.error.message);
+      if (catsRes.error) throw new Error(catsRes.error.message);
+
       return {
         deals: (dealsRes.data || []) as RedeemDeal[],
         categories: (catsRes.data || []) as DealCategory[],
