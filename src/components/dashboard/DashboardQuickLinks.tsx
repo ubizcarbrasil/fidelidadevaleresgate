@@ -19,6 +19,7 @@ import { getPublicOrigin } from "@/lib/publicShareUrl";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
+  const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const { data: brand } = useQuery({
     queryKey: ["brand-quick-links", currentBrandId],
@@ -45,7 +46,15 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
-  const openExternal = (url: string) => { window.location.href = url; };
+  // Links that should use SPA navigation (internal admin routes)
+  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação"]);
+  const handleOpen = (label: string, path: string) => {
+    if (internalLabels.has(label)) {
+      navigate(path);
+    } else {
+      window.location.href = path;
+    }
+  };
 
   if (!brand) return null;
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
@@ -87,6 +96,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {quickLinks.map((link) => {
               const internalUrl = `${origin}${link.path}`;
+              const isInternal = internalLabels.has(link.label);
                const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
               return (
                 <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
@@ -96,7 +106,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
                   </div>
                   <p className="text-xs text-muted-foreground">{link.description}</p>
                   <div className="flex gap-1">
-                    <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => openExternal(internalUrl)}>
+                    <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => handleOpen(link.label, isInternal ? link.path : internalUrl)}>
                       <ExternalLink className="h-3 w-3" /> Abrir
                     </Button>
                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(internalUrl)}>
