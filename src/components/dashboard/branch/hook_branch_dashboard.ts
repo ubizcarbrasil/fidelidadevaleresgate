@@ -106,3 +106,36 @@ export function useBranchPassengerStats(branchId: string) {
     enabled: !!branchId,
   });
 }
+
+export function useBranchRidesPerDay(branchId: string) {
+  return useQuery({
+    queryKey: ["branch-rides-per-day", branchId],
+    queryFn: async () => {
+      const since = subDays(new Date(), 13);
+      const sinceISO = startOfDay(since).toISOString();
+
+      const { data, error } = await supabase
+        .from("machine_rides" as any)
+        .select("finalized_at")
+        .eq("branch_id", branchId)
+        .eq("ride_status", "FINALIZED")
+        .gte("finalized_at", sinceISO);
+
+      if (error) throw error;
+
+      const countMap: Record<string, number> = {};
+      for (let i = 0; i < 14; i++) {
+        const d = format(subDays(new Date(), 13 - i), "dd/MM");
+        countMap[d] = 0;
+      }
+
+      for (const row of (data || []) as { finalized_at: string }[]) {
+        const d = format(new Date(row.finalized_at), "dd/MM");
+        if (d in countMap) countMap[d]++;
+      }
+
+      return Object.entries(countMap).map(([day, rides]) => ({ day, rides }));
+    },
+    enabled: !!branchId,
+  });
+}

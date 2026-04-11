@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats } from "./branch/hook_branch_dashboard";
+import { useBranchDashboardStats, useBranchRanking, useBranchRealtimeFeed, useBranchPassengerStats, useBranchRidesPerDay } from "./branch/hook_branch_dashboard";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBranchModules } from "@/hooks/useBranchModules";
