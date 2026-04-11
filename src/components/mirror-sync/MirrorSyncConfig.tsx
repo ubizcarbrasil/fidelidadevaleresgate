@@ -181,7 +181,7 @@ export default function MirrorSyncConfig({ brandId, sourceType: initialSource }:
           <div className="flex items-center justify-between">
             <div>
               <Label>Sincronização automática</Label>
-              <p className="text-xs text-muted-foreground">Sincronizar periodicamente</p>
+              <p className="text-xs text-muted-foreground">Sincroniza automaticamente às 00:00, 12:00 e 18:00 (horário UTC)</p>
             </div>
             <Switch checked={form.auto_sync_enabled} onCheckedChange={(v) => setForm({ ...form, auto_sync_enabled: v })} />
           </div>
