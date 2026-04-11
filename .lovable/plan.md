@@ -1,46 +1,33 @@
 
 
-## Plano: Taxa de conversão personalizada por produto
+## Plano: Corrigir visibilidade dos produtos de resgate para clientes
 
-### Problema atual
-Hoje o custo em pontos de cada produto é definido pela taxa global (pts/R$) ou manualmente com valor fixo. Não existe opção de definir uma taxa de conversão personalizada por produto, que calcularia automaticamente o custo baseado no preço do produto.
+### Problema
+A tabela `affiliate_deals` tem RLS ativado com apenas uma política para admins. Clientes autenticados não conseguem ler os produtos, então a loja de resgate aparece vazia.
 
-### Mudanças
+### Solução
+Adicionar uma política de SELECT para usuários autenticados com role `customer`, permitindo leitura apenas dos produtos ativos e resgatáveis.
 
-**1. Migração SQL** — Adicionar coluna `custom_points_per_real` na tabela `affiliate_deals`
+### Mudança
+
+**1. Migração SQL** — Nova política RLS na tabela `affiliate_deals`
+
 ```sql
-ALTER TABLE affiliate_deals ADD COLUMN custom_points_per_real numeric DEFAULT NULL;
+CREATE POLICY "Customers can view redeemable deals"
+ON public.affiliate_deals
+FOR SELECT
+TO authenticated
+USING (
+  is_active = true
+  AND is_redeemable = true
+);
 ```
-Quando `NULL`, usa a taxa global. Quando preenchido, o custo em pontos é recalculado como `preço × custom_points_per_real`.
 
-**2. Modal de Edição por Produto** — Novo componente `ModalEditarResgatavel`
-- Abre ao clicar em "Editar" no produto (novo botão na tabela/card)
-- Campos editáveis:
-  - **Público-alvo** (motorista/cliente/ambos)
-  - **Custo em pontos** (editável diretamente)
-  - **Taxa personalizada** (pts/R$) — campo opcional que, ao ser preenchido, recalcula o custo automaticamente com base no preço do produto
-  - Preview: mostra o cálculo `Preço R$ X × Y pts/R$ = Z pts`
-- Ao salvar, grava `redeem_points_cost`, `redeemable_by` e `custom_points_per_real`
-
-**3. Atualizar `ModalAdicionarResgatavel`**
-- Mostrar a taxa global atual (motorista/cliente) como referência
-- Permitir que o usuário defina uma taxa personalizada por produto durante a adição (campo opcional)
-
-**4. Atualizar `ProdutosResgatePage`**
-- Adicionar botão "Editar" em cada linha/card que abre o `ModalEditarResgatavel`
-- Na coluna/card de custo, indicar quando o produto tem taxa personalizada (badge ou ícone)
-- No `BotaoRecalcularPontos`, respeitar a taxa personalizada do produto quando existir (usar `custom_points_per_real` em vez da global)
-
-**5. Atualizar `BotaoRecalcularPontos`**
-- Ao recalcular em lote, usar `custom_points_per_real` do produto quando existir, senão usar a taxa global
+Essa política permite que qualquer usuário autenticado (incluindo clientes) visualize produtos que estejam ativos e marcados como resgatáveis. Dados sensíveis não são expostos pois a query do cliente já seleciona apenas colunas públicas.
 
 ### Arquivos envolvidos
-- 1 migração SQL (nova coluna)
-- `src/pages/produtos_resgate/components/ModalEditarResgatavel.tsx` (novo)
-- `src/pages/produtos_resgate/components/ModalAdicionarResgatavel.tsx` (atualizar)
-- `src/pages/produtos_resgate/components/BotaoRecalcularPontos.tsx` (atualizar)
-- `src/pages/ProdutosResgatePage.tsx` (atualizar)
+- 1 migração SQL (nova política RLS)
 
 ### Resultado
-O empreendedor pode definir uma taxa de conversão personalizada por produto, ver o cálculo em tempo real, e editar todos os campos de resgate em um modal dedicado. Produtos com taxa personalizada são recalculados corretamente em lote.
+Os produtos de resgate ativados aparecerão na loja do cliente imediatamente.
 
