@@ -347,6 +347,13 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
           )}
         </SheetContent>
       </Sheet>
+
+      <ManualCustomerScoringDialog
+        open={!!bonusCustomer}
+        onOpenChange={(open) => { if (!open) setBonusCustomer(null); }}
+        customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name } : null}
+        brandId={brandId}
+      />
     </>
   );
 }
