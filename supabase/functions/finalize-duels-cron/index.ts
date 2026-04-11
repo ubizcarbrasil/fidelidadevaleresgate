@@ -24,6 +24,7 @@ Deno.serve(async (req) => {
   // (function is not exposed publicly, only called by pg_cron)
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(supabaseUrl, serviceRoleKey);
 
   try {

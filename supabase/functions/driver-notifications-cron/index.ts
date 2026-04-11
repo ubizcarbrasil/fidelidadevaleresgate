@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
   // Auth: cron jobs send anon key via pg_net — no strict auth check needed
   // (function is not exposed publicly, only called by pg_cron)
 
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
     serviceRoleKey,
