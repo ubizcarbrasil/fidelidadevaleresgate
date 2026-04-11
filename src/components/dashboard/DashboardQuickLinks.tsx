@@ -44,7 +44,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
-  const openExternal = (url: string) => { window.open(url, "_blank"); };
+  const openExternal = (url: string) => { window.location.href = url; };
 
   if (!brand) return null;
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
@@ -138,7 +138,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
                     <Copy className="h-3 w-3" /> Copiar
                   </Button>
                   {acc.role === "driver" && currentBrandId && (
-                    <Button variant="outline" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => openExternal(`${origin}/customer-preview?brandId=${currentBrandId}`)}>
+                    <Button variant="outline" size="sm" className="h-7 text-xs w-full gap-1" onClick={() => { window.location.href = `/customer-preview?brandId=${currentBrandId}`; }}>
                       <ExternalLink className="h-3 w-3" /> Abrir como Motorista
                     </Button>
                   )}
@@ -219,7 +219,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
           <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Parceiros</CardTitle>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             {currentBrandId && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => window.open(`/customer-preview?brandId=${currentBrandId}`, "_blank")}>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => { window.location.href = `/customer-preview?brandId=${currentBrandId}`; }}>
                 <Smartphone className="h-3.5 w-3.5" />App do Cliente
               </Button>
             )}
@@ -240,7 +240,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
             {filteredStores.map((store) => (
               <div key={store.id} className="flex items-center justify-between py-2.5 gap-2">
                 <div className="min-w-0"><p className="text-sm font-medium truncate">{store.name}</p><p className="text-xs text-muted-foreground">{store.address || "—"}</p></div>
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => window.open(`/store-panel?storeId=${store.id}`, "_blank")}><Eye className="h-3 w-3" />Ver</Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => { window.location.href = `/store-panel?storeId=${store.id}`; }}><Eye className="h-3 w-3" />Ver</Button>
               </div>
             ))}
           </div>

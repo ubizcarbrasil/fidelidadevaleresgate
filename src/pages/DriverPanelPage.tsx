@@ -99,17 +99,19 @@ export default function DriverPanelPage() {
       if (!b) { setError("Marca não encontrada para o ID informado."); setLoading(false); return; }
 
       // Auto-redirect: if current host doesn't match the brand's canonical origin, redirect ONCE
+      // BUT allow access from any *.lovable.app domain (published or preview) without forcing redirect
       const settings = b.brand_settings_json as Record<string, unknown> | null;
       try {
         const canonicalOrigin = await resolveCanonicalOriginFromSettings(brandId, settings);
         const currentOrigin = window.location.origin;
-
-        // Skip redirect in iframe, dev/preview, or if already on canonical
-        const isInIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
         const hostname = window.location.hostname;
-        const isDevOrPreview = hostname.includes("id-preview--") || hostname.includes("lovableproject.com") || hostname === "localhost";
 
-        if (!isInIframe && !isDevOrPreview && canonicalOrigin && currentOrigin !== canonicalOrigin) {
+        // Skip redirect in iframe, dev/preview, localhost, or any lovable domain
+        const isInIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+        const isDevOrPreview = hostname.includes("id-preview--") || hostname.includes("lovableproject.com") || hostname === "localhost";
+        const isLovableDomain = hostname.endsWith(".lovable.app");
+
+        if (!isInIframe && !isDevOrPreview && !isLovableDomain && canonicalOrigin && currentOrigin !== canonicalOrigin) {
           // Guard: only redirect once per session to avoid infinite loops
           const redirectKey = `__redir_${brandId}_${hostname}`;
           if (!sessionStorage.getItem(redirectKey)) {
@@ -118,7 +120,6 @@ export default function DriverPanelPage() {
             window.location.replace(redirectUrl);
             return;
           }
-          // If we already tried redirecting this session, skip and load normally
         }
       } catch { /* don't block loading on redirect check failure */ }
 
