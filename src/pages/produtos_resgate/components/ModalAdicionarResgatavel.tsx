@@ -111,7 +111,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
           const cost = calcularPontos(p.price)!;
           return supabase
             .from("affiliate_deals")
-            .update({ is_redeemable: true, redeem_points_cost: cost } as any)
+            .update({ is_redeemable: true, redeem_points_cost: cost, redeemable_by: publicoAlvo } as any)
             .eq("id", p.id);
         });
 
