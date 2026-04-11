@@ -1,0 +1,1 @@
+ALTER VIEW public.public_affiliate_deals_safe SET (security_invoker = on);
