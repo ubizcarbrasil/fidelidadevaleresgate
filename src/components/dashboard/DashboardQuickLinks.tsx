@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Building2, Store, ShoppingBag, Car, ExternalLink, Copy, LogIn,
-  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks,
+  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks, Gift, Settings2,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
