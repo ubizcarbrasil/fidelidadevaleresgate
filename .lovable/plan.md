@@ -1,19 +1,47 @@
 
 
-## Plano: Corrigir erro de enum no ManualCustomerScoringDialog
+## Plano: Corrigir trigger `notify_admin_product_redemption`
 
 ### Problema
-O erro `invalid input value for enum ledger_reference_type: "MANUAL_BONUS"` ocorre porque o valor `MANUAL_BONUS` não existe no enum `ledger_reference_type`. Os valores válidos incluem `MANUAL_ADJUSTMENT`.
+O trigger `notify_admin_product_redemption` referencia campos inexistentes na tabela `product_redemption_orders`:
+- `NEW.product_title` — **não existe** (o título está dentro de `deal_snapshot_json->>'title'`)
+- `NEW.points_cost` — **não existe** (o campo correto é `points_spent`)
 
-### Mudanças
+### Mudança
 
-**Arquivo 1**: `src/components/machine-integration/ManualCustomerScoringDialog.tsx`
-- Alterar `reference_type: "MANUAL_BONUS"` para `reference_type: "MANUAL_ADJUSTMENT"`
+**Migração SQL** — Recriar a função do trigger com os campos corretos:
 
-**Arquivo 2**: `src/components/machine-integration/ManualDriverScoringDialog.tsx`
-- Mesma correção: `reference_type: "MANUAL_BONUS"` → `reference_type: "MANUAL_ADJUSTMENT"`
+```sql
+CREATE OR REPLACE FUNCTION public.notify_admin_product_redemption()
+  RETURNS trigger
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path = 'public'
+AS $$
+DECLARE
+  v_customer_name text;
+  v_product_title text;
+  v_points integer;
+BEGIN
+  v_customer_name := COALESCE(NEW.customer_name, 'Cliente');
+  v_product_title := COALESCE(NEW.deal_snapshot_json->>'title', 'Produto');
+  v_points := COALESCE(NEW.points_spent, 0);
 
-### Detalhes técnicos
-- Nenhuma migração necessária — o valor `MANUAL_ADJUSTMENT` já existe no enum
-- Ambos os dialogs (cliente e motorista) usam o valor incorreto e precisam ser corrigidos
+  INSERT INTO public.admin_notifications (brand_id, title, body, type, reference_id)
+  VALUES (
+    NEW.brand_id,
+    'Novo resgate de produto',
+    v_customer_name || ' resgatou "' || v_product_title || '" por ' || v_points || ' pts',
+    'redemption_product',
+    NEW.id
+  );
+  RETURN NEW;
+END;
+$$;
+```
+
+### Detalhes
+- Nenhuma alteração de código frontend necessária
+- Apenas uma migração SQL corrigindo a função do trigger
+- O trigger em si (`on_product_redemption_admin_notif`) permanece inalterado
 
