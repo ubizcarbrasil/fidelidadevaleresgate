@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, ScrollText, UserCheck, RefreshCw } from "lucide-react";
+import { Plus, Pencil, ScrollText, UserCheck, RefreshCw, Gift } from "lucide-react";
+import ManualCustomerScoringDialog from "@/components/machine-integration/ManualCustomerScoringDialog";
 import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
@@ -36,6 +37,7 @@ export default function CustomersPage() {
   const [form, setForm] = useState<CustomerForm>(emptyForm);
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const [ledgerCustomer, setLedgerCustomer] = useState<any>(null);
+  const [bonusCustomer, setBonusCustomer] = useState<any>(null);
   const [tierFilter, setTierFilter] = useState<string>("");
   const [crmFilter, setCrmFilter] = useState<string>("");
 
@@ -342,6 +344,7 @@ export default function CustomersPage() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setBonusCustomer(c)} title="Bonificar"><Gift className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                     </div>
                   </div>
@@ -414,6 +417,7 @@ export default function CustomersPage() {
                       <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setBonusCustomer(c)} title="Bonificar"><Gift className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
@@ -426,6 +430,18 @@ export default function CustomersPage() {
       )}
 
       <CustomerLedgerDrawer customer={ledgerCustomer} open={!!ledgerCustomer} onOpenChange={open => { if (!open) setLedgerCustomer(null); }} />
+
+      <ManualCustomerScoringDialog
+        open={!!bonusCustomer}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBonusCustomer(null);
+            qc.invalidateQueries({ queryKey: ["customers"] });
+          }
+        }}
+        customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name, branch_id: bonusCustomer.branch_id } : null}
+        brandId={currentBrandId || ""}
+      />
 
       <Dialog open={bulkOpen} onOpenChange={v => { if (!v) { setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); } }}>
         <DialogContent>
