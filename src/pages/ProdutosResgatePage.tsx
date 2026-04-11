@@ -384,6 +384,9 @@ export default function ProdutosResgatePage() {
                             <Badge variant={deal.is_active ? "default" : "secondary"} className="text-[10px]">
                               {deal.is_active ? "Ativo" : "Inativo"}
                             </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
+                            </Badge>
                           </div>
                         </div>
                       </div>
