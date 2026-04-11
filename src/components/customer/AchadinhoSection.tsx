@@ -35,6 +35,7 @@ interface AffiliateDeal {
   origin?: string | null;
   is_redeemable?: boolean;
   redeem_points_cost?: number | null;
+  redeemable_by?: string | null;
 }
 
 interface DealCategory {
