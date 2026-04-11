@@ -62,7 +62,11 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     enabled: aberto && !!currentBrandId,
   });
 
-  const pointsPerReal = taxasConversao?.base ?? 40;
+  const taxaAtiva = publicoAlvo === "driver"
+    ? (taxasConversao?.driver ?? 40)
+    : publicoAlvo === "customer"
+      ? (taxasConversao?.customer ?? 40)
+      : Math.max(taxasConversao?.driver ?? 40, taxasConversao?.customer ?? 40);
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],
