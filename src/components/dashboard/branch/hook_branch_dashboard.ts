@@ -129,7 +129,7 @@ export function useBranchRidesPerDay(branchId: string) {
         countMap[d] = 0;
       }
 
-      for (const row of (data || []) as { finalized_at: string }[]) {
+      for (const row of ((data || []) as unknown as { finalized_at: string }[])) {
         const d = format(new Date(row.finalized_at), "dd/MM");
         if (d in countMap) countMap[d]++;
       }
