@@ -22,7 +22,7 @@ export default function BotaoRecalcularPontos() {
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [aberto, setAberto] = useState(false);
 
-  const { data: pointsPerReal } = useQuery({
+  const { data: taxasConversao } = useQuery({
     queryKey: ["brand-points-per-real", currentBrandId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,12 +32,26 @@ export default function BotaoRecalcularPontos() {
         .single();
       if (error) throw error;
       const settings = data?.brand_settings_json as Record<string, any> | null;
-      return (settings?.redemption_rules?.points_per_real as number) || 40;
+      const rules = settings?.redemption_rules || {};
+      const base = (rules.points_per_real as number) || 40;
+      return {
+        driver: (rules.points_per_real_driver as number) || base,
+        customer: (rules.points_per_real_customer as number) || base,
+        base,
+      };
     },
     enabled: !!currentBrandId,
   });
 
-  const taxa = pointsPerReal ?? 40;
+  const taxa = taxasConversao?.base ?? 40;
+
+  const getTaxaPorPublico = (redeemableBy: string): number => {
+    if (!taxasConversao) return taxa;
+    if (redeemableBy === "driver") return taxasConversao.driver;
+    if (redeemableBy === "customer") return taxasConversao.customer;
+    // "both" → use the higher rate
+    return Math.max(taxasConversao.driver, taxasConversao.customer);
+  };
 
   const recalcular = useMutation({
     mutationFn: async () => {
