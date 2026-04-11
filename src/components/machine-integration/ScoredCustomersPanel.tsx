@@ -38,6 +38,7 @@ type LedgerEntry = {
 export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<ScoredCustomer | null>(null);
+  const [bonusCustomer, setBonusCustomer] = useState<ScoredCustomer | null>(null);
   const debouncedSearch = useDebounce(search, 400);
 
   /* ── Query: customers who have machine_rides ── */
