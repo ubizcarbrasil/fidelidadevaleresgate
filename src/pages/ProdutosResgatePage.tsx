@@ -257,6 +257,11 @@ export default function ProdutosResgatePage() {
       </div>
 
       <ModalAdicionarResgatavel aberto={modalAberto} onFechar={() => setModalAberto(false)} />
+      <ModalEditarResgatavel
+        produto={produtoEditando}
+        aberto={!!produtoEditando}
+        onFechar={() => setProdutoEditando(null)}
+      />
 
       {/* Estado vazio global */}
       {isEmptyNoSearch && (
