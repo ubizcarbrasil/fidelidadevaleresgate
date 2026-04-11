@@ -150,7 +150,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     queryFn: async () => {
       let dealsQuery = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin, is_redeemable, redeem_points_cost")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin, is_redeemable, redeem_points_cost, redeemable_by")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
