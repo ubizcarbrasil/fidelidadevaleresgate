@@ -264,7 +264,7 @@ export default function DriverPanelConfigPage() {
             </Button>
           </div>
           <Button
-            onClick={() => window.open(driverUrl, "_blank")}
+            onClick={() => { window.location.href = driverUrl; }}
             disabled={!currentBrandId}
             className="gap-2 w-full sm:w-auto"
           >

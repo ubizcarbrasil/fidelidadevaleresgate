@@ -20,14 +20,15 @@ function BrandThemedAuth({ brandId }: { brandId: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Use public_brands_safe to work without auth session (e.g. new tab on mobile)
     supabase
-      .from("brands")
+      .from("public_brands_safe")
       .select("*")
       .eq("id", brandId)
       .eq("is_active", true)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
-        setBrand(data);
+        setBrand(data as Brand | null);
         setLoading(false);
       });
   }, [brandId]);
