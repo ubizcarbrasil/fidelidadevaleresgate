@@ -212,7 +212,13 @@ export default function CustomerRedeemStorePage({ onBack }: Props) {
 
         {/* Content */}
         <div className="px-5 pt-4">
-          {isLoading ? (
+          {error ? (
+            <div className="text-center py-16">
+              <AlertTriangle className="h-12 w-12 mx-auto text-destructive/50 mb-3" />
+              <p className="text-sm text-muted-foreground">Erro ao carregar produtos</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Tente novamente mais tarde</p>
+            </div>
+          ) : isLoading ? (
             <div className="grid grid-cols-2 gap-3">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="rounded-[18px] overflow-hidden bg-card">
