@@ -1,27 +1,24 @@
 
 
-## Plano: Adicionar Pontos Manualmente para Clientes/Passageiros
+## Plano: Adicionar botão "Bonificar" na página CRM de Clientes
 
 ### Contexto
-Já existe o `ManualDriverScoringDialog` para motoristas. O `ScoredCustomersPanel` mostra clientes mas não tem botão de bonificação manual. Vamos criar o equivalente para clientes.
+A página `CrmCustomersPage` lista todos os clientes mas não tem opção de bonificação manual. O `ManualCustomerScoringDialog` já existe e funciona. Basta integrá-lo nesta página.
 
 ### Mudanças
 
-**Arquivo 1 (novo)**: `src/components/machine-integration/ManualCustomerScoringDialog.tsx`
-- Componente idêntico ao `ManualDriverScoringDialog`, adaptado para clientes
-- Props: `open`, `onOpenChange`, `customer` (id, name, branch_id), `brandId`
-- Insere no `points_ledger` com `reference_type: "MANUAL_BONUS"` e `entry_type: "CREDIT"`
-- Atualiza `points_balance` no registro do customer
-- Invalida queries `["scored-customers"]` e `["customer-ledger-machine"]`
+**Arquivo**: `src/pages/CrmCustomersPage.tsx`
 
-**Arquivo 2**: `src/components/machine-integration/ScoredCustomersPanel.tsx`
-- Adicionar estado `bonusCustomer` para controlar qual cliente está recebendo bonificação
-- Adicionar botão de "Bonificar" (ícone `Gift`) ao lado do botão "Ver" em cada linha de cliente
-- Adicionar botão "Bonificar" também dentro do drawer de detalhes do cliente
-- Renderizar `ManualCustomerScoringDialog` com o cliente selecionado
+1. Importar `ManualCustomerScoringDialog` e `useBrandGuard` para obter o `currentBrandId`
+2. Importar ícone `Gift` do lucide-react
+3. Adicionar estado `bonusCustomer` para controlar qual cliente está sendo bonificado
+4. Na tabela, adicionar coluna "Ações" com botão `Gift` em cada linha (com `e.stopPropagation()` para não abrir o drawer)
+5. No drawer de detalhes do cliente, adicionar botão "Bonificar Cliente" abaixo dos dados
+6. Renderizar `ManualCustomerScoringDialog` com o cliente selecionado e o `brandId`
+7. Invalidar também a query `crm-analytics-full` no sucesso (via `onOpenChange`)
 
 ### Detalhes técnicos
-- Nenhuma migração SQL necessária — usa tabelas existentes (`points_ledger`, `customers`)
-- Mesma lógica do driver: insert no ledger + update no saldo
-- `reason` default: "Bonificação manual - Passageiro"
+- O `ManualCustomerScoringDialog` aceita `customer: { id, name, branch_id? }` — o `CrmCustomer` já tem `id` e `name`
+- `brandId` vem de `useBrandGuard().currentBrandId`
+- Nenhuma migração SQL necessária
 
