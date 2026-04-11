@@ -26,6 +26,7 @@ const PAGE_SIZE = 20;
 export default function ProdutosResgatePage() {
   const qc = useQueryClient();
   const { currentBrandId, currentBranchId, consoleScope, isRootAdmin } = useBrandGuard();
+  const { brand } = useBrand();
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const isMobile = useIsMobile();
 
@@ -34,8 +35,11 @@ export default function ProdutosResgatePage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [batchCost, setBatchCost] = useState("");
+  const [batchRedeemableBy, setBatchRedeemableBy] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [modalAberto, setModalAberto] = useState(false);
+
+  const mirrorDriver = (brand?.brand_settings_json as any)?.customer_redeem_mirror_driver === true;
 
   // ── Query ──
   const { data, isLoading } = useQuery({
