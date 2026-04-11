@@ -1,0 +1,1 @@
+ALTER TABLE public.affiliate_deals ADD COLUMN custom_points_per_real numeric DEFAULT NULL;

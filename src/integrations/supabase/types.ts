@@ -235,6 +235,7 @@ export type Database = {
           click_count: number
           created_at: string
           current_status: string
+          custom_points_per_real: number | null
           description: string | null
           first_imported_at: string | null
           id: string
@@ -275,6 +276,7 @@ export type Database = {
           click_count?: number
           created_at?: string
           current_status?: string
+          custom_points_per_real?: number | null
           description?: string | null
           first_imported_at?: string | null
           id?: string
@@ -315,6 +317,7 @@ export type Database = {
           click_count?: number
           created_at?: string
           current_status?: string
+          custom_points_per_real?: number | null
           description?: string | null
           first_imported_at?: string | null
           id?: string
