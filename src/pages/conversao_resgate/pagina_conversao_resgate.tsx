@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { Save, Car, Users, Coins, Loader2, Info } from "lucide-react";
+import BotaoRecalcularPontos from "@/pages/produtos_resgate/components/BotaoRecalcularPontos";
 
 interface TaxasConversao {
   points_per_real: number;
@@ -133,10 +134,13 @@ export default function PaginaConversaoResgate() {
             Defina taxas de conversão diferentes para motoristas e passageiros
           </p>
         </div>
-        <LoadingButton onClick={() => salvar.mutate()} disabled={!dirty} isLoading={salvar.isPending} loadingText="Salvando...">
-          <Save className="h-4 w-4 mr-2" />
-          Salvar Taxas
-        </LoadingButton>
+        <div className="flex items-center gap-2">
+          <BotaoRecalcularPontos />
+          <LoadingButton onClick={() => salvar.mutate()} disabled={!dirty} isLoading={salvar.isPending} loadingText="Salvando...">
+            <Save className="h-4 w-4 mr-2" />
+            Salvar Taxas
+          </LoadingButton>
+        </div>
       </div>
 
       {/* Cards */}
