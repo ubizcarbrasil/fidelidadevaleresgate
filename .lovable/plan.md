@@ -1,29 +1,27 @@
 
 
-## Plano: Corrigir navegação dos links do dashboard que causam recarregamento e perda de contexto
+## Plano: Facilitar acesso à página de Módulos no painel do empreendedor
 
-### Causa raiz
-A alteração anterior trocou `window.open(..., "_blank")` por `window.location.href`, o que corrigiu o problema de nova aba no mobile. Porém, `window.location.href` faz um **recarregamento completo do app**, forçando o AuthContext, BrandContext e ModuleGuard a reinicializar do zero. Durante essa reinicialização, o `ModuleGuard` pode não encontrar os módulos ainda e redirecionar para `/`, ou a página de destino (como `/branch-wallet`) pode não ter `currentBranchId` resolvido e mostrar "Nenhuma cidade vinculada ao seu perfil."
+### Problema
+A página **Módulos** (`/brand-modules`) está escondida no final do sidebar, dentro do grupo "Configurações". No mobile, o usuário precisa rolar muito para encontrá-la.
 
-A solução correta é usar **React Router `navigate()`** para links internos do admin, mantendo o SPA ativo e preservando todo o contexto autenticado.
+### Solução
+Duas melhorias simples para tornar o acesso mais fácil:
 
-### Mudanças
+#### 1. Mover "Módulos" para uma posição mais visível no sidebar
+- No arquivo `src/components/consoles/BrandSidebar.tsx`, mover o item "Módulos" do grupo "Configurações" (final do sidebar) para o grupo "Guias Inteligentes" (topo do sidebar), que é o primeiro grupo visível após o Dashboard.
+- Isso garante que o empreendedor veja "Módulos" logo no início do menu.
 
-#### 1. `src/components/dashboard/DashboardQuickLinks.tsx`
-- Importar `useNavigate` do React Router
-- Classificar os links em **internos** (admin: Gamificação, Painel Franqueado, Painel Parceiro, Cadastro Parceiro) e **externos** (App do Cliente, Achadinho Motorista)
-- Links internos: usar `navigate(link.path)` (SPA navigation, sem recarregamento)
-- Links externos: manter `window.location.href` ou `window.open` conforme o contexto
-
-#### 2. `src/pages/DriverPanelConfigPage.tsx`
-- Verificar se o botão "Abrir Painel do Motorista" também usa `window.location.href` para rota interna e, se sim, trocar para `navigate()`
-
-### Resultado esperado
-- Clicar em "Gamificação" abre a página instantaneamente sem recarregamento
-- Clicar em "Painel Franqueado" mantém o contexto de auth e mostra o conteúdo correto
-- Todos os links internos do admin funcionam como navegação SPA
+#### 2. Adicionar atalho de "Módulos" nos Links Úteis do dashboard
+- No arquivo `src/components/dashboard/DashboardQuickLinks.tsx`, adicionar um card "Módulos" na seção de Links Úteis, com navegação SPA (`navigate("/brand-modules")`).
+- Assim, direto da tela inicial, o empreendedor consegue acessar a gestão de módulos com um clique.
 
 ### Arquivos envolvidos
-- `src/components/dashboard/DashboardQuickLinks.tsx`
-- `src/pages/DriverPanelConfigPage.tsx` (verificação)
+- `src/components/consoles/BrandSidebar.tsx` — reposicionar item "Módulos"
+- `src/components/dashboard/DashboardQuickLinks.tsx` — adicionar atalho rápido
+
+### Resultado
+- "Módulos" aparece no topo do sidebar, fácil de encontrar
+- Um botão "Módulos" aparece nos Links Úteis do dashboard
+- Sem recarregamento de página, navegação instantânea
 
