@@ -103,8 +103,10 @@ export default function BotaoRecalcularPontos() {
         <AlertDialogHeader>
           <AlertDialogTitle>Recalcular custo em pontos?</AlertDialogTitle>
           <AlertDialogDescription>
-            Todos os produtos resgatáveis terão o custo recalculado usando a taxa atual de{" "}
-            <strong>{taxa} pts por R$ 1,00</strong>. Valores editados manualmente serão sobrescritos.
+            Todos os produtos resgatáveis terão o custo recalculado usando a taxa do público-alvo:{" "}
+            <strong>Motorista: {taxasConversao?.driver ?? taxa} pts/R$</strong>,{" "}
+            <strong>Passageiro: {taxasConversao?.customer ?? taxa} pts/R$</strong>.
+            Valores editados manualmente serão sobrescritos.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
