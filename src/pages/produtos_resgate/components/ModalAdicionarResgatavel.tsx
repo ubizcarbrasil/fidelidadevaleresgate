@@ -38,6 +38,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [custoPontos, setCustoPontos] = useState("");
   const [tentouSalvar, setTentouSalvar] = useState(false);
   const [modoAutomatico, setModoAutomatico] = useState(true);
+  const [publicoAlvo, setPublicoAlvo] = useState<"driver" | "customer" | "both">("driver");
 
   // Fetch points_per_real rates (driver/customer) from brand settings
   const { data: taxasConversao } = useQuery({
