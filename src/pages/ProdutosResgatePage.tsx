@@ -198,6 +198,39 @@ export default function ProdutosResgatePage() {
     );
   };
 
+  const handleBatchSetRedeemableBy = () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return toast.error("Selecione ao menos um item");
+    if (!batchRedeemableBy) return toast.error("Selecione um público-alvo");
+    batchUpdate.mutate(
+      { ids, updates: { redeemable_by: batchRedeemableBy } },
+      { onSuccess: () => { toast.success(`Público atualizado em ${ids.length} itens`); setBatchRedeemableBy(""); } }
+    );
+  };
+
+  const handleChangeRedeemableBy = (id: string, value: string) => {
+    updateDeal.mutate(
+      { id, updates: { redeemable_by: value } },
+      { onSuccess: () => toast.success("Público atualizado"), onError: (e: Error) => toast.error(e.message) }
+    );
+  };
+
+  const toggleMirrorMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const current = (brand?.brand_settings_json as Record<string, any>) ?? {};
+      const { error } = await supabase
+        .from("brands")
+        .update({ brand_settings_json: { ...current, customer_redeem_mirror_driver: enabled } } as any)
+        .eq("id", brand!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brand"] });
+      toast.success("Configuração de espelhamento atualizada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const formatPrice = (val: number | null | undefined) => {
     if (val == null) return "—";
     return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
