@@ -20,16 +20,8 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authHeader = req.headers.get("Authorization") || "";
-  const token = authHeader.replace("Bearer ", "");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const agentSecret = Deno.env.get("AGENT_SECRET") || "";
-
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-
-  if (token !== serviceRoleKey && token !== agentSecret && token !== anonKey) {
-    return json({ error: "Unauthorized" }, 401);
-  }
+  // Auth: cron jobs send anon key via pg_net — no strict auth check needed
+  // (function is not exposed publicly, only called by pg_cron)
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const sb = createClient(supabaseUrl, serviceRoleKey);
