@@ -284,8 +284,17 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
                     +{selectedCustomer.total_ride_points} pts
                   </Badge>
                 </div>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => {
+                    setBonusCustomer(selectedCustomer);
+                  }}
+                >
+                  <Gift className="h-4 w-4 mr-2 text-primary" />
+                  Bonificar Cliente
+                </Button>
               </div>
-
               {/* Ledger */}
               <div>
                 <h4 className="text-sm font-semibold mb-2">Extrato da carteira</h4>
