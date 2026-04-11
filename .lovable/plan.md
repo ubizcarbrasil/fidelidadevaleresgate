@@ -1,36 +1,27 @@
 
 
-## Plano: Cliente segue o mesmo fluxo de checkout do motorista ao resgatar produto
+## Plano: Adicionar Pontos Manualmente para Clientes/Passageiros
 
-### Problema
-Atualmente, quando o cliente clica em "Ir para oferta" na tela de detalhe do deal (`AchadinhoDealDetail`), ele é redirecionado para um link externo. Para deals resgatáveis com pontos, o cliente deveria seguir o mesmo fluxo do motorista: abrir o checkout com formulário de entrega e enviar o pedido para o painel admin.
-
-### Solução
-Modificar o `AchadinhoDealDetail` para detectar deals resgatáveis e, em vez de abrir link externo, acionar o `CustomerRedeemCheckout`.
+### Contexto
+Já existe o `ManualDriverScoringDialog` para motoristas. O `ScoredCustomersPanel` mostra clientes mas não tem botão de bonificação manual. Vamos criar o equivalente para clientes.
 
 ### Mudanças
 
-**Arquivo 1**: `src/components/customer/AchadinhoDealDetail.tsx`
+**Arquivo 1 (novo)**: `src/components/machine-integration/ManualCustomerScoringDialog.tsx`
+- Componente idêntico ao `ManualDriverScoringDialog`, adaptado para clientes
+- Props: `open`, `onOpenChange`, `customer` (id, name, branch_id), `brandId`
+- Insere no `points_ledger` com `reference_type: "MANUAL_BONUS"` e `entry_type: "CREDIT"`
+- Atualiza `points_balance` no registro do customer
+- Invalida queries `["scored-customers"]` e `["customer-ledger-machine"]`
 
-1. Adicionar props opcionais: `is_redeemable`, `redeem_points_cost` na interface `AffiliateDeal`
-2. Adicionar estado `showCheckout` para controlar a exibição do checkout
-3. Modificar `handleGoToOffer`: se o deal for resgatável (`is_redeemable && redeem_points_cost > 0`), abrir o `CustomerRedeemCheckout` em vez de `window.open`
-4. Alterar o label do CTA: para deals resgatáveis, mostrar "Resgatar com Pontos" com o custo em pontos, em vez do CTA genérico
-5. Renderizar `CustomerRedeemCheckout` quando `showCheckout = true`
-
-**Arquivo 2**: `src/components/customer/AchadinhoSection.tsx`
-- Garantir que `is_redeemable` e `redeem_points_cost` estão no `selectedDeal` passado ao `AchadinhoDealDetail` (já estão na query, apenas confirmar que a interface aceita)
-
-**Arquivo 3**: `src/components/customer/AchadinhoCategoryPage.tsx`
-- Mesma verificação: garantir que os campos resgatáveis são passados ao deal detail
-
-### Fluxo resultante
-1. Cliente abre detalhe do deal
-2. Se deal NÃO é resgatável → comportamento atual (abre link externo)
-3. Se deal É resgatável → botão mostra "Resgatar — X pts" → clica → abre `CustomerRedeemCheckout` → preenche dados → pedido vai para o painel admin da cidade e empreendedor
+**Arquivo 2**: `src/components/machine-integration/ScoredCustomersPanel.tsx`
+- Adicionar estado `bonusCustomer` para controlar qual cliente está recebendo bonificação
+- Adicionar botão de "Bonificar" (ícone `Gift`) ao lado do botão "Ver" em cada linha de cliente
+- Adicionar botão "Bonificar" também dentro do drawer de detalhes do cliente
+- Renderizar `ManualCustomerScoringDialog` com o cliente selecionado
 
 ### Detalhes técnicos
-- Nenhuma migração SQL necessária
-- O `CustomerRedeemCheckout` já existe e funciona com `order_source: "customer"`
-- A query de deals já traz `is_redeemable` e `redeem_points_cost`
+- Nenhuma migração SQL necessária — usa tabelas existentes (`points_ledger`, `customers`)
+- Mesma lógica do driver: insert no ledger + update no saldo
+- `reason` default: "Bonificação manual - Passageiro"
 
