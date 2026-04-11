@@ -67,6 +67,8 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     { label: "Painel Franqueado", path: "/branch-wallet", prodPath: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
     { label: "Gamificação", path: "/gamificacao-admin", prodPath: "/gamificacao-admin", icon: Swords, description: "Duelos & Ranking", scoringFilter: "DRIVER" as const },
     { label: "Módulos", path: "/brand-modules", prodPath: "/brand-modules", icon: Blocks, description: "Ativar/desativar módulos" },
+    { label: "Regras de Resgate", path: "/regras-resgate", prodPath: "/regras-resgate", icon: Settings2, description: "Conversão pontos/R$ e limites" },
+    { label: "Produtos de Resgate", path: "/produtos-resgate", prodPath: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" },
   ];
 
   const quickLinks = allQuickLinks.filter((link) => {
