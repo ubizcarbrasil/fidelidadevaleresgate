@@ -1,65 +1,47 @@
 
-Diagnóstico confirmado:
 
-- O problema não parece ser falta de produto nem falta de módulo.
-- A marca `db15bd21-9137-4965-a0fb-540d8e8b26f1` está com:
-  - `customer_product_redeem` ativo
-  - `customer_redeem_mirror_driver = true`
-- Existem produtos resgatáveis ativos no banco:
-  - `50` com `redeemable_by = both`
-  - `12` com `redeemable_by = driver`
-- Ou seja: catálogo para passageiro existe.
+## Plano: Corrigir visibilidade dos produtos de resgate para o cliente
 
-Causa mais provável:
+### Diagnóstico
 
-- A tela do passageiro ainda consulta a tabela base `affiliate_deals` diretamente em `src/components/customer/CustomerRedeemStorePage.tsx`.
-- Depois das mudanças de segurança, essa leitura pode falhar para navegação pública/sem sessão válida.
-- Como o componente hoje não trata `dealsRes.error` nem `catsRes.error`, a falha vira lista vazia silenciosa — parece “não apareceu”, mesmo com dados existentes.
+Os dados estão corretos no banco:
+- 50 produtos resgatáveis ativos com `redeemable_by = 'both'` e `redeem_points_cost` definido
+- 12 produtos com `redeemable_by = 'driver'`
+- Taxa do passageiro configurada: 50 pts/R$, motorista: 40 pts/R$
+- Espelhamento (`customer_redeem_mirror_driver`): ativado
 
-Plano de correção:
+A causa raiz é que a view `public_affiliate_deals_safe` foi configurada com `security_invoker = on` (migração `20260411212959`). Isso faz a view executar com as permissões do usuário que faz a consulta, sujeitando-a ao RLS da tabela `affiliate_deals`. A policy original de leitura anônima (`"Anon read active affiliate deals"`) foi removida anteriormente, e a policy `"Customers can view redeemable deals"` pode não estar funcionando corretamente no contexto da view com security_invoker.
 
-1. Ajustar a fonte de dados da loja do passageiro
-- Trocar a leitura da tela do passageiro para usar a view pública segura em vez da tabela base.
-- Isso evita depender da política da tabela interna para exibir catálogo.
+Esse é exatamente o mesmo problema que ocorreu com a view `public_brands_safe`, que foi corrigido na migração `20260410170030` removendo o `security_invoker`.
 
-2. Atualizar a view pública de produtos
-- Criar migração para incluir na view pública os campos necessários para a loja do passageiro, principalmente:
-  - `redeemable_by`
-  - `category_id`
-  - `is_redeemable`
-  - `redeem_points_cost`
-- Manter a view segura e pública, sem expor campos internos desnecessários.
+### Solução
 
-3. Corrigir a lógica da loja do passageiro
-- Em `src/components/customer/CustomerRedeemStorePage.tsx`:
-  - consultar a view pública
-  - manter o filtro por branch
-  - manter a regra:
-    - se espelhamento estiver ligado, mostrar catálogo resgatável
-    - se desligado, mostrar apenas `customer` e `both`
+**1. Migração SQL** — Recriar a view SEM `security_invoker`
 
-4. Parar de esconder erro como “lista vazia”
-- Tratar `error` das queries de produtos e categorias.
-- Mostrar estado de erro real ao usuário/admin em vez de simplesmente renderizar “Nenhum produto encontrado”.
+```sql
+DROP VIEW IF EXISTS public.public_affiliate_deals_safe;
+CREATE VIEW public.public_affiliate_deals_safe AS
+SELECT
+  id, brand_id, branch_id, title, description, image_url,
+  price, original_price, affiliate_url, store_name, category,
+  is_active, click_count, order_index, created_at, updated_at,
+  store_logo_url, badge_label, category_id, origin,
+  is_featured, is_flash_promo, visible_driver, marketplace,
+  current_status, is_redeemable, redeem_points_cost, redeemable_by
+FROM affiliate_deals
+WHERE is_active = true;
 
-5. Revisão dos pontos correlatos
-- Verificar se outros componentes customer-facing ainda estão lendo `affiliate_deals` diretamente e alinhar ao mesmo padrão seguro quando necessário, para evitar regressão semelhante.
+GRANT SELECT ON public.public_affiliate_deals_safe TO anon, authenticated;
+```
 
-Arquivos envolvidos:
+Sem `security_invoker`, a view executa como owner (bypassa RLS), o que é seguro porque:
+- A view já filtra `is_active = true`
+- Apenas colunas públicas são expostas (sem campos internos de sync, API keys, etc.)
+- Segue o mesmo padrão já aplicado em `public_brands_safe`
 
-- `src/components/customer/CustomerRedeemStorePage.tsx`
-- 1 nova migração SQL para atualizar a view pública de produtos
-- possivelmente:
-  - `src/components/customer/AchadinhoSection.tsx`
-  - `src/components/customer/AchadinhoDealsOverlay.tsx`
+### Arquivos
+- 1 migração SQL (recriar a view)
 
-Detalhe técnico importante:
+### Resultado
+Os 50 produtos resgatáveis com pontos aparecerão imediatamente na Loja de Resgate do cliente, com o custo em pontos calculado conforme a regra de conversão (50 pts/R$).
 
-- Hoje a policy criada resolve leitura autenticada de produtos resgatáveis, mas não resolve bem o caso em que o app do passageiro navega sem sessão válida.
-- Como já existe uma estratégia de “view pública segura” no projeto, o ajuste mais consistente é usar essa mesma abordagem para a loja de resgate do passageiro, em vez de abrir mais a tabela base.
-
-Resultado esperado após a implementação:
-
-- Os produtos resgatáveis voltarão a aparecer para o passageiro.
-- O comportamento ficará consistente mesmo no fluxo público.
-- Se houver falha futura de acesso, a tela passará a mostrar erro real em vez de parecer vazia.
