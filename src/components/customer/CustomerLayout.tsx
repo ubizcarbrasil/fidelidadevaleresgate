@@ -107,6 +107,7 @@ const TAB_CONTENT: Record<Tab, React.FC<any>> = {
   home: CustomerHomePage,
   offers: CustomerOffersPage,
   driver: CustomerDriverDashboardPage,
+  redeem_store: () => null, // handled specially in render
   redemptions: CustomerRedemptionsPage,
   wallet: CustomerWalletPage,
   profile: CustomerProfilePage,
