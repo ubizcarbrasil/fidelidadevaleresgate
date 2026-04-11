@@ -307,6 +307,11 @@ export default function ProductRedemptionOrdersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {(order.order_source || "driver") === "customer" ? "Cliente" : "Motorista"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <span className="font-bold text-sm">{order.points_spent} pts</span>
                       </TableCell>
                       <TableCell>
