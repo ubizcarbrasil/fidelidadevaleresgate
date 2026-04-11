@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Separator } from "@/components/ui/separator";
 import {
   Search, Users, Eye, Loader2, Coins, ArrowUpRight, ArrowDownRight,
-  User, Phone, Mail, CreditCard, Hash, Download,
+  User, Phone, Mail, CreditCard, Hash, Download, Gift,
 } from "lucide-react";
+import ManualCustomerScoringDialog from "./ManualCustomerScoringDialog";
 
 type ScoredCustomer = {
   id: string;
