@@ -431,6 +431,18 @@ export default function CustomersPage() {
 
       <CustomerLedgerDrawer customer={ledgerCustomer} open={!!ledgerCustomer} onOpenChange={open => { if (!open) setLedgerCustomer(null); }} />
 
+      <ManualCustomerScoringDialog
+        open={!!bonusCustomer}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBonusCustomer(null);
+            qc.invalidateQueries({ queryKey: ["customers"] });
+          }
+        }}
+        customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name, branch_id: bonusCustomer.branch_id } : null}
+        brandId={currentBrandId || ""}
+      />
+
       <Dialog open={bulkOpen} onOpenChange={v => { if (!v) { setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Identificar {selectedIds.size} cliente(s)</DialogTitle></DialogHeader>
