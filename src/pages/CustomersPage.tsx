@@ -417,6 +417,7 @@ export default function CustomersPage() {
                       <TableCell><Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => setLedgerCustomer(c)} title="Extrato"><ScrollText className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setBonusCustomer(c)} title="Bonificar"><Gift className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
