@@ -457,6 +457,84 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: manual_bonus — credit points manually for a customer or driver
+    if (action === "manual_bonus") {
+      const { customer_id, amount, reason, brand_id } = body;
+      const parsedAmount = Number(amount);
+
+      if (!customer_id || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        return new Response(JSON.stringify({ error: "customer_id and valid amount required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: customer, error: customerError } = await adminClient
+        .from("customers")
+        .select("id, name, brand_id, branch_id, points_balance")
+        .eq("id", customer_id)
+        .maybeSingle();
+
+      if (customerError) throw customerError;
+      if (!customer) {
+        return new Response(JSON.stringify({ error: "Cliente não encontrado" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (brand_id && brand_id !== customer.brand_id) {
+        return new Response(JSON.stringify({ error: "Marca inválida para este cliente" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: brandAdminCheck } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("brand_id", customer.brand_id)
+        .in("role", ["brand_admin", "root_admin"])
+        .maybeSingle();
+
+      if (!brandAdminCheck && !isRootAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const bonusReason = typeof reason === "string" && reason.trim().length > 0
+        ? reason.trim()
+        : "Bonificação manual";
+      const currentBalance = Number(customer.points_balance || 0);
+      const newBalance = currentBalance + parsedAmount;
+
+      const { error: ledgerError } = await adminClient.from("points_ledger").insert({
+        customer_id: customer.id,
+        brand_id: customer.brand_id,
+        branch_id: customer.branch_id,
+        entry_type: "CREDIT",
+        points_amount: parsedAmount,
+        money_amount: 0,
+        reason: bonusReason,
+        reference_type: "MANUAL_ADJUSTMENT",
+        created_by_user_id: user.id,
+      });
+      if (ledgerError) throw ledgerError;
+
+      const { error: updateError } = await adminClient
+        .from("customers")
+        .update({ points_balance: newBalance })
+        .eq("id", customer.id);
+      if (updateError) throw updateError;
+
+      return new Response(JSON.stringify({ ok: true, customer_id: customer.id, new_balance: newBalance }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

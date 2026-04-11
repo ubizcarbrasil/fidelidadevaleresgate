@@ -24,31 +24,21 @@ export default function ManualCustomerScoringDialog({ open, onOpenChange, custom
   const mutation = useMutation({
     mutationFn: async () => {
       if (!customer) throw new Error("Cliente não selecionado");
-      const amount = parseInt(points);
-      if (!amount || amount <= 0) throw new Error("Informe uma quantidade válida de pontos");
+      const amount = Number(points.replace(/\D/g, ""));
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error("Informe uma quantidade válida de pontos");
 
-      const { error: ledgerErr } = await (supabase as any).from("points_ledger").insert({
-        brand_id: brandId,
-        branch_id: customer.branch_id || null,
-        customer_id: customer.id,
-        entry_type: "CREDIT",
-        points_amount: amount,
-        money_amount: 0,
-        reason: reason.trim() || "Bonificação manual - Passageiro",
-        reference_type: "MANUAL_ADJUSTMENT",
+      const { data, error } = await supabase.functions.invoke("admin-brand-actions", {
+        body: {
+          action: "manual_bonus",
+          brand_id: brandId,
+          customer_id: customer.id,
+          amount,
+          reason: reason.trim() || "Bonificação manual - Passageiro",
+        },
       });
-      if (ledgerErr) throw ledgerErr;
 
-      const { data: current } = await (supabase as any)
-        .from("customers")
-        .select("points_balance")
-        .eq("id", customer.id)
-        .single();
-
-      await (supabase as any)
-        .from("customers")
-        .update({ points_balance: (current?.points_balance || 0) + amount })
-        .eq("id", customer.id);
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       toast.success(`${points} pontos creditados com sucesso!`);
