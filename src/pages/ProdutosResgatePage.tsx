@@ -451,9 +451,16 @@ export default function ProdutosResgatePage() {
                             <Badge variant={deal.is_active ? "default" : "secondary"} className="text-[10px]">
                               {deal.is_active ? "Ativo" : "Inativo"}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px]">
-                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
-                            </Badge>
+                            <Select value={(deal as any).redeemable_by ?? "driver"} onValueChange={(v) => handleChangeRedeemableBy(deal.id, v)}>
+                              <SelectTrigger className="h-7 w-[90px] text-[10px] px-2">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="driver">Motorista</SelectItem>
+                                <SelectItem value="customer">Cliente</SelectItem>
+                                <SelectItem value="both">Ambos</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                       </div>
