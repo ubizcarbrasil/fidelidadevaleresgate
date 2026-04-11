@@ -47,7 +47,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
   // Links that should use SPA navigation (internal admin routes)
-  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação", "Módulos"]);
+  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação", "Módulos", "Regras de Resgate", "Produtos de Resgate"]);
   const handleOpen = (label: string, path: string) => {
     if (internalLabels.has(label)) {
       navigate(path);
