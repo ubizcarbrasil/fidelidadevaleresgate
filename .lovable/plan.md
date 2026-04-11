@@ -1,30 +1,40 @@
 
 
-## Plano: Gráfico de corridas por dia no dashboard da cidade
+## Plano: Corrigir erro 401 nos crons finalize-duels-cron e driver-notifications-cron
 
-### Objetivo
-Adicionar um gráfico de barras mostrando a quantidade de corridas finalizadas por dia (últimos 14 dias) no dashboard da cidade (branch), logo abaixo dos KPIs de motorista.
+### Causa raiz
+Os dois cron jobs usam `current_setting(...)` para obter a service_role_key no SQL do `pg_cron`, mas essa função retorna string vazia no contexto do `pg_net`. Resultado: o Bearer token enviado é vazio e as edge functions retornam 401.
+
+- `finalize-duels-cron` usa `current_setting('app.settings.service_role_key', true)` — **não existe**
+- `driver-notifications-cron` usa `current_setting('supabase.service_role_key', true)` — **indisponível no pg_net**
+
+Os outros crons que funcionam (como `check-expiring-favorites`, `expire-pending-pins`) usam a **anon key hardcoded** e não têm verificação de auth no código.
+
+### Solução
+Atualizar os dois cron jobs no `pg_cron` para usar a anon key hardcoded (mesmo padrão dos crons que funcionam) e ajustar as edge functions para aceitar a anon key como token válido.
 
 ### Mudanças
 
-#### 1. Novo hook `useBranchRidesPerDay` em `hook_branch_dashboard.ts`
-- Query na tabela `machine_rides` filtrando por `branch_id`, `ride_status = 'FINALIZED'` e últimos 14 dias
-- Seleciona apenas `finalized_at`, agrupa por dia no client-side
-- Retorna array `{ day: "dd/MM", rides: number }[]`
+#### 1. Atualizar as edge functions para aceitar a anon key
+Nos arquivos `finalize-duels-cron/index.ts` e `driver-notifications-cron/index.ts`, adicionar verificação da `SUPABASE_ANON_KEY` como token válido:
+```typescript
+const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+if (token !== serviceRoleKey && token !== agentSecret && token !== anonKey) {
+  return json({ error: "Unauthorized" }, 401);
+}
+```
 
-#### 2. Novo componente `BranchGraficoCorridasDia.tsx`
-- Recebe os dados do hook
-- Renderiza um `BarChart` (recharts) com eixo X = dia, eixo Y = quantidade
-- Card com título "Corridas por dia (últimos 14 dias)"
-- Skeleton durante loading
-- Segue o mesmo padrão visual dos gráficos existentes no `BrandSettingsPage`
+#### 2. Recriar os cron jobs com anon key hardcoded
+Usar `supabase--read_query` (via `cron.unschedule` + `cron.schedule`) para substituir os dois jobs:
 
-#### 3. Integração no `BranchDashboardSection.tsx`
-- Chamar o novo hook passando `branchId`
-- Inserir o componente `BranchGraficoCorridasDia` logo após os KPIs de motorista (entre os KPIs e a Visão Geral), dentro do bloco `isDriverEnabled`
+- **Job 8** (`finalize-duels-every-5-min`): trocar `current_setting('app.settings.service_role_key', true)` pela anon key literal
+- **Job 5** (`driver-notifications-cron`): trocar `current_setting('supabase.service_role_key', true)` pela anon key literal
+
+#### 3. Deploy das edge functions
+Fazer deploy de ambas as funções atualizadas.
 
 ### Arquivos envolvidos
-- `src/components/dashboard/branch/hook_branch_dashboard.ts` — novo hook
-- `src/components/dashboard/branch/BranchGraficoCorridasDia.tsx` — novo componente
-- `src/components/dashboard/BranchDashboardSection.tsx` — integração
+- `supabase/functions/finalize-duels-cron/index.ts` — aceitar anon key
+- `supabase/functions/driver-notifications-cron/index.ts` — aceitar anon key
+- Cron jobs no banco (via SQL insert) — recriar com anon key hardcoded
 
