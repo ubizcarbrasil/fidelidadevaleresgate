@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus, Users, Pencil } from "lucide-react";
+import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus, Users, Pencil, Minus } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
@@ -56,6 +56,29 @@ export default function ProdutosResgatePage() {
   });
 
   const mirrorDriver = brandSettings?.customer_redeem_mirror_driver === true;
+  const customerRedeemRows = (brandSettings?.customer_redeem_rows as number) ?? 1;
+
+  const updateRowsMutation = useMutation({
+    mutationFn: async (rows: number) => {
+      if (!currentBrandId) throw new Error("Marca não identificada");
+      const { data: brandData } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", currentBrandId)
+        .single();
+      const current = (brandData?.brand_settings_json as Record<string, any>) ?? {};
+      const { error } = await supabase
+        .from("brands")
+        .update({ brand_settings_json: { ...current, customer_redeem_rows: rows } } as any)
+        .eq("id", currentBrandId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brand-settings", currentBrandId] });
+      toast.success("Linhas de resgate atualizadas");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   // ── Query ──
   const { data, isLoading } = useQuery({
@@ -386,6 +409,37 @@ export default function ProdutosResgatePage() {
               />
             </div>
           </div>
+
+          {/* Configuração de linhas para resgate do cliente */}
+          <Card>
+            <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm font-medium">Linhas de "Resgatar com Pontos" (Cliente)</p>
+                <p className="text-xs text-muted-foreground">Quantas linhas de produtos aparecerão na seção de resgate do app do cliente</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8"
+                  disabled={customerRedeemRows <= 1 || updateRowsMutation.isPending}
+                  onClick={() => updateRowsMutation.mutate(customerRedeemRows - 1)}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="text-lg font-bold w-8 text-center">{customerRedeemRows}</span>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8"
+                  disabled={customerRedeemRows >= 5 || updateRowsMutation.isPending}
+                  onClick={() => updateRowsMutation.mutate(customerRedeemRows + 1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Batch actions */}
           {selectedIds.size > 0 && (
