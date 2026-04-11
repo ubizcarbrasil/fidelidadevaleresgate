@@ -165,6 +165,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
 
 /* ── Access Hub Section ── */
 function AccessHubSection({ consoleScope }: { consoleScope: string }) {
+  const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const isRoot = consoleScope === "ROOT";
   const isBrand = ["BRAND", "TENANT"].includes(consoleScope);
@@ -210,8 +211,8 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
                      <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
                    </div>
                    <div className="flex gap-1.5 shrink-0">
-                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
-                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => navigate(`/?brandId=${brand.id}`)}><Building2 className="h-3 w-3" />Admin</Button>
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => navigate(`/customer-preview?brandId=${brand.id}`)}><Smartphone className="h-3 w-3" />App</Button>
                    </div>
                 </div>
               ))}
@@ -230,7 +231,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
           <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Parceiros</CardTitle>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             {currentBrandId && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => { window.location.href = `/customer-preview?brandId=${currentBrandId}`; }}>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => navigate(`/customer-preview?brandId=${currentBrandId}`)}>
                 <Smartphone className="h-3.5 w-3.5" />App do Cliente
               </Button>
             )}
@@ -251,7 +252,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
             {filteredStores.map((store) => (
               <div key={store.id} className="flex items-center justify-between py-2.5 gap-2">
                 <div className="min-w-0"><p className="text-sm font-medium truncate">{store.name}</p><p className="text-xs text-muted-foreground">{store.address || "—"}</p></div>
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => { window.location.href = `/store-panel?storeId=${store.id}`; }}><Eye className="h-3 w-3" />Ver</Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => navigate(`/store-panel?storeId=${store.id}`)}><Eye className="h-3 w-3" />Ver</Button>
               </div>
             ))}
           </div>
