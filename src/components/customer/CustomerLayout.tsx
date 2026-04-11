@@ -133,6 +133,8 @@ export default function CustomerLayout() {
   const [showTour, setShowTour] = useState(false);
   const [achadinhoCatGridOpen, setAchadinhoCatGridOpen] = useState(false);
   const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
+  const [redeemStoreOpen, setRedeemStoreOpen] = useState(false);
+  const [redeemHistoryOpen, setRedeemHistoryOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
   usePrefetchRoutes();
@@ -331,6 +333,10 @@ export default function CustomerLayout() {
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
                   onOpenAchadinhoCategoryGrid={() => setAchadinhoCatGridOpen(true)}
                 />
+              ) : activeTab === "redeem_store" ? (
+                <Suspense fallback={<TabSkeleton />}>
+                  <CustomerRedeemStorePage onBack={() => setActiveTab("home")} />
+                </Suspense>
               ) : (
                 <Suspense fallback={<TabSkeleton />}>
                   <ActivePage />
