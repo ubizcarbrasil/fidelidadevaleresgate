@@ -1,24 +1,23 @@
 
 
-## Plano: Adicionar botão "Bonificar" na página CRM de Clientes
+## Plano: Adicionar botão "Bonificar" na CustomersPage
 
-### Contexto
-A página `CrmCustomersPage` lista todos os clientes mas não tem opção de bonificação manual. O `ManualCustomerScoringDialog` já existe e funciona. Basta integrá-lo nesta página.
+### Problema
+O botão de bonificação manual existe no CrmCustomersPage e no ScoredCustomersPanel, mas não na página principal de clientes (`CustomersPage`), que é a tela mostrada no screenshot.
 
 ### Mudanças
 
-**Arquivo**: `src/pages/CrmCustomersPage.tsx`
+**Arquivo**: `src/pages/CustomersPage.tsx`
 
-1. Importar `ManualCustomerScoringDialog` e `useBrandGuard` para obter o `currentBrandId`
-2. Importar ícone `Gift` do lucide-react
-3. Adicionar estado `bonusCustomer` para controlar qual cliente está sendo bonificado
-4. Na tabela, adicionar coluna "Ações" com botão `Gift` em cada linha (com `e.stopPropagation()` para não abrir o drawer)
-5. No drawer de detalhes do cliente, adicionar botão "Bonificar Cliente" abaixo dos dados
-6. Renderizar `ManualCustomerScoringDialog` com o cliente selecionado e o `brandId`
-7. Invalidar também a query `crm-analytics-full` no sucesso (via `onOpenChange`)
+1. Importar `ManualCustomerScoringDialog` e ícone `Gift`
+2. Adicionar estado `bonusCustomer` 
+3. **Mobile (cards)**: adicionar botão `Gift` ao lado dos botões de Extrato e Editar (linha 343-346)
+4. **Desktop (tabela)**: adicionar botão `Gift` na coluna Ações ao lado de Extrato e Editar (linha 415-417)
+5. Renderizar `ManualCustomerScoringDialog` com o cliente selecionado e `currentBrandId`
+6. Ao fechar o dialog, invalidar query `["customers"]` para atualizar o saldo
 
 ### Detalhes técnicos
-- O `ManualCustomerScoringDialog` aceita `customer: { id, name, branch_id? }` — o `CrmCustomer` já tem `id` e `name`
-- `brandId` vem de `useBrandGuard().currentBrandId`
 - Nenhuma migração SQL necessária
+- Reutiliza o `ManualCustomerScoringDialog` já existente
+- O customer já tem `id`, `name` e `branch_id` disponíveis no data
 
