@@ -35,6 +35,7 @@ interface AffiliateDeal {
   origin?: string | null;
   is_redeemable?: boolean;
   redeem_points_cost?: number | null;
+  redeemable_by?: string | null;
 }
 
 interface DealCategory {
@@ -149,7 +150,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
     queryFn: async () => {
       let dealsQuery = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin, is_redeemable, redeem_points_cost")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category, category_id, created_at, origin, is_redeemable, redeem_points_cost, redeemable_by")
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .order("order_index")
@@ -229,9 +230,16 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       viable.unshift(virtualCat);
     }
 
-    // Virtual "Resgatar com Pontos" category — redeemable deals (only for drivers)
-    const redeemableCount = deals.filter(d => d.is_redeemable).length;
-    if (isDriver && redeemableCount >= MIN_DEALS) {
+    // Virtual "Resgatar com Pontos" category — for drivers and passengers
+    const redeemableDeals = deals.filter(d => {
+      if (!d.is_redeemable) return false;
+      if (!isDriver) {
+        const rb = d.redeemable_by;
+        return rb === 'both' || rb === 'customer';
+      }
+      return true;
+    });
+    if (redeemableDeals.length >= MIN_DEALS) {
       const redeemableCat: DealCategory = {
         id: REDEEMABLE_ID,
         name: "Resgatar com Pontos",
@@ -413,7 +421,14 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           const isVirtualRedeemable = cat.id === REDEEMABLE_ID;
           const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
           const catDeals = isVirtualRedeemable
-            ? deals.filter(d => d.is_redeemable)
+            ? deals.filter(d => {
+                if (!d.is_redeemable) return false;
+                if (!isDriver) {
+                  const rb = d.redeemable_by;
+                  return rb === 'both' || rb === 'customer';
+                }
+                return true;
+              })
             : isVirtualNew
             ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
             : deals.filter(d => d.category_id === cat.id);
