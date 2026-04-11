@@ -14,10 +14,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus, Users } from "lucide-react";
+import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus, Users, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
+import ModalEditarResgatavel from "./produtos_resgate/components/ModalEditarResgatavel";
 import { formatPoints } from "@/lib/formatPoints";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -38,6 +39,7 @@ export default function ProdutosResgatePage() {
   const [batchRedeemableBy, setBatchRedeemableBy] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [modalAberto, setModalAberto] = useState(false);
+  const [produtoEditando, setProdutoEditando] = useState<any>(null);
 
   const mirrorDriver = (brand?.brand_settings_json as any)?.customer_redeem_mirror_driver === true;
 
@@ -47,7 +49,7 @@ export default function ProdutosResgatePage() {
     queryFn: async () => {
       let query = supabase
         .from("affiliate_deals")
-        .select("id, title, image_url, price, original_price, is_active, is_redeemable, redeem_points_cost, store_name, redeemable_by", { count: "exact" })
+        .select("id, title, image_url, price, original_price, is_active, is_redeemable, redeem_points_cost, store_name, redeemable_by, custom_points_per_real", { count: "exact" })
         .eq("is_redeemable", true);
 
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
