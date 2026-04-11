@@ -244,7 +244,10 @@ export default function ProductRedemptionOrdersPage() {
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold">{order.points_spent} pts</span>
-                      <Badge variant={st.variant} className="text-[10px]">{st.label}</Badge>
+                       <Badge variant={st.variant} className="text-[10px]">{st.label}</Badge>
+                       <Badge variant="outline" className="text-[10px]">
+                         {(order.order_source || "driver") === "customer" ? "Cliente" : "Motorista"}
+                       </Badge>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] text-muted-foreground">
@@ -275,7 +278,8 @@ export default function ProductRedemptionOrdersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
-                  <TableHead>Motorista</TableHead>
+                  <TableHead>Motorista / Cliente</TableHead>
+                  <TableHead>Origem</TableHead>
                   <TableHead>Pontos</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
