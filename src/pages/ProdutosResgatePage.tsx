@@ -363,19 +363,35 @@ export default function ProdutosResgatePage() {
           {/* Batch actions */}
           {selectedIds.size > 0 && (
             <Card>
-              <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
                 <Badge variant="secondary">{selectedIds.size} selecionado(s)</Badge>
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2">
                   <Input
                     type="number"
                     min={0}
-                    placeholder="Novo custo em pontos"
+                    placeholder="Custo em pontos"
                     value={batchCost}
                     onChange={(e) => setBatchCost(e.target.value)}
-                    className="w-48"
+                    className="w-40"
                   />
                   <Button size="sm" onClick={handleBatchSetCost} disabled={batchUpdate.isPending}>
                     <Save className="h-4 w-4 mr-1" />
+                    Aplicar
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select value={batchRedeemableBy} onValueChange={setBatchRedeemableBy}>
+                    <SelectTrigger className="w-36 h-9">
+                      <SelectValue placeholder="Público-alvo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="driver">Motorista</SelectItem>
+                      <SelectItem value="customer">Cliente</SelectItem>
+                      <SelectItem value="both">Ambos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={handleBatchSetRedeemableBy} disabled={batchUpdate.isPending}>
+                    <Users className="h-4 w-4 mr-1" />
                     Aplicar
                   </Button>
                 </div>
