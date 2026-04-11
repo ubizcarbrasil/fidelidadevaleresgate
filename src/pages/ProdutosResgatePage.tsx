@@ -450,6 +450,7 @@ export default function ProdutosResgatePage() {
                       <TableHead>Preço Original</TableHead>
                       <TableHead>Custo em Pontos</TableHead>
                       <TableHead>Ativo</TableHead>
+                      <TableHead>Público</TableHead>
                       <TableHead>Resgatável</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -523,6 +524,11 @@ export default function ProdutosResgatePage() {
                           <TableCell>
                             <Badge variant={deal.is_active ? "default" : "secondary"}>
                               {deal.is_active ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
                             </Badge>
                           </TableCell>
                           <TableCell>
