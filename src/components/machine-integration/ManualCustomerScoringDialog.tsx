@@ -35,7 +35,7 @@ export default function ManualCustomerScoringDialog({ open, onOpenChange, custom
         points_amount: amount,
         money_amount: 0,
         reason: reason.trim() || "Bonificação manual - Passageiro",
-        reference_type: "MANUAL_BONUS",
+        reference_type: "MANUAL_ADJUSTMENT",
       });
       if (ledgerErr) throw ledgerErr;
 

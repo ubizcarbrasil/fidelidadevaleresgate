@@ -35,7 +35,7 @@ export default function ManualDriverScoringDialog({ open, onOpenChange, driver, 
         points_amount: amount,
         money_amount: 0,
         reason: reason.trim() || "Bonificação manual - Motorista",
-        reference_type: "MANUAL_BONUS",
+        reference_type: "MANUAL_ADJUSTMENT",
       });
       if (ledgerErr) throw ledgerErr;
 
