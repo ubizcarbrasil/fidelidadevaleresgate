@@ -1,40 +1,41 @@
 
 
-## Plano: Corrigir erro 401 nos crons finalize-duels-cron e driver-notifications-cron
+## Plano: Ativar módulo de Resgate de Produtos para Cliente
 
-### Causa raiz
-Os dois cron jobs usam `current_setting(...)` para obter a service_role_key no SQL do `pg_cron`, mas essa função retorna string vazia no contexto do `pg_net`. Resultado: o Bearer token enviado é vazio e as edge functions retornam 401.
+### Diagnóstico
+1. O módulo `customer_product_redeem` **existe** na tabela `module_definitions`, mas **nenhuma marca** o tem habilitado em `brand_modules` — por isso a funcionalidade não aparece.
+2. Os itens do sidebar "Produtos de Resgate" e "Pedidos de Resgate" têm `scoringFilter: "DRIVER"`, ou seja, só são visíveis quando o modelo de negócio da marca inclui motoristas. Isso está correto para o cenário atual.
+3. Todo o código das features (coluna "Público", filtro "Origem", badges, label dinâmico) **já está implementado** e funcional.
 
-- `finalize-duels-cron` usa `current_setting('app.settings.service_role_key', true)` — **não existe**
-- `driver-notifications-cron` usa `current_setting('supabase.service_role_key', true)` — **indisponível no pg_net**
+### O que precisa ser feito
 
-Os outros crons que funcionam (como `check-expiring-favorites`, `expire-pending-pins`) usam a **anon key hardcoded** e não têm verificação de auth no código.
+#### 1. Ativar o módulo para as marcas desejadas (SQL)
+Inserir registros em `brand_modules` vinculando o módulo `customer_product_redeem` às marcas que devem ter acesso:
 
-### Solução
-Atualizar os dois cron jobs no `pg_cron` para usar a anon key hardcoded (mesmo padrão dos crons que funcionam) e ajustar as edge functions para aceitar a anon key como token válido.
-
-### Mudanças
-
-#### 1. Atualizar as edge functions para aceitar a anon key
-Nos arquivos `finalize-duels-cron/index.ts` e `driver-notifications-cron/index.ts`, adicionar verificação da `SUPABASE_ANON_KEY` como token válido:
-```typescript
-const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-if (token !== serviceRoleKey && token !== agentSecret && token !== anonKey) {
-  return json({ error: "Unauthorized" }, 401);
-}
+```sql
+INSERT INTO brand_modules (brand_id, module_definition_id, is_enabled)
+SELECT b.id, md.id, true
+FROM brands b, module_definitions md
+WHERE md.key = 'customer_product_redeem'
+  AND b.is_active = true
+ON CONFLICT DO NOTHING;
 ```
 
-#### 2. Recriar os cron jobs com anon key hardcoded
-Usar `supabase--read_query` (via `cron.unschedule` + `cron.schedule`) para substituir os dois jobs:
+Isso ativa para todas as marcas ativas. Se quiser ativar para uma marca específica, usaremos o ID diretamente.
 
-- **Job 8** (`finalize-duels-every-5-min`): trocar `current_setting('app.settings.service_role_key', true)` pela anon key literal
-- **Job 5** (`driver-notifications-cron`): trocar `current_setting('supabase.service_role_key', true)` pela anon key literal
+#### 2. (Opcional) Ativar espelhamento de catálogo
+Se quiser que os clientes vejam os mesmos produtos do motorista automaticamente:
 
-#### 3. Deploy das edge functions
-Fazer deploy de ambas as funções atualizadas.
+```sql
+UPDATE brands
+SET brand_settings_json = jsonb_set(
+  COALESCE(brand_settings_json::jsonb, '{}'),
+  '{customer_redeem_mirror_driver}',
+  'true'
+)
+WHERE is_active = true;
+```
 
-### Arquivos envolvidos
-- `supabase/functions/finalize-duels-cron/index.ts` — aceitar anon key
-- `supabase/functions/driver-notifications-cron/index.ts` — aceitar anon key
-- Cron jobs no banco (via SQL insert) — recriar com anon key hardcoded
+### Nenhuma alteração de código necessária
+Tudo já está pronto no frontend — basta ativar no banco.
 
