@@ -1,45 +1,47 @@
 
 
-## Plano: Corrigir erro "null is not an object (evaluating 'brand.id')" no toggle de espelhamento
+## Plano: Corrigir o toggle de espelhamento que não reflete o estado visualmente
 
 ### Problema
-Na página de Produtos de Resgate, o toggle "Espelhar produtos do motorista para cliente" tenta acessar `brand!.id` (linha 226), mas `brand` é `null` no contexto admin quando a marca não é resolvida via domínio. Isso causa o crash.
+O estado visual do switch (`mirrorDriver`, linha 44) lê de `brand?.brand_settings_json`, mas no contexto admin `brand` é `null`, então o switch sempre mostra "desligado" — mesmo após salvar com sucesso. A invalidação de `["brand"]` não resolve porque `brand` vem do `BrandContext` (resolução por domínio), que permanece `null`.
 
 ### Solução
-Na mutation `toggleMirrorMutation`, usar `currentBrandId` (que vem do `useBrandGuard()` e está sempre disponível no contexto admin) em vez de `brand!.id`.
+Usar estado local + query direta ao banco para determinar o valor do mirror, em vez de depender do `brand` do contexto.
 
-### Mudança
+### Mudanças
 
 **Arquivo**: `src/pages/ProdutosResgatePage.tsx`
 
-1. Na `toggleMirrorMutation` (linha ~220-234):
-   - Trocar `brand!.id` por `currentBrandId`
-   - Adicionar guard no início: se `!currentBrandId`, lançar erro
-   - Para ler `brand_settings_json` atual quando `brand` é null, buscar direto do banco com `currentBrandId`
+1. Adicionar uma query dedicada para buscar o `brand_settings_json` usando `currentBrandId`:
 
 ```typescript
-const toggleMirrorMutation = useMutation({
-  mutationFn: async (enabled: boolean) => {
-    if (!currentBrandId) throw new Error("Marca não identificada");
-    // Buscar settings atuais direto do banco (brand pode ser null no admin)
-    const { data: brandData } = await supabase
+const { data: brandSettings } = useQuery({
+  queryKey: ["brand-settings", currentBrandId],
+  queryFn: async () => {
+    const { data } = await supabase
       .from("brands")
       .select("brand_settings_json")
-      .eq("id", currentBrandId)
+      .eq("id", currentBrandId!)
       .single();
-    const current = (brandData?.brand_settings_json as Record<string, any>) ?? {};
-    const { error } = await supabase
-      .from("brands")
-      .update({ brand_settings_json: { ...current, customer_redeem_mirror_driver: enabled } } as any)
-      .eq("id", currentBrandId);
-    if (error) throw error;
+    return (data?.brand_settings_json as Record<string, any>) ?? {};
   },
-  // ... callbacks mantidos
+  enabled: !!currentBrandId,
 });
+
+const mirrorDriver = brandSettings?.customer_redeem_mirror_driver === true;
 ```
 
-2. Na leitura de `mirrorDriver` (linha 44): também usar fallback quando `brand` é null — buscar via query existente ou aceitar false como default (já é o comportamento atual com `brand?.`).
+2. Na `toggleMirrorMutation.onSuccess`, invalidar `["brand-settings"]` em vez de (ou além de) `["brand"]`:
+
+```typescript
+onSuccess: () => {
+  qc.invalidateQueries({ queryKey: ["brand-settings"] });
+  toast.success("Configuração de espelhamento atualizada");
+},
+```
+
+3. Remover a linha 44 antiga que dependia de `brand?.brand_settings_json`.
 
 ### Resultado
-O toggle de espelhamento funcionará corretamente no painel admin, independentemente de `brand` estar carregado ou não no contexto.
+O toggle refletirá corretamente o estado salvo no banco, atualizando visualmente após cada mudança.
 
