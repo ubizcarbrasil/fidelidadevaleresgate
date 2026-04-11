@@ -15,7 +15,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Search, Loader2, Coins, Plus, Zap } from "lucide-react";
+import { Search, Loader2, Coins, Plus, Zap, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   aberto: boolean;
@@ -31,6 +38,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [custoPontos, setCustoPontos] = useState("");
   const [tentouSalvar, setTentouSalvar] = useState(false);
   const [modoAutomatico, setModoAutomatico] = useState(true);
+  const [publicoAlvo, setPublicoAlvo] = useState<"driver" | "customer" | "both">("driver");
 
   // Fetch points_per_real rates (driver/customer) from brand settings
   const { data: taxasConversao } = useQuery({
@@ -54,7 +62,11 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     enabled: aberto && !!currentBrandId,
   });
 
-  const pointsPerReal = taxasConversao?.base ?? 40;
+  const taxaAtiva = publicoAlvo === "driver"
+    ? (taxasConversao?.driver ?? 40)
+    : publicoAlvo === "customer"
+      ? (taxasConversao?.customer ?? 40)
+      : Math.max(taxasConversao?.driver ?? 40, taxasConversao?.customer ?? 40);
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],
@@ -79,8 +91,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
 
   const calcularPontos = (price: number | null | undefined): number | null => {
     if (price == null || price <= 0) return null;
-    const rate = pointsPerReal ?? 1;
-    return Math.ceil(price * rate);
+    return Math.ceil(price * taxaAtiva);
   };
 
   const marcarResgatavel = useMutation({
@@ -100,7 +111,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
           const cost = calcularPontos(p.price)!;
           return supabase
             .from("affiliate_deals")
-            .update({ is_redeemable: true, redeem_points_cost: cost } as any)
+            .update({ is_redeemable: true, redeem_points_cost: cost, redeemable_by: publicoAlvo } as any)
             .eq("id", p.id);
         });
 
@@ -113,7 +124,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
 
         const { error } = await supabase
           .from("affiliate_deals")
-          .update({ is_redeemable: true, redeem_points_cost: num } as any)
+          .update({ is_redeemable: true, redeem_points_cost: num, redeemable_by: publicoAlvo } as any)
           .in("id", ids);
         if (error) throw error;
       }
@@ -134,6 +145,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     setCustoPontos("");
     setBusca("");
     setTentouSalvar(false);
+    setPublicoAlvo("driver");
     onFechar();
   };
 
@@ -189,6 +201,24 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
           />
         </div>
 
+        {/* Seletor de público-alvo */}
+        <div className="flex items-center gap-3 rounded-md border p-3">
+          <Users className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium mb-1">Público-alvo</p>
+            <Select value={publicoAlvo} onValueChange={(v) => setPublicoAlvo(v as "driver" | "customer" | "both")}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="driver">Motorista</SelectItem>
+                <SelectItem value="customer">Passageiro</SelectItem>
+                <SelectItem value="both">Ambos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Toggle automático / manual */}
         <div className="flex items-center justify-between gap-3 rounded-md border p-3">
           <div className="flex items-center gap-2">
@@ -196,7 +226,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
             <div>
               <p className="text-sm font-medium">Calcular automaticamente</p>
               <p className="text-xs text-muted-foreground">
-                Usa preço × {pointsPerReal ?? 1} pt/R$
+                Usa preço × {taxaAtiva} pt/R$
               </p>
             </div>
           </div>
