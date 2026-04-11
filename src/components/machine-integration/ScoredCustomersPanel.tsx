@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Separator } from "@/components/ui/separator";
 import {
   Search, Users, Eye, Loader2, Coins, ArrowUpRight, ArrowDownRight,
-  User, Phone, Mail, CreditCard, Hash, Download,
+  User, Phone, Mail, CreditCard, Hash, Download, Gift,
 } from "lucide-react";
+import ManualCustomerScoringDialog from "./ManualCustomerScoringDialog";
 
 type ScoredCustomer = {
   id: string;
@@ -37,6 +38,7 @@ type LedgerEntry = {
 export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<ScoredCustomer | null>(null);
+  const [bonusCustomer, setBonusCustomer] = useState<ScoredCustomer | null>(null);
   const debouncedSearch = useDebounce(search, 400);
 
   /* ── Query: customers who have machine_rides ── */
@@ -228,6 +230,15 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
                       variant="ghost"
                       size="icon"
                       className="shrink-0"
+                      onClick={() => setBonusCustomer(c)}
+                      title="Bonificar"
+                    >
+                      <Gift className="h-4 w-4 text-primary" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
                       onClick={() => setSelectedCustomer(c)}
                     >
                       <Eye className="h-4 w-4" />
@@ -273,8 +284,17 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
                     +{selectedCustomer.total_ride_points} pts
                   </Badge>
                 </div>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => {
+                    setBonusCustomer(selectedCustomer);
+                  }}
+                >
+                  <Gift className="h-4 w-4 mr-2 text-primary" />
+                  Bonificar Cliente
+                </Button>
               </div>
-
               {/* Ledger */}
               <div>
                 <h4 className="text-sm font-semibold mb-2">Extrato da carteira</h4>
@@ -327,6 +347,13 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
           )}
         </SheetContent>
       </Sheet>
+
+      <ManualCustomerScoringDialog
+        open={!!bonusCustomer}
+        onOpenChange={(open) => { if (!open) setBonusCustomer(null); }}
+        customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name } : null}
+        brandId={brandId}
+      />
     </>
   );
 }
