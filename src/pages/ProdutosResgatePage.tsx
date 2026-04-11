@@ -501,6 +501,15 @@ export default function ProdutosResgatePage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8"
+                            onClick={() => setProdutoEditando(deal)}
+                          >
+                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                            Editar
+                          </Button>
                           <span className="text-xs text-muted-foreground">Resgatável</span>
                           <Switch
                             checked={!!deal.is_redeemable}
@@ -533,6 +542,7 @@ export default function ProdutosResgatePage() {
                       <TableHead>Ativo</TableHead>
                       <TableHead>Público</TableHead>
                       <TableHead>Resgatável</TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -625,6 +635,16 @@ export default function ProdutosResgatePage() {
                               onCheckedChange={() => handleToggleRedeemable(deal.id, !!deal.is_redeemable)}
                               disabled={updateDeal.isPending}
                             />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => setProdutoEditando(deal)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
