@@ -7,6 +7,10 @@ interface Props {
 }
 
 export default function BranchKpiCorridas({ stats }: Props) {
+  const trend = stats.rides_prev_month > 0
+    ? Math.round(((stats.rides_month - stats.rides_prev_month) / stats.rides_prev_month) * 100)
+    : undefined;
+
   return (
     <KpiCard
       title="Corridas Realizadas"
@@ -14,6 +18,7 @@ export default function BranchKpiCorridas({ stats }: Props) {
       sub={`hoje: ${stats.rides_today} · mês: ${stats.rides_month}`}
       icon={Car}
       color="primary"
+      trend={trend}
     />
   );
 }
