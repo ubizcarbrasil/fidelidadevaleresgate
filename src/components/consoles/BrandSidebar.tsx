@@ -38,6 +38,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.jornada", defaultTitle: "Guia do Empreendedor", url: "/brand-journey", icon: Rocket, moduleKey: "guide_brand" },
       { key: "sidebar.jornada_emissor", defaultTitle: "Guia do Emissor", url: "/emitter-journey", icon: Zap, moduleKey: "guide_emitter" },
+      { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
     ],
   },
   {
@@ -168,7 +169,6 @@ const groups: { label: string; items: MenuItem[] }[] = [
     label: "Configurações",
     items: [
       { key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe },
-      { key: "sidebar.modulos", defaultTitle: "Módulos", url: "/brand-modules", icon: Blocks },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings" },
       { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car, scoringFilter: "DRIVER" },
       { key: "sidebar.subscription", defaultTitle: "Meu Plano", url: "/subscription", icon: CreditCard, moduleKey: "subscription" },

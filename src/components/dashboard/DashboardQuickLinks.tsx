@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Building2, Store, ShoppingBag, Car, ExternalLink, Copy, LogIn,
-  Globe, Eye, Smartphone, Search, Link2, Swords,
+  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
@@ -47,7 +47,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
   // Links that should use SPA navigation (internal admin routes)
-  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação"]);
+  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação", "Módulos"]);
   const handleOpen = (label: string, path: string) => {
     if (internalLabels.has(label)) {
       navigate(path);
@@ -66,6 +66,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     { label: "Achadinho Motorista", path: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", prodPath: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", icon: Car, description: "Marketplace do motorista", scoringFilter: "DRIVER" as const },
     { label: "Painel Franqueado", path: "/branch-wallet", prodPath: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
     { label: "Gamificação", path: "/gamificacao-admin", prodPath: "/gamificacao-admin", icon: Swords, description: "Duelos & Ranking", scoringFilter: "DRIVER" as const },
+    { label: "Módulos", path: "/brand-modules", prodPath: "/brand-modules", icon: Blocks, description: "Ativar/desativar módulos" },
   ];
 
   const quickLinks = allQuickLinks.filter((link) => {
