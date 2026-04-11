@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCrmAnalytics, CrmCustomer } from "@/hooks/useCrmAnalytics";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Search, Download, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, Users, Search, Download, ArrowUpDown, Gift } from "lucide-react";
+import ManualCustomerScoringDialog from "@/components/machine-integration/ManualCustomerScoringDialog";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -24,12 +27,15 @@ type SortKey = "name" | "points_balance" | "days_inactive" | "total_earnings" | 
 
 export default function CrmCustomersPage() {
   const { allCustomers, isLoading } = useCrmAnalytics();
+  const { currentBrandId } = useBrandGuard();
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selectedCustomer, setSelectedCustomer] = useState<CrmCustomer | null>(null);
+  const [bonusCustomer, setBonusCustomer] = useState<CrmCustomer | null>(null);
 
   const filtered = useMemo(() => {
     let list = allCustomers;
@@ -126,6 +132,7 @@ export default function CrmCustomersPage() {
                     <span className="flex items-center gap-1">Dias Inativo <ArrowUpDown className="h-3 w-3" /></span>
                   </TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-[60px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -145,6 +152,11 @@ export default function CrmCustomersPage() {
                       <Badge variant={c.status === "lost" ? "destructive" : c.status === "at_risk" ? "outline" : "secondary"} className="text-[10px]">
                         {STATUS_LABELS[c.status]}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Bonificar" onClick={(e) => { e.stopPropagation(); setBonusCustomer(c); }}>
+                        <Gift className="h-4 w-4 text-primary" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -192,11 +204,29 @@ export default function CrmCustomersPage() {
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Dias Inativo</span><span className={selectedCustomer.days_inactive >= 60 ? "text-destructive font-bold" : ""}>{selectedCustomer.days_inactive} dias</span></div>
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Status</span><Badge variant={selectedCustomer.status === "lost" ? "destructive" : "secondary"} className="text-[10px]">{STATUS_LABELS[selectedCustomer.status]}</Badge></div>
                 </div>
+
+                <Button className="w-full gap-2" variant="outline" onClick={() => { setBonusCustomer(selectedCustomer); }}>
+                  <Gift className="h-4 w-4" /> Bonificar Cliente
+                </Button>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      {currentBrandId && (
+        <ManualCustomerScoringDialog
+          open={!!bonusCustomer}
+          onOpenChange={(open) => {
+            if (!open) {
+              setBonusCustomer(null);
+              qc.invalidateQueries({ queryKey: ["crm-analytics-full"] });
+            }
+          }}
+          customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name } : null}
+          brandId={currentBrandId}
+        />
+      )}
     </div>
   );
 }
