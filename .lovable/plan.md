@@ -1,19 +1,17 @@
 
 
-## Plano: Adicionar atalhos de "Regras de Resgate" e "Produtos de Resgate" nos Links Úteis
+## Plano: Adicionar botão "Recalcular Pontos" na página Conversão por Público
 
-### Mudanças em `src/components/dashboard/DashboardQuickLinks.tsx`
+### O que será feito
+Importar e reutilizar o componente `BotaoRecalcularPontos` já existente em `src/pages/produtos_resgate/components/BotaoRecalcularPontos.tsx` dentro da página `pagina_conversao_resgate.tsx`. Esse botão já busca as taxas por público e recalcula todos os produtos.
 
-1. **Importar ícones**: Adicionar `Gift` e `Settings2` (ou similares) do lucide-react para os novos cards.
+### Mudanças em `src/pages/conversao_resgate/pagina_conversao_resgate.tsx`
 
-2. **Adicionar dois novos links** ao array `allQuickLinks`:
-   - `{ label: "Regras de Resgate", path: "/regras-resgate", icon: Settings2, description: "Conversão pontos/R$ e limites" }`
-   - `{ label: "Produtos de Resgate", path: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" }`
-
-3. **Registrar como internos**: Adicionar "Regras de Resgate" e "Produtos de Resgate" ao `internalLabels` Set para usar navegação SPA (`navigate()`) sem recarregar a página.
+1. **Importar** o componente `BotaoRecalcularPontos`
+2. **Posicionar** o botão ao lado do botão "Salvar Taxas" no header da página, para que após salvar as novas taxas o empreendedor possa recalcular todos os produtos com um clique
 
 ### Resultado
-- Dois novos cards aparecem na seção "Links Úteis" do dashboard
-- Navegação instantânea sem perda de contexto
-- Um arquivo alterado: `src/components/dashboard/DashboardQuickLinks.tsx`
+- Após ajustar as taxas de conversão, o empreendedor clica em "Recalcular Pontos" na mesma tela
+- Todos os produtos resgatáveis têm seus custos em pontos atualizados automaticamente
+- Um arquivo alterado
 
