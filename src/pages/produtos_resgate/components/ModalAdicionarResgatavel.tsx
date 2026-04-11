@@ -91,8 +91,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
 
   const calcularPontos = (price: number | null | undefined): number | null => {
     if (price == null || price <= 0) return null;
-    const rate = pointsPerReal ?? 1;
-    return Math.ceil(price * rate);
+    return Math.ceil(price * taxaAtiva);
   };
 
   const marcarResgatavel = useMutation({
