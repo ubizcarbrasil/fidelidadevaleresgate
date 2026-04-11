@@ -89,7 +89,7 @@ function TabSkeleton() {
   );
 }
 
-type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile" | "driver";
+type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile" | "driver" | "redeem_store";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
 
@@ -97,6 +97,7 @@ const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string; 
   { key: "home", label: "Início", iconKey: "nav_home" },
   { key: "offers", label: "Ofertas", iconKey: "nav_offers", moduleKey: "offers" },
   { key: "driver", label: "Motorista", iconKey: "nav_wallet", driverOnly: true },
+  { key: "redeem_store", label: "Loja", iconKey: "nav_redemptions", moduleKey: "customer_product_redeem" },
   { key: "redemptions", label: "Resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
   { key: "wallet", label: "Carteira", iconKey: "nav_wallet", moduleKey: "wallet" },
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
