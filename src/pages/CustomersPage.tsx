@@ -37,6 +37,7 @@ export default function CustomersPage() {
   const [form, setForm] = useState<CustomerForm>(emptyForm);
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const [ledgerCustomer, setLedgerCustomer] = useState<any>(null);
+  const [bonusCustomer, setBonusCustomer] = useState<any>(null);
   const [tierFilter, setTierFilter] = useState<string>("");
   const [crmFilter, setCrmFilter] = useState<string>("");
 
