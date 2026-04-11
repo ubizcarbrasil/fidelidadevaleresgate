@@ -32,16 +32,18 @@ interface SyncErrorDeal {
 
 const AchadinhosAlerts = memo(function AchadinhosAlerts({ brandId }: AchadinhosAlertsProps) {
   const { data: notifications, isLoading: notifLoading } = useQuery({
-    queryKey: ["dashboard-achadinho-notifications", brandId],
+    queryKey: ["dashboard-achadinho-admin-notifications", brandId],
     queryFn: async () => {
-      let q = supabase
-        .from("customer_notifications")
+      if (!brandId) return [];
+      const { data } = await supabase
+        .from("admin_notifications")
         .select("id, title, body, type, created_at, is_read")
+        .eq("brand_id", brandId)
         .order("created_at", { ascending: false })
         .limit(8);
-      const { data } = await q;
       return (data || []) as Notification[];
     },
+    enabled: !!brandId,
   });
 
   const { data: syncErrors, isLoading: syncLoading } = useQuery({
