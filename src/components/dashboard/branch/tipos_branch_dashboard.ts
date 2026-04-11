@@ -19,6 +19,7 @@ export interface BranchDashboardStats {
   rides_total: number;
   rides_today: number;
   rides_month: number;
+  rides_prev_month: number;
   rides_avg_per_driver: number;
   // Visão geral
   wallet_balance: number;
