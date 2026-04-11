@@ -330,22 +330,34 @@ export default function ProdutosResgatePage() {
             </Card>
           </div>
 
-          {/* Filtros de status */}
-          <div className="flex items-center gap-2">
-            {([
-              { key: "all" as const, label: "Todos" },
-              { key: "active" as const, label: "Ativos" },
-              { key: "inactive" as const, label: "Inativos" },
-            ]).map((f) => (
-              <Button
-                key={f.key}
-                size="sm"
-                variant={statusFilter === f.key ? "default" : "outline"}
-                onClick={() => handleStatusFilter(f.key)}
-              >
-                {f.label}
-              </Button>
-            ))}
+           {/* Filtros de status */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2">
+              {([
+                { key: "all" as const, label: "Todos" },
+                { key: "active" as const, label: "Ativos" },
+                { key: "inactive" as const, label: "Inativos" },
+              ]).map((f) => (
+                <Button
+                  key={f.key}
+                  size="sm"
+                  variant={statusFilter === f.key ? "default" : "outline"}
+                  onClick={() => handleStatusFilter(f.key)}
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Toggle espelhamento motorista → cliente */}
+            <div className="flex items-center gap-2 ml-auto">
+              <label className="text-sm text-muted-foreground whitespace-nowrap">Espelhar produtos do motorista para cliente</label>
+              <Switch
+                checked={mirrorDriver}
+                onCheckedChange={(v) => toggleMirrorMutation.mutate(v)}
+                disabled={toggleMirrorMutation.isPending}
+              />
+            </div>
           </div>
 
           {/* Batch actions */}
