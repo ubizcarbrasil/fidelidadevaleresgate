@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { useCustomer } from "@/contexts/CustomerContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
 import { toast } from "sonner";
-import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
-import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 
 interface RedeemDeal {
   id: string;
@@ -26,21 +24,16 @@ interface Props {
   onSuccess: () => void;
 }
 
-export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
-  const { driver, refreshDriver } = useDriverSession();
-  const { celebrate: celebrateRedeem } = useRedeemCelebration();
+export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Props) {
+  const { customer, refetch } = useCustomer();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [verified, setVerified] = useState(false);
-
-  const cleanName = (name?: string | null) =>
-    name?.replace(/\[MOTORISTA\]\s*/i, "").replace(/\s*\(D\)\s*$/i, "").trim() || "";
 
   const [form, setForm] = useState({
-    name: cleanName(driver?.name) || "",
-    phone: driver?.phone || "",
-    cpf: driver?.cpf || "",
+    name: customer?.name || "",
+    phone: customer?.phone || "",
+    cpf: customer?.cpf || "",
     cep: "",
     address: "",
     number: "",
@@ -50,7 +43,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
     state: "",
   });
 
-  const pointsBalance = driver?.points_balance || 0;
+  const pointsBalance = customer?.points_balance || 0;
   const canAfford = pointsBalance >= deal.redeem_points_cost;
 
   const updateField = (key: string, value: string) => {
@@ -80,7 +73,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
   };
 
   const handleSubmit = async () => {
-    if (!driver) return;
+    if (!customer) return;
     if (!canAfford) {
       toast.error("Saldo de pontos insuficiente!");
       return;
@@ -94,9 +87,9 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
     try {
       // 1. Debit points via ledger
       const { error: ledgerError } = await supabase.from("points_ledger").insert({
-        customer_id: driver.id,
-        brand_id: driver.brand_id,
-        branch_id: driver.branch_id,
+        customer_id: customer.id,
+        brand_id: customer.brand_id,
+        branch_id: customer.branch_id,
         entry_type: "DEBIT",
         points_amount: deal.redeem_points_cost,
         reason: `Resgate: ${deal.title}`,
@@ -107,13 +100,13 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       // 1b. Decrement customer balance
       await supabase.from("customers").update({
         points_balance: pointsBalance - deal.redeem_points_cost,
-      }).eq("id", driver.id);
+      }).eq("id", customer.id);
 
-      // 2. Create redemption order
+      // 2. Create redemption order with order_source = 'customer'
       const { error: orderError } = await supabase.from("product_redemption_orders").insert({
-        brand_id: driver.brand_id,
-        branch_id: driver.branch_id,
-        customer_id: driver.id,
+        brand_id: customer.brand_id,
+        branch_id: customer.branch_id,
+        customer_id: customer.id,
         deal_id: deal.id,
         deal_snapshot_json: {
           title: deal.title,
@@ -132,31 +125,21 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
         delivery_neighborhood: form.neighborhood,
         delivery_city: form.city,
         delivery_state: form.state,
-        order_source: "driver",
+        order_source: "customer",
       });
       if (orderError) throw orderError;
 
-      // Refresh driver balance
-      await refreshDriver();
+      // Refresh customer balance
+      await refetch();
 
       setSuccess(true);
-      celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
+      toast.success("Resgate solicitado com sucesso! 🎉");
     } catch (err: any) {
       haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
     }
     setLoading(false);
   };
-
-  // Step 1: Verification
-  if (!verified) {
-    return (
-      <DriverVerifyCodeStep
-        onVerified={() => setVerified(true)}
-        onBack={onClose}
-      />
-    );
-  }
 
   if (success) {
     return (

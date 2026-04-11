@@ -41,7 +41,7 @@ export default function ProdutosResgatePage() {
     queryFn: async () => {
       let query = supabase
         .from("affiliate_deals")
-        .select("id, title, image_url, price, original_price, is_active, is_redeemable, redeem_points_cost, store_name", { count: "exact" })
+        .select("id, title, image_url, price, original_price, is_active, is_redeemable, redeem_points_cost, store_name, redeemable_by", { count: "exact" })
         .eq("is_redeemable", true);
 
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
@@ -384,6 +384,9 @@ export default function ProdutosResgatePage() {
                             <Badge variant={deal.is_active ? "default" : "secondary"} className="text-[10px]">
                               {deal.is_active ? "Ativo" : "Inativo"}
                             </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
+                            </Badge>
                           </div>
                         </div>
                       </div>
@@ -447,6 +450,7 @@ export default function ProdutosResgatePage() {
                       <TableHead>Preço Original</TableHead>
                       <TableHead>Custo em Pontos</TableHead>
                       <TableHead>Ativo</TableHead>
+                      <TableHead>Público</TableHead>
                       <TableHead>Resgatável</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -520,6 +524,11 @@ export default function ProdutosResgatePage() {
                           <TableCell>
                             <Badge variant={deal.is_active ? "default" : "secondary"}>
                               {deal.is_active ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
                             </Badge>
                           </TableCell>
                           <TableCell>

@@ -32,6 +32,8 @@ const CustomerWalletPage = lazy(() => import("@/pages/customer/CustomerWalletPag
 const CustomerProfilePage = lazy(() => import("@/pages/customer/CustomerProfilePage"));
 const CustomerDriverDashboardPage = lazy(() => import("@/pages/customer/CustomerDriverDashboardPage"));
 const CustomerEmissorasPage = lazy(() => import("@/pages/customer/CustomerEmissorasPage"));
+const CustomerRedeemStorePage = lazy(() => import("@/components/customer/CustomerRedeemStorePage"));
+const CustomerRedeemOrderHistory = lazy(() => import("@/components/customer/CustomerRedeemOrderHistory"));
 
 // Lazy-loaded overlays (rendered on demand)
 const CustomerOfferDetailPage = lazy(() => import("@/pages/customer/CustomerOfferDetailPage"));
@@ -87,7 +89,7 @@ function TabSkeleton() {
   );
 }
 
-type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile" | "driver";
+type Tab = "home" | "offers" | "redemptions" | "wallet" | "profile" | "driver" | "redeem_store";
 
 import type { AppIconKey } from "@/hooks/useAppIcons";
 
@@ -95,6 +97,7 @@ const TABS: { key: Tab; label: string; iconKey: AppIconKey; moduleKey?: string; 
   { key: "home", label: "Início", iconKey: "nav_home" },
   { key: "offers", label: "Ofertas", iconKey: "nav_offers", moduleKey: "offers" },
   { key: "driver", label: "Motorista", iconKey: "nav_wallet", driverOnly: true },
+  { key: "redeem_store", label: "Loja", iconKey: "nav_redemptions", moduleKey: "customer_product_redeem" },
   { key: "redemptions", label: "Resgates", iconKey: "nav_redemptions", moduleKey: "redemption_qr" },
   { key: "wallet", label: "Carteira", iconKey: "nav_wallet", moduleKey: "wallet" },
   { key: "profile", label: "Perfil", iconKey: "nav_profile" },
@@ -104,6 +107,7 @@ const TAB_CONTENT: Record<Tab, React.FC<any>> = {
   home: CustomerHomePage,
   offers: CustomerOffersPage,
   driver: CustomerDriverDashboardPage,
+  redeem_store: () => null, // handled specially in render
   redemptions: CustomerRedemptionsPage,
   wallet: CustomerWalletPage,
   profile: CustomerProfilePage,
@@ -129,6 +133,8 @@ export default function CustomerLayout() {
   const [showTour, setShowTour] = useState(false);
   const [achadinhoCatGridOpen, setAchadinhoCatGridOpen] = useState(false);
   const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
+  const [redeemStoreOpen, setRedeemStoreOpen] = useState(false);
+  const [redeemHistoryOpen, setRedeemHistoryOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
   usePrefetchRoutes();
@@ -327,6 +333,10 @@ export default function CustomerLayout() {
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
                   onOpenAchadinhoCategoryGrid={() => setAchadinhoCatGridOpen(true)}
                 />
+              ) : activeTab === "redeem_store" ? (
+                <Suspense fallback={<TabSkeleton />}>
+                  <CustomerRedeemStorePage onBack={() => setActiveTab("home")} />
+                </Suspense>
               ) : (
                 <Suspense fallback={<TabSkeleton />}>
                   <ActivePage />

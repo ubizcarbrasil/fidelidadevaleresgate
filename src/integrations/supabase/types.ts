@@ -206,6 +206,7 @@ export type Database = {
           price: number | null
           raw_payload: Json | null
           redeem_points_cost: number | null
+          redeemable_by: string
           source_group_id: string | null
           source_group_name: string | null
           store_logo_url: string | null
@@ -245,6 +246,7 @@ export type Database = {
           price?: number | null
           raw_payload?: Json | null
           redeem_points_cost?: number | null
+          redeemable_by?: string
           source_group_id?: string | null
           source_group_name?: string | null
           store_logo_url?: string | null
@@ -284,6 +286,7 @@ export type Database = {
           price?: number | null
           raw_payload?: Json | null
           redeem_points_cost?: number | null
+          redeemable_by?: string
           source_group_id?: string | null
           source_group_name?: string | null
           store_logo_url?: string | null
@@ -5436,6 +5439,7 @@ export type Database = {
           delivery_number: string
           delivery_state: string
           id: string
+          order_source: string
           points_spent: number
           reviewed_at: string | null
           reviewed_by: string | null
@@ -5463,6 +5467,7 @@ export type Database = {
           delivery_number: string
           delivery_state: string
           id?: string
+          order_source?: string
           points_spent: number
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -5490,6 +5495,7 @@ export type Database = {
           delivery_number?: string
           delivery_state?: string
           id?: string
+          order_source?: string
           points_spent?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
