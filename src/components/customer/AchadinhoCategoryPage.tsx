@@ -37,6 +37,8 @@ interface AffiliateDeal {
   store_name: string | null;
   store_logo_url: string | null;
   badge_label: string | null;
+  is_redeemable?: boolean;
+  redeem_points_cost?: number | null;
 }
 
 interface CategoryBanner {
@@ -69,7 +71,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
       const isVirtual = category.id === "__new_offers__";
       let q = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, is_redeemable, redeem_points_cost")
         .eq("brand_id", brand!.id)
         .eq("is_active", true);
 
