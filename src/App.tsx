@@ -128,6 +128,7 @@ const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernanceP
 const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductRedemptionOrdersPage"));
 const ProdutosResgatePage = lazyWithRetry(() => import("@/pages/ProdutosResgatePage"));
 const RegrasResgatePage = lazyWithRetry(() => import("@/pages/RegrasResgatePage"));
+const PaginaConversaoResgate = lazyWithRetry(() => import("@/pages/conversao_resgate/pagina_conversao_resgate"));
 const ManuaisPage = lazyWithRetry(() => import("@/pages/ManuaisPage"));
 const BrandBranchesPage = lazyWithRetry(() => import("@/pages/BrandBranchesPage"));
 const BrandBranchForm = lazyWithRetry(() => import("@/pages/BrandBranchForm"));
@@ -224,6 +225,7 @@ function AnimatedRoutes() {
               <Route path="product-redemption-orders" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProductRedemptionOrdersPage /></ModuleGuard>} />
               <Route path="produtos-resgate" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProdutosResgatePage /></ModuleGuard>} />
               <Route path="regras-resgate" element={<ModuleGuard moduleKey="affiliate_deals"><RegrasResgatePage /></ModuleGuard>} />
+              <Route path="conversao-resgate" element={<ModuleGuard moduleKey="affiliate_deals"><PaginaConversaoResgate /></ModuleGuard>} />
               <Route path="store-catalog" element={<ModuleGuard moduleKey="catalog"><StoreCatalogPage /></ModuleGuard>} />
               <Route path="reports" element={<ModuleGuard moduleKey="reports"><ReportsPage /></ModuleGuard>} />
               <Route path="send-notification" element={<ModuleGuard moduleKey="notifications"><SendNotificationPage /></ModuleGuard>} />
