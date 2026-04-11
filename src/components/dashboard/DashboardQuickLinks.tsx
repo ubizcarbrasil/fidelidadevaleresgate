@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -18,6 +19,7 @@ import { getPublicOrigin } from "@/lib/publicShareUrl";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
+  const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const { data: brand } = useQuery({
     queryKey: ["brand-quick-links", currentBrandId],
@@ -44,7 +46,15 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
-  const openExternal = (url: string) => { window.location.href = url; };
+  // Links that should use SPA navigation (internal admin routes)
+  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação"]);
+  const handleOpen = (label: string, path: string) => {
+    if (internalLabels.has(label)) {
+      navigate(path);
+    } else {
+      window.location.href = path;
+    }
+  };
 
   if (!brand) return null;
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
@@ -86,6 +96,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {quickLinks.map((link) => {
               const internalUrl = `${origin}${link.path}`;
+              const isInternal = internalLabels.has(link.label);
                const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
               return (
                 <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
@@ -95,7 +106,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
                   </div>
                   <p className="text-xs text-muted-foreground">{link.description}</p>
                   <div className="flex gap-1">
-                    <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => openExternal(internalUrl)}>
+                    <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => handleOpen(link.label, isInternal ? link.path : internalUrl)}>
                       <ExternalLink className="h-3 w-3" /> Abrir
                     </Button>
                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(internalUrl)}>
@@ -154,6 +165,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
 
 /* ── Access Hub Section ── */
 function AccessHubSection({ consoleScope }: { consoleScope: string }) {
+  const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const isRoot = consoleScope === "ROOT";
   const isBrand = ["BRAND", "TENANT"].includes(consoleScope);
@@ -199,8 +211,8 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
                      <div><p className="text-sm font-medium truncate">{brand.name}</p><p className="text-xs text-muted-foreground">{brand.slug}</p></div>
                    </div>
                    <div className="flex gap-1.5 shrink-0">
-                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/?brandId=${brand.id}`; }}><Building2 className="h-3 w-3" />Admin</Button>
-                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => { window.location.href = `/customer-preview?brandId=${brand.id}`; }}><Smartphone className="h-3 w-3" />App</Button>
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => navigate(`/?brandId=${brand.id}`)}><Building2 className="h-3 w-3" />Admin</Button>
+                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1 flex-1 sm:flex-none" onClick={() => navigate(`/customer-preview?brandId=${brand.id}`)}><Smartphone className="h-3 w-3" />App</Button>
                    </div>
                 </div>
               ))}
@@ -219,7 +231,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
           <CardTitle className="text-sm font-medium flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Painéis dos Parceiros</CardTitle>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             {currentBrandId && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => { window.location.href = `/customer-preview?brandId=${currentBrandId}`; }}>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 hidden sm:inline-flex" onClick={() => navigate(`/customer-preview?brandId=${currentBrandId}`)}>
                 <Smartphone className="h-3.5 w-3.5" />App do Cliente
               </Button>
             )}
@@ -240,7 +252,7 @@ function AccessHubSection({ consoleScope }: { consoleScope: string }) {
             {filteredStores.map((store) => (
               <div key={store.id} className="flex items-center justify-between py-2.5 gap-2">
                 <div className="min-w-0"><p className="text-sm font-medium truncate">{store.name}</p><p className="text-xs text-muted-foreground">{store.address || "—"}</p></div>
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => { window.location.href = `/store-panel?storeId=${store.id}`; }}><Eye className="h-3 w-3" />Ver</Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 shrink-0" onClick={() => navigate(`/store-panel?storeId=${store.id}`)}><Eye className="h-3 w-3" />Ver</Button>
               </div>
             ))}
           </div>
