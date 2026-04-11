@@ -83,6 +83,11 @@ export default function PaginaConversaoResgate() {
   });
 
   const updateField = (key: keyof TaxasConversao, value: string) => {
+    if (value === "" || value === ".") {
+      setForm((prev) => ({ ...prev, [key]: 0 }));
+      setDirty(true);
+      return;
+    }
     const num = parseFloat(value);
     if (isNaN(num) || num < 0) return;
     setForm((prev) => ({ ...prev, [key]: num }));
@@ -164,7 +169,7 @@ export default function PaginaConversaoResgate() {
                   type="number"
                   step="0.1"
                   min={0.01}
-                  value={form[card.field]}
+                  value={form[card.field] === 0 ? "" : form[card.field]}
                   onChange={(e) => updateField(card.field, e.target.value)}
                   className="w-32"
                 />
