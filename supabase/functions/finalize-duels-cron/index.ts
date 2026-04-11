@@ -25,7 +25,9 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const agentSecret = Deno.env.get("AGENT_SECRET") || "";
 
-  if (token !== serviceRoleKey && token !== agentSecret) {
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+
+  if (token !== serviceRoleKey && token !== agentSecret && token !== anonKey) {
     return json({ error: "Unauthorized" }, 401);
   }
 
