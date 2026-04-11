@@ -2,13 +2,15 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Share2, Tag, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Share2, Tag, AlertTriangle, Gift } from "lucide-react";
 import ReportarOfertaDialog from "@/components/customer/ReportarOfertaDialog";
+import CustomerRedeemCheckout from "@/components/customer/CustomerRedeemCheckout";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import { motion } from "framer-motion";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import SafeImage from "@/components/customer/SafeImage";
 import AppIcon from "@/components/customer/AppIcon";
+import { formatPoints } from "@/lib/formatPoints";
 
 interface AffiliateDeal {
   id: string;
@@ -23,6 +25,8 @@ interface AffiliateDeal {
   badge_label: string | null;
   category_id?: string | null;
   origin?: string | null;
+  is_redeemable?: boolean;
+  redeem_points_cost?: number | null;
 }
 
 interface Props {
@@ -53,7 +57,10 @@ export default function AchadinhoDealDetail({
 }: Props) {
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
   const [reportOpen, setReportOpen] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
   const highlight = "hsl(var(--vb-highlight))";
+
+  const isRedeemable = !!(deal.is_redeemable && (deal.redeem_points_cost || 0) > 0);
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
 
   const ctaConfig = brandSettings?.achadinho_cta;
@@ -110,6 +117,10 @@ export default function AchadinhoDealDetail({
   });
 
   const handleGoToOffer = () => {
+    if (isRedeemable) {
+      setShowCheckout(true);
+      return;
+    }
     if (customerId) {
       supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customerId }).then();
     }
@@ -273,10 +284,17 @@ export default function AchadinhoDealDetail({
             <div className="px-5 pt-5 pb-4">
               <button
                 onClick={handleGoToOffer}
-                className="w-full py-3.5 rounded-xl text-base font-bold transition-transform active:scale-[0.97]"
+                className="w-full py-3.5 rounded-xl text-base font-bold transition-transform active:scale-[0.97] flex items-center justify-center gap-2"
                 style={{ backgroundColor: ctaBg, color: ctaText }}
               >
-                {ctaLabel}
+                {isRedeemable ? (
+                  <>
+                    <Gift className="h-5 w-5" />
+                    Resgatar — {formatPoints(deal.redeem_points_cost!)} pts
+                  </>
+                ) : (
+                  ctaLabel
+                )}
               </button>
             </div>
 
@@ -358,6 +376,24 @@ export default function AchadinhoDealDetail({
           </div>
         </div>
       </motion.div>
+
+      {showCheckout && (
+        <CustomerRedeemCheckout
+          deal={{
+            id: deal.id,
+            title: deal.title,
+            image_url: deal.image_url,
+            price: deal.price,
+            affiliate_url: deal.affiliate_url,
+            redeem_points_cost: deal.redeem_points_cost!,
+          }}
+          onClose={() => setShowCheckout(false)}
+          onSuccess={() => {
+            setShowCheckout(false);
+            onBack();
+          }}
+        />
+      )}
     </motion.div>
   );
 }
