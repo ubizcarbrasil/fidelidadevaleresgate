@@ -1,23 +1,19 @@
 
 
-## Plano: Adicionar botão "Bonificar" na CustomersPage
+## Plano: Corrigir erro de enum no ManualCustomerScoringDialog
 
 ### Problema
-O botão de bonificação manual existe no CrmCustomersPage e no ScoredCustomersPanel, mas não na página principal de clientes (`CustomersPage`), que é a tela mostrada no screenshot.
+O erro `invalid input value for enum ledger_reference_type: "MANUAL_BONUS"` ocorre porque o valor `MANUAL_BONUS` não existe no enum `ledger_reference_type`. Os valores válidos incluem `MANUAL_ADJUSTMENT`.
 
 ### Mudanças
 
-**Arquivo**: `src/pages/CustomersPage.tsx`
+**Arquivo 1**: `src/components/machine-integration/ManualCustomerScoringDialog.tsx`
+- Alterar `reference_type: "MANUAL_BONUS"` para `reference_type: "MANUAL_ADJUSTMENT"`
 
-1. Importar `ManualCustomerScoringDialog` e ícone `Gift`
-2. Adicionar estado `bonusCustomer` 
-3. **Mobile (cards)**: adicionar botão `Gift` ao lado dos botões de Extrato e Editar (linha 343-346)
-4. **Desktop (tabela)**: adicionar botão `Gift` na coluna Ações ao lado de Extrato e Editar (linha 415-417)
-5. Renderizar `ManualCustomerScoringDialog` com o cliente selecionado e `currentBrandId`
-6. Ao fechar o dialog, invalidar query `["customers"]` para atualizar o saldo
+**Arquivo 2**: `src/components/machine-integration/ManualDriverScoringDialog.tsx`
+- Mesma correção: `reference_type: "MANUAL_BONUS"` → `reference_type: "MANUAL_ADJUSTMENT"`
 
 ### Detalhes técnicos
-- Nenhuma migração SQL necessária
-- Reutiliza o `ManualCustomerScoringDialog` já existente
-- O customer já tem `id`, `name` e `branch_id` disponíveis no data
+- Nenhuma migração necessária — o valor `MANUAL_ADJUSTMENT` já existe no enum
+- Ambos os dialogs (cliente e motorista) usam o valor incorreto e precisam ser corrigidos
 
