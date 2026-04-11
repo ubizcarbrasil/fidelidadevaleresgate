@@ -1,32 +1,46 @@
 
 
-## Plano: Corrigir input da página Regras de Resgate
+## Plano: Taxa de conversão personalizada por produto
 
-### Problema
-Mesmo bug da página anterior: a função `updateField` em `RegrasResgatePage.tsx` (linha 131-136) rejeita strings vazias porque `parseFloat("")` retorna `NaN`. Além disso, o `value` do Input (linha 240) não mostra vazio quando o valor é `0`.
+### Problema atual
+Hoje o custo em pontos de cada produto é definido pela taxa global (pts/R$) ou manualmente com valor fixo. Não existe opção de definir uma taxa de conversão personalizada por produto, que calcularia automaticamente o custo baseado no preço do produto.
 
-### Mudanças em `src/pages/RegrasResgatePage.tsx`
+### Mudanças
 
-**1. Atualizar `updateField` (linhas 131-136)** para aceitar string vazia:
-```typescript
-const updateField = (key: keyof RedemptionRules, value: string) => {
-  if (value === "" || value === ".") {
-    setForm((prev) => ({ ...prev, [key]: 0 }));
-    setDirty(true);
-    return;
-  }
-  const num = parseFloat(value);
-  if (isNaN(num) || num < 0) return;
-  setForm((prev) => ({ ...prev, [key]: num }));
-  setDirty(true);
-};
+**1. Migração SQL** — Adicionar coluna `custom_points_per_real` na tabela `affiliate_deals`
+```sql
+ALTER TABLE affiliate_deals ADD COLUMN custom_points_per_real numeric DEFAULT NULL;
 ```
+Quando `NULL`, usa a taxa global. Quando preenchido, o custo em pontos é recalculado como `preço × custom_points_per_real`.
 
-**2. Atualizar o `value` do Input (linha 240)** para mostrar campo vazio quando valor é `0`:
-```typescript
-value={form[card.field] === 0 ? "" : form[card.field]}
-```
+**2. Modal de Edição por Produto** — Novo componente `ModalEditarResgatavel`
+- Abre ao clicar em "Editar" no produto (novo botão na tabela/card)
+- Campos editáveis:
+  - **Público-alvo** (motorista/cliente/ambos)
+  - **Custo em pontos** (editável diretamente)
+  - **Taxa personalizada** (pts/R$) — campo opcional que, ao ser preenchido, recalcula o custo automaticamente com base no preço do produto
+  - Preview: mostra o cálculo `Preço R$ X × Y pts/R$ = Z pts`
+- Ao salvar, grava `redeem_points_cost`, `redeemable_by` e `custom_points_per_real`
+
+**3. Atualizar `ModalAdicionarResgatavel`**
+- Mostrar a taxa global atual (motorista/cliente) como referência
+- Permitir que o usuário defina uma taxa personalizada por produto durante a adição (campo opcional)
+
+**4. Atualizar `ProdutosResgatePage`**
+- Adicionar botão "Editar" em cada linha/card que abre o `ModalEditarResgatavel`
+- Na coluna/card de custo, indicar quando o produto tem taxa personalizada (badge ou ícone)
+- No `BotaoRecalcularPontos`, respeitar a taxa personalizada do produto quando existir (usar `custom_points_per_real` em vez da global)
+
+**5. Atualizar `BotaoRecalcularPontos`**
+- Ao recalcular em lote, usar `custom_points_per_real` do produto quando existir, senão usar a taxa global
+
+### Arquivos envolvidos
+- 1 migração SQL (nova coluna)
+- `src/pages/produtos_resgate/components/ModalEditarResgatavel.tsx` (novo)
+- `src/pages/produtos_resgate/components/ModalAdicionarResgatavel.tsx` (atualizar)
+- `src/pages/produtos_resgate/components/BotaoRecalcularPontos.tsx` (atualizar)
+- `src/pages/ProdutosResgatePage.tsx` (atualizar)
 
 ### Resultado
-O usuário consegue apagar o valor e digitar um novo número normalmente, igual ao fix já aplicado na página "Conversão por Público". Um arquivo alterado.
+O empreendedor pode definir uma taxa de conversão personalizada por produto, ver o cálculo em tempo real, e editar todos os campos de resgate em um modal dedicado. Produtos com taxa personalizada são recalculados corretamente em lote.
 
