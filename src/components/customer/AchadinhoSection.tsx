@@ -230,9 +230,16 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
       viable.unshift(virtualCat);
     }
 
-    // Virtual "Resgatar com Pontos" category — redeemable deals (only for drivers)
-    const redeemableCount = deals.filter(d => d.is_redeemable).length;
-    if (isDriver && redeemableCount >= MIN_DEALS) {
+    // Virtual "Resgatar com Pontos" category — for drivers and passengers
+    const redeemableDeals = deals.filter(d => {
+      if (!d.is_redeemable) return false;
+      if (!isDriver) {
+        const rb = d.redeemable_by;
+        return rb === 'both' || rb === 'customer';
+      }
+      return true;
+    });
+    if (redeemableDeals.length >= MIN_DEALS) {
       const redeemableCat: DealCategory = {
         id: REDEEMABLE_ID,
         name: "Resgatar com Pontos",
