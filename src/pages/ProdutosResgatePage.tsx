@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrand } from "@/contexts/BrandContext";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { DataTableControls } from "@/components/DataTableControls";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus } from "lucide-react";
+import { Package, Coins, CheckCircle2, Save, Trash2, Loader2, ArrowRight, Plus, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
@@ -24,6 +26,7 @@ const PAGE_SIZE = 20;
 export default function ProdutosResgatePage() {
   const qc = useQueryClient();
   const { currentBrandId, currentBranchId, consoleScope, isRootAdmin } = useBrandGuard();
+  const { brand } = useBrand();
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const isMobile = useIsMobile();
 
@@ -32,8 +35,11 @@ export default function ProdutosResgatePage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [batchCost, setBatchCost] = useState("");
+  const [batchRedeemableBy, setBatchRedeemableBy] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [modalAberto, setModalAberto] = useState(false);
+
+  const mirrorDriver = (brand?.brand_settings_json as any)?.customer_redeem_mirror_driver === true;
 
   // ── Query ──
   const { data, isLoading } = useQuery({
@@ -192,6 +198,39 @@ export default function ProdutosResgatePage() {
     );
   };
 
+  const handleBatchSetRedeemableBy = () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return toast.error("Selecione ao menos um item");
+    if (!batchRedeemableBy) return toast.error("Selecione um público-alvo");
+    batchUpdate.mutate(
+      { ids, updates: { redeemable_by: batchRedeemableBy } },
+      { onSuccess: () => { toast.success(`Público atualizado em ${ids.length} itens`); setBatchRedeemableBy(""); } }
+    );
+  };
+
+  const handleChangeRedeemableBy = (id: string, value: string) => {
+    updateDeal.mutate(
+      { id, updates: { redeemable_by: value } },
+      { onSuccess: () => toast.success("Público atualizado"), onError: (e: Error) => toast.error(e.message) }
+    );
+  };
+
+  const toggleMirrorMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const current = (brand?.brand_settings_json as Record<string, any>) ?? {};
+      const { error } = await supabase
+        .from("brands")
+        .update({ brand_settings_json: { ...current, customer_redeem_mirror_driver: enabled } } as any)
+        .eq("id", brand!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brand"] });
+      toast.success("Configuração de espelhamento atualizada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const formatPrice = (val: number | null | undefined) => {
     if (val == null) return "—";
     return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
@@ -291,40 +330,68 @@ export default function ProdutosResgatePage() {
             </Card>
           </div>
 
-          {/* Filtros de status */}
-          <div className="flex items-center gap-2">
-            {([
-              { key: "all" as const, label: "Todos" },
-              { key: "active" as const, label: "Ativos" },
-              { key: "inactive" as const, label: "Inativos" },
-            ]).map((f) => (
-              <Button
-                key={f.key}
-                size="sm"
-                variant={statusFilter === f.key ? "default" : "outline"}
-                onClick={() => handleStatusFilter(f.key)}
-              >
-                {f.label}
-              </Button>
-            ))}
+           {/* Filtros de status */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2">
+              {([
+                { key: "all" as const, label: "Todos" },
+                { key: "active" as const, label: "Ativos" },
+                { key: "inactive" as const, label: "Inativos" },
+              ]).map((f) => (
+                <Button
+                  key={f.key}
+                  size="sm"
+                  variant={statusFilter === f.key ? "default" : "outline"}
+                  onClick={() => handleStatusFilter(f.key)}
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Toggle espelhamento motorista → cliente */}
+            <div className="flex items-center gap-2 ml-auto">
+              <label className="text-sm text-muted-foreground whitespace-nowrap">Espelhar produtos do motorista para cliente</label>
+              <Switch
+                checked={mirrorDriver}
+                onCheckedChange={(v) => toggleMirrorMutation.mutate(v)}
+                disabled={toggleMirrorMutation.isPending}
+              />
+            </div>
           </div>
 
           {/* Batch actions */}
           {selectedIds.size > 0 && (
             <Card>
-              <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
                 <Badge variant="secondary">{selectedIds.size} selecionado(s)</Badge>
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2">
                   <Input
                     type="number"
                     min={0}
-                    placeholder="Novo custo em pontos"
+                    placeholder="Custo em pontos"
                     value={batchCost}
                     onChange={(e) => setBatchCost(e.target.value)}
-                    className="w-48"
+                    className="w-40"
                   />
                   <Button size="sm" onClick={handleBatchSetCost} disabled={batchUpdate.isPending}>
                     <Save className="h-4 w-4 mr-1" />
+                    Aplicar
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select value={batchRedeemableBy} onValueChange={setBatchRedeemableBy}>
+                    <SelectTrigger className="w-36 h-9">
+                      <SelectValue placeholder="Público-alvo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="driver">Motorista</SelectItem>
+                      <SelectItem value="customer">Cliente</SelectItem>
+                      <SelectItem value="both">Ambos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={handleBatchSetRedeemableBy} disabled={batchUpdate.isPending}>
+                    <Users className="h-4 w-4 mr-1" />
                     Aplicar
                   </Button>
                 </div>
@@ -384,9 +451,16 @@ export default function ProdutosResgatePage() {
                             <Badge variant={deal.is_active ? "default" : "secondary"} className="text-[10px]">
                               {deal.is_active ? "Ativo" : "Inativo"}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px]">
-                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
-                            </Badge>
+                            <Select value={(deal as any).redeemable_by ?? "driver"} onValueChange={(v) => handleChangeRedeemableBy(deal.id, v)}>
+                              <SelectTrigger className="h-7 w-[90px] text-[10px] px-2">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="driver">Motorista</SelectItem>
+                                <SelectItem value="customer">Cliente</SelectItem>
+                                <SelectItem value="both">Ambos</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                       </div>
@@ -527,9 +601,16 @@ export default function ProdutosResgatePage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              {(deal as any).redeemable_by === "both" ? "Ambos" : (deal as any).redeemable_by === "customer" ? "Cliente" : "Motorista"}
-                            </Badge>
+                            <Select value={(deal as any).redeemable_by ?? "driver"} onValueChange={(v) => handleChangeRedeemableBy(deal.id, v)}>
+                              <SelectTrigger className="h-8 w-[110px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="driver">Motorista</SelectItem>
+                                <SelectItem value="customer">Cliente</SelectItem>
+                                <SelectItem value="both">Ambos</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             <Switch
