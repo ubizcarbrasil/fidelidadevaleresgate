@@ -1,47 +1,45 @@
 
 
-## Plano: Corrigir visibilidade dos produtos de resgate para o cliente
+## Plano: Corrigir erro "null is not an object (evaluating 'brand.id')" no toggle de espelhamento
 
-### Diagnóstico
-
-Os dados estão corretos no banco:
-- 50 produtos resgatáveis ativos com `redeemable_by = 'both'` e `redeem_points_cost` definido
-- 12 produtos com `redeemable_by = 'driver'`
-- Taxa do passageiro configurada: 50 pts/R$, motorista: 40 pts/R$
-- Espelhamento (`customer_redeem_mirror_driver`): ativado
-
-A causa raiz é que a view `public_affiliate_deals_safe` foi configurada com `security_invoker = on` (migração `20260411212959`). Isso faz a view executar com as permissões do usuário que faz a consulta, sujeitando-a ao RLS da tabela `affiliate_deals`. A policy original de leitura anônima (`"Anon read active affiliate deals"`) foi removida anteriormente, e a policy `"Customers can view redeemable deals"` pode não estar funcionando corretamente no contexto da view com security_invoker.
-
-Esse é exatamente o mesmo problema que ocorreu com a view `public_brands_safe`, que foi corrigido na migração `20260410170030` removendo o `security_invoker`.
+### Problema
+Na página de Produtos de Resgate, o toggle "Espelhar produtos do motorista para cliente" tenta acessar `brand!.id` (linha 226), mas `brand` é `null` no contexto admin quando a marca não é resolvida via domínio. Isso causa o crash.
 
 ### Solução
+Na mutation `toggleMirrorMutation`, usar `currentBrandId` (que vem do `useBrandGuard()` e está sempre disponível no contexto admin) em vez de `brand!.id`.
 
-**1. Migração SQL** — Recriar a view SEM `security_invoker`
+### Mudança
 
-```sql
-DROP VIEW IF EXISTS public.public_affiliate_deals_safe;
-CREATE VIEW public.public_affiliate_deals_safe AS
-SELECT
-  id, brand_id, branch_id, title, description, image_url,
-  price, original_price, affiliate_url, store_name, category,
-  is_active, click_count, order_index, created_at, updated_at,
-  store_logo_url, badge_label, category_id, origin,
-  is_featured, is_flash_promo, visible_driver, marketplace,
-  current_status, is_redeemable, redeem_points_cost, redeemable_by
-FROM affiliate_deals
-WHERE is_active = true;
+**Arquivo**: `src/pages/ProdutosResgatePage.tsx`
 
-GRANT SELECT ON public.public_affiliate_deals_safe TO anon, authenticated;
+1. Na `toggleMirrorMutation` (linha ~220-234):
+   - Trocar `brand!.id` por `currentBrandId`
+   - Adicionar guard no início: se `!currentBrandId`, lançar erro
+   - Para ler `brand_settings_json` atual quando `brand` é null, buscar direto do banco com `currentBrandId`
+
+```typescript
+const toggleMirrorMutation = useMutation({
+  mutationFn: async (enabled: boolean) => {
+    if (!currentBrandId) throw new Error("Marca não identificada");
+    // Buscar settings atuais direto do banco (brand pode ser null no admin)
+    const { data: brandData } = await supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", currentBrandId)
+      .single();
+    const current = (brandData?.brand_settings_json as Record<string, any>) ?? {};
+    const { error } = await supabase
+      .from("brands")
+      .update({ brand_settings_json: { ...current, customer_redeem_mirror_driver: enabled } } as any)
+      .eq("id", currentBrandId);
+    if (error) throw error;
+  },
+  // ... callbacks mantidos
+});
 ```
 
-Sem `security_invoker`, a view executa como owner (bypassa RLS), o que é seguro porque:
-- A view já filtra `is_active = true`
-- Apenas colunas públicas são expostas (sem campos internos de sync, API keys, etc.)
-- Segue o mesmo padrão já aplicado em `public_brands_safe`
-
-### Arquivos
-- 1 migração SQL (recriar a view)
+2. Na leitura de `mirrorDriver` (linha 44): também usar fallback quando `brand` é null — buscar via query existente ou aceitar false como default (já é o comportamento atual com `brand?.`).
 
 ### Resultado
-Os 50 produtos resgatáveis com pontos aparecerão imediatamente na Loja de Resgate do cliente, com o custo em pontos calculado conforme a regra de conversão (50 pts/R$).
+O toggle de espelhamento funcionará corretamente no painel admin, independentemente de `brand` estar carregado ou não no contexto.
 
