@@ -421,7 +421,14 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
           const isVirtualRedeemable = cat.id === REDEEMABLE_ID;
           const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
           const catDeals = isVirtualRedeemable
-            ? deals.filter(d => d.is_redeemable)
+            ? deals.filter(d => {
+                if (!d.is_redeemable) return false;
+                if (!isDriver) {
+                  const rb = d.redeemable_by;
+                  return rb === 'both' || rb === 'customer';
+                }
+                return true;
+              })
             : isVirtualNew
             ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
             : deals.filter(d => d.category_id === cat.id);
