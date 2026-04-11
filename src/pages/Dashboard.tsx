@@ -19,6 +19,7 @@ import DashboardKpiSection from "@/components/dashboard/DashboardKpiSection";
 import DashboardChartsSection from "@/components/dashboard/DashboardChartsSection";
 import DashboardQuickLinksSection from "@/components/dashboard/DashboardQuickLinks";
 import RidesCounterCard from "@/components/dashboard/RidesCounterCard";
+import AdminNotificationBell from "@/components/dashboard/AdminNotificationBell";
 
 const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard/TasksSection"));
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
@@ -278,6 +279,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <DashboardHeader consoleScope={consoleScope} scopeLabels={scopeLabels} isCityScopedView={isCityScopedView} viewingBranchId={viewingBranchId} />
         <div className="flex items-center gap-3">
+          <AdminNotificationBell />
           <Badge variant="outline" className="gap-1.5 text-xs font-normal border-success/30 text-success">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-40 dot-pulse" />
