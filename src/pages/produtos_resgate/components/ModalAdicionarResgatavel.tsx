@@ -124,7 +124,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
 
         const { error } = await supabase
           .from("affiliate_deals")
-          .update({ is_redeemable: true, redeem_points_cost: num } as any)
+          .update({ is_redeemable: true, redeem_points_cost: num, redeemable_by: publicoAlvo } as any)
           .in("id", ids);
         if (error) throw error;
       }
@@ -145,6 +145,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
     setCustoPontos("");
     setBusca("");
     setTentouSalvar(false);
+    setPublicoAlvo("driver");
     onFechar();
   };
 
@@ -200,6 +201,24 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
           />
         </div>
 
+        {/* Seletor de público-alvo */}
+        <div className="flex items-center gap-3 rounded-md border p-3">
+          <Users className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium mb-1">Público-alvo</p>
+            <Select value={publicoAlvo} onValueChange={(v) => setPublicoAlvo(v as "driver" | "customer" | "both")}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="driver">Motorista</SelectItem>
+                <SelectItem value="customer">Passageiro</SelectItem>
+                <SelectItem value="both">Ambos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Toggle automático / manual */}
         <div className="flex items-center justify-between gap-3 rounded-md border p-3">
           <div className="flex items-center gap-2">
@@ -207,7 +226,7 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
             <div>
               <p className="text-sm font-medium">Calcular automaticamente</p>
               <p className="text-xs text-muted-foreground">
-                Usa preço × {pointsPerReal ?? 1} pt/R$
+                Usa preço × {taxaAtiva} pt/R$
               </p>
             </div>
           </div>
