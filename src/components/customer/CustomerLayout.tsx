@@ -32,6 +32,8 @@ const CustomerWalletPage = lazy(() => import("@/pages/customer/CustomerWalletPag
 const CustomerProfilePage = lazy(() => import("@/pages/customer/CustomerProfilePage"));
 const CustomerDriverDashboardPage = lazy(() => import("@/pages/customer/CustomerDriverDashboardPage"));
 const CustomerEmissorasPage = lazy(() => import("@/pages/customer/CustomerEmissorasPage"));
+const CustomerRedeemStorePage = lazy(() => import("@/components/customer/CustomerRedeemStorePage"));
+const CustomerRedeemOrderHistory = lazy(() => import("@/components/customer/CustomerRedeemOrderHistory"));
 
 // Lazy-loaded overlays (rendered on demand)
 const CustomerOfferDetailPage = lazy(() => import("@/pages/customer/CustomerOfferDetailPage"));
