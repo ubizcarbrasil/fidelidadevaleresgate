@@ -219,11 +219,17 @@ export default function ProdutosResgatePage() {
 
   const toggleMirrorMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
-      const current = (brand?.brand_settings_json as Record<string, any>) ?? {};
+      if (!currentBrandId) throw new Error("Marca não identificada");
+      const { data: brandData } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", currentBrandId)
+        .single();
+      const current = (brandData?.brand_settings_json as Record<string, any>) ?? {};
       const { error } = await supabase
         .from("brands")
         .update({ brand_settings_json: { ...current, customer_redeem_mirror_driver: enabled } } as any)
-        .eq("id", brand!.id);
+        .eq("id", currentBrandId);
       if (error) throw error;
     },
     onSuccess: () => {
