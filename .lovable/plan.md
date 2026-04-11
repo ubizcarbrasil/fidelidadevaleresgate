@@ -1,17 +1,28 @@
 
 
-## Plano: Adicionar botão "Recalcular Pontos" na página Conversão por Público
+## Plano: Adicionar seletor de público-alvo no modal de adicionar produtos resgatáveis
 
-### O que será feito
-Importar e reutilizar o componente `BotaoRecalcularPontos` já existente em `src/pages/produtos_resgate/components/BotaoRecalcularPontos.tsx` dentro da página `pagina_conversao_resgate.tsx`. Esse botão já busca as taxas por público e recalcula todos os produtos.
+### Problema atual
+O modal `ModalAdicionarResgatavel` marca produtos como resgatáveis mas nao define o campo `redeemable_by`, ficando sem público-alvo. Tambem usa apenas a taxa base de conversao, ignorando as taxas separadas de motorista/passageiro.
 
-### Mudanças em `src/pages/conversao_resgate/pagina_conversao_resgate.tsx`
+### Mudancas em `src/pages/produtos_resgate/components/ModalAdicionarResgatavel.tsx`
 
-1. **Importar** o componente `BotaoRecalcularPontos`
-2. **Posicionar** o botão ao lado do botão "Salvar Taxas" no header da página, para que após salvar as novas taxas o empreendedor possa recalcular todos os produtos com um clique
+1. **Adicionar estado `publicoAlvo`** com opcoes "driver", "customer" ou "both" (default: "driver")
+
+2. **Adicionar seletor visual** (segmented buttons ou Select) antes da lista de produtos, com as opcoes:
+   - Motorista
+   - Passageiro  
+   - Ambos
+
+3. **Usar taxa correta no calculo automatico**: quando `publicoAlvo` for "driver" usar `taxasConversao.driver`, "customer" usar `taxasConversao.customer`, "both" usar `Math.max(driver, customer)`
+
+4. **Incluir `redeemable_by` no update**: nas mutacoes de insert, adicionar `redeemable_by: publicoAlvo` junto com `is_redeemable: true`
+
+5. **Atualizar label do toggle automatico** para mostrar a taxa do publico selecionado (ex: "Usa preco x 60 pt/R$" para passageiro)
 
 ### Resultado
-- Após ajustar as taxas de conversão, o empreendedor clica em "Recalcular Pontos" na mesma tela
-- Todos os produtos resgatáveis têm seus custos em pontos atualizados automaticamente
+- O empreendedor escolhe para quem o produto sera resgatavel ao adicioná-lo
+- A taxa de conversao correta e aplicada automaticamente
+- O campo `redeemable_by` e salvo corretamente no banco
 - Um arquivo alterado
 
