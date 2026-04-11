@@ -38,6 +38,7 @@ export default function ProductRedemptionOrdersPage() {
   const [trackingCode, setTrackingCode] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [sourceFilter, setSourceFilter] = useState<string>("ALL");
 
   const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
@@ -164,9 +165,13 @@ export default function ProductRedemptionOrdersPage() {
     }
   };
 
-  const filteredOrders = statusFilter === "ALL"
+  let filteredOrders = statusFilter === "ALL"
     ? orders
     : orders.filter((o: any) => o.status === statusFilter);
+
+  if (sourceFilter !== "ALL") {
+    filteredOrders = filteredOrders.filter((o: any) => (o.order_source || "driver") === sourceFilter);
+  }
 
   return (
     <div className="space-y-6">
@@ -192,6 +197,21 @@ export default function ProductRedemptionOrdersPage() {
                 {orders.filter((o: any) => o.status === item.key).length}
               </Badge>
             )}
+          </Button>
+        ))}
+      </div>
+
+      {/* Source filter */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground font-medium">Origem:</span>
+        {[{ key: "ALL", label: "Todos" }, { key: "driver", label: "Motorista" }, { key: "customer", label: "Cliente" }].map((item) => (
+          <Button
+            key={item.key}
+            variant={sourceFilter === item.key ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSourceFilter(item.key)}
+          >
+            {item.label}
           </Button>
         ))}
       </div>
