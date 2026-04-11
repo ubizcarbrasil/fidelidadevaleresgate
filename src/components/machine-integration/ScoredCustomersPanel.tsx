@@ -230,6 +230,15 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
                       variant="ghost"
                       size="icon"
                       className="shrink-0"
+                      onClick={() => setBonusCustomer(c)}
+                      title="Bonificar"
+                    >
+                      <Gift className="h-4 w-4 text-primary" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
                       onClick={() => setSelectedCustomer(c)}
                     >
                       <Eye className="h-4 w-4" />
