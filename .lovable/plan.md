@@ -1,27 +1,19 @@
 
 
-## Plano: Facilitar acesso à página de Módulos no painel do empreendedor
+## Plano: Adicionar atalhos de "Regras de Resgate" e "Produtos de Resgate" nos Links Úteis
 
-### Problema
-A página **Módulos** (`/brand-modules`) está escondida no final do sidebar, dentro do grupo "Configurações". No mobile, o usuário precisa rolar muito para encontrá-la.
+### Mudanças em `src/components/dashboard/DashboardQuickLinks.tsx`
 
-### Solução
-Duas melhorias simples para tornar o acesso mais fácil:
+1. **Importar ícones**: Adicionar `Gift` e `Settings2` (ou similares) do lucide-react para os novos cards.
 
-#### 1. Mover "Módulos" para uma posição mais visível no sidebar
-- No arquivo `src/components/consoles/BrandSidebar.tsx`, mover o item "Módulos" do grupo "Configurações" (final do sidebar) para o grupo "Guias Inteligentes" (topo do sidebar), que é o primeiro grupo visível após o Dashboard.
-- Isso garante que o empreendedor veja "Módulos" logo no início do menu.
+2. **Adicionar dois novos links** ao array `allQuickLinks`:
+   - `{ label: "Regras de Resgate", path: "/regras-resgate", icon: Settings2, description: "Conversão pontos/R$ e limites" }`
+   - `{ label: "Produtos de Resgate", path: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" }`
 
-#### 2. Adicionar atalho de "Módulos" nos Links Úteis do dashboard
-- No arquivo `src/components/dashboard/DashboardQuickLinks.tsx`, adicionar um card "Módulos" na seção de Links Úteis, com navegação SPA (`navigate("/brand-modules")`).
-- Assim, direto da tela inicial, o empreendedor consegue acessar a gestão de módulos com um clique.
-
-### Arquivos envolvidos
-- `src/components/consoles/BrandSidebar.tsx` — reposicionar item "Módulos"
-- `src/components/dashboard/DashboardQuickLinks.tsx` — adicionar atalho rápido
+3. **Registrar como internos**: Adicionar "Regras de Resgate" e "Produtos de Resgate" ao `internalLabels` Set para usar navegação SPA (`navigate()`) sem recarregar a página.
 
 ### Resultado
-- "Módulos" aparece no topo do sidebar, fácil de encontrar
-- Um botão "Módulos" aparece nos Links Úteis do dashboard
-- Sem recarregamento de página, navegação instantânea
+- Dois novos cards aparecem na seção "Links Úteis" do dashboard
+- Navegação instantânea sem perda de contexto
+- Um arquivo alterado: `src/components/dashboard/DashboardQuickLinks.tsx`
 
