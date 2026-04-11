@@ -132,6 +132,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
         delivery_neighborhood: form.neighborhood,
         delivery_city: form.city,
         delivery_state: form.state,
+        order_source: "driver",
       });
       if (orderError) throw orderError;
 
