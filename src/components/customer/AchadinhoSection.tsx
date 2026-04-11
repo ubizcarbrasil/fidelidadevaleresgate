@@ -433,7 +433,8 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
             ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
             : deals.filter(d => d.category_id === cat.id);
           if (!catDeals.length) return null;
-          const configuredRows = isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
+          const customerRedeemRows = isVirtualRedeemable ? ((brand?.brand_settings_json as any)?.customer_redeem_rows ?? 1) : null;
+          const configuredRows = isVirtualRedeemable ? (customerRedeemRows ?? 1) : isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
           const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(catDeals.length / MIN_PER_ROW)));
           const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
           const visibleDeals = catDeals.slice(0, visibleCount);
