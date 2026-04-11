@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Building2, Store, ShoppingBag, Car, ExternalLink, Copy, LogIn,
-  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks, Gift, Settings2,
+  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks, Gift, Settings2, ArrowLeftRight,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
@@ -47,7 +47,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
   // Links that should use SPA navigation (internal admin routes)
-  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação", "Módulos", "Regras de Resgate", "Produtos de Resgate"]);
+  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação", "Módulos", "Regras de Resgate", "Produtos de Resgate", "Conversão por Público"]);
   const handleOpen = (label: string, path: string) => {
     if (internalLabels.has(label)) {
       navigate(path);
@@ -69,6 +69,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     { label: "Módulos", path: "/brand-modules", prodPath: "/brand-modules", icon: Blocks, description: "Ativar/desativar módulos" },
     { label: "Regras de Resgate", path: "/regras-resgate", prodPath: "/regras-resgate", icon: Settings2, description: "Conversão pontos/R$ e limites" },
     { label: "Produtos de Resgate", path: "/produtos-resgate", prodPath: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" },
+    { label: "Conversão por Público", path: "/conversao-resgate", prodPath: "/conversao-resgate", icon: ArrowLeftRight, description: "Taxa pts/R$ por motorista e passageiro" },
   ];
 
   const quickLinks = allQuickLinks.filter((link) => {

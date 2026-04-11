@@ -1,5 +1,5 @@
 import React from "react";
-import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, GalleryHorizontal, Grip, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package, Bell, ShoppingCart, FolderHeart, CreditCard, Swords, Globe } from "lucide-react";
+import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet, Blocks, Settings2, ScrollText, GalleryHorizontal, Grip, Tag, FileText, ClipboardList, Layers, ShoppingBag, UserCheck, ReceiptText, Ticket, RefreshCw, Coins, PackageSearch, BarChart3, ScanLine, Shield, FolderTree, Zap, Rocket, Key, BookOpen, Eye, TrendingUp, ChevronRight, Car, FlaskConical, LayoutTemplate, FileUp, Truck, Package, Bell, ShoppingCart, FolderHeart, CreditCard, Swords, Globe, ArrowLeftRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -53,6 +53,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
       { key: "sidebar.branches", defaultTitle: "Minhas Cidades", url: "/brand-branches", icon: MapPin },
       { key: "sidebar.pacotes_pontos", defaultTitle: "Pacotes de Pontos", url: "/points-packages", icon: Package },
       { key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2 },
+      { key: "sidebar.conversao_resgate", defaultTitle: "Conversão por Público", url: "/conversao-resgate", icon: ArrowLeftRight },
       { key: "sidebar.jornada_cidades", defaultTitle: "Guia de Cidades", url: "/brand-cidades-journey", icon: BookOpen },
       { key: "sidebar.onboarding_cidade", defaultTitle: "Onboarding Cidade", url: "/city-onboarding", icon: Rocket },
     ],

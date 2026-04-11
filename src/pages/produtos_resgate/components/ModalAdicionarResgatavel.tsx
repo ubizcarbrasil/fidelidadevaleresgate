@@ -32,8 +32,8 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [tentouSalvar, setTentouSalvar] = useState(false);
   const [modoAutomatico, setModoAutomatico] = useState(true);
 
-  // Fetch points_per_real from brand settings
-  const { data: pointsPerReal } = useQuery({
+  // Fetch points_per_real rates (driver/customer) from brand settings
+  const { data: taxasConversao } = useQuery({
     queryKey: ["brand-points-per-real", currentBrandId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,10 +43,18 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
         .single();
       if (error) throw error;
       const settings = data?.brand_settings_json as Record<string, any> | null;
-      return (settings?.redemption_rules?.points_per_real as number) || 40;
+      const rules = settings?.redemption_rules || {};
+      const base = (rules.points_per_real as number) || 40;
+      return {
+        driver: (rules.points_per_real_driver as number) || base,
+        customer: (rules.points_per_real_customer as number) || base,
+        base,
+      };
     },
     enabled: aberto && !!currentBrandId,
   });
+
+  const pointsPerReal = taxasConversao?.base ?? 40;
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],
