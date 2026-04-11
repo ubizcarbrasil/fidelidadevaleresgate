@@ -388,7 +388,7 @@ export default function ProductRedemptionOrdersPage() {
                 {/* Customer info */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-1">
-                    <MapPin className="h-4 w-4" /> Dados do Motorista
+                    <MapPin className="h-4 w-4" /> Dados do {(selectedOrder.order_source || "driver") === "customer" ? "Cliente" : "Motorista"}
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>

@@ -41,7 +41,7 @@ export default function ProdutosResgatePage() {
     queryFn: async () => {
       let query = supabase
         .from("affiliate_deals")
-        .select("id, title, image_url, price, original_price, is_active, is_redeemable, redeem_points_cost, store_name", { count: "exact" })
+        .select("id, title, image_url, price, original_price, is_active, is_redeemable, redeem_points_cost, store_name, redeemable_by", { count: "exact" })
         .eq("is_redeemable", true);
 
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
