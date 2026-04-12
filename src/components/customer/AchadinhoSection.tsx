@@ -238,7 +238,7 @@ export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }
 
   const [bannerIndex, setBannerIndex] = useState(0);
 
-  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID && selectedCat !== REDEEMABLE_ID;
+  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID;
 
   const { data: catBanners } = useQuery({
     queryKey: ["affiliate-cat-banners-inline", brand?.id, selectedCat],
@@ -402,23 +402,12 @@ export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }
       <div className="space-y-5 animate-fade-in">
         {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
           const isVirtualNew = cat.id === NEW_OFFERS_ID;
-          const isVirtualRedeemable = cat.id === REDEEMABLE_ID;
           const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
-          const catDeals = isVirtualRedeemable
-            ? deals.filter(d => {
-                if (!d.is_redeemable) return false;
-                if (!isDriver) {
-                  const rb = d.redeemable_by;
-                  return rb === 'both' || rb === 'customer';
-                }
-                return true;
-              })
-            : isVirtualNew
-            ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
-            : deals.filter(d => d.category_id === cat.id);
+          const catDeals = isVirtualNew
+            ? deals.filter(d => !d.is_redeemable && d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
+            : deals.filter(d => !d.is_redeemable && d.category_id === cat.id);
           if (!catDeals.length) return null;
-          const customerRedeemRows = isVirtualRedeemable ? ((brand?.brand_settings_json as any)?.customer_redeem_rows ?? 1) : null;
-          const configuredRows = isVirtualRedeemable ? (customerRedeemRows ?? 1) : isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
+          const configuredRows = isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
           const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(catDeals.length / MIN_PER_ROW)));
           const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
           const visibleDeals = catDeals.slice(0, visibleCount);
