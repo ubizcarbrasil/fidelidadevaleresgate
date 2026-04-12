@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ChevronRight, Gift, LayoutGrid, icons } from "lucide-react";
+import { ChevronRight, Coins, Gift, LayoutGrid, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -205,7 +205,7 @@ export default function CompreComPontosSection() {
             className="h-7 w-7 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)" }}
           >
-            <Gift className="h-4 w-4" style={{ color: highlight }} />
+            <Coins className="h-4 w-4" style={{ color: highlight }} />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
@@ -232,7 +232,7 @@ export default function CompreComPontosSection() {
                 border: !selectedCat ? `2px solid ${primary}` : '2px solid transparent',
               }}
             >
-              <Gift className="h-6 w-6" style={{ color: !selectedCat ? '#fff' : highlight }} />
+              <Coins className="h-6 w-6" style={{ color: !selectedCat ? '#fff' : highlight }} />
             </div>
             <span className="text-[10px] font-medium text-center leading-tight" style={{ color: !selectedCat ? highlight : undefined }}>
               Todos

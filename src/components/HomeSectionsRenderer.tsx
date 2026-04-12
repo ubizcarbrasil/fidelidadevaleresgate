@@ -984,15 +984,15 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
         <LazyImage src={currentBanner?.image_url} alt={currentBanner?.title || "Banner"} className={`${h} w-full`} />
       </div>
       {banners.length > 1 && (
-        <div className="flex justify-center gap-1.5 mt-2">
+        <div className="flex justify-center gap-1 mt-1.5">
           {banners.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               className="rounded-full transition-all"
               style={{
-                height: 6,
-                width: 6,
+                height: 4,
+                width: 4,
                 backgroundColor: i === current ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
               }}
             />
