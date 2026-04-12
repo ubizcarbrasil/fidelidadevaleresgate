@@ -63,22 +63,22 @@ export default function DriverBannerCarousel({ brandId }: { brandId: string }) {
           alt={banner.title || "Banner"}
           className="w-full h-full object-cover"
         />
-
-        {count > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {banners!.map((_, i) => (
-              <div
-                key={i}
-                className="h-1.5 rounded-full transition-all duration-300"
-                style={{
-                  width: i === current ? 16 : 6,
-                  backgroundColor: i === current ? "white" : "rgba(255,255,255,0.5)",
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
+      {count > 1 && (
+        <div className="flex justify-center gap-1.5 mt-2">
+          {banners!.map((_, i) => (
+            <div
+              key={i}
+              className="rounded-full transition-all duration-300"
+              style={{
+                height: 6,
+                width: 6,
+                backgroundColor: i === current ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
