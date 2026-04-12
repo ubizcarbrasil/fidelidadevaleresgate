@@ -1,46 +1,62 @@
 
-Objetivo: fazer com que os resgates de produtos feitos pelo cliente apareçam corretamente em “Meus Resgates”.
 
-Diagnóstico
-- O checkout do cliente grava o pedido em `product_redemption_orders` com `order_source = 'customer'` (`src/components/customer/CustomerRedeemCheckout.tsx`).
-- A tela mostrada no print (`src/pages/customer/CustomerRedemptionsPage.tsx`) busca apenas a tabela `redemptions`.
-- Já existe um histórico específico para pedidos de produto em `src/components/customer/CustomerRedeemOrderHistory.tsx`, mas ele está “solto”: foi importado no `CustomerLayout` e nunca é renderizado/aberto.
-- No `CustomerLayout` existem estados `redeemStoreOpen` e `redeemHistoryOpen`, mas eles não estão conectados a nada.
+## Plano: Notificações de resgate com destaque vermelho, detalhes completos e Telegram
 
-Problema real
-O resgate do cliente está sendo salvo no lugar certo para produto, mas a aba “Meus Resgates” não consulta esse lugar. Por isso o usuário resgata com sucesso e a lista continua vazia.
+### 1. Estilo vermelho nas notificações de resgate
 
-Plano de correção
-1. Atualizar a experiência da aba `Meus Resgates`
-- Ajustar `src/pages/customer/CustomerRedemptionsPage.tsx` para exibir também os resgates de produto do cliente, além dos resgates da tabela `redemptions`.
-- Manter a lista atual de cupons/PINs e acrescentar os pedidos de produto no mesmo fluxo visual.
+**Arquivos**: `AdminNotificationBell.tsx`, `AchadinhosAlerts.tsx`
 
-2. Reaproveitar o histórico já existente
-- Usar a lógica de `src/components/customer/CustomerRedeemOrderHistory.tsx` como base de consulta/shape dos pedidos.
-- Evitar duplicação: extrair a busca/normalização para um hook ou serviço compartilhado da feature de resgates do cliente.
+- Notificações do tipo `redemption_product` e `redemption_city` terão fundo vermelho (`bg-red-500/10`, borda `border-red-500/30`), ícone vermelho e texto em destaque.
+- O dot de não-lido será vermelho pulsante.
+- No bell popover: fundo `bg-destructive/10` com borda vermelha para esses tipos.
 
-3. Padronizar a exibição
-- Mapear os pedidos de `product_redemption_orders` para um formato compatível com a aba de resgates.
-- Exibir status como `PENDING`, `APPROVED`, `SHIPPED`, `DELIVERED` e `REJECTED` com labels em português.
-- Diferenciar visualmente “cupom/QR” e “produto” para o usuário entender o tipo de resgate.
+### 2. Ao clicar na notificação, abrir detalhes completos do pedido
 
-4. Atualizar a tela após concluir o checkout
-- No sucesso de `CustomerRedeemCheckout`, invalidar as queries da aba de resgates do cliente para o novo pedido aparecer sem depender de recarregar manualmente.
-- Garantir também refresh do saldo, como já existe hoje.
+**Arquivos**: `AdminNotificationBell.tsx` (novo modal/dialog), novo componente `RedemptionOrderDetailDialog.tsx`
 
-5. Limpeza de código órfão
-- Remover ou conectar corretamente o fluxo hoje incompleto em `CustomerLayout` (`redeemHistoryOpen`, import lazy do `CustomerRedeemOrderHistory`), para não manter código morto.
-- Se a decisão for unificar tudo na aba principal, o overlay separado deixa de ser necessário.
+Ao clicar numa notificação de `redemption_product`:
+- Usar o `reference_id` (que é o ID do `product_redemption_orders`) para buscar os dados completos do pedido.
+- Exibir em um Dialog/Sheet:
+  - **Dados do cliente**: nome, telefone, CPF
+  - **Endereço de entrega**: CEP, endereço, número, complemento, bairro, cidade, estado
+  - **Produto**: título, imagem (do snapshot), pontos gastos
+  - **Link do produto**: `affiliate_url` (link do Mercado Livre) como botão clicável
+  - **Status**: com badge colorido
+  - **Código de rastreio** (se houver)
 
-Arquivos envolvidos
-- `src/pages/customer/CustomerRedemptionsPage.tsx`
-- `src/components/customer/CustomerRedeemCheckout.tsx`
-- `src/components/customer/CustomerRedeemOrderHistory.tsx`
-- `src/components/customer/CustomerLayout.tsx`
-- possivelmente um novo hook/serviço da feature para centralizar a leitura dos dois tipos de resgate
+### 3. Notificação no Telegram quando houver resgate de produto
 
-Detalhes técnicos
-- Não parece ser problema de banco nem de política de acesso; o problema é de integração entre frontend e as tabelas corretas.
-- `product_redemption_orders` já possui política de SELECT para o próprio cliente.
-- Nenhuma migração SQL é necessária para esta correção.
-- A melhor abordagem é consolidar os dois fluxos na experiência “Meus Resgates”, em vez de manter um histórico de produtos escondido e inacessível.
+**Arquivo**: Atualizar o trigger SQL `notify_admin_product_redemption` para também disparar Telegram, **OU** (melhor abordagem) criar uma edge function `send-telegram-redemption-notification` chamada pelo frontend após o resgate.
+
+**Abordagem escolhida**: Adicionar o envio de Telegram diretamente no fluxo de checkout (`CustomerRedeemCheckout.tsx` e `DriverRedeemCheckout.tsx`), após criar o pedido com sucesso. Isso reutiliza o padrão já existente de `send-telegram-ride-notification`.
+
+- Buscar o `telegram_chat_id` da `machine_integrations` da marca (com fallback).
+- Chamar `send-telegram-ride-notification` (ou criar uma nova function simples) com template de resgate:
+  ```
+  🛍️ Novo resgate de produto!
+  👤 Cliente: Nome
+  📱 Telefone: ...
+  📦 Produto: "Kit 10 Peças..."
+  🪙 Pontos: 5000 pts
+  📍 Enviar para: Rua X, 123 - Cidade/UF
+  🔗 Link: https://mercadolivre.com/...
+  ```
+
+**Alternativa mais limpa**: Adicionar o envio de Telegram dentro do próprio trigger SQL via `pg_net` ou, mais realisticamente, criar uma edge function `notify-product-redemption-telegram` que é chamada pelo trigger via webhook. Porém, a abordagem mais simples é chamar do frontend após o sucesso do insert.
+
+### Resumo dos arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/dashboard/AdminNotificationBell.tsx` | Estilo vermelho + onClick abre dialog de detalhes |
+| `src/components/dashboard/AchadinhosAlerts.tsx` | Estilo vermelho nas notificações de resgate |
+| `src/components/dashboard/RedemptionOrderDetailDialog.tsx` | **Novo** — Dialog com todos os dados do pedido |
+| `src/components/customer/CustomerRedeemCheckout.tsx` | Enviar notificação Telegram após resgate |
+| `src/components/driver/DriverRedeemCheckout.tsx` | Enviar notificação Telegram após resgate |
+| `supabase/functions/send-telegram-ride-notification/index.ts` | Adicionar template para resgates de produto |
+
+### Detalhes técnicos
+- Sem migração SQL necessária — todos os dados já existem em `product_redemption_orders`.
+- Reutiliza a edge function de Telegram existente, adicionando um novo template quando `is_redemption_notification = true`.
+- O `reference_id` na `admin_notifications` já aponta para o ID do pedido, então a busca de detalhes é direta.
+
