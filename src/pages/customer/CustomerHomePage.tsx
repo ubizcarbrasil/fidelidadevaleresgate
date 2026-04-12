@@ -115,6 +115,8 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     ACHADINHOS: "affiliate_deals",
     COMPRE_COM_PONTOS: "customer_product_redeem",
     EMISSORAS: "offers",
+    BANNERS: "banners",
+    CATEGORIES: "categories",
   };
 
   const isNativeSectionVisible = (ns: NativeSectionConfig) => {
