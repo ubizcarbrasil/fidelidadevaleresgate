@@ -160,7 +160,14 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
             </Suspense>
           </div>
         );
-      default:
+      case "COMPRE_COM_PONTOS":
+        return (
+          <div key="compre-com-pontos" className="mt-6 animate-fade-in">
+            <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl mx-4" />}>
+              <CompreComPontosSection />
+            </Suspense>
+          </div>
+        );
         return null;
     }
   };
