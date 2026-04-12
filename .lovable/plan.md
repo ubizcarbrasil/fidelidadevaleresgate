@@ -1,24 +1,27 @@
 
 
-## Plano: Remover nome da loja dos cards "Compre com Pontos"
+## Plano: Remover título e "Ver todos" da seção de Banners
+
+### Problema
+A seção de banners mostra um cabeçalho com o título "Banners" e o botão "Ver todos ›" que o usuário quer remover.
 
 ### Alteração
 
-**Arquivo**: `src/components/customer/CompreComPontosSection.tsx` (linhas 93-95)
+**Arquivo**: `src/components/HomeSectionsRenderer.tsx` (linhas 433-449)
 
-Remover o bloco que exibe `deal.store_name` dentro do `RedeemDealCard`:
+Adicionar uma condição para ocultar o header quando o tipo da seção for `BANNER_CAROUSEL`:
 
 ```tsx
-// REMOVER:
-{deal.store_name && (
-  <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
+{/* Section Header */}
+{(section.title || section.subtitle) && templateType !== "BANNER_CAROUSEL" && (
+  // ... header content remains unchanged
 )}
 ```
 
 ### Resultado
-Os cards de "Compre com Pontos" não exibirão mais o nome da loja (ex: "mercadolivre") abaixo da imagem do produto.
+A seção de banners não exibirá mais o título "Banners" nem o botão "Ver todos".
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/customer/CompreComPontosSection.tsx` | Remover exibição de `store_name` no card |
+| `src/components/HomeSectionsRenderer.tsx` | Ocultar header para `BANNER_CAROUSEL` |
 
