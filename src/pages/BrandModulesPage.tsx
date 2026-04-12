@@ -221,6 +221,12 @@ export default function BrandModulesPage() {
             </span>
           </div>
 
+          <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
+            const def = definitions?.find(d => d.key === key);
+            if (!def) return true;
+            return isEnabled(def.id);
+          }} />
+
           {sortedCategories.map((category) => {
             const mods = grouped[category]!;
             const meta = CATEGORY_META[category] || CATEGORY_META.general;
