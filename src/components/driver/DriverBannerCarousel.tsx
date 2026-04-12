@@ -65,17 +65,15 @@ export default function DriverBannerCarousel({ brandId }: { brandId: string }) {
         />
       </div>
       {count > 1 && (
-        <div className="flex justify-center gap-1.5 mt-2">
+        <div className="flex justify-center gap-0.5 mt-1">
           {banners!.map((_, i) => (
-            <div
+            <span
               key={i}
-              className="rounded-full transition-all duration-300"
-              style={{
-                height: 6,
-                width: 6,
-                backgroundColor: i === current ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
-              }}
-            />
+              onClick={() => setCurrent(i)}
+              className={`text-[8px] leading-none cursor-pointer transition-colors ${i === current ? "text-primary" : "text-muted-foreground/30"}`}
+            >
+              •
+            </span>
           ))}
         </div>
       )}
