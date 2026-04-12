@@ -18,6 +18,8 @@ import CustomerLedgerOverlay from "@/components/customer/CustomerLedgerOverlay";
 import { useCustomerFavorites } from "@/hooks/useCustomerFavorites";
 import WelcomeTour from "@/components/customer/WelcomeTour";
 import { haptic } from "@/lib/haptics";
+import CustomerMenuDrawer from "@/components/customer/CustomerMenuDrawer";
+import { Menu } from "lucide-react";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { usePrefetchRoutes } from "@/hooks/usePrefetchRoutes";
 import { hslToCss } from "@/lib/utils";
@@ -134,6 +136,7 @@ export default function CustomerLayout() {
   const [achadinhoCatGridOpen, setAchadinhoCatGridOpen] = useState(false);
   const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
   const [redeemStoreOpen, setRedeemStoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
@@ -299,6 +302,12 @@ export default function CustomerLayout() {
                 >
                   <AppIcon iconKey="header_wallet" className="h-[18px] w-[18px] text-foreground/70" />
                 </button>
+                <button
+                  onClick={() => setMenuOpen(true)}
+                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
+                >
+                  <Menu className="h-[18px] w-[18px] text-foreground/70" />
+                </button>
               </div>
             </div>
 
@@ -322,7 +331,7 @@ export default function CustomerLayout() {
         <main
           ref={mainRef}
           onScroll={handleScroll}
-          className="flex-1 pb-24 overflow-y-auto overflow-x-hidden"
+          className="flex-1 pb-6 overflow-y-auto overflow-x-hidden"
           style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
         >
           <div key={activeTab} className="animate-fade-in">
@@ -352,62 +361,20 @@ export default function CustomerLayout() {
           </div>
         </main>
 
-        {/* Bottom Tab Bar — Dark premium */}
-        <nav
-          className="fixed bottom-0 inset-x-0 z-50"
-          style={{
-            backgroundColor: "hsl(var(--card))",
-            borderTop: "1px solid hsl(var(--border))",
+        {/* Hamburger Menu Drawer */}
+        <CustomerMenuDrawer
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          tabs={filteredTabs}
+          activeTab={activeTab}
+          onNavigate={(tabKey) => {
+            haptic("light");
+            setActiveTab(tabKey as Tab);
+            setHeaderVisible(true);
+            if (mainRef.current) mainRef.current.scrollTop = 0;
+            lastScrollY.current = 0;
           }}
-        >
-          <div className="max-w-lg mx-auto flex">
-            {filteredTabs.map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => {
-                    haptic("light");
-                    setActiveTab(tab.key);
-                    setHeaderVisible(true);
-                    if (mainRef.current) mainRef.current.scrollTop = 0;
-                    lastScrollY.current = 0;
-                  }}
-                  className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 transition-all relative"
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="tab-indicator"
-                      className="absolute top-0 inset-x-0 mx-auto w-10 h-[3px] rounded-full"
-                      style={{ backgroundColor: "hsl(var(--foreground))" }}
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                    />
-                  )}
-                  <div
-                    className="h-8 w-8 rounded-xl flex items-center justify-center transition-all duration-200"
-                    style={{
-                      backgroundColor: isActive ? "hsl(var(--foreground) / 0.12)" : "transparent",
-                      transform: isActive ? "scale(1.05)" : "scale(1)",
-                    }}
-                  >
-                    <AppIcon
-                      iconKey={tab.iconKey}
-                      className="h-5 w-5"
-                      strokeWidth={isActive ? 2.2 : 1.6}
-                      style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-                    />
-                  </div>
-                  <span
-                    className="text-[10px] font-semibold transition-colors"
-                    style={{ color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-                  >
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+        />
 
         {/* Offer Detail Overlay */}
         {selectedOffer && (
