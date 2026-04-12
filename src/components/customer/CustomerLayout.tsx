@@ -175,18 +175,26 @@ export default function CustomerLayout() {
     });
   }, []);
 
-  // Default to dark mode for customer app (respect user preference if saved)
+  // Theme mode based on branch settings
   useEffect(() => {
-    const saved = localStorage.getItem("customer_dark_mode");
-    if (saved === "light") {
-      document.documentElement.classList.remove("dark");
+    const branchSettings = (selectedBranch?.branch_settings_json || {}) as Record<string, unknown>;
+    const defaultTheme = (branchSettings.theme_customer_default as string) || "dark";
+    const allowToggle = branchSettings.theme_customer_allow_toggle !== false;
+
+    if (!allowToggle) {
+      // Force the configured theme, ignore user preference
+      document.documentElement.classList.toggle("dark", defaultTheme === "dark");
+      localStorage.setItem("customer_dark_mode", defaultTheme);
     } else {
-      document.documentElement.classList.add("dark");
+      // Respect user preference, fallback to branch default
+      const saved = localStorage.getItem("customer_dark_mode");
+      const effectiveTheme = saved || defaultTheme;
+      document.documentElement.classList.toggle("dark", effectiveTheme !== "light");
     }
     return () => {
       document.documentElement.classList.remove("dark");
     };
-  }, []);
+  }, [selectedBranch]);
 
   // Show welcome tour on first visit
   useEffect(() => {

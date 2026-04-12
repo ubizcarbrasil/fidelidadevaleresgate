@@ -75,11 +75,15 @@ export default function DriverPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Force dark mode
+  // Theme mode based on branch settings (driver)
   useEffect(() => {
-    document.documentElement.classList.add("dark");
+    const branchData = branch || null;
+    const branchSettings = (branchData?.branch_settings_json || {}) as Record<string, unknown>;
+    const defaultTheme = (branchSettings.theme_driver_default as string) || "dark";
+    document.documentElement.classList.toggle("dark", defaultTheme === "dark");
+    document.documentElement.classList.toggle("dark", defaultTheme !== "light");
     return () => { document.documentElement.classList.remove("dark"); };
-  }, []);
+  }, [branch]);
 
   useEffect(() => {
     if (!brandId) {
