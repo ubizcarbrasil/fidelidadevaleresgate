@@ -309,6 +309,15 @@ export function BrandSidebar() {
       }),
   }));
 
+  // Apply saved sidebar group order
+  const sortedGroups = sidebarOrder
+    ? [...resolvedGroups].sort((a, b) => {
+        const idxA = sidebarOrder.indexOf(a.label);
+        const idxB = sidebarOrder.indexOf(b.label);
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+      })
+    : resolvedGroups;
+
   // Auto-open the group containing the active route
   const activeGroupLabel = resolvedGroups.find(g =>
     g.items.some(item => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url)))
