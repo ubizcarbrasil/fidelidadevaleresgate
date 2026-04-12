@@ -332,6 +332,13 @@ export default function CustomerLayout() {
                   onOpenCategoryGrid={() => setCategoryGridOpen(true)}
                   onOpenCategoryStores={(cat) => setSelectedCategory(cat)}
                   onOpenAchadinhoCategoryGrid={() => setAchadinhoCatGridOpen(true)}
+                  onOpenAchadinhoCategory={(cat) => {
+                    if (cat.id === "__redeemable__") {
+                      setActiveTab("redeem_store");
+                    } else {
+                      setSelectedAchadinhoCat(cat);
+                    }
+                  }}
                 />
               ) : activeTab === "redeem_store" ? (
                 <Suspense fallback={<TabSkeleton />}>
