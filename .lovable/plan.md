@@ -1,31 +1,39 @@
 
 
-## Plano: Respeitar módulos desativados na tela do cliente
+## Plano: Adicionar módulos faltantes ao mapeamento da Home
 
-### Problema
-Quando o empreendedor desativa o módulo "Achadinhos" (chave `affiliate_deals`) na tela de módulos, a seção continua aparecendo na Home do cliente. Isso acontece porque o `CustomerHomePage` renderiza as seções nativas baseado apenas na configuração de layout (`home_layout_json`), sem verificar se o módulo correspondente está ativo via `useBrandModules`.
+### Diagnóstico
+O mapeamento atual (`SECTION_MODULE_MAP`) cobre apenas 3 seções. Existem mais 2 módulos no banco que correspondem a seções nativas da Home mas não estão mapeados:
 
-O mesmo problema afeta outras seções:
-- **Compre com Pontos** → módulo `customer_product_redeem`
-- **Compre e Pontue (Emissoras)** → módulo `offers`
+| Seção nativa | Módulo (key) | Status |
+|---|---|---|
+| ACHADINHOS | `affiliate_deals` | ✅ Mapeado |
+| COMPRE_COM_PONTOS | `customer_product_redeem` | ✅ Mapeado |
+| EMISSORAS | `offers` | ✅ Mapeado |
+| BANNERS | `banners` | ❌ Faltando |
+| CATEGORIES | `categories` | ❌ Faltando |
+| FOR_YOU | (sem módulo correspondente) | — OK |
 
 ### Alteração
 
-**Arquivo**: `src/pages/customer/CustomerHomePage.tsx`
+**Arquivo**: `src/pages/customer/CustomerHomePage.tsx` (linha 114-118)
 
-1. Importar `useBrandModules` e chamar `isModuleEnabled`
-2. Criar um mapeamento de seção nativa → chave de módulo:
-   ```
-   ACHADINHOS → affiliate_deals
-   COMPRE_COM_PONTOS → customer_product_redeem
-   EMISSORAS → offers
-   ```
-3. Na função `isNativeSectionVisible`, adicionar verificação: se a seção tem um módulo associado e esse módulo está desativado, retornar `false`
+Adicionar `BANNERS` e `CATEGORIES` ao `SECTION_MODULE_MAP`:
+
+```tsx
+const SECTION_MODULE_MAP: Record<string, string> = {
+  ACHADINHOS: "affiliate_deals",
+  COMPRE_COM_PONTOS: "customer_product_redeem",
+  EMISSORAS: "offers",
+  BANNERS: "banners",
+  CATEGORIES: "categories",
+};
+```
 
 ### Resultado
-Desativar um módulo no painel de módulos automaticamente oculta a seção correspondente na Home do cliente, sem necessidade de configuração adicional no page builder.
+Desativar o módulo "Banners" ou "Categorias" no painel de módulos agora também oculta a seção correspondente na Home do cliente.
 
 | Arquivo | Ação |
-|---------|------|
-| `src/pages/customer/CustomerHomePage.tsx` | Adicionar verificação de `isModuleEnabled` nas seções nativas |
+|---|---|
+| `src/pages/customer/CustomerHomePage.tsx` | Adicionar 2 entradas ao mapeamento |
 
