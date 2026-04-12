@@ -319,7 +319,7 @@ export function BrandSidebar() {
     : resolvedGroups;
 
   // Auto-open the group containing the active route
-  const activeGroupLabel = resolvedGroups.find(g =>
+  const activeGroupLabel = sortedGroups.find(g =>
     g.items.some(item => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url)))
   )?.label || null;
 
@@ -376,7 +376,7 @@ export function BrandSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {resolvedGroups.map((group) => {
+        {sortedGroups.map((group) => {
           if (group.items.length === 0) return null;
           const alwaysOpen = group.label === "Resgate com Pontos";
           return (
