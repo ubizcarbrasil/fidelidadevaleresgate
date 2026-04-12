@@ -232,7 +232,7 @@ export default function CompreComPontosSection() {
                 border: !selectedCat ? `2px solid ${primary}` : '2px solid transparent',
               }}
             >
-              <Gift className="h-6 w-6" style={{ color: !selectedCat ? '#fff' : highlight }} />
+              <Coins className="h-6 w-6" style={{ color: !selectedCat ? '#fff' : highlight }} />
             </div>
             <span className="text-[10px] font-medium text-center leading-tight" style={{ color: !selectedCat ? highlight : undefined }}>
               Todos
