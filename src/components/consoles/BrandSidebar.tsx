@@ -260,11 +260,33 @@ export function BrandSidebar() {
   const { user, signOut } = useAuth();
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
-  const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan } = useBrandInfo();
+  const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan, brandId: infoBrandId } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
+
+  const effectiveBrandId = currentBrandId || infoBrandId;
+
+  // Fetch sidebar group order from brand settings
+  const { data: sidebarOrder } = useQuery({
+    queryKey: ["brand-sidebar-order", effectiveBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", effectiveBrandId!)
+        .single();
+      if (error) throw error;
+      const settings = data?.brand_settings_json as Record<string, any> | null;
+      if (settings?.sidebar_group_order && Array.isArray(settings.sidebar_group_order)) {
+        return settings.sidebar_group_order as string[];
+      }
+      return null;
+    },
+    enabled: !!effectiveBrandId,
+    staleTime: 60_000,
+  });
 
   const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
 
