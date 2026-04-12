@@ -184,10 +184,8 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
           onClick={() => onOpenLedger?.()}
           className="mx-4 mt-3 w-[calc(100%-2rem)] relative overflow-hidden rounded-2xl p-4 shadow-lg transition-all active:scale-[0.98] animate-fade-in text-left"
           style={{
-            background: accent
-              ? `linear-gradient(135deg, ${accent}, ${accent}cc)`
-              : "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))",
-            color: "hsl(var(--primary-foreground))",
+            background: "linear-gradient(135deg, #f59e0b, #d97706)",
+            color: "#fff",
           }}
         >
           {/* Decorative circles */}
