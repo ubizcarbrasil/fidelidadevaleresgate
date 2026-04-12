@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface Props {
 
 export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { customer, refetch } = useCustomer();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
