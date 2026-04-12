@@ -140,6 +140,20 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       // Refresh driver balance
       await refreshDriver();
 
+      // Send Telegram notification (fire & forget)
+      sendRedemptionTelegramNotification({
+        brandId: driver.brand_id,
+        branchId: driver.branch_id,
+        customerName: form.name,
+        customerPhone: form.phone,
+        customerCpf: form.cpf || undefined,
+        productTitle: deal.title,
+        pointsSpent: deal.redeem_points_cost,
+        deliveryAddress: `${form.address}, ${form.number}${form.complement ? ` - ${form.complement}` : ""} - ${form.neighborhood}, ${form.city}/${form.state} - CEP ${form.cep}`,
+        productUrl: deal.affiliate_url,
+        orderSource: "driver",
+      });
+
       setSuccess(true);
       celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
     } catch (err: any) {
