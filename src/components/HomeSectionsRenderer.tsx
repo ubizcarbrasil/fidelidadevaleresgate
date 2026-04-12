@@ -431,7 +431,7 @@ function SectionBlock({ section, branchId, primary, accent, fg, cardBg, fontHead
   return (
     <section>
       {/* Section Header */}
-      {(section.title || section.subtitle) && (
+      {(section.title || section.subtitle) && templateType !== "BANNER_CAROUSEL" && (
         <div className="max-w-lg mx-auto px-4 mb-2 flex items-center justify-between">
           <h2 className="text-[15px] font-bold text-foreground" style={{ fontFamily: fontHeading }}>
             {section.title}
