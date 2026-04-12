@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { AnimatePresence } from "framer-motion";
 import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
 import { RedemptionCard } from "@/components/customer/RedemptionCard";
+import { ProductOrderCard } from "@/components/customer/ProductOrderCard";
 import type { RedemptionWithOffer } from "@/types/customer";
 import { hslToCss, brandAlpha } from "@/lib/utils";
 import { RedemptionCardSkeleton } from "@/components/customer/RedemptionCardSkeleton";
@@ -73,6 +74,23 @@ export default function CustomerRedemptionsPage() {
     enabled: !!customer?.id,
   });
 
+  const { data: productOrders = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: queryKeys.customerProductOrders.list(customer?.id),
+    queryFn: async () => {
+      if (!customer?.id) return [];
+      const { data, error } = await supabase
+        .from("product_redemption_orders")
+        .select("*")
+        .eq("customer_id", customer.id)
+        .eq("order_source", "customer")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!customer?.id,
+  });
+
   const handleLoadMore = async () => {
     if (!customer?.id || loadingMore) return;
     setLoadingMore(true);
@@ -91,6 +109,17 @@ export default function CustomerRedemptionsPage() {
     setLoadingMore(false);
   };
 
+  // Unified items: merge redemptions + product orders into a single sorted list
+  type UnifiedItem = { type: "redemption"; data: RedemptionWithOffer; created_at: string } | { type: "product"; data: any; created_at: string };
+
+  const unifiedItems = useMemo(() => {
+    const items: UnifiedItem[] = [];
+    allRedemptions.forEach(r => items.push({ type: "redemption", data: r, created_at: r.created_at }));
+    productOrders.forEach(o => items.push({ type: "product", data: o, created_at: o.created_at ?? "" }));
+    items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return items;
+  }, [allRedemptions, productOrders]);
+
   const counts = useMemo(() => {
     const c = { ALL: 0, PENDING: 0, USED: 0, EXPIRED: 0 };
     allRedemptions.forEach((r) => {
@@ -98,23 +127,45 @@ export default function CustomerRedemptionsPage() {
       const status = r.status as keyof typeof c;
       if (status in c) c[status]++;
     });
+    // Count product orders as PENDING in the filter
+    productOrders.forEach(() => {
+      c.ALL++;
+      c.PENDING++;
+    });
     return c;
-  }, [allRedemptions]);
+  }, [allRedemptions, productOrders]);
 
-  const filtered = useMemo(() => {
-    let list = allRedemptions;
-    if (filter !== "ALL") list = list.filter((r) => r.status === filter);
+  const filteredItems = useMemo(() => {
+    let list = unifiedItems;
+    if (filter !== "ALL") {
+      list = list.filter((item) => {
+        if (item.type === "redemption") return item.data.status === filter;
+        // Product orders map to PENDING filter
+        if (filter === "PENDING") return true;
+        return false;
+      });
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((r) =>
-        r.token?.toLowerCase().includes(q) ||
-        r.id?.toLowerCase().includes(q) ||
-        r.offers?.title?.toLowerCase().includes(q) ||
-        r.offers?.stores?.name?.toLowerCase().includes(q)
-      );
+      list = list.filter((item) => {
+        if (item.type === "redemption") {
+          const r = item.data;
+          return r.token?.toLowerCase().includes(q) ||
+            r.id?.toLowerCase().includes(q) ||
+            r.offers?.title?.toLowerCase().includes(q) ||
+            r.offers?.stores?.name?.toLowerCase().includes(q);
+        }
+        // Product order search
+        const snap = typeof item.data.deal_snapshot_json === "string"
+          ? JSON.parse(item.data.deal_snapshot_json)
+          : item.data.deal_snapshot_json || {};
+        return snap.title?.toLowerCase().includes(q) || item.data.id?.toLowerCase().includes(q);
+      });
     }
     return list;
-  }, [allRedemptions, filter, search]);
+  }, [unifiedItems, filter, search]);
+
+  const anyLoading = isLoading || isLoadingProducts;
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -122,7 +173,10 @@ export default function CustomerRedemptionsPage() {
   const formatDate = (d: string) =>
     format(new Date(d), "dd/MM/yyyy, HH:mm", { locale: ptBR });
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerProductOrders.all }),
+    ]);
   }, [queryClient]);
 
   return (
@@ -187,31 +241,41 @@ export default function CustomerRedemptionsPage() {
         </div>
 
         {/* Redemption cards */}
-        {isLoading ? (
+        {anyLoading ? (
           <div className="px-5 space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <RedemptionCardSkeleton key={i} />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="px-5">
             <EmptyState type="redemptions" primary={primary} />
           </div>
         ) : (
           <div className="px-5 space-y-4">
-            {filtered.map((r) => (
-              <RedemptionCard
-                key={r.id}
-                r={r}
-                primary={primary}
-                fg={fg}
-                fontHeading={fontHeading}
-                formatCurrency={formatCurrency}
-                formatDate={formatDate}
-                onViewDetail={() => setSelectedRedemption(r)}
-                onCanceled={() => queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all })}
-              />
-            ))}
+            {filteredItems.map((item) =>
+              item.type === "redemption" ? (
+                <RedemptionCard
+                  key={item.data.id}
+                  r={item.data}
+                  primary={primary}
+                  fg={fg}
+                  fontHeading={fontHeading}
+                  formatCurrency={formatCurrency}
+                  formatDate={formatDate}
+                  onViewDetail={() => setSelectedRedemption(item.data)}
+                  onCanceled={() => queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all })}
+                />
+              ) : (
+                <ProductOrderCard
+                  key={`product-${item.data.id}`}
+                  order={item.data}
+                  primary={primary}
+                  fg={fg}
+                  fontHeading={fontHeading}
+                />
+              )
+            )}
             {hasMore && (
               <button
                 onClick={handleLoadMore}
