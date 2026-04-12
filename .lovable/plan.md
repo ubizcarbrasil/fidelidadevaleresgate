@@ -1,23 +1,22 @@
 
 
-## Plano: Trocar indicadores circulares por caracteres de ponto "•"
+## Plano: Trocar ícone Gift por Coins nos cards de "Compre com Pontos"
+
+### Problema
+Nos cards da seção "Compre com Pontos", o ícone ao lado do preço em pontos e no fallback da imagem/logo ainda é o `Gift` (presente). O usuário quer que seja o ícone `Coins` (moedas).
 
 ### Alterações
 
-**Arquivo**: `src/components/HomeSectionsRenderer.tsx` (linhas 986-1001)
-- Substituir os `<button>` com bolinhas CSS por caracteres de texto `•` (bullet)
-- Dot ativo: cor primária, dot inativo: cinza com opacidade baixa
-- Tamanho pequeno (`text-[8px]`), espaçamento mínimo (`gap-0.5`)
-- Manter funcionalidade de clique para navegar
+**Arquivo**: `src/components/customer/CompreComPontosSection.tsx`
 
-**Arquivo**: `src/components/driver/DriverBannerCarousel.tsx` (linhas ~71-82)
-- Mesma alteração: trocar divs circulares por caracteres `•`
+Substituir as 3 ocorrências restantes de `<Gift>` por `<Coins>` dentro do componente `RedeemDealCard`:
+
+1. **Linha 75** — fallback quando não há imagem do produto → trocar `Gift` por `Coins`
+2. **Linha 87** — fallback quando não há logo da loja (canto superior direito) → trocar `Gift` por `Coins`
+3. **Linha 98** — ícone ao lado do preço em pontos → trocar `Gift` por `Coins`
+
+Remover `Gift` do import (já não será mais usado).
 
 ### Resultado
-Indicadores viram pontinhos de texto discretos (como "• • • •") abaixo do banner.
-
-| Arquivo | Ação |
-|---------|------|
-| `src/components/HomeSectionsRenderer.tsx` | Trocar dots CSS por caracteres "•" |
-| `src/components/driver/DriverBannerCarousel.tsx` | Mesma troca |
+Todos os ícones nos cards passam a ser moedas (🪙) em vez de presente (🎁), consistente com o tema "Compre com Pontos".
 
