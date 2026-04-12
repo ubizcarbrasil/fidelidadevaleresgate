@@ -168,7 +168,7 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
             </Suspense>
           </div>
         );
-        return null;
+      default:
     }
   };
 
