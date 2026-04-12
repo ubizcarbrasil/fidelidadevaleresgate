@@ -297,12 +297,6 @@ export default function CustomerLayout() {
                   )}
                 </button>
                 <button
-                  onClick={() => setLedgerOpen(true)}
-                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
-                >
-                  <AppIcon iconKey="header_wallet" className="h-[18px] w-[18px] text-foreground/70" />
-                </button>
-                <button
                   onClick={() => setMenuOpen(true)}
                   className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
                 >
