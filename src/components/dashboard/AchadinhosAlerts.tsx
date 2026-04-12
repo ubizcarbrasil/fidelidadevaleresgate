@@ -108,10 +108,12 @@ const AchadinhosAlerts = memo(function AchadinhosAlerts({ brandId }: AchadinhosA
             ))}
 
             {/* Customer Notifications */}
-            {notifications?.map((notif) => (
-              <div key={`notif-${notif.id}`} className="flex items-start gap-3 p-2.5 rounded-lg bg-accent/30 border border-border">
-                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Bell className="h-3.5 w-3.5 text-primary" />
+            {notifications?.map((notif) => {
+              const isRedeem = notif.type === "redemption_product" || notif.type === "redemption_city";
+              return (
+              <div key={`notif-${notif.id}`} className={`flex items-start gap-3 p-2.5 rounded-lg border ${isRedeem ? "bg-red-500/10 border-red-500/30" : "bg-accent/30 border-border"}`}>
+                <div className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isRedeem ? "bg-red-500/20" : "bg-primary/10"}`}>
+                  <Bell className={`h-3.5 w-3.5 ${isRedeem ? "text-red-500" : "text-primary"}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
