@@ -1050,7 +1050,7 @@ function ProductRedemptionCharts({ brandId, dateFrom, dateTo }: { brandId: strin
     if (!prodOrders?.length) return [];
     const map: Record<string, { date: string; total: number; motorista: number; cliente: number }> = {};
     for (const r of prodOrders) {
-      const day = r.created_at.slice(0, 10);
+      const day = (r.created_at || "").slice(0, 10);
       if (!map[day]) map[day] = { date: day, total: 0, motorista: 0, cliente: 0 };
       map[day].total++;
       if (r.order_source === "driver") map[day].motorista++;
