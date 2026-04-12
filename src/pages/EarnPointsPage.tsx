@@ -204,7 +204,7 @@ export default function EarnPointsPage() {
       if (eventErr) throw eventErr;
 
       // Atomic credit via RPC
-      const { error: creditErr } = await supabase.rpc("credit_customer_points", {
+      const { error: creditErr } = await supabase.rpc("credit_customer_points" as any, {
         p_customer_id: selectedCustomerId,
         p_brand_id: currentBrandId,
         p_branch_id: branchId,

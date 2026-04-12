@@ -81,7 +81,7 @@ export default function ProductRedemptionOrdersPage() {
       // If rejecting, refund points
       if (status === "REJECTED" && order) {
         const userId = (await supabase.auth.getUser()).data.user!.id;
-        await supabase.rpc("refund_customer_points", {
+        await supabase.rpc("refund_customer_points" as any, {
           p_customer_id: order.customer_id,
           p_brand_id: order.brand_id,
           p_branch_id: order.branch_id,
