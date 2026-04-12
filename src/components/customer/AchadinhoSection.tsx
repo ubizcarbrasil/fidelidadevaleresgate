@@ -130,9 +130,10 @@ function DealCard({ deal, highlight, primary, fontHeading, onClick, formatPrice,
 
 interface AchadinhoSectionProps {
   onOpenAllCategories?: () => void;
+  onOpenCategory?: (cat: { id: string; name: string; icon_name: string; color: string }) => void;
 }
 
-export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSectionProps) {
+export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }: AchadinhoSectionProps) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer, isDriver } = useCustomer();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
@@ -451,7 +452,7 @@ export default function AchadinhoSection({ onOpenAllCategories }: AchadinhoSecti
                   </div>
                 </div>
                 <button
-                  onClick={() => onOpenAllCategories ? onOpenAllCategories() : setSelectedCat(cat.id)}
+                  onClick={() => onOpenCategory ? onOpenCategory(cat) : setSelectedCat(cat.id)}
                   className="text-xs font-semibold flex items-center gap-0.5"
                   style={{ color: highlight }}
                 >
