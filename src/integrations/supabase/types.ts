@@ -8218,6 +8218,29 @@ export type Database = {
           points_balance: number
         }[]
       }
+      process_product_redemption: {
+        Args: {
+          p_address: string
+          p_affiliate_url: string
+          p_branch_id: string
+          p_brand_id: string
+          p_cep: string
+          p_city: string
+          p_complement: string
+          p_cpf: string
+          p_customer_id: string
+          p_deal_id: string
+          p_deal_snapshot: Json
+          p_name: string
+          p_neighborhood: string
+          p_number: string
+          p_order_source: string
+          p_phone: string
+          p_points_cost: number
+          p_state: string
+        }
+        Returns: string
+      }
       rate_limit_cleanup: { Args: never; Returns: undefined }
       redeem_city_offer_driver: {
         Args: {
