@@ -58,6 +58,7 @@ const RedemptionOrderDetailDialog = memo(function RedemptionOrderDetailDialog({
       .single();
     setOrder(data);
     setLoading(false);
+  };
 
   useEffect(() => {
     if (open && orderId) fetchOrder();
