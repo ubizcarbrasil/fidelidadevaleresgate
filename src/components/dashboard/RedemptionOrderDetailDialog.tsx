@@ -58,8 +58,26 @@ const RedemptionOrderDetailDialog = memo(function RedemptionOrderDetailDialog({
       .single();
     setOrder(data);
     setLoading(false);
-  };
+
+  useEffect(() => {
+    if (open && orderId) fetchOrder();
   }, [open, orderId]);
+
+  const updateStatus = async (newStatus: string) => {
+    if (!order) return;
+    setUpdating(newStatus);
+    const { error } = await supabase
+      .from("product_redemption_orders")
+      .update({ status: newStatus } as any)
+      .eq("id", order.id);
+    if (error) {
+      toast.error("Erro ao atualizar status");
+    } else {
+      toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus]?.label || newStatus}`);
+      setOrder({ ...order, status: newStatus });
+    }
+    setUpdating(null);
+  };
 
   const snap = (() => {
     if (!order) return {};
