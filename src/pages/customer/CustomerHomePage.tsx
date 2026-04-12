@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { useAutoSeedDemo } from "@/hooks/useAutoSeedDemo";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { useBrandModules } from "@/hooks/useBrandModules";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomerNav } from "@/components/customer/CustomerLayout";
 import { Coins } from "lucide-react";
@@ -108,8 +109,18 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
 
   const isDriver = !!(customer?.name && /\[MOTORISTA\]/i.test(customer.name));
 
+  const { isModuleEnabled } = useBrandModules();
+
+  const SECTION_MODULE_MAP: Record<string, string> = {
+    ACHADINHOS: "affiliate_deals",
+    COMPRE_COM_PONTOS: "customer_product_redeem",
+    EMISSORAS: "offers",
+  };
+
   const isNativeSectionVisible = (ns: NativeSectionConfig) => {
     if (!ns.enabled) return false;
+    const moduleKey = SECTION_MODULE_MAP[ns.key];
+    if (moduleKey && !isModuleEnabled(moduleKey)) return false;
     const audience = ns.audience || "all";
     if (audience === "driver_only" && !isDriver) return false;
     if (audience === "customer_only" && isDriver) return false;
