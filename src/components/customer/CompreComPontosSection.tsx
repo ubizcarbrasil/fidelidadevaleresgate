@@ -205,7 +205,7 @@ export default function CompreComPontosSection() {
             className="h-7 w-7 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: "hsl(var(--vb-highlight) / 0.12)" }}
           >
-            <Gift className="h-4 w-4" style={{ color: highlight }} />
+            <Coins className="h-4 w-4" style={{ color: highlight }} />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ fontFamily: fontHeading }}>
