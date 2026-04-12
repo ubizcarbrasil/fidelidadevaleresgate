@@ -1,21 +1,22 @@
 
 
-## Plano: Controle de Modo Claro/Escuro por Cidade e por Tipo de Usuário
+## Plano: Reordenação drag & drop dos grupos do sidebar do empreendedor
 
-### Problema
-Atualmente o modo escuro é fixo (dark por padrão no app do cliente, dark forçado no painel do motorista). O empreendedor não tem controle sobre qual modo cada tipo de usuário (motorista/cliente) pode usar em cada cidade.
+### Objetivo
+Permitir que o empreendedor reorganize a ordem dos grupos do sidebar através de uma interface drag & drop no painel administrativo.
 
-### Solução
-Adicionar configurações no `branch_settings_json` de cada cidade para controlar o tema padrão e a possibilidade de alternância, separado por motorista e cliente.
-
-### Novas flags no `branch_settings_json`
+### Onde guardar a configuração
+No campo `brand_settings_json` da tabela `brands`, adicionar uma chave `sidebar_group_order` com um array de labels dos grupos na ordem desejada:
 
 ```json
 {
-  "theme_customer_default": "dark",
-  "theme_customer_allow_toggle": true,
-  "theme_driver_default": "dark",
-  "theme_driver_allow_toggle": false
+  "sidebar_group_order": [
+    "Gestão Comercial",
+    "Programa de Fidelidade",
+    "Achadinhos",
+    "Guias Inteligentes",
+    ...
+  ]
 }
 ```
 
@@ -23,36 +24,37 @@ Adicionar configurações no `branch_settings_json` de cada cidade para controla
 
 | Arquivo | Ação |
 |---------|------|
-| `src/pages/BrandBranchForm.tsx` | Adicionar 4 novos campos (selects + switches) na seção de configuração da cidade |
-| `src/components/customer/CustomerLayout.tsx` | Ler `theme_customer_default` e `theme_customer_allow_toggle` do branch para definir o tema inicial |
-| `src/pages/customer/CustomerProfilePage.tsx` | Ocultar o toggle de dark mode quando `theme_customer_allow_toggle` é `false` |
-| `src/pages/DriverPanelPage.tsx` | Ler `theme_driver_default` do branch e respeitar `theme_driver_allow_toggle` |
+| `src/components/brand-modules/SidebarOrderEditor.tsx` | **Criar** — Componente com lista drag & drop (usando `@dnd-kit/core` + `@dnd-kit/sortable`) dos grupos do sidebar |
+| `src/pages/BrandModulesPage.tsx` | Adicionar o `SidebarOrderEditor` na tela de Módulos (ao lado ou abaixo do HomeSectionOrderEditor) |
+| `src/components/consoles/BrandSidebar.tsx` | Ler `sidebar_group_order` do brand e reordenar os `groups` antes de renderizar |
+| `src/hooks/useBrandInfo.ts` | Expor `brandSettingsJson` para acesso ao campo de configuração (se não expõe já) |
 
-### Detalhes da UI no formulário de cidade
-
-Nova seção "Aparência do App" com:
+### UI do componente
 
 ```text
-┌─────────────────────────────────────────────┐
-│ 🎨 Aparência do App                         │
-│                                             │
-│ Cliente                                     │
-│   Tema padrão:  [Escuro ▾]                 │
-│   Permitir alternar tema:  [ON]             │
-│                                             │
-│ Motorista                                   │
-│   Tema padrão:  [Escuro ▾]                 │
-│   Permitir alternar tema:  [OFF]            │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ 📋 Ordem do Menu Lateral                │
+│                                         │
+│  ☰ Gestão Comercial            [↕]     │
+│  ☰ Programa de Fidelidade     [↕]     │
+│  ☰ Achadinhos                  [↕]     │
+│  ☰ Guias Inteligentes          [↕]     │
+│  ☰ Personalização & Vitrine   [↕]     │
+│  ☰ Cidades                     [↕]     │
+│  ...                                    │
+└─────────────────────────────────────────┘
 ```
 
-### Lógica no app do cliente
-1. `CustomerLayout` busca as settings do branch selecionado
-2. Se `theme_customer_default` = `"light"`, inicia em modo claro (a menos que o usuário já tenha escolhido manualmente)
-3. Se `theme_customer_allow_toggle` = `false`, o `DarkModeToggle` no perfil fica oculto e o tema é forçado
+Cada item é arrastável. Ao soltar, salva automaticamente no `brand_settings_json`.
 
-### Lógica no painel do motorista
-1. `DriverPanelPage` lê `theme_driver_default` do branch
-2. Se `theme_driver_allow_toggle` = `false`, força o tema configurado sem opção de mudança
-3. Se `true`, adiciona um toggle no painel (atualmente não existe)
+### Lógica no BrandSidebar
+1. Buscar `sidebar_group_order` das settings da marca
+2. Se existir, reordenar o array `groups` para seguir a ordem salva
+3. Grupos não listados vão para o final (fallback seguro)
+
+### Dependência
+- Instalar `@dnd-kit/core` e `@dnd-kit/sortable` (ou usar setas ↑/↓ como no HomeSectionOrderEditor para manter consistência e evitar nova dependência)
+
+### Alternativa sem nova dependência
+Usar o mesmo padrão de setas ↑/↓ do `HomeSectionOrderEditor`, mantendo consistência visual e sem instalar pacotes extras. Recomendo esta abordagem.
 
