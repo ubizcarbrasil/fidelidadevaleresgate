@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { AnimatePresence } from "framer-motion";
 import CustomerRedemptionDetailPage from "./CustomerRedemptionDetailPage";
 import { RedemptionCard } from "@/components/customer/RedemptionCard";
+import { ProductOrderCard } from "@/components/customer/ProductOrderCard";
 import type { RedemptionWithOffer } from "@/types/customer";
 import { hslToCss, brandAlpha } from "@/lib/utils";
 import { RedemptionCardSkeleton } from "@/components/customer/RedemptionCardSkeleton";

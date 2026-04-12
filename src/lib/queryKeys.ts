@@ -108,4 +108,5 @@ export const queryKeys = {
   produtosResgate: createKeys("produtos-resgate"),
   produtosResgateKpis: createKeys("produtos-resgate-kpis"),
   scoredDrivers: createKeys("scored-drivers"),
+  customerProductOrders: createKeys("customer-product-orders"),
 } as const;
