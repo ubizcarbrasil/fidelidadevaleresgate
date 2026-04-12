@@ -48,6 +48,12 @@ export default function BranchForm() {
   const [longitude, setLongitude] = useState("");
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+
+  // Theme appearance settings
+  const [themeCustomerDefault, setThemeCustomerDefault] = useState<"dark" | "light">("dark");
+  const [themeCustomerAllowToggle, setThemeCustomerAllowToggle] = useState(true);
+  const [themeDriverDefault, setThemeDriverDefault] = useState<"dark" | "light">("dark");
+  const [themeDriverAllowToggle, setThemeDriverAllowToggle] = useState(false);
   const geocodeTimer = useRef<ReturnType<typeof setTimeout>>();
   const isLoadingEdit = useRef(false);
 
@@ -83,6 +89,12 @@ export default function BranchForm() {
         setIsActive(data.is_active);
         setLatitude((data as any).latitude?.toString() || "");
         setLongitude((data as any).longitude?.toString() || "");
+        // Load theme appearance settings from branch_settings_json
+        const bSettings = (data.branch_settings_json || {}) as Record<string, unknown>;
+        setThemeCustomerDefault((bSettings.theme_customer_default as "dark" | "light") || "dark");
+        setThemeCustomerAllowToggle(bSettings.theme_customer_allow_toggle !== false);
+        setThemeDriverDefault((bSettings.theme_driver_default as "dark" | "light") || "dark");
+        setThemeDriverAllowToggle(bSettings.theme_driver_allow_toggle === true);
         setTimeout(() => { isLoadingEdit.current = false; }, 500);
       });
     }
@@ -134,10 +146,25 @@ export default function BranchForm() {
       return;
     }
     setLoading(true);
+
+    // Merge theme settings into existing branch_settings_json
+    let existingSettings: Record<string, unknown> = {};
+    if (isEdit) {
+      const { data: current } = await supabase.from("branches").select("branch_settings_json").eq("id", id!).maybeSingle();
+      existingSettings = (current?.branch_settings_json || {}) as Record<string, unknown>;
+    }
+
     const payload: any = {
       name, slug, brand_id: brandId, city: city || null, state: state || null, timezone, is_active: isActive,
       latitude: latitude ? parseFloat(latitude) : null,
       longitude: longitude ? parseFloat(longitude) : null,
+      branch_settings_json: {
+        ...existingSettings,
+        theme_customer_default: themeCustomerDefault,
+        theme_customer_allow_toggle: themeCustomerAllowToggle,
+        theme_driver_default: themeDriverDefault,
+        theme_driver_allow_toggle: themeDriverAllowToggle,
+      },
     };
 
     const { error } = isEdit
@@ -217,6 +244,51 @@ export default function BranchForm() {
             <div className="flex items-center justify-between py-2">
               <Label>Ativo</Label>
               <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
+
+            {/* Aparência do App */}
+            <div className="border rounded-lg p-4 space-y-4 mt-2">
+              <p className="text-sm font-semibold flex items-center gap-2">🎨 Aparência do App</p>
+
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground">Cliente</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tema padrão</Label>
+                    <Select value={themeCustomerDefault} onValueChange={(v) => setThemeCustomerDefault(v as "dark" | "light")}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dark">Escuro</SelectItem>
+                        <SelectItem value="light">Claro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Permitir alternar tema</Label>
+                    <Switch checked={themeCustomerAllowToggle} onCheckedChange={setThemeCustomerAllowToggle} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground">Motorista</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tema padrão</Label>
+                    <Select value={themeDriverDefault} onValueChange={(v) => setThemeDriverDefault(v as "dark" | "light")}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dark">Escuro</SelectItem>
+                        <SelectItem value="light">Claro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Permitir alternar tema</Label>
+                    <Switch checked={themeDriverAllowToggle} onCheckedChange={setThemeDriverAllowToggle} />
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row pt-4">
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">{loading ? "Salvando..." : "Salvar"}</Button>
