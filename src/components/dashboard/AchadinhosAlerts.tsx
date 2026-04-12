@@ -130,7 +130,8 @@ const AchadinhosAlerts = memo(function AchadinhosAlerts({ brandId }: AchadinhosA
                   </p>
                 </div>
               </div>
-            ))}
+            )})}
+
 
             {!hasNotifs && !hasSyncErrors && (
               <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta no momento.</p>
