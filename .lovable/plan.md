@@ -1,38 +1,38 @@
 
 
-## Plano: Corrigir "Ver todos" na seção Resgatar com Pontos
+## Plano: Substituir barra inferior por menu hamburger no header
 
-### Problema
-O botão "Ver todos" em cada linha de categoria (incluindo "Resgatar com Pontos") chama `onOpenAllCategories()`, que abre a **grade de categorias** em vez de mostrar a **listagem de ofertas** daquela categoria.
+### Problema atual
+A navegação principal (Início, Ofertas, Loja, Resgates, Carteira, Perfil) está numa barra fixa no rodapé, ocupando espaço na tela. O usuário quer mover todos esses itens para um menu hamburger (ícone de 3 linhas) no header, ao lado do ícone de carteira.
 
-### Correção
-
-**Arquivo**: `src/components/customer/AchadinhoSection.tsx`
-
-- Adicionar uma nova prop `onOpenCategory?: (cat: DealCategory) => void` ao componente
-- No botão "Ver todos" de cada linha de categoria (linha 453-460), chamar `onOpenCategory(cat)` em vez de `onOpenAllCategories()`
-- Manter `onOpenAllCategories` apenas para o botão principal do cabeçalho da seção e o botão "Ver todos" das bolinhas de categorias
+### Alterações
 
 **Arquivo**: `src/components/customer/CustomerLayout.tsx`
 
-- Passar `onOpenCategory` da `CustomerHomePage` → `AchadinhoSection`
-- No handler, verificar se a categoria é "Resgatar com Pontos" (REDEEMABLE_ID) e, nesse caso, abrir a loja de resgate (`setRedeemStoreOpen(true)` ou navegar para a aba correspondente)
-- Para outras categorias, abrir `AchadinhoCategoryPage` diretamente (`setSelectedAchadinhoCat(cat)`)
+1. **Remover a `<nav>` inferior** (linhas 356-410) — toda a barra de abas do rodapé será eliminada
+2. **Adicionar botão hamburger no header** — ao lado do botão de carteira (linha ~296), inserir um botão com ícone `Menu` (lucide-react) que abre um drawer/sheet lateral
+3. **Criar menu lateral (Sheet)** com os mesmos itens de `filteredTabs`:
+   - Cada item mostra ícone + label
+   - Ao clicar, fecha o menu e navega para a tab correspondente (`setActiveTab`)
+   - Item ativo fica destacado visualmente
+4. **Remover `pb-24`** do `<main>` (linha 325) já que não há mais barra inferior ocupando espaço — ajustar para `pb-6`
 
-**Arquivo**: `src/pages/customer/CustomerHomePage.tsx`
-
-- Adicionar prop `onOpenAchadinhoCategory` para receber o handler e repassar ao `AchadinhoSection`
+**Componente novo**: `src/components/customer/CustomerMenuDrawer.tsx`
+- Sheet/Drawer lateral que recebe `filteredTabs`, `activeTab` e `onNavigate`
+- Visual dark premium consistente com o design system
+- Animação suave de entrada/saída
+- Itens com ícone, label e indicador de ativo
 
 ### Resultado
-- "Ver todos" em "Resgatar com Pontos" → abre listagem de produtos resgatáveis
-- "Ver todos" em qualquer outra categoria → abre a página de ofertas daquela categoria
-- Botão principal "Achadinhos" e bolinha "Ver todos" → continua abrindo a grade de categorias
+- Header ganha um ícone de 3 linhas (hamburger) que abre menu lateral
+- Menu lateral lista: Início, Ofertas, Loja, Resgates, Carteira, Perfil
+- Rodapé fica livre — mais espaço para conteúdo
+- Navegação mantém a mesma funcionalidade
 
-### Resumo de arquivos
+### Arquivos
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/customer/AchadinhoSection.tsx` | Nova prop `onOpenCategory`, lógica do botão "Ver todos" por linha |
-| `src/pages/customer/CustomerHomePage.tsx` | Repassar nova prop |
-| `src/components/customer/CustomerLayout.tsx` | Handler que roteia para resgate ou categoria |
+| `src/components/customer/CustomerMenuDrawer.tsx` | Novo componente — drawer com itens de navegação |
+| `src/components/customer/CustomerLayout.tsx` | Remover nav inferior, adicionar botão hamburger no header, passar props ao drawer |
 
