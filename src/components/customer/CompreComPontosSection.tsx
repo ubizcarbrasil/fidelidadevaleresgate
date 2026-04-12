@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
-import { ChevronRight, Coins, Gift, LayoutGrid, icons } from "lucide-react";
+import { ChevronRight, Coins, LayoutGrid, icons } from "lucide-react";
 import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -72,7 +72,7 @@ function RedeemDealCard({ deal, highlight, primary, fontHeading, onClick }: {
           <img src={deal.image_url} alt={deal.title} className={`w-full aspect-square ${deal.origin === 'dvlinks' ? 'object-cover' : 'object-contain'}`} loading="lazy" />
         ) : (
           <div className="w-full aspect-square flex items-center justify-center" style={{ backgroundColor: withAlpha(primary, 0.06) }}>
-            <Gift className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
+            <Coins className="h-8 w-8" style={{ color: withAlpha(primary, 0.3) }} />
           </div>
         )}
         {deal.badge_label && (
@@ -84,7 +84,7 @@ function RedeemDealCard({ deal, highlight, primary, fontHeading, onClick }: {
           {deal.store_logo_url ? (
             <img src={deal.store_logo_url} alt={deal.store_name || ""} className="h-5 w-5 object-contain rounded-full" />
           ) : (
-            <Gift className="h-3 w-3 text-muted-foreground" />
+            <Coins className="h-3 w-3 text-muted-foreground" />
           )}
         </div>
       </div>
@@ -95,7 +95,7 @@ function RedeemDealCard({ deal, highlight, primary, fontHeading, onClick }: {
         <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
         {pointsStr ? (
           <div className="flex items-baseline gap-1">
-            <Gift className="h-3 w-3" style={{ color: highlight }} />
+            <Coins className="h-3 w-3" style={{ color: highlight }} />
             <span className="text-sm font-bold" style={{ color: highlight, fontFamily: fontHeading }}>{pointsStr}</span>
           </div>
         ) : deal.price ? (
