@@ -33,7 +33,7 @@ const CustomerProfilePage = lazy(() => import("@/pages/customer/CustomerProfileP
 const CustomerDriverDashboardPage = lazy(() => import("@/pages/customer/CustomerDriverDashboardPage"));
 const CustomerEmissorasPage = lazy(() => import("@/pages/customer/CustomerEmissorasPage"));
 const CustomerRedeemStorePage = lazy(() => import("@/components/customer/CustomerRedeemStorePage"));
-const CustomerRedeemOrderHistory = lazy(() => import("@/components/customer/CustomerRedeemOrderHistory"));
+
 
 // Lazy-loaded overlays (rendered on demand)
 const CustomerOfferDetailPage = lazy(() => import("@/pages/customer/CustomerOfferDetailPage"));
@@ -134,7 +134,7 @@ export default function CustomerLayout() {
   const [achadinhoCatGridOpen, setAchadinhoCatGridOpen] = useState(false);
   const [selectedAchadinhoCat, setSelectedAchadinhoCat] = useState<{ id: string; name: string; icon_name: string; color: string } | null>(null);
   const [redeemStoreOpen, setRedeemStoreOpen] = useState(false);
-  const [redeemHistoryOpen, setRedeemHistoryOpen] = useState(false);
+  
   const { isFavorite, toggleFavorite } = useCustomerFavorites();
   const { unreadCount } = useCustomerNotifications();
   usePrefetchRoutes();

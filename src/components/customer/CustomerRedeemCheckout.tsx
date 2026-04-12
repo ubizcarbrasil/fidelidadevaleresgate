@@ -131,8 +131,9 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       });
       if (orderError) throw orderError;
 
-      // Refresh customer balance
+      // Refresh customer balance and product orders list
       await refetch();
+      queryClient.invalidateQueries({ queryKey: ["customer-product-orders"] });
 
       setSuccess(true);
       toast.success("Resgate solicitado com sucesso! 🎉");
