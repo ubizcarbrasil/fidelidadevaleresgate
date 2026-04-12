@@ -615,20 +615,25 @@ export default function CsvImportPage() {
             }).select("id").single();
             if (earningErr) throw new Error(`Erro ao criar evento: ${earningErr.message}`);
 
-            // Insert ledger entry
-            await supabase.from("points_ledger").insert({
-              brand_id: brandId, branch_id: branchId, customer_id: customerId,
-              entry_type: "CREDIT" as any, points_amount: points, money_amount: money,
-              reason: `Importação CSV – R$ ${purchaseValue.toFixed(2)}`,
-              reference_type: "EARNING" as any, reference_id: earningData.id,
-              created_by_user_id: user.id,
+            // Atomic credit via RPC
+            await supabase.rpc("credit_customer_points" as any, {
+              p_customer_id: customerId,
+              p_brand_id: brandId,
+              p_branch_id: branchId,
+              p_points: points,
+              p_money: money,
+              p_reason: `Importação CSV – R$ ${purchaseValue.toFixed(2)}`,
+              p_reference_type: "EARNING_EVENT",
+              p_reference_id: earningData.id,
+              p_created_by_user_id: user.id,
             });
 
-            // Update customer balance
-            await supabase.from("customers").update({
-              points_balance: currentPointsBalance + points,
-              money_balance: currentMoneyBalance + money,
-            }).eq("id", customerId);
+            // Update money_balance separately if needed
+            if (money > 0) {
+              await supabase.from("customers").update({
+                money_balance: currentMoneyBalance + money,
+              }).eq("id", customerId);
+            }
 
             result.success++;
           } catch (err: any) { result.errors.push({ row: i + 2, message: err.message }); }

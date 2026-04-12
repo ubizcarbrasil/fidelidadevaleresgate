@@ -83,7 +83,20 @@ export default function StoreOrdersTab({ store }: Props) {
       const totalAmount = Number(order.total_amount) || 0;
 
       if (points > 0) {
-        // 3. Insert earning_event
+        // Atomic credit via RPC
+        await supabase.rpc("credit_customer_points" as any, {
+          p_customer_id: customerId,
+          p_brand_id: store.brand_id,
+          p_branch_id: store.branch_id,
+          p_points: points,
+          p_money: totalAmount,
+          p_reason: `Pedido catálogo - R$ ${totalAmount.toFixed(2)}`,
+          p_reference_type: "EARNING_EVENT",
+          p_reference_id: order.id,
+          p_created_by_user_id: user.id,
+        });
+
+        // Insert earning_event for tracking
         await supabase.from("earning_events").insert({
           brand_id: store.brand_id,
           branch_id: store.branch_id,
@@ -96,28 +109,6 @@ export default function StoreOrdersTab({ store }: Props) {
           status: "APPROVED",
           receipt_code: `PED-${order.id.slice(0, 8).toUpperCase()}`,
         });
-
-        // 4. Insert points_ledger
-        await supabase.from("points_ledger").insert({
-          brand_id: store.brand_id,
-          branch_id: store.branch_id,
-          customer_id: customerId,
-          created_by_user_id: user.id,
-          entry_type: "CREDIT",
-          reference_type: "EARNING_EVENT",
-          reference_id: order.id,
-          points_amount: points,
-          money_amount: 0,
-          reason: `Pedido catálogo - R$ ${totalAmount.toFixed(2)}`,
-        });
-
-        // 5. Update customer balance
-        const { data: cust } = await supabase.from("customers").select("points_balance").eq("id", customerId).single();
-        if (cust) {
-          await supabase.from("customers").update({
-            points_balance: Number(cust.points_balance) + points,
-          }).eq("id", customerId);
-        }
       }
 
       toast.success(`Pontuação confirmada! ${points} pontos creditados.`);

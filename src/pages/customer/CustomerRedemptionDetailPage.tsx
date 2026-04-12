@@ -75,32 +75,16 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
       if (debitEntry && debitEntry.points_amount > 0) {
         const userId = (await supabase.auth.getUser()).data.user?.id;
         if (userId) {
-          // Insert credit (refund) entry
-          await supabase.from("points_ledger").insert({
-            customer_id: debitEntry.customer_id,
-            brand_id: debitEntry.brand_id,
-            branch_id: debitEntry.branch_id,
-            entry_type: "CREDIT",
-            points_amount: debitEntry.points_amount,
-            money_amount: 0,
-            reference_type: "REDEMPTION",
-            reference_id: redemption.id as string,
-            reason: "Estorno de resgate",
-            created_by_user_id: userId,
+          await supabase.rpc("refund_customer_points" as any, {
+            p_customer_id: debitEntry.customer_id,
+            p_brand_id: debitEntry.brand_id,
+            p_branch_id: debitEntry.branch_id,
+            p_points: debitEntry.points_amount,
+            p_reason: "Estorno de resgate",
+            p_reference_type: "REDEMPTION",
+            p_reference_id: redemption.id,
+            p_created_by_user_id: userId,
           });
-
-          // Restore customer balance
-          const { data: cust } = await supabase
-            .from("customers")
-            .select("points_balance")
-            .eq("id", debitEntry.customer_id)
-            .single();
-
-          if (cust) {
-            await supabase.from("customers").update({
-              points_balance: Number(cust.points_balance) + debitEntry.points_amount,
-            }).eq("id", debitEntry.customer_id);
-          }
         }
       }
 
