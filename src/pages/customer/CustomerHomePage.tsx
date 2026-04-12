@@ -13,6 +13,7 @@ import { hslToCss } from "@/lib/utils";
 const ForYouSection = lazy(() => import("@/components/customer/ForYouSection"));
 const EmissorasSection = lazy(() => import("@/components/customer/EmissorasSection"));
 const AchadinhoSection = lazy(() => import("@/components/customer/AchadinhoSection"));
+const CompreComPontosSection = lazy(() => import("@/components/customer/CompreComPontosSection"));
 import { Skeleton } from "@/components/ui/skeleton";
 import { haptic } from "@/lib/haptics";
 import type { NativeSectionConfig } from "@/components/page-builder-v2/PageSectionsEditor";
