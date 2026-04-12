@@ -161,8 +161,12 @@ export default function CustomerProfilePage() {
         className="rounded-[20px] overflow-hidden bg-card mb-5 animate-fade-in"
         style={{ boxShadow: "0 2px 12px hsl(var(--foreground) / 0.04)" }}
       >
-        {/* Dark mode toggle */}
-        <DarkModeToggle primary={primary} fg={fg} />
+        {/* Dark mode toggle — only if branch allows it */}
+        {(() => {
+          const branchSettings = (selectedBranch?.branch_settings_json || {}) as Record<string, unknown>;
+          const allowToggle = branchSettings.theme_customer_allow_toggle !== false;
+          return allowToggle ? <DarkModeToggle primary={primary} fg={fg} /> : null;
+        })()}
         {visibleLinks.map((link, idx) => (
           <ProfileMenuItemButton
             key={link.id}
