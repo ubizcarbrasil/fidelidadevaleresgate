@@ -241,31 +241,41 @@ export default function CustomerRedemptionsPage() {
         </div>
 
         {/* Redemption cards */}
-        {isLoading ? (
+        {anyLoading ? (
           <div className="px-5 space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <RedemptionCardSkeleton key={i} />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="px-5">
             <EmptyState type="redemptions" primary={primary} />
           </div>
         ) : (
           <div className="px-5 space-y-4">
-            {filtered.map((r) => (
-              <RedemptionCard
-                key={r.id}
-                r={r}
-                primary={primary}
-                fg={fg}
-                fontHeading={fontHeading}
-                formatCurrency={formatCurrency}
-                formatDate={formatDate}
-                onViewDetail={() => setSelectedRedemption(r)}
-                onCanceled={() => queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all })}
-              />
-            ))}
+            {filteredItems.map((item) =>
+              item.type === "redemption" ? (
+                <RedemptionCard
+                  key={item.data.id}
+                  r={item.data}
+                  primary={primary}
+                  fg={fg}
+                  fontHeading={fontHeading}
+                  formatCurrency={formatCurrency}
+                  formatDate={formatDate}
+                  onViewDetail={() => setSelectedRedemption(item.data)}
+                  onCanceled={() => queryClient.invalidateQueries({ queryKey: queryKeys.customerRedemptions.all })}
+                />
+              ) : (
+                <ProductOrderCard
+                  key={`product-${item.data.id}`}
+                  order={item.data}
+                  primary={primary}
+                  fg={fg}
+                  fontHeading={fontHeading}
+                />
+              )
+            )}
             {hasMore && (
               <button
                 onClick={handleLoadMore}
