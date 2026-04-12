@@ -20,7 +20,10 @@ import {
   CheckCircle2,
   XCircle,
   CreditCard,
+  ShoppingCart,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   PENDING: { label: "Pendente", icon: Clock, color: "hsl(var(--muted-foreground))" },
