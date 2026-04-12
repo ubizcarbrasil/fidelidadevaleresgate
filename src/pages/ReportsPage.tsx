@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon, Tag, icons, Store, ShoppingBag } from "lucide-react";
+import { Download, FileSpreadsheet, BarChart3, ShieldAlert, TrendingUp, LineChart as LineChartIcon, Tag, icons, Store, ShoppingBag, Package } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -18,7 +18,7 @@ import {
   ResponsiveContainer, Legend, PieChart, Pie, Cell,
 } from "recharts";
 
-type ReportType = "redemptions" | "earning_events" | "customers" | "vouchers" | "affiliate_clicks" | "coupon_performance" | "catalog_orders";
+type ReportType = "redemptions" | "earning_events" | "customers" | "vouchers" | "affiliate_clicks" | "coupon_performance" | "catalog_orders" | "product_redemptions";
 
 const REPORT_OPTIONS: { value: ReportType; label: string }[] = [
   { value: "redemptions", label: "Resgates" },
@@ -28,6 +28,7 @@ const REPORT_OPTIONS: { value: ReportType; label: string }[] = [
   { value: "affiliate_clicks", label: "Cliques em Achadinhos" },
   { value: "coupon_performance", label: "Performance por Cupom" },
   { value: "catalog_orders", label: "Vendas do Catálogo" },
+  { value: "product_redemptions", label: "Resgates de Produtos" },
 ];
 
 function formatDate(d: string) {
@@ -108,6 +109,10 @@ export default function ReportsPage() {
 
           {reportType === "catalog_orders" && data && data.length > 0 && (
             <CatalogOrdersSummary data={data} />
+          )}
+
+          {reportType === "product_redemptions" && data && data.length > 0 && (
+            <ProductRedemptionSummary data={data} />
           )}
 
           <ReportTable
@@ -289,6 +294,89 @@ function CatalogOrdersSummary({ data }: { data: Record<string, any>[] }) {
         <p className="text-xs text-muted-foreground flex items-center gap-1"><ShoppingBag className="h-3 w-3" /> Taxa Confirmação</p>
         <p className="text-2xl font-bold">{totalOrders > 0 ? ((confirmed / totalOrders) * 100).toFixed(0) : 0}%</p>
       </CardContent></Card>
+    </div>
+  );
+}
+
+// --- Product Redemption Summary ---
+function ProductRedemptionSummary({ data }: { data: Record<string, any>[] }) {
+  const total = data.length;
+  const pending = data.filter(r => r["Status"] === "PENDING").length;
+  const approved = data.filter(r => r["Status"] === "APPROVED").length;
+  const shipped = data.filter(r => r["Status"] === "SHIPPED").length;
+  const delivered = data.filter(r => r["Status"] === "DELIVERED").length;
+  const rejected = data.filter(r => r["Status"] === "REJECTED").length;
+  const totalPoints = data.reduce((s, r) => s + (Number(r["Pontos"]) || 0), 0);
+  const drivers = data.filter(r => r["Origem"] === "motorista").length;
+  const customers = data.filter(r => r["Origem"] === "cliente").length;
+  const driverPct = total > 0 ? ((drivers / total) * 100).toFixed(0) : "0";
+  const customerPct = total > 0 ? ((customers / total) * 100).toFixed(0) : "0";
+
+  // Top 5 products
+  const productCounts: Record<string, number> = {};
+  for (const r of data) {
+    const title = r["Produto"] || "Desconhecido";
+    productCounts[title] = (productCounts[title] || 0) + 1;
+  }
+  const top5 = Object.entries(productCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-5">
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Total de Pedidos</p>
+          <p className="text-2xl font-bold">{total}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {pending > 0 && <span className="text-destructive font-medium">{pending} pendentes</span>}
+            {pending > 0 && delivered > 0 && " · "}
+            {delivered > 0 && `${delivered} entregues`}
+          </p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Pontos Gastos</p>
+          <p className="text-2xl font-bold">{totalPoints.toLocaleString("pt-BR")}</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Por Status</p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {pending > 0 && <Badge variant="outline" className="text-xs border-yellow-500/50 text-yellow-500">Pendente {pending}</Badge>}
+            {approved > 0 && <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-500">Aprovado {approved}</Badge>}
+            {shipped > 0 && <Badge variant="outline" className="text-xs border-purple-500/50 text-purple-500">Comprado {shipped}</Badge>}
+            {delivered > 0 && <Badge variant="outline" className="text-xs border-green-500/50 text-green-500">Concluído {delivered}</Badge>}
+            {rejected > 0 && <Badge variant="outline" className="text-xs border-destructive/50 text-destructive">Rejeitado {rejected}</Badge>}
+          </div>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">Origem</p>
+          <p className="text-sm font-medium mt-1">🚗 Motorista: {driverPct}%</p>
+          <p className="text-sm font-medium">👤 Cliente: {customerPct}%</p>
+        </CardContent></Card>
+        <Card className="border-primary/30 bg-primary/5"><CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Top Produto</p>
+          <p className="text-sm font-bold truncate mt-1">{top5[0]?.[0] || "—"}</p>
+          <p className="text-xs text-muted-foreground">{top5[0]?.[1] || 0} resgates</p>
+        </CardContent></Card>
+      </div>
+
+      {top5.length > 1 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Top 5 Produtos Mais Resgatados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {top5.map(([title, count], i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="truncate max-w-[70%]">{i + 1}. {title}</span>
+                  <Badge variant="secondary">{count}x</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -930,7 +1018,161 @@ function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; date
             )}
         </CardContent>
       </Card>
+
+      {/* Product Redemption Charts */}
+      <ProductRedemptionCharts brandId={brandId} dateFrom={dateFrom} dateTo={dateTo} />
     </div>
+  );
+}
+
+// --- Product Redemption Charts ---
+function ProductRedemptionCharts({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
+  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
+  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+
+  const { data: prodOrders, isLoading } = useQuery({
+    queryKey: ["chart-product-redemptions", dateFrom, dateTo, brandId],
+    queryFn: async () => {
+      let q = supabase
+        .from("product_redemption_orders")
+        .select("id, status, order_source, points_spent, deal_snapshot_json, created_at")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(1000);
+      if (brandId) q = q.eq("brand_id", brandId);
+      const { data } = await q;
+      return data || [];
+    },
+  });
+
+  const byDay = useMemo(() => {
+    if (!prodOrders?.length) return [];
+    const map: Record<string, { date: string; total: number; motorista: number; cliente: number }> = {};
+    for (const r of prodOrders) {
+      const day = r.created_at.slice(0, 10);
+      if (!map[day]) map[day] = { date: day, total: 0, motorista: 0, cliente: 0 };
+      map[day].total++;
+      if (r.order_source === "driver") map[day].motorista++;
+      else map[day].cliente++;
+    }
+    return Object.values(map);
+  }, [prodOrders]);
+
+  const statusDist = useMemo(() => {
+    if (!prodOrders?.length) return [];
+    const counts: Record<string, number> = {};
+    for (const r of prodOrders) {
+      const s = r.status || "PENDING";
+      counts[s] = (counts[s] || 0) + 1;
+    }
+    const labels: Record<string, string> = { PENDING: "Pendente", APPROVED: "Aprovado", SHIPPED: "Comprado", DELIVERED: "Concluído", REJECTED: "Rejeitado" };
+    return Object.entries(counts).map(([k, v]) => ({ name: labels[k] || k, value: v }));
+  }, [prodOrders]);
+
+  const topProducts = useMemo(() => {
+    if (!prodOrders?.length) return [];
+    const counts: Record<string, number> = {};
+    for (const r of prodOrders) {
+      const snap = r.deal_snapshot_json as any;
+      const title = snap?.title || "Desconhecido";
+      const shortTitle = title.length > 30 ? title.slice(0, 28) + "…" : title;
+      counts[shortTitle] = (counts[shortTitle] || 0) + 1;
+    }
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([name, resgates]) => ({ name, resgates }));
+  }, [prodOrders]);
+
+  const formatTick = (d: string) => {
+    const parts = d.split("-");
+    return `${parts[2]}/${parts[1]}`;
+  };
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (!prodOrders?.length) return null;
+
+  const STATUS_COLORS = [CHART_COLORS[4], CHART_COLORS[0], CHART_COLORS[5], CHART_COLORS[3], CHART_COLORS[1]];
+
+  return (
+    <>
+      {/* Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="h-4 w-4" /> Resgates de Produtos por Dia
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={byDay}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="date" tickFormatter={formatTick} className="text-xs" />
+              <YAxis className="text-xs" />
+              <Tooltip
+                contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                labelFormatter={(v) => `Data: ${formatTick(v as string)}`}
+              />
+              <Legend />
+              <Bar dataKey="motorista" name="Motorista" stackId="a" fill={CHART_COLORS[4]} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="cliente" name="Cliente" stackId="a" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Status Pie */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" /> Status dos Resgates de Produtos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={statusDist}
+                  cx="50%" cy="50%"
+                  innerRadius={60} outerRadius={100}
+                  paddingAngle={4} dataKey="value"
+                  label={({ name, percent }: any) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                >
+                  {statusDist.map((_, i) => (
+                    <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Top Products Bar */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4" /> Top 10 Produtos Resgatados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis type="number" className="text-xs" />
+                <YAxis type="category" dataKey="name" width={140} className="text-xs" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                />
+                <Bar dataKey="resgates" name="Resgates" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
 
@@ -1081,6 +1323,37 @@ async function fetchReport(reportType: ReportType, dateFrom: string, dateTo: str
         "Data": formatDate(r.created_at),
         "Confirmado em": r.points_confirmed_at ? formatDate(r.points_confirmed_at) : "—",
       }));
+    }
+    case "product_redemptions": {
+      let q = supabase
+        .from("product_redemption_orders")
+        .select("id, status, order_source, points_spent, deal_snapshot_json, customer_name, customer_cpf, customer_phone, delivery_address_json, tracking_code, created_at, reviewed_at, branch_id, branches(name)")
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { data } = await q;
+      return (data || []).map(r => {
+        const snap = r.deal_snapshot_json as any;
+        const addr = r.delivery_address_json as any;
+        return {
+          "Data": formatDate(r.created_at),
+          "Produto": snap?.title || "—",
+          "Cliente": r.customer_name || "—",
+          "CPF": r.customer_cpf || "—",
+          "Telefone": r.customer_phone || "—",
+          "Origem": r.order_source === "driver" ? "motorista" : "cliente",
+          "Pontos": r.points_spent || 0,
+          "Status": r.status || "PENDING",
+          "Cidade": (r.branches as any)?.name || "—",
+          "Endereço": addr ? `${addr.street || ""}, ${addr.number || ""} - ${addr.city || ""} / ${addr.state || ""}` : "—",
+          "CEP": addr?.zip_code || "—",
+          "Rastreio": r.tracking_code || "—",
+          "Link ML": snap?.affiliate_url || snap?.origin_url || "—",
+          "Revisado em": r.reviewed_at ? formatDate(r.reviewed_at) : "—",
+        };
+      });
     }
     default: return [];
   }
