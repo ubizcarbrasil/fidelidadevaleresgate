@@ -228,6 +228,8 @@ export default function BrandModulesPage() {
             return isEnabled(def.id);
           }} />
 
+          <SidebarOrderEditor brandId={brandId} />
+
           {sortedCategories.map((category) => {
             const mods = grouped[category]!;
             const meta = CATEGORY_META[category] || CATEGORY_META.general;
