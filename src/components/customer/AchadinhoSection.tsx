@@ -231,31 +231,14 @@ export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }
       viable.unshift(virtualCat);
     }
 
-    // Virtual "Resgatar com Pontos" category — for drivers and passengers
-    const redeemableDeals = deals.filter(d => {
-      if (!d.is_redeemable) return false;
-      if (!isDriver) {
-        const rb = d.redeemable_by;
-        return rb === 'both' || rb === 'customer';
-      }
-      return true;
-    });
-    if (redeemableDeals.length >= MIN_DEALS) {
-      const redeemableCat: DealCategory = {
-        id: REDEEMABLE_ID,
-        name: "Resgatar com Pontos",
-        icon_name: "Gift",
-        color: "#eab308",
-      };
-      viable.unshift(redeemableCat);
-    }
+    // Redeemable deals are now in CompreComPontosSection — excluded here
 
     return { viableCategories: viable, overflowDealIds: overflow };
   }, [rawCategories, deals, categoryLayout, isDriver]);
 
   const [bannerIndex, setBannerIndex] = useState(0);
 
-  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID && selectedCat !== REDEEMABLE_ID;
+  const isRealCategory = selectedCat && selectedCat !== NEW_OFFERS_ID;
 
   const { data: catBanners } = useQuery({
     queryKey: ["affiliate-cat-banners-inline", brand?.id, selectedCat],
@@ -419,23 +402,12 @@ export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }
       <div className="space-y-5 animate-fade-in">
         {(selectedCat ? viableCategories.filter(c => c.id === selectedCat) : viableCategories).map(cat => {
           const isVirtualNew = cat.id === NEW_OFFERS_ID;
-          const isVirtualRedeemable = cat.id === REDEEMABLE_ID;
           const cutoff = Date.now() - NEW_OFFERS_WINDOW_MS;
-          const catDeals = isVirtualRedeemable
-            ? deals.filter(d => {
-                if (!d.is_redeemable) return false;
-                if (!isDriver) {
-                  const rb = d.redeemable_by;
-                  return rb === 'both' || rb === 'customer';
-                }
-                return true;
-              })
-            : isVirtualNew
-            ? deals.filter(d => d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
-            : deals.filter(d => d.category_id === cat.id);
+          const catDeals = isVirtualNew
+            ? deals.filter(d => !d.is_redeemable && d.created_at && new Date(d.created_at).getTime() > cutoff).sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
+            : deals.filter(d => !d.is_redeemable && d.category_id === cat.id);
           if (!catDeals.length) return null;
-          const customerRedeemRows = isVirtualRedeemable ? ((brand?.brand_settings_json as any)?.customer_redeem_rows ?? 1) : null;
-          const configuredRows = isVirtualRedeemable ? (customerRedeemRows ?? 1) : isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
+          const configuredRows = isVirtualNew ? 3 : (categoryLayout[cat.id]?.rows ?? 1);
           const effectiveRows = Math.min(configuredRows, Math.max(1, Math.floor(catDeals.length / MIN_PER_ROW)));
           const visibleCount = Math.floor(catDeals.length / effectiveRows) * effectiveRows || catDeals.length;
           const visibleDeals = catDeals.slice(0, visibleCount);
@@ -507,7 +479,7 @@ export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }
                       style={{ scrollSnapType: "x mandatory", touchAction: "pan-x pan-y" }}
                     >
                       {rowDeals.map((deal) => (
-                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel showPointsPrice={isVirtualRedeemable} />
+                        <DealCard key={deal.id} deal={deal} highlight={highlight} primary={primary} fontHeading={fontHeading} onClick={handleClick} formatPrice={formatPrice} isCarousel />
                       ))}
                       <div className="min-w-[16px] flex-shrink-0" />
                     </div>
