@@ -203,29 +203,29 @@ export default function EarnPointsPage() {
       }).select("id").single();
       if (eventErr) throw eventErr;
 
-      // Insert ledger entry
-      const { error: ledgerErr } = await supabase.from("points_ledger").insert({
-        brand_id: currentBrandId,
-        branch_id: branchId,
-        customer_id: selectedCustomerId,
-        entry_type: "CREDIT" as any,
-        points_amount: preview!.points ?? 0,
-        money_amount: preview!.money ?? 0,
-        reason: `Compra no parceiro ${selectedStore?.name || ""}`,
-        reference_type: "EARNING_EVENT" as any,
-        reference_id: event.id,
-        created_by_user_id: user.id,
+      // Atomic credit via RPC
+      const { error: creditErr } = await supabase.rpc("credit_customer_points", {
+        p_customer_id: selectedCustomerId,
+        p_brand_id: currentBrandId,
+        p_branch_id: branchId,
+        p_points: preview!.points ?? 0,
+        p_money: preview!.money ?? 0,
+        p_reason: `Compra no parceiro ${selectedStore?.name || ""}`,
+        p_reference_type: "EARNING_EVENT",
+        p_reference_id: event.id,
+        p_created_by_user_id: user.id,
       });
-      if (ledgerErr) throw ledgerErr;
+      if (creditErr) throw creditErr;
 
-      // Update customer balance
+      // Update money_balance separately (RPC handles points_balance)
       const newPoints = (selectedCustomer?.points_balance || 0) + (preview!.points ?? 0);
       const newMoney = (selectedCustomer?.money_balance || 0) + (preview!.money ?? 0);
-      const { error: custErr } = await supabase
-        .from("customers")
-        .update({ points_balance: newPoints, money_balance: newMoney })
-        .eq("id", selectedCustomerId);
-      if (custErr) throw custErr;
+      if ((preview!.money ?? 0) > 0) {
+        await supabase
+          .from("customers")
+          .update({ money_balance: newMoney })
+          .eq("id", selectedCustomerId);
+      }
 
       // Record Ganha-Ganha billing event (fire-and-forget)
       recordGanhaGanhaBillingEvent({

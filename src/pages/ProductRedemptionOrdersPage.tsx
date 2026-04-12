@@ -81,26 +81,16 @@ export default function ProductRedemptionOrdersPage() {
       // If rejecting, refund points
       if (status === "REJECTED" && order) {
         const userId = (await supabase.auth.getUser()).data.user!.id;
-        await supabase.from("points_ledger").insert({
-          customer_id: order.customer_id,
-          brand_id: order.brand_id,
-          branch_id: order.branch_id,
-          entry_type: "CREDIT",
-          points_amount: order.points_spent,
-          reason: `Reembolso: pedido de resgate rejeitado`,
-          reference_type: "MANUAL_ADJUSTMENT",
-          created_by_user_id: userId,
-        } as any);
-        const { data: cust } = await supabase
-          .from("customers")
-          .select("points_balance")
-          .eq("id", order.customer_id)
-          .single();
-        if (cust) {
-          await supabase.from("customers").update({
-            points_balance: (cust.points_balance || 0) + order.points_spent,
-          }).eq("id", order.customer_id);
-        }
+        await supabase.rpc("refund_customer_points", {
+          p_customer_id: order.customer_id,
+          p_brand_id: order.brand_id,
+          p_branch_id: order.branch_id,
+          p_points: order.points_spent,
+          p_reason: "Reembolso: pedido de resgate rejeitado",
+          p_reference_type: "MANUAL_ADJUSTMENT",
+          p_reference_id: order.id,
+          p_created_by_user_id: userId,
+        });
       }
 
       // Send push notification

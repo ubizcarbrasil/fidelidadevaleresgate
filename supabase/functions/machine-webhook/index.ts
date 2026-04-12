@@ -431,24 +431,23 @@ async function processFinalized(
     logger.info("Points calculated", { machineRideId, customerTier, pointsPerReal, ruleSource, rideValue, points });
 
     if (points > 0) {
-      await sb.from("points_ledger").insert({
-        brand_id: brandId,
-        branch_id: customer.branch_id,
-        customer_id: customer.id,
-        entry_type: "CREDIT",
-        points_amount: points,
-        money_amount: rideValue,
-        reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)} (${customerTier} ×${pointsPerReal})`,
-        reference_type: "MACHINE_RIDE",
+      // Atomic credit via RPC
+      await sb.rpc("credit_customer_points", {
+        p_customer_id: customer.id,
+        p_brand_id: brandId,
+        p_branch_id: customer.branch_id,
+        p_points: points,
+        p_money: rideValue,
+        p_reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)} (${customerTier} ×${pointsPerReal})`,
+        p_reference_type: "MACHINE_RIDE",
       });
 
-      // Update points_balance, ride_count, and recalculate tier
+      // Update ride_count and recalculate tier (balance already updated by RPC)
       const newRideCount = (customer.ride_count || 0) + 1;
       const newTier = getTierFromRideCount(newRideCount);
       await sb
         .from("customers")
         .update({
-          points_balance: (customer.points_balance || 0) + points,
           ride_count: newRideCount,
           customer_tier: newTier,
         })
@@ -700,22 +699,21 @@ async function processFinalized(
         }
 
         if (driverPoints > 0) {
-          // Credit driver points
-          await sb.from("points_ledger").insert({
-            brand_id: brandId,
-            branch_id: driverCustomer.branch_id,
-            customer_id: driverCustomer.id,
-            entry_type: "CREDIT",
-            points_amount: driverPoints,
-            money_amount: rideValue,
-            reason: `Corrida TaxiMachine #${machineRideId} - Motorista (${reasonDetail})`,
-            reference_type: "MACHINE_RIDE",
+          // Atomic credit via RPC
+          await sb.rpc("credit_customer_points", {
+            p_customer_id: driverCustomer.id,
+            p_brand_id: brandId,
+            p_branch_id: driverCustomer.branch_id,
+            p_points: driverPoints,
+            p_money: rideValue,
+            p_reason: `Corrida TaxiMachine #${machineRideId} - Motorista (${reasonDetail})`,
+            p_reference_type: "MACHINE_RIDE",
           });
 
+          // Update ride_count, tier, monthly rides (balance already updated by RPC)
           const newRideCount = (driverCustomer.ride_count || 0) + 1;
           const newTier = getTierFromRideCount(newRideCount);
           await sb.from("customers").update({
-            points_balance: (driverCustomer.points_balance || 0) + driverPoints,
             ride_count: newRideCount,
             customer_tier: newTier,
             driver_monthly_ride_count: currentMonthlyRides,
