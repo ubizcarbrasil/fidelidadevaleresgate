@@ -23,7 +23,8 @@ const DEFAULT_NATIVE_SECTIONS: NativeSectionConfig[] = [
   { key: "CATEGORIES", label: "Categorias", enabled: true, order: 1 },
   { key: "FOR_YOU", label: "Selecionado para Você", enabled: true, order: 2 },
   { key: "EMISSORAS", label: "Compre e Pontue", enabled: true, order: 3 },
-  { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 4 },
+  { key: "COMPRE_COM_PONTOS", label: "Compre com Pontos", enabled: true, order: 4 },
+  { key: "ACHADINHOS", label: "Achadinhos", enabled: true, order: 5 },
 ];
 
 // hslToCss imported from @/lib/utils
