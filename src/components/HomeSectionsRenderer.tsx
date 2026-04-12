@@ -982,25 +982,23 @@ function BannerCarousel({ items, primary, bannerHeight }: { items: any[]; primar
         onClick={isClickable ? handleBannerClick : undefined}
       >
         <LazyImage src={currentBanner?.image_url} alt={currentBanner?.title || "Banner"} className={`${h} w-full`} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-        {banners.length > 1 && (
-          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1">
-            {banners.map((_, i) => (
-              <button
-                key={i}
-                onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
-                className="transition-all"
-                style={{
-                  height: 5,
-                  width: i === current ? 16 : 5,
-                  borderRadius: 3,
-                  backgroundColor: i === current ? "#fff" : "rgba(255,255,255,0.4)",
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
+      {banners.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-2">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className="rounded-full transition-all"
+              style={{
+                height: 6,
+                width: 6,
+                backgroundColor: i === current ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
