@@ -1,39 +1,26 @@
 
 
-## Plano: Criar seção independente "Compre com Pontos"
-
-### Problema
-A categoria "Resgatar com Pontos" está embutida dentro da seção Achadinhos como uma categoria virtual. O usuário quer que seja uma **seção separada** com o nome "COMPRE COM PONTOS", mantendo a mesma estética de categorias/carrosséis.
+## Plano: Ajustar indicadores do banner e trocar ícone de presente por moedas
 
 ### Alterações
 
-**Arquivo novo**: `src/components/customer/CompreComPontosSection.tsx`
-- Seção independente que busca apenas deals com `is_redeemable = true` e `redeemable_by` compatível (customer/both)
-- Header com título "Compre com Pontos" e subtítulo
-- Categorias filtradas (pills horizontais) — mostra apenas categorias que possuem produtos resgatáveis
-- Carrosséis horizontais por categoria (mesma estética do Achadinhos)
-- Cards exibem preço em pontos (pts) em destaque
-- Reutiliza o `DealCard` e `AchadinhoDealDetail` existentes
-- Respeita configuração de linhas (`customer_redeem_rows`)
+**Arquivo**: `src/components/HomeSectionsRenderer.tsx` (linhas 986-1000)
+- Reduzir os dots do banner de 6px para 4px de altura/largura
+- Reduzir o gap entre dots de `gap-1.5` para `gap-1`
+- Reduzir margem superior de `mt-2` para `mt-1.5`
+- Resultado: indicadores mais discretos e sutis
 
-**Arquivo**: `src/components/customer/AchadinhoSection.tsx`
-- Remover a categoria virtual "Resgatar com Pontos" (linhas 234-251)
-- Remover o filtro `REDEEMABLE_ID` e referências a `isVirtualRedeemable`
-- Deals resgatáveis não aparecem mais nos Achadinhos
-
-**Arquivo**: `src/pages/customer/CustomerHomePage.tsx`
-- Importar e renderizar `CompreComPontosSection` como seção separada (antes ou depois dos Achadinhos, conforme layout)
-- Passar callbacks de navegação necessários
+**Arquivo**: `src/components/customer/CompreComPontosSection.tsx`
+- Trocar o import `Gift` por `Coins` do lucide-react
+- Substituir todas as ocorrências de `<Gift>` por `<Coins>` no header e na pill "Todos"
+- Manter `<Gift>` apenas nos cards de deal (fallback de imagem e badge de pontos) ou trocar também se fizer sentido visual
 
 ### Resultado
-- Achadinhos mostra apenas ofertas de afiliados normais
-- "Compre com Pontos" é uma seção própria, visualmente destacada, com categorias e carrosséis independentes
-
-### Arquivos
+- Dots do banner ficam menores e mais discretos
+- Seção "Compre com Pontos" usa ícone de moedas (🪙) em vez de presente (🎁)
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/customer/CompreComPontosSection.tsx` | Novo — seção independente de resgate com pontos |
-| `src/components/customer/AchadinhoSection.tsx` | Remover categoria virtual "Resgatar com Pontos" |
-| `src/pages/customer/CustomerHomePage.tsx` | Adicionar nova seção ao layout da home |
+| `src/components/HomeSectionsRenderer.tsx` | Reduzir tamanho dos dots do banner |
+| `src/components/customer/CompreComPontosSection.tsx` | Trocar Gift por Coins |
 
