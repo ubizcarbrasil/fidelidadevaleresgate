@@ -46,19 +46,19 @@ const RedemptionOrderDetailDialog = memo(function RedemptionOrderDetailDialog({
 }: Props) {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open || !orderId) return;
+  const fetchOrder = async () => {
+    if (!orderId) return;
     setLoading(true);
-    supabase
+    const { data } = await supabase
       .from("product_redemption_orders")
       .select("*")
       .eq("id", orderId)
-      .single()
-      .then(({ data }) => {
-        setOrder(data);
-        setLoading(false);
-      });
+      .single();
+    setOrder(data);
+    setLoading(false);
+  };
   }, [open, orderId]);
 
   const snap = (() => {
