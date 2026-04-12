@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react"
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
+import { sendRedemptionTelegramNotification } from "@/lib/sendRedemptionTelegram";
 
 interface RedeemDeal {
   id: string;
@@ -134,6 +135,20 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       // Refresh customer balance and product orders list
       await refetch();
       queryClient.invalidateQueries({ queryKey: ["customer-product-orders"] });
+
+      // Send Telegram notification (fire & forget)
+      sendRedemptionTelegramNotification({
+        brandId: customer.brand_id,
+        branchId: customer.branch_id,
+        customerName: form.name,
+        customerPhone: form.phone,
+        customerCpf: form.cpf || undefined,
+        productTitle: deal.title,
+        pointsSpent: deal.redeem_points_cost,
+        deliveryAddress: `${form.address}, ${form.number}${form.complement ? ` - ${form.complement}` : ""} - ${form.neighborhood}, ${form.city}/${form.state} - CEP ${form.cep}`,
+        productUrl: deal.affiliate_url,
+        orderSource: "customer",
+      });
 
       setSuccess(true);
       toast.success("Resgate solicitado com sucesso! 🎉");
